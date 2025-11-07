@@ -106,10 +106,10 @@ flowchart TD
     B -->|stored in| C[Student Wallet<br/>Stores credential<br/>Organizes with collections<br/>Creates presentations]
     C -->|presents| D[Employer Verifier<br/>Receives presentation<br/>Verifies cryptographically<br/>Checks revocation status]
     
-    style A fill:#e1f5ff
-    style B fill:#fff4e1
-    style C fill:#e8f5e9
-    style D fill:#fce4ec
+    style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
+    style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style D fill:#c2185b,stroke:#880e4f,stroke-width:2px,color:#fff
 ```
 
 ## Prerequisites

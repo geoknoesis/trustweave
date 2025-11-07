@@ -11,11 +11,13 @@
   * [Quick Start](getting-started/quick-start.md)
   * [Earth Observation Scenario](getting-started/earth-observation-scenario.md)
   * [Academic Credentials Scenario](getting-started/academic-credentials-scenario.md)
+  * [National Education Credentials Algeria Scenario](getting-started/national-education-credentials-algeria-scenario.md)
   * [Professional Identity Scenario](getting-started/professional-identity-scenario.md)
   * [Proof of Location Scenario](getting-started/proof-of-location-scenario.md)
   * [Spatial Web Authorization Scenario](getting-started/spatial-web-authorization-scenario.md)
   * [Digital Workflow & Provenance Scenario](getting-started/digital-workflow-provenance-scenario.md)
   * [News Industry Scenario](getting-started/news-industry-scenario.md)
+  * [Data Catalog & DCAT Scenario](getting-started/data-catalog-dcat-scenario.md)
   * [Your First Application](getting-started/your-first-application.md)
   * [Project Setup](getting-started/project-setup.md)
 

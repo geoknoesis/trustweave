@@ -112,9 +112,9 @@ flowchart TD
     A[Multiple Issuers<br/>Universities<br/>Employers<br/>Certification Bodies<br/>Skills Verifiers] -->|issue credentials| B[Professional Wallet<br/>Education Collection<br/>Work Collection<br/>Certifications Collection]
     B -->|creates presentations| C[Targeted Presentations<br/>Job Application selective<br/>Professional Profile public<br/>Contract Negotiation detailed]
     
-    style A fill:#e1f5ff
-    style B fill:#fff4e1
-    style C fill:#e8f5e9
+    style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
+    style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
 ```
 
 ## Prerequisites

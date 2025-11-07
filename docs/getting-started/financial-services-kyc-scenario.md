@@ -126,10 +126,10 @@ flowchart TD
     B -->|stored in customer wallet| C[Customer Wallet<br/>Stores KYC Credential<br/>Creates Presentations]
     C -->|presents to financial institution| D[Financial Institution<br/>Verifies KYC Credential<br/>Checks Compliance<br/>Opens Account]
     
-    style A fill:#e1f5ff
-    style B fill:#fff4e1
-    style C fill:#e8f5e9
-    style D fill:#fce4ec
+    style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
+    style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style D fill:#c2185b,stroke:#880e4f,stroke-width:2px,color:#fff
 ```
 
 ## Key Concepts

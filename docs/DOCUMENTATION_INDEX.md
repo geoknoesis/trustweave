@@ -28,11 +28,13 @@
 
 - **[Earth Observation Scenario](../docs/getting-started/earth-observation-scenario.md)**: Complete EO data integrity workflow
 - **[Academic Credentials Scenario](../docs/getting-started/academic-credentials-scenario.md)**: University credential issuance and verification
+- **[National Education Credentials Algeria Scenario](../docs/getting-started/national-education-credentials-algeria-scenario.md)**: AlgeroPass national-level education credential system
 - **[Professional Identity Scenario](../docs/getting-started/professional-identity-scenario.md)**: Professional credential wallet management
 - **[Proof of Location Scenario](../docs/getting-started/proof-of-location-scenario.md)**: Geospatial location proofs and verification
 - **[Spatial Web Authorization Scenario](../docs/getting-started/spatial-web-authorization-scenario.md)**: DID-based authorization for spatial entities (agents, activities, things, features)
 - **[Digital Workflow & Provenance Scenario](../docs/getting-started/digital-workflow-provenance-scenario.md)**: PROV-O workflow provenance tracking for digital information
 - **[News Industry Scenario](../docs/getting-started/news-industry-scenario.md)**: Content provenance and authenticity verification for news media
+- **[Data Catalog & DCAT Scenario](../docs/getting-started/data-catalog-dcat-scenario.md)**: Verifiable data catalog system using DCAT for government and enterprise
 
 ## API Reference
 

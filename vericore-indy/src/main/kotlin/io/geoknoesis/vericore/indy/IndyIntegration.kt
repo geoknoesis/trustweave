@@ -1,0 +1,66 @@
+package io.geoknoesis.vericore.indy
+
+import io.geoknoesis.vericore.anchor.BlockchainAnchorClient
+import io.geoknoesis.vericore.anchor.spi.BlockchainAnchorClientProvider
+import io.geoknoesis.vericore.anchor.spi.BlockchainIntegrationHelper
+
+/**
+ * SPI provider for Hyperledger Indy blockchain anchor clients.
+ * Supports Indy ledger pools (mainnet, testnet, custom pools).
+ */
+class IndyBlockchainAnchorClientProvider : BlockchainAnchorClientProvider {
+
+    override val name: String = "indy"
+    
+    override val supportedChains: List<String> = listOf(
+        IndyBlockchainAnchorClient.SOVRIN_MAINNET,
+        IndyBlockchainAnchorClient.SOVRIN_STAGING,
+        IndyBlockchainAnchorClient.BCOVRIN_TESTNET
+    )
+
+    override fun create(chainId: String, options: Map<String, Any?>): BlockchainAnchorClient? {
+        if (!chainId.startsWith("indy:")) {
+            return null
+        }
+        return IndyBlockchainAnchorClient(chainId, options)
+    }
+}
+
+/**
+ * Integration helper for Hyperledger Indy blockchain adapters.
+ * Supports Indy ledger pools (mainnet, testnet, custom pools).
+ */
+object IndyIntegration {
+
+    /**
+     * Discovers and registers Indy blockchain anchor clients via SPI.
+     * Registers all supported chains.
+     *
+     * @param options Configuration options (walletName, walletKey, did, poolEndpoint)
+     * @return List of registered chain IDs
+     */
+    fun discoverAndRegister(options: Map<String, Any?> = emptyMap()): List<String> {
+        return BlockchainIntegrationHelper.discoverAndRegister("indy", options)
+    }
+
+    /**
+     * Manually register Indy clients for specific chains.
+     *
+     * @param chainIds List of chain IDs to register (defaults to testnet for testing)
+     * @param options Configuration options (walletName, walletKey, did, poolEndpoint)
+     * @return List of registered chain IDs
+     */
+    fun setup(
+        chainIds: List<String> = listOf(IndyBlockchainAnchorClient.BCOVRIN_TESTNET),
+        options: Map<String, Any?> = emptyMap()
+    ): List<String> {
+        return BlockchainIntegrationHelper.setup(
+            providerName = "indy",
+            chainIds = chainIds,
+            defaultChainIds = listOf(IndyBlockchainAnchorClient.BCOVRIN_TESTNET),
+            options = options,
+            allowCustomChains = true // Allow custom Indy pools
+        )
+    }
+}
+

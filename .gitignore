@@ -1,0 +1,46 @@
+# Gradle
+.gradle/
+build/
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Kotlin
+*.kotlin_module
+
+# Logs
+*.log
+
+# Temporary files
+compile-error*.txt
+test-*.txt
+*-output*.txt
+
+# Node.js (for Ganache installation)
+node_modules/
+package-lock.json
+
+# Gradle Node Plugin downloads
+build/nodejs/
+build/npm/
+

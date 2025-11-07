@@ -94,6 +94,71 @@ fun main() = runBlocking {
 }
 ```
 
+### Example: Managing Credentials with Wallets
+
+```kotlin
+import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
+import io.geoknoesis.vericore.credential.models.VerifiableCredential
+import io.geoknoesis.vericore.credential.PresentationOptions
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+
+fun main() = runBlocking {
+    // Create a wallet
+    val wallet = InMemoryWallet(
+        walletDid = "did:key:wallet",
+        holderDid = "did:key:holder"
+    )
+    
+    // Store a credential
+    val credential = VerifiableCredential(
+        type = listOf("VerifiableCredential", "PersonCredential"),
+        issuer = "did:key:issuer",
+        credentialSubject = buildJsonObject {
+            put("id", "did:key:subject")
+            put("name", "Alice")
+            put("email", "alice@example.com")
+        },
+        issuanceDate = "2023-01-01T00:00:00Z"
+    )
+    
+    val credentialId = wallet.store(credential)
+    
+    // Organize credentials
+    if (wallet is CredentialOrganization) {
+        val collection = wallet.createCollection("Work Credentials")
+        wallet.addToCollection(credentialId, collection)
+        wallet.tagCredential(credentialId, setOf("important", "verified"))
+    }
+    
+    // Query credentials
+    val credentials = wallet.query {
+        byIssuer("did:key:issuer")
+        byType("PersonCredential")
+        notExpired()
+        valid()
+    }
+    
+    // Create a presentation
+    if (wallet is CredentialPresentation) {
+        val presentation = wallet.createPresentation(
+            credentialIds = listOf(credentialId),
+            holderDid = wallet.holderDid,
+            options = PresentationOptions(
+                holderDid = wallet.holderDid,
+                proofType = "Ed25519Signature2020"
+            )
+        )
+        println("Created presentation with ${presentation.verifiableCredential.size} credentials")
+    }
+    
+    // Get wallet statistics
+    val stats = wallet.getStatistics()
+    println("Wallet has ${stats.totalCredentials} credentials")
+}
+```
+
 ### Example: Anchoring Data to a Blockchain
 
 ```kotlin
@@ -624,7 +689,19 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed information about changes, improve
 
 ## Additional Documentation
 
+Comprehensive documentation is available in the [`docs/`](docs/) directory:
+
 - **[Documentation Index](docs/DOCUMENTATION_INDEX.md)**: Complete documentation index
+- **[Core Concepts](docs/core-concepts/README.md)**: Introduction to DIDs, VCs, Wallets, and more
+- **[Wallet API Tutorial](docs/tutorials/wallet-api-tutorial.md)**: Complete guide to using wallets
+- **[Use Case Scenarios](docs/getting-started/)**: Real-world scenarios including:
+  - [Earth Observation](docs/getting-started/earth-observation-scenario.md) - Data integrity verification
+  - [Academic Credentials](docs/getting-started/academic-credentials-scenario.md) - University credential system
+  - [Professional Identity](docs/getting-started/professional-identity-scenario.md) - Professional credential wallet
+  - [Proof of Location](docs/getting-started/proof-of-location-scenario.md) - Geospatial location proofs
+  - [Spatial Web Authorization](docs/getting-started/spatial-web-authorization-scenario.md) - DID-based spatial authorization
+- **[API Reference](docs/api-reference/)**: Detailed API documentation
+- **[Getting Started](docs/getting-started/)**: Installation and quick start guides
 - **[Optimization Summary](OPTIMIZATION_COMPLETE.md)**: Summary of codebase optimizations
 - **[Module READMEs](vericore-anchor/src/main/kotlin/io/geoknoesis/vericore/anchor/README.md)**: Detailed module documentation
 

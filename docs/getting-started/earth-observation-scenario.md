@@ -1,4 +1,4 @@
-# Get Started: Earth Observation Scenario
+# Earth Observation Scenario
 
 This guide walks you through building a complete Earth Observation (EO) data integrity verification system using VeriCore. You'll learn how to create DIDs, compute digests, build integrity chains, and anchor data to blockchains.
 
@@ -12,6 +12,74 @@ By the end of this tutorial, you'll have:
 - ✅ Created a Verifiable Credential referencing the Linkset
 - ✅ Anchored the VC digest to a blockchain
 - ✅ Verified the complete integrity chain
+
+## Big Picture & Significance
+
+### The Earth Observation Data Challenge
+
+Earth Observation data powers critical applications from climate monitoring to disaster response. However, ensuring data integrity, authenticity, and provenance is a fundamental challenge that affects trust, compliance, and decision-making.
+
+**Industry Context**:
+- **Market Size**: Global EO market projected to reach $11.3 billion by 2026 (CAGR 9.8%)
+- **Data Volume**: Petabytes of satellite imagery generated daily
+- **Critical Applications**: Climate monitoring, disaster management, agriculture, urban planning
+- **Trust Requirements**: Data used for policy decisions, scientific research, and emergency response
+- **Regulatory Pressure**: Increasing requirements for data provenance and quality assurance
+
+**Why This Matters**:
+1. **Data Trust**: Verify EO data hasn't been tampered with or corrupted
+2. **Provenance**: Track data lineage from satellite to end user
+3. **Quality Assurance**: Ensure data meets quality standards for critical applications
+4. **Compliance**: Meet regulatory requirements for data integrity
+5. **Reproducibility**: Enable scientific reproducibility with verifiable data
+6. **Accountability**: Hold data providers accountable for data quality
+
+### The Data Integrity Problem
+
+Traditional EO data systems struggle with integrity because:
+- **No Verification**: Can't verify data hasn't been tampered with
+- **No Provenance**: Missing information about data origin and processing
+- **No Quality Tracking**: Can't verify data quality claims
+- **Centralized Trust**: Reliance on single authorities creates bottlenecks
+- **No Interoperability**: Different systems can't verify each other's data
+
+## Value Proposition
+
+### Problems Solved
+
+1. **Data Integrity**: Cryptographic proof that data hasn't been tampered with
+2. **Provenance Tracking**: Complete lineage from satellite to end user
+3. **Quality Verification**: Verifiable quality reports and metadata
+4. **Interoperability**: Standard format works across all EO systems
+5. **Compliance**: Automated audit trails for regulatory requirements
+6. **Trust**: Build trust in EO data through verifiable credentials
+7. **Accountability**: Hold data providers accountable for data quality
+
+### Business Benefits
+
+**For Data Providers**:
+- **Trust**: Build trust with data consumers
+- **Compliance**: Meet regulatory requirements
+- **Differentiation**: Stand out with verifiable data quality
+- **Accountability**: Clear responsibility tracking
+
+**For Data Consumers**:
+- **Confidence**: Verify data integrity before use
+- **Quality**: Access verifiable quality reports
+- **Provenance**: Understand data lineage
+- **Compliance**: Meet data quality requirements
+
+**For Regulators**:
+- **Audit Trails**: Complete data lineage records
+- **Verification**: Verify data quality claims
+- **Transparency**: Understand data processing
+
+### ROI Considerations
+
+- **Trust**: Increased data trust enables new use cases
+- **Compliance**: Automated compliance reduces costs by 50%
+- **Quality**: Reduced errors save time and money
+- **Interoperability**: Standard format reduces integration costs
 
 ## Understanding the Problem
 
@@ -28,34 +96,16 @@ VeriCore solves this by creating a **verifiable integrity chain** that links all
 
 Think of the integrity chain like a Russian nesting doll, where each layer protects and verifies the next:
 
-```
-┌─────────────────────────────────────┐
-│   Blockchain Anchor                 │  ← Immutable proof on blockchain
-│   (VC Digest)                        │
-└──────────────┬──────────────────────┘
-               │ references
-               ↓
-┌─────────────────────────────────────┐
-│   Verifiable Credential (VC)        │  ← Credential about the dataset
-│   - Linkset Digest Reference        │
-│   - Dataset Metadata                │
-└──────────────┬──────────────────────┘
-               │ references
-               ↓
-┌─────────────────────────────────────┐
-│   Linkset                            │  ← Collection of links to artifacts
-│   - Metadata Link                    │
-│   - Provenance Link                  │
-│   - Quality Report Link              │
-└──────────────┬──────────────────────┘
-               │ references
-               ↓
-┌─────────────────────────────────────┐
-│   Artifacts                          │  ← Actual data documents
-│   - Metadata Document                │
-│   - Provenance Document              │
-│   - Quality Report Document          │
-└─────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A[Blockchain Anchor<br/>VC Digest<br/><em>Immutable proof on blockchain</em>] -->|references| B[Verifiable Credential VC<br/>Linkset Digest Reference<br/>Dataset Metadata<br/><em>Credential about the dataset</em>]
+    B -->|references| C[Linkset<br/>Metadata Link<br/>Provenance Link<br/>Quality Report Link<br/><em>Collection of links to artifacts</em>]
+    C -->|references| D[Artifacts<br/>Metadata Document<br/>Provenance Document<br/>Quality Report Document<br/><em>Actual data documents</em>]
+    
+    style A fill:#e1f5ff
+    style B fill:#fff4e1
+    style C fill:#e8f5e9
+    style D fill:#fce4ec
 ```
 
 **Key Concept**: Each level contains a **digest** (cryptographic hash) of the level below it. If any data is tampered with, the digest won't match, and verification will fail.

@@ -60,27 +60,41 @@ The `SUMMARY.md` file defines the table of contents for GitBook. It uses markdow
 
 ### GitBook Configuration
 
-Create a `book.json` file in the `docs` directory:
+The `book.json` file in the `docs` directory contains the GitBook configuration:
 
 ```json
 {
   "title": "VeriCore Developer Documentation",
   "description": "Comprehensive developer documentation for VeriCore",
-  "author": "Your Name",
+  "author": "GeoKnoesis",
   "language": "en",
-  "gitbook": "3.2.3",
+  "gitbook": ">=3.2.3",
+  "root": "./docs",
+  "structure": {
+    "readme": "README.md",
+    "summary": "SUMMARY.md"
+  },
   "plugins": [
     "theme-default",
     "search",
-    "livereload"
+    "livereload",
+    "code",
+    "copy-code-button",
+    "expandable-chapters",
+    "anchors",
+    "github",
+    "sharing",
+    "fontsettings"
   ],
   "pluginsConfig": {
-    "theme-default": {
-      "showLevel": true
+    "github": {
+      "url": "https://github.com/geoknoesis/vericore"
     }
   }
 }
 ```
+
+**Note**: GitBook.com (cloud) supports Mermaid diagrams natively - no plugin needed. Mermaid code blocks in markdown will be automatically rendered.
 
 ### Styling
 

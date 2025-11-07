@@ -1,0 +1,13 @@
+{
+  "title": "VeriCore Documentation",
+  "description": "Comprehensive developer documentation for VeriCore",
+  "root": "./docs",
+  "structure": {
+    "readme": "README.md",
+    "summary": "SUMMARY.md"
+  },
+  "variables": {
+    "version": "1.0.0-SNAPSHOT"
+  }
+}
+

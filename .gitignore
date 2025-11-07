@@ -36,6 +36,10 @@ compile-error*.txt
 test-*.txt
 *-output*.txt
 
+# GitBook
+_book/
+.gitbook/
+
 # Node.js (for Ganache installation)
 node_modules/
 package-lock.json

@@ -1,0 +1,51 @@
+/* GitBook PDF Styles */
+
+/* Optimize for PDF printing */
+.markdown-section {
+    font-size: 11pt;
+    line-height: 1.5;
+}
+
+.markdown-section pre {
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    page-break-inside: avoid;
+    font-size: 9pt;
+}
+
+.markdown-section code {
+    background-color: #f5f5f5;
+    padding: 2px 4px;
+    font-size: 9pt;
+}
+
+.markdown-section table {
+    page-break-inside: avoid;
+    font-size: 9pt;
+}
+
+.markdown-section img {
+    max-width: 100%;
+    page-break-inside: avoid;
+}
+
+.markdown-section h1 {
+    page-break-before: always;
+    font-size: 24pt;
+}
+
+.markdown-section h2 {
+    page-break-after: avoid;
+    font-size: 18pt;
+}
+
+.markdown-section h3 {
+    page-break-after: avoid;
+    font-size: 14pt;
+}
+
+/* Remove background colors for printing */
+.markdown-section .mermaid {
+    background-color: white !important;
+}
+

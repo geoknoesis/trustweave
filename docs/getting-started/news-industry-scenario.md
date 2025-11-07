@@ -90,9 +90,9 @@ News content provenance faces several critical challenges:
 
 ```mermaid
 flowchart TD
-    A[Journalist DID<br/>Author Identity<br/>Credentials] -->|creates| B[Article Content<br/>Article DID<br/>Content Hash<br/>Authorship Credential]
-    B -->|modified by| C[Editor DID<br/>Editor Identity<br/>Modification Credential]
-    C -->|publishes| D[Publisher DID<br/>Publication Credential<br/>Blockchain Anchor]
+    A["Journalist DID\nAuthor Identity\nCredentials"] -->|creates| B["Article Content\nArticle DID\nContent Hash\nAuthorship Credential"]
+    B -->|modified by| C["Editor DID\nEditor Identity\nModification Credential"]
+    C -->|publishes| D["Publisher DID\nPublication Credential\nBlockchain Anchor"]
     
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff

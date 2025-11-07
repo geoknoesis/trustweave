@@ -1,0 +1,250 @@
+package io.geoknoesis.vericore.credential.presentation
+
+import io.geoknoesis.vericore.credential.CredentialVerificationResult
+import io.geoknoesis.vericore.credential.PresentationOptions
+import io.geoknoesis.vericore.credential.PresentationVerificationOptions
+import io.geoknoesis.vericore.credential.PresentationVerificationResult
+import io.geoknoesis.vericore.credential.models.VerifiableCredential
+import io.geoknoesis.vericore.credential.models.VerifiablePresentation
+import io.geoknoesis.vericore.credential.proof.ProofGenerator
+import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
+import io.geoknoesis.vericore.credential.proof.ProofOptions
+import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.util.UUID
+
+/**
+ * Presentation request model.
+ * 
+ * Used to request verifiable presentations from holders.
+ * 
+ * @param id Unique request identifier
+ * @param query Presentation query specifying what credentials are requested
+ * @param challenge Challenge string for authentication
+ * @param domain Optional domain string for authentication
+ * @param expires Optional expiration timestamp
+ */
+data class PresentationRequest(
+    val id: String = UUID.randomUUID().toString(),
+    val query: PresentationQuery,
+    val challenge: String,
+    val domain: String? = null,
+    val expires: String? = null
+)
+
+/**
+ * Presentation query specifying credential requirements.
+ * 
+ * @param type Query type (e.g., "DIDAuthentication", "CredentialQuery")
+ * @param credentialTypes List of required credential types
+ * @param requiredFields List of required fields in credentialSubject
+ * @param issuer Optional required issuer DID
+ */
+data class PresentationQuery(
+    val type: String, // "DIDAuthentication", "CredentialQuery"
+    val credentialTypes: List<String>? = null,
+    val requiredFields: List<String>? = null,
+    val issuer: String? = null
+)
+
+/**
+ * Presentation service for creating and verifying verifiable presentations.
+ * 
+ * Handles presentation creation, selective disclosure, and verification.
+ * 
+ * **Example Usage**:
+ * ```kotlin
+ * val service = PresentationService(
+ *     proofGenerator = Ed25519ProofGenerator { data, keyId -> kms.sign(keyId, data) },
+ *     credentialVerifier = CredentialVerifier { did -> didRegistry.resolve(did).document != null }
+ * )
+ * 
+ * // Create presentation
+ * val presentation = service.createPresentation(
+ *     credentials = listOf(credential1, credential2),
+ *     holderDid = "did:key:...",
+ *     options = PresentationOptions(
+ *         holderDid = "did:key:...",
+ *         challenge = "challenge-123",
+ *         domain = "example.com"
+ *     )
+ * )
+ * 
+ * // Verify presentation
+ * val result = service.verifyPresentation(
+ *     presentation = presentation,
+ *     options = PresentationVerificationOptions(
+ *         verifyChallenge = true,
+ *         expectedChallenge = "challenge-123"
+ *     )
+ * )
+ * ```
+ */
+class PresentationService(
+    private val proofGenerator: ProofGenerator? = null,
+    private val credentialVerifier: CredentialVerifier? = null
+) {
+    /**
+     * Create a verifiable presentation from credentials.
+     * 
+     * @param credentials List of credentials to include in presentation
+     * @param holderDid DID of the presentation holder
+     * @param options Presentation options (proof type, challenge, domain, etc.)
+     * @return Verifiable presentation with proof
+     */
+    suspend fun createPresentation(
+        credentials: List<VerifiableCredential>,
+        holderDid: String,
+        options: PresentationOptions
+    ): VerifiablePresentation = withContext(Dispatchers.IO) {
+        require(credentials.isNotEmpty()) { "At least one credential is required" }
+        require(holderDid.isNotBlank()) { "Holder DID is required" }
+        
+        // Build presentation without proof
+        val presentation = VerifiablePresentation(
+            id = UUID.randomUUID().toString(),
+            type = listOf("VerifiablePresentation"),
+            verifiableCredential = credentials,
+            holder = holderDid,
+            proof = null,
+            challenge = options.challenge,
+            domain = options.domain
+        )
+        
+        // Generate proof if proof type is specified
+        val proof = if (options.proofType.isNotBlank() && options.keyId != null) {
+            val generator = proofGenerator ?: getProofGenerator(options.proofType)
+            generator.generateProof(
+                credential = credentials.first(), // Use first credential for proof generation context
+                keyId = options.keyId,
+                options = ProofOptions(
+                    proofPurpose = "authentication",
+                    challenge = options.challenge,
+                    domain = options.domain
+                )
+            )
+        } else {
+            null
+        }
+        
+        presentation.copy(proof = proof)
+    }
+    
+    /**
+     * Verify a verifiable presentation.
+     * 
+     * @param presentation Presentation to verify
+     * @param options Verification options
+     * @return Verification result
+     */
+    suspend fun verifyPresentation(
+        presentation: VerifiablePresentation,
+        options: PresentationVerificationOptions = PresentationVerificationOptions()
+    ): PresentationVerificationResult = withContext(Dispatchers.IO) {
+        val errors = mutableListOf<String>()
+        val warnings = mutableListOf<String>()
+        
+        var presentationProofValid = false
+        var challengeValid = true
+        var domainValid = true
+        
+        // 1. Verify presentation proof
+        if (presentation.proof != null) {
+            // TODO: Implement actual proof verification
+            // For now, check proof structure
+            presentationProofValid = presentation.proof.type.isNotBlank() &&
+                                    presentation.proof.verificationMethod.isNotBlank()
+            if (!presentationProofValid) {
+                errors.add("Presentation proof is invalid")
+            }
+        } else {
+            errors.add("Presentation has no proof")
+        }
+        
+        // 2. Verify challenge
+        if (options.verifyChallenge) {
+            if (options.expectedChallenge != null) {
+                challengeValid = presentation.challenge == options.expectedChallenge
+                if (!challengeValid) {
+                    errors.add("Challenge mismatch: expected '${options.expectedChallenge}', got '${presentation.challenge}'")
+                }
+            } else if (presentation.challenge == null) {
+                warnings.add("No challenge provided in presentation")
+            }
+        }
+        
+        // 3. Verify domain
+        if (options.verifyDomain && options.expectedDomain != null) {
+            domainValid = presentation.domain == options.expectedDomain
+            if (!domainValid) {
+                errors.add("Domain mismatch: expected '${options.expectedDomain}', got '${presentation.domain}'")
+            }
+        }
+        
+        // 4. Verify all credentials in presentation
+        val credentialResults = mutableListOf<CredentialVerificationResult>()
+        if (options.checkRevocation && credentialVerifier != null) {
+            for (credential in presentation.verifiableCredential) {
+                val result = credentialVerifier.verify(
+                    credential,
+                    io.geoknoesis.vericore.credential.CredentialVerificationOptions(
+                        checkRevocation = options.checkRevocation
+                    )
+                )
+                credentialResults.add(result)
+                
+                if (!result.valid) {
+                    errors.add("Credential ${credential.id ?: "unknown"} verification failed: ${result.errors.joinToString(", ")}")
+                }
+            }
+        }
+        
+        PresentationVerificationResult(
+            valid = errors.isEmpty() && presentationProofValid && challengeValid && domainValid,
+            errors = errors,
+            warnings = warnings,
+            presentationProofValid = presentationProofValid,
+            challengeValid = challengeValid,
+            domainValid = domainValid,
+            credentialResults = credentialResults
+        )
+    }
+    
+    /**
+     * Create a selective disclosure presentation.
+     * 
+     * Creates a presentation that only discloses specific fields from credentials.
+     * Requires BBS+ proof type for zero-knowledge selective disclosure.
+     * 
+     * @param credentials List of credentials
+     * @param disclosedFields List of field paths to disclose (e.g., ["credentialSubject.name", "credentialSubject.email"])
+     * @param holderDid DID of the holder
+     * @param options Presentation options
+     * @return Presentation with selective disclosure
+     */
+    suspend fun createSelectiveDisclosure(
+        credentials: List<VerifiableCredential>,
+        disclosedFields: List<String>,
+        holderDid: String,
+        options: PresentationOptions
+    ): VerifiablePresentation {
+        // TODO: Implement selective disclosure using BBS+ proofs
+        // For now, return a regular presentation
+        // Full implementation would:
+        // 1. Use BBS+ proof generator
+        // 2. Create derived credentials with only disclosed fields
+        // 3. Generate zero-knowledge proof
+        
+        return createPresentation(credentials, holderDid, options)
+    }
+    
+    /**
+     * Get proof generator by type.
+     */
+    private fun getProofGenerator(proofType: String): ProofGenerator {
+        return ProofGeneratorRegistry.get(proofType)
+            ?: throw IllegalArgumentException("No proof generator registered for type: $proofType")
+    }
+}
+

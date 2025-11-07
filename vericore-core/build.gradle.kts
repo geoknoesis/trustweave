@@ -1,6 +1,7 @@
 plugins {
     id("vericore.shared")
     kotlin("jvm")
+    kotlin("plugin.serialization")
 }
 
 group = "io.geoknoesis.vericore"

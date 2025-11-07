@@ -116,9 +116,9 @@ Healthcare data management faces several critical challenges:
 
 ```mermaid
 flowchart TD
-    A[Healthcare Provider<br/>Creates Provider DID<br/>Issues Medical Credentials<br/>Manages Patient Consent] -->|issues credentials| B[Medical Credentials<br/>Prescription<br/>Lab Results<br/>Vaccination Record<br/>Diagnosis<br/>Proof cryptographic]
-    B -->|stored in patient wallet| C[Patient Wallet<br/>Stores all medical credentials<br/>Manages consent<br/>Creates selective presentations]
-    C -->|shares with consent| D[Healthcare Provider New<br/>Receives presentation<br/>Verifies credentials<br/>Accesses authorized data]
+    A["Healthcare Provider\nCreates Provider DID\nIssues Medical Credentials\nManages Patient Consent"] -->|issues credentials| B["Medical Credentials\nPrescription\nLab Results\nVaccination Record\nDiagnosis\nProof cryptographic"]
+    B -->|stored in patient wallet| C["Patient Wallet\nStores all medical credentials\nManages consent\nCreates selective presentations"]
+    C -->|shares with consent| D["Healthcare Provider New\nReceives presentation\nVerifies credentials\nAccesses authorized data"]
     
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff

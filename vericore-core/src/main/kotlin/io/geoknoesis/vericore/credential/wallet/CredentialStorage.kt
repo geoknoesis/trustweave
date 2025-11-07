@@ -1,0 +1,218 @@
+package io.geoknoesis.vericore.credential.wallet
+
+import io.geoknoesis.vericore.credential.models.VerifiableCredential
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+
+/**
+ * Core credential storage interface.
+ * 
+ * All wallets must implement this for basic credential operations.
+ * This follows VeriCore's pattern of small, focused interfaces.
+ * 
+ * **Example Usage**:
+ * ```kotlin
+ * val storage: CredentialStorage = createWallet()
+ * 
+ * // Store credential
+ * val id = storage.store(credential)
+ * 
+ * // Retrieve credential
+ * val credential = storage.get(id)
+ * 
+ * // Query credentials
+ * val credentials = storage.query {
+ *     byIssuer(issuerDid)
+ *     byType("PersonCredential")
+ *     notExpired()
+ * }
+ * ```
+ */
+interface CredentialStorage {
+    /**
+     * Store a credential.
+     * 
+     * @param credential Credential to store
+     * @return Credential ID (uses credential.id if present, otherwise generates one)
+     */
+    suspend fun store(credential: VerifiableCredential): String
+    
+    /**
+     * Get a credential by ID.
+     * 
+     * @param credentialId Credential ID
+     * @return Credential, or null if not found
+     */
+    suspend fun get(credentialId: String): VerifiableCredential?
+    
+    /**
+     * List credentials matching a filter.
+     * 
+     * @param filter Optional filter criteria
+     * @return List of matching credentials
+     */
+    suspend fun list(filter: CredentialFilter? = null): List<VerifiableCredential>
+    
+    /**
+     * Delete a credential.
+     * 
+     * @param credentialId Credential ID
+     * @return true if credential was deleted, false if not found
+     */
+    suspend fun delete(credentialId: String): Boolean
+    
+    /**
+     * Query credentials using a query builder.
+     * 
+     * **Example**:
+     * ```kotlin
+     * val credentials = storage.query {
+     *     byIssuer("did:key:issuer")
+     *     byType("PersonCredential")
+     *     notExpired()
+     *     notRevoked()
+     * }
+     * ```
+     * 
+     * @param query Query builder function
+     * @return List of matching credentials
+     */
+    suspend fun query(query: CredentialQueryBuilder.() -> Unit): List<VerifiableCredential>
+}
+
+/**
+ * Credential filter criteria.
+ */
+data class CredentialFilter(
+    val issuer: String? = null,
+    val type: List<String>? = null,
+    val subjectId: String? = null,
+    val expired: Boolean? = null,
+    val revoked: Boolean? = null
+)
+
+/**
+ * Fluent query builder for credentials.
+ * 
+ * **Example**:
+ * ```kotlin
+ * val query = CredentialQueryBuilder().apply {
+ *     byIssuer("did:key:issuer")
+ *     byType("PersonCredential")
+ *     notExpired()
+ *     valid()
+ * }
+ * ```
+ */
+class CredentialQueryBuilder {
+    private val filters = mutableListOf<(VerifiableCredential) -> Boolean>()
+    
+    /**
+     * Filter by issuer DID.
+     */
+    fun byIssuer(issuerDid: String) {
+        filters.add { it.issuer == issuerDid }
+    }
+    
+    /**
+     * Filter by credential type.
+     */
+    fun byType(type: String) {
+        filters.add { it.type.contains(type) }
+    }
+    
+    /**
+     * Filter by multiple credential types.
+     */
+    fun byTypes(vararg types: String) {
+        val typeSet = types.toSet()
+        filters.add { credential -> credential.type.any { it in typeSet } }
+    }
+    
+    /**
+     * Filter by subject ID.
+     */
+    fun bySubject(subjectId: String) {
+        filters.add { credential ->
+            credential.credentialSubject.jsonObject["id"]?.jsonPrimitive?.content == subjectId
+        }
+    }
+    
+    /**
+     * Filter to only non-expired credentials.
+     */
+    fun notExpired() {
+        filters.add { credential ->
+            credential.expirationDate?.let { expirationDate ->
+                try {
+                    val expiration = java.time.Instant.parse(expirationDate)
+                    java.time.Instant.now().isBefore(expiration)
+                } catch (e: Exception) {
+                    true // If can't parse, assume not expired
+                }
+            } ?: true // No expiration date means not expired
+        }
+    }
+    
+    /**
+     * Filter to only expired credentials.
+     */
+    fun expired() {
+        filters.add { credential ->
+            credential.expirationDate?.let { expirationDate ->
+                try {
+                    val expiration = java.time.Instant.parse(expirationDate)
+                    java.time.Instant.now().isAfter(expiration)
+                } catch (e: Exception) {
+                    false
+                }
+            } ?: false
+        }
+    }
+    
+    /**
+     * Filter to only non-revoked credentials.
+     */
+    fun notRevoked() {
+        filters.add { credential ->
+            credential.credentialStatus == null // TODO: Check actual revocation status
+        }
+    }
+    
+    /**
+     * Filter to only revoked credentials.
+     */
+    fun revoked() {
+        filters.add { credential ->
+            credential.credentialStatus != null // TODO: Check actual revocation status
+        }
+    }
+    
+    /**
+     * Filter to only valid credentials (not expired, not revoked, has proof).
+     */
+    fun valid() {
+        filters.add { credential ->
+            credential.proof != null &&
+            (credential.expirationDate?.let { expirationDate ->
+                try {
+                    val expiration = java.time.Instant.parse(expirationDate)
+                    java.time.Instant.now().isBefore(expiration)
+                } catch (e: Exception) {
+                    false
+                }
+            } ?: true) &&
+            credential.credentialStatus == null // TODO: Check actual revocation
+        }
+    }
+    
+    /**
+     * Build the query predicate.
+     */
+    internal fun build(): (VerifiableCredential) -> Boolean {
+        return { credential ->
+            filters.all { it(credential) }
+        }
+    }
+}
+

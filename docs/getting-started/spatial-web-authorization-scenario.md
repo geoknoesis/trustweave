@@ -112,11 +112,11 @@ In a decentralized Spatial Web, we face several critical challenges:
 
 ```mermaid
 flowchart TD
-    A[Spatial Domain Authority<br/>Creates Domain DID<br/>Defines Geographic Boundary<br/>Registers Allowed Activities] -->|governs| B[Spatial Domain<br/>Domain DID<br/>Bounding Box/Polygon<br/>Activity Registry<br/>Entity Registry]
-    B -->|contains| C[Spatial Entities<br/>Agent DID Thing DID<br/>Activity DID Feature DID]
-    C -->|requires authorization| D[Authorization Credential<br/>Agent DID<br/>Activity Type<br/>Domain Scope<br/>Constraints time resources<br/>Proof cryptographic]
-    D -->|anchors to blockchain| E[Blockchain Anchor<br/>Immutable authorization record<br/>Domain relationships<br/>Audit trail]
-    E -->|verifies before activity| F[Activity Execution<br/>Permission Check<br/>Domain Validation<br/>Activity Logging]
+    A["Spatial Domain Authority\nCreates Domain DID\nDefines Geographic Boundary\nRegisters Allowed Activities"] -->|governs| B["Spatial Domain\nDomain DID\nBounding Box/Polygon\nActivity Registry\nEntity Registry"]
+    B -->|contains| C["Spatial Entities\nAgent DID Thing DID\nActivity DID Feature DID"]
+    C -->|requires authorization| D["Authorization Credential\nAgent DID\nActivity Type\nDomain Scope\nConstraints time resources\nProof cryptographic"]
+    D -->|anchors to blockchain| E["Blockchain Anchor\nImmutable authorization record\nDomain relationships\nAudit trail"]
+    E -->|verifies before activity| F["Activity Execution\nPermission Check\nDomain Validation\nActivity Logging"]
     
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff

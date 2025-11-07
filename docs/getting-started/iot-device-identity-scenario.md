@@ -118,9 +118,9 @@ IoT device identity management faces several critical challenges:
 
 ```mermaid
 flowchart TD
-    A[Device Manufacturer<br/>Creates Device DID<br/>Issues Device Attestation<br/>Certifies Device Capabilities] -->|issues credentials| B[Device Credentials<br/>Device Attestation<br/>Capability Credentials<br/>Network Authorization<br/>Proof cryptographic]
-    B -->|device uses credentials| C[IoT Device<br/>Stores Credentials<br/>Authenticates to Network<br/>Communicates with Other Devices]
-    C -->|verifies before allowing| D[Network Gateway<br/>Verifies Device Identity<br/>Checks Authorization<br/>Grants Network Access]
+    A["Device Manufacturer\nCreates Device DID\nIssues Device Attestation\nCertifies Device Capabilities"] -->|issues credentials| B["Device Credentials\nDevice Attestation\nCapability Credentials\nNetwork Authorization\nProof cryptographic"]
+    B -->|device uses credentials| C["IoT Device\nStores Credentials\nAuthenticates to Network\nCommunicates with Other Devices"]
+    C -->|verifies before allowing| D["Network Gateway\nVerifies Device Identity\nChecks Authorization\nGrants Network Access"]
     
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff

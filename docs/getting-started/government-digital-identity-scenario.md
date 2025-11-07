@@ -121,9 +121,9 @@ Government identity management faces several critical challenges:
 
 ```mermaid
 flowchart TD
-    A["Government Agency\nCreates Agency DID\nIssues Identity Credentials\nManages Citizen Registry"] -->|issues credentials| B["Government Credentials\nDriver's License\nPassport\nTax Credential\nProof cryptographic"]
-    B -->|stored in citizen wallet| C["Citizen Identity Wallet\nStores all government credentials\nManages identity\nCreates presentations"]
-    C -->|presents for service access| D["Government Service\nVerifies credentials\nGrants access\nLogs access"]
+    A["Government Agency<br/>Creates Agency DID<br/>Issues Identity Credentials<br/>Manages Citizen Registry"] -->|issues credentials| B["Government Credentials<br/>Driver's License<br/>Passport<br/>Tax Credential<br/>Proof cryptographic"]
+    B -->|stored in citizen wallet| C["Citizen Identity Wallet<br/>Stores all government credentials<br/>Manages identity<br/>Creates presentations"]
+    C -->|presents for service access| D["Government Service<br/>Verifies credentials<br/>Grants access<br/>Logs access"]
     
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff

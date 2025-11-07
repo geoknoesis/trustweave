@@ -102,9 +102,9 @@ VeriCore solves this by enabling:
 
 ```mermaid
 flowchart TD
-    A["University Issuer\nCreates DID\nIssues Verifiable Credential"] -->|issues| B["Verifiable Credential\nStudent DID\nDegree Information\nCryptographic Proof"]
-    B -->|stored in| C["Student Wallet\nStores credential\nOrganizes with collections\nCreates presentations"]
-    C -->|presents| D["Employer Verifier\nReceives presentation\nVerifies cryptographically\nChecks revocation status"]
+    A["University Issuer<br/>Creates DID<br/>Issues Verifiable Credential"] -->|issues| B["Verifiable Credential<br/>Student DID<br/>Degree Information<br/>Cryptographic Proof"]
+    B -->|stored in| C["Student Wallet<br/>Stores credential<br/>Organizes with collections<br/>Creates presentations"]
+    C -->|presents| D["Employer Verifier<br/>Receives presentation<br/>Verifies cryptographically<br/>Checks revocation status"]
     
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff

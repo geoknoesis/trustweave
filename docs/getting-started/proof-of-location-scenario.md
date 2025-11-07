@@ -103,10 +103,10 @@ VeriCore solves this by enabling:
 
 ```mermaid
 flowchart TD
-    A["Location Provider\nGPS Device\nIoT Sensor\nMobile App"] -->|captures location| B["Location Data\nCoordinates lat/lon\nTimestamp\nAccuracy\nDevice ID"]
-    B -->|issues credential| C["Verifiable Credential\nLocation Claim\nProof cryptographic\nMetadata"]
-    C -->|anchors to blockchain| D["Blockchain Anchor\nImmutable timestamp\nLocation digest\nIntegrity proof"]
-    D -->|stores in wallet| E["Location Wallet\nStores location credentials\nCreates presentations\nSelective disclosure"]
+    A["Location Provider<br/>GPS Device<br/>IoT Sensor<br/>Mobile App"] -->|captures location| B["Location Data<br/>Coordinates lat/lon<br/>Timestamp<br/>Accuracy<br/>Device ID"]
+    B -->|issues credential| C["Verifiable Credential<br/>Location Claim<br/>Proof cryptographic<br/>Metadata"]
+    C -->|anchors to blockchain| D["Blockchain Anchor<br/>Immutable timestamp<br/>Location digest<br/>Integrity proof"]
+    D -->|stores in wallet| E["Location Wallet<br/>Stores location credentials<br/>Creates presentations<br/>Selective disclosure"]
     
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff

@@ -118,9 +118,9 @@ Supply chain management faces several critical challenges:
 
 ```mermaid
 flowchart TD
-    A["Manufacturer\nCreates Product Credential\nIssues Origin Credential"] -->|transfers product| B["Distributor\nReceives Product\nIssues Transfer Credential\nUpdates Chain of Custody"]
-    B -->|transfers product| C["Retailer\nReceives Product\nIssues Sale Credential\nProvides Consumer Access"]
-    C -->|anchors to blockchain| D["Blockchain Anchor\nImmutable Supply Chain Record\nProvenance Trail"]
+    A["Manufacturer<br/>Creates Product Credential<br/>Issues Origin Credential"] -->|transfers product| B["Distributor<br/>Receives Product<br/>Issues Transfer Credential<br/>Updates Chain of Custody"]
+    B -->|transfers product| C["Retailer<br/>Receives Product<br/>Issues Sale Credential<br/>Provides Consumer Access"]
+    C -->|anchors to blockchain| D["Blockchain Anchor<br/>Immutable Supply Chain Record<br/>Provenance Trail"]
     
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff

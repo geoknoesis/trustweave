@@ -127,10 +127,10 @@ National education credential systems face several critical challenges:
 
 ```mermaid
 flowchart TD
-    A["National Education Authority\nMinistry of Higher Education\nCreates Authority DID\nManages National Registry"] -->|issues national credentials| B["AlgeroPass Credential\nStudent DID\nEducation Information\nInstitution Reference\nNational Recognition\nProof cryptographic"]
-    B -->|stored in student wallet| C["Student National Wallet\nStores AlgeroPass credentials\nManages all education credentials\nCreates presentations"]
-    C -->|presents to institution| D["Educational Institution\nVerifies national credential\nChecks institution reference\nGrants access or credit"]
-    C -->|presents to employer| E["Employer\nVerifies national credential\nChecks authenticity\nValidates education level"]
+    A["National Education Authority<br/>Ministry of Higher Education<br/>Creates Authority DID<br/>Manages National Registry"] -->|issues national credentials| B["AlgeroPass Credential<br/>Student DID<br/>Education Information<br/>Institution Reference<br/>National Recognition<br/>Proof cryptographic"]
+    B -->|stored in student wallet| C["Student National Wallet<br/>Stores AlgeroPass credentials<br/>Manages all education credentials<br/>Creates presentations"]
+    C -->|presents to institution| D["Educational Institution<br/>Verifies national credential<br/>Checks institution reference<br/>Grants access or credit"]
+    C -->|presents to employer| E["Employer<br/>Verifies national credential<br/>Checks authenticity<br/>Validates education level"]
     
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff

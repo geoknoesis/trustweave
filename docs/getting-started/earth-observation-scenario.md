@@ -98,9 +98,9 @@ Think of the integrity chain like a Russian nesting doll, where each layer prote
 
 ```mermaid
 flowchart TD
-    A["Blockchain Anchor\nVC Digest\nImmutable proof on blockchain"] -->|references| B["Verifiable Credential VC\nLinkset Digest Reference\nDataset Metadata\nCredential about the dataset"]
-    B -->|references| C["Linkset\nMetadata Link\nProvenance Link\nQuality Report Link\nCollection of links to artifacts"]
-    C -->|references| D["Artifacts\nMetadata Document\nProvenance Document\nQuality Report Document\nActual data documents"]
+    A["Blockchain Anchor<br/>VC Digest<br/>Immutable proof on blockchain"] -->|references| B["Verifiable Credential VC<br/>Linkset Digest Reference<br/>Dataset Metadata<br/>Credential about the dataset"]
+    B -->|references| C["Linkset<br/>Metadata Link<br/>Provenance Link<br/>Quality Report Link<br/>Collection of links to artifacts"]
+    C -->|references| D["Artifacts<br/>Metadata Document<br/>Provenance Document<br/>Quality Report Document<br/>Actual data documents"]
     
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff

@@ -122,9 +122,9 @@ Financial services identity verification faces several critical challenges:
 
 ```mermaid
 flowchart TD
-    A["KYC Provider\nVerifies Customer Identity\nIssues KYC Credential\nPerforms AML/Sanctions Screening"] -->|issues KYC credential| B["KYC Credential\nIdentity Information\nVerification Level\nAML Status\nProof cryptographic"]
-    B -->|stored in customer wallet| C["Customer Wallet\nStores KYC Credential\nCreates Presentations"]
-    C -->|presents to financial institution| D["Financial Institution\nVerifies KYC Credential\nChecks Compliance\nOpens Account"]
+    A["KYC Provider<br/>Verifies Customer Identity<br/>Issues KYC Credential<br/>Performs AML/Sanctions Screening"] -->|issues KYC credential| B["KYC Credential<br/>Identity Information<br/>Verification Level<br/>AML Status<br/>Proof cryptographic"]
+    B -->|stored in customer wallet| C["Customer Wallet<br/>Stores KYC Credential<br/>Creates Presentations"]
+    C -->|presents to financial institution| D["Financial Institution<br/>Verifies KYC Credential<br/>Checks Compliance<br/>Opens Account"]
     
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff

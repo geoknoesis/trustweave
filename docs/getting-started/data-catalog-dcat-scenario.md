@@ -117,11 +117,11 @@ Data catalog systems face several critical challenges:
 
 ```mermaid
 flowchart TD
-    A["Data Publisher\nGovernment Agency\nEnterprise Department\nCreates Publisher DID"] -->|publishes dataset| B["DCAT Dataset Description\nDataset DID\nDCAT Metadata\nDistribution Links\nProvenance Information"]
-    B -->|issues credential| C["Dataset Credential\nVerifiable DCAT Metadata\nQuality Information\nLineage References\nProof cryptographic"]
-    C -->|registered in| D["Data Catalog\nDCAT Catalog\nDataset Registry\nDiscovery Service"]
-    D -->|anchors to blockchain| E["Blockchain Anchor\nImmutable Catalog Record\nDataset Digest\nMetadata Hash"]
-    E -->|discovered by| F["Data Consumer\nSearches Catalog\nVerifies Credentials\nAccesses Dataset"]
+    A["Data Publisher<br/>Government Agency<br/>Enterprise Department<br/>Creates Publisher DID"] -->|publishes dataset| B["DCAT Dataset Description<br/>Dataset DID<br/>DCAT Metadata<br/>Distribution Links<br/>Provenance Information"]
+    B -->|issues credential| C["Dataset Credential<br/>Verifiable DCAT Metadata<br/>Quality Information<br/>Lineage References<br/>Proof cryptographic"]
+    C -->|registered in| D["Data Catalog<br/>DCAT Catalog<br/>Dataset Registry<br/>Discovery Service"]
+    D -->|anchors to blockchain| E["Blockchain Anchor<br/>Immutable Catalog Record<br/>Dataset Digest<br/>Metadata Hash"]
+    E -->|discovered by| F["Data Consumer<br/>Searches Catalog<br/>Verifies Credentials<br/>Accesses Dataset"]
     
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff

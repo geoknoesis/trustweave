@@ -113,9 +113,9 @@ Digital workflow provenance faces several critical challenges:
 
 ```mermaid
 flowchart TD
-    A["Source Entity\nOriginal Data\nEntity DID"] -->|used by| B["Activity Processing Step\nActivity DID\nTransformation Applied\nAgent DID who performed"]
-    B -->|generated| C["Derived Entity\nProcessed Data\nEntity DID\nProvenance Credential"]
-    C -->|anchors to blockchain| D["Blockchain Anchor\nImmutable Provenance Record\nComplete Lineage"]
+    A["Source Entity<br/>Original Data<br/>Entity DID"] -->|used by| B["Activity Processing Step<br/>Activity DID<br/>Transformation Applied<br/>Agent DID who performed"]
+    B -->|generated| C["Derived Entity<br/>Processed Data<br/>Entity DID<br/>Provenance Credential"]
+    C -->|anchors to blockchain| D["Blockchain Anchor<br/>Immutable Provenance Record<br/>Complete Lineage"]
     
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff

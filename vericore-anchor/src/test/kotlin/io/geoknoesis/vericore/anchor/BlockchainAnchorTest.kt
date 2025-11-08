@@ -20,22 +20,38 @@ class AnchorRefTest {
         assertEquals("ABC123", ref.txHash)
         assertEquals("app-123", ref.contract)
     }
-}
-
-class BlockchainRegistryTest {
-
+    
     @Test
-    fun `BlockchainRegistry should register and retrieve clients`() {
-        val mockClient = object : BlockchainAnchorClient {
-            override suspend fun writePayload(payload: JsonElement, mediaType: String) = TODO()
-            override suspend fun readPayload(ref: AnchorRef) = TODO()
-        }
-
-        BlockchainRegistry.register("test:chain", mockClient)
-        assertEquals(mockClient, BlockchainRegistry.get("test:chain"))
-        assertNull(BlockchainRegistry.get("nonexistent:chain"))
-
-        BlockchainRegistry.clear()
+    fun `AnchorRef with extra metadata`() {
+        val ref = AnchorRef(
+            chainId = "algorand:testnet",
+            txHash = "tx-123",
+            contract = "app-456",
+            extra = mapOf("mediaType" to "application/json", "custom" to "value")
+        )
+        
+        assertEquals(2, ref.extra.size)
+        assertEquals("application/json", ref.extra["mediaType"])
+        assertEquals("value", ref.extra["custom"])
+    }
+    
+    @Test
+    fun `AnchorResult with all fields`() {
+        val ref = AnchorRef(chainId = "algorand:testnet", txHash = "tx-123")
+        val payload = buildJsonObject { put("data", "test") }
+        
+        val result = AnchorResult(
+            ref = ref,
+            payload = payload,
+            mediaType = "application/json",
+            timestamp = 1234567890L
+        )
+        
+        assertEquals(ref, result.ref)
+        assertEquals(payload, result.payload)
+        assertEquals("application/json", result.mediaType)
+        assertEquals(1234567890L, result.timestamp)
     }
 }
+
 

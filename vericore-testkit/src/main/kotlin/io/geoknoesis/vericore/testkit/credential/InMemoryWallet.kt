@@ -152,7 +152,9 @@ class InMemoryWallet(
     }
     
     override suspend fun getCollection(collectionId: String): CredentialCollection? {
-        return collections[collectionId]
+        val collection = collections[collectionId] ?: return null
+        // Update credentialCount dynamically to match listCollections() behavior
+        return collection.copy(credentialCount = collectionCredentials[collectionId]?.size ?: 0)
     }
     
     override suspend fun listCollections(): List<CredentialCollection> {

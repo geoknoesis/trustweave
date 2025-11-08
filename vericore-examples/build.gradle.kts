@@ -2,6 +2,7 @@ plugins {
     id("vericore.shared")
     kotlin("jvm")
     kotlin("plugin.serialization")
+    id("org.jetbrains.kotlinx.kover") version "0.7.6"
 }
 
 group = "io.geoknoesis.vericore"
@@ -17,6 +18,10 @@ dependencies {
     
     // For blockchain examples
     implementation(project(":vericore-ganache"))
+    
+    // Test dependencies
+    testImplementation(Libs.kotlinTest)
+    testImplementation(Libs.junitJupiter)
 }
 
 // Configure main class for running examples

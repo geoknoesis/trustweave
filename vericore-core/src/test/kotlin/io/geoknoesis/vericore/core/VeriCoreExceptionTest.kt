@@ -1,26 +1,61 @@
 package io.geoknoesis.vericore.core
 
 import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
+import kotlin.test.*
 
+/**
+ * Comprehensive tests for VeriCoreException classes.
+ */
 class VeriCoreExceptionTest {
 
     @Test
-    fun `VeriCoreException should work`() {
+    fun `test VeriCoreException with message`() {
         val exception = VeriCoreException("Test error")
+        
         assertEquals("Test error", exception.message)
+        assertNull(exception.cause)
     }
 
     @Test
-    fun `NotFoundException should work`() {
+    fun `test VeriCoreException with message and cause`() {
+        val cause = RuntimeException("Underlying error")
+        val exception = VeriCoreException("Test error", cause)
+        
+        assertEquals("Test error", exception.message)
+        assertEquals(cause, exception.cause)
+    }
+
+    @Test
+    fun `test NotFoundException`() {
         val exception = NotFoundException("Resource not found")
+        
+        assertTrue(exception is VeriCoreException)
         assertEquals("Resource not found", exception.message)
     }
 
     @Test
-    fun `InvalidOperationException should work`() {
+    fun `test NotFoundException with cause`() {
+        val cause = RuntimeException("Underlying error")
+        val exception = NotFoundException("Resource not found", cause)
+        
+        assertEquals("Resource not found", exception.message)
+        assertEquals(cause, exception.cause)
+    }
+
+    @Test
+    fun `test InvalidOperationException`() {
         val exception = InvalidOperationException("Invalid operation")
+        
+        assertTrue(exception is VeriCoreException)
         assertEquals("Invalid operation", exception.message)
     }
-}
 
+    @Test
+    fun `test InvalidOperationException with cause`() {
+        val cause = IllegalArgumentException("Invalid argument")
+        val exception = InvalidOperationException("Invalid operation", cause)
+        
+        assertEquals("Invalid operation", exception.message)
+        assertEquals(cause, exception.cause)
+    }
+}

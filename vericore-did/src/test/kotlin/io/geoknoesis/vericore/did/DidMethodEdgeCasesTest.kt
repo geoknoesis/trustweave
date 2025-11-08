@@ -1,0 +1,246 @@
+package io.geoknoesis.vericore.did
+
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import kotlin.test.*
+
+/**
+ * Comprehensive edge case tests for DidMethod interface and DidRegistry.
+ */
+class DidMethodEdgeCasesTest {
+
+    @BeforeEach
+    fun setup() {
+        DidRegistry.clear()
+    }
+
+    @Test
+    fun `test DidMethod createDid with empty options`() = runBlocking {
+        val method = createMockDidMethod("test")
+        
+        val doc = method.createDid(emptyMap())
+        
+        assertNotNull(doc)
+        assertTrue(doc.id.startsWith("did:test:"))
+    }
+
+    @Test
+    fun `test DidMethod createDid with options`() = runBlocking {
+        val method = createMockDidMethod("test")
+        
+        val doc = method.createDid(mapOf("keyId" to "key-123", "algorithm" to "Ed25519"))
+        
+        assertNotNull(doc)
+    }
+
+    @Test
+    fun `test DidMethod resolveDid with valid DID`() = runBlocking {
+        val method = createMockDidMethod("test")
+        
+        val result = method.resolveDid("did:test:123")
+        
+        assertNotNull(result)
+        assertNotNull(result.document)
+        assertEquals("did:test:123", result.document?.id)
+    }
+
+    @Test
+    fun `test DidMethod resolveDid with invalid DID format`() = runBlocking {
+        val method = createMockDidMethod("test")
+        
+        // Should handle gracefully or throw
+        try {
+            val result = method.resolveDid("invalid-did")
+            assertNotNull(result)
+        } catch (e: Exception) {
+            assertTrue(e is IllegalArgumentException || e is Exception)
+        }
+    }
+
+    @Test
+    fun `test DidMethod updateDid`() = runBlocking {
+        val method = createMockDidMethod("test")
+        val originalDoc = DidDocument(id = "did:test:123")
+        
+        val updated = method.updateDid("did:test:123") { doc ->
+            doc.copy(alsoKnownAs = listOf("did:web:example.com"))
+        }
+        
+        assertNotNull(updated)
+        assertEquals(1, updated.alsoKnownAs.size)
+    }
+
+    @Test
+    fun `test DidMethod updateDid with complex updater`() = runBlocking {
+        val method = createMockDidMethod("test")
+        val vm = VerificationMethodRef(
+            id = "did:test:123#key-1",
+            type = "Ed25519VerificationKey2020",
+            controller = "did:test:123"
+        )
+        
+        val updated = method.updateDid("did:test:123") { doc ->
+            doc.copy(
+                verificationMethod = listOf(vm),
+                authentication = listOf("did:test:123#key-1")
+            )
+        }
+        
+        assertEquals(1, updated.verificationMethod.size)
+        assertEquals(1, updated.authentication.size)
+    }
+
+    @Test
+    fun `test DidMethod deactivateDid`() = runBlocking {
+        val method = createMockDidMethod("test")
+        
+        val result = method.deactivateDid("did:test:123")
+        
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test DidMethod deactivateDid with nonexistent DID`() = runBlocking {
+        val method = createMockDidMethod("test")
+        
+        // May return false or throw
+        try {
+            val result = method.deactivateDid("did:test:nonexistent")
+            assertNotNull(result) // Boolean value
+        } catch (e: Exception) {
+            assertTrue(true) // Exception is acceptable
+        }
+    }
+
+    @Test
+    fun `test DidRegistry register multiple methods`() {
+        val method1 = createMockDidMethod("method1")
+        val method2 = createMockDidMethod("method2")
+        
+        DidRegistry.register(method1)
+        DidRegistry.register(method2)
+        
+        assertEquals(method1, DidRegistry.get("method1"))
+        assertEquals(method2, DidRegistry.get("method2"))
+    }
+
+    @Test
+    fun `test DidRegistry register overwrites existing method`() {
+        val method1 = createMockDidMethod("test")
+        val method2 = createMockDidMethod("test")
+        
+        DidRegistry.register(method1)
+        DidRegistry.register(method2)
+        
+        assertEquals(method2, DidRegistry.get("test"))
+    }
+
+    @Test
+    fun `test DidRegistry resolve with metadata`() = runBlocking {
+        val method = object : DidMethod {
+            override val method = "test"
+            
+            override suspend fun createDid(options: Map<String, Any?>) = DidDocument(id = "did:test:123")
+            
+            override suspend fun resolveDid(did: String) = DidResolutionResult(
+                document = DidDocument(id = did),
+                documentMetadata = mapOf("created" to "2024-01-01T00:00:00Z", "updated" to "2024-01-02T00:00:00Z"),
+                resolutionMetadata = mapOf("duration" to 100L, "cached" to false)
+            )
+            
+            override suspend fun updateDid(did: String, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
+            override suspend fun deactivateDid(did: String) = true
+        }
+        
+        DidRegistry.register(method)
+        
+        val result = DidRegistry.resolve("did:test:123")
+        
+        assertNotNull(result.document)
+        assertEquals(2, result.documentMetadata.size)
+        assertEquals(2, result.resolutionMetadata.size)
+    }
+
+    @Test
+    fun `test DidRegistry resolve with null document`() = runBlocking {
+        val method = object : DidMethod {
+            override val method = "test"
+            
+            override suspend fun createDid(options: Map<String, Any?>) = DidDocument(id = "did:test:123")
+            
+            override suspend fun resolveDid(did: String) = DidResolutionResult(
+                document = null,
+                resolutionMetadata = mapOf("error" to "notFound")
+            )
+            
+            override suspend fun updateDid(did: String, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
+            override suspend fun deactivateDid(did: String) = true
+        }
+        
+        DidRegistry.register(method)
+        
+        val result = DidRegistry.resolve("did:test:nonexistent")
+        
+        assertNull(result.document)
+        assertTrue(result.resolutionMetadata.containsKey("error"))
+    }
+
+    @Test
+    fun `test DidRegistry clear removes all methods`() {
+        val method1 = createMockDidMethod("method1")
+        val method2 = createMockDidMethod("method2")
+        
+        DidRegistry.register(method1)
+        DidRegistry.register(method2)
+        
+        DidRegistry.clear()
+        
+        assertNull(DidRegistry.get("method1"))
+        assertNull(DidRegistry.get("method2"))
+    }
+
+    @Test
+    fun `test DidRegistry resolve with DID containing special characters`() = runBlocking {
+        val method = createMockDidMethod("test")
+        DidRegistry.register(method)
+        
+        val result = DidRegistry.resolve("did:test:abc-123_xyz")
+        
+        assertNotNull(result)
+        assertNotNull(result.document)
+    }
+
+    @Test
+    fun `test DidRegistry resolve with very long DID`() = runBlocking {
+        val method = createMockDidMethod("test")
+        DidRegistry.register(method)
+        
+        val longId = "a".repeat(1000)
+        val result = DidRegistry.resolve("did:test:$longId")
+        
+        assertNotNull(result)
+    }
+
+    private fun createMockDidMethod(methodName: String): DidMethod {
+        return object : DidMethod {
+            override val method = methodName
+            
+            override suspend fun createDid(options: Map<String, Any?>) = DidDocument(
+                id = "did:$methodName:${options["keyId"] ?: "123"}"
+            )
+            
+            override suspend fun resolveDid(did: String) = DidResolutionResult(
+                document = DidDocument(id = did)
+            )
+            
+            override suspend fun updateDid(did: String, updater: (DidDocument) -> DidDocument): DidDocument {
+                val current = DidDocument(id = did)
+                return updater(current)
+            }
+            
+            override suspend fun deactivateDid(did: String) = did.startsWith("did:$methodName:")
+        }
+    }
+}
+

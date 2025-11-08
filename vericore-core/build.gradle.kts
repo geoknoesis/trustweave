@@ -9,5 +9,9 @@ version = "1.0.0-SNAPSHOT"
 
 dependencies {
     // vericore-core has no dependencies on other vericore modules
+    // Test dependencies
+    testImplementation(project(":vericore-testkit"))
+    testImplementation(project(":vericore-did"))
+    testImplementation(project(":vericore-kms"))
 }
 

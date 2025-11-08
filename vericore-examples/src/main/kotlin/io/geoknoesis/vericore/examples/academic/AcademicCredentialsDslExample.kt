@@ -1,0 +1,181 @@
+package io.geoknoesis.vericore.examples.academic
+
+import io.geoknoesis.vericore.credential.dsl.*
+import io.geoknoesis.vericore.credential.models.VerifiableCredential
+import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
+import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
+import kotlinx.coroutines.runBlocking
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+
+/**
+ * Academic Credentials Example using DSL.
+ * 
+ * This example demonstrates how to use the Credential DSL API to:
+ * 1. Configure a trust layer
+ * 2. Create credentials using the fluent DSL
+ * 3. Issue credentials with automatic proof generation
+ * 4. Verify credentials
+ * 5. Create presentations
+ */
+fun main() = runBlocking {
+    println("=== Academic Credentials Scenario (DSL) ===\n")
+    
+    // Step 1: Configure Trust Layer
+    println("Step 1: Configuring trust layer...")
+    val trustLayer = trustLayer {
+        keys {
+            provider("inMemory")
+            algorithm("Ed25519")
+        }
+        
+        did {
+            method("key") {
+                algorithm("Ed25519")
+            }
+        }
+        
+        anchor {
+            chain("algorand:testnet") {
+                inMemory()
+            }
+        }
+        
+        credentials {
+            defaultProofType("Ed25519Signature2020")
+            autoAnchor(false) // Set to true to auto-anchor credentials
+        }
+    }
+    println("✓ Trust layer configured")
+    
+    // Step 2: Create DIDs
+    println("\nStep 2: Creating DIDs...")
+    val kms = trustLayer.getKms() as InMemoryKeyManagementService
+    val didMethod = DidKeyMockMethod(kms)
+    
+    val universityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    println("University DID: ${universityDid.id}")
+    
+    val studentDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    println("Student DID: ${studentDid.id}")
+    
+    // Step 3: Create student wallet using DSL
+    println("\nStep 3: Creating student wallet...")
+    val studentWallet = trustLayer.wallet {
+        id("student-wallet-${studentDid.id.substringAfterLast(":")}")
+        holder(studentDid.id)
+        enableOrganization()
+        enablePresentation()
+    }
+    println("Wallet created with ID: ${studentWallet.walletId}")
+    
+    // Step 4: University issues degree credential using DSL
+    println("\nStep 4: University issues degree credential using DSL...")
+    val issuerKey = kms.generateKey("Ed25519")
+    
+    val issuedCredential = trustLayer.issue {
+        credential {
+            id("https://example.edu/credentials/degree-${studentDid.id.substringAfterLast(":")}")
+            type("DegreeCredential", "BachelorDegreeCredential")
+            issuer(universityDid.id)
+            subject {
+                id(studentDid.id)
+                "degree" {
+                    "type" to "BachelorDegree"
+                    "name" to "Bachelor of Science in Computer Science"
+                    "university" to "Example University"
+                    "graduationDate" to "2023-05-15"
+                    "gpa" to "3.8"
+                }
+            }
+            issued(Instant.now())
+            expires(365 * 10, ChronoUnit.DAYS) // Valid for 10 years
+        }
+        by(issuerDid = universityDid.id, keyId = issuerKey.id)
+    }
+    
+    println("Credential issued:")
+    println("  - Type: ${issuedCredential.type}")
+    println("  - Issuer: ${issuedCredential.issuer}")
+    println("  - Has proof: ${issuedCredential.proof != null}")
+    if (issuedCredential.proof != null) {
+        println("  - Proof type: ${issuedCredential.proof?.type}")
+    }
+    
+    // Step 5: Student stores credential in wallet
+    println("\nStep 5: Student stores credential in wallet...")
+    val credentialId = studentWallet.store(issuedCredential)
+    println("Credential stored with ID: $credentialId")
+    
+    // Step 6: Organize credentials
+    println("\nStep 6: Organizing credentials...")
+    val educationCollection = studentWallet.createCollection(
+        name = "Education Credentials",
+        description = "Academic degrees and certificates"
+    )
+    studentWallet.addToCollection(credentialId, educationCollection)
+    studentWallet.tagCredential(credentialId, setOf("degree", "bachelor", "computer-science", "verified"))
+    
+    println("Created collection: $educationCollection")
+    println("Added tags: degree, bachelor, computer-science, verified")
+    
+    // Step 7: Query credentials
+    println("\nStep 7: Querying credentials...")
+    val degrees = studentWallet.query {
+        byType("DegreeCredential")
+        valid()
+    }
+    println("Found ${degrees.size} valid degree credentials")
+    
+    // Step 8: Create presentation using DSL
+    println("\nStep 8: Creating presentation using DSL...")
+    val presentation = presentation {
+        credentials(issuedCredential)
+        holder(studentDid.id)
+        challenge("job-application-12345")
+        proofType("Ed25519Signature2020")
+    }
+    
+    println("Presentation created:")
+    println("  - Holder: ${presentation.holder}")
+    println("  - Credentials: ${presentation.verifiableCredential.size}")
+    println("  - Challenge: ${presentation.challenge}")
+    
+    // Step 9: Verify credential using DSL
+    println("\nStep 9: Verifying credential using DSL...")
+    val verificationResult = trustLayer.verify {
+        credential(issuedCredential)
+        checkRevocation()
+        checkExpiration()
+    }
+    
+    if (verificationResult.valid) {
+        println("✅ Credential is valid!")
+        println("  - Proof valid: ${verificationResult.proofValid}")
+        println("  - Issuer valid: ${verificationResult.issuerValid}")
+        println("  - Not expired: ${verificationResult.notExpired}")
+        println("  - Not revoked: ${verificationResult.notRevoked}")
+    } else {
+        println("❌ Credential verification failed:")
+        verificationResult.errors.forEach { println("  - $it") }
+    }
+    
+    // Step 10: Get wallet statistics
+    println("\nStep 10: Wallet statistics...")
+    val stats = studentWallet.getStatistics()
+    println("""
+        Total credentials: ${stats.totalCredentials}
+        Valid credentials: ${stats.validCredentials}
+        Collections: ${stats.collectionsCount}
+        Tags: ${stats.tagsCount}
+    """.trimIndent())
+    
+    println("\n=== Scenario Complete ===")
+    println("\nKey Benefits of DSL:")
+    println("  ✓ Single trust layer configuration")
+    println("  ✓ Fluent credential creation (no manual buildJsonObject)")
+    println("  ✓ Automatic proof generation")
+    println("  ✓ Simplified issuance and verification")
+    println("  ✓ Type-safe operations")
+}
+

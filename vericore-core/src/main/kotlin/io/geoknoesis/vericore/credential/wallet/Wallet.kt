@@ -119,14 +119,14 @@ interface Wallet : CredentialStorage {
             totalCredentials = credentials.size,
             validCredentials = credentials.count { credential ->
                 credential.proof != null &&
-                credential.expirationDate?.let { expirationDate ->
+                (credential.expirationDate?.let { expirationDate ->
                     try {
                         val expiration = Instant.parse(expirationDate)
                         now.isBefore(expiration)
                     } catch (e: Exception) {
                         false
                     }
-                } ?: true &&
+                } ?: true) &&
                 credential.credentialStatus == null
             },
             expiredCredentials = credentials.count { credential ->

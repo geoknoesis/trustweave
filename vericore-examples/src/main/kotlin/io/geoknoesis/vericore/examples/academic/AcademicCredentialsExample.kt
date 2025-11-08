@@ -172,7 +172,7 @@ fun createDegreeCredential(
     gpa: String
 ): VerifiableCredential {
     val now = Instant.now()
-    val expirationDate = now.plus(10, ChronoUnit.YEARS) // Valid for 10 years
+    val expirationDate = now.plus(365 * 10, ChronoUnit.DAYS) // Valid for 10 years
     
     return VerifiableCredential(
         id = "https://example.edu/credentials/degree-${studentDid.substringAfterLast(":")}",
@@ -190,11 +190,7 @@ fun createDegreeCredential(
         },
         issuanceDate = now.toString(),
         expirationDate = expirationDate.toString(),
-        credentialSchema = io.geoknoesis.vericore.credential.models.CredentialSchema(
-            id = "https://example.edu/schemas/degree.json",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = io.geoknoesis.vericore.spi.SchemaFormat.JSON_SCHEMA
-        )
+        credentialSchema = null // Schema validation skipped for example
     )
 }
 

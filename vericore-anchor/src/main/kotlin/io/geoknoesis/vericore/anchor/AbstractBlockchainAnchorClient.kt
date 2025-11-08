@@ -97,10 +97,10 @@ abstract class AbstractBlockchainAnchorClient(
         payload: JsonElement,
         mediaType: String
     ): AnchorResult = withContext(Dispatchers.IO) {
+        val payloadJson = Json.encodeToString(JsonElement.serializer(), payload)
+        val payloadBytes = payloadJson.toByteArray(StandardCharsets.UTF_8)
+        
         try {
-            val payloadJson = Json.encodeToString(JsonElement.serializer(), payload)
-            val payloadBytes = payloadJson.toByteArray(StandardCharsets.UTF_8)
-
             // Submit transaction to blockchain or use fallback storage
             val txHash = if (canSubmitTransaction()) {
                 submitTransactionToBlockchain(payloadBytes)

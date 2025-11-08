@@ -51,9 +51,10 @@ class BasicWallet(
             return allCredentials
         }
         
+        val filterType = filter.type // Store in local variable to avoid smart cast issue
         return allCredentials.filter { credential ->
             (filter.issuer == null || credential.issuer == filter.issuer) &&
-            (filter.type == null || filter.type.any { credential.type.contains(it) }) &&
+            (filterType == null || filterType.any { credential.type.contains(it) }) &&
             (filter.subjectId == null || {
                 credential.credentialSubject.jsonObject["id"]?.jsonPrimitive?.content == filter.subjectId
             }()) &&
@@ -82,7 +83,10 @@ class BasicWallet(
     override suspend fun query(query: CredentialQueryBuilder.() -> Unit): List<VerifiableCredential> {
         val builder = CredentialQueryBuilder()
         builder.query()
-        val predicate = builder.build()
+        // Use reflection to call createPredicate() to work around caching issues
+        val predicateMethod = builder::class.java.getMethod("createPredicate")
+        @Suppress("UNCHECKED_CAST")
+        val predicate = predicateMethod.invoke(builder) as (VerifiableCredential) -> Boolean
         
         return credentials.values.filter(predicate)
     }

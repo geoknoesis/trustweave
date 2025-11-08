@@ -8,6 +8,7 @@ import io.geoknoesis.vericore.credential.wallet.CredentialLifecycle
 import io.geoknoesis.vericore.credential.wallet.CredentialMetadata
 import io.geoknoesis.vericore.credential.wallet.CredentialOrganization
 import io.geoknoesis.vericore.credential.wallet.CredentialPresentation
+import io.geoknoesis.vericore.credential.wallet.DidManagement
 import io.geoknoesis.vericore.credential.wallet.Wallet
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -19,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap
  * In-memory full-featured wallet for testing.
  * 
  * Implements all capability interfaces: CredentialOrganization, CredentialLifecycle,
- * and CredentialPresentation. Perfect for testing and development.
+ * CredentialPresentation, and DidManagement. Perfect for testing and development.
  * 
  * **Example Usage**:
  * ```kotlin
@@ -52,7 +53,8 @@ class InMemoryWallet(
 ) : Wallet,
     CredentialOrganization,
     CredentialLifecycle,
-    CredentialPresentation {
+    CredentialPresentation,
+    DidManagement {
     
     // Storage
     private val credentials = ConcurrentHashMap<String, VerifiableCredential>()
@@ -88,9 +90,10 @@ class InMemoryWallet(
         return if (filter == null) {
             allCredentials
         } else {
+            val filterType = filter.type // Store in local variable to avoid smart cast issue
             allCredentials.filter { credential ->
                 (filter.issuer == null || credential.issuer == filter.issuer) &&
-                (filter.type == null || filter.type.any { credential.type.contains(it) }) &&
+                (filterType == null || filterType.any { credential.type.contains(it) }) &&
                 (filter.subjectId == null || {
                     credential.credentialSubject.jsonObject["id"]?.jsonPrimitive?.content == filter.subjectId
                 }()) &&
@@ -127,7 +130,10 @@ class InMemoryWallet(
     override suspend fun query(query: io.geoknoesis.vericore.credential.wallet.CredentialQueryBuilder.() -> Unit): List<VerifiableCredential> {
         val builder = io.geoknoesis.vericore.credential.wallet.CredentialQueryBuilder()
         builder.query()
-        val predicate = builder.build()
+        // Use reflection to call createPredicate() to work around caching issues
+        val predicateMethod = builder::class.java.getMethod("createPredicate")
+        @Suppress("UNCHECKED_CAST")
+        val predicate = predicateMethod.invoke(builder) as (VerifiableCredential) -> Boolean
         return credentials.values.filter(predicate)
     }
     
@@ -299,6 +305,46 @@ class InMemoryWallet(
     ): VerifiablePresentation {
         // Simplified implementation - real selective disclosure would filter fields
         return createPresentation(credentialIds, holderDid, options)
+    }
+    
+    // DidManagement implementation
+    private val managedDids = mutableSetOf<String>()
+    
+    init {
+        managedDids.add(walletDid)
+        managedDids.add(holderDid)
+    }
+    
+    override suspend fun createDid(method: String, options: Map<String, Any?>): String {
+        val did = "did:$method:test-${UUID.randomUUID()}"
+        managedDids.add(did)
+        return did
+    }
+    
+    override suspend fun getDids(): List<String> {
+        return managedDids.toList()
+    }
+    
+    override suspend fun getPrimaryDid(): String {
+        return holderDid
+    }
+    
+    override suspend fun setPrimaryDid(did: String): Boolean {
+        return if (managedDids.contains(did)) {
+            managedDids.add(did) // Add if not present
+            true
+        } else {
+            false
+        }
+    }
+    
+    override suspend fun resolveDid(did: String): Any? {
+        // Simplified - return null for now, real implementation would resolve DID
+        return if (managedDids.contains(did)) {
+            mapOf("id" to did) // Mock DID document
+        } else {
+            null
+        }
     }
     
     // Helper methods

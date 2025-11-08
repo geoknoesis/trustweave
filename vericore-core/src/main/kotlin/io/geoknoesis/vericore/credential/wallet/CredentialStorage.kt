@@ -105,7 +105,27 @@ data class CredentialFilter(
  * ```
  */
 class CredentialQueryBuilder {
-    private val filters = mutableListOf<(VerifiableCredential) -> Boolean>()
+    internal val filters = mutableListOf<(VerifiableCredential) -> Boolean>()
+    
+    /**
+     * Get the query predicate.
+     * This is the public API for getting the predicate function.
+     */
+    public fun toPredicate(): (VerifiableCredential) -> Boolean {
+        return { credential ->
+            filters.all { it(credential) }
+        }
+    }
+    
+    /**
+     * Create predicate function from filters (public method for cross-module access).
+     * This method is used by wallet implementations to get the query predicate.
+     */
+    public fun createPredicate(): (VerifiableCredential) -> Boolean {
+        return { credential ->
+            filters.all { it(credential) }
+        }
+    }
     
     /**
      * Filter by issuer DID.
@@ -203,15 +223,6 @@ class CredentialQueryBuilder {
                 }
             } ?: true) &&
             credential.credentialStatus == null // TODO: Check actual revocation
-        }
-    }
-    
-    /**
-     * Build the query predicate.
-     */
-    internal fun build(): (VerifiableCredential) -> Boolean {
-        return { credential ->
-            filters.all { it(credential) }
         }
     }
 }

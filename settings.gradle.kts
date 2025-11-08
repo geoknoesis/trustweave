@@ -23,6 +23,7 @@ include(
     "vericore-polygon",
     "vericore-godiddy",
     "vericore-ganache",
-    "vericore-indy"
+    "vericore-indy",
+    "vericore-examples"
 )
 

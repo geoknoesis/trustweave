@@ -167,9 +167,8 @@ class GanacheBlockchainAnchorClient(
             throw BlockchainTransactionException(
                 message = "Transaction failed: ${error?.message ?: "Unknown error"}",
                 chainId = chainId,
+                txHash = null,
                 operation = "submitTransaction",
-                payloadSize = data.size.toLong(),
-                gasUsed = gasLimit.toLong(),
                 cause = null
             )
         }

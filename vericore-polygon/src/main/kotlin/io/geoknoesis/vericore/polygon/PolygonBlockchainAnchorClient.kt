@@ -153,6 +153,7 @@ class PolygonBlockchainAnchorClient(
             throw BlockchainTransactionException(
                 message = "Transaction failed: ${error?.message ?: "Unknown error"}",
                 chainId = chainId,
+                txHash = null,
                 operation = "submitTransaction",
                 payloadSize = data.size.toLong(),
                 gasUsed = transaction.gasLimit?.toLong(),

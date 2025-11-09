@@ -69,8 +69,8 @@ class DidKeyMockMethodTest {
 
         assertNotNull(result.document)
         assertEquals(document, result.document)
-        assertTrue(result.documentMetadata.containsKey("created"))
-        assertTrue(result.documentMetadata.containsKey("updated"))
+        assertNotNull(result.documentMetadata.created)
+        assertNotNull(result.documentMetadata.updated)
         assertEquals("key", result.resolutionMetadata["method"])
         assertEquals(true, result.resolutionMetadata["mock"])
     }

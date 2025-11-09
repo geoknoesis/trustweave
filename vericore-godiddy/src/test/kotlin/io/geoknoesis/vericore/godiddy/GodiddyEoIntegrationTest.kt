@@ -67,7 +67,10 @@ class GodiddyEoIntegrationTest {
             // Continue with fallback method
             val resolutionResult = DidRegistry.resolve(issuerDid)
             assertNotNull(resolutionResult.document, "DID should resolve")
-            assertEquals(issuerDid, resolutionResult.document?.id)
+            val document = resolutionResult.document
+            if (document != null) {
+                assertEquals(issuerDid, document.id)
+            }
             // Skip rest of test since GoDiddy services aren't available
             return@runBlocking
         }
@@ -102,13 +105,16 @@ class GodiddyEoIntegrationTest {
             // Continue with test using local DID document
             io.geoknoesis.vericore.did.DidResolutionResult(
                 document = issuerDoc,
-                documentMetadata = emptyMap(),
+                documentMetadata = io.geoknoesis.vericore.did.DidDocumentMetadata(),
                 resolutionMetadata = mapOf("provider" to "local")
             )
         }
         
         assertNotNull(resolutionResult.document, "DID should resolve")
-        assertEquals(issuerDid, resolutionResult.document?.id)
+        val document = resolutionResult.document
+        if (document != null) {
+            assertEquals(issuerDid, document.id)
+        }
         
         // Verify metadata indicates GoDiddy provider (if available)
         val provider = resolutionResult.resolutionMetadata["provider"]
@@ -384,7 +390,7 @@ class GodiddyEoIntegrationTest {
 
         // Resolve using GoDiddy Universal Resolver
         val resolutionResult = try {
-            result.resolver?.resolveDid(issuerDid)
+            result.resolver.resolveDid(issuerDid)
         } catch (e: Exception) {
             println("Note: DID resolution failed (expected if service unavailable): ${e.message}")
             null
@@ -392,8 +398,9 @@ class GodiddyEoIntegrationTest {
         
         // Note: Resolution might fail if the DID was just created and not yet
         // registered in the Universal Resolver's backend. This is expected behavior.
-        if (resolutionResult?.document != null) {
-            assertEquals(issuerDid, resolutionResult.document?.id)
+        val document = resolutionResult?.document
+        if (document != null) {
+            assertEquals(issuerDid, document.id)
             println("Successfully resolved DID via GoDiddy: $issuerDid")
         } else {
             println("Note: DID resolution returned null (DID may not be registered in Universal Resolver backend)")

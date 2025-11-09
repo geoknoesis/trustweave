@@ -1,68 +1,168 @@
 package io.geoknoesis.vericore.examples.professional
 
+import io.geoknoesis.vericore.credential.dsl.*
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
-import io.geoknoesis.vericore.credential.models.VerifiablePresentation
-import io.geoknoesis.vericore.credential.PresentationOptions
-import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
+import io.geoknoesis.vericore.credential.wallet.CredentialOrganization
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
-import io.geoknoesis.vericore.did.DidRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.put
-import kotlinx.serialization.json.add
 import java.time.Instant
 
 fun main() = runBlocking {
     println("=== Professional Identity Wallet Scenario ===\n")
     
-    // Step 1: Setup
+    // Step 1: Configure Trust Layer with all features
     println("Step 1: Setting up services...")
+    // Create KMS first so we can use it for key generation and signing
     val kms = InMemoryKeyManagementService()
-    val didMethod = DidKeyMockMethod(kms)
-    DidRegistry.register(didMethod)
+    val kmsRef = kms // Capture for closure
     
-    val professionalDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
-    println("Professional DID: ${professionalDid.id}")
+    val trustLayer = trustLayer {
+        keys {
+            custom(kmsRef)
+            // Provide signer function directly to avoid reflection issues
+            signer { data, keyId ->
+                kmsRef.sign(keyId, data)
+            }
+        }
+        
+        did {
+            method(DidMethods.KEY) {
+                algorithm(KeyAlgorithms.ED25519)
+            }
+        }
+        
+        credentials {
+            defaultProofType(ProofTypes.ED25519)
+        }
+        
+        revocation {
+            provider("inMemory")
+        }
+        
+        schemas {
+            autoValidate(false)
+            defaultFormat(io.geoknoesis.vericore.spi.SchemaFormat.JSON_SCHEMA)
+        }
+    }
     
-    // Step 2: Create professional wallet
+    // Create professional DID using new DSL
+    val professionalDid = trustLayer.createDid {
+        method(DidMethods.KEY)
+        algorithm(KeyAlgorithms.ED25519)
+    }
+    println("Professional DID: $professionalDid")
+    
+    // Register schemas for credential validation
+    println("\nStep 1.5: Registering credential schemas...")
+    trustLayer.registerSchema {
+        id("https://example.com/schemas/education")
+        type(SchemaValidatorTypes.JSON_SCHEMA)
+        jsonSchema {
+            put("\$schema", "http://json-schema.org/draft-07/schema#")
+            put("type", "object")
+            put("properties", buildJsonObject {
+                put("degree", buildJsonObject {
+                    put("type", "object")
+                    put("properties", buildJsonObject {
+                        put("type", buildJsonObject { put("type", "string") })
+                        put("field", buildJsonObject { put("type", "string") })
+                        put("institution", buildJsonObject { put("type", "string") })
+                        put("year", buildJsonObject { put("type", "string") })
+                    })
+                })
+            })
+        }
+    }
+    println("✓ Education schema registered")
+    
+    trustLayer.registerSchema {
+        id("https://example.com/schemas/certification")
+        type(SchemaValidatorTypes.JSON_SCHEMA)
+        jsonSchema {
+            put("\$schema", "http://json-schema.org/draft-07/schema#")
+            put("type", "object")
+            put("properties", buildJsonObject {
+                put("certification", buildJsonObject {
+                    put("type", "object")
+                    put("properties", buildJsonObject {
+                        put("name", buildJsonObject { put("type", "string") })
+                        put("issuer", buildJsonObject { put("type", "string") })
+                        put("issueDate", buildJsonObject { put("type", "string") })
+                        put("expirationDate", buildJsonObject { put("type", "string") })
+                    })
+                })
+            })
+        }
+    }
+    println("✓ Certification schema registered")
+    
+    // Step 2: Create professional wallet using DSL
     println("\nStep 2: Creating professional wallet...")
-    val wallet = InMemoryWallet(
-        walletDid = professionalDid.id,
-        holderDid = professionalDid.id
-    )
+    val wallet = trustLayer.wallet {
+        id("professional-wallet-${professionalDid.substringAfterLast(":")}")
+        holder(professionalDid)
+        enableOrganization()
+        enablePresentation()
+    }
     println("Wallet created: ${wallet.walletId}")
     
-    // Step 3: Store education credentials
+    // Step 3: Store education credentials using DSL
     println("\nStep 3: Storing education credentials...")
-    val bachelorDegree = createEducationCredential(
-        issuerDid = "did:key:university",
-        holderDid = professionalDid.id,
-        degreeType = "Bachelor",
-        field = "Computer Science",
-        institution = "Tech University",
-        year = "2018"
-    )
-    val bachelorId = wallet.store(bachelorDegree)
+    // Generate keys for issuers using the same KMS
+    val universityKey = kms.generateKey("Ed25519")
+    // Verify key exists
+    kms.getPublicKey(universityKey.id)
     
-    val masterDegree = createEducationCredential(
-        issuerDid = "did:key:university",
-        holderDid = professionalDid.id,
-        degreeType = "Master",
-        field = "Software Engineering",
-        institution = "Tech University",
-        year = "2020"
-    )
-    val masterId = wallet.store(masterDegree)
+    // Issue credentials using new DSL with revocation support
+    val bachelorDegree = trustLayer.issue {
+        credential {
+            id("https://example.edu/credentials/bachelor-${professionalDid.substringAfterLast(":")}")
+            type(CredentialTypes.EDUCATION, "BachelorDegreeCredential")
+            issuer("did:key:university")
+            subject {
+                id(professionalDid)
+                "degree" {
+                    "type" to "Bachelor"
+                    "field" to "Computer Science"
+                    "institution" to "Tech University"
+                    "year" to "2018"
+                }
+            }
+            issued(Instant.now())
+        }
+        by(issuerDid = "did:key:university", keyId = universityKey.id)
+    }
+    val bachelorId = bachelorDegree.storeIn(wallet).credentialId
+    
+    val masterDegree = trustLayer.issue {
+        credential {
+            id("https://example.edu/credentials/master-${professionalDid.substringAfterLast(":")}")
+            type(CredentialTypes.EDUCATION, "MasterDegreeCredential")
+            issuer("did:key:university")
+            subject {
+                id(professionalDid)
+                "degree" {
+                    "type" to "Master"
+                    "field" to "Software Engineering"
+                    "institution" to "Tech University"
+                    "year" to "2020"
+                }
+            }
+            issued(Instant.now())
+        }
+        by(issuerDid = "did:key:university", keyId = universityKey.id)
+    }
+    val masterId = masterDegree.storeIn(wallet).credentialId
     
     println("Stored ${wallet.list().size} education credentials")
     
-    // Step 4: Store work experience credentials
+    // Step 4: Store work experience credentials using DSL
     println("\nStep 4: Storing work experience credentials...")
     val job1 = createEmploymentCredential(
         issuerDid = "did:key:company1",
-        holderDid = professionalDid.id,
+        holderDid = professionalDid,
         company = "Tech Corp",
         role = "Software Engineer",
         startDate = "2020-06-01",
@@ -77,7 +177,7 @@ fun main() = runBlocking {
     
     val job2 = createEmploymentCredential(
         issuerDid = "did:key:company2",
-        holderDid = professionalDid.id,
+        holderDid = professionalDid,
         company = "Innovation Labs",
         role = "Senior Software Engineer",
         startDate = "2023-01-01",
@@ -91,11 +191,11 @@ fun main() = runBlocking {
     
     println("Stored ${wallet.list().size} total credentials")
     
-    // Step 5: Store certifications
+    // Step 5: Store certifications using DSL
     println("\nStep 5: Storing certifications...")
     val awsCert = createCertificationCredential(
         issuerDid = "did:key:aws",
-        holderDid = professionalDid.id,
+        holderDid = professionalDid,
         certificationName = "AWS Certified Solutions Architect",
         issuer = "Amazon Web Services",
         issueDate = "2021-03-15",
@@ -106,7 +206,7 @@ fun main() = runBlocking {
     
     val kubernetesCert = createCertificationCredential(
         issuerDid = "did:key:cncf",
-        holderDid = professionalDid.id,
+        holderDid = professionalDid,
         certificationName = "Certified Kubernetes Administrator",
         issuer = "Cloud Native Computing Foundation",
         issueDate = "2022-06-20",
@@ -117,92 +217,137 @@ fun main() = runBlocking {
     
     println("Stored ${wallet.list().size} total credentials")
     
-    // Step 6: Organize credentials
+    // Step 5.5: Verify credentials against schemas
+    println("\nStep 5.5: Validating credentials against schemas...")
+    val awsCertStored = wallet.get(awsCertId)
+    if (awsCertStored != null) {
+        try {
+            val schemaResult = awsCertStored.validateSchema(trustLayer.dsl(), "https://example.com/schemas/certification")
+            println("AWS cert schema validation: ${if (schemaResult.valid) "✓ Valid" else "✗ Invalid"}")
+        } catch (e: Exception) {
+            println("Schema validation skipped (validator not registered)")
+        }
+    }
+    
+    // Step 6: Organize credentials using new DSL
     println("\nStep 6: Organizing credentials...")
+    var certificationsCollectionId: String? = null
+    if (wallet is CredentialOrganization) {
+        val result = wallet.organize {
+            collection("Education", "Academic degrees and certificates") {
+                add(bachelorId, masterId)
+                tag(bachelorId, "education", "degree", "bachelor", "computer-science")
+                tag(masterId, "education", "degree", "master", "software-engineering")
+            }
+            
+            collection("Work Experience", "Employment history and achievements") {
+                add(job1Id, job2Id)
+                tag(job1Id, "work", "employment", "software-engineer", "completed")
+                tag(job2Id, "work", "employment", "senior-engineer", "current")
+            }
+            
+            collection("Certifications", "Professional licenses and certifications") {
+                add(awsCertId, k8sCertId)
+                tag(awsCertId, "certification", "cloud", "aws", "active")
+                tag(k8sCertId, "certification", "kubernetes", "cncf", "active")
+            }
+        }
+        println("Organized credentials into ${result.collectionsCreated} collections")
+        
+        // Get collection ID for querying
+        certificationsCollectionId = wallet.listCollections()
+            .find { it.name == "Certifications" }?.id
+    }
     
-    // Create collections
-    val educationCollection = wallet.createCollection(
-        name = "Education",
-        description = "Academic degrees and certificates"
-    )
-    val workCollection = wallet.createCollection(
-        name = "Work Experience",
-        description = "Employment history and achievements"
-    )
-    val certificationsCollection = wallet.createCollection(
-        name = "Certifications",
-        description = "Professional licenses and certifications"
-    )
-    
-    // Add credentials to collections
-    wallet.addToCollection(bachelorId, educationCollection)
-    wallet.addToCollection(masterId, educationCollection)
-    wallet.addToCollection(job1Id, workCollection)
-    wallet.addToCollection(job2Id, workCollection)
-    wallet.addToCollection(awsCertId, certificationsCollection)
-    wallet.addToCollection(k8sCertId, certificationsCollection)
-    
-    // Add tags
-    wallet.tagCredential(bachelorId, setOf("education", "degree", "bachelor", "computer-science"))
-    wallet.tagCredential(masterId, setOf("education", "degree", "master", "software-engineering"))
-    wallet.tagCredential(job1Id, setOf("work", "employment", "software-engineer", "completed"))
-    wallet.tagCredential(job2Id, setOf("work", "employment", "senior-engineer", "current"))
-    wallet.tagCredential(awsCertId, setOf("certification", "cloud", "aws", "active"))
-    wallet.tagCredential(k8sCertId, setOf("certification", "kubernetes", "cncf", "active"))
-    
-    println("Created ${wallet.listCollections().size} collections")
-    println("Total tags: ${wallet.getAllTags().size}")
-    
-    // Step 7: Query credentials
+    // Step 7: Query credentials using enhanced query DSL
     println("\nStep 7: Querying credentials...")
     
-    // Find all active certifications
-    val activeCerts = wallet.query {
+    // Find all active certifications using enhanced query
+    val activeCerts = wallet.queryEnhanced {
         byType("CertificationCredential")
         notExpired()
         valid()
+        byTag("active")
     }
     println("Active certifications: ${activeCerts.size}")
     
-    // Find credentials by tag
-    val cloudCredentials = wallet.findByTag("cloud")
-    println("Cloud-related credentials: ${cloudCredentials.size}")
+    // Find cloud-related credentials by tag and collection
+    if (certificationsCollectionId != null) {
+        val cloudCredentials = wallet.queryEnhanced {
+            byTag("cloud")
+            byCollection(certificationsCollectionId)
+        }
+        println("Cloud-related credentials: ${cloudCredentials.size}")
+    }
     
-    // Step 8: Create targeted presentations
+    // Step 8: Create targeted presentations using wallet presentation DSL
     println("\nStep 8: Creating targeted presentations...")
     
-    // Presentation for job application (selective disclosure)
-    val jobApplicationPresentation = wallet.createSelectiveDisclosure(
-        credentialIds = listOf(masterId, job1Id, job2Id, awsCertId),
-        disclosedFields = listOf(
-            "degree.field",
-            "degree.institution",
-            "degree.year",
-            "employment.company",
-            "employment.role",
-            "employment.startDate",
-            "certification.name",
-            "certification.issuer"
-        ),
-        holderDid = professionalDid.id,
-        options = PresentationOptions(
-            holderDid = professionalDid.id,
-            proofType = "Ed25519Signature2020",
-            challenge = "job-application-${Instant.now().toEpochMilli()}"
-        )
-    )
+    // Generate a key for the professional/holder to sign presentations
+    val professionalKey = kms.generateKey("Ed25519", mapOf("keyId" to "professional-key"))
+    
+    // Presentation for job application using wallet presentation DSL
+    val jobApplicationPresentation = wallet.presentation {
+        fromWallet(masterId, job1Id, job2Id, awsCertId)
+        holder(professionalDid)
+        challenge("job-application-${Instant.now().toEpochMilli()}")
+        proofType(ProofTypes.ED25519)
+        keyId(professionalKey.id)
+        selectiveDisclosure {
+            reveal(
+                "degree.field",
+                "degree.institution",
+                "degree.year",
+                "employment.company",
+                "employment.role",
+                "employment.startDate",
+                "certification.name",
+                "certification.issuer"
+            )
+        }
+    }
     println("Job application presentation created with ${jobApplicationPresentation.verifiableCredential.size} credentials")
     
-    // Presentation for professional profile (public)
-    val profilePresentation = wallet.createPresentation(
-        credentialIds = listOf(masterId, job2Id, awsCertId, k8sCertId),
-        holderDid = professionalDid.id,
-        options = PresentationOptions(
-            holderDid = professionalDid.id,
-            proofType = "Ed25519Signature2020"
-        )
-    )
-    println("Professional profile presentation created")
+    // Presentation for professional profile using query-based presentation
+    val profilePresentation = wallet.presentation {
+        fromQuery {
+            byTypes("MasterDegreeCredential", "EmploymentCredential", "CertificationCredential")
+            valid()
+        }
+        holder(professionalDid)
+        proofType(ProofTypes.ED25519)
+        keyId(professionalKey.id)
+    }
+    println("Professional profile presentation created with ${profilePresentation.verifiableCredential.size} credentials")
+    
+    // Step 8.5: Demonstrate key rotation
+    println("\nStep 8.5: Demonstrating key rotation...")
+    try {
+        val updatedDoc = trustLayer.rotateKey {
+            did(professionalDid)
+            algorithm(KeyAlgorithms.ED25519)
+        }
+        println("✓ Key rotated successfully")
+    } catch (e: Exception) {
+        println("Key rotation skipped (${e.message})")
+    }
+    
+    // Step 8.6: Demonstrate DID document updates
+    println("\nStep 8.6: Demonstrating DID document updates...")
+    try {
+        val updatedDoc = trustLayer.updateDid {
+            did(professionalDid)
+            method(DidMethods.KEY)
+            addService {
+                id("$professionalDid#service-1")
+                type(ServiceTypes.LINKED_DOMAINS)
+                endpoint("https://professional.example.com")
+            }
+        }
+        println("✓ DID document updated with service endpoint")
+    } catch (e: Exception) {
+        println("DID document update skipped (${e.message})")
+    }
     
     // Step 9: Wallet statistics
     println("\nStep 9: Wallet statistics...")
@@ -226,22 +371,22 @@ fun createEducationCredential(
     institution: String,
     year: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        id = "https://example.edu/credentials/${degreeType.lowercase()}-${holderDid.substringAfterLast(":")}",
-        type = listOf("VerifiableCredential", "EducationCredential", "${degreeType}DegreeCredential"),
-        issuer = issuerDid,
-        credentialSubject = buildJsonObject {
-            put("id", holderDid)
-            put("degree", buildJsonObject {
-                put("type", degreeType)
-                put("field", field)
-                put("institution", institution)
-                put("year", year)
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null // Education credentials typically don't expire
-    )
+    return credential {
+        id("https://example.edu/credentials/${degreeType.lowercase()}-${holderDid.substringAfterLast(":")}")
+        type("EducationCredential", "${degreeType}DegreeCredential")
+        issuer(issuerDid)
+        subject {
+            id(holderDid)
+            "degree" {
+                "type" to degreeType
+                "field" to field
+                "institution" to institution
+                "year" to year
+            }
+        }
+        issued(Instant.now())
+        // Education credentials typically don't expire
+    }
 }
 
 fun createEmploymentCredential(
@@ -253,29 +398,26 @@ fun createEmploymentCredential(
     endDate: String?,
     achievements: List<String>
 ): VerifiableCredential {
-    return VerifiableCredential(
-        id = "https://example.com/employment/${company.lowercase()}-${holderDid.substringAfterLast(":")}",
-        type = listOf("VerifiableCredential", "EmploymentCredential"),
-        issuer = issuerDid,
-        credentialSubject = buildJsonObject {
-            put("id", holderDid)
-            put("employment", buildJsonObject {
-                put("company", company)
-                put("role", role)
-                put("startDate", startDate)
+    return credential {
+        id("https://example.com/employment/${company.lowercase()}-${holderDid.substringAfterLast(":")}")
+        type("EmploymentCredential")
+        issuer(issuerDid)
+        subject {
+            id(holderDid)
+            "employment" {
+                "company" to company
+                "role" to role
+                "startDate" to startDate
                 if (endDate != null) {
-                    put("endDate", endDate)
+                    "endDate" to endDate
                 } else {
-                    put("current", true)
+                    "current" to true
                 }
-                put("achievements", buildJsonArray {
-                    achievements.forEach { add(it) }
-                })
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null
-    )
+                "achievements" to achievements
+            }
+        }
+        issued(Instant.now())
+    }
 }
 
 fun createCertificationCredential(
@@ -287,22 +429,34 @@ fun createCertificationCredential(
     expirationDate: String,
     credentialId: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        id = "https://example.com/certifications/$credentialId",
-        type = listOf("VerifiableCredential", "CertificationCredential"),
-        issuer = issuerDid,
-        credentialSubject = buildJsonObject {
-            put("id", holderDid)
-            put("certification", buildJsonObject {
-                put("name", certificationName)
-                put("issuer", issuer)
-                put("issueDate", issueDate)
-                put("expirationDate", expirationDate)
-                put("credentialId", credentialId)
-            })
-        },
-        issuanceDate = issueDate,
-        expirationDate = expirationDate
-    )
+    // Parse dates - handle both ISO format with time and date-only format
+    val parsedIssueDate = if (issueDate.contains("T")) {
+        Instant.parse(issueDate)
+    } else {
+        Instant.parse("${issueDate}T00:00:00Z")
+    }
+    
+    val parsedExpirationDate = if (expirationDate.contains("T")) {
+        Instant.parse(expirationDate)
+    } else {
+        Instant.parse("${expirationDate}T00:00:00Z")
+    }
+    
+    return credential {
+        id("https://example.com/certifications/$credentialId")
+        type("CertificationCredential")
+        issuer(issuerDid)
+        subject {
+            id(holderDid)
+            "certification" {
+                "name" to certificationName
+                "issuer" to issuer
+                "issueDate" to issueDate
+                "expirationDate" to expirationDate
+                "credentialId" to credentialId
+            }
+        }
+        issued(parsedIssueDate)
+        expires(parsedExpirationDate)
+    }
 }
-

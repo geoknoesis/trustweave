@@ -11,6 +11,23 @@ allprojects {
         maven("https://maven.waltid.dev/releases")
         maven("https://maven.waltid.dev/snapshots")
     }
+    
+    // License configuration
+    afterEvaluate {
+        tasks.withType<Jar>().configureEach {
+            manifest {
+                attributes(
+                    mapOf(
+                        "Implementation-Title" to project.name,
+                        "Implementation-Version" to project.version,
+                        "Implementation-Vendor" to "GeoKnoesis",
+                        "Bundle-License" to "https://www.gnu.org/licenses/agpl-3.0.html",
+                        "License" to "AGPL-3.0"
+                    )
+                )
+            }
+        }
+    }
 }
 
 // Apply Kover to all subprojects that have tests

@@ -679,6 +679,43 @@ fun main() = runBlocking {
 }
 ```
 
+## License
+
+VeriCore is available under a dual-licensing model:
+
+### Community License (AGPL v3.0)
+
+VeriCore is available free of charge under the **GNU Affero General Public License v3.0** (AGPL v3.0) for:
+- Open-source projects (OSI-approved licenses)
+- Educational and research purposes
+- Personal projects
+- Non-commercial use
+
+See [LICENSE](LICENSE) for the full AGPL v3.0 license text.
+
+### Commercial License
+
+For proprietary and commercial use, VeriCore is available under a **Commercial License** that includes:
+- ✅ Use in proprietary/commercial software
+- ✅ Distribution in commercial products
+- ✅ Priority technical support
+- ✅ Indemnification against IP claims
+- ✅ Regular updates and security patches
+
+**Commercial licensing inquiries:**
+- Email: licensing@geoknoesis.com
+- Website: https://geoknoesis.com/licensing
+
+See [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md) for commercial license terms.
+
+### Which License Do I Need?
+
+- **Open-source project** → Use AGPL v3.0 (free)
+- **Commercial/proprietary software** → Purchase Commercial License
+- **SaaS application** → Purchase Commercial License
+- **Enterprise deployment** → Purchase Commercial License
+- **Unsure?** → Contact us at licensing@geoknoesis.com
+
 ## Contributing
 
 [Contributing guidelines]

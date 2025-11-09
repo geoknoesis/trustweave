@@ -32,6 +32,9 @@ class VerificationBuilder(
     private var schemaId: String? = null
     private var verifyBlockchainAnchor: Boolean = false
     private var chainId: String? = null
+    private var checkTrustRegistry: Boolean = false
+    private var verifyDelegation: Boolean = false
+    private var validateProofPurpose: Boolean = false
     
     /**
      * Set the credential to verify.
@@ -93,6 +96,27 @@ class VerificationBuilder(
     }
     
     /**
+     * Enable trust registry checking.
+     */
+    fun checkTrustRegistry() {
+        this.checkTrustRegistry = true
+    }
+    
+    /**
+     * Enable delegation verification.
+     */
+    fun verifyDelegation() {
+        this.verifyDelegation = true
+    }
+    
+    /**
+     * Enable proof purpose validation.
+     */
+    fun validateProofPurpose() {
+        this.validateProofPurpose = true
+    }
+    
+    /**
      * Build and perform verification.
      */
     suspend fun build(): CredentialVerificationResult = withContext(Dispatchers.IO) {
@@ -101,13 +125,28 @@ class VerificationBuilder(
         val config = context.getConfig()
         val chainIdToUse = chainId ?: config.credentialConfig.defaultChain
         
+        val resolveDidFn: suspend (String) -> Any? = { did ->
+            try {
+                val didRegistryClass = Class.forName("io.geoknoesis.vericore.did.DidRegistry")
+                val resolveMethod = didRegistryClass.getMethod("resolve", String::class.java)
+                resolveMethod.invoke(null, did) as? Any
+            } catch (e: Exception) {
+                null
+            }
+        }
+        
         val options = CredentialVerificationOptions(
             checkRevocation = checkRevocation,
             checkExpiration = checkExpiration,
             validateSchema = validateSchema,
             schemaId = schemaId,
             verifyBlockchainAnchor = verifyBlockchainAnchor,
-            chainId = chainIdToUse
+            chainId = chainIdToUse,
+            checkTrustRegistry = checkTrustRegistry,
+            trustRegistry = context.getTrustRegistry(),
+            verifyDelegation = verifyDelegation,
+            resolveDid = resolveDidFn,
+            validateProofPurpose = validateProofPurpose
         )
         
         context.getVerifier().verify(cred, options)

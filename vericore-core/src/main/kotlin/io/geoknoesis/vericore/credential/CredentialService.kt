@@ -138,6 +138,11 @@ data class CredentialVerificationOptions(
     val schemaId: String? = null,
     val verifyBlockchainAnchor: Boolean = false,
     val chainId: String? = null,
+    val checkTrustRegistry: Boolean = false,
+    val trustRegistry: Any? = null, // TrustRegistry - using Any to avoid dependency
+    val verifyDelegation: Boolean = false,
+    val resolveDid: suspend (String) -> Any? = { null }, // DidResolutionResult? - using Any to avoid dependency
+    val validateProofPurpose: Boolean = false,
     val additionalOptions: Map<String, Any?> = emptyMap()
 )
 
@@ -180,7 +185,10 @@ data class CredentialVerificationResult(
     val notExpired: Boolean = false,
     val notRevoked: Boolean = false,
     val schemaValid: Boolean = false,
-    val blockchainAnchorValid: Boolean = false
+    val blockchainAnchorValid: Boolean = false,
+    val trustRegistryValid: Boolean = false,
+    val delegationValid: Boolean = false,
+    val proofPurposeValid: Boolean = false
 )
 
 /**

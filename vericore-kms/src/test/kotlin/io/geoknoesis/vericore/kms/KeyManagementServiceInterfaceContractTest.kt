@@ -147,7 +147,7 @@ class KeyManagementServiceInterfaceContractTest {
         val handle = kms.generateKey("Ed25519")
         
         assertNotNull(handle.publicKeyJwk)
-        assertTrue(handle.publicKeyJwk!!.containsKey("kty"))
+        assertTrue(handle.publicKeyJwk.containsKey("kty"))
     }
 
     @Test

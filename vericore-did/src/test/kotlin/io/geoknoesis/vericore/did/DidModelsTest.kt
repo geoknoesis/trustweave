@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import java.time.Instant
 
 /**
  * Comprehensive tests for Did models and DidRegistry.
@@ -143,12 +144,14 @@ class DidModelsTest {
         val doc = DidDocument(id = "did:key:issuer")
         val result = DidResolutionResult(
             document = doc,
-            documentMetadata = mapOf("created" to "2024-01-01T00:00:00Z"),
+            documentMetadata = DidDocumentMetadata(
+                created = Instant.parse("2024-01-01T00:00:00Z")
+            ),
             resolutionMetadata = mapOf("duration" to 100L)
         )
         
         assertNotNull(result.document)
-        assertEquals(1, result.documentMetadata.size)
+        assertNotNull(result.documentMetadata.created)
         assertEquals(1, result.resolutionMetadata.size)
     }
 
@@ -157,8 +160,9 @@ class DidModelsTest {
         val result = DidResolutionResult(document = null)
         
         assertNull(result.document)
-        assertTrue(result.documentMetadata.isEmpty())
+        assertNull(result.documentMetadata.created)
         assertTrue(result.resolutionMetadata.isEmpty())
     }
 }
+
 

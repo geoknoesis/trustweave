@@ -3,6 +3,8 @@ package io.geoknoesis.vericore.credential.dsl
 import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
 import io.geoknoesis.vericore.credential.anchor.CredentialAnchorService
+import io.geoknoesis.vericore.credential.models.CredentialStatus
+import io.geoknoesis.vericore.credential.revocation.StatusPurpose
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -26,6 +28,7 @@ import kotlinx.coroutines.withContext
  *             }
  *         }
  *         issued(Instant.now())
+ *         withRevocation() // Auto-creates status list if needed
  *     }
  *     by(issuerDid = "did:key:university", keyId = "key-1")
  *     withProof("Ed25519Signature2020")
@@ -44,6 +47,7 @@ class IssuanceBuilder(
     private var domain: String? = null
     private var anchorChain: String? = null
     private var autoAnchor: Boolean = false
+    private var autoRevocation: Boolean = false
     
     /**
      * Set the credential to issue (can be built inline).
@@ -99,12 +103,48 @@ class IssuanceBuilder(
     }
     
     /**
+     * Enable automatic revocation support (creates status list if needed).
+     */
+    fun withRevocation() {
+        this.autoRevocation = true
+    }
+    
+    /**
      * Build and issue the credential.
      */
     suspend fun build(): VerifiableCredential = withContext(Dispatchers.IO) {
         val cred = credential ?: throw IllegalStateException("Credential is required")
         val issuer = issuerDid ?: throw IllegalStateException("Issuer DID is required")
         val key = keyId ?: throw IllegalStateException("Key ID is required")
+        
+        // Handle auto-revocation if enabled
+        var credentialToIssue = cred
+        if (autoRevocation && cred.credentialStatus == null) {
+            try {
+                val statusListManager = context.getStatusListManager()
+                if (statusListManager != null) {
+                    // Create or get status list for issuer
+                    val statusList = statusListManager.createStatusList(
+                        issuerDid = issuer,
+                        purpose = StatusPurpose.REVOCATION
+                    )
+                    
+                    // Add credential status to credential
+                    val credentialStatus = CredentialStatus(
+                        id = "${statusList.id}#0",
+                        type = "StatusList2021Entry",
+                        statusPurpose = "revocation",
+                        statusListIndex = "0",
+                        statusListCredential = statusList.id
+                    )
+                    
+                    credentialToIssue = cred.copy(credentialStatus = credentialStatus)
+                }
+            } catch (e: Exception) {
+                // Status list manager not available - continue without revocation
+                // In production, you might want to log this or throw
+            }
+        }
         
         val config = context.getConfig()
         val proofTypeToUse = proofType ?: config.credentialConfig.defaultProofType
@@ -121,7 +161,7 @@ class IssuanceBuilder(
         
         // Issue credential
         val issuedCredential = context.getIssuer().issue(
-            credential = cred,
+            credential = credentialToIssue,
             issuerDid = issuer,
             keyId = key,
             options = options

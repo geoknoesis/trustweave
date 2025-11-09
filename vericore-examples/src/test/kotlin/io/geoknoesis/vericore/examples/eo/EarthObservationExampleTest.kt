@@ -163,7 +163,7 @@ class EarthObservationExampleTest {
             put("@context", "https://www.w3.org/ns/json-ld#")
             put("links", Json.encodeToJsonElement(links))
         }
-        val linksetDigest = io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(linksetWithoutDigest)
+        val linksetDigest = io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
         val linkset = TestDataBuilders.buildLinkset(
             digestMultibase = linksetDigest,
             links = links,
@@ -171,8 +171,9 @@ class EarthObservationExampleTest {
         )
 
         assertNotNull(linkset)
-        val linksArray = linkset["links"]?.jsonArray
-        assertNotNull(linksArray)
+        val linksElement = linkset["links"]
+        assertNotNull(linksElement)
+        val linksArray = linksElement.jsonArray
         assertEquals(3, linksArray.size)
     }
 
@@ -210,7 +211,7 @@ class EarthObservationExampleTest {
             put("@context", "https://www.w3.org/ns/json-ld#")
             put("links", Json.encodeToJsonElement(links))
         }
-        val linksetDigest = io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(linksetWithoutDigest)
+        val linksetDigest = io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
         val linkset = TestDataBuilders.buildLinkset(
             digestMultibase = linksetDigest,
             links = links,
@@ -294,7 +295,7 @@ class EarthObservationExampleTest {
                 }
             }
         }
-        val linksetDigest = io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(linksetWithoutDigest)
+        val linksetDigest = io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
         // Build final linkset with computed digest
         val linkset = TestDataBuilders.buildLinkset(
             digestMultibase = linksetDigest,
@@ -330,7 +331,7 @@ class EarthObservationExampleTest {
                 }
             }
         }
-        val vcDigest = io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(vcWithoutMetadata)
+        val vcDigest = io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(vcWithoutMetadata as JsonElement)
         
         // Add VC digest to credential
         val credentialWithDigest = buildJsonObject {
@@ -415,7 +416,7 @@ class EarthObservationExampleTest {
             put("@context", "https://www.w3.org/ns/json-ld#")
             put("links", Json.encodeToJsonElement(links))
         }
-        val linksetDigest = io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(linksetWithoutDigest)
+        val linksetDigest = io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
         val linkset = TestDataBuilders.buildLinkset(
             digestMultibase = linksetDigest,
             links = links

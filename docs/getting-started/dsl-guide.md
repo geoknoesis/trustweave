@@ -43,6 +43,10 @@ val trustLayer = trustLayer {
         defaultProofType("Ed25519Signature2020")
         autoAnchor(false)
     }
+    
+    trust {
+        provider("inMemory")  // Trust registry provider
+    }
 }
 ```
 

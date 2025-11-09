@@ -3,6 +3,7 @@ package io.geoknoesis.vericore.did
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import java.time.Instant
 
 /**
  * Comprehensive interface contract tests for DidMethod.
@@ -179,7 +180,7 @@ class DidMethodInterfaceContractTest {
                 return if (doc != null) {
                     DidResolutionResult(
                         document = doc,
-                        documentMetadata = emptyMap(),
+                        documentMetadata = DidDocumentMetadata(),
                         resolutionMetadata = emptyMap()
                     )
                 } else {

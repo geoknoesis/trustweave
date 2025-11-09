@@ -2,6 +2,7 @@ package io.geoknoesis.vericore.did
 
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import java.time.Instant
 
 /**
  * Branch coverage tests for Did models.
@@ -159,12 +160,14 @@ class DidModelsBranchCoverageTest {
         val doc = DidDocument(id = "did:key:123")
         val result = DidResolutionResult(
             document = doc,
-            documentMetadata = mapOf("created" to "2024-01-01T00:00:00Z"),
+            documentMetadata = DidDocumentMetadata(
+                created = Instant.parse("2024-01-01T00:00:00Z")
+            ),
             resolutionMetadata = mapOf("duration" to 100)
         )
         
         assertNotNull(result.document)
-        assertEquals(1, result.documentMetadata.size)
+        assertNotNull(result.documentMetadata.created)
         assertEquals(1, result.resolutionMetadata.size)
     }
 
@@ -172,12 +175,12 @@ class DidModelsBranchCoverageTest {
     fun `test DidResolutionResult constructor without document`() {
         val result = DidResolutionResult(
             document = null,
-            documentMetadata = emptyMap(),
+            documentMetadata = DidDocumentMetadata(),
             resolutionMetadata = mapOf("error" to "notFound")
         )
         
         assertNull(result.document)
-        assertTrue(result.documentMetadata.isEmpty())
+        assertNull(result.documentMetadata.created)
         assertEquals(1, result.resolutionMetadata.size)
     }
 
@@ -187,7 +190,7 @@ class DidModelsBranchCoverageTest {
         val result = DidResolutionResult(document = doc)
         
         assertNotNull(result.document)
-        assertTrue(result.documentMetadata.isEmpty())
+        assertNull(result.documentMetadata.created)
         assertTrue(result.resolutionMetadata.isEmpty())
     }
 }

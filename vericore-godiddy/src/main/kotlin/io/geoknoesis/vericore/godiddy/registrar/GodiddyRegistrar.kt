@@ -141,7 +141,19 @@ class GodiddyRegistrar(
      */
     private fun convertDidDocumentToJson(document: DidDocument): JsonObject {
         return buildJsonObject {
+            // Add @context (JSON-LD context)
+            if (document.context.isNotEmpty()) {
+                if (document.context.size == 1) {
+                    put("@context", document.context[0])
+                } else {
+                    put("@context", buildJsonArray {
+                        document.context.forEach { add(it) }
+                    })
+                }
+            }
+            
             put("id", document.id)
+            
             if (document.verificationMethod.isNotEmpty()) {
                 put("verificationMethod", buildJsonArray {
                     document.verificationMethod.forEach { vm ->
@@ -165,6 +177,21 @@ class GodiddyRegistrar(
                     document.assertionMethod.forEach { add(it) }
                 })
             }
+            if (document.keyAgreement.isNotEmpty()) {
+                put("keyAgreement", buildJsonArray {
+                    document.keyAgreement.forEach { add(it) }
+                })
+            }
+            if (document.capabilityInvocation.isNotEmpty()) {
+                put("capabilityInvocation", buildJsonArray {
+                    document.capabilityInvocation.forEach { add(it) }
+                })
+            }
+            if (document.capabilityDelegation.isNotEmpty()) {
+                put("capabilityDelegation", buildJsonArray {
+                    document.capabilityDelegation.forEach { add(it) }
+                })
+            }
             if (document.service.isNotEmpty()) {
                 put("service", buildJsonArray {
                     document.service.forEach { s ->
@@ -184,6 +211,18 @@ class GodiddyRegistrar(
      */
     private fun convertToDidDocument(json: JsonObject, did: String): DidDocument {
         val id = json["id"]?.jsonPrimitive?.content ?: did
+        
+        // Extract @context (can be string or array in JSON-LD)
+        val context = when {
+            json["@context"] != null -> {
+                when (val ctx = json["@context"]) {
+                    is JsonPrimitive -> listOf(ctx.content)
+                    is JsonArray -> ctx.mapNotNull { it.jsonPrimitive?.content }
+                    else -> listOf("https://www.w3.org/ns/did/v1")
+                }
+            }
+            else -> listOf("https://www.w3.org/ns/did/v1")
+        }
         
         val verificationMethod = json["verificationMethod"]?.jsonArray?.mapNotNull { vmJson ->
             val vmObj = vmJson.jsonObject
@@ -214,6 +253,18 @@ class GodiddyRegistrar(
             ?: json["assertionMethod"]?.jsonPrimitive?.content?.let { listOf(it) }
             ?: emptyList()
         
+        val keyAgreement = json["keyAgreement"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
+            ?: json["keyAgreement"]?.jsonPrimitive?.content?.let { listOf(it) }
+            ?: emptyList()
+        
+        val capabilityInvocation = json["capabilityInvocation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
+            ?: json["capabilityInvocation"]?.jsonPrimitive?.content?.let { listOf(it) }
+            ?: emptyList()
+        
+        val capabilityDelegation = json["capabilityDelegation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
+            ?: json["capabilityDelegation"]?.jsonPrimitive?.content?.let { listOf(it) }
+            ?: emptyList()
+        
         val service = json["service"]?.jsonArray?.mapNotNull { sJson ->
             val sObj = sJson.jsonObject
             val sId = sObj["id"]?.jsonPrimitive?.content
@@ -232,9 +283,13 @@ class GodiddyRegistrar(
         
         return DidDocument(
             id = id,
+            context = context,
             verificationMethod = verificationMethod,
             authentication = authentication,
             assertionMethod = assertionMethod,
+            keyAgreement = keyAgreement,
+            capabilityInvocation = capabilityInvocation,
+            capabilityDelegation = capabilityDelegation,
             service = service
         )
     }

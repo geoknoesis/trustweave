@@ -1,5 +1,7 @@
 package io.geoknoesis.vericore.did
 
+import java.time.Instant
+
 /**
  * Represents a Decentralized Identifier (DID).
  *
@@ -67,23 +69,48 @@ data class Service(
  * Represents a DID Document following W3C DID Core structure.
  *
  * @param id The DID identifier
+ * @param context JSON-LD context(s) for the document (defaults to W3C DID Core context)
  * @param alsoKnownAs Alternative identifiers for this DID
  * @param controller DIDs that control this DID
  * @param verificationMethod List of verification methods
  * @param authentication List of verification method references for authentication
  * @param assertionMethod List of verification method references for assertions
  * @param keyAgreement List of verification method references for key agreement
+ * @param capabilityInvocation List of verification method references for capability invocation
+ * @param capabilityDelegation List of verification method references for capability delegation
  * @param service List of service endpoints
  */
 data class DidDocument(
     val id: String,
+    val context: List<String> = listOf("https://www.w3.org/ns/did/v1"),
     val alsoKnownAs: List<String> = emptyList(),
     val controller: List<String> = emptyList(),
     val verificationMethod: List<VerificationMethodRef> = emptyList(),
     val authentication: List<String> = emptyList(),
     val assertionMethod: List<String> = emptyList(),
     val keyAgreement: List<String> = emptyList(),
+    val capabilityInvocation: List<String> = emptyList(),
+    val capabilityDelegation: List<String> = emptyList(),
     val service: List<Service> = emptyList()
+)
+
+/**
+ * Metadata about a DID Document following W3C DID Core specification.
+ *
+ * @param created ISO 8601 timestamp when the DID document was created
+ * @param updated ISO 8601 timestamp when the DID document was last updated
+ * @param versionId Version identifier for the DID document
+ * @param nextUpdate ISO 8601 timestamp indicating when to check for updates
+ * @param canonicalId Canonical form of the DID identifier
+ * @param equivalentId List of equivalent DID identifiers
+ */
+data class DidDocumentMetadata(
+    val created: Instant? = null,
+    val updated: Instant? = null,
+    val versionId: String? = null,
+    val nextUpdate: Instant? = null,
+    val canonicalId: String? = null,
+    val equivalentId: List<String> = emptyList()
 )
 
 /**
@@ -95,7 +122,7 @@ data class DidDocument(
  */
 data class DidResolutionResult(
     val document: DidDocument?,
-    val documentMetadata: Map<String, Any?> = emptyMap(),
+    val documentMetadata: DidDocumentMetadata = DidDocumentMetadata(),
     val resolutionMetadata: Map<String, Any?> = emptyMap()
 )
 

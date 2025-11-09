@@ -1,4 +1,4 @@
-# Credential DSL Implementation Summary
+ # Credential DSL Implementation Summary
 
 ## ✅ Completed Implementation
 

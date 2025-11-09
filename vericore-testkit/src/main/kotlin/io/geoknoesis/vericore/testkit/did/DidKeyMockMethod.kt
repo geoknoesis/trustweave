@@ -2,6 +2,7 @@ package io.geoknoesis.vericore.testkit.did
 
 import io.geoknoesis.vericore.did.*
 import io.geoknoesis.vericore.kms.KeyManagementService
+import java.time.Instant
 import java.util.*
 
 /**
@@ -50,11 +51,12 @@ class DidKeyMockMethod(
 
     override suspend fun resolveDid(did: String): DidResolutionResult {
         val document = documents[did]
+        val now = Instant.now()
         return DidResolutionResult(
             document = document,
-            documentMetadata = mapOf(
-                "created" to System.currentTimeMillis(),
-                "updated" to System.currentTimeMillis()
+            documentMetadata = DidDocumentMetadata(
+                created = now,
+                updated = now
             ),
             resolutionMetadata = mapOf(
                 "method" to method,

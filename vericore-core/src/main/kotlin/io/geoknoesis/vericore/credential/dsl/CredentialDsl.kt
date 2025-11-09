@@ -233,6 +233,15 @@ class JsonObjectBuilder {
     private val properties = mutableMapOf<String, JsonElement>()
     
     /**
+     * Set a nested property with a nested object builder.
+     */
+    operator fun String.invoke(block: JsonObjectBuilder.() -> Unit) {
+        val builder = JsonObjectBuilder()
+        builder.block()
+        properties[this] = builder.build()
+    }
+    
+    /**
      * Set a nested property.
      */
     infix fun String.to(value: Any?) {
@@ -252,6 +261,50 @@ class JsonObjectBuilder {
             null -> JsonNull
             else -> JsonPrimitive(value.toString())
         }
+    }
+    
+    /**
+     * Put a property value (for compatibility with SchemaDsl).
+     */
+    fun put(key: String, value: String) {
+        properties[key] = JsonPrimitive(value)
+    }
+    
+    /**
+     * Put a property value (number).
+     */
+    fun put(key: String, value: Number) {
+        properties[key] = JsonPrimitive(value)
+    }
+    
+    /**
+     * Put a property value (boolean).
+     */
+    fun put(key: String, value: Boolean) {
+        properties[key] = JsonPrimitive(value)
+    }
+    
+    /**
+     * Put a nested JSON object.
+     */
+    fun put(key: String, block: JsonObjectBuilder.() -> Unit) {
+        val builder = JsonObjectBuilder()
+        builder.block()
+        properties[key] = builder.build()
+    }
+    
+    /**
+     * Put a JSON array.
+     */
+    fun put(key: String, values: List<JsonElement>) {
+        properties[key] = JsonArray(values)
+    }
+    
+    /**
+     * Put a JsonObject directly.
+     */
+    fun put(key: String, value: JsonObject) {
+        properties[key] = value
     }
     
     /**

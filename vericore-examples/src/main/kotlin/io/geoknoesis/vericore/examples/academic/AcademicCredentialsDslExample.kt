@@ -2,6 +2,7 @@ package io.geoknoesis.vericore.examples.academic
 
 import io.geoknoesis.vericore.credential.dsl.*
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
+import io.geoknoesis.vericore.credential.wallet.CredentialOrganization
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
@@ -26,12 +27,12 @@ fun main() = runBlocking {
     val trustLayer = trustLayer {
         keys {
             provider("inMemory")
-            algorithm("Ed25519")
+            algorithm(KeyAlgorithms.ED25519)
         }
         
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(DidMethods.KEY) {
+                algorithm(KeyAlgorithms.ED25519)
             }
         }
         
@@ -42,28 +43,45 @@ fun main() = runBlocking {
         }
         
         credentials {
-            defaultProofType("Ed25519Signature2020")
+            defaultProofType(ProofTypes.ED25519)
             autoAnchor(false) // Set to true to auto-anchor credentials
+        }
+        
+        revocation {
+            provider("inMemory")
+        }
+        
+        schemas {
+            autoValidate(false)
+            defaultFormat(io.geoknoesis.vericore.spi.SchemaFormat.JSON_SCHEMA)
+        }
+        
+        // Configure trust registry
+        trust {
+            provider("inMemory")
         }
     }
     println("✓ Trust layer configured")
     
-    // Step 2: Create DIDs
+    // Step 2: Create DIDs using new DSL
     println("\nStep 2: Creating DIDs...")
-    val kms = trustLayer.getKms() as InMemoryKeyManagementService
-    val didMethod = DidKeyMockMethod(kms)
+    val universityDid = trustLayer.createDid {
+        method(DidMethods.KEY)
+        algorithm(KeyAlgorithms.ED25519)
+    }
+    println("University DID: $universityDid")
     
-    val universityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
-    println("University DID: ${universityDid.id}")
-    
-    val studentDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
-    println("Student DID: ${studentDid.id}")
+    val studentDid = trustLayer.createDid {
+        method(DidMethods.KEY)
+        algorithm(KeyAlgorithms.ED25519)
+    }
+    println("Student DID: $studentDid")
     
     // Step 3: Create student wallet using DSL
     println("\nStep 3: Creating student wallet...")
     val studentWallet = trustLayer.wallet {
-        id("student-wallet-${studentDid.id.substringAfterLast(":")}")
-        holder(studentDid.id)
+        id("student-wallet-${studentDid.substringAfterLast(":")}")
+        holder(studentDid)
         enableOrganization()
         enablePresentation()
     }
@@ -71,15 +89,17 @@ fun main() = runBlocking {
     
     // Step 4: University issues degree credential using DSL
     println("\nStep 4: University issues degree credential using DSL...")
+    val kms = trustLayer.dsl().getKms() as? InMemoryKeyManagementService
+        ?: InMemoryKeyManagementService()
     val issuerKey = kms.generateKey("Ed25519")
     
     val issuedCredential = trustLayer.issue {
         credential {
-            id("https://example.edu/credentials/degree-${studentDid.id.substringAfterLast(":")}")
+            id("https://example.edu/credentials/degree-${studentDid.substringAfterLast(":")}")
             type("DegreeCredential", "BachelorDegreeCredential")
-            issuer(universityDid.id)
+            issuer(universityDid)
             subject {
-                id(studentDid.id)
+                id(studentDid)
                 "degree" {
                     "type" to "BachelorDegree"
                     "name" to "Bachelor of Science in Computer Science"
@@ -91,7 +111,8 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(365 * 10, ChronoUnit.DAYS) // Valid for 10 years
         }
-        by(issuerDid = universityDid.id, keyId = issuerKey.id)
+        by(issuerDid = universityDid, keyId = issuerKey.id)
+        withRevocation() // Auto-create status list
     }
     
     println("Credential issued:")
@@ -101,39 +122,45 @@ fun main() = runBlocking {
     if (issuedCredential.proof != null) {
         println("  - Proof type: ${issuedCredential.proof?.type}")
     }
+    if (issuedCredential.credentialStatus != null) {
+        println("  - Revocation status: ${issuedCredential.credentialStatus?.id}")
+    }
     
-    // Step 5: Student stores credential in wallet
+    // Step 5: Student stores credential in wallet using lifecycle DSL
     println("\nStep 5: Student stores credential in wallet...")
-    val credentialId = studentWallet.store(issuedCredential)
-    println("Credential stored with ID: $credentialId")
+    val stored = issuedCredential.storeIn(studentWallet)
+    println("Credential stored with ID: ${stored.credentialId}")
     
-    // Step 6: Organize credentials
+    // Step 6: Organize credentials using new DSL
     println("\nStep 6: Organizing credentials...")
-    val educationCollection = studentWallet.createCollection(
-        name = "Education Credentials",
-        description = "Academic degrees and certificates"
-    )
-    studentWallet.addToCollection(credentialId, educationCollection)
-    studentWallet.tagCredential(credentialId, setOf("degree", "bachelor", "computer-science", "verified"))
+    if (studentWallet is CredentialOrganization) {
+        val result = studentWallet.organize {
+            collection("Education Credentials", "Academic degrees and certificates") {
+                add(stored.credentialId)
+                tag(stored.credentialId, "degree", "bachelor", "computer-science", "verified")
+            }
+        }
+        println("Created ${result.collectionsCreated} collection(s)")
+        println("Added tags: degree, bachelor, computer-science, verified")
+    } else {
+        println("Wallet does not support organization features")
+    }
     
-    println("Created collection: $educationCollection")
-    println("Added tags: degree, bachelor, computer-science, verified")
-    
-    // Step 7: Query credentials
+    // Step 7: Query credentials using enhanced query DSL
     println("\nStep 7: Querying credentials...")
-    val degrees = studentWallet.query {
+    val degrees = studentWallet.queryEnhanced {
         byType("DegreeCredential")
         valid()
     }
     println("Found ${degrees.size} valid degree credentials")
     
-    // Step 8: Create presentation using DSL
-    println("\nStep 8: Creating presentation using DSL...")
-    val presentation = presentation {
-        credentials(issuedCredential)
-        holder(studentDid.id)
+    // Step 8: Create presentation using wallet presentation DSL
+    println("\nStep 8: Creating presentation using wallet presentation DSL...")
+    val presentation = studentWallet.presentation {
+        fromWallet(stored.credentialId)
+        holder(studentDid)
         challenge("job-application-12345")
-        proofType("Ed25519Signature2020")
+        proofType(ProofTypes.ED25519)
     }
     
     println("Presentation created:")
@@ -141,10 +168,9 @@ fun main() = runBlocking {
     println("  - Credentials: ${presentation.verifiableCredential.size}")
     println("  - Challenge: ${presentation.challenge}")
     
-    // Step 9: Verify credential using DSL
-    println("\nStep 9: Verifying credential using DSL...")
-    val verificationResult = trustLayer.verify {
-        credential(issuedCredential)
+    // Step 9: Verify credential using lifecycle DSL
+    println("\nStep 9: Verifying credential using lifecycle DSL...")
+    val verificationResult = stored.verify(trustLayer) {
         checkRevocation()
         checkExpiration()
     }
@@ -169,6 +195,35 @@ fun main() = runBlocking {
         Collections: ${stats.collectionsCount}
         Tags: ${stats.tagsCount}
     """.trimIndent())
+    
+    // Step 11: Demonstrate trust registry
+    println("\nStep 11: Demonstrating trust registry...")
+    trustLayer.trust {
+        // Add university as trusted anchor
+        addAnchor(universityDid) {
+            credentialTypes("DegreeCredential", "EducationCredential")
+            description("Trusted university for academic credentials")
+        }
+        println("✓ Added university as trust anchor")
+        
+        // Verify credential with trust registry
+        val isTrusted = isTrusted(universityDid, "DegreeCredential")
+        println("University trusted for DegreeCredential: $isTrusted")
+    }
+    
+    // Step 12: Demonstrate DID document updates with new fields
+    println("\nStep 12: Demonstrating DID document updates...")
+    try {
+        trustLayer.updateDid {
+            did(universityDid)
+            method(DidMethods.KEY)
+            addCapabilityDelegation("$universityDid#key-1")
+            context("https://www.w3.org/ns/did/v1")
+        }
+        println("✓ Updated university DID document with capability delegation and context")
+    } catch (e: Exception) {
+        println("DID document update skipped (${e.message})")
+    }
     
     println("\n=== Scenario Complete ===")
     println("\nKey Benefits of DSL:")

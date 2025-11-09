@@ -8,7 +8,8 @@ import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.withType
 import org.gradle.kotlin.dsl.configure
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.jvm.toolchain.JavaToolchainSpec
 import java.io.File
 
 fun Project.configureKotlin() {
@@ -23,7 +24,7 @@ fun Project.configureKotlin() {
     }
     
     // Configure Java toolchain to use Java 21
-    extensions.configure<org.gradle.api.plugins.JavaPluginExtension> {
+    extensions.configure<JavaPluginExtension> {
         toolchain {
             languageVersion.set(JavaLanguageVersion.of(21))
         }
@@ -32,7 +33,7 @@ fun Project.configureKotlin() {
     // Configure Kotlin compilation
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_21)
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
             freeCompilerArgs.add("-Xjsr305=strict")
         }
     }

@@ -2,6 +2,7 @@ package io.geoknoesis.vericore.godiddy.resolver
 
 import io.geoknoesis.vericore.core.VeriCoreException
 import io.geoknoesis.vericore.did.DidDocument
+import io.geoknoesis.vericore.did.DidDocumentMetadata
 import io.geoknoesis.vericore.did.DidResolutionResult
 import io.geoknoesis.vericore.godiddy.GodiddyClient
 import io.geoknoesis.vericore.godiddy.models.GodiddyResolutionResponse
@@ -10,6 +11,7 @@ import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
+import java.time.Instant
 
 /**
  * Client for godiddy Universal Resolver service.
@@ -33,7 +35,7 @@ class GodiddyResolver(
             if (status == HttpStatusCode.NotFound) {
                 return@withContext DidResolutionResult(
                     document = null,
-                    documentMetadata = emptyMap(),
+                    documentMetadata = DidDocumentMetadata(),
                     resolutionMetadata = mapOf(
                         "error" to "notFound",
                         "provider" to "godiddy"
@@ -60,7 +62,7 @@ class GodiddyResolver(
                 null // Document might be missing or invalid
             }
             
-            val documentMetadata = didDocumentMetadata?.entries?.associate { it.key to convertJsonElement(it.value) } ?: emptyMap()
+            val documentMetadata = convertToDidDocumentMetadata(didDocumentMetadata)
             
             val resolutionMetadata = (didResolutionMetadata?.entries?.associate { it.key to convertJsonElement(it.value) } ?: emptyMap())
                 .plus("provider" to "godiddy")
@@ -84,6 +86,18 @@ class GodiddyResolver(
         // This is a simplified conversion - in practice, you'd need full JSON-LD parsing
         // For now, we'll extract basic fields
         val id = json["id"]?.jsonPrimitive?.content ?: throw VeriCoreException("DID document missing 'id' field")
+        
+        // Extract @context (can be string or array in JSON-LD)
+        val context = when {
+            json["@context"] != null -> {
+                when (val ctx = json["@context"]) {
+                    is JsonPrimitive -> listOf(ctx.content)
+                    is JsonArray -> ctx.mapNotNull { it.jsonPrimitive?.content }
+                    else -> listOf("https://www.w3.org/ns/did/v1")
+                }
+            }
+            else -> listOf("https://www.w3.org/ns/did/v1")
+        }
         
         // Extract verification methods
         val verificationMethod = json["verificationMethod"]?.jsonArray?.mapNotNull { vmJson ->
@@ -117,6 +131,21 @@ class GodiddyResolver(
             ?: json["assertionMethod"]?.jsonPrimitive?.content?.let { listOf(it) }
             ?: emptyList()
         
+        // Extract key agreement references
+        val keyAgreement = json["keyAgreement"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
+            ?: json["keyAgreement"]?.jsonPrimitive?.content?.let { listOf(it) }
+            ?: emptyList()
+        
+        // Extract capability invocation references
+        val capabilityInvocation = json["capabilityInvocation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
+            ?: json["capabilityInvocation"]?.jsonPrimitive?.content?.let { listOf(it) }
+            ?: emptyList()
+        
+        // Extract capability delegation references
+        val capabilityDelegation = json["capabilityDelegation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
+            ?: json["capabilityDelegation"]?.jsonPrimitive?.content?.let { listOf(it) }
+            ?: emptyList()
+        
         // Extract services
         val service = json["service"]?.jsonArray?.mapNotNull { sJson ->
             val sObj = sJson.jsonObject
@@ -136,10 +165,43 @@ class GodiddyResolver(
         
         return DidDocument(
             id = id,
+            context = context,
             verificationMethod = verificationMethod,
             authentication = authentication,
             assertionMethod = assertionMethod,
+            keyAgreement = keyAgreement,
+            capabilityInvocation = capabilityInvocation,
+            capabilityDelegation = capabilityDelegation,
             service = service
+        )
+    }
+    
+    /**
+     * Converts JsonObject to DidDocumentMetadata.
+     */
+    private fun convertToDidDocumentMetadata(json: JsonObject?): DidDocumentMetadata {
+        if (json == null) return DidDocumentMetadata()
+        
+        val created = json["created"]?.jsonPrimitive?.content?.let { 
+            try { Instant.parse(it) } catch (e: Exception) { null }
+        }
+        val updated = json["updated"]?.jsonPrimitive?.content?.let { 
+            try { Instant.parse(it) } catch (e: Exception) { null }
+        }
+        val versionId = json["versionId"]?.jsonPrimitive?.content
+        val nextUpdate = json["nextUpdate"]?.jsonPrimitive?.content?.let { 
+            try { Instant.parse(it) } catch (e: Exception) { null }
+        }
+        val canonicalId = json["canonicalId"]?.jsonPrimitive?.content
+        val equivalentId = json["equivalentId"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content } ?: emptyList()
+        
+        return DidDocumentMetadata(
+            created = created,
+            updated = updated,
+            versionId = versionId,
+            nextUpdate = nextUpdate,
+            canonicalId = canonicalId,
+            equivalentId = equivalentId
         )
     }
     

@@ -32,7 +32,7 @@ class PresentationServiceTest {
         ProofGeneratorRegistry.clear()
         
         // Create a simple mock signer for testing
-        val signer: suspend (ByteArray, String) -> ByteArray = { data, _ ->
+        val signer: suspend (ByteArray, String) -> ByteArray = { _, _ ->
             // Simple mock signature
             "mock-signature-${UUID.randomUUID()}".toByteArray()
         }
@@ -298,7 +298,7 @@ class PresentationServiceTest {
         val presentation = serviceWithoutGenerator.createPresentation(credentials, holderDid, options)
         
         assertNotNull(presentation.proof)
-        assertEquals("Ed25519Signature2020", presentation.proof?.type)
+        assertEquals("Ed25519Signature2020", presentation.proof.type)
     }
 
     @Test

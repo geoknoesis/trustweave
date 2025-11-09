@@ -36,7 +36,7 @@ class CredentialIssuerTest {
         SchemaValidatorRegistry.register(JsonSchemaValidator())
         
         // Create a simple mock signer for testing
-        val signer: suspend (ByteArray, String) -> ByteArray = { data, _ ->
+        val signer: suspend (ByteArray, String) -> ByteArray = { _, _ ->
             // Simple mock signature - just return a fixed byte array
             "mock-signature-${UUID.randomUUID()}".toByteArray()
         }
@@ -71,9 +71,9 @@ class CredentialIssuerTest {
         )
         
         assertNotNull(issued.proof)
-        assertEquals("Ed25519Signature2020", issued.proof?.type)
+        assertEquals("Ed25519Signature2020", issued.proof.type)
         assertEquals(issuerDid, issued.issuer)
-        assertNotNull(issued.proof?.proofValue)
+        assertNotNull(issued.proof.proofValue)
     }
 
     @Test
@@ -93,8 +93,8 @@ class CredentialIssuerTest {
         )
         
         assertNotNull(issued.proof)
-        assertEquals("challenge-123", issued.proof?.challenge)
-        assertEquals("example.com", issued.proof?.domain)
+        assertEquals("challenge-123", issued.proof.challenge)
+        assertEquals("example.com", issued.proof.domain)
     }
 
     @Test
@@ -255,7 +255,7 @@ class CredentialIssuerTest {
         )
         
         assertNotNull(issued.proof)
-        assertEquals("Ed25519Signature2020", issued.proof?.type)
+        assertEquals("Ed25519Signature2020", issued.proof.type)
     }
 
     @Test
@@ -308,7 +308,7 @@ class CredentialIssuerTest {
         )
         
         assertNotNull(issued.credentialStatus)
-        assertEquals("StatusList2021Entry", issued.credentialStatus?.type)
+        assertEquals("StatusList2021Entry", issued.credentialStatus.type)
     }
 
     private fun createTestCredential(

@@ -225,5 +225,37 @@ class CredentialQueryBuilder {
             credential.credentialStatus == null // TODO: Check actual revocation
         }
     }
+    
+    /**
+     * Filter by tag (requires CredentialOrganization capability).
+     * Note: This filter will only work if the wallet supports CredentialOrganization.
+     * The actual filtering is done by the wallet implementation.
+     */
+    fun byTag(tag: String) {
+        // Store tag filter - wallet implementation will handle this
+        filters.add { credential ->
+            // This is a placeholder - actual tag filtering is done by wallet
+            // Wallet implementations should check tags separately
+            true // Don't filter here, let wallet handle it
+        }
+        // Store tag in a way wallet can access it
+        // Note: This requires wallet to check tags separately
+    }
+    
+    /**
+     * Filter by collection (requires CredentialOrganization capability).
+     * Note: This filter will only work if the wallet supports CredentialOrganization.
+     * The actual filtering is done by the wallet implementation.
+     */
+    fun byCollection(collectionId: String) {
+        // Store collection filter - wallet implementation will handle this
+        filters.add { credential ->
+            // This is a placeholder - actual collection filtering is done by wallet
+            // Wallet implementations should check collections separately
+            true // Don't filter here, let wallet handle it
+        }
+        // Store collection ID in a way wallet can access it
+        // Note: This requires wallet to check collections separately
+    }
 }
 

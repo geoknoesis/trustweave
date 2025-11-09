@@ -45,6 +45,11 @@ fun main() = runBlocking {
             autoValidate(false)
             defaultFormat(io.geoknoesis.vericore.spi.SchemaFormat.JSON_SCHEMA)
         }
+        
+        // Configure trust registry
+        trust {
+            provider("inMemory")
+        }
     }
     
     // Create professional DID using new DSL
@@ -323,7 +328,7 @@ fun main() = runBlocking {
     // Step 8.5: Demonstrate key rotation
     println("\nStep 8.5: Demonstrating key rotation...")
     try {
-        val updatedDoc = trustLayer.rotateKey {
+        trustLayer.rotateKey {
             did(professionalDid)
             algorithm(KeyAlgorithms.ED25519)
         }
@@ -335,7 +340,7 @@ fun main() = runBlocking {
     // Step 8.6: Demonstrate DID document updates
     println("\nStep 8.6: Demonstrating DID document updates...")
     try {
-        val updatedDoc = trustLayer.updateDid {
+        trustLayer.updateDid {
             did(professionalDid)
             method(DidMethods.KEY)
             addService {
@@ -343,8 +348,14 @@ fun main() = runBlocking {
                 type(ServiceTypes.LINKED_DOMAINS)
                 endpoint("https://professional.example.com")
             }
+            // Add capability invocation for signing documents
+            addCapabilityInvocation("$professionalDid#key-1")
+            // Add capability delegation for delegating to assistants
+            addCapabilityDelegation("$professionalDid#key-2")
+            // Set JSON-LD context
+            context("https://www.w3.org/ns/did/v1", "https://example.com/context/v1")
         }
-        println("✓ DID document updated with service endpoint")
+        println("✓ DID document updated with service endpoint, capability relationships, and context")
     } catch (e: Exception) {
         println("DID document update skipped (${e.message})")
     }

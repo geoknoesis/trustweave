@@ -52,7 +52,9 @@ class TrustLayerConfig private constructor(
     val didMethods: Map<String, Any>, // DidMethod - using Any to avoid dependency
     val anchorClients: Map<String, Any>, // BlockchainAnchorClient - using Any to avoid dependency
     val credentialConfig: CredentialConfig,
-    val issuer: CredentialIssuer
+    val issuer: CredentialIssuer,
+    val statusListManager: Any? = null, // StatusListManager - using Any to avoid dependency
+    val trustRegistry: Any? = null // TrustRegistry - using Any to avoid dependency
 ) {
     /**
      * Credential configuration within trust layer.
@@ -78,6 +80,8 @@ class TrustLayerConfig private constructor(
         private var defaultProofType: String = "Ed25519Signature2020"
         private var autoAnchor: Boolean = false
         private var defaultChain: String? = null
+        private var revocationProvider: String? = null
+        private var trustProvider: String? = null
         
         /**
          * Configure key management service.
@@ -132,6 +136,33 @@ class TrustLayerConfig private constructor(
         }
         
         /**
+         * Configure revocation services.
+         */
+        fun revocation(block: RevocationConfigBuilder.() -> Unit) {
+            val builder = RevocationConfigBuilder()
+            builder.block()
+            revocationProvider = builder.provider
+        }
+        
+        /**
+         * Configure schema services.
+         */
+        fun schemas(block: SchemaConfigBuilder.() -> Unit) {
+            val builder = SchemaConfigBuilder()
+            builder.block()
+            // Store schema config for later use
+        }
+        
+        /**
+         * Configure trust registry.
+         */
+        fun trust(block: TrustConfigBuilder.() -> Unit) {
+            val builder = TrustConfigBuilder()
+            builder.block()
+            trustProvider = builder.provider
+        }
+        
+        /**
          * Build the trust layer configuration.
          */
         suspend fun build(): TrustLayerConfig {
@@ -182,6 +213,20 @@ class TrustLayerConfig private constructor(
             val proofGenerator = createProofGenerator(defaultProofType, resolvedKms, finalSigner)
             ProofGeneratorRegistry.register(proofGenerator)
             
+            // Resolve status list manager if revocation is configured
+            val resolvedStatusListManager = if (revocationProvider != null) {
+                resolveStatusListManager(revocationProvider!!)
+            } else {
+                null
+            }
+            
+            // Resolve trust registry if configured
+            val resolvedTrustRegistry = if (trustProvider != null) {
+                resolveTrustRegistry(trustProvider!!)
+            } else {
+                null
+            }
+            
             // Create credential issuer
             val issuer = CredentialIssuer(
                 proofGenerator = proofGenerator,
@@ -224,7 +269,9 @@ class TrustLayerConfig private constructor(
                     autoAnchor = autoAnchor,
                     defaultChain = defaultChain
                 ),
-                issuer = issuer
+                issuer = issuer,
+                statusListManager = resolvedStatusListManager,
+                trustRegistry = resolvedTrustRegistry
             )
         }
         
@@ -464,6 +511,86 @@ class TrustLayerConfig private constructor(
             )
         }
         
+        private suspend fun resolveStatusListManager(providerName: String): Any {
+            // Check for inMemory first (testkit)
+            if (providerName == "inMemory") {
+                try {
+                    val managerClass = Class.forName("io.geoknoesis.vericore.credential.revocation.InMemoryStatusListManager")
+                    val constructor = managerClass.getDeclaredConstructor()
+                    return constructor.newInstance()
+                } catch (e: Exception) {
+                    throw IllegalStateException(
+                        "InMemoryStatusListManager not found. " +
+                        "Ensure vericore-core is on classpath.",
+                        e
+                    )
+                }
+            }
+            
+            // Try to discover via SPI if available
+            try {
+                val providerClass = Class.forName("io.geoknoesis.vericore.credential.revocation.spi.StatusListManagerProvider")
+                val serviceLoader = java.util.ServiceLoader.load(providerClass)
+                val provider = serviceLoader.find { 
+                    val nameMethod = it.javaClass.getMethod("getName")
+                    nameMethod.invoke(it) == providerName
+                }
+                
+                if (provider != null) {
+                    val createMethod = provider.javaClass.getMethod("create", Map::class.java)
+                    val manager = createMethod.invoke(provider, emptyMap<String, Any>())
+                    return manager ?: throw IllegalStateException("Failed to create StatusListManager for provider: $providerName")
+                }
+            } catch (e: ClassNotFoundException) {
+                // SPI classes not available
+            }
+            
+            throw IllegalStateException(
+                "StatusListManager provider '$providerName' not found. " +
+                "Ensure appropriate provider is on classpath or use 'inMemory' for testing."
+            )
+        }
+        
+        private suspend fun resolveTrustRegistry(providerName: String): Any {
+            // Check for inMemory first (testkit)
+            if (providerName == "inMemory") {
+                try {
+                    val registryClass = Class.forName("io.geoknoesis.vericore.testkit.trust.InMemoryTrustRegistry")
+                    val constructor = registryClass.getDeclaredConstructor()
+                    return constructor.newInstance()
+                } catch (e: Exception) {
+                    throw IllegalStateException(
+                        "InMemoryTrustRegistry not found. " +
+                        "Ensure vericore-testkit is on classpath.",
+                        e
+                    )
+                }
+            }
+            
+            // Try to discover via SPI if available
+            try {
+                val providerClass = Class.forName("io.geoknoesis.vericore.trust.spi.TrustRegistryProvider")
+                val serviceLoader = java.util.ServiceLoader.load(providerClass)
+                val provider = serviceLoader.find { 
+                    val nameMethod = it.javaClass.getMethod("getName")
+                    nameMethod.invoke(it) == providerName
+                }
+                
+                if (provider != null) {
+                    val createMethod = provider.javaClass.getMethod("create", Map::class.java)
+                    val registry = createMethod.invoke(provider, emptyMap<String, Any?>())
+                    return registry ?: throw IllegalStateException("Failed to create trust registry for provider: $providerName")
+                }
+            } catch (e: ClassNotFoundException) {
+                // SPI classes not available
+            }
+            
+            throw IllegalStateException(
+                "Trust registry provider '$providerName' not found. " +
+                "Ensure appropriate provider is on classpath or use 'inMemory' for testing."
+            )
+        }
+        
         private fun createProofGenerator(
             proofType: String,
             kms: Any,
@@ -660,6 +787,44 @@ class TrustLayerConfig private constructor(
         
         fun defaultChain(chainId: String) {
             defaultChain = chainId
+        }
+    }
+    
+    /**
+     * Revocation configuration builder.
+     */
+    class RevocationConfigBuilder {
+        var provider: String = "inMemory"
+        
+        fun provider(name: String) {
+            provider = name
+        }
+    }
+    
+    /**
+     * Trust registry configuration builder.
+     */
+    class TrustConfigBuilder {
+        var provider: String = "inMemory"
+        
+        fun provider(name: String) {
+            provider = name
+        }
+    }
+    
+    /**
+     * Schema configuration builder.
+     */
+    class SchemaConfigBuilder {
+        var autoValidate: Boolean = false
+        var defaultFormat: io.geoknoesis.vericore.spi.SchemaFormat = io.geoknoesis.vericore.spi.SchemaFormat.JSON_SCHEMA
+        
+        fun autoValidate(enabled: Boolean) {
+            autoValidate = enabled
+        }
+        
+        fun defaultFormat(format: io.geoknoesis.vericore.spi.SchemaFormat) {
+            defaultFormat = format
         }
     }
 }

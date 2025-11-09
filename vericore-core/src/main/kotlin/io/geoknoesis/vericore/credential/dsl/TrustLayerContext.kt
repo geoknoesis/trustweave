@@ -103,6 +103,41 @@ class TrustLayerContext(
     }
     
     /**
+     * Get the status list manager from trust layer.
+     * Returns null if not configured.
+     */
+    fun getStatusListManager(): io.geoknoesis.vericore.credential.revocation.StatusListManager? {
+        return config.statusListManager as? io.geoknoesis.vericore.credential.revocation.StatusListManager
+    }
+    
+    /**
+     * Get the schema registry.
+     */
+    fun getSchemaRegistry(): io.geoknoesis.vericore.credential.schema.SchemaRegistry {
+        return io.geoknoesis.vericore.credential.schema.SchemaRegistry
+    }
+    
+    /**
+     * Get the DID registry.
+     */
+    fun getDidRegistry(): Any? {
+        return try {
+            val didRegistryClass = Class.forName("io.geoknoesis.vericore.did.DidRegistry")
+            didRegistryClass.getDeclaredField("INSTANCE").get(null)
+                ?: didRegistryClass // If no INSTANCE, return the class itself
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
+    /**
+     * Get the trust registry.
+     */
+    fun getTrustRegistry(): io.geoknoesis.vericore.trust.TrustRegistry? {
+        return config.trustRegistry as? io.geoknoesis.vericore.trust.TrustRegistry
+    }
+    
+    /**
      * Issue a credential using the trust layer configuration.
      */
     suspend fun issue(block: IssuanceBuilder.() -> Unit): VerifiableCredential = withContext(Dispatchers.IO) {

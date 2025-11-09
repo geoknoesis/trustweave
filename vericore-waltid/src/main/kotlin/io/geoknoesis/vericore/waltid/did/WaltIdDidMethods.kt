@@ -159,11 +159,12 @@ class WaltIdKeyMethod(
             
             // For now, return from local cache or create resolution result
             val document = documents[did]
+            val now = java.time.Instant.now()
             DidResolutionResult(
                 document = document,
-                documentMetadata = mapOf(
-                    "created" to System.currentTimeMillis(),
-                    "updated" to System.currentTimeMillis()
+                documentMetadata = io.geoknoesis.vericore.did.DidDocumentMetadata(
+                    created = now,
+                    updated = now
                 ),
                 resolutionMetadata = mapOf(
                     "method" to method,
@@ -229,11 +230,12 @@ class WaltIdWebMethod(
             // val document = convertWaltIdDocument(waltIdDoc)
             
             val document = documents[did]
+            val now = java.time.Instant.now()
             DidResolutionResult(
                 document = document,
-                documentMetadata = mapOf(
-                    "created" to System.currentTimeMillis(),
-                    "updated" to System.currentTimeMillis()
+                documentMetadata = io.geoknoesis.vericore.did.DidDocumentMetadata(
+                    created = now,
+                    updated = now
                 ),
                 resolutionMetadata = mapOf(
                     "method" to method,

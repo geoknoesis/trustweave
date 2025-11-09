@@ -92,7 +92,7 @@ class BlockchainAnchorClientTest {
         assertEquals(payload, result.payload)
         assertEquals("application/json", result.mediaType)
         assertNotNull(result.timestamp)
-        assertTrue(result.timestamp!! > 0)
+        assertTrue(result.timestamp > 0)
     }
 
     @Test
@@ -217,8 +217,8 @@ class BlockchainAnchorClientTest {
         
         val afterWrite = System.currentTimeMillis() / 1000
         assertNotNull(result.timestamp)
-        assertTrue(result.timestamp!! >= beforeWrite)
-        assertTrue(result.timestamp!! <= afterWrite)
+        assertTrue(result.timestamp >= beforeWrite)
+        assertTrue(result.timestamp <= afterWrite)
     }
 
     @Test

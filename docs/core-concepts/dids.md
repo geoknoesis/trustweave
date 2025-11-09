@@ -28,16 +28,20 @@ did:ion:EiClkZMDnmYGhX8tR8i3z2b5M5fN5hJ5vK5xL5yM5zN5oP5q
 
 A **DID Document** is a JSON-LD document that describes how to use a DID. It contains:
 
+- **@context**: JSON-LD context(s) for semantic interpretation (defaults to W3C DID Core context)
 - **Verification Methods**: Public keys for authentication and signing
 - **Service Endpoints**: URLs for interacting with the DID
 - **Authentication**: Methods for proving control of the DID
+- **Assertion Method**: Methods for signing verifiable credentials
 - **Key Agreement**: Methods for establishing secure channels
+- **Capability Invocation**: Methods for invoking capabilities on behalf of the DID
+- **Capability Delegation**: Methods for delegating capabilities to other DIDs
 
 ### Example DID Document
 
 ```json
 {
-  "@context": "https://www.w3.org/ns/did/v1",
+  "@context": ["https://www.w3.org/ns/did/v1"],
   "id": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
   "verificationMethod": [{
     "id": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#keys-1",
@@ -46,9 +50,22 @@ A **DID Document** is a JSON-LD document that describes how to use a DID. It con
     "publicKeyMultibase": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
   }],
   "authentication": ["#keys-1"],
-  "assertionMethod": ["#keys-1"]
+  "assertionMethod": ["#keys-1"],
+  "capabilityInvocation": ["#keys-1"],
+  "capabilityDelegation": ["#keys-1"]
 }
 ```
+
+### DID Document Metadata
+
+When resolving a DID, the resolution result includes metadata about the DID Document:
+
+- **created**: Timestamp when the DID document was created
+- **updated**: Timestamp when the DID document was last updated
+- **versionId**: Version identifier for the DID document
+- **nextUpdate**: Timestamp indicating when to check for updates
+- **canonicalId**: Canonical form of the DID identifier
+- **equivalentId**: List of equivalent DID identifiers
 
 ## DID Methods
 

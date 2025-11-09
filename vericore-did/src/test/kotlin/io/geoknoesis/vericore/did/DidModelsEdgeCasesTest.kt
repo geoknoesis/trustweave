@@ -1,6 +1,7 @@
 package io.geoknoesis.vericore.did
 
 import kotlin.test.*
+import java.time.Instant
 
 /**
  * Comprehensive edge case tests for DID models (VerificationMethodRef, Service, DidDocument, DidResolutionResult).
@@ -199,12 +200,12 @@ class DidModelsEdgeCasesTest {
         val doc = DidDocument(id = "did:key:issuer")
         val result = DidResolutionResult(
             document = doc,
-            documentMetadata = emptyMap(),
+            documentMetadata = DidDocumentMetadata(),
             resolutionMetadata = emptyMap()
         )
         
         assertNotNull(result.document)
-        assertTrue(result.documentMetadata.isEmpty())
+        assertNull(result.documentMetadata.created)
         assertTrue(result.resolutionMetadata.isEmpty())
     }
 
@@ -213,11 +214,11 @@ class DidModelsEdgeCasesTest {
         val doc = DidDocument(id = "did:key:issuer")
         val result = DidResolutionResult(
             document = doc,
-            documentMetadata = mapOf(
-                "created" to "2024-01-01T00:00:00Z",
-                "updated" to "2024-01-02T00:00:00Z",
-                "versionId" to "1",
-                "nextUpdate" to "2024-02-01T00:00:00Z"
+            documentMetadata = DidDocumentMetadata(
+                created = Instant.parse("2024-01-01T00:00:00Z"),
+                updated = Instant.parse("2024-01-02T00:00:00Z"),
+                versionId = "1",
+                nextUpdate = Instant.parse("2024-02-01T00:00:00Z")
             ),
             resolutionMetadata = mapOf(
                 "duration" to 150L,
@@ -227,7 +228,9 @@ class DidModelsEdgeCasesTest {
             )
         )
         
-        assertEquals(4, result.documentMetadata.size)
+        assertNotNull(result.documentMetadata.created)
+        assertNotNull(result.documentMetadata.updated)
+        assertEquals("1", result.documentMetadata.versionId)
         assertEquals(4, result.resolutionMetadata.size)
     }
 
@@ -285,4 +288,5 @@ class DidModelsEdgeCasesTest {
         assertEquals(service1, service2)
     }
 }
+
 

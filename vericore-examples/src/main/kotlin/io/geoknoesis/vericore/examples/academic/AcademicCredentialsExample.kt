@@ -1,82 +1,90 @@
 package io.geoknoesis.vericore.examples.academic
 
+import io.geoknoesis.vericore.credential.dsl.*
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
-import io.geoknoesis.vericore.credential.models.VerifiablePresentation
-import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
-import io.geoknoesis.vericore.credential.CredentialVerificationOptions
-import io.geoknoesis.vericore.credential.PresentationOptions
-import io.geoknoesis.vericore.credential.issuer.CredentialIssuer
-import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
-import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
-import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
-import io.geoknoesis.vericore.credential.wallet.CredentialQueryBuilder
-import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
+import io.geoknoesis.vericore.credential.wallet.CredentialOrganization
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
-import io.geoknoesis.vericore.did.DidRegistry
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 fun main() = runBlocking {
     println("=== Academic Credentials Scenario ===\n")
     
-    // Step 1: Setup - Create KMS and DID methods
-    println("Step 1: Setting up services...")
-    val universityKms = InMemoryKeyManagementService()
-    val studentKms = InMemoryKeyManagementService()
-    
-    val didMethod = DidKeyMockMethod(universityKms)
-    DidRegistry.register(didMethod)
+    // Step 1: Configure Trust Layer
+    println("Step 1: Configuring trust layer...")
+    val trustLayer = trustLayer {
+        keys {
+            provider("inMemory")
+            algorithm("Ed25519")
+        }
+        
+        did {
+            method("key") {
+                algorithm("Ed25519")
+            }
+        }
+        
+        anchor {
+            chain("algorand:testnet") {
+                inMemory()
+            }
+        }
+        
+        credentials {
+            defaultProofType("Ed25519Signature2020")
+            autoAnchor(false)
+        }
+    }
+    println("✓ Trust layer configured")
     
     // Step 2: Create DIDs
     println("\nStep 2: Creating DIDs...")
+    val kms = trustLayer.dsl().getKms() as? InMemoryKeyManagementService
+        ?: InMemoryKeyManagementService()
+    val didMethod = DidKeyMockMethod(kms)
+    
     val universityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
     println("University DID: ${universityDid.id}")
     
     val studentDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
     println("Student DID: ${studentDid.id}")
     
-    // Step 3: Create student wallet
+    // Step 3: Create student wallet using DSL
     println("\nStep 3: Creating student wallet...")
-    val studentWallet = InMemoryWallet(
-        walletDid = studentDid.id,
-        holderDid = studentDid.id
-    )
+    val studentWallet = trustLayer.wallet {
+        id("student-wallet-${studentDid.id.substringAfterLast(":")}")
+        holder(studentDid.id)
+        enableOrganization()
+        enablePresentation()
+    }
     println("Wallet created with ID: ${studentWallet.walletId}")
     
-    // Step 4: University issues degree credential
+    // Step 4: University issues degree credential using DSL
     println("\nStep 4: University issues degree credential...")
-    val degreeCredential = createDegreeCredential(
-        issuerDid = universityDid.id,
-        studentDid = studentDid.id,
-        degreeName = "Bachelor of Science in Computer Science",
-        universityName = "Example University",
-        graduationDate = "2023-05-15",
-        gpa = "3.8"
-    )
+    val issuerKey = kms.generateKey("Ed25519")
     
-    // Issue credential with proof
-    val issuerKey = universityKms.generateKey("Ed25519")
-    val proofGenerator = Ed25519ProofGenerator(
-        signer = { data, keyId -> universityKms.sign(keyId, data) },
-        getPublicKeyId = { keyId -> issuerKey.id }
-    )
-    ProofGeneratorRegistry.register(proofGenerator)
-    
-    val credentialIssuer = CredentialIssuer(
-        proofGenerator = proofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
-    )
-    
-    val issuedCredential = credentialIssuer.issue(
-        credential = degreeCredential,
-        issuerDid = universityDid.id,
-        keyId = issuerKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-    )
+    val issuedCredential = trustLayer.issue {
+        credential {
+            id("https://example.edu/credentials/degree-${studentDid.id.substringAfterLast(":")}")
+            type("DegreeCredential", "BachelorDegreeCredential")
+            issuer(universityDid.id)
+            subject {
+                id(studentDid.id)
+                "degree" {
+                    "type" to "BachelorDegree"
+                    "name" to "Bachelor of Science in Computer Science"
+                    "university" to "Example University"
+                    "graduationDate" to "2023-05-15"
+                    "gpa" to "3.8"
+                }
+            }
+            issued(Instant.now())
+            expires(365 * 10, ChronoUnit.DAYS) // Valid for 10 years
+        }
+        by(issuerDid = universityDid.id, keyId = issuerKey.id)
+    }
     
     println("Credential issued:")
     println("  - Type: ${issuedCredential.type}")
@@ -90,15 +98,17 @@ fun main() = runBlocking {
     
     // Step 6: Organize credentials
     println("\nStep 6: Organizing credentials...")
-    val educationCollection = studentWallet.createCollection(
-        name = "Education Credentials",
-        description = "Academic degrees and certificates"
-    )
-    studentWallet.addToCollection(credentialId, educationCollection)
-    studentWallet.tagCredential(credentialId, setOf("degree", "bachelor", "computer-science", "verified"))
-    
-    println("Created collection: $educationCollection")
-    println("Added tags: degree, bachelor, computer-science, verified")
+    if (studentWallet is CredentialOrganization) {
+        val educationCollection = studentWallet.createCollection(
+            name = "Education Credentials",
+            description = "Academic degrees and certificates"
+        )
+        studentWallet.addToCollection(credentialId, educationCollection)
+        studentWallet.tagCredential(credentialId, setOf("degree", "bachelor", "computer-science", "verified"))
+        
+        println("Created collection: $educationCollection")
+        println("Added tags: degree, bachelor, computer-science, verified")
+    }
     
     // Step 7: Query credentials
     println("\nStep 7: Querying credentials...")
@@ -108,36 +118,27 @@ fun main() = runBlocking {
     }
     println("Found ${degrees.size} valid degree credentials")
     
-    // Step 8: Create presentation for job application
+    // Step 8: Create presentation using DSL
     println("\nStep 8: Creating presentation for job application...")
-    val presentation = studentWallet.createPresentation(
-        credentialIds = listOf(credentialId),
-        holderDid = studentDid.id,
-        options = PresentationOptions(
-            holderDid = studentDid.id,
-            proofType = "Ed25519Signature2020",
-            challenge = "job-application-12345"
-        )
-    )
+    val presentation = presentation {
+        credentials(issuedCredential)
+        holder(studentDid.id)
+        challenge("job-application-12345")
+        proofType("Ed25519Signature2020")
+    }
     
     println("Presentation created:")
     println("  - Holder: ${presentation.holder}")
     println("  - Credentials: ${presentation.verifiableCredential.size}")
     println("  - Challenge: ${presentation.challenge}")
     
-    // Step 9: Verify credential
+    // Step 9: Verify credential using DSL
     println("\nStep 9: Verifying credential...")
-    val verifier = CredentialVerifier(
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
-    )
-    
-    val verificationResult = verifier.verify(
-        credential = issuedCredential,
-        options = CredentialVerificationOptions(
-            checkRevocation = true,
-            checkExpiration = true
-        )
-    )
+    val verificationResult = trustLayer.verify {
+        credential(issuedCredential)
+        checkRevocation()
+        checkExpiration()
+    }
     
     if (verificationResult.valid) {
         println("✅ Credential is valid!")
@@ -163,6 +164,10 @@ fun main() = runBlocking {
     println("\n=== Scenario Complete ===")
 }
 
+/**
+ * Helper function to create a degree credential.
+ * Used by tests and can be used for programmatic credential creation.
+ */
 fun createDegreeCredential(
     issuerDid: String,
     studentDid: String,
@@ -171,26 +176,22 @@ fun createDegreeCredential(
     graduationDate: String,
     gpa: String
 ): VerifiableCredential {
-    val now = Instant.now()
-    val expirationDate = now.plus(365 * 10, ChronoUnit.DAYS) // Valid for 10 years
-    
-    return VerifiableCredential(
-        id = "https://example.edu/credentials/degree-${studentDid.substringAfterLast(":")}",
-        type = listOf("VerifiableCredential", "DegreeCredential", "BachelorDegreeCredential"),
-        issuer = issuerDid,
-        credentialSubject = buildJsonObject {
-            put("id", studentDid)
-            put("degree", buildJsonObject {
-                put("type", "BachelorDegree")
-                put("name", degreeName)
-                put("university", universityName)
-                put("graduationDate", graduationDate)
-                put("gpa", gpa)
-            })
-        },
-        issuanceDate = now.toString(),
-        expirationDate = expirationDate.toString(),
-        credentialSchema = null // Schema validation skipped for example
-    )
+    return credential {
+        id("https://example.edu/credentials/degree-${studentDid.substringAfterLast(":")}")
+        type("VerifiableCredential", "DegreeCredential")
+        issuer(issuerDid)
+        subject {
+            id(studentDid)
+            "degree" {
+                "type" to "BachelorDegree"
+                "name" to degreeName
+                "university" to universityName
+                "graduationDate" to graduationDate
+                "gpa" to gpa
+            }
+        }
+        issued(Instant.now())
+        expires(365 * 10, ChronoUnit.DAYS) // Valid for 10 years
+    }
 }
 

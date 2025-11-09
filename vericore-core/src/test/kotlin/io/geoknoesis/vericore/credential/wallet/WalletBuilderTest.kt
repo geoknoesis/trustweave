@@ -152,3 +152,4 @@ class WalletBuilderTest {
     private fun mockCredentialIssuer(): Any = object {}
 }
 
+

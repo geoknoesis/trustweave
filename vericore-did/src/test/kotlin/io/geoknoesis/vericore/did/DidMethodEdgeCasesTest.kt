@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import java.time.Instant
 
 /**
  * Comprehensive edge case tests for DidMethod interface and DidRegistry.
@@ -145,7 +146,10 @@ class DidMethodEdgeCasesTest {
             
             override suspend fun resolveDid(did: String) = DidResolutionResult(
                 document = DidDocument(id = did),
-                documentMetadata = mapOf("created" to "2024-01-01T00:00:00Z", "updated" to "2024-01-02T00:00:00Z"),
+                documentMetadata = DidDocumentMetadata(
+                    created = Instant.parse("2024-01-01T00:00:00Z"),
+                    updated = Instant.parse("2024-01-02T00:00:00Z")
+                ),
                 resolutionMetadata = mapOf("duration" to 100L, "cached" to false)
             )
             
@@ -158,7 +162,8 @@ class DidMethodEdgeCasesTest {
         val result = DidRegistry.resolve("did:test:123")
         
         assertNotNull(result.document)
-        assertEquals(2, result.documentMetadata.size)
+        assertNotNull(result.documentMetadata.created)
+        assertNotNull(result.documentMetadata.updated)
         assertEquals(2, result.resolutionMetadata.size)
     }
 
@@ -243,4 +248,5 @@ class DidMethodEdgeCasesTest {
         }
     }
 }
+
 

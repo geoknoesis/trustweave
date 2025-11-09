@@ -7,9 +7,12 @@ VeriCore provides a comprehensive set of features for building decentralized ide
 ### 1. Decentralized Identifiers (DIDs)
 
 - **Pluggable DID Methods**: Support for any DID method via the `DidMethod` interface
-- **DID Document Management**: W3C DID Core-compliant document handling
+- **DID Document Management**: W3C DID Core-compliant document handling with all verification relationships
 - **DID Resolution**: Chain-agnostic DID resolution through the registry pattern
 - **Multiple Method Support**: Works with did:key, did:web, did:ion, did:algo, and more
+- **Verification Relationships**: Support for authentication, assertionMethod, keyAgreement, capabilityInvocation, and capabilityDelegation
+- **JSON-LD Context**: Full support for JSON-LD contexts in DID Documents
+- **DID Document Metadata**: Structured metadata with temporal fields (created, updated, etc.)
 
 ### 2. Blockchain Anchoring
 
@@ -37,6 +40,27 @@ VeriCore provides a comprehensive set of features for building decentralized ide
 - **Automatic Discovery**: Adapters discovered via Java ServiceLoader
 - **Runtime Registration**: Register adapters without code changes
 - **Modular Design**: Each adapter module is independent and optional
+
+### 6. Web of Trust
+
+- **Trust Registry**: Manage trust anchors and discover trust paths between DIDs
+- **Trust Path Discovery**: Find trust relationships using graph traversal algorithms
+- **Trust Scores**: Calculate trust scores based on path length and anchor strength
+- **Credential Type Filtering**: Filter trust anchors by credential type
+- **Integration with Verification**: Built-in trust registry checking during credential verification
+
+### 7. Delegation Chains
+
+- **Capability Delegation**: Delegate credential issuance and other capabilities to other DIDs
+- **Multi-Hop Delegation**: Support for hierarchical delegation chains
+- **Delegation Verification**: Verify delegation chains end-to-end
+- **Integration with Credentials**: Automatic delegation checking for delegated credentials
+
+### 8. Proof Purpose Validation
+
+- **Purpose Verification**: Validate that proof purposes match DID Document verification relationships
+- **Relationship Checking**: Ensure proofs are used only for their intended purposes
+- **W3C Compliance**: Full compliance with W3C DID Core proof purpose requirements
 
 ## Technical Features
 

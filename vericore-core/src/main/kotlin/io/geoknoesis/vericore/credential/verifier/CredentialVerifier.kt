@@ -4,9 +4,12 @@ import io.geoknoesis.vericore.credential.CredentialVerificationOptions
 import io.geoknoesis.vericore.credential.CredentialVerificationResult
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
 import io.geoknoesis.vericore.credential.schema.SchemaRegistry
+import io.geoknoesis.vericore.credential.proof.ProofValidator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.Instant
+import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
+import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 
 /**
  * Native credential verifier implementation.
@@ -65,8 +68,39 @@ class CredentialVerifier(
         var notRevoked = true
         var schemaValid = true
         var blockchainAnchorValid = true
+        var trustRegistryValid = true
+        var delegationValid = true
+        var proofPurposeValid = true
         
-        // 1. Verify proof signature
+        // 1. Verify proof purpose if enabled (before signature verification)
+        if (options.validateProofPurpose && credential.proof != null) {
+            try {
+                    if (options.resolveDid != null) {
+                        val resolveDidFn: suspend (String) -> Any? = { did ->
+                            options.resolveDid(did) as? Any
+                        }
+                        
+                        val proofValidator = ProofValidator(resolveDidFn)
+                    val purposeResult = proofValidator.validateProofPurpose(
+                        proofPurpose = credential.proof.proofPurpose,
+                        verificationMethod = credential.proof.verificationMethod,
+                        issuerDid = credential.issuer
+                    )
+                    
+                    proofPurposeValid = purposeResult.valid
+                    if (!proofPurposeValid) {
+                        errors.addAll(purposeResult.errors)
+                    }
+                } else {
+                    warnings.add("Proof purpose validation requested but resolveDid not provided")
+                }
+            } catch (e: Exception) {
+                warnings.add("Proof purpose validation failed: ${e.message}")
+                proofPurposeValid = false
+            }
+        }
+        
+        // 2. Verify proof signature
         if (credential.proof != null) {
             proofValid = verifyProof(credential, credential.proof)
             if (!proofValid) {
@@ -131,8 +165,87 @@ class CredentialVerifier(
             warnings.add("Blockchain anchor verification not yet implemented")
         }
         
+        // 7. Check trust registry if enabled
+        if (options.checkTrustRegistry && options.trustRegistry != null) {
+            try {
+                val registry = options.trustRegistry
+                val isTrustedMethod = registry.javaClass.getMethod(
+                    "isTrustedIssuer",
+                    String::class.java,
+                    String::class.java,
+                    kotlin.coroutines.Continuation::class.java
+                )
+                
+                // Extract credential type from credential.type
+                val credentialType = credential.type.firstOrNull { it != "VerifiableCredential" }
+                
+                // Call isTrustedIssuer using reflection with coroutines
+                val isTrusted = suspendCoroutineUninterceptedOrReturn<Boolean> { cont ->
+                    try {
+                        val result = isTrustedMethod.invoke(registry, credential.issuer, credentialType, cont)
+                        if (result === COROUTINE_SUSPENDED) {
+                            COROUTINE_SUSPENDED
+                        } else {
+                            cont.resumeWith(Result.success(result as Boolean))
+                            COROUTINE_SUSPENDED
+                        }
+                    } catch (e: Exception) {
+                        cont.resumeWith(Result.failure(e))
+                        COROUTINE_SUSPENDED
+                    }
+                } ?: false
+                
+                trustRegistryValid = isTrusted
+                if (!trustRegistryValid) {
+                    errors.add("Issuer '${credential.issuer}' is not trusted in trust registry")
+                }
+            } catch (e: Exception) {
+                warnings.add("Trust registry check failed: ${e.message}")
+                trustRegistryValid = false
+            }
+        }
+        
+        // 8. Verify delegation if proof purpose is capabilityDelegation or capabilityInvocation
+        if (options.verifyDelegation && credential.proof != null) {
+            val proofPurpose = credential.proof.proofPurpose
+            if (proofPurpose == "capabilityDelegation" || proofPurpose == "capabilityInvocation") {
+                try {
+                    // Extract delegator from proof verificationMethod
+                    val verificationMethod = credential.proof.verificationMethod
+                    val delegatorDid = if (verificationMethod.contains("#")) {
+                        verificationMethod.substringBefore("#")
+                    } else {
+                        credential.issuer // Fallback to issuer
+                    }
+                    
+                    // Verify delegation chain
+                    if (options.resolveDid != null) {
+                        val resolveDidFn: suspend (String) -> Any? = { did ->
+                            options.resolveDid(did) as? Any
+                        }
+                        
+                        val delegationService = io.geoknoesis.vericore.did.delegation.DelegationService(resolveDidFn)
+                        val delegationResult = delegationService.verifyDelegationChain(
+                            delegatorDid = delegatorDid,
+                            delegateDid = credential.issuer
+                        )
+                        
+                        delegationValid = delegationResult.valid
+                        if (!delegationValid) {
+                            errors.add("Delegation verification failed: ${delegationResult.errors.joinToString(", ")}")
+                        }
+                    } else {
+                        warnings.add("Delegation verification requested but resolveDid not provided")
+                    }
+                } catch (e: Exception) {
+                    warnings.add("Delegation verification failed: ${e.message}")
+                    delegationValid = false
+                }
+            }
+        }
+        
         CredentialVerificationResult(
-            valid = errors.isEmpty() && proofValid && issuerValid && notExpired && notRevoked && schemaValid && blockchainAnchorValid,
+            valid = errors.isEmpty() && proofValid && issuerValid && notExpired && notRevoked && schemaValid && blockchainAnchorValid && trustRegistryValid && delegationValid && proofPurposeValid,
             errors = errors,
             warnings = warnings,
             proofValid = proofValid,
@@ -140,7 +253,10 @@ class CredentialVerifier(
             notExpired = notExpired,
             notRevoked = notRevoked,
             schemaValid = schemaValid,
-            blockchainAnchorValid = blockchainAnchorValid
+            blockchainAnchorValid = blockchainAnchorValid,
+            trustRegistryValid = trustRegistryValid,
+            delegationValid = delegationValid,
+            proofPurposeValid = proofPurposeValid
         )
     }
     

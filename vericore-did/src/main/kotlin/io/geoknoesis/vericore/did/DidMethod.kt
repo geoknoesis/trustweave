@@ -18,6 +18,28 @@ interface DidMethod {
      * @return The initial DID Document
      */
     suspend fun createDid(options: Map<String, Any?> = emptyMap()): DidDocument
+    
+    /**
+     * Creates a new DID using type-safe options.
+     * 
+     * This method provides compile-time type safety over the Map-based version.
+     * Default implementation delegates to [createDid] with map conversion.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val options = DidCreationOptions(
+     *     algorithm = KeyAlgorithm.ED25519,
+     *     purposes = listOf(KeyPurpose.AUTHENTICATION)
+     * )
+     * val document = didMethod.createDid(options)
+     * ```
+     * 
+     * @param options Type-safe creation options
+     * @return The initial DID Document
+     */
+    suspend fun createDid(options: DidCreationOptions): DidDocument {
+        return createDid(options.toMap())
+    }
 
     /**
      * Resolves a DID to its DID Document.
@@ -49,11 +71,15 @@ interface DidMethod {
 }
 
 /**
- * Registry for DID method implementations.
- * Allows registration and lookup of DID methods.
+ * Global DID registry for backward compatibility.
+ *
+ * The preferred API is `DidMethodRegistry`, which allows instance-based
+ * isolation. This singleton is retained for legacy integrations that still rely
+ * on a global registry and stores state in its own internal
+ * `DidMethodRegistry` instance.
  */
 object DidRegistry {
-    private val methods = mutableMapOf<String, DidMethod>()
+    private val defaultRegistry = DidMethodRegistry()
 
     /**
      * Registers a DID method implementation.
@@ -61,7 +87,7 @@ object DidRegistry {
      * @param method The DID method to register
      */
     fun register(method: DidMethod) {
-        methods[method.method] = method
+        defaultRegistry.register(method)
     }
 
     /**
@@ -71,7 +97,7 @@ object DidRegistry {
      * @return The DidMethod implementation, or null if not found
      */
     fun get(methodName: String): DidMethod? {
-        return methods[methodName]
+        return defaultRegistry.get(methodName)
     }
 
     /**
@@ -82,17 +108,14 @@ object DidRegistry {
      * @throws IllegalArgumentException if the DID method is not registered
      */
     suspend fun resolve(did: String): DidResolutionResult {
-        val parsed = Did.parse(did)
-        val method = get(parsed.method)
-            ?: throw IllegalArgumentException("DID method '${parsed.method}' is not registered")
-        return method.resolveDid(did)
+        return defaultRegistry.resolve(did)
     }
 
     /**
      * Clears all registered methods (useful for testing).
      */
     fun clear() {
-        methods.clear()
+        defaultRegistry.clear()
     }
 }
 

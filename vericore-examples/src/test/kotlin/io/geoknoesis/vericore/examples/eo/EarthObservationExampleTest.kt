@@ -53,7 +53,6 @@ class EarthObservationExampleTest {
     fun `test DID creation for data provider`() = runBlocking {
         // Setup
         DidRegistry.clear()
-        BlockchainRegistry.clear()
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         DidRegistry.register(didMethod)

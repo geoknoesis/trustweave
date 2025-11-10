@@ -8,7 +8,9 @@ group = "io.geoknoesis.vericore"
 version = "1.0.0-SNAPSHOT"
 
 dependencies {
-    // vericore-core has no dependencies on other vericore modules
+    implementation(kotlin("reflect"))
+    implementation(project(":vericore-spi"))
+    implementation(project(":vericore-trust"))
     // Test dependencies
     testImplementation(project(":vericore-testkit"))
     testImplementation(project(":vericore-did"))

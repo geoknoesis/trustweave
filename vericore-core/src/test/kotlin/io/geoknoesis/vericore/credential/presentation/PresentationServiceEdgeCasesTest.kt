@@ -8,6 +8,7 @@ import io.geoknoesis.vericore.credential.models.VerifiablePresentation
 import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
 import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
 import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
+import io.geoknoesis.vericore.util.booleanDidResolver
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.AfterEach
@@ -41,7 +42,7 @@ class PresentationServiceEdgeCasesTest {
         ProofGeneratorRegistry.register(proofGenerator)
         
         credentialVerifier = CredentialVerifier(
-            resolveDid = { true }
+            booleanDidResolver { true }
         )
         
         service = PresentationService(

@@ -1,6 +1,7 @@
 package io.geoknoesis.vericore.examples.professional
 
 import io.geoknoesis.vericore.credential.PresentationOptions
+import io.geoknoesis.vericore.anchor.BlockchainRegistry
 import io.geoknoesis.vericore.did.DidRegistry
 import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
@@ -48,6 +49,7 @@ class ProfessionalIdentityExampleTest {
     fun `test storing multiple credential types`() = runBlocking {
         // Setup
         DidRegistry.clear()
+        BlockchainRegistry.clear()
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         DidRegistry.register(didMethod)
@@ -115,6 +117,7 @@ class ProfessionalIdentityExampleTest {
     fun `test credential organization with collections`() = runBlocking {
         // Setup
         DidRegistry.clear()
+        BlockchainRegistry.clear()
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         DidRegistry.register(didMethod)
@@ -174,6 +177,7 @@ class ProfessionalIdentityExampleTest {
     fun `test credential tagging`() = runBlocking {
         // Setup
         DidRegistry.clear()
+        BlockchainRegistry.clear()
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         DidRegistry.register(didMethod)
@@ -214,6 +218,7 @@ class ProfessionalIdentityExampleTest {
     fun `test credential querying by type`() = runBlocking {
         // Setup
         DidRegistry.clear()
+        BlockchainRegistry.clear()
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         DidRegistry.register(didMethod)
@@ -258,6 +263,7 @@ class ProfessionalIdentityExampleTest {
     fun `test selective disclosure presentation`() = runBlocking {
         // Setup
         DidRegistry.clear()
+        BlockchainRegistry.clear()
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         DidRegistry.register(didMethod)
@@ -317,6 +323,7 @@ class ProfessionalIdentityExampleTest {
     fun `test full presentation creation`() = runBlocking {
         // Setup
         DidRegistry.clear()
+        BlockchainRegistry.clear()
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         DidRegistry.register(didMethod)
@@ -368,6 +375,7 @@ class ProfessionalIdentityExampleTest {
     fun `test querying active certifications`() = runBlocking {
         // Setup
         DidRegistry.clear()
+        BlockchainRegistry.clear()
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         DidRegistry.register(didMethod)

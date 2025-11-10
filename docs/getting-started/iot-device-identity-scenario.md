@@ -364,7 +364,9 @@ import java.time.Instant
     // The resolveDid function checks if DIDs are valid (simplified for example)
     val manufacturerIssuer = CredentialIssuer(
         proofGenerator = manufacturerProofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     // Issue the credential with cryptographic proof
@@ -515,7 +517,9 @@ import java.time.Instant
     
     val gatewayIssuer = CredentialIssuer(
         proofGenerator = gatewayProofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     val issuedNetworkAuth = gatewayIssuer.issue(
@@ -555,7 +559,9 @@ import io.geoknoesis.vericore.credential.CredentialVerificationOptions
     // Create verifier to check device credentials
     // This verifier will check cryptographic proofs and credential validity
     val verifier = CredentialVerifier(
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     // First, verify device attestation
@@ -1050,7 +1056,9 @@ fun authenticateSmartHomeDevice(
 ): Boolean {
     // Verify device attestation
     val verifier = CredentialVerifier(
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     val verification = verifier.verify(
@@ -1108,7 +1116,9 @@ fun establishVehicleCommunication(
     vehicle2Attestation: VerifiableCredential
 ): Boolean {
     val verifier = CredentialVerifier(
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     // Verify both vehicle attestations
@@ -1159,4 +1169,5 @@ fun establishVehicleCommunication(
 - Explore [Proof of Location Scenario](proof-of-location-scenario.md) for location-based device tracking
 - Check out [Supply Chain & Traceability Scenario](supply-chain-traceability-scenario.md) for device manufacturing tracking
 - Review [Core Concepts: DIDs](../core-concepts/dids.md) for identity management
+
 

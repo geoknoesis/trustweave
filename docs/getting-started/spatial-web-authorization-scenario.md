@@ -361,11 +361,14 @@ fun main() = runBlocking {
         signer = { data, keyId -> domainAuthorityKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> authorityKey.id }
     )
-    ProofGeneratorRegistry.register(proofGenerator)
+
+val didResolver = CredentialDidResolver { did ->
+    DidRegistry.resolve(did).toCredentialDidResolution()
+}
     
     val credentialIssuer = CredentialIssuer(
         proofGenerator = proofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+    resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
     )
     
     val issuedCredential = credentialIssuer.issue(
@@ -425,15 +428,16 @@ fun main() = runBlocking {
     // Step 9: Verify authorization before activity
     println("\nStep 9: Verifying authorization before activity...")
     val verifier = CredentialVerifier(
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+    defaultDidResolver = didResolver
     )
     
     val verificationResult = verifier.verify(
         credential = issuedCredential,
         options = CredentialVerificationOptions(
-            checkRevocation = true,
-            checkExpiration = true,
-            validateSchema = true
+        checkRevocation = false,
+        checkExpiration = true,
+        validateSchema = false,
+        didResolver = didResolver
         )
     )
     
@@ -1094,4 +1098,5 @@ fun authorizeMonitoringActivities(
 - Check out [IoT & Device Identity Scenario](iot-device-identity-scenario.md) for device authorization
 - Review [Core Concepts: DIDs](../core-concepts/dids.md) for identity management
 - Study [Core Concepts: Verifiable Credentials](../core-concepts/verifiable-credentials.md) for credential details
+
 

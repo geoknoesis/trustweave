@@ -4,7 +4,9 @@ VeriCore is organized into several core modules, each providing specific functio
 
 ## Module Overview
 
-- **[vericore-core](vericore-core.md)** - Shared types, exceptions, and common utilities
+- **vericore-spi** - Shared plugin/service abstractions and adapter loader utilities
+- **vericore-trust** - Trust registry interfaces and trust-layer runtime helpers
+- **[vericore-core](vericore-core.md)** - Credential domain APIs, DSLs, and wallet utilities
 - **[vericore-json](vericore-json.md)** - JSON canonicalization and digest computation utilities
 - **[vericore-kms](vericore-kms.md)** - Key management service abstraction
 - **[vericore-did](vericore-did.md)** - DID and DID Document management with pluggable DID methods
@@ -14,15 +16,14 @@ VeriCore is organized into several core modules, each providing specific functio
 ## Module Dependencies
 
 ```
-vericore-core (no dependencies)
-    ↓
+vericore-spi (no dependencies)
+vericore-trust → vericore-spi
+vericore-core → vericore-spi, vericore-trust
 vericore-json → vericore-core
 vericore-kms → vericore-core
-    ↓
-vericore-did → vericore-core, vericore-kms
-vericore-anchor → vericore-core, vericore-json
-    ↓
-vericore-testkit → all above modules
+vericore-did → vericore-core, vericore-spi, vericore-kms
+vericore-anchor → vericore-core, vericore-spi, vericore-json
+vericore-testkit → vericore-core, vericore-spi, vericore-trust, vericore-did, vericore-kms, vericore-anchor
 ```
 
 ## Next Steps

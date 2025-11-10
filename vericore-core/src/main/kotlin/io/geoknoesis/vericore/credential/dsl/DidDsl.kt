@@ -1,10 +1,11 @@
 package io.geoknoesis.vericore.credential.dsl
 
+import io.geoknoesis.vericore.spi.services.DidMethodService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.Continuation
-import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
-import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
+import kotlin.reflect.full.callSuspend
+import kotlin.reflect.full.memberFunctions
+import kotlin.reflect.jvm.isAccessible
 
 /**
  * DID Builder DSL.
@@ -73,83 +74,35 @@ class DidBuilder(
             createOptions["algorithm"] = algorithm
         }
         
-        // Create DID using reflection to avoid dependency on vericore-did
-        try {
-            val createDidMethod = didMethod.javaClass.getMethod(
-                "createDid",
-                Map::class.java,
-                Continuation::class.java
-            )
-            
-            suspendCoroutineUninterceptedOrReturn<String> { cont ->
-                try {
-                    val result = createDidMethod.invoke(didMethod, createOptions, cont)
-                    if (result === COROUTINE_SUSPENDED) {
-                        COROUTINE_SUSPENDED
-                    } else {
-                        // Extract DID string from DidDocument
-                        val document = result as? Any
-                        if (document != null) {
-                            try {
-                                val getIdMethod = document.javaClass.getMethod("getId")
-                                val didString = getIdMethod.invoke(document) as? String
-                                if (didString != null) {
-                                    cont.resumeWith(Result.success(didString))
-                                    COROUTINE_SUSPENDED
-                                } else {
-                                    cont.resumeWith(Result.failure(
-                                        IllegalStateException("DID document has no ID")
-                                    ))
-                                    COROUTINE_SUSPENDED
-                                }
-                            } catch (e: Exception) {
-                                // Try field access
-                                try {
-                                    val idField = document.javaClass.getDeclaredField("id")
-                                    idField.isAccessible = true
-                                    val didString = idField.get(document) as? String
-                                    if (didString != null) {
-                                        cont.resumeWith(Result.success(didString))
-                                        COROUTINE_SUSPENDED
-                                    } else {
-                                        cont.resumeWith(Result.failure(
-                                            IllegalStateException("DID document has no ID")
-                                        ))
-                                        COROUTINE_SUSPENDED
-                                    }
-                                } catch (e2: Exception) {
-                                    cont.resumeWith(Result.failure(
-                                        IllegalStateException(
-                                            "Failed to extract DID from document: ${e2.message}"
-                                        )
-                                    ))
-                                    COROUTINE_SUSPENDED
-                                }
-                            }
-                        } else {
-                            cont.resumeWith(Result.failure(
-                                IllegalStateException("createDid returned null")
-                            ))
-                            COROUTINE_SUSPENDED
-                        }
-                    }
-                } catch (e: Exception) {
-                    cont.resumeWith(Result.failure(
-                        IllegalStateException(
-                            "Failed to create DID with method '$methodName': ${e.message}",
-                            e
-                        )
-                    ))
-                    COROUTINE_SUSPENDED
-                }
-            } ?: throw IllegalStateException("DID creation was suspended")
-        } catch (e: NoSuchMethodException) {
-            throw IllegalStateException(
-                "DID method '$methodName' does not implement createDid method. " +
-                "Ensure it implements DidMethod interface.",
-                e
-            )
+        // Invoke the DID method directly via reflection
+        val document = invokeSuspendFunction(didMethod, "createDid", createOptions)
+            ?: throw IllegalStateException("createDid on '$methodName' returned null")
+
+        val didId = extractDidId(document)
+            ?: throw IllegalStateException("createDid on '$methodName' returned document without id")
+
+        return@withContext didId
+    }
+}
+
+private suspend fun invokeSuspendFunction(target: Any, methodName: String, vararg args: Any?): Any? {
+    val function = target::class.memberFunctions.firstOrNull { fn ->
+        fn.name == methodName && fn.parameters.size == args.size + 1
+    } ?: throw NoSuchMethodException("Method $methodName with ${args.size} arguments not found on ${target::class.qualifiedName}")
+
+    function.isAccessible = true
+    return function.callSuspend(target, *args)
+}
+
+private fun extractDidId(document: Any): String? {
+    return try {
+        val method = document::class.java.methods.firstOrNull { it.name == "getId" && it.parameterCount == 0 }
+        method?.let {
+            it.isAccessible = true
+            it.invoke(document) as? String
         }
+    } catch (_: Exception) {
+        null
     }
 }
 

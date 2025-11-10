@@ -4,6 +4,9 @@ import io.geoknoesis.vericore.credential.CredentialVerificationOptions
 import io.geoknoesis.vericore.credential.models.CredentialStatus
 import io.geoknoesis.vericore.credential.models.Proof
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
+import io.geoknoesis.vericore.credential.did.CredentialDidResolver
+import io.geoknoesis.vericore.credential.did.CredentialDidResolution
+import io.geoknoesis.vericore.util.booleanDidResolver
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.BeforeEach
@@ -102,7 +105,7 @@ class CredentialVerifierAdditionalBranchCoverageTest {
 
     @Test
     fun `test CredentialVerifier verify with resolveDid returning false`() = runBlocking {
-        val verifier = CredentialVerifier(resolveDid = { false })
+        val verifier = CredentialVerifier(booleanDidResolver { false })
         val credential = createTestCredential()
         
         val result = verifier.verify(credential)
@@ -114,7 +117,7 @@ class CredentialVerifierAdditionalBranchCoverageTest {
     @Test
     fun `test CredentialVerifier verify with resolveDid throwing exception`() = runBlocking {
         val verifier = CredentialVerifier(
-            resolveDid = { throw RuntimeException("DID resolution failed") }
+            CredentialDidResolver { throw RuntimeException("DID resolution failed") }
         )
         val credential = createTestCredential()
         

@@ -2,10 +2,14 @@ package io.geoknoesis.vericore.credential.verifier
 
 import io.geoknoesis.vericore.credential.CredentialVerificationOptions
 import io.geoknoesis.vericore.credential.CredentialVerificationResult
+import io.geoknoesis.vericore.credential.did.CredentialDidResolution
+import io.geoknoesis.vericore.credential.did.CredentialDidResolver
 import io.geoknoesis.vericore.credential.models.Proof
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
 import io.geoknoesis.vericore.did.DidDocument
 import io.geoknoesis.vericore.did.DidResolutionResult
+import io.geoknoesis.vericore.did.toCredentialDidResolution
+import io.geoknoesis.vericore.util.booleanDidResolver
 import io.geoknoesis.vericore.testkit.trust.InMemoryTrustRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
@@ -33,11 +37,7 @@ class CredentialVerifierWebOfTrustTest {
             )
         )
         
-        val resolveDid: suspend (String) -> Boolean = { did ->
-            did == issuerDid
-        }
-        
-        val verifier = CredentialVerifier(resolveDid)
+        val verifier = CredentialVerifier(booleanDidResolver { did -> did == issuerDid })
         
         val credential = VerifiableCredential(
             id = "https://example.com/credential-1",
@@ -71,8 +71,7 @@ class CredentialVerifierWebOfTrustTest {
         
         // Don't add issuer as trust anchor
         
-        val resolveDid: suspend (String) -> Boolean = { true }
-        val verifier = CredentialVerifier(resolveDid)
+        val verifier = CredentialVerifier(booleanDidResolver { true })
         
         val credential = VerifiableCredential(
             id = "https://example.com/credential-1",
@@ -119,7 +118,10 @@ class CredentialVerifierWebOfTrustTest {
             }
         }
         
-        val verifier = CredentialVerifier { did -> resolveDid(did) != null }
+        val didResolver = CredentialDidResolver { did ->
+            resolveDid(did)?.toCredentialDidResolution()
+        }
+        val verifier = CredentialVerifier(didResolver)
         
         // Credential issued by delegate, but verificationMethod references delegator
         // to show delegation chain
@@ -141,7 +143,7 @@ class CredentialVerifierWebOfTrustTest {
             credential = credential,
             options = CredentialVerificationOptions(
                 verifyDelegation = true,
-                resolveDid = resolveDid
+                didResolver = didResolver
             )
         )
         
@@ -149,7 +151,40 @@ class CredentialVerifierWebOfTrustTest {
         // The verification checks if issuer (delegateDid) is delegated by delegatorDid
         assertTrue(result.delegationValid)
     }
-    
+
+    @Test
+    fun `legacy boolean resolver fails delegation gracefully`() = runBlocking {
+        val delegatorDid = "did:key:delegator"
+        val delegateDid = "did:key:delegate"
+
+        val verifier = CredentialVerifier(booleanDidResolver { true })
+
+        val credential = VerifiableCredential(
+            id = "https://example.com/delegated-credential",
+            type = listOf("VerifiableCredential", "TestCredential"),
+            issuer = delegateDid,
+            credentialSubject = buildJsonObject { put("id", "did:key:holder") },
+            issuanceDate = Instant.now().toString(),
+            proof = Proof(
+                type = "Ed25519Signature2020",
+                created = Instant.now().toString(),
+                verificationMethod = "$delegatorDid#key-1",
+                proofPurpose = "capabilityDelegation"
+            )
+        )
+
+        val result = verifier.verify(
+            credential = credential,
+            options = CredentialVerificationOptions(
+                verifyDelegation = true,
+                didResolver = booleanDidResolver { true }
+            )
+        )
+
+        assertFalse(result.delegationValid)
+        assertTrue(result.errors.any { it.contains("Delegator DID document", ignoreCase = true) })
+    }
+
     @Test
     fun `test verify credential with proof purpose validation enabled`() = runBlocking {
         val issuerDid = "did:key:issuer"
@@ -165,7 +200,10 @@ class CredentialVerifierWebOfTrustTest {
             } else null
         }
         
-        val verifier = CredentialVerifier { did -> resolveDid(did) != null }
+        val didResolver = CredentialDidResolver { did ->
+            resolveDid(did)?.toCredentialDidResolution()
+        }
+        val verifier = CredentialVerifier(didResolver)
         
         val credential = VerifiableCredential(
             id = "https://example.com/credential-1",
@@ -185,11 +223,43 @@ class CredentialVerifierWebOfTrustTest {
             credential = credential,
             options = CredentialVerificationOptions(
                 validateProofPurpose = true,
-                resolveDid = resolveDid
+                didResolver = didResolver
             )
         )
         
         assertTrue(result.proofPurposeValid)
+    }
+
+    @Test
+    fun `legacy boolean resolver fails proof purpose gracefully`() = runBlocking {
+        val issuerDid = "did:key:issuer"
+
+        val verifier = CredentialVerifier(booleanDidResolver { true })
+
+        val credential = VerifiableCredential(
+            id = "https://example.com/credential-1",
+            type = listOf("VerifiableCredential", "TestCredential"),
+            issuer = issuerDid,
+            credentialSubject = buildJsonObject { put("id", "did:key:holder") },
+            issuanceDate = Instant.now().toString(),
+            proof = Proof(
+                type = "Ed25519Signature2020",
+                created = Instant.now().toString(),
+                verificationMethod = "$issuerDid#key-1",
+                proofPurpose = "assertionMethod"
+            )
+        )
+
+        val result = verifier.verify(
+            credential = credential,
+            options = CredentialVerificationOptions(
+                validateProofPurpose = true,
+                didResolver = booleanDidResolver { true }
+            )
+        )
+
+        assertFalse(result.proofPurposeValid)
+        assertTrue(result.errors.any { it.contains("Issuer DID document", ignoreCase = true) })
     }
     
     @Test
@@ -215,7 +285,10 @@ class CredentialVerifierWebOfTrustTest {
             } else null
         }
         
-        val verifier = CredentialVerifier { did -> resolveDid(did) != null }
+        val verifyResolver = CredentialDidResolver { did ->
+            resolveDid(did)?.toCredentialDidResolution()
+        }
+        val verifier = CredentialVerifier(verifyResolver)
         
         val credential = VerifiableCredential(
             id = "https://example.com/credential-1",
@@ -237,7 +310,7 @@ class CredentialVerifierWebOfTrustTest {
                 checkTrustRegistry = true,
                 trustRegistry = registry,
                 validateProofPurpose = true,
-                resolveDid = resolveDid,
+                didResolver = verifyResolver,
                 checkExpiration = true
             )
         )
@@ -254,8 +327,7 @@ class CredentialVerifierWebOfTrustTest {
         
         // Don't add issuer as trust anchor
         
-        val resolveDid: suspend (String) -> Boolean = { true }
-        val verifier = CredentialVerifier(resolveDid)
+        val verifier = CredentialVerifier(booleanDidResolver { true })
         
         val credential = VerifiableCredential(
             id = "https://example.com/credential-1",
@@ -300,7 +372,10 @@ class CredentialVerifierWebOfTrustTest {
             } else null
         }
         
-        val verifier = CredentialVerifier { did -> resolveDid(did) != null }
+        val resolver = CredentialDidResolver { did ->
+            resolveDid(did)?.toCredentialDidResolution()
+        }
+        val verifier = CredentialVerifier(resolver)
         
         val credential = VerifiableCredential(
             id = "https://example.com/credential-1",
@@ -320,7 +395,7 @@ class CredentialVerifierWebOfTrustTest {
             credential = credential,
             options = CredentialVerificationOptions(
                 validateProofPurpose = true,
-                resolveDid = resolveDid
+                didResolver = resolver
             )
         )
         
@@ -348,7 +423,10 @@ class CredentialVerifierWebOfTrustTest {
             }
         }
         
-        val verifier = CredentialVerifier { did -> resolveDid(did) != null }
+        val delegationResolver = CredentialDidResolver { did ->
+            resolveDid(did)?.toCredentialDidResolution()
+        }
+        val verifier = CredentialVerifier(delegationResolver)
         
         val credential = VerifiableCredential(
             id = "https://example.com/delegated-credential",
@@ -368,7 +446,7 @@ class CredentialVerifierWebOfTrustTest {
             credential = credential,
             options = CredentialVerificationOptions(
                 verifyDelegation = true,
-                resolveDid = resolveDid
+                didResolver = delegationResolver
             )
         )
         

@@ -1,5 +1,6 @@
 package io.geoknoesis.vericore.credential
 
+import io.geoknoesis.vericore.credential.did.CredentialDidResolver
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
 import io.geoknoesis.vericore.credential.models.VerifiablePresentation
 import io.geoknoesis.vericore.spi.SchemaFormat
@@ -141,7 +142,7 @@ data class CredentialVerificationOptions(
     val checkTrustRegistry: Boolean = false,
     val trustRegistry: Any? = null, // TrustRegistry - using Any to avoid dependency
     val verifyDelegation: Boolean = false,
-    val resolveDid: suspend (String) -> Any? = { null }, // DidResolutionResult? - using Any to avoid dependency
+    val didResolver: io.geoknoesis.vericore.credential.did.CredentialDidResolver? = null,
     val validateProofPurpose: Boolean = false,
     val additionalOptions: Map<String, Any?> = emptyMap()
 )

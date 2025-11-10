@@ -10,6 +10,8 @@ import io.geoknoesis.vericore.credential.schema.JsonSchemaValidator
 import io.geoknoesis.vericore.credential.schema.SchemaRegistry
 import io.geoknoesis.vericore.credential.schema.SchemaValidatorRegistry
 import io.geoknoesis.vericore.spi.SchemaFormat
+import io.geoknoesis.vericore.credential.did.CredentialDidResolver
+import io.geoknoesis.vericore.util.booleanDidResolver
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.AfterEach
@@ -31,7 +33,7 @@ class CredentialVerifierEdgeCasesTest {
         SchemaValidatorRegistry.clear()
         SchemaValidatorRegistry.register(JsonSchemaValidator())
         verifier = CredentialVerifier(
-            resolveDid = { did -> did == issuerDid }
+            booleanDidResolver { did -> did == issuerDid }
         )
     }
 
@@ -297,7 +299,7 @@ class CredentialVerifierEdgeCasesTest {
     @Test
     fun `test verify credential with DID resolution throwing exception`() = runBlocking {
         val verifierWithThrowingDid = CredentialVerifier(
-            resolveDid = { throw RuntimeException("DID resolution failed") }
+            CredentialDidResolver { throw RuntimeException("DID resolution failed") }
         )
         val credential = createTestCredential()
         
@@ -311,7 +313,7 @@ class CredentialVerifierEdgeCasesTest {
     @Test
     fun `test verify credential with DID resolution returning false`() = runBlocking {
         val verifierWithFailedDid = CredentialVerifier(
-            resolveDid = { false }
+            booleanDidResolver { false }
         )
         val credential = createTestCredential()
         

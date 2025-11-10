@@ -38,36 +38,41 @@ fun main() {
 ## Step 3: Create a DID
 
 ```kotlin
-import io.geoknoesis.vericore.did.*
+import io.geoknoesis.vericore.did.DidRegistry
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    // Setup: Create KMS and DID method
+    // Reset for repeatable runs in samples and unit tests.
+    DidRegistry.clear()
+
     val kms = InMemoryKeyManagementService()
     val didMethod = DidKeyMockMethod(kms)
-    
-    // Register the method
+
     DidRegistry.register(didMethod)
-    
-    // Create a DID
-    val document = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+
+    val document = didMethod.createDid(
+        mapOf("algorithm" to "Ed25519")
+    )
     println("Created DID: ${document.id}")
-    
-    // Resolve the DID
-    val result = DidRegistry.resolve(document.id)
-    println("Resolved document: ${result.document?.id}")
+
+    val resolution = DidRegistry.resolve(document.id)
+    checkNotNull(resolution.document) {
+        "Mock DID resolver should always supply a document during quick-start"
+    }
+    println("Resolved DID document id: ${resolution.document.id}")
 }
 ```
 
 ## Step 4: Anchor Data to Blockchain
 
 ```kotlin
-import io.geoknoesis.vericore.anchor.*
+import io.geoknoesis.vericore.anchor.BlockchainRegistry
+import io.geoknoesis.vericore.anchor.anchorTyped
+import io.geoknoesis.vericore.anchor.readTyped
 import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -77,47 +82,50 @@ data class VerifiableCredentialDigest(
 )
 
 fun main() = runBlocking {
-    // Setup: Create and register blockchain client
-    val client = InMemoryBlockchainAnchorClient("algorand:mainnet", "app-123")
+    val client = InMemoryBlockchainAnchorClient(
+        chainId = "algorand:mainnet",
+        contract = "app-123"
+    )
+    BlockchainRegistry.clear()
     BlockchainRegistry.register("algorand:mainnet", client)
-    
-    // Create a digest object
+
     val digest = VerifiableCredentialDigest(
         vcId = "vc-12345",
         vcDigest = "uABC123..."
     )
-    
-    // Anchor it
+
     val result = anchorTyped(
         value = digest,
         serializer = VerifiableCredentialDigest.serializer(),
         targetChainId = "algorand:mainnet"
     )
-    
+
     println("Anchored at: ${result.ref.txHash}")
-    
-    // Read it back
+
     val retrieved = readTyped<VerifiableCredentialDigest>(
         ref = result.ref,
         serializer = VerifiableCredentialDigest.serializer()
     )
-    
-    println("Retrieved: ${retrieved.vcId}")
+
+    println("Retrieved digest subject: ${retrieved.vcId}")
 }
 ```
 
 ## Step 5: Complete Workflow
 
 ```kotlin
-import io.geoknoesis.vericore.anchor.*
-import io.geoknoesis.vericore.did.*
+import io.geoknoesis.vericore.anchor.BlockchainRegistry
+import io.geoknoesis.vericore.anchor.anchorTyped
+import io.geoknoesis.vericore.anchor.readTyped
+import io.geoknoesis.vericore.did.DidRegistry
 import io.geoknoesis.vericore.json.DigestUtils
 import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 @Serializable
 data class VerifiableCredentialDigest(
@@ -127,56 +135,53 @@ data class VerifiableCredentialDigest(
 )
 
 fun main() = runBlocking {
-    // 1. Setup services
+    DidRegistry.clear()
+    BlockchainRegistry.clear()
+
     val kms = InMemoryKeyManagementService()
     val didMethod = DidKeyMockMethod(kms)
     val anchorClient = InMemoryBlockchainAnchorClient("algorand:mainnet")
-    
+
     DidRegistry.register(didMethod)
     BlockchainRegistry.register("algorand:mainnet", anchorClient)
-    
-    // 2. Create a DID for the issuer
-    val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+
+    val issuerDoc = didMethod.createDid()
     val issuerDid = issuerDoc.id
-    
-    // 3. Create a verifiable credential payload
+
     val vcPayload = buildJsonObject {
-        put("vcId", "vc-12345")
+        put("id", "urn:vc:quick-start-1")
         put("issuer", issuerDid)
         put("credentialSubject", buildJsonObject {
-            put("id", "subject-123")
+            put("id", "did:key:holder-123")
             put("type", "Person")
         })
     }
-    
-    // 4. Compute digest
+
     val digest = DigestUtils.sha256DigestMultibase(vcPayload)
-    
-    // 5. Create digest object and anchor it
-    val digestObj = VerifiableCredentialDigest(
-        vcId = "vc-12345",
+    val digestRecord = VerifiableCredentialDigest(
+        vcId = "urn:vc:quick-start-1",
         vcDigest = digest,
         issuer = issuerDid
     )
-    
+
     val anchorResult = anchorTyped(
-        value = digestObj,
+        value = digestRecord,
         serializer = VerifiableCredentialDigest.serializer(),
         targetChainId = "algorand:mainnet"
     )
-    
+
     println("Issuer DID: $issuerDid")
-    println("VC Digest: $digest")
-    println("Anchored at: ${anchorResult.ref.txHash}")
-    
-    // 6. Verify by reading back
+    println("Anchored digest: ${anchorResult.ref.txHash}")
+
     val retrieved = readTyped<VerifiableCredentialDigest>(
         ref = anchorResult.ref,
         serializer = VerifiableCredentialDigest.serializer()
     )
-    
-    assert(retrieved.vcDigest == digest)
-    println("Verification successful!")
+
+    require(retrieved.vcDigest == digest) {
+        "Anchored digest mismatch: expected $digest, got ${retrieved.vcDigest}"
+    }
+    println("Digest verification succeeded.")
 }
 ```
 

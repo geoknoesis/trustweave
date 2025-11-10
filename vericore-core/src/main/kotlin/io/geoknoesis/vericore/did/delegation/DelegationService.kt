@@ -1,6 +1,10 @@
 package io.geoknoesis.vericore.did.delegation
 
-import io.geoknoesis.vericore.core.VeriCoreException
+import io.geoknoesis.vericore.credential.did.CredentialDidResolver
+import io.geoknoesis.vericore.credential.did.asCredentialDidResolution
+import io.geoknoesis.vericore.spi.services.DidDocumentAccess
+import io.geoknoesis.vericore.spi.services.VerificationMethodAccess
+import io.geoknoesis.vericore.spi.services.AdapterLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -13,9 +17,7 @@ import kotlinx.coroutines.withContext
  * 
  * **Example Usage**:
  * ```kotlin
- * val delegationService = DelegationService(
- *     resolveDid = { did -> didRegistry.resolve(did) }
- * )
+ * val delegationService = DelegationService(didResolver)
  * 
  * val result = delegationService.verifyDelegationChain(
  *     delegatorDid = "did:key:delegator",
@@ -29,8 +31,21 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class DelegationService(
-    private val resolveDid: suspend (String) -> Any? // DidResolutionResult? - using Any to avoid dependency
+    private val didResolver: CredentialDidResolver,
+    private val documentAccess: DidDocumentAccess? = null, // Optional - will attempt reflective adapter if not provided
+    private val verificationMethodAccess: VerificationMethodAccess? = null // Optional - will attempt reflective adapter if not provided
 ) {
+
+    constructor(
+        resolveDid: suspend (String) -> Any?,
+        documentAccess: DidDocumentAccess? = null,
+        verificationMethodAccess: VerificationMethodAccess? = null
+    ) : this(
+        CredentialDidResolver { did -> resolveDid(did).asCredentialDidResolution() },
+        documentAccess,
+        verificationMethodAccess
+    )
+
     /**
      * Verifies a delegation chain between a delegator and delegate.
      * 
@@ -47,9 +62,22 @@ class DelegationService(
         val errors = mutableListOf<String>()
         val path = mutableListOf<String>()
         
-        // Resolve delegator DID document using reflection
-        val delegatorResult = resolveDid(delegatorDid) as? Any
-        if (delegatorResult == null) {
+        // Get required service instances
+        val docAccess = documentAccess ?: AdapterLoader.didDocumentAccess()
+        val vmAccess = verificationMethodAccess ?: AdapterLoader.verificationMethodAccess()
+        
+        // If services not available, throw error with helpful message
+        if (docAccess == null || vmAccess == null) {
+            throw IllegalStateException(
+                "DidDocumentAccess or VerificationMethodAccess not available. " +
+                "Ensure vericore-did module is on classpath by importing a class from it " +
+                "(e.g., io.geoknoesis.vericore.did.DidDocument) to trigger service registration."
+            )
+        }
+        
+        // Resolve delegator DID document
+        val delegatorResult = didResolver.resolve(delegatorDid)
+        if (delegatorResult == null || !delegatorResult.isResolvable) {
             return@withContext DelegationChainResult(
                 valid = false,
                 path = emptyList(),
@@ -57,31 +85,21 @@ class DelegationService(
             )
         }
         
-        val delegatorDoc = try {
-            val getDocumentMethod = delegatorResult.javaClass.getMethod("getDocument")
-            getDocumentMethod.invoke(delegatorResult) as? Any
-        } catch (e: Exception) {
-            null
-        }
-        
+        val delegatorDoc = delegatorResult.document
+            ?: delegatorResult.raw?.let { runCatching { docAccess.getDocument(it) }.getOrNull() }
+            ?: docAccess.getDocument(delegatorResult)
         if (delegatorDoc == null) {
             return@withContext DelegationChainResult(
                 valid = false,
                 path = emptyList(),
-                errors = listOf("Delegator DID document not found: $delegatorDid")
+                errors = listOf("Delegator DID document not available: $delegatorDid")
             )
         }
         
         path.add(delegatorDid)
         
-        // Check if delegator has capabilityDelegation relationships using reflection
-        val capabilityDelegation = try {
-            val getCapabilityDelegationMethod = delegatorDoc.javaClass.getMethod("getCapabilityDelegation")
-            val result = getCapabilityDelegationMethod.invoke(delegatorDoc) as? List<*>
-            result?.mapNotNull { it?.toString() } ?: emptyList()
-        } catch (e: Exception) {
-            emptyList()
-        }
+        // Check if delegator has capabilityDelegation relationships
+        val capabilityDelegation = docAccess.getCapabilityDelegation(delegatorDoc)
         
         if (capabilityDelegation.isEmpty()) {
             return@withContext DelegationChainResult(
@@ -92,8 +110,8 @@ class DelegationService(
         }
         
         // Resolve delegate DID document
-        val delegateResult = resolveDid(delegateDid) as? Any
-        if (delegateResult == null) {
+        val delegateResult = didResolver.resolve(delegateDid)
+        if (delegateResult == null || !delegateResult.isResolvable) {
             return@withContext DelegationChainResult(
                 valid = false,
                 path = path,
@@ -101,18 +119,14 @@ class DelegationService(
             )
         }
         
-        val delegateDoc = try {
-            val getDocumentMethod = delegateResult.javaClass.getMethod("getDocument")
-            getDocumentMethod.invoke(delegateResult) as? Any
-        } catch (e: Exception) {
-            null
-        }
-        
+        val delegateDoc = delegateResult.document
+            ?: delegateResult.raw?.let { runCatching { docAccess.getDocument(it) }.getOrNull() }
+            ?: docAccess.getDocument(delegateResult)
         if (delegateDoc == null) {
             return@withContext DelegationChainResult(
                 valid = false,
                 path = path,
-                errors = listOf("Delegate DID document not found: $delegateDid")
+                errors = listOf("Delegate DID document not available: $delegateDid")
             )
         }
         
@@ -124,19 +138,17 @@ class DelegationService(
             refStr == delegateDid || 
             refStr.startsWith("$delegateDid#") ||
             try {
-                val getVerificationMethodMethod = delegateDoc.javaClass.getMethod("getVerificationMethod")
-                val verificationMethods = getVerificationMethodMethod.invoke(delegateDoc) as? List<*>
-                verificationMethods?.any { vm ->
+                // Use services to check verification methods
+                val verificationMethods = docAccess.getVerificationMethod(delegateDoc)
+                verificationMethods.any { vm ->
                     try {
-                        val getIdMethod = vm?.javaClass?.getMethod("getId")
-                        val getControllerMethod = vm?.javaClass?.getMethod("getController")
-                        val vmId = getIdMethod?.invoke(vm)?.toString()
-                        val vmController = getControllerMethod?.invoke(vm)?.toString()
+                        val vmId = vmAccess.getId(vm)
+                        val vmController = vmAccess.getController(vm)
                         vmId == refStr && vmController == delegateDid
                     } catch (e: Exception) {
                         false
                     }
-                } ?: false
+                }
             } catch (e: Exception) {
                 false
             }

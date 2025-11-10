@@ -133,3 +133,4 @@ suspend fun TrustLayerConfig.completeWorkflow(
     return dsl().completeWorkflow(didBlock, credentialBlock, wallet, organizeBlock)
 }
 
+

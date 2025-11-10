@@ -258,22 +258,21 @@ inline fun <T> Wallet.withKeyManagement(block: (KeyManagement) -> T): T?
 inline fun <T> Wallet.withIssuance(block: (CredentialIssuance) -> T): T?
 ```
 
-## WalletRegistry
+## WalletDirectory
 
-Central registry for wallet management.
+Instance-scoped registry for wallet management.
 
 ```kotlin
-object WalletRegistry {
-    fun register(wallet: Wallet)
-    fun get(walletId: String): Wallet?
-    fun getByDid(did: String): Wallet?
-    fun <T : Any> findByCapability(clazz: KClass<T>): List<T>
-    fun findByCapability(feature: String): List<Wallet>
-    fun getAll(): List<Wallet>
-    fun unregister(walletId: String): Boolean
-    fun clear()
-}
+val directory = WalletDirectory()
+directory.register(wallet)
+val retrieved = directory.get(wallet.walletId)
+val didWallet = directory.getByDid("did:key:holder")
+val orgWallets = directory.findByCapability(CredentialOrganization::class)
+directory.unregister(wallet.walletId)
+directory.clear()
 ```
+
+> **Heads up:** `WalletDirectory` only indexes `walletDid` / `holderDid` values for wallets that implement `DidManagement`. Pure storage wallets will still resolve by `walletId`, but `getByDid` will return `null`.
 
 ## WalletBuilder
 

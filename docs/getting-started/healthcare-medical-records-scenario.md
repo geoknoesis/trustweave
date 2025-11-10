@@ -275,11 +275,14 @@ fun main() = runBlocking {
         signer = { data, keyId -> hospitalKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> hospitalKey.id }
     )
-    ProofGeneratorRegistry.register(proofGenerator)
     
+val didResolver = CredentialDidResolver { did ->
+    DidRegistry.resolve(did).toCredentialDidResolution()
+}
+
     val credentialIssuer = CredentialIssuer(
         proofGenerator = proofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+    resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
     )
     
     val issuedPrescription = credentialIssuer.issue(
@@ -425,7 +428,9 @@ fun main() = runBlocking {
     // Step 11: Verify credentials
     println("\nStep 11: Verifying medical credentials...")
     val verifier = CredentialVerifier(
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     val prescriptionVerification = verifier.verify(
@@ -1143,4 +1148,5 @@ fun authenticateForTelemedicine(
 - Check out [Government & Digital Identity Scenario](government-digital-identity-scenario.md) for identity verification
 - Review [Core Concepts: Verifiable Credentials](../core-concepts/verifiable-credentials.md) for credential details
 - Study [Core Concepts: Wallets](../core-concepts/wallets.md) for wallet management
+
 

@@ -26,13 +26,18 @@ allprojects {
                     )
                 )
             }
+            // Write jars to a dedicated directory to avoid collisions with any
+            // files that might be held open by tools during iterative builds.
+            destinationDirectory.set(layout.buildDirectory.dir("packaged-libs"))
         }
     }
 }
 
 // Apply Kover to all subprojects that have tests
 subprojects {
+    // Configure all module builds to go under a unified build directory
     if (project.name != "buildSrc") {
+        layout.buildDirectory.set(rootProject.layout.buildDirectory.dir("modules/${project.name}"))
         apply(plugin = "org.jetbrains.kotlinx.kover")
     }
 }

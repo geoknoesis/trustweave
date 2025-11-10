@@ -1,6 +1,10 @@
 package io.geoknoesis.vericore.credential.proof
 
-import io.geoknoesis.vericore.core.VeriCoreException
+import io.geoknoesis.vericore.credential.did.CredentialDidResolver
+import io.geoknoesis.vericore.credential.did.asCredentialDidResolution
+import io.geoknoesis.vericore.spi.services.DidDocumentAccess
+import io.geoknoesis.vericore.spi.services.VerificationMethodAccess
+import io.geoknoesis.vericore.spi.services.AdapterLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -12,9 +16,7 @@ import kotlinx.coroutines.withContext
  * 
  * **Example Usage**:
  * ```kotlin
- * val validator = ProofValidator(
- *     resolveDid = { did -> didRegistry.resolve(did) }
- * )
+ * val validator = ProofValidator(didResolver)
  * 
  * val result = validator.validateProofPurpose(
  *     proofPurpose = "assertionMethod",
@@ -28,8 +30,21 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class ProofValidator(
-    private val resolveDid: suspend (String) -> Any? // DidResolutionResult? - using Any to avoid dependency
+    private val didResolver: CredentialDidResolver,
+    private val documentAccess: DidDocumentAccess? = null, // Optional - will attempt reflective adapter if not provided
+    private val verificationMethodAccess: VerificationMethodAccess? = null // Optional - will attempt reflective adapter if not provided
 ) {
+
+    constructor(
+        resolveDid: suspend (String) -> Any?,
+        documentAccess: DidDocumentAccess? = null,
+        verificationMethodAccess: VerificationMethodAccess? = null
+    ) : this(
+        CredentialDidResolver { did -> resolveDid(did).asCredentialDidResolution() },
+        documentAccess,
+        verificationMethodAccess
+    )
+
     /**
      * Validates that a proof purpose matches the verification relationship in the DID Document.
      * 
@@ -45,22 +60,31 @@ class ProofValidator(
     ): ProofPurposeValidationResult = withContext(Dispatchers.IO) {
         val errors = mutableListOf<String>()
         
-        // Resolve issuer DID document using reflection
-        val resolutionResult = resolveDid(issuerDid) as? Any
-        if (resolutionResult == null) {
+        // Get required service instances
+        val docAccess = documentAccess ?: AdapterLoader.didDocumentAccess()
+        val vmAccess = verificationMethodAccess ?: AdapterLoader.verificationMethodAccess()
+        
+        // If services not available, throw error with helpful message
+        if (docAccess == null || vmAccess == null) {
+            throw IllegalStateException(
+                "DidDocumentAccess or VerificationMethodAccess not available. " +
+                "Ensure vericore-did module is on classpath by importing a class from it " +
+                "(e.g., io.geoknoesis.vericore.did.DidDocument) to trigger service registration."
+            )
+        }
+        
+        // Resolve issuer DID document
+        val resolutionResult = didResolver.resolve(issuerDid)
+        if (resolutionResult == null || !resolutionResult.isResolvable) {
             return@withContext ProofPurposeValidationResult(
                 valid = false,
                 errors = listOf("Failed to resolve issuer DID: $issuerDid")
             )
         }
         
-        val document = try {
-            val getDocumentMethod = resolutionResult.javaClass.getMethod("getDocument")
-            getDocumentMethod.invoke(resolutionResult) as? Any
-        } catch (e: Exception) {
-            null
-        }
-        
+        val document = resolutionResult.document
+            ?: resolutionResult.raw?.let { runCatching { docAccess.getDocument(it) }.getOrNull() }
+            ?: docAccess.getDocument(resolutionResult)
         if (document == null) {
             return@withContext ProofPurposeValidationResult(
                 valid = false,
@@ -71,91 +95,51 @@ class ProofValidator(
         // Normalize verification method reference
         val normalizedVmRef = normalizeVerificationMethodReference(verificationMethod, issuerDid)
         
-        // Check if verification method exists in document using reflection
-        // Note: We check verificationMethod list, but if a relationship references it, that's also valid
-        val verificationMethods = try {
-            val getVerificationMethodMethod = document.javaClass.getMethod("getVerificationMethod")
-            val result = getVerificationMethodMethod.invoke(document) as? List<*>
-            result ?: emptyList<Any>()
-        } catch (e: Exception) {
-            emptyList<Any>()
-        }
+        // Check if verification method exists in document
+        val verificationMethods = docAccess.getVerificationMethod(document)
         
-        // Check if VM exists in verificationMethod list OR if it's referenced in relationships
-        // This allows relationships to reference VMs even if not explicitly in verificationMethod
+        // Check if VM exists in verificationMethod list
         val vmExistsInList = verificationMethods.any { vm ->
             try {
-                val getIdMethod = vm?.javaClass?.getMethod("getId")
-                val vmId = getIdMethod?.invoke(vm)?.toString()
+                val vmId = vmAccess.getId(vm)
                 vmId == normalizedVmRef || vmId == verificationMethod
             } catch (e: Exception) {
                 false
             }
         }
         
-        // Check if proof purpose matches verification relationship using reflection
-        // If the relationship matches, we consider it valid even if VM not in verificationMethod list
+        // Check if proof purpose matches verification relationship
         val isValid = when (proofPurpose) {
             "assertionMethod" -> {
-                val assertionMethod = try {
-                    val getMethod = document.javaClass.getMethod("getAssertionMethod")
-                    val result = getMethod.invoke(document) as? List<*>
-                    result?.mapNotNull { it?.toString() } ?: emptyList()
-                } catch (e: Exception) {
-                    emptyList()
-                }
+                val assertionMethod = docAccess.getAssertionMethod(document)
                 assertionMethod.any { ref ->
                     ref == normalizedVmRef || ref == verificationMethod || 
                     ref == "#${verificationMethod.substringAfterLast("#")}"
                 }
             }
             "authentication" -> {
-                val authentication = try {
-                    val getMethod = document.javaClass.getMethod("getAuthentication")
-                    val result = getMethod.invoke(document) as? List<*>
-                    result?.mapNotNull { it?.toString() } ?: emptyList()
-                } catch (e: Exception) {
-                    emptyList()
-                }
+                val authentication = docAccess.getAuthentication(document)
                 authentication.any { ref ->
                     ref == normalizedVmRef || ref == verificationMethod ||
                     ref == "#${verificationMethod.substringAfterLast("#")}"
                 }
             }
             "keyAgreement" -> {
-                val keyAgreement = try {
-                    val getMethod = document.javaClass.getMethod("getKeyAgreement")
-                    val result = getMethod.invoke(document) as? List<*>
-                    result?.mapNotNull { it?.toString() } ?: emptyList()
-                } catch (e: Exception) {
-                    emptyList()
-                }
+                val keyAgreement = docAccess.getKeyAgreement(document)
                 keyAgreement.any { ref ->
                     ref == normalizedVmRef || ref == verificationMethod ||
                     ref == "#${verificationMethod.substringAfterLast("#")}"
                 }
             }
             "capabilityInvocation" -> {
-                val capabilityInvocation = try {
-                    val getMethod = document.javaClass.getMethod("getCapabilityInvocation")
-                    val result = getMethod.invoke(document) as? List<*>
-                    result?.mapNotNull { it?.toString() } ?: emptyList()
-                } catch (e: Exception) {
-                    emptyList()
-                }
+                val capabilityInvocation = docAccess.getCapabilityInvocation(document)
                 capabilityInvocation.any { ref ->
                     ref == normalizedVmRef || ref == verificationMethod ||
                     ref == "#${verificationMethod.substringAfterLast("#")}"
                 }
             }
             "capabilityDelegation" -> {
-                val capabilityDelegation = try {
-                    val getMethod = document.javaClass.getMethod("getCapabilityDelegation")
-                    val result = getMethod.invoke(document) as? List<*>
-                    result?.mapNotNull { it?.toString() } ?: emptyList()
-                } catch (e: Exception) {
-                    emptyList()
-                }
+                val capabilityDelegation = docAccess.getCapabilityDelegation(document)
                 capabilityDelegation.any { ref ->
                     ref == normalizedVmRef || ref == verificationMethod ||
                     ref == "#${verificationMethod.substringAfterLast("#")}"

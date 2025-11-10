@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package io.geoknoesis.vericore.did.delegation
 
 import io.geoknoesis.vericore.did.DidDocument
@@ -179,6 +181,15 @@ class DelegationServiceEdgeCasesTest {
         assertFalse(result.valid)
         assertTrue(result.path.isEmpty())
         assertTrue(result.errors.isNotEmpty())
+    }
+
+    @Test
+    fun `test verify delegation chain with boolean resolver returns invalid`() = runBlocking {
+        val service = DelegationService(resolveDid = { _: String -> true })
+        val result = service.verifyDelegationChain("did:key:delegator", "did:key:delegate")
+
+        assertFalse(result.valid)
+        assertTrue(result.errors.any { it.contains("DID document", ignoreCase = true) })
     }
 }
 

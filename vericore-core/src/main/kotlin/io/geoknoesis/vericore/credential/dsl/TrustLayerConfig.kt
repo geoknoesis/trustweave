@@ -1,9 +1,12 @@
 package io.geoknoesis.vericore.credential.dsl
 
+import io.geoknoesis.vericore.credential.did.CredentialDidResolver
+import io.geoknoesis.vericore.credential.did.asCredentialDidResolution
 import io.geoknoesis.vericore.credential.issuer.CredentialIssuer
 import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
 import io.geoknoesis.vericore.credential.proof.ProofGenerator
 import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
+import io.geoknoesis.vericore.spi.services.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.runBlocking
@@ -53,8 +56,10 @@ class TrustLayerConfig private constructor(
     val anchorClients: Map<String, Any>, // BlockchainAnchorClient - using Any to avoid dependency
     val credentialConfig: CredentialConfig,
     val issuer: CredentialIssuer,
+    val didResolver: io.geoknoesis.vericore.credential.did.CredentialDidResolver? = null,
     val statusListManager: Any? = null, // StatusListManager - using Any to avoid dependency
-    val trustRegistry: Any? = null // TrustRegistry - using Any to avoid dependency
+    val trustRegistry: Any? = null, // TrustRegistry - using Any to avoid dependency
+    val walletFactory: WalletFactory? = null // Wallet factory for creating wallet instances
 ) {
     /**
      * Credential configuration within trust layer.
@@ -82,6 +87,34 @@ class TrustLayerConfig private constructor(
         private var defaultChain: String? = null
         private var revocationProvider: String? = null
         private var trustProvider: String? = null
+        
+        // Factory instances (optional - will attempt reflection-based adapters if not provided)
+        private var kmsFactory: KmsFactory? = null
+        private var didMethodFactory: DidMethodFactory? = null
+        private var anchorClientFactory: BlockchainAnchorClientFactory? = null
+        private var statusListManagerFactory: StatusListManagerFactory? = null
+        private var trustRegistryFactory: TrustRegistryFactory? = null
+        private var walletFactory: WalletFactory? = null
+        
+        /**
+         * Set factory instances for dependency resolution.
+         * If not provided, will attempt to load default adapters reflectively.
+         */
+        fun factories(
+            kmsFactory: KmsFactory? = null,
+            didMethodFactory: DidMethodFactory? = null,
+            anchorClientFactory: BlockchainAnchorClientFactory? = null,
+            statusListManagerFactory: StatusListManagerFactory? = null,
+            trustRegistryFactory: TrustRegistryFactory? = null,
+            walletFactory: WalletFactory? = null
+        ) {
+            this.kmsFactory = kmsFactory
+            this.didMethodFactory = didMethodFactory
+            this.anchorClientFactory = anchorClientFactory
+            this.statusListManagerFactory = statusListManagerFactory
+            this.trustRegistryFactory = trustRegistryFactory
+            this.walletFactory = walletFactory
+        }
         
         /**
          * Configure key management service.
@@ -184,13 +217,19 @@ class TrustLayerConfig private constructor(
             for ((methodName, config) in didMethodConfigs) {
                 val method = resolveDidMethod(methodName, config, resolvedKms)
                 resolvedDidMethods[methodName] = method
-                // Register in DidRegistry using reflection
-                try {
-                    val didRegistryClass = Class.forName("io.geoknoesis.vericore.did.DidRegistry")
-                    val registerMethod = didRegistryClass.getMethod("register", Any::class.java)
-                    registerMethod.invoke(null, method)
-                } catch (e: Exception) {
-                    // DidRegistry not available - this is OK for DSL usage
+                // Register in DidRegistry using service
+                val didRegistryService = AdapterLoader.didRegistryService()
+                if (didRegistryService != null) {
+                    didRegistryService.register(method)
+                } else {
+                    // Fallback to reflection if service not available
+                    try {
+                        val didRegistryClass = Class.forName("io.geoknoesis.vericore.did.DidRegistry")
+                        val registerMethod = didRegistryClass.getMethod("register", Any::class.java)
+                        registerMethod.invoke(null, method)
+                    } catch (e: Exception) {
+                        // DidRegistry not available - this is OK for DSL usage
+                    }
                 }
             }
             
@@ -199,13 +238,32 @@ class TrustLayerConfig private constructor(
             for ((chainId, config) in anchorConfigs) {
                 val client = resolveAnchorClient(chainId, config)
                 resolvedAnchorClients[chainId] = client
-                // Register in BlockchainRegistry using reflection
-                try {
-                    val blockchainRegistryClass = Class.forName("io.geoknoesis.vericore.anchor.BlockchainRegistry")
-                    val registerMethod = blockchainRegistryClass.getMethod("register", String::class.java, Any::class.java)
-                    registerMethod.invoke(null, chainId, client)
-                } catch (e: Exception) {
-                    // BlockchainRegistry not available - this is OK for DSL usage
+                // Register in BlockchainRegistry using service
+                val blockchainRegistryService = AdapterLoader.blockchainRegistryService()
+                if (blockchainRegistryService != null) {
+                    try {
+                        val registerMethod = blockchainRegistryService::class.java.getMethod("register", String::class.java, Any::class.java)
+                        registerMethod.isAccessible = true
+                        registerMethod.invoke(blockchainRegistryService, chainId, client)
+                    } catch (e: Exception) {
+                        // Adapter present but failed to register - fall back to reflection
+                        try {
+                            val blockchainRegistryClass = Class.forName("io.geoknoesis.vericore.anchor.BlockchainRegistry")
+                            val registerMethod = blockchainRegistryClass.getMethod("register", String::class.java, Any::class.java)
+                            registerMethod.invoke(null, chainId, client)
+                        } catch (_: Exception) {
+                            // Ignored - registry not available is acceptable for DSL usage
+                        }
+                    }
+                } else {
+                    // Fallback to reflection if service not available
+                    try {
+                        val blockchainRegistryClass = Class.forName("io.geoknoesis.vericore.anchor.BlockchainRegistry")
+                        val registerMethod = blockchainRegistryClass.getMethod("register", String::class.java, Any::class.java)
+                        registerMethod.invoke(null, chainId, client)
+                    } catch (e: Exception) {
+                        // BlockchainRegistry not available - this is OK for DSL usage
+                    }
                 }
             }
             
@@ -227,37 +285,21 @@ class TrustLayerConfig private constructor(
                 null
             }
             
-            // Create credential issuer
+            val credentialDidResolver = CredentialDidResolver { did ->
+                val service = AdapterLoader.didRegistryService() ?: return@CredentialDidResolver null
+                runCatching { service.resolve(did) }.getOrNull()?.asCredentialDidResolution()
+            }
+
             val issuer = CredentialIssuer(
                 proofGenerator = proofGenerator,
-                resolveDid = { did -> 
-                    try {
-                        val didRegistryClass = Class.forName("io.geoknoesis.vericore.did.DidRegistry")
-                        val resolveMethod = didRegistryClass.getMethod("resolve", String::class.java)
-                    val result = resolveMethod.invoke(null, did) as? Any
-                    if (result != null) {
-                        try {
-                            val getDocumentMethod = result.javaClass.getMethod("getDocument")
-                            val document = getDocumentMethod.invoke(result) as? Any
-                            document != null
-                        } catch (e: NoSuchMethodException) {
-                            try {
-                                val documentField = result.javaClass.getDeclaredField("document")
-                                documentField.isAccessible = true
-                                val document = documentField.get(result) as? Any
-                                document != null
-                            } catch (e2: Exception) {
-                                false
-                            }
-                        }
-                    } else {
-                        false
-                    }
-                    } catch (e: Exception) {
-                        true // Assume valid if registry not available
-                    }
+                resolveDid = { did ->
+                    val resolution = credentialDidResolver.resolve(did)
+                    resolution?.isResolvable ?: true
                 }
             )
+            
+            // Resolve wallet factory
+            val resolvedWalletFactory = walletFactory ?: getDefaultWalletFactory()
             
             return TrustLayerConfig(
                 name = name,
@@ -270,102 +312,32 @@ class TrustLayerConfig private constructor(
                     defaultChain = defaultChain
                 ),
                 issuer = issuer,
+                didResolver = credentialDidResolver,
                 statusListManager = resolvedStatusListManager,
-                trustRegistry = resolvedTrustRegistry
+                trustRegistry = resolvedTrustRegistry,
+                walletFactory = resolvedWalletFactory
             )
         }
         
         private suspend fun resolveKms(providerName: String, algorithm: String): Pair<Any, (suspend (ByteArray, String) -> ByteArray)?> {
-            // Check for inMemory first (testkit)
-            if (providerName == "inMemory") {
-                try {
-                    val kmsClass = Class.forName("io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService")
-                    val kmsInstance = kmsClass.getDeclaredConstructor().newInstance()
-                    // Store reference to avoid closure issues
-                    val kmsRef = kmsInstance
-                    // Create a signer function for the resolved KMS
-                    val signerFn: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
-                        // Call the suspend sign method directly via a simple adapter
-                        // Since we resolved the KMS, we know it's InMemoryKeyManagementService
-                        // We'll use a simple reflection call just for this case
-                        try {
-                            val signMethod = kmsClass.getDeclaredMethod(
-                                "sign",
-                                String::class.java,
-                                ByteArray::class.java,
-                                String::class.java,
-                                kotlin.coroutines.Continuation::class.java
-                            )
-                            kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn<ByteArray> { cont ->
-                                try {
-                                    val result = signMethod.invoke(kmsRef, keyId, data, null, cont)
-                                    if (result === kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED) {
-                                        kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
-                                    } else {
-                                        cont.resumeWith(Result.success(result as ByteArray))
-                                        kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
-                                    }
-                                } catch (e: Exception) {
-                                    cont.resumeWith(Result.failure(e))
-                                    kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
-                                }
-                            } ?: throw IllegalStateException("Sign operation failed")
-                        } catch (e: NoSuchMethodException) {
-                            // Try without algorithm parameter
-                            val signMethod = kmsClass.getDeclaredMethod(
-                                "sign",
-                                String::class.java,
-                                ByteArray::class.java,
-                                kotlin.coroutines.Continuation::class.java
-                            )
-                            kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn<ByteArray> { cont ->
-                                try {
-                                    val result = signMethod.invoke(kmsRef, keyId, data, cont)
-                                    if (result === kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED) {
-                                        kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
-                                    } else {
-                                        cont.resumeWith(Result.success(result as ByteArray))
-                                        kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
-                                    }
-                                } catch (e: Exception) {
-                                    cont.resumeWith(Result.failure(e))
-                                    kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
-                                }
-                            } ?: throw IllegalStateException("Sign operation failed")
-                        }
-                    }
-                    return Pair(kmsInstance, signerFn)
-                } catch (e: Exception) {
-                    throw IllegalStateException(
-                        "InMemoryKeyManagementService not found. " +
-                        "Ensure vericore-testkit is on classpath."
-                    )
-                }
-            }
-            
-            // Try to discover via SPI
+            val factory = kmsFactory ?: getDefaultKmsFactory()
+            return factory.createFromProvider(providerName, algorithm)
+        }
+        
+        private fun getDefaultKmsFactory(): KmsFactory {
+            // Try to get factory from testkit
             try {
-                val providerClass = Class.forName("io.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider")
-                val serviceLoader = java.util.ServiceLoader.load(providerClass)
-                val provider = serviceLoader.find { 
-                    val nameMethod = it.javaClass.getMethod("getName")
-                    nameMethod.invoke(it) == providerName
-                }
-                
-                if (provider != null) {
-                    val createMethod = provider.javaClass.getMethod("create", Map::class.java)
-                    val kms = createMethod.invoke(provider, mapOf("algorithm" to algorithm))
-                    // For SPI providers, we can't easily create a signer without reflection
-                    // So return null and require the user to provide one
-                    return Pair(kms ?: throw IllegalStateException("Failed to create KMS for provider: $providerName"), null)
-                }
-            } catch (e: ClassNotFoundException) {
-                // SPI classes not available
+                val factoryClass = Class.forName("io.geoknoesis.vericore.testkit.services.TestkitKmsFactory")
+                val factory = factoryClass.getDeclaredConstructor().newInstance() as? KmsFactory
+                if (factory != null) return factory
+            } catch (e: Exception) {
+                // Testkit not available, fall through
             }
             
+            // Fallback: throw error asking user to provide factory
             throw IllegalStateException(
-                "KMS provider '$providerName' not found. " +
-                "Ensure vericore-$providerName is on classpath or use 'inMemory' for testing."
+                "KMS factory not available. " +
+                "Provide a factory via Builder.factories() or ensure vericore-testkit is on classpath."
             )
         }
         
@@ -375,74 +347,27 @@ class TrustLayerConfig private constructor(
             kms: Any
         ): Any {
             requireNotNull(kms) { "KMS cannot be null when resolving DID method: $methodName" }
-            // Try to discover via SPI
+            val factory = didMethodFactory ?: getDefaultDidMethodFactory()
+            val method = factory.create(methodName, config, kms)
+            return method ?: throw IllegalStateException(
+                "DID method '$methodName' not found. " +
+                "Ensure appropriate DID method provider is on classpath."
+            )
+        }
+        
+        private fun getDefaultDidMethodFactory(): DidMethodFactory {
+            // Try to get factory from testkit
             try {
-                val providerClass = Class.forName("io.geoknoesis.vericore.did.spi.DidMethodProvider")
-                val serviceLoader = java.util.ServiceLoader.load(providerClass)
-                
-                // Try waltid provider first
-                val waltIdProvider = serviceLoader.find {
-                    val nameMethod = it.javaClass.getMethod("getName")
-                    nameMethod.invoke(it) == "waltid"
-                }
-                if (waltIdProvider != null) {
-                    val supportedMethodsMethod = waltIdProvider.javaClass.getMethod("getSupportedMethods")
-                    val supportedMethods = supportedMethodsMethod.invoke(waltIdProvider) as? List<*>
-                    if (supportedMethods != null && methodName in supportedMethods) {
-                        val createMethod = waltIdProvider.javaClass.getMethod("create", String::class.java, Map::class.java)
-                        val method = createMethod.invoke(waltIdProvider, methodName, config.toOptions(kms))
-                        if (method != null) return method
-                    }
-                }
-                
-                // Try godiddy provider
-                val godiddyProvider = serviceLoader.find {
-                    val nameMethod = it.javaClass.getMethod("getName")
-                    nameMethod.invoke(it) == "godiddy"
-                }
-                if (godiddyProvider != null) {
-                    val supportedMethodsMethod = godiddyProvider.javaClass.getMethod("getSupportedMethods")
-                    val supportedMethods = supportedMethodsMethod.invoke(godiddyProvider) as? List<*>
-                    if (supportedMethods != null && methodName in supportedMethods) {
-                        val createMethod = godiddyProvider.javaClass.getMethod("create", String::class.java, Map::class.java)
-                        val method = createMethod.invoke(godiddyProvider, methodName, config.toOptions(kms))
-                        if (method != null) return method
-                    }
-                }
-            } catch (e: ClassNotFoundException) {
-                // SPI classes not available
-            }
-            
-            // Fallback to testkit for "key" method
-            if (methodName == "key") {
-                try {
-                    val didMethodClass = Class.forName("io.geoknoesis.vericore.testkit.did.DidKeyMockMethod")
-                    // Find KeyManagementService interface
-                    val kmsInterface = try {
-                        Class.forName("io.geoknoesis.vericore.kms.KeyManagementService")
-                    } catch (e: ClassNotFoundException) {
-                        throw IllegalStateException(
-                            "KeyManagementService interface not found. " +
-                            "Ensure vericore-kms is on classpath."
-                        )
-                    }
-                    // Get constructor that takes KeyManagementService
-                    val constructor = didMethodClass.getDeclaredConstructor(kmsInterface)
-                    constructor.isAccessible = true
-                    return constructor.newInstance(kms)
-                } catch (e: Exception) {
-                    throw IllegalStateException(
-                        "DidKeyMockMethod not found or cannot be instantiated: ${e.message}. " +
-                        "Ensure vericore-testkit is on classpath. " +
-                        "Original error: ${e.javaClass.simpleName}: ${e.message}",
-                        e
-                    )
-                }
+                val factoryClass = Class.forName("io.geoknoesis.vericore.testkit.services.TestkitDidMethodFactory")
+                val factory = factoryClass.getDeclaredConstructor().newInstance() as? DidMethodFactory
+                if (factory != null) return factory
+            } catch (e: Exception) {
+                // Testkit not available, fall through
             }
             
             throw IllegalStateException(
-                "DID method '$methodName' not found. " +
-                "Ensure appropriate DID method provider is on classpath."
+                "DID method factory not available. " +
+                "Provide a factory via Builder.factories() or ensure vericore-testkit is on classpath."
             )
         }
         
@@ -450,145 +375,96 @@ class TrustLayerConfig private constructor(
             chainId: String,
             config: AnchorConfig
         ): Any {
-            // Check for inMemory first (testkit)
-            if (config.provider == "inMemory") {
-                try {
-                    val clientClass = Class.forName("io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient")
-                    val contract = config.options["contract"] as? String
-                    // Try to find constructor - Kotlin default parameters create multiple constructors
-                    val constructors = clientClass.declaredConstructors
-                    val constructor = constructors.find { 
-                        val params = it.parameterTypes
-                        when {
-                            contract != null -> params.size == 2 && params[0] == String::class.java && params[1] == String::class.java
-                            else -> params.size == 1 && params[0] == String::class.java || 
-                                    (params.size == 2 && params[0] == String::class.java && params[1] == String::class.java)
-                        }
-                    } ?: throw NoSuchMethodException("No suitable constructor found for InMemoryBlockchainAnchorClient")
-                    
-                    constructor.isAccessible = true
-                    return if (contract != null) {
-                        constructor.newInstance(chainId, contract)
-                    } else {
-                        // Try single parameter first, then two parameters with null
-                        try {
-                            constructor.newInstance(chainId)
-                        } catch (e: Exception) {
-                            constructor.newInstance(chainId, null)
-                        }
-                    }
-                } catch (e: Exception) {
-                    throw IllegalStateException(
-                        "InMemoryBlockchainAnchorClient not found or cannot be instantiated: ${e.message}. " +
-                        "Ensure vericore-testkit is on classpath. " +
-                        "Original error: ${e.javaClass.simpleName}: ${e.message}",
-                        e
-                    )
-                }
-            }
-            
-            // Try to discover via SPI
+            val factory = anchorClientFactory ?: getDefaultAnchorClientFactory()
+            return factory.create(chainId, config.provider, config.options)
+        }
+        
+        private fun getDefaultAnchorClientFactory(): BlockchainAnchorClientFactory {
+            // Try to get factory from testkit
             try {
-                val providerClass = Class.forName("io.geoknoesis.vericore.anchor.spi.BlockchainAnchorClientProvider")
-                val serviceLoader = java.util.ServiceLoader.load(providerClass)
-                val provider = serviceLoader.find {
-                    val nameMethod = it.javaClass.getMethod("getName")
-                    nameMethod.invoke(it) == config.provider
-                }
-                
-                if (provider != null) {
-                    val createMethod = provider.javaClass.getMethod("create", String::class.java, Map::class.java)
-                    val client = createMethod.invoke(provider, chainId, config.options)
-                    return client ?: throw IllegalStateException("Failed to create anchor client for chain: $chainId")
-                }
-            } catch (e: ClassNotFoundException) {
-                // SPI classes not available
+                val factoryClass = Class.forName("io.geoknoesis.vericore.testkit.services.TestkitBlockchainAnchorClientFactory")
+                val factory = factoryClass.getDeclaredConstructor().newInstance() as? BlockchainAnchorClientFactory
+                if (factory != null) return factory
+            } catch (e: Exception) {
+                // Testkit not available, fall through
             }
             
             throw IllegalStateException(
-                "Anchor provider '${config.provider}' not found for chain '$chainId'. " +
-                "Ensure vericore-${config.provider} is on classpath or use 'inMemory' for testing."
+                "BlockchainAnchorClient factory not available. " +
+                "Provide a factory via Builder.factories() or ensure vericore-testkit is on classpath."
             )
         }
         
         private suspend fun resolveStatusListManager(providerName: String): Any {
-            // Check for inMemory first (testkit)
-            if (providerName == "inMemory") {
-                try {
-                    val managerClass = Class.forName("io.geoknoesis.vericore.credential.revocation.InMemoryStatusListManager")
-                    val constructor = managerClass.getDeclaredConstructor()
-                    return constructor.newInstance()
-                } catch (e: Exception) {
-                    throw IllegalStateException(
-                        "InMemoryStatusListManager not found. " +
-                        "Ensure vericore-core is on classpath.",
-                        e
-                    )
-                }
+            val factory = statusListManagerFactory ?: getDefaultStatusListManagerFactory()
+            return factory.create(providerName)
+        }
+        
+        private fun getDefaultStatusListManagerFactory(): StatusListManagerFactory {
+            // Try to get factory from testkit
+            try {
+                val factoryClass = Class.forName("io.geoknoesis.vericore.testkit.services.TestkitStatusListManagerFactory")
+                val factory = factoryClass.getDeclaredConstructor().newInstance() as? StatusListManagerFactory
+                if (factory != null) return factory
+            } catch (e: Exception) {
+                // Testkit not available, fall through
             }
             
-            // Try to discover via SPI if available
+            // Fallback: try to instantiate InMemoryStatusListManager directly (it's in vericore-core)
             try {
-                val providerClass = Class.forName("io.geoknoesis.vericore.credential.revocation.spi.StatusListManagerProvider")
-                val serviceLoader = java.util.ServiceLoader.load(providerClass)
-                val provider = serviceLoader.find { 
-                    val nameMethod = it.javaClass.getMethod("getName")
-                    nameMethod.invoke(it) == providerName
+                val managerClass = Class.forName("io.geoknoesis.vericore.credential.revocation.InMemoryStatusListManager")
+                // Return a factory that creates instances
+                return object : StatusListManagerFactory {
+                    override suspend fun create(providerName: String): Any {
+                        if (providerName == "inMemory") {
+                            return managerClass.getDeclaredConstructor().newInstance()
+                        }
+                        throw IllegalStateException("Only 'inMemory' provider supported")
+                    }
                 }
-                
-                if (provider != null) {
-                    val createMethod = provider.javaClass.getMethod("create", Map::class.java)
-                    val manager = createMethod.invoke(provider, emptyMap<String, Any>())
-                    return manager ?: throw IllegalStateException("Failed to create StatusListManager for provider: $providerName")
-                }
-            } catch (e: ClassNotFoundException) {
-                // SPI classes not available
+            } catch (e: Exception) {
+                // Fall through
             }
             
             throw IllegalStateException(
-                "StatusListManager provider '$providerName' not found. " +
-                "Ensure appropriate provider is on classpath or use 'inMemory' for testing."
+                "StatusListManager factory not available. " +
+                "Provide a factory via Builder.factories() or ensure vericore-testkit is on classpath."
             )
         }
         
         private suspend fun resolveTrustRegistry(providerName: String): Any {
-            // Check for inMemory first (testkit)
-            if (providerName == "inMemory") {
-                try {
-                    val registryClass = Class.forName("io.geoknoesis.vericore.testkit.trust.InMemoryTrustRegistry")
-                    val constructor = registryClass.getDeclaredConstructor()
-                    return constructor.newInstance()
-                } catch (e: Exception) {
-                    throw IllegalStateException(
-                        "InMemoryTrustRegistry not found. " +
-                        "Ensure vericore-testkit is on classpath.",
-                        e
-                    )
-                }
-            }
-            
-            // Try to discover via SPI if available
+            val factory = trustRegistryFactory ?: getDefaultTrustRegistryFactory()
+            return factory.create(providerName)
+        }
+        
+        private fun getDefaultTrustRegistryFactory(): TrustRegistryFactory {
+            // Try to get factory from testkit
             try {
-                val providerClass = Class.forName("io.geoknoesis.vericore.trust.spi.TrustRegistryProvider")
-                val serviceLoader = java.util.ServiceLoader.load(providerClass)
-                val provider = serviceLoader.find { 
-                    val nameMethod = it.javaClass.getMethod("getName")
-                    nameMethod.invoke(it) == providerName
-                }
-                
-                if (provider != null) {
-                    val createMethod = provider.javaClass.getMethod("create", Map::class.java)
-                    val registry = createMethod.invoke(provider, emptyMap<String, Any?>())
-                    return registry ?: throw IllegalStateException("Failed to create trust registry for provider: $providerName")
-                }
-            } catch (e: ClassNotFoundException) {
-                // SPI classes not available
+                val factoryClass = Class.forName("io.geoknoesis.vericore.testkit.services.TestkitTrustRegistryFactory")
+                val factory = factoryClass.getDeclaredConstructor().newInstance() as? TrustRegistryFactory
+                if (factory != null) return factory
+            } catch (e: Exception) {
+                // Testkit not available, fall through
             }
             
             throw IllegalStateException(
-                "Trust registry provider '$providerName' not found. " +
-                "Ensure appropriate provider is on classpath or use 'inMemory' for testing."
+                "TrustRegistry factory not available. " +
+                "Provide a factory via Builder.factories() or ensure vericore-testkit is on classpath."
             )
+        }
+        
+        private fun getDefaultWalletFactory(): WalletFactory? {
+            // Try to get factory from testkit
+            try {
+                val factoryClass = Class.forName("io.geoknoesis.vericore.testkit.services.TestkitWalletFactory")
+                val factory = factoryClass.getDeclaredConstructor().newInstance() as? WalletFactory
+                if (factory != null) return factory
+            } catch (e: Exception) {
+                // Testkit not available, that's OK - wallet is optional
+            }
+            
+            // Wallet factory is optional, return null if not available
+            return null
         }
         
         private fun createProofGenerator(

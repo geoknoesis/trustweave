@@ -24,6 +24,10 @@ include(
     "vericore-godiddy",
     "vericore-ganache",
     "vericore-indy",
-    "vericore-examples"
+    "vericore-examples",
+    "vericore-bom",
+    "vericore-all",
+    "vericore-spi",
+    "vericore-trust"
 )
 

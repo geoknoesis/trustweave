@@ -9,6 +9,7 @@ import io.geoknoesis.vericore.credential.schema.JsonSchemaValidator
 import io.geoknoesis.vericore.credential.schema.SchemaRegistry
 import io.geoknoesis.vericore.credential.schema.SchemaValidatorRegistry
 import io.geoknoesis.vericore.spi.SchemaFormat
+import io.geoknoesis.vericore.util.booleanDidResolver
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.AfterEach
@@ -32,7 +33,7 @@ class CredentialVerifierMoreBranchesTest {
         SchemaValidatorRegistry.clear()
         SchemaValidatorRegistry.register(JsonSchemaValidator())
         verifier = CredentialVerifier(
-            resolveDid = { did -> did == issuerDid }
+            booleanDidResolver { did -> did == issuerDid }
         )
     }
 
@@ -270,7 +271,7 @@ class CredentialVerifierMoreBranchesTest {
     @Test
     fun `test verify with resolveDid returning false for issuer`() = runBlocking {
         val verifierWithFailedResolution = CredentialVerifier(
-            resolveDid = { false }
+            booleanDidResolver { false }
         )
         
         val credential = createTestCredential()
@@ -284,7 +285,7 @@ class CredentialVerifierMoreBranchesTest {
     @Test
     fun `test verify with resolveDid returning true for different DID`() = runBlocking {
         val verifierWithDifferentResolution = CredentialVerifier(
-            resolveDid = { did -> did == "did:key:different" }
+            booleanDidResolver { did -> did == "did:key:different" }
         )
         
         val credential = createTestCredential()

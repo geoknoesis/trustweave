@@ -9,6 +9,7 @@ import io.geoknoesis.vericore.credential.models.VerifiablePresentation
 import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
 import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
 import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
+import io.geoknoesis.vericore.util.booleanDidResolver
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.BeforeEach
@@ -281,7 +282,7 @@ class PresentationServiceBranchCoverageTest {
 
     @Test
     fun `test branch verifyPresentation checkRevocation true with verifier`() = runBlocking {
-        val verifier = CredentialVerifier { true }
+        val verifier = CredentialVerifier(booleanDidResolver { true })
         val service = PresentationService(credentialVerifier = verifier)
         val credential = createTestCredential()
         val presentation = createTestPresentation(credentials = listOf(credential))
@@ -313,7 +314,7 @@ class PresentationServiceBranchCoverageTest {
 
     @Test
     fun `test branch verifyPresentation checkRevocation false`() = runBlocking {
-        val verifier = CredentialVerifier { true }
+        val verifier = CredentialVerifier(booleanDidResolver { true })
         val service = PresentationService(credentialVerifier = verifier)
         val presentation = createTestPresentation()
         
@@ -329,7 +330,7 @@ class PresentationServiceBranchCoverageTest {
 
     @Test
     fun `test branch verifyPresentation with invalid credential`() = runBlocking {
-        val verifier = CredentialVerifier { false }
+        val verifier = CredentialVerifier(booleanDidResolver { false })
         val service = PresentationService(credentialVerifier = verifier)
         val credential = createTestCredential()
         val presentation = createTestPresentation(

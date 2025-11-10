@@ -2,7 +2,6 @@ package io.geoknoesis.vericore.ganache
 
 import io.geoknoesis.vericore.anchor.*
 import io.geoknoesis.vericore.did.DidDocument
-import io.geoknoesis.vericore.did.DidRegistry
 import io.geoknoesis.vericore.json.DigestUtils
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.integrity.IntegrityVerifier
@@ -15,6 +14,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import io.geoknoesis.vericore.anchor.BlockchainRegistry
+import io.geoknoesis.vericore.did.DidRegistry
 
 /**
  * Earth Observation (EO) integration test scenario for Ganache.
@@ -52,8 +53,8 @@ class GanacheEoIntegrationTest {
 
     @AfterEach
     fun cleanup() {
-        DidRegistry.clear()
         BlockchainRegistry.clear()
+        DidRegistry.clear()
     }
 
     @Test
@@ -76,8 +77,8 @@ class GanacheEoIntegrationTest {
             )
         )
 
-        DidRegistry.register(didMethod)
         BlockchainRegistry.register(chainId, anchorClient)
+        DidRegistry.register(didMethod)
 
         // Step 1: Create a DID for the issuer
         val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))

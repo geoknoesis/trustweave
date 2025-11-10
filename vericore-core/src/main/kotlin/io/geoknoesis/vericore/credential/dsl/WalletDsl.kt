@@ -24,8 +24,11 @@ class WalletBuilder(
 ) {
     private var walletId: String? = null
     private var holderDid: String? = null
+    private var walletDid: String? = null
+    private var provider: String = "inMemory" // Default to inMemory for testing
     private var enableOrganization: Boolean = false
     private var enablePresentation: Boolean = false
+    private val options = mutableMapOf<String, Any?>()
     
     /**
      * Set wallet ID.
@@ -39,6 +42,41 @@ class WalletBuilder(
      */
     fun holder(did: String) {
         this.holderDid = did
+    }
+    
+    /**
+     * Set wallet DID.
+     */
+    fun walletDid(did: String) {
+        this.walletDid = did
+    }
+    
+    /**
+     * Set wallet provider (e.g., "inMemory", "basic", "database", "file").
+     */
+    fun provider(name: String) {
+        this.provider = name
+    }
+    
+    /**
+     * Use in-memory wallet (for testing).
+     */
+    fun inMemory() {
+        this.provider = "inMemory"
+    }
+    
+    /**
+     * Use basic wallet (minimal features).
+     */
+    fun basic() {
+        this.provider = "basic"
+    }
+    
+    /**
+     * Add custom option for wallet creation.
+     */
+    fun option(key: String, value: Any?) {
+        options[key] = value
     }
     
     /**
@@ -59,28 +97,36 @@ class WalletBuilder(
      * Build the wallet.
      */
     suspend fun build(): Wallet = withContext(Dispatchers.IO) {
-        val finalHolderDid = holderDid 
-            ?: throw IllegalStateException("Holder DID is required")
+        val walletIdStr = walletId ?: java.util.UUID.randomUUID().toString()
+        val walletDidStr = walletDid ?: "did:key:test-wallet-$walletIdStr"
         
-        // Use InMemoryWallet from testkit via reflection
-        try {
-            val walletClass = Class.forName("io.geoknoesis.vericore.testkit.credential.InMemoryWallet")
-            val walletIdStr = walletId ?: java.util.UUID.randomUUID().toString()
-            // InMemoryWallet constructor: (walletId: String, walletDid: String, holderDid: String)
-            // walletDid defaults to "did:key:test-wallet-$walletId", but we'll pass it explicitly
-            val walletDidStr = "did:key:test-wallet-$walletIdStr"
-            val wallet = walletClass.getDeclaredConstructor(
-                String::class.java, 
-                String::class.java, 
-                String::class.java
-            ).newInstance(walletIdStr, walletDidStr, finalHolderDid)
-            wallet as Wallet
-        } catch (e: Exception) {
-            throw IllegalStateException(
-                "InMemoryWallet not found. " +
-                "Ensure vericore-testkit is on classpath. Error: ${e.message}"
-            )
+        // Add organization and presentation flags to options if needed
+        val finalOptions = options.toMutableMap()
+        if (enableOrganization) {
+            finalOptions["enableOrganization"] = true
         }
+        if (enablePresentation) {
+            finalOptions["enablePresentation"] = true
+        }
+        
+        // Use WalletFactory from TrustLayerContext
+        val walletFactory = context.getWalletFactory()
+            ?: throw IllegalStateException(
+                "WalletFactory not available. " +
+                "Ensure vericore-testkit is on classpath or provide a wallet factory via TrustLayerConfig."
+            )
+        
+        val wallet = walletFactory.create(
+            providerName = provider,
+            walletId = walletIdStr,
+            walletDid = walletDidStr,
+            holderDid = holderDid,
+            options = finalOptions
+        )
+
+        return@withContext wallet as? Wallet ?: throw IllegalStateException(
+            "WalletFactory returned unsupported instance of type ${wallet?.let { it::class.qualifiedName }}"
+        )
     }
 }
 

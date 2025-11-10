@@ -1,10 +1,12 @@
 package io.geoknoesis.vericore.credential.dsl
 
+import io.geoknoesis.vericore.spi.services.KmsService
+import io.geoknoesis.vericore.spi.services.DidMethodService
+import io.geoknoesis.vericore.spi.services.DidDocumentAccess
+import io.geoknoesis.vericore.spi.services.VerificationMethodAccess
+import io.geoknoesis.vericore.spi.services.AdapterLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.Continuation
-import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
-import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 
 /**
  * Key Rotation Builder DSL.
@@ -88,255 +90,110 @@ class KeyRotationBuilder(
         val kms = context.getKms()
             ?: throw IllegalStateException("KMS is not configured in trust layer")
         
-        // Generate new key using reflection
-        val newKeyHandle = try {
-            val generateKeyMethod = kms.javaClass.getMethod(
-                "generateKey",
-                String::class.java,
-                Map::class.java,
-                Continuation::class.java
+        // Generate new key using KmsService
+        val kmsService = AdapterLoader.kmsService()
+            ?: throw IllegalStateException(
+                "KmsService not available. " +
+                "Ensure vericore-testkit module is on classpath or provide a custom KmsService via factories."
             )
-            
-            suspendCoroutineUninterceptedOrReturn<Any> { cont ->
-                try {
-                    val result = generateKeyMethod.invoke(kms, algorithm, emptyMap<String, Any?>(), cont)
-                    if (result === COROUTINE_SUSPENDED) {
-                        COROUTINE_SUSPENDED
-                    } else {
-                        cont.resumeWith(Result.success(result))
-                        COROUTINE_SUSPENDED
-                    }
-                } catch (e: Exception) {
-                    cont.resumeWith(Result.failure(
-                        IllegalStateException("Failed to generate key: ${e.message}", e)
-                    ))
-                    COROUTINE_SUSPENDED
-                }
-            } ?: throw IllegalStateException("Key generation was suspended")
-        } catch (e: NoSuchMethodException) {
-            throw IllegalStateException(
-                "KMS does not implement generateKey method. " +
-                "Ensure it implements KeyManagementService interface.",
-                e
+        
+        val newKeyHandle = kmsService.generateKey(kms, algorithm, emptyMap())
+        val publicKeyJwk = kmsService.getPublicKeyJwk(newKeyHandle)
+        val keyId = kmsService.getKeyId(newKeyHandle)
+        
+        // Get service instances for DID document manipulation
+        val docAccess = AdapterLoader.didDocumentAccess()
+            ?: throw IllegalStateException(
+                "DidDocumentAccess not available. " +
+                "Ensure vericore-did module is on classpath or provide a custom DidDocumentAccess via factories."
             )
-        }
-        
-        // Extract public key from key handle
-        val publicKeyJwk = try {
-            val getPublicKeyJwkMethod = newKeyHandle.javaClass.getMethod("getPublicKeyJwk")
-            getPublicKeyJwkMethod.invoke(newKeyHandle) as? Map<String, Any?>
-        } catch (e: Exception) {
-            try {
-                val publicKeyJwkField = newKeyHandle.javaClass.getDeclaredField("publicKeyJwk")
-                publicKeyJwkField.isAccessible = true
-                publicKeyJwkField.get(newKeyHandle) as? Map<String, Any?>
-            } catch (e2: Exception) {
-                throw IllegalStateException(
-                    "Failed to extract public key from key handle: ${e2.message}",
-                    e2
-                )
-            }
-        }
-        
-        // Extract key ID
-        val keyId = try {
-            val getIdMethod = newKeyHandle.javaClass.getMethod("getId")
-            getIdMethod.invoke(newKeyHandle) as? String
-        } catch (e: Exception) {
-            try {
-                val idField = newKeyHandle.javaClass.getDeclaredField("id")
-                idField.isAccessible = true
-                idField.get(newKeyHandle) as? String
-            } catch (e2: Exception) {
-                "key-${System.currentTimeMillis()}"
-            }
-        } ?: "key-${System.currentTimeMillis()}"
-        
-        // Update DID document
-        val updatedDoc = try {
-            val updateDidMethod = didMethod.javaClass.getMethod(
-                "updateDid",
-                String::class.java,
-                kotlin.jvm.functions.Function1::class.java,
-                Continuation::class.java
+        val vmAccess = AdapterLoader.verificationMethodAccess()
+            ?: throw IllegalStateException(
+                "VerificationMethodAccess not available. " +
+                "Ensure vericore-did module is on classpath or provide a custom VerificationMethodAccess via factories."
             )
-            
-            suspendCoroutineUninterceptedOrReturn<Any> { cont ->
-                try {
-                    // Create updater function
-                    val updater: (Any) -> Any = { currentDoc ->
-                        // Extract current verification methods
-                        val currentVm = try {
-                            val getVmMethod = currentDoc.javaClass.getMethod("getVerificationMethod")
-                            getVmMethod.invoke(currentDoc) as? List<*>
-                        } catch (e: Exception) {
-                            try {
-                                val vmField = currentDoc.javaClass.getDeclaredField("verificationMethod")
-                                vmField.isAccessible = true
-                                vmField.get(currentDoc) as? List<*>
-                            } catch (e2: Exception) {
-                                emptyList<Any>()
-                            }
-                        } ?: emptyList<Any>()
-                        
-                        // Extract current authentication
-                        val currentAuth = try {
-                            val getAuthMethod = currentDoc.javaClass.getMethod("getAuthentication")
-                            getAuthMethod.invoke(currentDoc) as? List<*>
-                        } catch (e: Exception) {
-                            try {
-                                val authField = currentDoc.javaClass.getDeclaredField("authentication")
-                                authField.isAccessible = true
-                                authField.get(currentDoc) as? List<*>
-                            } catch (e2: Exception) {
-                                emptyList<String>()
-                            }
-                        } ?: emptyList<String>()
-                        
-                        // Extract current assertion method
-                        val currentAssertion = try {
-                            val getAssertionMethod = currentDoc.javaClass.getMethod("getAssertionMethod")
-                            getAssertionMethod.invoke(currentDoc) as? List<*>
-                        } catch (e: Exception) {
-                            try {
-                                val assertionField = currentDoc.javaClass.getDeclaredField("assertionMethod")
-                                assertionField.isAccessible = true
-                                assertionField.get(currentDoc) as? List<*>
-                            } catch (e2: Exception) {
-                                emptyList<String>()
-                            }
-                        } ?: emptyList<String>()
-                        
-                        // Create new verification method
-                        val newVmId = "$targetDid#$keyId"
-                        val vmType = when (algorithm.uppercase()) {
-                            "ED25519" -> "Ed25519VerificationKey2020"
-                            "SECP256K1" -> "EcdsaSecp256k1VerificationKey2019"
-                            else -> "JsonWebKey2020"
-                        }
-                        
-                        // Filter out old keys
-                        val filteredVm = currentVm.filter { vm ->
-                            val vmId = try {
-                                val getIdMethod = vm?.javaClass?.getMethod("getId")
-                                getIdMethod?.invoke(vm) as? String
-                            } catch (e: Exception) {
-                                try {
-                                    val idField = vm?.javaClass?.getDeclaredField("id")
-                                    idField?.isAccessible = true
-                                    idField?.get(vm) as? String
-                                } catch (e2: Exception) {
-                                    null
-                                }
-                            }
-                            !oldKeyIds.any { oldId -> vmId?.contains(oldId) == true }
-                        }
-                        
-                        val filteredAuth = currentAuth.filter { auth ->
-                            val authStr = auth?.toString() ?: ""
-                            !oldKeyIds.any { oldId -> authStr.contains(oldId) }
-                        }
-                        
-                        val filteredAssertion = currentAssertion.filter { assertion ->
-                            val assertionStr = assertion?.toString() ?: ""
-                            !oldKeyIds.any { oldId -> assertionStr.contains(oldId) }
-                        }
-                        
-                        // Create new verification method object
-                        val newVm = try {
-                            val vmClass = Class.forName("io.geoknoesis.vericore.did.VerificationMethodRef")
-                            val constructor = vmClass.getDeclaredConstructor(
-                                String::class.java,
-                                String::class.java,
-                                String::class.java,
-                                Map::class.java,
-                                String::class.java
-                            )
-                            constructor.newInstance(
-                                newVmId,
-                                vmType,
-                                targetDid,
-                                publicKeyJwk,
-                                null as String?
-                            )
-                        } catch (e: Exception) {
-                            // Fallback: create a map-based representation
-                            mapOf(
-                                "id" to newVmId,
-                                "type" to vmType,
-                                "controller" to targetDid,
-                                "publicKeyJwk" to (publicKeyJwk ?: emptyMap())
-                            )
-                        }
-                        
-                        // Create updated document
-                        val updatedVm = filteredVm + newVm
-                        val updatedAuth = filteredAuth + newVmId
-                        val updatedAssertion = filteredAssertion + newVmId
-                        
-                        // Use copy method if available
-                        try {
-                            val copyMethod = currentDoc.javaClass.getMethod(
-                                "copy",
-                                String::class.java,
-                                List::class.java,
-                                List::class.java,
-                                List::class.java,
-                                List::class.java,
-                                List::class.java
-                            )
-                            copyMethod.invoke(
-                                currentDoc,
-                                targetDid,
-                                emptyList<String>(), // alsoKnownAs
-                                emptyList<String>(), // controller
-                                updatedVm,
-                                updatedAuth,
-                                updatedAssertion
-                            )
-                        } catch (e: Exception) {
-                            // Fallback: try with fewer parameters
-                            try {
-                                val copyMethod = currentDoc.javaClass.getMethod(
-                                    "copy",
-                                    List::class.java,
-                                    List::class.java,
-                                    List::class.java
-                                )
-                                copyMethod.invoke(currentDoc, updatedVm, updatedAuth, updatedAssertion)
-                            } catch (e2: Exception) {
-                                // Last resort: return current doc (rotation failed silently)
-                                currentDoc
-                            }
-                        }
-                    }
-                    
-                    val result = updateDidMethod.invoke(didMethod, targetDid, updater, cont)
-                    if (result === COROUTINE_SUSPENDED) {
-                        COROUTINE_SUSPENDED
-                    } else {
-                        cont.resumeWith(Result.success(result))
-                        COROUTINE_SUSPENDED
-                    }
-                } catch (e: Exception) {
-                    cont.resumeWith(Result.failure(
-                        IllegalStateException(
-                            "Failed to rotate key for DID '$targetDid': ${e.message}",
-                            e
-                        )
-                    ))
-                    COROUTINE_SUSPENDED
-                }
-            } ?: throw IllegalStateException("DID update was suspended")
-        } catch (e: NoSuchMethodException) {
-            throw IllegalStateException(
-                "DID method '$methodName' does not implement updateDid method. " +
-                "Ensure it implements DidMethod interface.",
-                e
+        val didMethodService = AdapterLoader.didMethodService()
+            ?: throw IllegalStateException(
+                "DidMethodService not available. " +
+                "Ensure vericore-did module is on classpath or provide a custom DidMethodService via factories."
+            )
+        
+        // Update DID document using service interfaces
+        val updatedDoc = didMethodService.updateDid(didMethod, targetDid) { currentDoc: Any ->
+            // Create updater function using service interfaces
+            updateDocumentForKeyRotation(
+                currentDoc, targetDid, keyId, algorithm, 
+                publicKeyJwk, oldKeyIds, docAccess, vmAccess
             )
         }
         
         updatedDoc
+    }
+    
+    /**
+     * Update document for key rotation using service interfaces.
+     */
+    private fun updateDocumentForKeyRotation(
+        currentDoc: Any,
+        targetDid: String,
+        keyId: String,
+        algorithm: String,
+        publicKeyJwk: Map<String, Any?>?,
+        oldKeyIds: List<String>,
+        docAccess: DidDocumentAccess,
+        vmAccess: VerificationMethodAccess
+    ): Any {
+        // Extract current verification methods using service interface
+        val currentVm = docAccess.getVerificationMethod(currentDoc)
+        
+        // Extract current authentication and assertion using service interface
+        val currentAuth = docAccess.getAuthentication(currentDoc)
+        val currentAssertion = docAccess.getAssertionMethod(currentDoc)
+        
+        // Create new verification method
+        val newVmId = "$targetDid#$keyId"
+        val vmType = when (algorithm.uppercase()) {
+            "ED25519" -> "Ed25519VerificationKey2020"
+            "SECP256K1" -> "EcdsaSecp256k1VerificationKey2019"
+            else -> "JsonWebKey2020"
+        }
+        
+        // Filter out old keys using service interface
+        val filteredVm = currentVm.filter { vm ->
+            val vmId = vmAccess.getId(vm)
+            !oldKeyIds.any { oldId -> vmId.contains(oldId) }
+        }
+        
+        val filteredAuth = currentAuth.filter { auth ->
+            !oldKeyIds.any { oldId -> auth.contains(oldId) }
+        }
+        
+        val filteredAssertion = currentAssertion.filter { assertion ->
+            !oldKeyIds.any { oldId -> assertion.contains(oldId) }
+        }
+        
+        // Create new verification method object using service interface
+        val newVm = docAccess.createVerificationMethod(
+            id = newVmId,
+            type = vmType,
+            controller = targetDid,
+            publicKeyJwk = publicKeyJwk,
+            publicKeyMultibase = null
+        )
+        
+        // Create updated document
+        val updatedVm = filteredVm + newVm
+        val updatedAuth = filteredAuth + newVmId
+        val updatedAssertion = filteredAssertion + newVmId
+        
+        // Use copy method from docAccess
+        return docAccess.copyDocument(
+            doc = currentDoc,
+            id = targetDid,
+            verificationMethod = updatedVm,
+            authentication = updatedAuth,
+            assertionMethod = updatedAssertion
+        )
     }
 }
 

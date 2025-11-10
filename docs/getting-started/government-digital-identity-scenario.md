@@ -290,7 +290,9 @@ fun main() = runBlocking {
     
     val dmvIssuer = CredentialIssuer(
         proofGenerator = dmvProofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     val issuedDriversLicense = dmvIssuer.issue(
@@ -328,7 +330,9 @@ fun main() = runBlocking {
     
     val passportIssuer = CredentialIssuer(
         proofGenerator = passportProofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     val issuedPassport = passportIssuer.issue(
@@ -360,7 +364,9 @@ fun main() = runBlocking {
     
     val taxIssuer = CredentialIssuer(
         proofGenerator = taxProofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     val issuedTaxCredential = taxIssuer.issue(
@@ -400,7 +406,9 @@ fun main() = runBlocking {
     // Step 10: Verify credentials
     println("\nStep 10: Verifying government credentials...")
     val verifier = CredentialVerifier(
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     val licenseVerification = verifier.verify(
@@ -584,7 +592,9 @@ fun verifyCrossBorderIdentity(
 ): Boolean {
     // Verify passport credential is valid
     val verifier = CredentialVerifier(
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     val verification = verifier.verify(
@@ -941,7 +951,9 @@ fun verifyPassportAtBorder(
     borderControlDid: String
 ): BorderVerificationResult {
     val verifier = CredentialVerifier(
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     val verification = verifier.verify(
@@ -1048,4 +1060,5 @@ data class TaxFilingData(
 - Check out [Financial Services & KYC Scenario](financial-services-kyc-scenario.md) for identity verification
 - Review [Core Concepts: DIDs](../core-concepts/dids.md) for identity management
 - Study [Core Concepts: Verifiable Credentials](../core-concepts/verifiable-credentials.md) for credential details
+
 

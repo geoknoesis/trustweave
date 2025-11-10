@@ -6,6 +6,17 @@ A **Trust Registry** is a system for managing trust anchors and discovering trus
 
 The Trust Registry implements a **Web of Trust** model where trust is established through relationships between DIDs, rather than relying on a single central authority.
 
+## Trust Layer Setup Checklist
+
+Before integrating the registry into an application, make sure the supporting trust primitives are configured. The registry will not be useful in isolation.
+
+- **DID resolution**: Instantiate a `CredentialDidResolver` that can route DID queries to your preferred `DidMethod` implementations. When wiring `CredentialIssuer` or `CredentialVerifier`, pass `resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }` so the new constructor signature is satisfied.
+- **Key management**: Provide a `KeyManagementService` for every party that needs to issue, present, or verify credentials. Production deployments should rely on HSM-backed or remote KMS providers rather than `InMemoryKeyManagementService`.
+- **Proof generators**: Register a proof generator (e.g., `Ed25519ProofGenerator`) or inject one directly into `CredentialIssuer`. VeriCore’s verifier currently performs structural checks only; bring your own cryptographic proof validation if signature verification is required.
+- **Schema and status services**: Register schemas with `SchemaRegistry` and configure status list endpoints before enabling `validateSchema` or `checkRevocation`.
+- **Trust anchors**: Seed the registry with anchors via `addAnchor` *before* verification. Anchors can be loaded from configuration files, REST endpoints, or anchored on-chain.
+- **Observability**: Decide how to persist trust decisions (audit logs, metrics, monitoring) so you can explain authorization outcomes to relying parties.
+
 ## Key Concepts
 
 ### Trust Anchors

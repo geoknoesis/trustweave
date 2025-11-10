@@ -30,6 +30,8 @@
   * [JSON Canonicalization](core-concepts/json-canonicalization.md)
 
 * [Core Modules](modules/core-modules.md)
+  * [vericore-spi](modules/vericore-spi.md)
+  * [vericore-trust](modules/vericore-trust.md)
   * [vericore-core](modules/vericore-core.md)
   * [vericore-json](modules/vericore-json.md)
   * [vericore-kms](modules/vericore-kms.md)

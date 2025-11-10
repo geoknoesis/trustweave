@@ -388,27 +388,28 @@ wallet.withPresentation { presentation ->
 }
 ```
 
-### Wallet Registry
+### Wallet Directory
 
-Manage multiple wallets:
+Manage multiple wallets with an instance-scoped directory:
 
 ```kotlin
-import io.geoknoesis.vericore.credential.wallet.WalletRegistry
+import io.geoknoesis.vericore.credential.wallet.WalletDirectory
+
+val directory = WalletDirectory()
 
 // Register wallets
 val wallet1 = BasicWallet()
 val wallet2 = InMemoryWallet()
-
-WalletRegistry.register(wallet1)
-WalletRegistry.register(wallet2)
+directory.register(wallet1)
+directory.register(wallet2)
 
 // Find wallets
-val retrieved = WalletRegistry.get(wallet1.walletId)
-val byDid = WalletRegistry.getByDid("did:key:wallet")
+val retrieved = directory.get(wallet1.walletId)
+val byDid = directory.getByDid("did:key:wallet")
 
 // Find wallets with specific capabilities
-val orgWallets = WalletRegistry.findByCapability(CredentialOrganization::class)
-val walletsWithCollections = WalletRegistry.findByCapability("collections")
+val orgWallets = directory.findByCapability(CredentialOrganization::class)
+val walletsWithCollections = directory.findByCapability("collections")
 ```
 
 ## Complete Example

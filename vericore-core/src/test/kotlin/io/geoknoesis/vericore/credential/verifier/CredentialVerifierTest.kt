@@ -10,6 +10,8 @@ import io.geoknoesis.vericore.credential.schema.JsonSchemaValidator
 import io.geoknoesis.vericore.credential.schema.SchemaRegistry
 import io.geoknoesis.vericore.credential.schema.SchemaValidatorRegistry
 import io.geoknoesis.vericore.spi.SchemaFormat
+import io.geoknoesis.vericore.credential.did.CredentialDidResolver
+import io.geoknoesis.vericore.util.booleanDidResolver
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.AfterEach
@@ -32,7 +34,7 @@ class CredentialVerifierTest {
         // Register JSON Schema validator
         SchemaValidatorRegistry.register(JsonSchemaValidator())
         verifier = CredentialVerifier(
-            resolveDid = { did -> did == issuerDid }
+            booleanDidResolver { did -> did == issuerDid }
         )
     }
 
@@ -90,7 +92,7 @@ class CredentialVerifierTest {
     @Test
     fun `test verify credential with invalid issuer DID`() = runBlocking {
         val verifierWithFailedDid = CredentialVerifier(
-            resolveDid = { false }
+            booleanDidResolver { false }
         )
         val credential = createTestCredential()
         

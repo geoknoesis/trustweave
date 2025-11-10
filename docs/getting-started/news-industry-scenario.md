@@ -314,7 +314,6 @@ import java.time.Instant
 ```kotlin
 import io.geoknoesis.vericore.credential.issuer.CredentialIssuer
 import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
-import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
 import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
 
     // Step 5: Issue authorship credential
@@ -328,12 +327,14 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
         signer = { data, keyId -> publisherKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> orgKey.id }
     )
-    ProofGeneratorRegistry.register(orgProofGenerator)
+    val didResolver = CredentialDidResolver { did ->
+        DidRegistry.resolve(did).toCredentialDidResolution()
+    }
     
     // Create credential issuer
     val orgIssuer = CredentialIssuer(
         proofGenerator = orgProofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
     )
     
     // Issue authorship credential
@@ -521,7 +522,9 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
     
     val factCheckerIssuer = CredentialIssuer(
         proofGenerator = factCheckerProofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     val issuedFactCheckCredential = factCheckerIssuer.issue(
@@ -556,9 +559,7 @@ import io.geoknoesis.vericore.credential.CredentialVerificationOptions
     // Step 9: Verify content authenticity
     println("\nStep 9: Verifying content authenticity...")
     
-    val verifier = CredentialVerifier(
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
-    )
+    val verifier = CredentialVerifier(didResolver)
     
     // Verify all credentials
     val credentials = listOf(
@@ -572,8 +573,9 @@ import io.geoknoesis.vericore.credential.CredentialVerificationOptions
         val verification = verifier.verify(
             credential = credential,
             options = CredentialVerificationOptions(
-                checkRevocation = true,
-                checkExpiration = false
+                checkRevocation = false,
+                checkExpiration = false,
+                didResolver = didResolver
             )
         )
         
@@ -800,4 +802,5 @@ fun createVersionCredential(
 - Explore [Earth Observation Scenario](earth-observation-scenario.md) for data integrity
 - Check out [Academic Credentials Scenario](academic-credentials-scenario.md) for credential concepts
 - Review [Core Concepts: Verifiable Credentials](../core-concepts/verifiable-credentials.md) for credential details
+
 

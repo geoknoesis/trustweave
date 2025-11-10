@@ -405,7 +405,9 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
     // Create credential issuer
     val publisherIssuer = CredentialIssuer(
         proofGenerator = publisherProofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     // Issue dataset credential
@@ -517,7 +519,9 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
     
     val catalogIssuer = CredentialIssuer(
         proofGenerator = catalogProofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     val issuedCatalogRecord = catalogIssuer.issue(
@@ -553,7 +557,9 @@ import io.geoknoesis.vericore.credential.CredentialVerificationOptions
     println("\nStep 8: Verifying dataset credentials...")
     
     val verifier = CredentialVerifier(
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     // Verify dataset credential
@@ -837,4 +843,5 @@ fun createQualityCredential(
 - Explore [Digital Workflow & Provenance Scenario](digital-workflow-provenance-scenario.md) for data lineage
 - Check out [Government Digital Identity Scenario](government-digital-identity-scenario.md) for related concepts
 - Review [Core Concepts: Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) for anchoring details
+
 

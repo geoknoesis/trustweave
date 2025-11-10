@@ -122,28 +122,30 @@ if (wallet.capabilities.supports("collections")) {
 }
 ```
 
-## Wallet Registry
+## Wallet Directory
 
-The **WalletRegistry** provides centralized wallet management:
+Create your own directory when you need to manage multiple wallets:
 
 ```kotlin
-import io.geoknoesis.vericore.credential.wallet.WalletRegistry
+import io.geoknoesis.vericore.credential.wallet.WalletDirectory
 
-// Register a wallet
+val directory = WalletDirectory()
+
+// Register wallets
 val wallet = createWallet()
-WalletRegistry.register(wallet)
+directory.register(wallet)
 
 // Get by ID
-val retrieved = WalletRegistry.get(wallet.walletId)
+val retrieved = directory.get(wallet.walletId)
 
 // Get by DID (if DidManagement supported)
-val byDid = WalletRegistry.getByDid("did:key:wallet")
+val byDid = directory.getByDid("did:key:wallet")
 
 // Find wallets with specific capability (type-safe)
-val orgWallets = WalletRegistry.findByCapability(CredentialOrganization::class)
+val orgWallets = directory.findByCapability(CredentialOrganization::class)
 
 // Find wallets by feature name (dynamic)
-val walletsWithCollections = WalletRegistry.findByCapability("collections")
+val walletsWithCollections = directory.findByCapability("collections")
 ```
 
 ## Wallet Statistics

@@ -446,7 +446,9 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
     // Create credential issuer
     val agentIssuer = CredentialIssuer(
         proofGenerator = agentProofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     // Issue activity credential
@@ -590,7 +592,9 @@ import io.geoknoesis.vericore.credential.CredentialVerificationOptions
     
     // Create verifier to check provenance credentials
     val verifier = CredentialVerifier(
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     // Verify all credentials in chain
@@ -1092,4 +1096,5 @@ data class DataTransformation(
 - Explore [News Industry Scenario](news-industry-scenario.md) for content provenance
 - Check out [Supply Chain & Traceability Scenario](supply-chain-traceability-scenario.md) for related tracking
 - Review [Core Concepts: Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) for anchoring details
+
 

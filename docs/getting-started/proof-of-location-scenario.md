@@ -270,11 +270,14 @@ fun main() = runBlocking {
         signer = { data, keyId -> locationProviderKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> issuerKey.id }
     )
-    ProofGeneratorRegistry.register(proofGenerator)
+
+val didResolver = CredentialDidResolver { did ->
+    DidRegistry.resolve(did).toCredentialDidResolution()
+}
     
     val credentialIssuer = CredentialIssuer(
         proofGenerator = proofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+    resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
     )
     
     val issuedCredential = credentialIssuer.issue(
@@ -391,16 +394,15 @@ fun main() = runBlocking {
     
     // Step 12: Verify location credential
     println("\nStep 12: Verifying location credential...")
-    val verifier = CredentialVerifier(
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
-    )
+    val verifier = CredentialVerifier(didResolver)
     
     val verificationResult = verifier.verify(
         credential = issuedCredential,
         options = CredentialVerificationOptions(
-            checkRevocation = true,
+            checkRevocation = false,
             checkExpiration = false, // Location proofs don't expire
-            validateSchema = true
+            validateSchema = false,
+            didResolver = didResolver
         )
     )
     
@@ -1086,4 +1088,5 @@ fun calculateConsensusLocation(
 - Learn about [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md)
 - Explore [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md)
 - Check out [Earth Observation Scenario](earth-observation-scenario.md) for related geospatial concepts
+
 

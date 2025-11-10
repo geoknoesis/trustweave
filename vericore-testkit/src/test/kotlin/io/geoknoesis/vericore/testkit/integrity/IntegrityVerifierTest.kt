@@ -2,6 +2,7 @@ package io.geoknoesis.vericore.testkit.integrity
 
 import io.geoknoesis.vericore.anchor.AnchorRef
 import io.geoknoesis.vericore.anchor.BlockchainRegistry
+import io.geoknoesis.vericore.did.DidRegistry
 import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
 import io.geoknoesis.vericore.testkit.integrity.models.*
 import kotlinx.coroutines.runBlocking
@@ -17,6 +18,7 @@ class IntegrityVerifierTest {
 
     @BeforeEach
     fun setup() {
+        DidRegistry.clear()
         BlockchainRegistry.clear()
     }
 

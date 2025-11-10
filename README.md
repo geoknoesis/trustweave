@@ -1,6 +1,58 @@
 # VeriCore
 
+> Beautiful, type-safe trust and identity for Kotlin
+
 A **neutral, reusable trust and identity core** library for Kotlin, designed to be domain-agnostic, chain-agnostic, DID-method-agnostic, and KMS-agnostic.
+
+## Quick Start (30 Seconds) ⚡
+
+```kotlin
+import io.geoknoesis.vericore.VeriCore
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+
+fun main() = runBlocking {
+    // 1. Create VeriCore instance
+    val vericore = VeriCore.create()
+    
+    // 2. Create a DID
+    val did = vericore.createDid()
+    
+    // 3. Issue a credential
+    val credential = vericore.issueCredential(
+        issuerDid = did.id,
+        issuerKeyId = did.id,  // Simplified for demo
+        credentialSubject = buildJsonObject {
+            put("id", "did:key:subject")
+            put("name", "Alice")
+        },
+        types = listOf("PersonCredential")
+    )
+    
+    // 4. Verify the credential
+    val result = vericore.verifyCredential(credential)
+    println("Valid: ${result.valid}")
+    
+    // 5. Store in wallet
+    val wallet = vericore.createWallet(holderDid = "did:key:alice")
+    wallet.store(credential)
+    
+    println("✅ Complete!")
+}
+```
+
+## Installation
+
+Add VeriCore to your project:
+
+```kotlin
+dependencies {
+    // All-in-one dependency (recommended)
+    implementation("io.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("io.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")  // For testing
+}
+```
 
 ## Overview
 
@@ -33,22 +85,66 @@ VeriCore is organized into six modules:
 - **Coroutine-based**: All I/O operations use Kotlin coroutines (`suspend` functions)
 - **Type-safe**: Uses Kotlinx Serialization for type-safe JSON handling
 
-## Quick Start
+## Which API Should I Use? 🤔
 
-### Adding Dependencies
+VeriCore provides multiple APIs for different use cases:
+
+### 1. **VeriCore Facade** (Recommended for Most Users) ✅
+
+**Use when:** You want the simplest, most intuitive API
 
 ```kotlin
-dependencies {
-    implementation("io.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
-    
-    // For testing
-    testImplementation("io.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+val vericore = VeriCore.create()
+val did = vericore.createDid()
+val credential = vericore.issueCredential(...)
+```
+
+**Pros:** Simple, type-safe, sensible defaults  
+**Cons:** Less configuration flexibility
+
+### 2. **Wallets Factory** (For Credential Storage) 📦
+
+**Use when:** You need to store and manage credentials
+
+```kotlin
+val wallet = Wallets.inMemory(holderDid = "did:key:alice")
+wallet.store(credential)
+val credentials = wallet.query { byType("PersonCredential") }
+```
+
+**Pros:** Clean API, no builder exceptions  
+**Cons:** In-memory only (for now)
+
+### 3. **Direct APIs** (For Advanced Users) ⚙️
+
+**Use when:** You need fine-grained control or advanced features
+
+```kotlin
+val didMethod = DidKeyMockMethod(kms)
+DidRegistry.register(didMethod)
+val doc = didMethod.createDid(options)
+```
+
+**Pros:** Maximum flexibility and control  
+**Cons:** More verbose, requires manual setup
+
+### 4. **DSL** (For Complex Workflows) 🎨
+
+**Use when:** Building complex trust layer configurations
+
+```kotlin
+val trustLayer = trustLayer {
+    keys { provider("inMemory") }
+    did { method("key") }
 }
 ```
+
+**Pros:** Declarative, readable configuration  
+**Cons:** Learning curve for DSL syntax
+
+---
+
+## Getting Started Examples
 
 ### Example: Computing a JSON Digest
 
@@ -68,7 +164,28 @@ fun main() {
 }
 ```
 
-### Example: Creating a DID
+### Example: Creating a DID (New Simple API)
+
+```kotlin
+import io.geoknoesis.vericore.VeriCore
+import kotlinx.coroutines.runBlocking
+
+fun main() = runBlocking {
+    // Create VeriCore instance
+    val vericore = VeriCore.create()
+    
+    // Create a DID (uses default "key" method)
+    val document = vericore.createDid()
+    println("Created DID: ${document.id}")
+    
+    // Resolve the DID
+    val result = vericore.resolveDid(document.id)
+    println("Resolved document: ${result.document?.id}")
+}
+```
+
+<details>
+<summary>Advanced: Using Direct APIs</summary>
 
 ```kotlin
 import io.geoknoesis.vericore.did.*
@@ -84,32 +201,32 @@ fun main() = runBlocking {
     // Register the method
     DidRegistry.register(didMethod)
     
-    // Create a DID
-    val document = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    // Create a DID with typed options
+    val options = DidCreationOptions(
+        algorithm = DidCreationOptions.KeyAlgorithm.ED25519,
+        purposes = listOf(DidCreationOptions.KeyPurpose.AUTHENTICATION)
+    )
+    val document = didMethod.createDid(options)
     println("Created DID: ${document.id}")
-    
-    // Resolve the DID
-    val result = DidRegistry.resolve(document.id)
-    println("Resolved document: ${result.document?.id}")
 }
 ```
 
-### Example: Managing Credentials with Wallets
+</details>
+```
+
+### Example: Managing Credentials with Wallets (New Simple API)
 
 ```kotlin
-import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
+import io.geoknoesis.vericore.credential.wallet.Wallets
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
-import io.geoknoesis.vericore.credential.PresentationOptions
+import io.geoknoesis.vericore.credential.wallet.CredentialOrganization
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
-    // Create a wallet
-    val wallet = InMemoryWallet(
-        walletDid = "did:key:wallet",
-        holderDid = "did:key:holder"
-    )
+    // Create a wallet using the new factory
+    val wallet = Wallets.inMemory(holderDid = "did:key:holder")
     
     // Store a credential
     val credential = VerifiableCredential(
@@ -741,4 +858,5 @@ Comprehensive documentation is available in the [`docs/`](docs/) directory:
 - **[Getting Started](docs/getting-started/)**: Installation and quick start guides
 - **[Optimization Summary](OPTIMIZATION_COMPLETE.md)**: Summary of codebase optimizations
 - **[Module READMEs](vericore-anchor/src/main/kotlin/io/geoknoesis/vericore/anchor/README.md)**: Detailed module documentation
+
 

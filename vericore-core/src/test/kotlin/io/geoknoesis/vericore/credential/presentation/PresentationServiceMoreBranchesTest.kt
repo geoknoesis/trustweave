@@ -1,6 +1,7 @@
 package io.geoknoesis.vericore.credential.presentation
 
 import io.geoknoesis.vericore.credential.CredentialVerificationOptions
+import io.geoknoesis.vericore.util.booleanDidResolver
 import io.geoknoesis.vericore.credential.PresentationOptions
 import io.geoknoesis.vericore.credential.models.Proof
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
@@ -44,7 +45,7 @@ class PresentationServiceMoreBranchesTest {
         presentationService = PresentationService(
             proofGenerator = proofGenerator,
             credentialVerifier = CredentialVerifier(
-                resolveDid = { did -> did == issuerDid || did == holderDid }
+                booleanDidResolver { did -> did == issuerDid || did == holderDid }
             )
         )
     }

@@ -110,22 +110,35 @@ Verify a credential or presentation:
 
 ```kotlin
 import io.geoknoesis.vericore.credential.CredentialVerificationOptions
+import io.geoknoesis.vericore.credential.did.CredentialDidResolver
+import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
+import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.did.toCredentialDidResolution
 
-val result = credentialService.verifyCredential(
-    issuedCredential,
-    CredentialVerificationOptions(
-        checkRevocation = true,
+val didResolver = CredentialDidResolver { did ->
+    DidRegistry.resolve(did).toCredentialDidResolution()
+}
+
+val verifier = CredentialVerifier(didResolver)
+
+val result = verifier.verify(
+    credential = issuedCredential,
+    options = CredentialVerificationOptions(
+        checkRevocation = false, // Requires status list integration
         checkExpiration = true,
-        validateSchema = true
+        validateSchema = false,
+        didResolver = didResolver
     )
 )
 
 if (result.valid) {
-    println("Credential is valid!")
+    println("Credential passed structural checks.")
 } else {
-    println("Errors: ${result.errors}")
+    println("Verification errors: ${result.errors}")
 }
 ```
+
+> **Important:** The built-in verifier performs structural checks today (proof fields, expiration, DID resolution). Integrate a dedicated cryptographic proof validator and revocation resolver for production deployments.
 
 ### 5. Revocation
 

@@ -357,7 +357,6 @@ import java.time.Instant
 ```kotlin
 import io.geoknoesis.vericore.credential.issuer.CredentialIssuer
 import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
-import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
 import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
 
     // Step 4: Issue enrollment credential with proof
@@ -373,12 +372,15 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
         signer = { data, keyId -> authorityKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> authorityKey.id }
     )
-    ProofGeneratorRegistry.register(authorityProofGenerator)
+    
+    val didResolver = CredentialDidResolver { did ->
+        DidRegistry.resolve(did).toCredentialDidResolution()
+    }
     
     // Create credential issuer
     val authorityIssuer = CredentialIssuer(
         proofGenerator = authorityProofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
     )
     
     // Issue enrollment credential
@@ -460,11 +462,10 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
         signer = { data, keyId -> institutionKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> institutionKey.id }
     )
-    ProofGeneratorRegistry.register(institutionProofGenerator)
     
     val institutionIssuer = CredentialIssuer(
         proofGenerator = institutionProofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
     )
     
     val issuedAchievementCredential = institutionIssuer.issue(
@@ -548,16 +549,15 @@ import io.geoknoesis.vericore.credential.CredentialVerificationOptions
     // Step 7: Verify credentials
     println("\nStep 7: Verifying credentials...")
     
-    val verifier = CredentialVerifier(
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
-    )
+    val verifier = CredentialVerifier(didResolver)
     
     // Verify enrollment credential
     val enrollmentVerification = verifier.verify(
         credential = issuedEnrollmentCredential,
         options = CredentialVerificationOptions(
-            checkRevocation = true,
-            checkExpiration = false
+            checkRevocation = false,
+            checkExpiration = false,
+            didResolver = didResolver
         )
     )
     
@@ -574,8 +574,9 @@ import io.geoknoesis.vericore.credential.CredentialVerificationOptions
     val achievementVerification = verifier.verify(
         credential = issuedAchievementCredential,
         options = CredentialVerificationOptions(
-            checkRevocation = true,
-            checkExpiration = false
+            checkRevocation = false,
+            checkExpiration = false,
+            didResolver = didResolver
         )
     )
     
@@ -844,4 +845,5 @@ fun queryNationalCredentials(
 - Explore [Government Digital Identity Scenario](government-digital-identity-scenario.md) for related concepts
 - Check out [Professional Identity Scenario](professional-identity-scenario.md) for credential management
 - Review [Core Concepts: Verifiable Credentials](../core-concepts/verifiable-credentials.md) for credential details
+
 

@@ -278,11 +278,14 @@ fun main() = runBlocking {
         signer = { data, keyId -> manufacturerKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> manufacturerKey.id }
     )
-    ProofGeneratorRegistry.register(manufacturerProofGenerator)
+    
+    val didResolver = CredentialDidResolver { did ->
+        DidRegistry.resolve(did).toCredentialDidResolution()
+    }
     
     val manufacturerIssuer = CredentialIssuer(
         proofGenerator = manufacturerProofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
     )
     
     val issuedOriginCredential = manufacturerIssuer.issue(
@@ -340,11 +343,10 @@ fun main() = runBlocking {
         signer = { data, keyId -> distributorKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> distributorKey.id }
     )
-    ProofGeneratorRegistry.register(distributorProofGenerator)
     
     val distributorIssuer = CredentialIssuer(
         proofGenerator = distributorProofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
     )
     
     val issuedTransferCredential = distributorIssuer.issue(
@@ -401,11 +403,10 @@ fun main() = runBlocking {
         signer = { data, keyId -> retailerKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> retailerKey.id }
     )
-    ProofGeneratorRegistry.register(retailerProofGenerator)
     
     val retailerIssuer = CredentialIssuer(
         proofGenerator = retailerProofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
     )
     
     val issuedSaleCredential = retailerIssuer.issue(
@@ -439,7 +440,9 @@ fun main() = runBlocking {
     // Step 10: Verify product authenticity
     println("\nStep 10: Verifying product authenticity...")
     val verifier = CredentialVerifier(
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     val authenticityValid = verifier.verify(
@@ -574,7 +577,9 @@ fun verifyProvenanceChain(credentials: List<VerifiableCredential>): Boolean {
     
     // Verify each credential
     val verifier = CredentialVerifier(
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     credentials.forEach { credential ->
@@ -1012,7 +1017,9 @@ fun verifyLuxuryGoodAuthenticity(
     
     // Verify origin credential
     val verifier = CredentialVerifier(
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     val verification = verifier.verify(
@@ -1062,4 +1069,5 @@ fun verifyLuxuryGoodAuthenticity(
 - Explore [Proof of Location Scenario](proof-of-location-scenario.md) for geospatial tracking
 - Check out [Financial Services & KYC Scenario](financial-services-kyc-scenario.md) for related verification
 - Review [Core Concepts: Verifiable Credentials](../core-concepts/verifiable-credentials.md) for credential details
+
 

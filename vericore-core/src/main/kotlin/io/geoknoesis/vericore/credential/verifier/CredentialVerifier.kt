@@ -2,6 +2,8 @@ package io.geoknoesis.vericore.credential.verifier
 
 import io.geoknoesis.vericore.credential.CredentialVerificationOptions
 import io.geoknoesis.vericore.credential.CredentialVerificationResult
+import io.geoknoesis.vericore.credential.did.CredentialDidResolver
+import io.geoknoesis.vericore.credential.did.asCredentialDidResolution
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
 import io.geoknoesis.vericore.credential.schema.SchemaRegistry
 import io.geoknoesis.vericore.credential.proof.ProofValidator
@@ -19,9 +21,7 @@ import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
  * 
  * **Example Usage**:
  * ```kotlin
- * val verifier = CredentialVerifier(
- *     resolveDid = { did -> didRegistry.resolve(did).document != null }
- * )
+ * val verifier = CredentialVerifier(myDidResolver)
  * 
  * val result = verifier.verify(
  *     credential = credential,
@@ -38,8 +38,9 @@ import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
  * ```
  */
 class CredentialVerifier(
-    private val resolveDid: suspend (String) -> Boolean = { true } // Default: assume DID is valid
+    private val defaultDidResolver: CredentialDidResolver? = null // Optional default resolver provided by caller
 ) {
+
     /**
      * Verify a verifiable credential.
      * 
@@ -72,31 +73,30 @@ class CredentialVerifier(
         var delegationValid = true
         var proofPurposeValid = true
         
+        val didResolver = buildDidResolver(options)
+
         // 1. Verify proof purpose if enabled (before signature verification)
         if (options.validateProofPurpose && credential.proof != null) {
-            try {
-                    if (options.resolveDid != null) {
-                        val resolveDidFn: suspend (String) -> Any? = { did ->
-                            options.resolveDid(did) as? Any
-                        }
-                        
-                        val proofValidator = ProofValidator(resolveDidFn)
+            if (didResolver == null) {
+                warnings.add("Proof purpose validation requested but no DID resolver available")
+                proofPurposeValid = false
+            } else {
+                try {
+                    val proofValidator = ProofValidator(didResolver)
                     val purposeResult = proofValidator.validateProofPurpose(
                         proofPurpose = credential.proof.proofPurpose,
                         verificationMethod = credential.proof.verificationMethod,
                         issuerDid = credential.issuer
                     )
-                    
+
                     proofPurposeValid = purposeResult.valid
                     if (!proofPurposeValid) {
                         errors.addAll(purposeResult.errors)
                     }
-                } else {
-                    warnings.add("Proof purpose validation requested but resolveDid not provided")
+                } catch (e: Exception) {
+                    warnings.add("Proof purpose validation failed: ${e.message}")
+                    proofPurposeValid = false
                 }
-            } catch (e: Exception) {
-                warnings.add("Proof purpose validation failed: ${e.message}")
-                proofPurposeValid = false
             }
         }
         
@@ -111,11 +111,15 @@ class CredentialVerifier(
         }
         
         // 2. Verify issuer DID resolution
-        issuerValid = try {
-            resolveDid(credential.issuer)
-        } catch (e: Exception) {
-            errors.add("Failed to resolve issuer DID: ${e.message}")
-            false
+        issuerValid = if (didResolver == null) {
+            true
+        } else {
+            try {
+                didResolver.resolve(credential.issuer)?.isResolvable == true
+            } catch (e: Exception) {
+                errors.add("Failed to resolve issuer DID: ${e.message}")
+                false
+            }
         }
         
         // 3. Check expiration
@@ -209,37 +213,32 @@ class CredentialVerifier(
         if (options.verifyDelegation && credential.proof != null) {
             val proofPurpose = credential.proof.proofPurpose
             if (proofPurpose == "capabilityDelegation" || proofPurpose == "capabilityInvocation") {
-                try {
-                    // Extract delegator from proof verificationMethod
-                    val verificationMethod = credential.proof.verificationMethod
-                    val delegatorDid = if (verificationMethod.contains("#")) {
-                        verificationMethod.substringBefore("#")
-                    } else {
-                        credential.issuer // Fallback to issuer
-                    }
-                    
-                    // Verify delegation chain
-                    if (options.resolveDid != null) {
-                        val resolveDidFn: suspend (String) -> Any? = { did ->
-                            options.resolveDid(did) as? Any
+                if (didResolver == null) {
+                    warnings.add("Delegation verification requested but no DID resolver available")
+                    delegationValid = false
+                } else {
+                    try {
+                        val verificationMethod = credential.proof.verificationMethod
+                        val delegatorDid = if (verificationMethod.contains("#")) {
+                            verificationMethod.substringBefore("#")
+                        } else {
+                            credential.issuer
                         }
-                        
-                        val delegationService = io.geoknoesis.vericore.did.delegation.DelegationService(resolveDidFn)
+
+                        val delegationService = io.geoknoesis.vericore.did.delegation.DelegationService(didResolver)
                         val delegationResult = delegationService.verifyDelegationChain(
                             delegatorDid = delegatorDid,
                             delegateDid = credential.issuer
                         )
-                        
+
                         delegationValid = delegationResult.valid
                         if (!delegationValid) {
                             errors.add("Delegation verification failed: ${delegationResult.errors.joinToString(", ")}")
                         }
-                    } else {
-                        warnings.add("Delegation verification requested but resolveDid not provided")
+                    } catch (e: Exception) {
+                        warnings.add("Delegation verification failed: ${e.message}")
+                        delegationValid = false
                     }
-                } catch (e: Exception) {
-                    warnings.add("Delegation verification failed: ${e.message}")
-                    delegationValid = false
                 }
             }
         }
@@ -290,6 +289,12 @@ class CredentialVerifier(
         
         // For now, return true if structure is valid
         return true
+    }
+
+    private fun buildDidResolver(options: CredentialVerificationOptions): CredentialDidResolver? {
+        options.didResolver?.let { return it }
+        defaultDidResolver?.let { return it }
+        return null
     }
 }
 

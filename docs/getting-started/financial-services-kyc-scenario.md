@@ -202,7 +202,6 @@ import io.geoknoesis.vericore.credential.PresentationOptions
 import io.geoknoesis.vericore.credential.issuer.CredentialIssuer
 import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
 import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
-import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
 import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
@@ -305,11 +304,13 @@ fun main() = runBlocking {
         signer = { data, keyId -> kycProviderKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> kycProviderKey.id }
     )
-    ProofGeneratorRegistry.register(kycProofGenerator)
+    val didResolver = CredentialDidResolver { did ->
+        DidRegistry.resolve(did).toCredentialDidResolution()
+    }
     
     val kycIssuer = CredentialIssuer(
         proofGenerator = kycProofGenerator,
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
     )
     
     val issuedKYCCredential = kycIssuer.issue(
@@ -358,16 +359,15 @@ fun main() = runBlocking {
     
     // Step 8: Bank verifies KYC credential
     println("\nStep 8: Bank verifies KYC credential for account opening...")
-    val bankVerifier = CredentialVerifier(
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
-    )
+    val bankVerifier = CredentialVerifier(didResolver)
     
     val bankVerification = bankVerifier.verify(
         credential = issuedKYCCredential,
         options = CredentialVerificationOptions(
-            checkRevocation = true,
+            checkRevocation = false,
             checkExpiration = true,
-            validateSchema = true
+            validateSchema = false,
+            didResolver = didResolver
         )
     )
     
@@ -417,8 +417,9 @@ fun main() = runBlocking {
     val exchangeVerification = bankVerifier.verify(
         credential = issuedKYCCredential,
         options = CredentialVerificationOptions(
-            checkRevocation = true,
-            checkExpiration = true
+            checkRevocation = false,
+            checkExpiration = true,
+            didResolver = didResolver
         )
     )
     
@@ -820,7 +821,9 @@ fun verifyCrossBorderKYC(
 ): Boolean {
     // Verify credential is valid
     val verifier = CredentialVerifier(
-        resolveDid = { did -> DidRegistry.resolve(did).document != null }
+        didResolver = CredentialDidResolver { did ->
+            DidRegistry.resolve(did).toCredentialDidResolution()
+        }
     )
     
     val verification = verifier.verify(
@@ -997,4 +1000,5 @@ fun applyForLoan(
 - Explore [Government & Digital Identity Scenario](government-digital-identity-scenario.md) for related identity verification
 - Check out [Healthcare & Medical Records Scenario](healthcare-medical-records-scenario.md) for privacy-preserving credentials
 - Review [Core Concepts: Verifiable Credentials](../core-concepts/verifiable-credentials.md) for credential details
+
 

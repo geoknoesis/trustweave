@@ -9,7 +9,10 @@ import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
 import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
 import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
 import io.geoknoesis.vericore.credential.wallet.CredentialQueryBuilder
+import io.geoknoesis.vericore.credential.did.CredentialDidResolver
+import io.geoknoesis.vericore.anchor.BlockchainRegistry
 import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.did.toCredentialDidResolution
 import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
@@ -129,7 +132,7 @@ class AcademicCredentialsExampleTest {
 
         val credentialIssuer = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { did -> DidRegistry.resolve(did).document != null }
+            resolveDid = { did -> DidRegistry.resolve(did)?.document != null }
         )
 
         val issuedCredential = credentialIssuer.issue(
@@ -183,7 +186,7 @@ class AcademicCredentialsExampleTest {
 
         val credentialIssuer = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { did -> DidRegistry.resolve(did).document != null }
+            resolveDid = { did -> DidRegistry.resolve(did)?.document != null }
         )
 
         val issuedCredential = credentialIssuer.issue(
@@ -239,7 +242,7 @@ class AcademicCredentialsExampleTest {
 
         val credentialIssuer = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { did -> DidRegistry.resolve(did).document != null }
+            resolveDid = { did -> DidRegistry.resolve(did)?.document != null }
         )
 
         val issuedCredential = credentialIssuer.issue(
@@ -311,7 +314,7 @@ class AcademicCredentialsExampleTest {
 
         val credentialIssuer = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { did -> DidRegistry.resolve(did).document != null }
+            resolveDid = { did -> DidRegistry.resolve(did)?.document != null }
         )
 
         val issuedCredential = credentialIssuer.issue(
@@ -368,7 +371,7 @@ class AcademicCredentialsExampleTest {
 
         val credentialIssuer = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { did -> DidRegistry.resolve(did).document != null }
+            resolveDid = { did -> DidRegistry.resolve(did)?.document != null }
         )
 
         val issuedCredential = credentialIssuer.issue(
@@ -428,7 +431,7 @@ class AcademicCredentialsExampleTest {
 
         val credentialIssuer = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { did -> DidRegistry.resolve(did).document != null }
+            resolveDid = { did -> DidRegistry.resolve(did)?.document != null }
         )
 
         val issuedCredential = credentialIssuer.issue(
@@ -440,7 +443,9 @@ class AcademicCredentialsExampleTest {
 
         // Verify credential
         val credentialVerifier = CredentialVerifier(
-            resolveDid = { did -> DidRegistry.resolve(did).document != null }
+            CredentialDidResolver { did ->
+                DidRegistry.resolve(did)?.toCredentialDidResolution()
+            }
         )
         
         val verificationResult = credentialVerifier.verify(
@@ -498,7 +503,7 @@ class AcademicCredentialsExampleTest {
 
         val credentialIssuer = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { did -> DidRegistry.resolve(did).document != null }
+            resolveDid = { did -> DidRegistry.resolve(did)?.document != null }
         )
 
         val issuedCredential = credentialIssuer.issue(

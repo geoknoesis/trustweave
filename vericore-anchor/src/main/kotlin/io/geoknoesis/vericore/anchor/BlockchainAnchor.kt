@@ -62,26 +62,37 @@ interface BlockchainAnchorClient {
     suspend fun readPayload(ref: AnchorRef): AnchorResult
 }
 
+suspend fun <T> BlockchainAnchorRegistry.anchorTyped(
+    value: T,
+    serializer: kotlinx.serialization.KSerializer<T>,
+    targetChainId: String,
+    mediaType: String = "application/json"
+): AnchorResult {
+    val client = get(targetChainId)
+        ?: throw IllegalArgumentException("No blockchain client registered for chain: $targetChainId")
+
+    val json = kotlinx.serialization.json.Json.encodeToJsonElement(serializer, value)
+    return client.writePayload(json, mediaType)
+}
+
+suspend fun <T> BlockchainAnchorRegistry.readTyped(
+    ref: AnchorRef,
+    serializer: kotlinx.serialization.KSerializer<T>
+): T {
+    val client = get(ref.chainId)
+        ?: throw IllegalArgumentException("No blockchain client registered for chain: ${ref.chainId}")
+
+    val result = client.readPayload(ref)
+    return kotlinx.serialization.json.Json.decodeFromJsonElement(serializer, result.payload)
+}
+
 /**
- * Registry for blockchain anchor clients.
- * 
- * Allows registration and lookup of clients by chain ID.
- * This registry enables chain-agnostic anchoring operations where clients
- * can be registered at runtime and selected based on chain ID.
- * 
- * **Example Usage**:
- * ```
- * // Register a client
- * BlockchainRegistry.register("algorand:testnet", algorandClient)
- * 
- * // Use helper function (automatically looks up client)
- * val result = anchorTyped(myData, MyData.serializer(), "algorand:testnet")
- * ```
- * 
- * **Thread Safety**: This registry is thread-safe for concurrent access.
+ * Global blockchain registry for backward compatibility. Newer code should
+ * prefer using `BlockchainAnchorRegistry` instances or the `VeriCore` facade,
+ * while delegating to an internal [BlockchainAnchorRegistry] instance.
  */
 object BlockchainRegistry {
-    private val clients = mutableMapOf<String, BlockchainAnchorClient>()
+    private val defaultRegistry = BlockchainAnchorRegistry()
 
     /**
      * Registers a blockchain anchor client for a specific chain.
@@ -90,7 +101,7 @@ object BlockchainRegistry {
      * @param client The blockchain anchor client implementation
      */
     fun register(chainId: String, client: BlockchainAnchorClient) {
-        clients[chainId] = client
+        defaultRegistry.register(chainId, client)
     }
 
     /**
@@ -100,15 +111,18 @@ object BlockchainRegistry {
      * @return The BlockchainAnchorClient, or null if not registered
      */
     fun get(chainId: String): BlockchainAnchorClient? {
-        return clients[chainId]
+        return defaultRegistry.get(chainId)
     }
 
     /**
      * Clears all registered clients (useful for testing).
      */
     fun clear() {
-        clients.clear()
+        defaultRegistry.clear()
     }
+
+    internal suspend fun <T> withRegistry(block: suspend BlockchainAnchorRegistry.() -> T): T =
+        block(defaultRegistry)
 }
 
 /**
@@ -141,12 +155,8 @@ suspend fun <T> anchorTyped(
     serializer: kotlinx.serialization.KSerializer<T>,
     targetChainId: String,
     mediaType: String = "application/json"
-): AnchorResult {
-    val client = BlockchainRegistry.get(targetChainId)
-        ?: throw IllegalArgumentException("No blockchain client registered for chain: $targetChainId")
-    
-    val json = kotlinx.serialization.json.Json.encodeToJsonElement(serializer, value)
-    return client.writePayload(json, mediaType)
+): AnchorResult = BlockchainRegistry.withRegistry {
+    anchorTyped(value, serializer, targetChainId, mediaType)
 }
 
 /**
@@ -175,11 +185,7 @@ suspend fun <T> anchorTyped(
 suspend fun <T> readTyped(
     ref: AnchorRef,
     serializer: kotlinx.serialization.KSerializer<T>
-): T {
-    val client = BlockchainRegistry.get(ref.chainId)
-        ?: throw IllegalArgumentException("No blockchain client registered for chain: ${ref.chainId}")
-    
-    val result = client.readPayload(ref)
-    return kotlinx.serialization.json.Json.decodeFromJsonElement(serializer, result.payload)
+): T = BlockchainRegistry.withRegistry {
+    readTyped(ref, serializer)
 }
 

@@ -1,6 +1,8 @@
 package io.geoknoesis.vericore.credential.presentation
 
 import io.geoknoesis.vericore.credential.CredentialVerificationOptions
+import io.geoknoesis.vericore.credential.did.CredentialDidResolution
+import io.geoknoesis.vericore.credential.did.CredentialDidResolver
 import io.geoknoesis.vericore.credential.PresentationOptions
 import io.geoknoesis.vericore.credential.PresentationVerificationOptions
 import io.geoknoesis.vericore.credential.models.Proof
@@ -44,7 +46,7 @@ class PresentationServiceTest {
         ProofGeneratorRegistry.register(proofGenerator)
         
         credentialVerifier = CredentialVerifier(
-            resolveDid = { true }
+            CredentialDidResolver { CredentialDidResolution(isResolvable = true) }
         )
         
         service = PresentationService(

@@ -10,6 +10,8 @@ version = "1.0.0-SNAPSHOT"
 
 dependencies {
     implementation(project(":vericore-core"))
+    implementation(project(":vericore-spi"))
+    implementation(project(":vericore-trust"))
     implementation(project(":vericore-json"))
     implementation(project(":vericore-anchor"))
     implementation(project(":vericore-did"))

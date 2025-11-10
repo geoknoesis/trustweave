@@ -130,14 +130,12 @@ class CredentialLifecycleDslTest {
         val credential = createTestCredential("cred-1")
         val stored = credential.storeIn(wallet)
         
-        if (wallet is io.geoknoesis.vericore.credential.wallet.CredentialOrganization) {
-            val result = stored.organize {
-                tag(stored.credentialId, "test", "tag")
-            }
-            
-            assertNotNull(result)
-            assertTrue(result.success)
+        val result = stored.organize {
+            tag(stored.credentialId, "test", "tag")
         }
+
+        assertNotNull(result)
+        assertTrue(result.success)
     }
     
     private fun createTestCredential(id: String): VerifiableCredential {

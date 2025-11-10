@@ -8,6 +8,7 @@ import io.geoknoesis.vericore.testkit.integrity.IntegrityVerificationResult
 import io.geoknoesis.vericore.testkit.integrity.TestDataBuilders
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
+import io.geoknoesis.vericore.anchor.BlockchainRegistry
 
 /**
  * Earth Observation (EO) test integration utility.
@@ -148,7 +149,7 @@ object EoTestIntegration {
      * @return EoTestResult containing anchor result and verification result
      */
     suspend fun executeScenario(scenario: EoTestScenario): EoTestResult {
-        // Register blockchain client
+        // Register blockchain client in the shared registry for test runs
         BlockchainRegistry.register(scenario.chainId, scenario.anchorClient)
 
         // Anchor VC digest to blockchain

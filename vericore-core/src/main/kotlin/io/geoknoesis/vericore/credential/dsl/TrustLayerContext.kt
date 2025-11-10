@@ -1,9 +1,14 @@
 package io.geoknoesis.vericore.credential.dsl
 
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
+import io.geoknoesis.vericore.credential.did.CredentialDidResolver
+import io.geoknoesis.vericore.credential.did.asCredentialDidResolution
 import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
 import io.geoknoesis.vericore.credential.wallet.Wallet
 import io.geoknoesis.vericore.credential.anchor.CredentialAnchorService
+import io.geoknoesis.vericore.spi.services.DidRegistryService
+import io.geoknoesis.vericore.spi.services.DidDocumentAccess
+import io.geoknoesis.vericore.spi.services.AdapterLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -59,38 +64,20 @@ class TrustLayerContext(
     fun getIssuer() = config.issuer
     
     /**
+     * Get the wallet factory.
+     */
+    fun getWalletFactory() = config.walletFactory
+    
+    /**
      * Get the credential verifier.
      */
     fun getVerifier(): CredentialVerifier {
-        return CredentialVerifier(
-            resolveDid = { did -> 
-                try {
-                    val didRegistryClass = Class.forName("io.geoknoesis.vericore.did.DidRegistry")
-                    val resolveMethod = didRegistryClass.getMethod("resolve", String::class.java)
-                    val result = resolveMethod.invoke(null, did) as? Any
-                    if (result != null) {
-                        try {
-                            val getDocumentMethod = result.javaClass.getMethod("getDocument")
-                            val document = getDocumentMethod.invoke(result) as? Any
-                            document != null
-                        } catch (e: NoSuchMethodException) {
-                            try {
-                                val documentField = result.javaClass.getDeclaredField("document")
-                                documentField.isAccessible = true
-                                val document = documentField.get(result) as? Any
-                                document != null
-                            } catch (e2: Exception) {
-                                false
-                            }
-                        }
-                    } else {
-                        false
-                    }
-                } catch (e: Exception) {
-                    true // Assume valid if registry not available
-                }
+        val resolver = config.didResolver ?: AdapterLoader.didRegistryService()?.let { service ->
+            CredentialDidResolver { did ->
+                runCatching { service.resolve(did) }.getOrNull()?.asCredentialDidResolution()
             }
-        )
+        }
+        return CredentialVerifier(defaultDidResolver = resolver)
     }
     
     /**
@@ -121,12 +108,14 @@ class TrustLayerContext(
      * Get the DID registry.
      */
     fun getDidRegistry(): Any? {
-        return try {
-            val didRegistryClass = Class.forName("io.geoknoesis.vericore.did.DidRegistry")
-            didRegistryClass.getDeclaredField("INSTANCE").get(null)
-                ?: didRegistryClass // If no INSTANCE, return the class itself
-        } catch (e: Exception) {
-            null
+        return AdapterLoader.didRegistryService() ?: run {
+            try {
+                val didRegistryClass = Class.forName("io.geoknoesis.vericore.did.DidRegistry")
+                didRegistryClass.getDeclaredField("INSTANCE").get(null)
+                    ?: didRegistryClass
+            } catch (e: Exception) {
+                null
+            }
         }
     }
     

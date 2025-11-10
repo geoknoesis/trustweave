@@ -4,7 +4,6 @@ import io.geoknoesis.vericore.credential.did.CredentialDidResolver
 import io.geoknoesis.vericore.credential.did.asCredentialDidResolution
 import io.geoknoesis.vericore.did.delegation.DelegationChainResult
 import io.geoknoesis.vericore.did.delegation.DelegationService
-import io.geoknoesis.vericore.spi.services.AdapterLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -31,12 +30,9 @@ import kotlinx.coroutines.withContext
  */
 class DelegationBuilder(private val context: TrustLayerContext) {
     private val resolveDidFn: CredentialDidResolver = CredentialDidResolver { did ->
-        val didRegistryService = AdapterLoader.didRegistryService()
-            ?: throw IllegalStateException(
-                "DidRegistryService not available. " +
-                "Ensure vericore-did module is on classpath and services are properly initialized."
-            )
-        didRegistryService.resolve(did).asCredentialDidResolution()
+        runCatching { context.getConfig().registries.didRegistry.resolve(did) }
+            .getOrNull()
+            ?.asCredentialDidResolution()
     }
 
     private val delegationService = DelegationService(resolveDidFn)

@@ -1,7 +1,7 @@
 package io.geoknoesis.vericore.anchor.spi
 
 import io.geoknoesis.vericore.anchor.BlockchainAnchorClient
-import io.geoknoesis.vericore.anchor.BlockchainRegistry
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import java.util.ServiceLoader
 
 /**
@@ -39,6 +39,7 @@ object BlockchainIntegrationHelper {
      */
     fun discoverAndRegister(
         providerName: String,
+        registry: BlockchainAnchorRegistry,
         options: Map<String, Any?> = emptyMap()
     ): List<String> {
         val providers = ServiceLoader.load(BlockchainAnchorClientProvider::class.java)
@@ -52,7 +53,7 @@ object BlockchainIntegrationHelper {
         for (chainId in provider.supportedChains) {
             val client = provider.create(chainId, options)
             if (client != null) {
-                BlockchainRegistry.register(chainId, client)
+                registry.register(chainId, client)
                 registeredChains.add(chainId)
             }
         }
@@ -73,6 +74,7 @@ object BlockchainIntegrationHelper {
      */
     fun setup(
         providerName: String,
+        registry: BlockchainAnchorRegistry,
         chainIds: List<String>,
         defaultChainIds: List<String>,
         options: Map<String, Any?> = emptyMap(),
@@ -95,7 +97,7 @@ object BlockchainIntegrationHelper {
             if (shouldRegister) {
                 val client = provider.create(chainId, options)
                 if (client != null) {
-                    BlockchainRegistry.register(chainId, client)
+                    registry.register(chainId, client)
                     registeredChains.add(chainId)
                 }
             }

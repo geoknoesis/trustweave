@@ -159,7 +159,7 @@ import io.geoknoesis.vericore.credential.PresentationOptions
 import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
-import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -173,7 +173,7 @@ fun main() = runBlocking {
     println("Step 1: Setting up services...")
     val kms = InMemoryKeyManagementService()
     val didMethod = DidKeyMockMethod(kms)
-    DidRegistry.register(didMethod)
+    val didRegistry = DidMethodRegistry().apply { register(didMethod) }
     
     val professionalDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
     println("Professional DID: ${professionalDid.id}")

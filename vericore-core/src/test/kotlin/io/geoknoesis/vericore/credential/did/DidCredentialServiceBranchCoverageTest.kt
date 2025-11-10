@@ -5,6 +5,11 @@ import io.geoknoesis.vericore.credential.issuer.CredentialIssuer
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
 import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
 import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
+import io.geoknoesis.vericore.did.DidDocument
+import io.geoknoesis.vericore.did.DidMethod
+import io.geoknoesis.vericore.did.DidMethodRegistry
+import io.geoknoesis.vericore.did.DidResolutionResult
+import io.geoknoesis.vericore.did.DefaultDidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.BeforeEach
@@ -12,10 +17,10 @@ import org.junit.jupiter.api.Test
 import kotlin.test.*
 
 /**
- * Comprehensive branch coverage tests for DidCredentialService.
+ * Comprehensive branch coverage tests for DidLinkedCredentialService.
  * Tests all methods, branches, and edge cases.
  */
-class DidCredentialServiceBranchCoverageTest {
+class DidLinkedCredentialServiceBranchCoverageTest {
 
     @BeforeEach
     fun setup() {
@@ -27,9 +32,9 @@ class DidCredentialServiceBranchCoverageTest {
     }
 
     @Test
-    fun `test DidCredentialService issueCredentialForDid with string claims`() = runBlocking {
+    fun `test DidLinkedCredentialService issueCredentialForDid with string claims`() = runBlocking {
         val issuer = CredentialIssuer()
-        val service = DidCredentialService(didRegistry = Any(), credentialIssuer = issuer)
+        val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
         
         val claims = mapOf<String, Any>(
             "name" to "John Doe",
@@ -50,9 +55,9 @@ class DidCredentialServiceBranchCoverageTest {
     }
 
     @Test
-    fun `test DidCredentialService issueCredentialForDid with number claims`() = runBlocking {
+    fun `test DidLinkedCredentialService issueCredentialForDid with number claims`() = runBlocking {
         val issuer = CredentialIssuer()
-        val service = DidCredentialService(didRegistry = Any(), credentialIssuer = issuer)
+        val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
         
         val claims = mapOf<String, Any>(
             "age" to 30,
@@ -71,9 +76,9 @@ class DidCredentialServiceBranchCoverageTest {
     }
 
     @Test
-    fun `test DidCredentialService issueCredentialForDid with boolean claims`() = runBlocking {
+    fun `test DidLinkedCredentialService issueCredentialForDid with boolean claims`() = runBlocking {
         val issuer = CredentialIssuer()
-        val service = DidCredentialService(didRegistry = Any(), credentialIssuer = issuer)
+        val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
         
         val claims = mapOf<String, Any>(
             "verified" to true,
@@ -92,9 +97,9 @@ class DidCredentialServiceBranchCoverageTest {
     }
 
     @Test
-    fun `test DidCredentialService issueCredentialForDid with mixed claims`() = runBlocking {
+    fun `test DidLinkedCredentialService issueCredentialForDid with mixed claims`() = runBlocking {
         val issuer = CredentialIssuer()
-        val service = DidCredentialService(didRegistry = Any(), credentialIssuer = issuer)
+        val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
         
         val claims = mapOf<String, Any>(
             "name" to "John Doe",
@@ -115,9 +120,9 @@ class DidCredentialServiceBranchCoverageTest {
     }
 
     @Test
-    fun `test DidCredentialService issueCredentialForDid with options`() = runBlocking {
+    fun `test DidLinkedCredentialService issueCredentialForDid with options`() = runBlocking {
         val issuer = CredentialIssuer()
-        val service = DidCredentialService(didRegistry = Any(), credentialIssuer = issuer)
+        val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
         
         val claims = mapOf<String, Any>("name" to "John Doe")
         val options = CredentialIssuanceOptions(
@@ -139,9 +144,9 @@ class DidCredentialServiceBranchCoverageTest {
     }
 
     @Test
-    fun `test DidCredentialService resolveCredentialSubject with DID subject`() = runBlocking {
+    fun `test DidLinkedCredentialService resolveCredentialSubject with DID subject`() = runBlocking {
         val issuer = CredentialIssuer()
-        val service = DidCredentialService(didRegistry = Any(), credentialIssuer = issuer)
+        val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
         
         val credential = VerifiableCredential(
             type = listOf("VerifiableCredential"),
@@ -159,9 +164,9 @@ class DidCredentialServiceBranchCoverageTest {
     }
 
     @Test
-    fun `test DidCredentialService resolveCredentialSubject with non-DID subject`() = runBlocking {
+    fun `test DidLinkedCredentialService resolveCredentialSubject with non-DID subject`() = runBlocking {
         val issuer = CredentialIssuer()
-        val service = DidCredentialService(didRegistry = Any(), credentialIssuer = issuer)
+        val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
         
         val credential = VerifiableCredential(
             type = listOf("VerifiableCredential"),
@@ -179,9 +184,9 @@ class DidCredentialServiceBranchCoverageTest {
     }
 
     @Test
-    fun `test DidCredentialService resolveCredentialSubject with missing id`() = runBlocking {
+    fun `test DidLinkedCredentialService resolveCredentialSubject with missing id`() = runBlocking {
         val issuer = CredentialIssuer()
-        val service = DidCredentialService(didRegistry = Any(), credentialIssuer = issuer)
+        val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
         
         val credential = VerifiableCredential(
             type = listOf("VerifiableCredential"),
@@ -198,9 +203,9 @@ class DidCredentialServiceBranchCoverageTest {
     }
 
     @Test
-    fun `test DidCredentialService verifyIssuerDid returns true`() = runBlocking {
+    fun `test DidLinkedCredentialService verifyIssuerDid returns true`() = runBlocking {
         val issuer = CredentialIssuer()
-        val service = DidCredentialService(didRegistry = Any(), credentialIssuer = issuer)
+        val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
         
         val credential = VerifiableCredential(
             type = listOf("VerifiableCredential"),
@@ -217,9 +222,9 @@ class DidCredentialServiceBranchCoverageTest {
     }
 
     @Test
-    fun `test DidCredentialService verifyIssuerDid with invalid DID`() = runBlocking {
+    fun `test DidLinkedCredentialService verifyIssuerDid with invalid DID`() = runBlocking {
         val issuer = CredentialIssuer()
-        val service = DidCredentialService(didRegistry = Any(), credentialIssuer = issuer)
+        val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
         
         val credential = VerifiableCredential(
             type = listOf("VerifiableCredential"),
@@ -232,8 +237,32 @@ class DidCredentialServiceBranchCoverageTest {
         
         val valid = service.verifyIssuerDid(credential)
         
-        assertTrue(valid) // Current implementation always returns true (placeholder)
+        assertFalse(valid)
     }
+}
+
+private fun createDidRegistry(): DidMethodRegistry {
+    val registry = DefaultDidMethodRegistry()
+    registry.register(object : DidMethod {
+        override val method: String = "key"
+
+        override suspend fun createDid(options: Map<String, Any?>): DidDocument {
+            val id = options["id"] as? String ?: "did:key:${java.util.UUID.randomUUID()}"
+            return DidDocument(id = id)
+        }
+
+        override suspend fun resolveDid(did: String): DidResolutionResult = DidResolutionResult(
+            document = DidDocument(id = did)
+        )
+
+        override suspend fun updateDid(
+            did: String,
+            updater: (DidDocument) -> DidDocument
+        ): DidDocument = updater(DidDocument(id = did))
+
+        override suspend fun deactivateDid(did: String): Boolean = true
+    })
+    return registry
 }
 
 

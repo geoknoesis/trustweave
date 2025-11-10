@@ -82,7 +82,7 @@ class InMemoryEoTestIntegrationExample : BaseEoIntegrationTest() {
         // Setup DID method
         val kms = io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService()
         val didMethod = io.geoknoesis.vericore.testkit.did.DidKeyMockMethod(kms)
-        io.geoknoesis.vericore.did.DidRegistry.register(didMethod)
+        didRegistry.register(didMethod)
         
         // Create issuer DID
         val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
@@ -91,6 +91,7 @@ class InMemoryEoTestIntegrationExample : BaseEoIntegrationTest() {
         // Create anchor client
         val chainId = getChainId()
         val anchorClient = createAnchorClient(chainId, getAnchorClientOptions())
+        blockchainRegistry.register(chainId, anchorClient)
         
         // Create scenario
         val scenario = EoTestIntegration.createScenario(
@@ -109,7 +110,7 @@ class InMemoryEoTestIntegrationExample : BaseEoIntegrationTest() {
         assertTrue(scenario.artifacts.containsKey("quality-1"))
         
         // Execute scenario
-        val result = EoTestIntegration.executeScenario(scenario)
+        val result = EoTestIntegration.executeScenario(scenario, blockchainRegistry)
         
         // Verify results
         assertTrue(result.verificationResult.valid)

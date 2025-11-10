@@ -1,13 +1,11 @@
 package io.geoknoesis.vericore.testkit.integrity
 
 import io.geoknoesis.vericore.anchor.AnchorRef
-import io.geoknoesis.vericore.anchor.BlockchainRegistry
-import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
 import io.geoknoesis.vericore.testkit.integrity.models.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 
@@ -16,16 +14,9 @@ import kotlin.test.*
  */
 class IntegrityVerifierTest {
 
-    @BeforeEach
-    fun setup() {
-        DidRegistry.clear()
-        BlockchainRegistry.clear()
-    }
-
     @Test
     fun `test verifyVcIntegrity`() = runBlocking {
         val client = InMemoryBlockchainAnchorClient("algorand:testnet")
-        BlockchainRegistry.register("algorand:testnet", client)
         
         val vc = buildJsonObject {
             put("type", buildJsonArray { add("VerifiableCredential") })
@@ -39,13 +30,14 @@ class IntegrityVerifierTest {
             payload = buildJsonObject { put("vcDigest", vcDigest) }
         )
         val anchorRef = anchorResult.ref
+        val registry = BlockchainAnchorRegistry().also { it.register("algorand:testnet", client) }
         
         val vcWithDigest = buildJsonObject {
             vc.entries.forEach { put(it.key, it.value) }
             put("digestMultibase", vcDigest)
         }
         
-        val isValid = IntegrityVerifier.verifyVcIntegrity(vcWithDigest, anchorRef)
+        val isValid = IntegrityVerifier.verifyVcIntegrity(vcWithDigest, anchorRef, registry)
         
         assertTrue(isValid)
     }
@@ -101,7 +93,7 @@ class IntegrityVerifierTest {
     @Test
     fun `test verifyIntegrityChain`() = runBlocking {
         val client = InMemoryBlockchainAnchorClient("algorand:testnet")
-        BlockchainRegistry.register("algorand:testnet", client)
+        val registry = BlockchainAnchorRegistry().also { it.register("algorand:testnet", client) }
         
         val artifactContent = buildJsonObject { put("title", "Test Dataset") }
         val artifactDigest = io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(artifactContent)
@@ -164,7 +156,8 @@ class IntegrityVerifierTest {
             },
             linkset = linksetWithDigest,
             artifacts = mapOf("artifact-1" to artifact),
-            anchorRef = anchorRef
+            anchorRef = anchorRef,
+            registry = registry
         )
         
         assertTrue(result.valid)

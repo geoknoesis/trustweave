@@ -6,9 +6,6 @@ import io.geoknoesis.vericore.credential.did.asCredentialDidResolution
 import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
 import io.geoknoesis.vericore.credential.wallet.Wallet
 import io.geoknoesis.vericore.credential.anchor.CredentialAnchorService
-import io.geoknoesis.vericore.spi.services.DidRegistryService
-import io.geoknoesis.vericore.spi.services.DidDocumentAccess
-import io.geoknoesis.vericore.spi.services.AdapterLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -41,14 +38,14 @@ class TrustLayerContext(
      * Get a DID method by name.
      */
     fun getDidMethod(name: String): Any? {
-        return config.didMethods[name]
+        return config.registries.didRegistry.get(name)
     }
     
     /**
      * Get an anchor client by chain ID.
      */
     fun getAnchorClient(chainId: String): Any? {
-        return config.anchorClients[chainId]
+        return config.registries.blockchainRegistry.get(chainId)
     }
     
     /**
@@ -72,10 +69,10 @@ class TrustLayerContext(
      * Get the credential verifier.
      */
     fun getVerifier(): CredentialVerifier {
-        val resolver = config.didResolver ?: AdapterLoader.didRegistryService()?.let { service ->
-            CredentialDidResolver { did ->
-                runCatching { service.resolve(did) }.getOrNull()?.asCredentialDidResolution()
-            }
+        val resolver = config.didResolver ?: CredentialDidResolver { did ->
+            runCatching { config.registries.didRegistry.resolve(did) }
+                .getOrNull()
+                ?.asCredentialDidResolution()
         }
         return CredentialVerifier(defaultDidResolver = resolver)
     }
@@ -84,7 +81,7 @@ class TrustLayerContext(
      * Get the credential anchor service.
      */
     fun getAnchorService(): CredentialAnchorService {
-        val anchorClient = config.anchorClients.values.firstOrNull()
+        val anchorClient = config.registries.blockchainRegistry.getAllClients().values.firstOrNull()
             ?: throw IllegalStateException("No anchor client configured in trust layer")
         return CredentialAnchorService(anchorClient)
     }
@@ -108,15 +105,7 @@ class TrustLayerContext(
      * Get the DID registry.
      */
     fun getDidRegistry(): Any? {
-        return AdapterLoader.didRegistryService() ?: run {
-            try {
-                val didRegistryClass = Class.forName("io.geoknoesis.vericore.did.DidRegistry")
-                didRegistryClass.getDeclaredField("INSTANCE").get(null)
-                    ?: didRegistryClass
-            } catch (e: Exception) {
-                null
-            }
-        }
+        return config.registries.didRegistry
     }
     
     /**

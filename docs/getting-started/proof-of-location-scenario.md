@@ -165,7 +165,8 @@ import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import io.geoknoesis.vericore.anchor.BlockchainRegistry
+import io.geoknoesis.vericore.did.DidMethodRegistry
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import io.geoknoesis.vericore.anchor.anchorTyped
 import io.geoknoesis.vericore.anchor.AnchorResult
 import io.geoknoesis.vericore.anchor.readTyped
@@ -198,11 +199,13 @@ fun main() = runBlocking {
     val verifierKms = InMemoryKeyManagementService()
     
     val didMethod = DidKeyMockMethod(locationProviderKms)
-    DidRegistry.register(didMethod)
+    val didRegistry = DidMethodRegistry().apply { register(didMethod) }
     
     // Setup blockchain for anchoring
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
-    BlockchainRegistry.register("eip155:1", anchorClient)
+    val blockchainRegistry = BlockchainAnchorRegistry().apply {
+        register("eip155:1", anchorClient)
+    }
     
     // Step 2: Create DIDs
     println("\nStep 2: Creating DIDs...")
@@ -272,7 +275,7 @@ fun main() = runBlocking {
     )
 
 val didResolver = CredentialDidResolver { did ->
-    DidRegistry.resolve(did).toCredentialDidResolution()
+    didRegistry.resolve(did).toCredentialDidResolution()
 }
     
     val credentialIssuer = CredentialIssuer(
@@ -456,7 +459,9 @@ Create key management services and blockchain client:
 ```kotlin
 val locationProviderKms = InMemoryKeyManagementService()
 val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
-BlockchainRegistry.register("eip155:1", anchorClient)
+val blockchainRegistry = BlockchainAnchorRegistry().apply {
+    register("eip155:1", anchorClient)
+}
 ```
 
 ### Step 2: Create Location Claim

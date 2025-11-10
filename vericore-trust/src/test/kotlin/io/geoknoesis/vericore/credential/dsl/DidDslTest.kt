@@ -7,7 +7,6 @@ import io.geoknoesis.vericore.credential.revocation.StatusPurpose
 import io.geoknoesis.vericore.credential.wallet.CredentialOrganization
 import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
 import io.geoknoesis.vericore.did.DidDocument
-import io.geoknoesis.vericore.did.DidRegistry
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking

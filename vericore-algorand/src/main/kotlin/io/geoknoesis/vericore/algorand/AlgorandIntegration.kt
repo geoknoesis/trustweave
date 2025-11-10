@@ -1,6 +1,7 @@
 package io.geoknoesis.vericore.algorand
 
 import io.geoknoesis.vericore.anchor.BlockchainAnchorClient
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import io.geoknoesis.vericore.anchor.spi.BlockchainAnchorClientProvider
 import io.geoknoesis.vericore.anchor.spi.BlockchainIntegrationHelper
 
@@ -30,6 +31,11 @@ class AlgorandBlockchainAnchorClientProvider : BlockchainAnchorClientProvider {
  * Integration helper for Algorand blockchain adapters.
  * Supports mainnet, testnet, and betanet chains.
  */
+data class AlgorandIntegrationResult(
+    val registry: BlockchainAnchorRegistry,
+    val registeredChains: List<String>
+)
+
 object AlgorandIntegration {
 
     /**
@@ -39,8 +45,19 @@ object AlgorandIntegration {
      * @param options Configuration options
      * @return List of registered chain IDs
      */
-    fun discoverAndRegister(options: Map<String, Any?> = emptyMap()): List<String> {
-        return BlockchainIntegrationHelper.discoverAndRegister("algorand", options)
+    fun discoverAndRegister(
+        options: Map<String, Any?> = emptyMap(),
+        registry: BlockchainAnchorRegistry = BlockchainAnchorRegistry()
+    ): AlgorandIntegrationResult {
+        val registeredChains = BlockchainIntegrationHelper.discoverAndRegister(
+            providerName = "algorand",
+            registry = registry,
+            options = options
+        )
+        return AlgorandIntegrationResult(
+            registry = registry,
+            registeredChains = registeredChains
+        )
     }
 
     /**
@@ -52,13 +69,19 @@ object AlgorandIntegration {
      */
     fun setup(
         chainIds: List<String> = listOf(AlgorandBlockchainAnchorClient.TESTNET),
-        options: Map<String, Any?> = emptyMap()
-    ): List<String> {
-        return BlockchainIntegrationHelper.setup(
+        options: Map<String, Any?> = emptyMap(),
+        registry: BlockchainAnchorRegistry = BlockchainAnchorRegistry()
+    ): AlgorandIntegrationResult {
+        val registeredChains = BlockchainIntegrationHelper.setup(
             providerName = "algorand",
+            registry = registry,
             chainIds = chainIds,
             defaultChainIds = listOf(AlgorandBlockchainAnchorClient.TESTNET),
             options = options
+        )
+        return AlgorandIntegrationResult(
+            registry = registry,
+            registeredChains = registeredChains
         )
     }
 }

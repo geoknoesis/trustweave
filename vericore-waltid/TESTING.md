@@ -74,18 +74,18 @@ fun main() = runBlocking {
 
 ### Test DID Creation
 ```kotlin
-import io.geoknoesis.vericore.did.DidRegistry
 import io.geoknoesis.vericore.waltid.WaltIdIntegration
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    WaltIdIntegration.discoverAndRegister()
-    
-    val keyMethod = DidRegistry.get("key")
+    val result = WaltIdIntegration.discoverAndRegister()
+    val registry = result.registry
+
+    val keyMethod = registry.get("key")
     val document = keyMethod!!.createDid(mapOf("algorithm" to "Ed25519"))
     println("Created DID: ${document.id}")
-    
-    val resolved = DidRegistry.resolve(document.id)
+
+    val resolved = registry.resolve(document.id)
     println("Resolved document: ${resolved.document?.id}")
 }
 ```

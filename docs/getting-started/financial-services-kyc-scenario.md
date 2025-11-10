@@ -206,9 +206,9 @@ import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import io.geoknoesis.vericore.anchor.BlockchainRegistry
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import io.geoknoesis.vericore.anchor.anchorTyped
-import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
@@ -237,11 +237,13 @@ fun main() = runBlocking {
     val customerKms = InMemoryKeyManagementService()
     
     val didMethod = DidKeyMockMethod(kycProviderKms)
-    DidRegistry.register(didMethod)
+    val didRegistry = DidMethodRegistry().apply { register(didMethod) }
     
     // Setup blockchain for anchoring
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
-    BlockchainRegistry.register("eip155:1", anchorClient)
+    val blockchainRegistry = BlockchainAnchorRegistry().apply {
+        register("eip155:1", anchorClient)
+    }
     
     // Step 2: Create DIDs
     println("\nStep 2: Creating DIDs...")
@@ -304,9 +306,9 @@ fun main() = runBlocking {
         signer = { data, keyId -> kycProviderKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> kycProviderKey.id }
     )
-    val didResolver = CredentialDidResolver { did ->
-        DidRegistry.resolve(did).toCredentialDidResolution()
-    }
+val didResolver = CredentialDidResolver { did ->
+    didRegistry.resolve(did).toCredentialDidResolution()
+}
     
     val kycIssuer = CredentialIssuer(
         proofGenerator = kycProofGenerator,
@@ -822,7 +824,7 @@ fun verifyCrossBorderKYC(
     // Verify credential is valid
     val verifier = CredentialVerifier(
         didResolver = CredentialDidResolver { did ->
-            DidRegistry.resolve(did).toCredentialDidResolution()
+            didRegistry.resolve(did).toCredentialDidResolution()
         }
     )
     

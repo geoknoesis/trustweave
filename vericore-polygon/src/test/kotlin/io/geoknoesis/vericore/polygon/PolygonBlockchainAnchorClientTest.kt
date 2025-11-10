@@ -1,10 +1,9 @@
 package io.geoknoesis.vericore.polygon
 
-import io.geoknoesis.vericore.anchor.*
+import io.geoknoesis.vericore.anchor.AnchorRef
 import io.geoknoesis.vericore.core.NotFoundException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -15,11 +14,6 @@ import kotlin.test.assertTrue
  * All tests use Mumbai testnet only for safety.
  */
 class PolygonBlockchainAnchorClientTest {
-
-    @AfterEach
-    fun cleanup() {
-        BlockchainRegistry.clear()
-    }
 
     @Test
     fun `should create client for Mumbai testnet`() = runBlocking {
@@ -108,31 +102,26 @@ class PolygonBlockchainAnchorClientProviderTest {
 
 class PolygonIntegrationTest {
 
-    @AfterEach
-    fun cleanup() {
-        BlockchainRegistry.clear()
-    }
-
     @Test
     fun `should discover and register via SPI`() {
-        val registeredChains = PolygonIntegration.discoverAndRegister()
-        assertTrue(registeredChains.isNotEmpty())
-        assertTrue(registeredChains.contains(PolygonBlockchainAnchorClient.MAINNET))
-        assertTrue(registeredChains.contains(PolygonBlockchainAnchorClient.MUMBAI))
+        val result = PolygonIntegration.discoverAndRegister()
+        assertTrue(result.registeredChains.isNotEmpty())
+        assertTrue(result.registeredChains.contains(PolygonBlockchainAnchorClient.MAINNET))
+        assertTrue(result.registeredChains.contains(PolygonBlockchainAnchorClient.MUMBAI))
 
-        val testnetClient = BlockchainRegistry.get(PolygonBlockchainAnchorClient.MUMBAI)
+        val testnetClient = result.registry.get(PolygonBlockchainAnchorClient.MUMBAI)
         assertNotNull(testnetClient)
     }
 
     @Test
     fun `should setup Mumbai testnet chain for testing`() {
-        val registeredChains = PolygonIntegration.setup(
+        val result = PolygonIntegration.setup(
             chainIds = listOf(PolygonBlockchainAnchorClient.MUMBAI)
         )
-        assertEquals(1, registeredChains.size)
-        assertEquals(PolygonBlockchainAnchorClient.MUMBAI, registeredChains[0])
+        assertEquals(1, result.registeredChains.size)
+        assertEquals(PolygonBlockchainAnchorClient.MUMBAI, result.registeredChains[0])
 
-        val client = BlockchainRegistry.get(PolygonBlockchainAnchorClient.MUMBAI)
+        val client = result.registry.get(PolygonBlockchainAnchorClient.MUMBAI)
         assertNotNull(client)
     }
 }

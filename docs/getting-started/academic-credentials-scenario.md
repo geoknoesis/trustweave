@@ -157,7 +157,7 @@ import io.geoknoesis.vericore.credential.models.CredentialSchema
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
 import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
 import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
-import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import io.geoknoesis.vericore.did.toCredentialDidResolution
 import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
@@ -170,17 +170,17 @@ import java.time.temporal.ChronoUnit
 
 fun main() = runBlocking {
     println("=== Academic Credentials Scenario ===")
-    DidRegistry.clear()
+    val didRegistry = DidMethodRegistry()
 
     val universityKms = InMemoryKeyManagementService()
     val didMethod = DidKeyMockMethod(universityKms)
-    DidRegistry.register(didMethod)
+    didRegistry.register(didMethod)
 
     val universityDid = didMethod.createDid()
     val studentDid = didMethod.createDid()
 
     val didResolver = CredentialDidResolver { did ->
-        DidRegistry.resolve(did).toCredentialDidResolution()
+        didRegistry.resolve(did).toCredentialDidResolution()
     }
 
     val studentWallet = InMemoryWallet(
@@ -289,10 +289,10 @@ private fun createDegreeCredential(
 Initialize a clean registry and create the key management service + DID method used by the university:
 
 ```kotlin
-DidRegistry.clear()
+val didRegistry = DidMethodRegistry()
 val universityKms = InMemoryKeyManagementService()
 val didMethod = DidKeyMockMethod(universityKms)
-DidRegistry.register(didMethod)
+didRegistry.register(didMethod)
 ```
 
 ### Step 2: Create DIDs
@@ -334,7 +334,7 @@ val credential = VerifiableCredential(
 )
 
 val didResolver = CredentialDidResolver { did ->
-    DidRegistry.resolve(did).toCredentialDidResolution()
+    didRegistry.resolve(did).toCredentialDidResolution()
 }
 
 val proofGenerator = Ed25519ProofGenerator(
@@ -490,7 +490,7 @@ suspend fun verifyAcademicCredential(
 - **Schema validation**: Register schema definitions with `SchemaRegistry.registerSchema` prior to enabling `validateSchema`, otherwise verification will throw an exception.
 - **Revocation**: The verifier short-circuits revocation checks. When you add a `credentialStatus`, ensure you also provide a status list resolver and set `checkRevocation = true`.
 - **Key custody**: Replace `InMemoryKeyManagementService` with an HSM or cloud KMS. Never persist private keys from the examples in production systems.
-- **Registry hygiene**: Call `DidRegistry.clear()` and `BlockchainRegistry.clear()` in tests to avoid cross-test pollution, but *never* in shared runtimes.
+- **Registry hygiene**: Create fresh instances of `DidMethodRegistry` and `BlockchainAnchorRegistry` per test to avoid cross-test pollution—no global state required.
 
 ### Revocation
 

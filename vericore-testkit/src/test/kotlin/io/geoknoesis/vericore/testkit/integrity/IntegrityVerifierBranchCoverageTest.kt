@@ -1,12 +1,11 @@
 package io.geoknoesis.vericore.testkit.integrity
 
 import io.geoknoesis.vericore.anchor.AnchorRef
-import io.geoknoesis.vericore.anchor.BlockchainRegistry
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import io.geoknoesis.vericore.json.DigestUtils
 import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -19,17 +18,13 @@ class IntegrityVerifierBranchCoverageTest {
 
     private lateinit var client: InMemoryBlockchainAnchorClient
     private val chainId = "algorand:testnet"
+    private lateinit var registry: BlockchainAnchorRegistry
 
     @BeforeEach
     fun setup() {
-        BlockchainRegistry.clear()
+        registry = BlockchainAnchorRegistry()
         client = InMemoryBlockchainAnchorClient(chainId)
-        BlockchainRegistry.register(chainId, client)
-    }
-
-    @AfterEach
-    fun cleanup() {
-        BlockchainRegistry.clear()
+        registry.register(chainId, client)
     }
 
     // ========== verifyVcIntegrity() Branch Coverage ==========
@@ -52,7 +47,7 @@ class IntegrityVerifierBranchCoverageTest {
         }
         val anchorResult = client.writePayload(payload, "application/json")
         
-        val result = IntegrityVerifier.verifyVcIntegrity(vc, anchorResult.ref)
+        val result = IntegrityVerifier.verifyVcIntegrity(vc, anchorResult.ref, registry)
         
         assertTrue(result)
     }
@@ -79,7 +74,7 @@ class IntegrityVerifierBranchCoverageTest {
         }
         val anchorResult = client.writePayload(payload, "application/json")
         
-        val result = IntegrityVerifier.verifyVcIntegrity(vc, anchorResult.ref)
+        val result = IntegrityVerifier.verifyVcIntegrity(vc, anchorResult.ref, registry)
         
         assertTrue(result)
     }
@@ -97,21 +92,20 @@ class IntegrityVerifierBranchCoverageTest {
         }
         val anchorResult = client.writePayload(payload, "application/json")
         
-        val result = IntegrityVerifier.verifyVcIntegrity(vc, anchorResult.ref)
+        val result = IntegrityVerifier.verifyVcIntegrity(vc, anchorResult.ref, registry)
         
         assertTrue(result)
     }
 
     @Test
     fun `test branch verifyVcIntegrity throws when no client registered`() = runBlocking {
-        BlockchainRegistry.clear()
         val vc = buildJsonObject {
             put("id", "cred-1")
         }
         val anchorRef = AnchorRef(chainId = "nonexistent:chain", txHash = "tx-123")
         
         assertFailsWith<io.geoknoesis.vericore.core.VeriCoreException> {
-            IntegrityVerifier.verifyVcIntegrity(vc, anchorRef)
+            IntegrityVerifier.verifyVcIntegrity(vc, anchorRef, BlockchainAnchorRegistry())
         }
     }
 
@@ -126,7 +120,7 @@ class IntegrityVerifierBranchCoverageTest {
         val anchorResult = client.writePayload(payload, "application/json")
         
         assertFailsWith<io.geoknoesis.vericore.core.VeriCoreException> {
-            IntegrityVerifier.verifyVcIntegrity(vc, anchorResult.ref)
+            IntegrityVerifier.verifyVcIntegrity(vc, anchorResult.ref, registry)
         }
     }
 
@@ -217,10 +211,10 @@ class IntegrityVerifierBranchCoverageTest {
             put("id", "linkset-1")
         }
         val artifacts = emptyMap<String, JsonObject>()
-        BlockchainRegistry.clear() // No client registered
+        val emptyRegistry = BlockchainAnchorRegistry()
         val anchorRef = AnchorRef(chainId = chainId, txHash = "tx-123")
         
-        val result = IntegrityVerifier.verifyIntegrityChain(vc, linkset, artifacts, anchorRef)
+        val result = IntegrityVerifier.verifyIntegrityChain(vc, linkset, artifacts, anchorRef, emptyRegistry)
         
         assertFalse(result.valid)
         assertTrue(result.steps.any { !it.valid })
@@ -250,7 +244,7 @@ class IntegrityVerifierBranchCoverageTest {
         val anchorResult = client.writePayload(payload, "application/json")
         val artifacts = emptyMap<String, JsonObject>()
         
-        val result = IntegrityVerifier.verifyIntegrityChain(vc, linkset, artifacts, anchorResult.ref)
+        val result = IntegrityVerifier.verifyIntegrityChain(vc, linkset, artifacts, anchorResult.ref, registry)
         
         assertNotNull(result)
     }
@@ -275,7 +269,7 @@ class IntegrityVerifierBranchCoverageTest {
         val anchorResult = client.writePayload(payload, "application/json")
         val artifacts = emptyMap<String, JsonObject>()
         
-        val result = IntegrityVerifier.verifyIntegrityChain(vc, linkset, artifacts, anchorResult.ref)
+        val result = IntegrityVerifier.verifyIntegrityChain(vc, linkset, artifacts, anchorResult.ref, registry)
         
         assertNotNull(result)
     }
@@ -304,7 +298,7 @@ class IntegrityVerifierBranchCoverageTest {
         val anchorResult = client.writePayload(payload, "application/json")
         val artifacts = emptyMap<String, JsonObject>()
         
-        val result = IntegrityVerifier.verifyIntegrityChain(vc, linkset, artifacts, anchorResult.ref)
+        val result = IntegrityVerifier.verifyIntegrityChain(vc, linkset, artifacts, anchorResult.ref, registry)
         
         assertNotNull(result)
     }
@@ -324,7 +318,7 @@ class IntegrityVerifierBranchCoverageTest {
         val anchorResult = client.writePayload(payload, "application/json")
         val artifacts = emptyMap<String, JsonObject>()
         
-        val result = IntegrityVerifier.verifyIntegrityChain(vc, linkset, artifacts, anchorResult.ref)
+        val result = IntegrityVerifier.verifyIntegrityChain(vc, linkset, artifacts, anchorResult.ref, registry)
         
         assertNotNull(result)
     }
@@ -370,7 +364,7 @@ class IntegrityVerifierBranchCoverageTest {
         val anchorResult = client.writePayload(payload, "application/json")
         val artifacts = mapOf("artifact-1" to artifact)
         
-        val result = IntegrityVerifier.verifyIntegrityChain(vc, linksetWithDigest, artifacts, anchorResult.ref)
+        val result = IntegrityVerifier.verifyIntegrityChain(vc, linksetWithDigest, artifacts, anchorResult.ref, registry)
         
         assertNotNull(result)
     }
@@ -398,7 +392,7 @@ class IntegrityVerifierBranchCoverageTest {
         val anchorResult = client.writePayload(payload, "application/json")
         val artifacts = emptyMap<String, JsonObject>()
         
-        val result = IntegrityVerifier.verifyIntegrityChain(vc, linkset, artifacts, anchorResult.ref)
+        val result = IntegrityVerifier.verifyIntegrityChain(vc, linkset, artifacts, anchorResult.ref, registry)
         
         assertFalse(result.valid)
         assertTrue(result.steps.any { !it.valid && it.name.contains("Artifact") })

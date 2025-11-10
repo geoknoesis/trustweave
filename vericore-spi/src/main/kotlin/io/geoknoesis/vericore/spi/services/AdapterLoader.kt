@@ -2,9 +2,6 @@ package io.geoknoesis.vericore.spi.services
 
 object AdapterLoader {
 
-    fun didRegistryService(): DidRegistryService? =
-        instantiate("io.geoknoesis.vericore.did.services.DidRegistryServiceAdapter") as? DidRegistryService
-
     fun didMethodService(): DidMethodService? =
         instantiate("io.geoknoesis.vericore.did.services.DidMethodServiceAdapter") as? DidMethodService
 
@@ -22,9 +19,6 @@ object AdapterLoader {
 
     fun walletFactory(): WalletFactory? =
         instantiate("io.geoknoesis.vericore.testkit.services.TestkitWalletFactory") as? WalletFactory
-
-    fun blockchainRegistryService(): Any? =
-        instantiate("io.geoknoesis.vericore.anchor.services.BlockchainRegistryServiceAdapter")
 
     private fun instantiate(className: String): Any? = try {
         val clazz = Class.forName(className)

@@ -5,6 +5,11 @@ import io.geoknoesis.vericore.credential.models.VerifiableCredential
 import io.geoknoesis.vericore.credential.issuer.CredentialIssuer
 import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
 import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
+import io.geoknoesis.vericore.did.DidDocument
+import io.geoknoesis.vericore.did.DidMethod
+import io.geoknoesis.vericore.did.DidMethodRegistry
+import io.geoknoesis.vericore.did.DefaultDidMethodRegistry
+import io.geoknoesis.vericore.did.DidResolutionResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.BeforeEach
@@ -13,13 +18,13 @@ import kotlin.test.*
 import java.util.UUID
 
 /**
- * Comprehensive tests for DidCredentialService API.
+ * Comprehensive tests for DidLinkedCredentialService API.
  */
-class DidCredentialServiceTest {
+class DidLinkedCredentialServiceTest {
 
     private lateinit var credentialIssuer: CredentialIssuer
-    private lateinit var didCredentialService: DidCredentialService
-    private val mockDidRegistry = Any()
+    private lateinit var didCredentialService: DidLinkedCredentialService
+    private lateinit var didRegistry: DidMethodRegistry
 
     @BeforeEach
     fun setup() {
@@ -40,8 +45,32 @@ class DidCredentialServiceTest {
             resolveDid = { did -> did.startsWith("did:key:") }
         )
         
-        didCredentialService = DidCredentialService(
-            didRegistry = mockDidRegistry,
+        didRegistry = DefaultDidMethodRegistry().also { registry ->
+            registry.register(object : DidMethod {
+                override val method: String = "key"
+
+                override suspend fun createDid(options: Map<String, Any?>): DidDocument {
+                    val id = options["id"] as? String ?: "did:key:${UUID.randomUUID()}"
+                    return DidDocument(id = id)
+                }
+
+                override suspend fun resolveDid(did: String): DidResolutionResult {
+                    return DidResolutionResult(
+                        document = DidDocument(id = did)
+                    )
+                }
+
+                override suspend fun updateDid(
+                    did: String,
+                    updater: (DidDocument) -> DidDocument
+                ): DidDocument = updater(DidDocument(id = did))
+
+                override suspend fun deactivateDid(did: String): Boolean = true
+            })
+        }
+
+        didCredentialService = DidLinkedCredentialService(
+            didRegistry = didRegistry,
             credentialIssuer = credentialIssuer
         )
     }
@@ -103,9 +132,7 @@ class DidCredentialServiceTest {
         
         val subjectDid = didCredentialService.resolveCredentialSubject(credential)
         
-        // Placeholder implementation returns null, but method executes
-        // In real implementation, would resolve DID and return it
-        assertNotNull(subjectDid) // May be null in placeholder
+        assertEquals("did:key:subject", subjectDid)
     }
 
     @Test

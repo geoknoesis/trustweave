@@ -1,7 +1,9 @@
 package io.geoknoesis.vericore.testkit.integrity
 
-import io.geoknoesis.vericore.anchor.*
-import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.anchor.AnchorRef
+import io.geoknoesis.vericore.anchor.BlockchainAnchorClient
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import io.geoknoesis.vericore.json.DigestUtils
 import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
@@ -9,7 +11,6 @@ import io.geoknoesis.vericore.testkit.integrity.models.*
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 
@@ -22,10 +23,14 @@ import kotlin.test.*
  */
 class IntegrityVerificationTest {
 
-    @AfterEach
-    fun cleanup() {
-        DidRegistry.clear()
-        BlockchainRegistry.clear()
+    private fun registerEnvironment(
+        didMethod: DidKeyMockMethod,
+        chainId: String,
+        anchorClient: BlockchainAnchorClient
+    ): Pair<DidMethodRegistry, BlockchainAnchorRegistry> {
+        val didRegistry = DidMethodRegistry().apply { register(didMethod) }
+        val blockchainRegistry = BlockchainAnchorRegistry().apply { register(chainId, anchorClient) }
+        return didRegistry to blockchainRegistry
     }
 
     @Test
@@ -36,8 +41,8 @@ class IntegrityVerificationTest {
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
         
-        DidRegistry.register(didMethod)
-        BlockchainRegistry.register(chainId, anchorClient)
+        val didRegistry = DidMethodRegistry().also { it.register(didMethod) }
+        val blockchainRegistry = BlockchainAnchorRegistry().also { it.register(chainId, anchorClient) }
 
         // Step 1: Create a DID for the issuer
         val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
@@ -134,7 +139,8 @@ class IntegrityVerificationTest {
             vc = vcWithDigest,
             linkset = linksetWithDigest,
             artifacts = artifacts,
-            anchorRef = anchorResult.ref
+            anchorRef = anchorResult.ref,
+            registry = blockchainRegistry
         )
 
         // Verify all steps passed
@@ -168,8 +174,7 @@ class IntegrityVerificationTest {
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
         
-        DidRegistry.register(didMethod)
-        BlockchainRegistry.register(chainId, anchorClient)
+        val (_, blockchainRegistry) = registerEnvironment(didMethod, chainId, anchorClient)
 
         val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
         val issuerDid = issuerDoc.id
@@ -222,7 +227,7 @@ class IntegrityVerificationTest {
         assertEquals(anchorResult.ref.txHash, discoveredRef.txHash)
         
         // Verify integrity
-        val isValid = IntegrityVerifier.verifyVcIntegrity(vcWithEvidence, discoveredRef)
+        val isValid = IntegrityVerifier.verifyVcIntegrity(vcWithEvidence, discoveredRef, blockchainRegistry)
         assertTrue(isValid, "VC integrity verification failed")
     }
 
@@ -233,8 +238,7 @@ class IntegrityVerificationTest {
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
         
-        DidRegistry.register(didMethod)
-        BlockchainRegistry.register(chainId, anchorClient)
+        val (_, blockchainRegistry) = registerEnvironment(didMethod, chainId, anchorClient)
 
         val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
         val issuerDid = issuerDoc.id
@@ -279,8 +283,7 @@ class IntegrityVerificationTest {
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
         
-        DidRegistry.register(didMethod)
-        BlockchainRegistry.register(chainId, anchorClient)
+        val (_, blockchainRegistry) = registerEnvironment(didMethod, chainId, anchorClient)
 
         val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
         val issuerDid = issuerDoc.id
@@ -334,7 +337,7 @@ class IntegrityVerificationTest {
         assertEquals(anchorResult.ref.txHash, discoveredRef.txHash)
         
         // Verify integrity
-        val isValid = IntegrityVerifier.verifyVcIntegrity(vcWithStatus, discoveredRef)
+        val isValid = IntegrityVerifier.verifyVcIntegrity(vcWithStatus, discoveredRef, blockchainRegistry)
         assertTrue(isValid, "VC integrity verification failed")
     }
 
@@ -345,8 +348,7 @@ class IntegrityVerificationTest {
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
         
-        DidRegistry.register(didMethod)
-        BlockchainRegistry.register(chainId, anchorClient)
+        val (_, blockchainRegistry) = registerEnvironment(didMethod, chainId, anchorClient)
 
         val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
         val issuerDid = issuerDoc.id
@@ -389,7 +391,7 @@ class IntegrityVerificationTest {
             digestMultibase = vcDigest,
             issued = fixedTimestamp
         )
-        val isValid = IntegrityVerifier.verifyVcIntegrity(vcWithDigest, discoveredRef)
+        val isValid = IntegrityVerifier.verifyVcIntegrity(vcWithDigest, discoveredRef, blockchainRegistry)
         assertTrue(isValid, "VC integrity verification failed")
     }
 
@@ -400,8 +402,7 @@ class IntegrityVerificationTest {
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
         
-        DidRegistry.register(didMethod)
-        BlockchainRegistry.register(chainId, anchorClient)
+        val (_, blockchainRegistry) = registerEnvironment(didMethod, chainId, anchorClient)
 
         val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
         val issuerDid = issuerDoc.id
@@ -439,8 +440,7 @@ class IntegrityVerificationTest {
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
         
-        DidRegistry.register(didMethod)
-        BlockchainRegistry.register(chainId, anchorClient)
+        val (_, blockchainRegistry) = registerEnvironment(didMethod, chainId, anchorClient)
 
         val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
         val issuerDid = issuerDoc.id

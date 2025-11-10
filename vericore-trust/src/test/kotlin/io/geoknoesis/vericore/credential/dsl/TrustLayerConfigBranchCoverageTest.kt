@@ -18,22 +18,7 @@ class TrustLayerConfigBranchCoverageTest {
 
     @BeforeEach
     fun setUp() {
-        // Clear registries before each test
-        try {
-            val didRegistryClass = Class.forName("io.geoknoesis.vericore.did.DidRegistry")
-            val clearMethod = didRegistryClass.getMethod("clear")
-            clearMethod.invoke(null)
-        } catch (e: Exception) {
-            // Registry not available, skip
-        }
-        
-        try {
-            val blockchainRegistryClass = Class.forName("io.geoknoesis.vericore.anchor.BlockchainRegistry")
-            val clearMethod = blockchainRegistryClass.getMethod("clear")
-            clearMethod.invoke(null)
-        } catch (e: Exception) {
-            // Registry not available, skip
-        }
+        // Each test creates a fresh trust layer configuration; no global cleanup required.
     }
 
     // ========== KMS Resolution Branches ==========
@@ -501,9 +486,7 @@ class TrustLayerConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch error when DID registry not available`() = runBlocking {
-        // This tests the exception handling when DidRegistry is not available
-        // The code should continue even if registry registration fails
+    fun `test branch handles DID registry registration`() = runBlocking {
         val trustLayer = trustLayer {
             keys {
                 provider("inMemory")
@@ -512,7 +495,7 @@ class TrustLayerConfigBranchCoverageTest {
                 method("key") {}
             }
         }
-        
+ 
         assertNotNull(trustLayer)
         assertTrue(trustLayer.didMethods.containsKey("key"))
     }

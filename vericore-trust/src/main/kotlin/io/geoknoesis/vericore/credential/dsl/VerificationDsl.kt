@@ -5,7 +5,6 @@ import io.geoknoesis.vericore.credential.CredentialVerificationResult
 import io.geoknoesis.vericore.credential.did.CredentialDidResolver
 import io.geoknoesis.vericore.credential.did.asCredentialDidResolution
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
-import io.geoknoesis.vericore.spi.services.AdapterLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -128,10 +127,10 @@ class VerificationBuilder(
         val config = context.getConfig()
         val chainIdToUse = chainId ?: config.credentialConfig.defaultChain
         
-        val didResolver = context.getConfig().didResolver ?: AdapterLoader.didRegistryService()?.let { service ->
-            CredentialDidResolver { did ->
-                runCatching { service.resolve(did) }.getOrNull()?.asCredentialDidResolution()
-            }
+        val didResolver = context.getConfig().didResolver ?: CredentialDidResolver { did ->
+            runCatching { context.getConfig().registries.didRegistry.resolve(did) }
+                .getOrNull()
+                ?.asCredentialDidResolution()
         }
 
         val options = CredentialVerificationOptions(

@@ -210,7 +210,7 @@ dependencies {
 ```kotlin
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
-import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -226,7 +226,7 @@ fun main() = runBlocking {
     val studentKms = InMemoryKeyManagementService() // For students
     
     val didMethod = DidKeyMockMethod(authorityKms)
-    DidRegistry.register(didMethod)
+    val didRegistry = DidMethodRegistry().apply { register(didMethod) }
     
     println("Services initialized")
 }
@@ -374,7 +374,7 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
     )
     
     val didResolver = CredentialDidResolver { did ->
-        DidRegistry.resolve(did).toCredentialDidResolution()
+        didRegistry.resolve(did).toCredentialDidResolution()
     }
     
     // Create credential issuer
@@ -670,7 +670,7 @@ import io.geoknoesis.vericore.credential.CredentialVerificationOptions
 
 ```kotlin
 import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import io.geoknoesis.vericore.anchor.BlockchainRegistry
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import io.geoknoesis.vericore.anchor.anchorTyped
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -689,7 +689,9 @@ data class AlgeroPassRecord(
     println("\nStep 9: Anchoring credentials to blockchain...")
     
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
-    BlockchainRegistry.register("eip155:1", anchorClient)
+    val blockchainRegistry = BlockchainAnchorRegistry().apply {
+        register("eip155:1", anchorClient)
+    }
     
     // Compute digest of enrollment credential
     val enrollmentDigest = io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(

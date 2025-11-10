@@ -202,9 +202,9 @@ import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import io.geoknoesis.vericore.anchor.BlockchainRegistry
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import io.geoknoesis.vericore.anchor.anchorTyped
-import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
@@ -233,11 +233,13 @@ fun main() = runBlocking {
     val retailerKms = InMemoryKeyManagementService()
     
     val didMethod = DidKeyMockMethod(manufacturerKms)
-    DidRegistry.register(didMethod)
+    val didRegistry = DidMethodRegistry().apply { register(didMethod) }
     
     // Setup blockchain for anchoring
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
-    BlockchainRegistry.register("eip155:1", anchorClient)
+    val blockchainRegistry = BlockchainAnchorRegistry().apply {
+        register("eip155:1", anchorClient)
+    }
     
     // Step 2: Create supply chain participant DIDs
     println("\nStep 2: Creating supply chain participant DIDs...")
@@ -279,9 +281,9 @@ fun main() = runBlocking {
         getPublicKeyId = { keyId -> manufacturerKey.id }
     )
     
-    val didResolver = CredentialDidResolver { did ->
-        DidRegistry.resolve(did).toCredentialDidResolution()
-    }
+val didResolver = CredentialDidResolver { did ->
+    didRegistry.resolve(did).toCredentialDidResolution()
+}
     
     val manufacturerIssuer = CredentialIssuer(
         proofGenerator = manufacturerProofGenerator,
@@ -441,7 +443,7 @@ fun main() = runBlocking {
     println("\nStep 10: Verifying product authenticity...")
     val verifier = CredentialVerifier(
         didResolver = CredentialDidResolver { did ->
-            DidRegistry.resolve(did).toCredentialDidResolution()
+            didRegistry.resolve(did).toCredentialDidResolution()
         }
     )
     
@@ -578,7 +580,7 @@ fun verifyProvenanceChain(credentials: List<VerifiableCredential>): Boolean {
     // Verify each credential
     val verifier = CredentialVerifier(
         didResolver = CredentialDidResolver { did ->
-            DidRegistry.resolve(did).toCredentialDidResolution()
+            didRegistry.resolve(did).toCredentialDidResolution()
         }
     )
     
@@ -1018,7 +1020,7 @@ fun verifyLuxuryGoodAuthenticity(
     // Verify origin credential
     val verifier = CredentialVerifier(
         didResolver = CredentialDidResolver { did ->
-            DidRegistry.resolve(did).toCredentialDidResolution()
+            didRegistry.resolve(did).toCredentialDidResolution()
         }
     )
     

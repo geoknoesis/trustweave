@@ -1,6 +1,7 @@
 package io.geoknoesis.vericore.polygon
 
 import io.geoknoesis.vericore.anchor.BlockchainAnchorClient
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import io.geoknoesis.vericore.anchor.spi.BlockchainAnchorClientProvider
 import io.geoknoesis.vericore.anchor.spi.BlockchainIntegrationHelper
 
@@ -33,6 +34,11 @@ class PolygonBlockchainAnchorClientProvider : BlockchainAnchorClientProvider {
  * Integration helper for Polygon blockchain adapters.
  * Supports Polygon mainnet and Mumbai testnet chains.
  */
+data class PolygonIntegrationResult(
+    val registry: BlockchainAnchorRegistry,
+    val registeredChains: List<String>
+)
+
 object PolygonIntegration {
 
     /**
@@ -42,8 +48,19 @@ object PolygonIntegration {
      * @param options Configuration options
      * @return List of registered chain IDs
      */
-    fun discoverAndRegister(options: Map<String, Any?> = emptyMap()): List<String> {
-        return BlockchainIntegrationHelper.discoverAndRegister("polygon", options)
+    fun discoverAndRegister(
+        options: Map<String, Any?> = emptyMap(),
+        registry: BlockchainAnchorRegistry = BlockchainAnchorRegistry()
+    ): PolygonIntegrationResult {
+        val registeredChains = BlockchainIntegrationHelper.discoverAndRegister(
+            providerName = "polygon",
+            registry = registry,
+            options = options
+        )
+        return PolygonIntegrationResult(
+            registry = registry,
+            registeredChains = registeredChains
+        )
     }
 
     /**
@@ -55,13 +72,19 @@ object PolygonIntegration {
      */
     fun setup(
         chainIds: List<String> = listOf(PolygonBlockchainAnchorClient.MUMBAI),
-        options: Map<String, Any?> = emptyMap()
-    ): List<String> {
-        return BlockchainIntegrationHelper.setup(
+        options: Map<String, Any?> = emptyMap(),
+        registry: BlockchainAnchorRegistry = BlockchainAnchorRegistry()
+    ): PolygonIntegrationResult {
+        val registeredChains = BlockchainIntegrationHelper.setup(
             providerName = "polygon",
+            registry = registry,
             chainIds = chainIds,
             defaultChainIds = listOf(PolygonBlockchainAnchorClient.MUMBAI),
             options = options
+        )
+        return PolygonIntegrationResult(
+            registry = registry,
+            registeredChains = registeredChains
         )
     }
 }

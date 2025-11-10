@@ -1,6 +1,6 @@
 package io.geoknoesis.vericore.godiddy
 
-import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import io.geoknoesis.vericore.did.spi.DidMethodProvider
 import io.geoknoesis.vericore.godiddy.issuer.GodiddyIssuer
 import io.geoknoesis.vericore.godiddy.registrar.GodiddyRegistrar
@@ -21,7 +21,10 @@ object GodiddyIntegration {
      * @param options Configuration options (baseUrl, timeout, apiKey, etc.)
      * @return A GodiddyIntegrationResult containing registered services
      */
-    fun discoverAndRegister(options: Map<String, Any?> = emptyMap()): GodiddyIntegrationResult {
+    fun discoverAndRegister(
+        registry: DidMethodRegistry,
+        options: Map<String, Any?> = emptyMap()
+    ): GodiddyIntegrationResult {
         // Create configuration from options
         val config = GodiddyConfig.fromOptions(options)
         val client = GodiddyClient(config)
@@ -54,12 +57,13 @@ object GodiddyIntegration {
         for (methodName in godiddyDidProvider.supportedMethods) {
             val method = godiddyDidProvider.create(methodName, options)
             if (method != null) {
-                DidRegistry.register(method)
+                registry.register(method)
                 registeredMethods.add(methodName)
             }
         }
 
         return GodiddyIntegrationResult(
+            registry = registry,
             registeredDidMethods = registeredMethods,
             resolver = resolver,
             registrar = registrar,
@@ -78,6 +82,7 @@ object GodiddyIntegration {
      */
     fun setup(
         baseUrl: String? = null,
+        registry: DidMethodRegistry,
         didMethods: List<String>? = null,
         options: Map<String, Any?> = emptyMap()
     ): GodiddyIntegrationResult {
@@ -123,13 +128,14 @@ object GodiddyIntegration {
             if (methodName in godiddyDidProvider.supportedMethods) {
                 val method = godiddyDidProvider.create(methodName, mergedOptions)
                 if (method != null) {
-                    DidRegistry.register(method)
+                    registry.register(method)
                     registeredMethods.add(methodName)
                 }
             }
         }
 
         return GodiddyIntegrationResult(
+            registry = registry,
             registeredDidMethods = registeredMethods,
             resolver = resolver,
             registrar = registrar,

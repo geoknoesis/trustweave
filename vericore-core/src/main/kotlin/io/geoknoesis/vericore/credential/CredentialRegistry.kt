@@ -28,6 +28,11 @@ import java.util.concurrent.ConcurrentHashMap
  * val credential = CredentialRegistry.issue(credential, options)
  * ```
  */
+@Deprecated(
+    message = "Inject CredentialService implementations via your own context instead of relying on the global CredentialRegistry singleton.",
+    replaceWith = ReplaceWith("mutableMapOf<String, CredentialService>()"),
+    level = DeprecationLevel.WARNING
+)
 object CredentialRegistry {
     private val services = ConcurrentHashMap<String, CredentialService>()
     

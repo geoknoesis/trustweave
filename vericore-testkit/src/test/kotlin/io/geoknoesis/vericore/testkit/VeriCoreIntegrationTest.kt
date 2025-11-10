@@ -1,14 +1,20 @@
 package io.geoknoesis.vericore.testkit
 
-import io.geoknoesis.vericore.anchor.*
-import io.geoknoesis.vericore.did.*
+import io.geoknoesis.vericore.anchor.AnchorResult
+import io.geoknoesis.vericore.anchor.BlockchainAnchorClient
 import io.geoknoesis.vericore.json.DigestUtils
 import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -31,10 +37,6 @@ class VeriCoreIntegrationTest {
         val didMethod = DidKeyMockMethod(kms)
         val anchorClient = InMemoryBlockchainAnchorClient("algorand:mainnet", "app-123")
         
-        // Register the DID method and blockchain client
-        DidRegistry.register(didMethod)
-        BlockchainRegistry.register("algorand:mainnet", anchorClient)
-
         // Step 1: Create a DID
         val didDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
         assertNotNull(didDocument.id)
@@ -61,50 +63,36 @@ class VeriCoreIntegrationTest {
             vcDigest = digest
         )
 
-        val anchorResult = anchorTyped(
-            value = digestObj,
-            serializer = VerifiableCredentialDigest.serializer(),
-            targetChainId = "algorand:mainnet"
-        )
+        val payload = Json.encodeToJsonElement(VerifiableCredentialDigest.serializer(), digestObj)
+        val anchorResult = anchorClient.writePayload(payload)
 
         assertNotNull(anchorResult.ref)
         println("Anchored at: ${anchorResult.ref.txHash}")
 
         // Step 5: Read back the anchored data
-        val retrieved = readTyped<VerifiableCredentialDigest>(
-            ref = anchorResult.ref,
-            serializer = VerifiableCredentialDigest.serializer()
-        )
+        val retrievedPayload = anchorClient.readPayload(anchorResult.ref).payload
+        val retrieved = Json.decodeFromJsonElement(VerifiableCredentialDigest.serializer(), retrievedPayload)
 
         assertEquals(digestObj.vcId, retrieved.vcId)
         assertEquals(digestObj.vcDigest, retrieved.vcDigest)
-
-        // Cleanup
-        DidRegistry.clear()
-        BlockchainRegistry.clear()
     }
 
     @Test
     fun integrationTest_RoundTripAnchorTypedAndReadTyped() = runBlocking {
         val client = InMemoryBlockchainAnchorClient("test:chain")
-        BlockchainRegistry.register("test:chain", client)
 
         val original = VerifiableCredentialDigest("vc-999", "uXYZ789")
         
-        val anchored = anchorTyped(
-            value = original,
-            serializer = VerifiableCredentialDigest.serializer(),
-            targetChainId = "test:chain"
+        val anchored = client.writePayload(
+            Json.encodeToJsonElement(VerifiableCredentialDigest.serializer(), original)
         )
 
-        val retrieved = readTyped<VerifiableCredentialDigest>(
-            ref = anchored.ref,
-            serializer = VerifiableCredentialDigest.serializer()
+        val retrieved = Json.decodeFromJsonElement(
+            VerifiableCredentialDigest.serializer(),
+            client.readPayload(anchored.ref).payload
         )
 
         assertEquals(original, retrieved)
-        
-        BlockchainRegistry.clear()
     }
 }
 

@@ -1,12 +1,18 @@
 package io.geoknoesis.vericore.did
 
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 
 class DidTest {
+
+    private lateinit var registry: DidMethodRegistry
+
+    @BeforeEach
+    fun setup() {
+        registry = DefaultDidMethodRegistry()
+    }
 
     @Test
     fun `Did toString should format correctly`() {
@@ -38,9 +44,11 @@ class DidTest {
 
 class DidRegistryTest {
 
+    private lateinit var registry: DidMethodRegistry
+
     @BeforeEach
     fun setup() {
-        DidRegistry.clear()
+        registry = DefaultDidMethodRegistry()
     }
 
     @Test
@@ -53,19 +61,19 @@ class DidRegistryTest {
             override suspend fun deactivateDid(did: String) = TODO()
         }
 
-        DidRegistry.register(mockMethod)
-        assertEquals(mockMethod, DidRegistry.get("test"))
-        assertNull(DidRegistry.get("nonexistent"))
+        registry.register(mockMethod)
+        assertEquals(mockMethod, registry.get("test"))
+        assertNull(registry.get("nonexistent"))
 
-        DidRegistry.clear()
+        registry.clear()
     }
 
     @Test
     fun `test resolve DID`() = runBlocking {
         val method = createMockDidMethod("test")
-        DidRegistry.register(method)
+        registry.register(method)
         
-        val result = DidRegistry.resolve("did:test:123")
+        val result = registry.resolve("did:test:123")
         
         assertNotNull(result)
         assertNotNull(result.document)
@@ -74,7 +82,7 @@ class DidRegistryTest {
     @Test
     fun `test resolve fails when method not registered`() = runBlocking {
         assertFailsWith<IllegalArgumentException> {
-            DidRegistry.resolve("did:nonexistent:123")
+            registry.resolve("did:nonexistent:123")
         }
     }
 
@@ -83,10 +91,10 @@ class DidRegistryTest {
         val method1 = createMockDidMethod("test")
         val method2 = createMockDidMethod("test")
         
-        DidRegistry.register(method1)
-        DidRegistry.register(method2)
+        registry.register(method1)
+        registry.register(method2)
         
-        val retrieved = DidRegistry.get("test")
+        val retrieved = registry.get("test")
         assertNotNull(retrieved)
         assertEquals("test", retrieved?.method)
     }
@@ -94,20 +102,20 @@ class DidRegistryTest {
     @Test
     fun `test resolve with invalid DID format`() = runBlocking {
         val method = createMockDidMethod("test")
-        DidRegistry.register(method)
+        registry.register(method)
         
         assertFailsWith<IllegalArgumentException> {
-            DidRegistry.resolve("invalid-did")
+            registry.resolve("invalid-did")
         }
     }
 
     @Test
     fun `test resolve with multiple registered methods`() = runBlocking {
-        DidRegistry.register(createMockDidMethod("method1"))
-        DidRegistry.register(createMockDidMethod("method2"))
+        registry.register(createMockDidMethod("method1"))
+        registry.register(createMockDidMethod("method2"))
         
-        val result1 = DidRegistry.resolve("did:method1:123")
-        val result2 = DidRegistry.resolve("did:method2:456")
+        val result1 = registry.resolve("did:method1:123")
+        val result2 = registry.resolve("did:method2:456")
         
         assertNotNull(result1.document)
         assertNotNull(result2.document)
@@ -116,17 +124,12 @@ class DidRegistryTest {
     @Test
     fun `test resolve extracts correct method from DID`() = runBlocking {
         val method = createMockDidMethod("web")
-        DidRegistry.register(method)
+        registry.register(method)
         
-        val result = DidRegistry.resolve("did:web:example.com")
+        val result = registry.resolve("did:web:example.com")
         
         assertNotNull(result.document)
         assertEquals("did:web:example.com", result.document?.id)
-    }
-
-    @AfterEach
-    fun cleanup() {
-        DidRegistry.clear()
     }
 
     private fun createMockDidMethod(methodName: String): DidMethod {

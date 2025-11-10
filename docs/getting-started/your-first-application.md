@@ -36,8 +36,10 @@ fun main() = runBlocking {
     val didMethod = DidKeyMockMethod(kms)
     val anchorClient = InMemoryBlockchainAnchorClient("algorand:mainnet")
     
-    DidRegistry.register(didMethod)
-    BlockchainRegistry.register("algorand:mainnet", anchorClient)
+    val didRegistry = DidMethodRegistry().apply { register(didMethod) }
+    val blockchainRegistry = BlockchainAnchorRegistry().apply {
+        register("algorand:mainnet", anchorClient)
+    }
     
     // Step 2: Create a DID for the issuer
     val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))

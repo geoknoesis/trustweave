@@ -149,7 +149,7 @@ dependencies {
 ```kotlin
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
-import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -165,7 +165,7 @@ fun main() = runBlocking {
     val publisherKms = InMemoryKeyManagementService()
     
     val didMethod = DidKeyMockMethod(journalistKms)
-    DidRegistry.register(didMethod)
+    val didRegistry = DidMethodRegistry().apply { register(didMethod) }
     
     println("Services initialized")
 }
@@ -328,7 +328,7 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
         getPublicKeyId = { keyId -> orgKey.id }
     )
     val didResolver = CredentialDidResolver { did ->
-        DidRegistry.resolve(did).toCredentialDidResolution()
+        didRegistry.resolve(did).toCredentialDidResolution()
     }
     
     // Create credential issuer
@@ -523,7 +523,7 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
     val factCheckerIssuer = CredentialIssuer(
         proofGenerator = factCheckerProofGenerator,
         didResolver = CredentialDidResolver { did ->
-            DidRegistry.resolve(did).toCredentialDidResolution()
+            didRegistry.resolve(did).toCredentialDidResolution()
         }
     )
     
@@ -613,7 +613,7 @@ import io.geoknoesis.vericore.credential.CredentialVerificationOptions
 
 ```kotlin
 import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import io.geoknoesis.vericore.anchor.BlockchainRegistry
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import io.geoknoesis.vericore.anchor.anchorTyped
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -632,7 +632,9 @@ data class ContentProvenanceRecord(
     println("\nStep 10: Anchoring content to blockchain...")
     
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
-    BlockchainRegistry.register("eip155:1", anchorClient)
+    val blockchainRegistry = BlockchainAnchorRegistry().apply {
+        register("eip155:1", anchorClient)
+    }
     
     // Create provenance record
     val provenanceDigest = io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(

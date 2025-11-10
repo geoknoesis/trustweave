@@ -8,13 +8,16 @@ This guide helps you migrate existing VeriCore code to use the new web of trust 
 
 **Before:**
 ```kotlin
-val result = DidRegistry.resolve("did:key:...")
+val didRegistry = DidMethodRegistry()
+// register methods during setup
+val result = didRegistry.resolve("did:key:...")
 val created = result.documentMetadata["created"] as? String
 ```
 
 **After:**
 ```kotlin
-val result = DidRegistry.resolve("did:key:...")
+val didRegistry = DidMethodRegistry()
+val result = didRegistry.resolve("did:key:...")
 val created = result.documentMetadata.created // Returns Instant?
 ```
 

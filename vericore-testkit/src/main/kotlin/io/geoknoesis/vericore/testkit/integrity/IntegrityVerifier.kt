@@ -1,7 +1,7 @@
 package io.geoknoesis.vericore.testkit.integrity
 
 import io.geoknoesis.vericore.anchor.AnchorRef
-import io.geoknoesis.vericore.anchor.BlockchainRegistry
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import io.geoknoesis.vericore.core.VeriCoreException
 import io.geoknoesis.vericore.json.DigestUtils
 import io.geoknoesis.vericore.testkit.integrity.models.*
@@ -19,7 +19,8 @@ object IntegrityVerifier {
      */
     suspend fun verifyVcIntegrity(
         vc: JsonObject,
-        anchorRef: AnchorRef
+        anchorRef: AnchorRef,
+        registry: BlockchainAnchorRegistry
     ): Boolean = withContext(Dispatchers.IO) {
         // Compute VC digest from VC without metadata fields (digestMultibase, evidence, credentialStatus)
         // These fields are added after the digest is computed and anchored
@@ -34,7 +35,7 @@ object IntegrityVerifier {
         val computedDigest = DigestUtils.sha256DigestMultibase(vcWithoutMetadata)
         
         // Read anchor from blockchain
-        val client = BlockchainRegistry.get(anchorRef.chainId)
+        val client = registry.get(anchorRef.chainId)
             ?: throw VeriCoreException("No blockchain client registered for chain: ${anchorRef.chainId}")
         
         val anchorResult = client.readPayload(anchorRef)
@@ -88,7 +89,8 @@ object IntegrityVerifier {
         vc: JsonObject,
         linkset: JsonObject,
         artifacts: Map<String, JsonObject>,
-        anchorRef: AnchorRef
+        anchorRef: AnchorRef,
+        registry: BlockchainAnchorRegistry
     ): IntegrityVerificationResult = withContext(Dispatchers.IO) {
         val results = mutableListOf<VerificationStep>()
         
@@ -104,7 +106,7 @@ object IntegrityVerifier {
         }
         val vcDigest = DigestUtils.sha256DigestMultibase(vcWithoutMetadata)
         val vcValid = try {
-            verifyVcIntegrity(vc, anchorRef)
+            verifyVcIntegrity(vc, anchorRef, registry)
         } catch (e: Exception) {
             false
         }

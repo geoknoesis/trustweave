@@ -1,5 +1,6 @@
 package io.geoknoesis.vericore.godiddy
 
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import kotlin.test.*
 
 /**
@@ -10,6 +11,7 @@ class GodiddyIntegrationResultTest {
     @Test
     fun `test GodiddyIntegrationResult with all fields`() {
         val result = GodiddyIntegrationResult(
+            registry = DidMethodRegistry(),
             registeredDidMethods = listOf("key", "web"),
             resolver = null, // Mock would be needed
             registrar = null,
@@ -25,6 +27,7 @@ class GodiddyIntegrationResultTest {
     @Test
     fun `test GodiddyIntegrationResult with empty methods list`() {
         val result = GodiddyIntegrationResult(
+            registry = DidMethodRegistry(),
             registeredDidMethods = emptyList()
         )
         
@@ -34,6 +37,7 @@ class GodiddyIntegrationResultTest {
     @Test
     fun `test GodiddyIntegrationResult with single method`() {
         val result = GodiddyIntegrationResult(
+            registry = DidMethodRegistry(),
             registeredDidMethods = listOf("key")
         )
         
@@ -44,6 +48,7 @@ class GodiddyIntegrationResultTest {
     @Test
     fun `test GodiddyIntegrationResult with multiple methods`() {
         val result = GodiddyIntegrationResult(
+            registry = DidMethodRegistry(),
             registeredDidMethods = listOf("key", "web", "ion", "polygonid")
         )
         
@@ -52,10 +57,13 @@ class GodiddyIntegrationResultTest {
 
     @Test
     fun `test GodiddyIntegrationResult equality`() {
+        val registry = DidMethodRegistry()
         val result1 = GodiddyIntegrationResult(
+            registry = registry,
             registeredDidMethods = listOf("key", "web")
         )
         val result2 = GodiddyIntegrationResult(
+            registry = registry,
             registeredDidMethods = listOf("key", "web")
         )
         
@@ -65,6 +73,7 @@ class GodiddyIntegrationResultTest {
     @Test
     fun `test GodiddyIntegrationResult copy`() {
         val original = GodiddyIntegrationResult(
+            registry = DidMethodRegistry(),
             registeredDidMethods = listOf("key")
         )
         val copied = original.copy(
@@ -78,6 +87,7 @@ class GodiddyIntegrationResultTest {
     @Test
     fun `test GodiddyIntegrationResult toString`() {
         val result = GodiddyIntegrationResult(
+            registry = DidMethodRegistry(),
             registeredDidMethods = listOf("key")
         )
         

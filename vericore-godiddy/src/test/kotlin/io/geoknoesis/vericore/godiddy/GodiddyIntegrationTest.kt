@@ -1,7 +1,6 @@
 package io.geoknoesis.vericore.godiddy
 
-import io.geoknoesis.vericore.did.DidRegistry
-import org.junit.jupiter.api.BeforeEach
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -11,15 +10,10 @@ import kotlin.test.assertTrue
  */
 class GodiddyIntegrationTest {
 
-    @BeforeEach
-    fun setUp() {
-        // Clear registry before each test
-        DidRegistry.clear()
-    }
-
     @Test
     fun `test discoverAndRegister with default configuration`() {
-        val result = GodiddyIntegration.discoverAndRegister()
+        val registry = DidMethodRegistry()
+        val result = GodiddyIntegration.discoverAndRegister(registry)
         
         assertNotNull(result, "Integration result should not be null")
         assertTrue(result.registeredDidMethods.isNotEmpty(), "Should register at least one DID method")
@@ -29,7 +23,8 @@ class GodiddyIntegrationTest {
     @Test
     fun `test setup with custom base URL`() {
         val customBaseUrl = "https://custom.godiddy.com"
-        val result = GodiddyIntegration.setup(baseUrl = customBaseUrl)
+        val registry = DidMethodRegistry()
+        val result = GodiddyIntegration.setup(baseUrl = customBaseUrl, registry = registry)
         
         assertNotNull(result, "Integration result should not be null")
         assertTrue(result.registeredDidMethods.isNotEmpty(), "Should register at least one DID method")
@@ -38,7 +33,8 @@ class GodiddyIntegrationTest {
 
     @Test
     fun `test setup with specific DID methods`() {
-        val result = GodiddyIntegration.setup(didMethods = listOf("key", "web"))
+        val registry = DidMethodRegistry()
+        val result = GodiddyIntegration.setup(registry = registry, didMethods = listOf("key", "web"))
         
         assertNotNull(result, "Integration result should not be null")
         assertTrue(result.registeredDidMethods.contains("key"), "Should register 'key' method")

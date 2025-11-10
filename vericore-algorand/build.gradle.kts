@@ -17,7 +17,7 @@ dependencies {
 
     // Test dependencies
     testImplementation(project(":vericore-testkit"))
-    testImplementation(project(":vericore-did")) // For DidRegistry
+    testImplementation(project(":vericore-did")) // For did method implementations
     testImplementation(project(":vericore-kms")) // For KeyManagementService
 }
 

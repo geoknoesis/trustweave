@@ -1,7 +1,11 @@
 package io.geoknoesis.vericore.examples.eo
 
-import io.geoknoesis.vericore.anchor.*
-import io.geoknoesis.vericore.did.*
+import io.geoknoesis.vericore.anchor.AnchorRef
+import io.geoknoesis.vericore.anchor.AnchorResult
+import io.geoknoesis.vericore.anchor.BlockchainAnchorClient
+import io.geoknoesis.vericore.anchor.DefaultBlockchainAnchorRegistry
+import io.geoknoesis.vericore.did.DefaultDidMethodRegistry
+import io.geoknoesis.vericore.did.DidMethod
 import io.geoknoesis.vericore.json.DigestUtils
 import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
@@ -45,10 +49,9 @@ fun main() = runBlocking {
     val chainId = "algorand:testnet"
     val anchorClient = InMemoryBlockchainAnchorClient(chainId)
     
-    // Register services so VeriCore can find them
-    // This is like adding tools to your toolbox
-    DidRegistry.register(didMethod)
-    BlockchainRegistry.register(chainId, anchorClient)
+    // Register services in scoped registries so VeriCore can find them
+    val didRegistry = DefaultDidMethodRegistry().apply { register(didMethod) }
+    val blockchainRegistry = DefaultBlockchainAnchorRegistry().apply { register(chainId, anchorClient) }
     
     println("✓ Services configured")
     println("  - Key Management: In-memory")
@@ -301,7 +304,8 @@ fun main() = runBlocking {
         vc = vcWithDigest,
         linkset = linksetWithDigest,
         artifacts = artifacts,
-        anchorRef = anchorResult.ref  // Reference to blockchain anchor from Step 6
+        anchorRef = anchorResult.ref,
+        registry = blockchainRegistry
     )
     
     // Display verification results

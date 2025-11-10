@@ -1,7 +1,5 @@
 package io.geoknoesis.vericore.credential.dsl
 
-import io.geoknoesis.vericore.did.DidRegistry
-import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
@@ -15,13 +13,10 @@ class KeyRotationDslTest {
     
     private lateinit var trustLayer: TrustLayerConfig
     private lateinit var kms: InMemoryKeyManagementService
-    private lateinit var didMethod: DidKeyMockMethod
     
     @BeforeEach
     fun setup() = runBlocking {
         kms = InMemoryKeyManagementService()
-        didMethod = DidKeyMockMethod(kms)
-        DidRegistry.register(didMethod)
         
         trustLayer = trustLayer {
             keys {

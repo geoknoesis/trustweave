@@ -82,15 +82,15 @@ Different DID methods use different mechanisms for creating and resolving DIDs:
 ### Creating a DID
 
 ```kotlin
-import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import io.geoknoesis.vericore.did.DidMethod
 
 // Register a DID method
 val didMethod: DidMethod = // ... get DID method
-DidRegistry.register(didMethod)
+val didRegistry = DidMethodRegistry().apply { register(didMethod) }
 
 // Create a DID
-val didDocument = DidRegistry.resolve("did:key:...")
+val didDocument = didRegistry.resolve("did:key:...")
 val did = didDocument.id
 ```
 
@@ -98,7 +98,8 @@ val did = didDocument.id
 
 ```kotlin
 // Resolve a DID to its DID Document
-val result = DidRegistry.resolve("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
+val didRegistry = DidMethodRegistry()
+val result = didRegistry.resolve("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
 val document = result.document
 
 // Access verification methods
@@ -109,8 +110,9 @@ val verificationMethod = document.verificationMethod.first()
 
 ```kotlin
 // Update a DID Document
-val updated = DidRegistry.resolve("did:key:...").let { result ->
-    val method = DidRegistry.get("key")!!
+val didRegistry = DidMethodRegistry()
+val updated = didRegistry.resolve("did:key:...").let { result ->
+    val method = didRegistry.get("key")!!
     method.updateDid(result.document.id) { current ->
         current.copy(
             service = current.service + Service(

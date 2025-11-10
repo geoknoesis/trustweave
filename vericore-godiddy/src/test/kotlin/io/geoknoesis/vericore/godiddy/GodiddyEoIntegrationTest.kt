@@ -1,14 +1,13 @@
 package io.geoknoesis.vericore.godiddy
 
-import io.geoknoesis.vericore.anchor.*
-import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.anchor.DefaultBlockchainAnchorRegistry
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import io.geoknoesis.vericore.json.DigestUtils
 import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
 import io.geoknoesis.vericore.testkit.integrity.IntegrityVerifier
 import io.geoknoesis.vericore.testkit.integrity.TestDataBuilders
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 
@@ -26,17 +25,12 @@ import kotlin.test.*
  */
 class GodiddyEoIntegrationTest {
 
-    @AfterEach
-    fun cleanup() {
-        DidRegistry.clear()
-        BlockchainRegistry.clear()
-    }
-
     @Test
     fun `end-to-end EO integrity chain verification with GoDiddy`() = runBlocking {
         // Setup: Register GoDiddy integration and blockchain client (testnet)
+        val didRegistry = DidMethodRegistry()
         val result = try {
-            GodiddyIntegration.discoverAndRegister()
+            GodiddyIntegration.discoverAndRegister(didRegistry)
         } catch (e: Exception) {
             println("Skipping test: GoDiddy integration failed: ${e.message}")
             return@runBlocking
@@ -45,7 +39,7 @@ class GodiddyEoIntegrationTest {
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
         
-        BlockchainRegistry.register(chainId, anchorClient)
+        val blockchainRegistry = DefaultBlockchainAnchorRegistry().apply { register(chainId, anchorClient) }
 
         // Verify GoDiddy services are available
         assertNotNull(result.resolver, "GoDiddy resolver should be available")
@@ -54,18 +48,18 @@ class GodiddyEoIntegrationTest {
         // Step 1: Create a DID for the issuer using GoDiddy
         // Note: In a real scenario, this would use Universal Registrar
         // For testing, we'll use a DID method that's registered via GoDiddy
-        val keyMethod = DidRegistry.get("key")
+        val keyMethod = result.registry.get("key")
         if (keyMethod == null) {
             // If key method is not available, use in-memory DID method as fallback for testing
             println("Note: did:key method not available via GoDiddy, using fallback")
             val kms = io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService()
             val fallbackMethod = io.geoknoesis.vericore.testkit.did.DidKeyMockMethod(kms)
-            DidRegistry.register(fallbackMethod)
+            result.registry.register(fallbackMethod)
             val issuerDoc = fallbackMethod.createDid(mapOf("algorithm" to "Ed25519"))
             val issuerDid = issuerDoc.id
             assertNotNull(issuerDid)
             // Continue with fallback method
-            val resolutionResult = DidRegistry.resolve(issuerDid)
+            val resolutionResult = result.registry.resolve(issuerDid)
             assertNotNull(resolutionResult.document, "DID should resolve")
             val document = resolutionResult.document
             if (document != null) {
@@ -82,7 +76,7 @@ class GodiddyEoIntegrationTest {
             // Use in-memory DID method as fallback
             val kms = io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService()
             val fallbackMethod = io.geoknoesis.vericore.testkit.did.DidKeyMockMethod(kms)
-            DidRegistry.register(fallbackMethod)
+            result.registry.register(fallbackMethod)
             fallbackMethod.createDid(mapOf("algorithm" to "Ed25519"))
         }
         val issuerDid = issuerDoc.id
@@ -99,7 +93,7 @@ class GodiddyEoIntegrationTest {
 
         // Step 2: Resolve the DID using GoDiddy Universal Resolver
         val resolutionResult = try {
-            DidRegistry.resolve(issuerDid)
+            result.registry.resolve(issuerDid)
         } catch (e: Exception) {
             println("Warning: DID resolution failed (expected if service unavailable): ${e.message}")
             // Continue with test using local DID document
@@ -319,7 +313,8 @@ class GodiddyEoIntegrationTest {
             vc = issuedCredential, // Use issued credential if available, otherwise original
             linkset = linksetWithDigest,
             artifacts = artifacts,
-            anchorRef = anchorResult.ref
+            anchorRef = anchorResult.ref,
+            registry = blockchainRegistry
         )
 
         // Verify all steps passed
@@ -364,7 +359,7 @@ class GodiddyEoIntegrationTest {
     @Test
     fun `test GoDiddy DID resolution for EO issuer`() = runBlocking {
         val result = try {
-            GodiddyIntegration.discoverAndRegister()
+            GodiddyIntegration.discoverAndRegister(DidMethodRegistry())
         } catch (e: Exception) {
             println("Skipping test: GoDiddy integration failed: ${e.message}")
             return@runBlocking
@@ -374,7 +369,7 @@ class GodiddyEoIntegrationTest {
         assertTrue(result.registeredDidMethods.isNotEmpty(), "At least one DID method should be registered")
 
         // Create a DID using one of the registered methods
-        val keyMethod = DidRegistry.get("key")
+        val keyMethod = result.registry.get("key")
         if (keyMethod == null) {
             println("Skipping test: did:key method not available")
             return@runBlocking
@@ -411,7 +406,7 @@ class GodiddyEoIntegrationTest {
     @Test
     fun `test GoDiddy VC issuance and verification workflow`() = runBlocking {
         val result = try {
-            GodiddyIntegration.discoverAndRegister()
+            GodiddyIntegration.discoverAndRegister(DidMethodRegistry())
         } catch (e: Exception) {
             println("Skipping test: GoDiddy integration failed: ${e.message}")
             return@runBlocking

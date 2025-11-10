@@ -158,7 +158,8 @@ data class PresentationOptions(
     val domain: String? = null,
     val selectiveDisclosure: Boolean = false,
     val disclosedFields: List<String> = emptyList(),
-    val additionalOptions: Map<String, Any?> = emptyMap()
+    val additionalOptions: Map<String, Any?> = emptyMap(),
+    val providerName: String? = null
 )
 
 /**

@@ -1,11 +1,16 @@
 package io.geoknoesis.vericore.credential.dsl
 
+import io.geoknoesis.vericore.anchor.BlockchainAnchorClient
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
+import io.geoknoesis.vericore.credential.CredentialServiceRegistry
 import io.geoknoesis.vericore.credential.did.CredentialDidResolver
 import io.geoknoesis.vericore.credential.did.asCredentialDidResolution
 import io.geoknoesis.vericore.credential.issuer.CredentialIssuer
 import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
 import io.geoknoesis.vericore.credential.proof.ProofGenerator
 import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
+import io.geoknoesis.vericore.did.DidMethod
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import io.geoknoesis.vericore.spi.services.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,6 +18,12 @@ import kotlinx.coroutines.runBlocking
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
+
+data class TrustLayerRegistries(
+    val didRegistry: DidMethodRegistry = DidMethodRegistry(),
+    val blockchainRegistry: BlockchainAnchorRegistry = BlockchainAnchorRegistry(),
+    val credentialRegistry: CredentialServiceRegistry = CredentialServiceRegistry.create()
+)
 
 /**
  * Unified Trust Layer Configuration.
@@ -51,16 +62,20 @@ import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
  */
 class TrustLayerConfig private constructor(
     val name: String,
-    val kms: Any, // KeyManagementService - using Any to avoid dependency
-    val didMethods: Map<String, Any>, // DidMethod - using Any to avoid dependency
-    val anchorClients: Map<String, Any>, // BlockchainAnchorClient - using Any to avoid dependency
+    val kms: Any,
+    val registries: TrustLayerRegistries,
     val credentialConfig: CredentialConfig,
     val issuer: CredentialIssuer,
-    val didResolver: io.geoknoesis.vericore.credential.did.CredentialDidResolver? = null,
-    val statusListManager: Any? = null, // StatusListManager - using Any to avoid dependency
-    val trustRegistry: Any? = null, // TrustRegistry - using Any to avoid dependency
-    val walletFactory: WalletFactory? = null // Wallet factory for creating wallet instances
+    val didResolver: CredentialDidResolver? = null,
+    val statusListManager: Any? = null,
+    val trustRegistry: Any? = null,
+    val walletFactory: WalletFactory? = null
 ) {
+    val didMethods: Map<String, Any>
+        get() = registries.didRegistry.getAllMethods()
+
+    val anchorClients: Map<String, Any>
+        get() = registries.blockchainRegistry.getAllClients()
     /**
      * Credential configuration within trust layer.
      */
@@ -73,14 +88,15 @@ class TrustLayerConfig private constructor(
     /**
      * Builder for trust layer configuration.
      */
-    class Builder(private val name: String = "default") {
+    class Builder(
+        private val name: String = "default",
+        private val registries: TrustLayerRegistries = TrustLayerRegistries()
+    ) {
         private var kms: Any? = null // KeyManagementService - using Any to avoid dependency
         private var kmsProvider: String? = null
         private var kmsAlgorithm: String = "Ed25519"
         private var kmsSigner: (suspend (ByteArray, String) -> ByteArray)? = null // Direct signer function
-        private val didMethods = mutableMapOf<String, Any>() // DidMethod - using Any to avoid dependency
         private val didMethodConfigs = mutableMapOf<String, DidMethodConfig>()
-        private val anchorClients = mutableMapOf<String, Any>() // BlockchainAnchorClient - using Any to avoid dependency
         private val anchorConfigs = mutableMapOf<String, AnchorConfig>()
         private var defaultProofType: String = "Ed25519Signature2020"
         private var autoAnchor: Boolean = false
@@ -213,58 +229,16 @@ class TrustLayerConfig private constructor(
             val finalSigner = kmsSigner ?: resolvedSigner
             
             // Resolve DID methods
-            val resolvedDidMethods = mutableMapOf<String, Any>()
             for ((methodName, config) in didMethodConfigs) {
-                val method = resolveDidMethod(methodName, config, resolvedKms)
-                resolvedDidMethods[methodName] = method
-                // Register in DidRegistry using service
-                val didRegistryService = AdapterLoader.didRegistryService()
-                if (didRegistryService != null) {
-                    didRegistryService.register(method)
-                } else {
-                    // Fallback to reflection if service not available
-                    try {
-                        val didRegistryClass = Class.forName("io.geoknoesis.vericore.did.DidRegistry")
-                        val registerMethod = didRegistryClass.getMethod("register", Any::class.java)
-                        registerMethod.invoke(null, method)
-                    } catch (e: Exception) {
-                        // DidRegistry not available - this is OK for DSL usage
-                    }
-                }
+                val resolvedMethod = resolveDidMethod(methodName, config, resolvedKms) as? DidMethod
+                    ?: throw IllegalStateException("Invalid DID method returned for '$methodName'")
+                registries.didRegistry.register(resolvedMethod)
             }
             
-            // Resolve anchor clients
-            val resolvedAnchorClients = mutableMapOf<String, Any>()
             for ((chainId, config) in anchorConfigs) {
-                val client = resolveAnchorClient(chainId, config)
-                resolvedAnchorClients[chainId] = client
-                // Register in BlockchainRegistry using service
-                val blockchainRegistryService = AdapterLoader.blockchainRegistryService()
-                if (blockchainRegistryService != null) {
-                    try {
-                        val registerMethod = blockchainRegistryService::class.java.getMethod("register", String::class.java, Any::class.java)
-                        registerMethod.isAccessible = true
-                        registerMethod.invoke(blockchainRegistryService, chainId, client)
-                    } catch (e: Exception) {
-                        // Adapter present but failed to register - fall back to reflection
-                        try {
-                            val blockchainRegistryClass = Class.forName("io.geoknoesis.vericore.anchor.BlockchainRegistry")
-                            val registerMethod = blockchainRegistryClass.getMethod("register", String::class.java, Any::class.java)
-                            registerMethod.invoke(null, chainId, client)
-                        } catch (_: Exception) {
-                            // Ignored - registry not available is acceptable for DSL usage
-                        }
-                    }
-                } else {
-                    // Fallback to reflection if service not available
-                    try {
-                        val blockchainRegistryClass = Class.forName("io.geoknoesis.vericore.anchor.BlockchainRegistry")
-                        val registerMethod = blockchainRegistryClass.getMethod("register", String::class.java, Any::class.java)
-                        registerMethod.invoke(null, chainId, client)
-                    } catch (e: Exception) {
-                        // BlockchainRegistry not available - this is OK for DSL usage
-                    }
-                }
+                val client = resolveAnchorClient(chainId, config) as? BlockchainAnchorClient
+                    ?: throw IllegalStateException("Invalid blockchain anchor client returned for '$chainId'")
+                registries.blockchainRegistry.register(chainId, client)
             }
             
             // Create proof generator
@@ -286,8 +260,9 @@ class TrustLayerConfig private constructor(
             }
             
             val credentialDidResolver = CredentialDidResolver { did ->
-                val service = AdapterLoader.didRegistryService() ?: return@CredentialDidResolver null
-                runCatching { service.resolve(did) }.getOrNull()?.asCredentialDidResolution()
+                runCatching { registries.didRegistry.resolve(did) }
+                    .getOrNull()
+                    ?.asCredentialDidResolution()
             }
 
             val issuer = CredentialIssuer(
@@ -301,11 +276,16 @@ class TrustLayerConfig private constructor(
             // Resolve wallet factory
             val resolvedWalletFactory = walletFactory ?: getDefaultWalletFactory()
             
+            val registriesSnapshot = TrustLayerRegistries(
+                didRegistry = registries.didRegistry.snapshot(),
+                blockchainRegistry = registries.blockchainRegistry.snapshot(),
+                credentialRegistry = registries.credentialRegistry.snapshot()
+            )
+            
             return TrustLayerConfig(
                 name = name,
                 kms = resolvedKms,
-                didMethods = resolvedDidMethods,
-                anchorClients = resolvedAnchorClients,
+                registries = registriesSnapshot,
                 credentialConfig = CredentialConfig(
                     defaultProofType = defaultProofType,
                     autoAnchor = autoAnchor,
@@ -345,10 +325,10 @@ class TrustLayerConfig private constructor(
             methodName: String,
             config: DidMethodConfig,
             kms: Any
-        ): Any {
+        ): DidMethod {
             requireNotNull(kms) { "KMS cannot be null when resolving DID method: $methodName" }
             val factory = didMethodFactory ?: getDefaultDidMethodFactory()
-            val method = factory.create(methodName, config, kms)
+            val method = factory.create(methodName, config, kms) as? DidMethod
             return method ?: throw IllegalStateException(
                 "DID method '$methodName' not found. " +
                 "Ensure appropriate DID method provider is on classpath."
@@ -374,9 +354,12 @@ class TrustLayerConfig private constructor(
         private suspend fun resolveAnchorClient(
             chainId: String,
             config: AnchorConfig
-        ): Any {
+        ): BlockchainAnchorClient {
             val factory = anchorClientFactory ?: getDefaultAnchorClientFactory()
-            return factory.create(chainId, config.provider, config.options)
+            val client = factory.create(chainId, config.provider, config.options)
+            return client as? BlockchainAnchorClient ?: throw IllegalStateException(
+                "Invalid blockchain anchor client implementation returned for $chainId"
+            )
         }
         
         private fun getDefaultAnchorClientFactory(): BlockchainAnchorClientFactory {
@@ -708,8 +691,12 @@ class TrustLayerConfig private constructor(
 /**
  * DSL function to create a trust layer configuration.
  */
-suspend fun trustLayer(name: String = "default", block: TrustLayerConfig.Builder.() -> Unit): TrustLayerConfig {
-    val builder = TrustLayerConfig.Builder(name)
+suspend fun trustLayer(
+    name: String = "default",
+    registries: TrustLayerRegistries = TrustLayerRegistries(),
+    block: TrustLayerConfig.Builder.() -> Unit
+): TrustLayerConfig {
+    val builder = TrustLayerConfig.Builder(name, registries)
     builder.block()
     return builder.build()
 }

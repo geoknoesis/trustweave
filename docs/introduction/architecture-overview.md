@@ -40,12 +40,12 @@ vericore/
 ### vericore-did
 - `DidMethod` interface
 - DID Document models (W3C compliant)
-- `DidRegistry` for method registration
+- `DidMethodRegistry` for method registration (instance-scoped)
 
 ### vericore-anchor
 - `BlockchainAnchorClient` interface
 - `AnchorRef` for chain-agnostic references
-- `BlockchainRegistry` for client registration
+- `BlockchainAnchorRegistry` for client registration (instance-scoped)
 
 ### vericore-testkit
 - In-memory implementations
@@ -75,16 +75,22 @@ vericore/
 
 ## Design Patterns
 
-### Registry Pattern
+### Scoped Registry Pattern
 
-Both `DidRegistry` and `BlockchainRegistry` use the registry pattern:
+Registries are owned by the application context rather than global singletons:
 
 ```kotlin
-// Register a DID method
-DidRegistry.register(didMethod)
+val didRegistry = DidMethodRegistry().apply { register(didMethod) }
+val blockchainRegistry = BlockchainAnchorRegistry().apply { register(chainId, client) }
 
-// Use it
-val result = DidRegistry.resolve("did:key:...")
+val config = VeriCoreConfig(
+    kms = kms,
+    walletFactory = walletFactory,
+    didRegistry = didRegistry,
+    blockchainRegistry = blockchainRegistry,
+    credentialRegistry = CredentialServiceRegistry.create()
+)
+val vericore = VeriCore.create(config)
 ```
 
 ### Service Provider Interface (SPI)
@@ -111,7 +117,7 @@ All external dependencies are abstracted through interfaces:
 ```
 Application
     ↓
-DidRegistry.get("key")
+VeriCoreContext.getDidMethod("key")
     ↓
 DidMethod.createDid()
     ↓
@@ -125,7 +131,7 @@ DidDocument (returned)
 ```
 Application
     ↓
-BlockchainRegistry.get("algorand:mainnet")
+VeriCoreContext.getBlockchainClient("algorand:mainnet")
     ↓
 BlockchainAnchorClient.writePayload()
     ↓
@@ -207,13 +213,13 @@ vericore-polygon
 
 1. Implement `DidMethod` interface
 2. Optionally implement `DidMethodProvider` for SPI
-3. Register via `DidRegistry.register()`
+3. Register via `DidMethodRegistry.register()`
 
 ### Adding a New Blockchain Adapter
 
 1. Implement `BlockchainAnchorClient` interface
 2. Optionally implement `BlockchainAnchorClientProvider` for SPI
-3. Register via `BlockchainRegistry.register()`
+3. Register via `BlockchainAnchorRegistry.register()`
 
 ### Adding a New KMS Backend
 

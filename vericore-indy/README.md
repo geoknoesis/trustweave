@@ -44,7 +44,7 @@ fun main() = runBlocking {
     // Automatically discover and register Indy adapters
     val result = IndyIntegration.discoverAndRegister()
     
-    println("Registered chains: $result")
+    println("Registered chains: ${result.registeredChains}")
 }
 ```
 
@@ -73,6 +73,7 @@ fun main() = runBlocking {
         chainIds = listOf(chainId.toString()),
         options = options.toMap()
     )
+    println("Registered chains: ${result.registeredChains}")
 }
 ```
 
@@ -93,6 +94,7 @@ fun main() = runBlocking {
             "poolEndpoint" to "https://test.bcovrin.vonx.io" // Optional
         )
     )
+    println("Registered chains: ${result.registeredChains}")
 }
 ```
 
@@ -117,10 +119,11 @@ fun main() = runBlocking {
     val chainId = ChainId.Indy.BCovrinTestnet
     
     // Register Indy client (uses in-memory fallback for testing)
-    IndyIntegration.setup(
+    val integration = IndyIntegration.setup(
         chainIds = listOf(chainId.toString()),
         options = emptyMap() // Uses in-memory fallback for testing
     )
+    val registry = integration.registry
     
     // Anchor data
     val digest = VerifiableCredentialDigest(
@@ -128,7 +131,7 @@ fun main() = runBlocking {
         vcDigest = "uABC123..."
     )
     
-    val result = anchorTyped(
+    val result = registry.anchorTyped(
         value = digest,
         serializer = VerifiableCredentialDigest.serializer(),
         targetChainId = chainId.toString()

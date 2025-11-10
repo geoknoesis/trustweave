@@ -121,7 +121,6 @@ val credentials = wallet.query { byType("PersonCredential") }
 
 ```kotlin
 val didMethod = DidKeyMockMethod(kms)
-DidRegistry.register(didMethod)
 val doc = didMethod.createDid(options)
 ```
 
@@ -197,9 +196,6 @@ fun main() = runBlocking {
     // Setup: Create KMS and DID method
     val kms = InMemoryKeyManagementService()
     val didMethod = DidKeyMockMethod(kms)
-    
-    // Register the method
-    DidRegistry.register(didMethod)
     
     // Create a DID with typed options
     val options = DidCreationOptions(
@@ -294,7 +290,9 @@ data class VerifiableCredentialDigest(
 fun main() = runBlocking {
     // Setup: Create and register blockchain client
     val client = InMemoryBlockchainAnchorClient("algorand:mainnet", "app-123")
-    BlockchainRegistry.register("algorand:mainnet", client)
+val blockchainRegistry = BlockchainAnchorRegistry().apply {
+    register("algorand:mainnet", client)
+}
     
     // Create a digest object
     val digest = VerifiableCredentialDigest(
@@ -303,7 +301,7 @@ fun main() = runBlocking {
     )
     
     // Anchor it
-    val result = anchorTyped(
+val result = blockchainRegistry.anchorTyped(
         value = digest,
         serializer = VerifiableCredentialDigest.serializer(),
         targetChainId = "algorand:mainnet"
@@ -312,7 +310,7 @@ fun main() = runBlocking {
     println("Anchored at: ${result.ref.txHash}")
     
     // Read it back
-    val retrieved = readTyped<VerifiableCredentialDigest>(
+val retrieved = blockchainRegistry.readTyped<VerifiableCredentialDigest>(
         ref = result.ref,
         serializer = VerifiableCredentialDigest.serializer()
     )
@@ -324,8 +322,11 @@ fun main() = runBlocking {
 ### Example: Complete Workflow
 
 ```kotlin
-import io.geoknoesis.vericore.anchor.*
-import io.geoknoesis.vericore.did.*
+import io.geoknoesis.vericore.anchor.AnchorResult
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
+import io.geoknoesis.vericore.anchor.anchorTyped
+import io.geoknoesis.vericore.anchor.readTyped
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import io.geoknoesis.vericore.json.DigestUtils
 import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
@@ -347,8 +348,10 @@ fun main() = runBlocking {
     val didMethod = DidKeyMockMethod(kms)
     val anchorClient = InMemoryBlockchainAnchorClient("algorand:mainnet")
     
-    DidRegistry.register(didMethod)
-    BlockchainRegistry.register("algorand:mainnet", anchorClient)
+    val didRegistry = DidMethodRegistry().apply { register(didMethod) }
+    val blockchainRegistry = BlockchainAnchorRegistry().apply {
+        register("algorand:mainnet", anchorClient)
+    }
     
     // 2. Create a DID for the issuer
     val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
@@ -374,7 +377,7 @@ fun main() = runBlocking {
         issuer = issuerDid
     )
     
-    val anchorResult = anchorTyped(
+    val anchorResult = blockchainRegistry.anchorTyped(
         value = digestObj,
         serializer = VerifiableCredentialDigest.serializer(),
         targetChainId = "algorand:mainnet"
@@ -385,7 +388,7 @@ fun main() = runBlocking {
     println("Anchored at: ${anchorResult.ref.txHash}")
     
     // 6. Verify by reading back
-    val retrieved = readTyped<VerifiableCredentialDigest>(
+    val retrieved = blockchainRegistry.readTyped<VerifiableCredentialDigest>(
         ref = anchorResult.ref,
         serializer = VerifiableCredentialDigest.serializer()
     )
@@ -443,7 +446,7 @@ DID and DID Document management:
 - `Did`: DID identifier model
 - `DidDocument`: W3C DID Core-compliant document model
 - `DidMethod`: Interface for DID method implementations
-- `DidRegistry`: Registry for pluggable DID methods
+- `DidMethodRegistry`: Instance-scoped registry for pluggable DID methods
 
 ### vericore-anchor
 
@@ -454,7 +457,7 @@ Blockchain anchoring abstraction with comprehensive type safety and error handli
 - `AbstractBlockchainAnchorClient`: Base class reducing code duplication across adapters
 - `AnchorRef`: Chain-agnostic anchor reference (CAIP-2 style)
 - `AnchorResult`: Result of anchoring operation
-- `BlockchainRegistry`: Registry for pluggable blockchain clients
+- `BlockchainAnchorRegistry`: Instance-scoped registry for pluggable blockchain clients
 - `ChainId`: Type-safe chain identifier (CAIP-2 format)
 - `BlockchainIntegrationHelper`: Utility for SPI-based adapter discovery
 - Helper functions: `anchorTyped()`, `readTyped()`
@@ -620,17 +623,19 @@ walt.id adapters are automatically discovered via Java ServiceLoader:
 
 ```kotlin
 import io.geoknoesis.vericore.waltid.WaltIdIntegration
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     // Automatically discover and register walt.id adapters
-    val result = WaltIdIntegration.discoverAndRegister()
+    val registry = DidMethodRegistry()
+    val result = WaltIdIntegration.discoverAndRegister(registry)
     
     println("Registered DID methods: ${result.registeredDidMethods}")
     // Output: Registered DID methods: [key, web]
     
     // Use VeriCore APIs as normal - walt.id adapters are now registered
-    val didDocument = DidRegistry.resolve("did:key:...")
+    val didDocument = registry.resolve("did:key:...")
 }
 ```
 
@@ -641,19 +646,22 @@ You can also manually configure walt.id integration:
 ```kotlin
 import io.geoknoesis.vericore.waltid.WaltIdIntegration
 import io.geoknoesis.vericore.waltid.WaltIdKeyManagementService
+import io.geoknoesis.vericore.did.DidMethodRegistry
 
 fun main() = runBlocking {
     // Create walt.id KMS
     val kms = WaltIdKeyManagementService()
+    val registry = DidMethodRegistry()
     
     // Setup integration with specific DID methods
     val result = WaltIdIntegration.setup(
         kms = kms,
+        registry = registry,
         didMethods = listOf("key", "web")
     )
     
     // Create a DID using walt.id
-    val keyMethod = DidRegistry.get("key")
+    val keyMethod = registry.get("key")
     val document = keyMethod!!.createDid(mapOf("algorithm" to "Ed25519"))
     println("Created DID: ${document.id}")
 }
@@ -698,17 +706,19 @@ godiddy adapters are automatically discovered via Java ServiceLoader:
 
 ```kotlin
 import io.geoknoesis.vericore.godiddy.GodiddyIntegration
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     // Automatically discover and register godiddy adapters
-    val result = GodiddyIntegration.discoverAndRegister()
+    val registry = DidMethodRegistry()
+    val result = GodiddyIntegration.discoverAndRegister(registry)
     
     println("Registered DID methods: ${result.registeredDidMethods}")
     // Output: Registered DID methods: [key, web, ion, ethr, ...]
     
     // Use VeriCore APIs as normal - godiddy adapters are now registered
-    val didDocument = DidRegistry.resolve("did:key:...")
+    val didDocument = registry.resolve("did:key:...")
 }
 ```
 
@@ -718,11 +728,14 @@ You can manually configure godiddy integration with a custom base URL:
 
 ```kotlin
 import io.geoknoesis.vericore.godiddy.GodiddyIntegration
+import io.geoknoesis.vericore.did.DidMethodRegistry
 
 fun main() = runBlocking {
     // Setup integration with custom base URL (for self-hosted instances)
+    val registry = DidMethodRegistry()
     val result = GodiddyIntegration.setup(
         baseUrl = "https://custom.godiddy.com",
+        registry = registry,
         didMethods = listOf("key", "web", "ion") // Optional: specify methods
     )
     
@@ -753,6 +766,7 @@ The godiddy integration supports the following configuration options:
 
 ```kotlin
 val result = GodiddyIntegration.discoverAndRegister(
+    registry = DidMethodRegistry(),
     options = mapOf(
         "baseUrl" to "https://resolver.godiddy.com", // Default: public godiddy service
         "timeout" to 30000L, // HTTP timeout in milliseconds
@@ -765,11 +779,13 @@ val result = GodiddyIntegration.discoverAndRegister(
 
 ```kotlin
 import io.geoknoesis.vericore.godiddy.GodiddyIntegration
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 
 fun main() = runBlocking {
-    val result = GodiddyIntegration.discoverAndRegister()
+    val registry = DidMethodRegistry()
+    val result = GodiddyIntegration.discoverAndRegister(registry)
     
     // Issue a credential
     val credential = buildJsonObject {

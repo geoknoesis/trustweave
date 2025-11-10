@@ -1,10 +1,9 @@
 package io.geoknoesis.vericore.algorand
 
-import io.geoknoesis.vericore.anchor.*
+import io.geoknoesis.vericore.anchor.AnchorRef
 import io.geoknoesis.vericore.core.NotFoundException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -15,11 +14,6 @@ import kotlin.test.assertTrue
  * All tests use testnet only for safety.
  */
 class AlgorandBlockchainAnchorClientTest {
-
-    @AfterEach
-    fun cleanup() {
-        BlockchainRegistry.clear()
-    }
 
     @Test
     fun `should create client for testnet`() = runBlocking {
@@ -98,32 +92,27 @@ class AlgorandBlockchainAnchorClientProviderTest {
 
 class AlgorandIntegrationTest {
 
-    @AfterEach
-    fun cleanup() {
-        BlockchainRegistry.clear()
-    }
-
     @Test
     fun `should discover and register via SPI`() {
-        val registeredChains = AlgorandIntegration.discoverAndRegister()
-        assertTrue(registeredChains.isNotEmpty())
-        assertTrue(registeredChains.contains(AlgorandBlockchainAnchorClient.MAINNET))
-        assertTrue(registeredChains.contains(AlgorandBlockchainAnchorClient.TESTNET))
-        assertTrue(registeredChains.contains(AlgorandBlockchainAnchorClient.BETANET))
+        val result = AlgorandIntegration.discoverAndRegister()
+        assertTrue(result.registeredChains.isNotEmpty())
+        assertTrue(result.registeredChains.contains(AlgorandBlockchainAnchorClient.MAINNET))
+        assertTrue(result.registeredChains.contains(AlgorandBlockchainAnchorClient.TESTNET))
+        assertTrue(result.registeredChains.contains(AlgorandBlockchainAnchorClient.BETANET))
 
-        val testnetClient = BlockchainRegistry.get(AlgorandBlockchainAnchorClient.TESTNET)
+        val testnetClient = result.registry.get(AlgorandBlockchainAnchorClient.TESTNET)
         assertNotNull(testnetClient)
     }
 
     @Test
     fun `should setup testnet chain for testing`() {
-        val registeredChains = AlgorandIntegration.setup(
+        val result = AlgorandIntegration.setup(
             chainIds = listOf(AlgorandBlockchainAnchorClient.TESTNET)
         )
-        assertEquals(1, registeredChains.size)
-        assertEquals(AlgorandBlockchainAnchorClient.TESTNET, registeredChains[0])
+        assertEquals(1, result.registeredChains.size)
+        assertEquals(AlgorandBlockchainAnchorClient.TESTNET, result.registeredChains[0])
 
-        val client = BlockchainRegistry.get(AlgorandBlockchainAnchorClient.TESTNET)
+        val client = result.registry.get(AlgorandBlockchainAnchorClient.TESTNET)
         assertNotNull(client)
     }
 }

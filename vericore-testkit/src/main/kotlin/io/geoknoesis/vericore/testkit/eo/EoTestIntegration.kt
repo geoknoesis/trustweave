@@ -1,14 +1,14 @@
 package io.geoknoesis.vericore.testkit.eo
 
-import io.geoknoesis.vericore.anchor.*
-import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.anchor.AnchorResult
+import io.geoknoesis.vericore.anchor.BlockchainAnchorClient
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import io.geoknoesis.vericore.json.DigestUtils
 import io.geoknoesis.vericore.testkit.integrity.IntegrityVerifier
 import io.geoknoesis.vericore.testkit.integrity.IntegrityVerificationResult
 import io.geoknoesis.vericore.testkit.integrity.TestDataBuilders
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
-import io.geoknoesis.vericore.anchor.BlockchainRegistry
 
 /**
  * Earth Observation (EO) test integration utility.
@@ -148,9 +148,11 @@ object EoTestIntegration {
      * @param scenario The EO test scenario to execute
      * @return EoTestResult containing anchor result and verification result
      */
-    suspend fun executeScenario(scenario: EoTestScenario): EoTestResult {
-        // Register blockchain client in the shared registry for test runs
-        BlockchainRegistry.register(scenario.chainId, scenario.anchorClient)
+    suspend fun executeScenario(
+        scenario: EoTestScenario,
+        blockchainRegistry: BlockchainAnchorRegistry
+    ): EoTestResult {
+        blockchainRegistry.register(scenario.chainId, scenario.anchorClient)
 
         // Anchor VC digest to blockchain
         val anchorResult = scenario.anchorClient.writePayload(scenario.digestPayload)
@@ -160,7 +162,8 @@ object EoTestIntegration {
             vc = scenario.vc,
             linkset = scenario.linkset,
             artifacts = scenario.artifacts,
-            anchorRef = anchorResult.ref
+            anchorRef = anchorResult.ref,
+            registry = blockchainRegistry
         )
 
         return EoTestResult(
@@ -188,7 +191,8 @@ object EoTestIntegration {
         chainId: String,
         datasetId: String = "eo-dataset-test",
         metadataTitle: String = "Test EO Dataset",
-        metadataDescription: String = "A test Earth Observation dataset for integrity verification"
+        metadataDescription: String = "A test Earth Observation dataset for integrity verification",
+        blockchainRegistry: BlockchainAnchorRegistry
     ): EoTestResult {
         val scenario = createScenario(
             issuerDid = issuerDid,
@@ -198,7 +202,7 @@ object EoTestIntegration {
             metadataTitle = metadataTitle,
             metadataDescription = metadataDescription
         )
-        return executeScenario(scenario)
+        return executeScenario(scenario, blockchainRegistry)
     }
 }
 

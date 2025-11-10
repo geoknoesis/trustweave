@@ -1,5 +1,6 @@
 package io.geoknoesis.vericore.godiddy
 
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import io.geoknoesis.vericore.godiddy.issuer.GodiddyIssuer
 import io.geoknoesis.vericore.godiddy.registrar.GodiddyRegistrar
 import io.geoknoesis.vericore.godiddy.resolver.GodiddyResolver
@@ -9,6 +10,11 @@ import io.geoknoesis.vericore.godiddy.verifier.GodiddyVerifier
  * Result of godiddy integration setup.
  */
 data class GodiddyIntegrationResult(
+    /**
+     * Registry that received the registered DID methods.
+     */
+    val registry: DidMethodRegistry,
+
     /**
      * List of DID methods that were registered.
      */

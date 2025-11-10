@@ -13,22 +13,7 @@ class TrustLayerConfigTest {
 
     @BeforeEach
     fun setUp() {
-        // Clear registries before each test (using reflection since they're not test dependencies)
-        try {
-            val didRegistryClass = Class.forName("io.geoknoesis.vericore.did.DidRegistry")
-            val clearMethod = didRegistryClass.getMethod("clear")
-            clearMethod.invoke(null)
-        } catch (e: Exception) {
-            // Registry not available, skip
-        }
-        
-        try {
-            val blockchainRegistryClass = Class.forName("io.geoknoesis.vericore.anchor.BlockchainRegistry")
-            val clearMethod = blockchainRegistryClass.getMethod("clear")
-            clearMethod.invoke(null)
-        } catch (e: Exception) {
-            // Registry not available, skip
-        }
+        // No global registries to clear; each test builds a fresh TrustLayerConfig.
     }
 
     @Test

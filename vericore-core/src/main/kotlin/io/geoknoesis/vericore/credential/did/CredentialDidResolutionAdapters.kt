@@ -1,6 +1,6 @@
 package io.geoknoesis.vericore.credential.did
 
-internal fun Any?.asCredentialDidResolution(): CredentialDidResolution? = when (this) {
+fun Any?.asCredentialDidResolution(): CredentialDidResolution? = when (this) {
     null -> null
     is CredentialDidResolution -> this
     is Boolean -> if (this) {

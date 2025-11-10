@@ -11,9 +11,11 @@ import java.time.Instant
  */
 class DidMethodEdgeCasesTest {
 
+    private lateinit var registry: DidMethodRegistry
+
     @BeforeEach
     fun setup() {
-        DidRegistry.clear()
+        registry = DefaultDidMethodRegistry()
     }
 
     @Test
@@ -119,11 +121,11 @@ class DidMethodEdgeCasesTest {
         val method1 = createMockDidMethod("method1")
         val method2 = createMockDidMethod("method2")
         
-        DidRegistry.register(method1)
-        DidRegistry.register(method2)
+        registry.register(method1)
+        registry.register(method2)
         
-        assertEquals(method1, DidRegistry.get("method1"))
-        assertEquals(method2, DidRegistry.get("method2"))
+        assertEquals(method1, registry.get("method1"))
+        assertEquals(method2, registry.get("method2"))
     }
 
     @Test
@@ -131,10 +133,10 @@ class DidMethodEdgeCasesTest {
         val method1 = createMockDidMethod("test")
         val method2 = createMockDidMethod("test")
         
-        DidRegistry.register(method1)
-        DidRegistry.register(method2)
+        registry.register(method1)
+        registry.register(method2)
         
-        assertEquals(method2, DidRegistry.get("test"))
+        assertEquals(method2, registry.get("test"))
     }
 
     @Test
@@ -157,9 +159,9 @@ class DidMethodEdgeCasesTest {
             override suspend fun deactivateDid(did: String) = true
         }
         
-        DidRegistry.register(method)
+        registry.register(method)
         
-        val result = DidRegistry.resolve("did:test:123")
+        val result = registry.resolve("did:test:123")
         
         assertNotNull(result.document)
         assertNotNull(result.documentMetadata.created)
@@ -183,9 +185,9 @@ class DidMethodEdgeCasesTest {
             override suspend fun deactivateDid(did: String) = true
         }
         
-        DidRegistry.register(method)
+        registry.register(method)
         
-        val result = DidRegistry.resolve("did:test:nonexistent")
+        val result = registry.resolve("did:test:nonexistent")
         
         assertNull(result.document)
         assertTrue(result.resolutionMetadata.containsKey("error"))
@@ -196,21 +198,21 @@ class DidMethodEdgeCasesTest {
         val method1 = createMockDidMethod("method1")
         val method2 = createMockDidMethod("method2")
         
-        DidRegistry.register(method1)
-        DidRegistry.register(method2)
+        registry.register(method1)
+        registry.register(method2)
         
-        DidRegistry.clear()
+        registry.clear()
         
-        assertNull(DidRegistry.get("method1"))
-        assertNull(DidRegistry.get("method2"))
+        assertNull(registry.get("method1"))
+        assertNull(registry.get("method2"))
     }
 
     @Test
     fun `test DidRegistry resolve with DID containing special characters`() = runBlocking {
         val method = createMockDidMethod("test")
-        DidRegistry.register(method)
+        registry.register(method)
         
-        val result = DidRegistry.resolve("did:test:abc-123_xyz")
+        val result = registry.resolve("did:test:abc-123_xyz")
         
         assertNotNull(result)
         assertNotNull(result.document)
@@ -219,10 +221,10 @@ class DidMethodEdgeCasesTest {
     @Test
     fun `test DidRegistry resolve with very long DID`() = runBlocking {
         val method = createMockDidMethod("test")
-        DidRegistry.register(method)
+        registry.register(method)
         
         val longId = "a".repeat(1000)
-        val result = DidRegistry.resolve("did:test:$longId")
+        val result = registry.resolve("did:test:$longId")
         
         assertNotNull(result)
     }

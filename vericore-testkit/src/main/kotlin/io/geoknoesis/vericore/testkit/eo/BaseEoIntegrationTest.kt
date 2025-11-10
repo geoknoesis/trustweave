@@ -1,9 +1,10 @@
 package io.geoknoesis.vericore.testkit.eo
 
 import io.geoknoesis.vericore.anchor.BlockchainAnchorClient
-import io.geoknoesis.vericore.anchor.BlockchainRegistry
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
+import io.geoknoesis.vericore.credential.CredentialServiceRegistry
 import io.geoknoesis.vericore.did.DidMethod
-import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
@@ -30,6 +31,10 @@ import kotlinx.coroutines.runBlocking
  * ```
  */
 abstract class BaseEoIntegrationTest {
+
+    protected val didRegistry: DidMethodRegistry = DidMethodRegistry()
+    protected val blockchainRegistry: BlockchainAnchorRegistry = BlockchainAnchorRegistry()
+    protected val credentialRegistry: CredentialServiceRegistry = CredentialServiceRegistry.create()
 
     /**
      * Creates a blockchain anchor client for the test.
@@ -60,7 +65,7 @@ abstract class BaseEoIntegrationTest {
     open fun setupDidMethod(): DidMethod {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        DidRegistry.register(didMethod)
+        didRegistry.register(didMethod)
         return didMethod
     }
 
@@ -69,8 +74,9 @@ abstract class BaseEoIntegrationTest {
      * Override if you need additional cleanup.
      */
     open fun cleanup() {
-        DidRegistry.clear()
-        BlockchainRegistry.clear()
+        didRegistry.clear()
+        blockchainRegistry.clear()
+        credentialRegistry.clear()
     }
 
     /**
@@ -101,6 +107,7 @@ abstract class BaseEoIntegrationTest {
         val testChainId = chainId ?: getChainId()
         val testOptions = options ?: getAnchorClientOptions()
         val anchorClient = createAnchorClient(testChainId, testOptions)
+        blockchainRegistry.register(testChainId, anchorClient)
 
         // Run complete EO scenario
         EoTestIntegration.runCompleteScenario(
@@ -109,7 +116,8 @@ abstract class BaseEoIntegrationTest {
             chainId = testChainId,
             datasetId = datasetId,
             metadataTitle = metadataTitle,
-            metadataDescription = metadataDescription
+            metadataDescription = metadataDescription,
+            blockchainRegistry = blockchainRegistry
         )
     }
 }

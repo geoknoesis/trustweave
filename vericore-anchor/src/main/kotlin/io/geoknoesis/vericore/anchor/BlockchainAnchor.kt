@@ -62,37 +62,18 @@ interface BlockchainAnchorClient {
     suspend fun readPayload(ref: AnchorRef): AnchorResult
 }
 
-suspend fun <T> BlockchainAnchorRegistry.anchorTyped(
-    value: T,
-    serializer: kotlinx.serialization.KSerializer<T>,
-    targetChainId: String,
-    mediaType: String = "application/json"
-): AnchorResult {
-    val client = get(targetChainId)
-        ?: throw IllegalArgumentException("No blockchain client registered for chain: $targetChainId")
-
-    val json = kotlinx.serialization.json.Json.encodeToJsonElement(serializer, value)
-    return client.writePayload(json, mediaType)
-}
-
-suspend fun <T> BlockchainAnchorRegistry.readTyped(
-    ref: AnchorRef,
-    serializer: kotlinx.serialization.KSerializer<T>
-): T {
-    val client = get(ref.chainId)
-        ?: throw IllegalArgumentException("No blockchain client registered for chain: ${ref.chainId}")
-
-    val result = client.readPayload(ref)
-    return kotlinx.serialization.json.Json.decodeFromJsonElement(serializer, result.payload)
-}
-
 /**
  * Global blockchain registry for backward compatibility. Newer code should
  * prefer using `BlockchainAnchorRegistry` instances or the `VeriCore` facade,
  * while delegating to an internal [BlockchainAnchorRegistry] instance.
  */
+@Deprecated(
+    message = "Use a scoped BlockchainAnchorRegistry instance (e.g., via VeriCoreConfig) instead of the global singleton.",
+    replaceWith = ReplaceWith("BlockchainAnchorRegistry()"),
+    level = DeprecationLevel.WARNING
+)
 object BlockchainRegistry {
-    private val defaultRegistry = BlockchainAnchorRegistry()
+    private val defaultRegistry: BlockchainAnchorRegistry = DefaultBlockchainAnchorRegistry()
 
     /**
      * Registers a blockchain anchor client for a specific chain.
@@ -124,68 +105,3 @@ object BlockchainRegistry {
     internal suspend fun <T> withRegistry(block: suspend BlockchainAnchorRegistry.() -> T): T =
         block(defaultRegistry)
 }
-
-/**
- * Helper function to anchor a typed value to a blockchain.
- * 
- * This function provides type-safe anchoring by automatically serializing
- * the value to JSON and anchoring it using the registered client for the
- * specified chain.
- * 
- * **Example Usage**:
- * ```
- * @Serializable
- * data class MyData(val name: String, val value: Int)
- * 
- * val data = MyData("test", 42)
- * val result = anchorTyped(data, MyData.serializer(), "algorand:testnet")
- * println("Anchored at: ${result.ref.txHash}")
- * ```
- * 
- * @param value The value to anchor (must be serializable)
- * @param serializer The Kotlinx Serialization serializer for the type
- * @param targetChainId The chain ID to anchor to (must have a registered client)
- * @param mediaType The media type of the payload (default: "application/json")
- * @return An AnchorResult containing the anchor reference and payload
- * @throws IllegalArgumentException if no client is registered for the chain ID
- * @throws BlockchainTransactionException if anchoring fails
- */
-suspend fun <T> anchorTyped(
-    value: T,
-    serializer: kotlinx.serialization.KSerializer<T>,
-    targetChainId: String,
-    mediaType: String = "application/json"
-): AnchorResult = BlockchainRegistry.withRegistry {
-    anchorTyped(value, serializer, targetChainId, mediaType)
-}
-
-/**
- * Helper function to read a typed value from a blockchain anchor.
- * 
- * This function provides type-safe reading by automatically deserializing
- * the payload from the anchor reference using the registered client.
- * 
- * **Example Usage**:
- * ```
- * @Serializable
- * data class MyData(val name: String, val value: Int)
- * 
- * val ref = AnchorRef(chainId = "algorand:testnet", txHash = "...")
- * val data = readTyped<MyData>(ref, MyData.serializer())
- * println("Read: ${data.name}")
- * ```
- * 
- * @param ref The anchor reference pointing to the anchored data
- * @param serializer The Kotlinx Serialization serializer for the type
- * @return The deserialized value
- * @throws IllegalArgumentException if no client is registered for the chain ID
- * @throws NotFoundException if the anchor reference does not exist
- * @throws BlockchainTransactionException if reading fails
- */
-suspend fun <T> readTyped(
-    ref: AnchorRef,
-    serializer: kotlinx.serialization.KSerializer<T>
-): T = BlockchainRegistry.withRegistry {
-    readTyped(ref, serializer)
-}
-

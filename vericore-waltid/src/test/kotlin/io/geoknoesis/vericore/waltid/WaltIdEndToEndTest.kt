@@ -1,8 +1,7 @@
 package io.geoknoesis.vericore.waltid
 
-import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -16,14 +15,10 @@ import kotlin.test.assertTrue
  */
 class WaltIdEndToEndTest {
 
-    @AfterEach
-    fun cleanup() {
-        DidRegistry.clear()
-    }
-
     @Test
     fun discoverAndRegister_shouldDiscoverAndRegisterWaltIdAdapters() = runBlocking {
-        val result = WaltIdIntegration.discoverAndRegister()
+        val registry = DidMethodRegistry()
+        val result = WaltIdIntegration.discoverAndRegister(registry)
         
         assertNotNull(result.kms, "KMS should be discovered")
         assertTrue(result.registeredDidMethods.isNotEmpty(), "At least one DID method should be registered")
@@ -34,10 +29,11 @@ class WaltIdEndToEndTest {
     @Test
     fun endToEnd_didCreationAndResolution() = runBlocking {
         // Setup integration
-        val result = WaltIdIntegration.discoverAndRegister()
+        val registry = DidMethodRegistry()
+        val result = WaltIdIntegration.discoverAndRegister(registry)
         
         // Get the key method
-        val keyMethod = DidRegistry.get("key")
+        val keyMethod = registry.get("key")
         assertNotNull(keyMethod, "did:key method should be registered")
         
         // Create a DID
@@ -47,16 +43,17 @@ class WaltIdEndToEndTest {
         assertTrue(document.verificationMethod.isNotEmpty(), "DID document should have verification methods")
         
         // Resolve the DID
-        val resolutionResult = DidRegistry.resolve(document.id)
+        val resolutionResult = registry.resolve(document.id)
         assertNotNull(resolutionResult.document, "DID should resolve to a document")
         assertEquals(document.id, resolutionResult.document?.id, "Resolved document should match created document")
     }
 
     @Test
     fun endToEnd_didWebCreation() = runBlocking {
-        val result = WaltIdIntegration.discoverAndRegister()
+        val registry = DidMethodRegistry()
+        val result = WaltIdIntegration.discoverAndRegister(registry)
         
-        val webMethod = DidRegistry.get("web")
+        val webMethod = registry.get("web")
         assertNotNull(webMethod, "did:web method should be registered")
         
         val document = webMethod!!.createDid(mapOf(
@@ -72,15 +69,16 @@ class WaltIdEndToEndTest {
     @Test
     fun `integration with VeriCore workflow`() = runBlocking {
         // This test demonstrates a complete VeriCore workflow using walt.id adapters
-        val result = WaltIdIntegration.discoverAndRegister()
+        val registry = DidMethodRegistry()
+        val result = WaltIdIntegration.discoverAndRegister(registry)
         
         // 1. Create a DID for an issuer
-        val keyMethod = DidRegistry.get("key")!!
+        val keyMethod = registry.get("key")!!
         val issuerDoc = keyMethod.createDid(mapOf("algorithm" to "Ed25519"))
         val issuerDid = issuerDoc.id
         
         // 2. Verify the DID can be resolved
-        val resolutionResult = DidRegistry.resolve(issuerDid)
+        val resolutionResult = registry.resolve(issuerDid)
         assertNotNull(resolutionResult.document)
         assertEquals(issuerDid, resolutionResult.document?.id)
         
@@ -94,11 +92,12 @@ class WaltIdEndToEndTest {
 
     @Test
     fun `multiple DID methods can coexist`() = runBlocking {
-        val result = WaltIdIntegration.discoverAndRegister()
+        val registry = DidMethodRegistry()
+        val result = WaltIdIntegration.discoverAndRegister(registry)
         
         // Both methods should be available
-        val keyMethod = DidRegistry.get("key")
-        val webMethod = DidRegistry.get("web")
+        val keyMethod = registry.get("key")
+        val webMethod = registry.get("web")
         
         assertNotNull(keyMethod, "did:key should be available")
         assertNotNull(webMethod, "did:web should be available")

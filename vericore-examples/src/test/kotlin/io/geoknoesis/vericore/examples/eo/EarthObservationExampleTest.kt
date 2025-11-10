@@ -1,7 +1,6 @@
 package io.geoknoesis.vericore.examples.eo
 
-import io.geoknoesis.vericore.anchor.BlockchainRegistry
-import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.anchor.DefaultBlockchainAnchorRegistry
 import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.integrity.IntegrityVerifier
@@ -52,10 +51,8 @@ class EarthObservationExampleTest {
     @Test
     fun `test DID creation for data provider`() = runBlocking {
         // Setup
-        DidRegistry.clear()
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        DidRegistry.register(didMethod)
         
         val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
         val issuerDid = issuerDoc.id
@@ -68,10 +65,9 @@ class EarthObservationExampleTest {
     @Test
     fun `test artifact creation`() = runBlocking {
         // Setup
-        DidRegistry.clear()
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        DidRegistry.register(didMethod)
+        
         val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
         val issuerDid = issuerDoc.id
 
@@ -113,10 +109,9 @@ class EarthObservationExampleTest {
     @Test
     fun `test linkset creation`() = runBlocking {
         // Setup
-        DidRegistry.clear()
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        DidRegistry.register(didMethod)
+        
         val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
         val issuerDid = issuerDoc.id
 
@@ -179,14 +174,10 @@ class EarthObservationExampleTest {
     @Test
     fun `test blockchain anchoring`() = runBlocking {
         // Setup
-        DidRegistry.clear()
-        BlockchainRegistry.clear()
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
-        DidRegistry.register(didMethod)
-        BlockchainRegistry.register(chainId, anchorClient)
         
         val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
         val issuerDid = issuerDoc.id
@@ -241,14 +232,11 @@ class EarthObservationExampleTest {
     @Test
     fun `test integrity verification`() = runBlocking {
         // Setup
-        DidRegistry.clear()
-        BlockchainRegistry.clear()
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
-        DidRegistry.register(didMethod)
-        BlockchainRegistry.register(chainId, anchorClient)
+        val blockchainRegistry = DefaultBlockchainAnchorRegistry().apply { register(chainId, anchorClient) }
         
         val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
         val issuerDid = issuerDoc.id
@@ -360,7 +348,8 @@ class EarthObservationExampleTest {
                 "metadata-1" to metadataArtifact,
                 "provenance-1" to provenanceArtifact
             ),
-            anchorRef = anchorResult.ref
+            anchorRef = anchorResult.ref,
+            registry = blockchainRegistry
         )
 
         // Check individual verification steps
@@ -384,14 +373,10 @@ class EarthObservationExampleTest {
     @Test
     fun `test reading anchored payload`() = runBlocking {
         // Setup
-        DidRegistry.clear()
-        BlockchainRegistry.clear()
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
-        DidRegistry.register(didMethod)
-        BlockchainRegistry.register(chainId, anchorClient)
         
         val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
         val issuerDid = issuerDoc.id

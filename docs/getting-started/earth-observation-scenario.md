@@ -200,8 +200,10 @@ fun main() = runBlocking {
     
     // Register services so VeriCore can find them
     // This is like adding tools to your toolbox
-    DidRegistry.register(didMethod)
-    BlockchainRegistry.register(chainId, anchorClient)
+    val didRegistry = DidMethodRegistry().apply { register(didMethod) }
+    val blockchainRegistry = BlockchainAnchorRegistry().apply {
+        register(chainId, anchorClient)
+    }
     
     println("✓ Services configured")
     println("  - Key Management: In-memory")
@@ -825,10 +827,12 @@ Anyone can verify the chain using these components!
 
 **Solution**: Register the blockchain client before using it:
 ```kotlin
-BlockchainRegistry.register(chainId, anchorClient)
+val blockchainRegistry = BlockchainAnchorRegistry().apply {
+    register(chainId, anchorClient)
+}
 ```
 
-**Check**: Ensure this happens before calling `anchorClient.writePayload()`.
+**Check**: Ensure the registry registration happens before calling `anchorClient.writePayload()`.
 
 ### Issue: DID method not found
 
@@ -838,10 +842,10 @@ BlockchainRegistry.register(chainId, anchorClient)
 
 **Solution**: Register the DID method:
 ```kotlin
-DidRegistry.register(didMethod)
+val didRegistry = DidMethodRegistry().apply { register(didMethod) }
 ```
 
-**Check**: Ensure this happens before calling `didMethod.createDid()` or `DidRegistry.resolve()`.
+**Check**: Ensure registration happens before calling `didMethod.createDid()` or resolving through `didRegistry`.
 
 ### Issue: Verification fails unexpectedly
 

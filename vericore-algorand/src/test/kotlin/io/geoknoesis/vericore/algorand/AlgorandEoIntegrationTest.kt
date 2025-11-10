@@ -1,8 +1,7 @@
 package io.geoknoesis.vericore.algorand
 
-import io.geoknoesis.vericore.anchor.*
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import io.geoknoesis.vericore.did.DidDocument
-import io.geoknoesis.vericore.did.DidRegistry
 import io.geoknoesis.vericore.json.DigestUtils
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.integrity.IntegrityVerifier
@@ -10,7 +9,6 @@ import io.geoknoesis.vericore.testkit.integrity.TestDataBuilders
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 
@@ -27,12 +25,6 @@ import kotlin.test.*
  */
 class AlgorandEoIntegrationTest {
 
-    @AfterEach
-    fun cleanup() {
-        DidRegistry.clear()
-        BlockchainRegistry.clear()
-    }
-
     @Test
     fun `end-to-end EO integrity chain verification with Algorand`() = runBlocking {
         // Setup: Create DID for issuer and register Algorand blockchain anchor client (testnet)
@@ -47,8 +39,9 @@ class AlgorandEoIntegrationTest {
             )
         )
 
-        DidRegistry.register(didMethod)
-        BlockchainRegistry.register(chainId, anchorClient)
+        val blockchainRegistry = BlockchainAnchorRegistry().apply {
+            register(chainId, anchorClient)
+        }
 
         // Step 1: Create a DID for the issuer
         val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
@@ -224,7 +217,8 @@ class AlgorandEoIntegrationTest {
             vc = vcWithDigest,
             linkset = linksetWithDigest,
             artifacts = artifacts,
-            anchorRef = anchorResult.ref
+            anchorRef = anchorResult.ref,
+            registry = blockchainRegistry
         )
 
         // Verify all steps passed
@@ -271,8 +265,6 @@ class AlgorandEoIntegrationTest {
     fun `test Algorand blockchain anchoring for EO dataset`() = runBlocking {
         val chainId = AlgorandBlockchainAnchorClient.TESTNET
         val anchorClient = AlgorandBlockchainAnchorClient(chainId, emptyMap())
-
-        BlockchainRegistry.register(chainId, anchorClient)
 
         // Create a simple EO dataset digest payload
         val digestPayload = buildJsonObject {

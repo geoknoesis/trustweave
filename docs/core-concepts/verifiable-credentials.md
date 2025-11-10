@@ -112,11 +112,14 @@ Verify a credential or presentation:
 import io.geoknoesis.vericore.credential.CredentialVerificationOptions
 import io.geoknoesis.vericore.credential.did.CredentialDidResolver
 import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
-import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import io.geoknoesis.vericore.did.toCredentialDidResolution
 
+val didRegistry = DidMethodRegistry()
+// register DID methods here, e.g. didRegistry.register(didMethod)
+
 val didResolver = CredentialDidResolver { did ->
-    DidRegistry.resolve(did).toCredentialDidResolution()
+    didRegistry.resolve(did).toCredentialDidResolution()
 }
 
 val verifier = CredentialVerifier(didResolver)

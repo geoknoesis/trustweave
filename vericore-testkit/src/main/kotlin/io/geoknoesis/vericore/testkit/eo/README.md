@@ -101,7 +101,7 @@ fun `test EO scenario step by step`() = runBlocking {
     // Setup DID method
     val kms = InMemoryKeyManagementService()
     val didMethod = DidKeyMockMethod(kms)
-    DidRegistry.register(didMethod)
+    didRegistry.register(didMethod)
     
     // Create issuer DID
     val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
@@ -110,6 +110,7 @@ fun `test EO scenario step by step`() = runBlocking {
     // Create anchor client
     val chainId = "testnet:local"
     val anchorClient = createAnchorClient(chainId, getAnchorClientOptions())
+    blockchainRegistry.register(chainId, anchorClient)
     
     // Create scenario
     val scenario = EoTestIntegration.createScenario(
@@ -121,7 +122,7 @@ fun `test EO scenario step by step`() = runBlocking {
     )
     
     // Execute scenario
-    val result = EoTestIntegration.executeScenario(scenario)
+    val result = EoTestIntegration.executeScenario(scenario, blockchainRegistry)
     
     // Verify results
     assertTrue(result.verificationResult.valid)

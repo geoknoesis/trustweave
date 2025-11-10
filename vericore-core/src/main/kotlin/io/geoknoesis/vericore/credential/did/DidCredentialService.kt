@@ -3,6 +3,7 @@ package io.geoknoesis.vericore.credential.did
 import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
 import io.geoknoesis.vericore.credential.issuer.CredentialIssuer
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.buildJsonObject
@@ -11,7 +12,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 /**
- * DID-based credential service.
+ * DID-linked credential service.
  * 
  * Integrates credential issuance with DID resolution and management.
  * Provides high-level API for issuing credentials to DIDs and
@@ -19,13 +20,13 @@ import kotlinx.serialization.json.put
  * 
  * **Example Usage**:
  * ```kotlin
- * val didCredentialService = DidCredentialService(
+ * val service = DidLinkedCredentialService(
  *     didRegistry = didRegistry,
  *     credentialIssuer = credentialIssuer
  * )
  * 
  * // Issue credential for a DID
- * val credential = didCredentialService.issueCredentialForDid(
+ * val credential = service.issueCredentialForDid(
  *     subjectDid = "did:key:...",
  *     credentialType = "PersonCredential",
  *     claims = mapOf(
@@ -37,11 +38,11 @@ import kotlinx.serialization.json.put
  * )
  * 
  * // Resolve credential subject DID
- * val subjectDid = didCredentialService.resolveCredentialSubject(credential)
+ * val subjectDid = service.resolveCredentialSubject(credential)
  * ```
  */
-class DidCredentialService(
-    private val didRegistry: Any, // DidRegistry - using Any to avoid dependency
+open class DidLinkedCredentialService(
+    private val didRegistry: DidMethodRegistry,
     private val credentialIssuer: CredentialIssuer
 ) {
     /**
@@ -154,13 +155,20 @@ class DidCredentialService(
      * @throws IllegalArgumentException if DID cannot be resolved
      */
     private suspend fun resolveDid(did: String) {
-        // TODO: Use DidRegistry.resolve when dependency is available
-        // For now, this is a placeholder that assumes DID is valid
-        // In full implementation:
-        // val result = (didRegistry as DidRegistry).resolve(did)
-        // if (result.document == null) {
-        //     throw IllegalArgumentException("DID not found: $did")
-        // }
+        val result = didRegistry.resolve(did)
+        if (result.document == null) {
+            throw IllegalArgumentException("DID not found: $did")
+        }
     }
 }
+
+@Deprecated(
+    message = "Renamed to DidLinkedCredentialService to better communicate intent.",
+    replaceWith = ReplaceWith("DidLinkedCredentialService(didRegistry, credentialIssuer)"),
+    level = DeprecationLevel.WARNING
+)
+class DidCredentialService(
+    didRegistry: DidMethodRegistry,
+    credentialIssuer: CredentialIssuer
+) : DidLinkedCredentialService(didRegistry, credentialIssuer)
 

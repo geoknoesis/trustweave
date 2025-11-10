@@ -4,6 +4,8 @@ import io.geoknoesis.vericore.anchor.AnchorResult
 import io.geoknoesis.vericore.anchor.BlockchainAnchorClient
 import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import io.geoknoesis.vericore.spi.services.WalletFactory
+import io.geoknoesis.vericore.credential.CredentialService
+import io.geoknoesis.vericore.credential.CredentialServiceRegistry
 import io.geoknoesis.vericore.credential.CredentialVerificationOptions
 import io.geoknoesis.vericore.credential.CredentialVerificationResult
 import io.geoknoesis.vericore.credential.did.CredentialDidResolver
@@ -12,6 +14,7 @@ import io.geoknoesis.vericore.credential.issuer.CredentialIssuer
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
 import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
 import io.geoknoesis.vericore.credential.wallet.Wallet
+import io.geoknoesis.vericore.credential.wallet.WalletProvider
 import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
 import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
 import io.geoknoesis.vericore.did.Did
@@ -21,9 +24,6 @@ import io.geoknoesis.vericore.did.DidMethod
 import io.geoknoesis.vericore.did.DidResolutionResult
 import io.geoknoesis.vericore.did.DidMethodRegistry
 import io.geoknoesis.vericore.kms.KeyManagementService
-import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
-import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
-import io.geoknoesis.vericore.testkit.services.TestkitWalletFactory
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import java.util.UUID
@@ -214,16 +214,21 @@ class VeriCore private constructor(
      * 
      * @param holderDid DID of the wallet holder
      * @param walletId Optional wallet identifier (generated if not provided)
+     * @param provider Strongly typed wallet provider identifier (defaults to in-memory)
+     * @param options Provider-specific configuration passed to the underlying [WalletFactory]
      * @return A new wallet instance
      */
     suspend fun createWallet(
         holderDid: String,
-        walletId: String = UUID.randomUUID().toString()
+        walletId: String = UUID.randomUUID().toString(),
+        provider: WalletProvider = WalletProvider.InMemory,
+        options: Map<String, Any?> = emptyMap()
     ): Wallet {
         val wallet = context.walletFactory.create(
-            providerName = "inMemory",
+            providerName = provider.id,
             walletId = walletId,
-            holderDid = holderDid
+            holderDid = holderDid,
+            options = options
         )
 
         return wallet as? Wallet ?: throw IllegalStateException(
@@ -403,7 +408,8 @@ class VeriCoreContext private constructor(
     internal val kms: KeyManagementService,
     internal val walletFactory: WalletFactory,
     internal val didRegistry: DidMethodRegistry,
-    internal val blockchainRegistry: BlockchainAnchorRegistry
+    internal val blockchainRegistry: BlockchainAnchorRegistry,
+    internal val credentialRegistry: CredentialServiceRegistry
 ) {
     
     /**
@@ -433,6 +439,12 @@ class VeriCoreContext private constructor(
     suspend fun resolveDid(did: String): DidResolutionResult {
         return didRegistry.resolve(did)
     }
+
+    fun didMethodRegistry(): DidMethodRegistry = didRegistry
+
+    fun blockchainRegistry(): BlockchainAnchorRegistry = blockchainRegistry
+
+    fun credentialRegistry(): CredentialServiceRegistry = credentialRegistry
     
     companion object {
         fun fromConfig(config: VeriCoreConfig): VeriCoreContext {
@@ -440,7 +452,8 @@ class VeriCoreContext private constructor(
                 kms = config.kms,
                 walletFactory = config.walletFactory,
                 didRegistry = config.didRegistry,
-                blockchainRegistry = config.blockchainRegistry
+                blockchainRegistry = config.blockchainRegistry,
+                credentialRegistry = config.credentialRegistry
             )
         }
     }
@@ -453,20 +466,23 @@ data class VeriCoreConfig(
     val kms: KeyManagementService,
     val walletFactory: WalletFactory,
     val didRegistry: DidMethodRegistry,
-    val blockchainRegistry: BlockchainAnchorRegistry = BlockchainAnchorRegistry()
+    val blockchainRegistry: BlockchainAnchorRegistry = BlockchainAnchorRegistry(),
+    val credentialRegistry: CredentialServiceRegistry = CredentialServiceRegistry.create()
 ) {
     fun toBuilder(): Builder = Builder(
         kms = kms,
         walletFactory = walletFactory,
         didRegistry = didRegistry.snapshot(),
-        blockchainRegistry = blockchainRegistry.snapshot()
+        blockchainRegistry = blockchainRegistry.snapshot(),
+        credentialRegistry = credentialRegistry.snapshot()
     )
     
     class Builder internal constructor(
         private var kms: KeyManagementService?,
         private var walletFactory: WalletFactory?,
         private val didRegistry: DidMethodRegistry,
-        private val blockchainRegistry: BlockchainAnchorRegistry
+        private val blockchainRegistry: BlockchainAnchorRegistry,
+        private val credentialRegistry: CredentialServiceRegistry
     ) {
         fun kms(kms: KeyManagementService) {
             this.kms = kms
@@ -482,6 +498,14 @@ data class VeriCoreConfig(
         
         fun registerBlockchainClient(chainId: String, client: BlockchainAnchorClient) {
             blockchainRegistry.register(chainId, client)
+        }
+        
+        fun registerCredentialService(service: CredentialService) {
+            credentialRegistry.register(service)
+        }
+        
+        fun unregisterCredentialService(providerName: String) {
+            credentialRegistry.unregister(providerName)
         }
         
         fun removeBlockchainClient(chainId: String) {
@@ -501,26 +525,19 @@ data class VeriCoreConfig(
                 kms = kms,
                 walletFactory = walletFactory,
                 didRegistry = didRegistry.snapshot(),
-                blockchainRegistry = blockchainRegistry.snapshot()
+                blockchainRegistry = blockchainRegistry.snapshot(),
+                credentialRegistry = credentialRegistry.snapshot()
             )
         }
     }
     
     companion object {
-        fun default(): VeriCoreConfig {
-            val kms = InMemoryKeyManagementService()
-            val walletFactory = TestkitWalletFactory()
-            val didRegistry = DidMethodRegistry()
-            val didMethod = DidKeyMockMethod(kms)
-            didRegistry.register(didMethod)
-            
-            return VeriCoreConfig(
-                kms = kms,
-                walletFactory = walletFactory,
-                didRegistry = didRegistry,
-                blockchainRegistry = BlockchainAnchorRegistry()
-            )
-        }
+        @Deprecated(
+            message = "Use VeriCoreDefaults.inMemoryTest() or construct a VeriCoreConfig manually.",
+            replaceWith = ReplaceWith("VeriCoreDefaults.inMemoryTest()"),
+            level = DeprecationLevel.WARNING
+        )
+        fun default(): VeriCoreConfig = VeriCoreDefaults.inMemoryTest()
     }
 }
 

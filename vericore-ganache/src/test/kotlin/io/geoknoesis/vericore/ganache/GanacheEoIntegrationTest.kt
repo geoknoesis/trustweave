@@ -14,8 +14,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import kotlin.test.*
-import io.geoknoesis.vericore.anchor.BlockchainRegistry
-import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.anchor.DefaultBlockchainAnchorRegistry
 
 /**
  * Earth Observation (EO) integration test scenario for Ganache.
@@ -53,8 +52,6 @@ class GanacheEoIntegrationTest {
 
     @AfterEach
     fun cleanup() {
-        BlockchainRegistry.clear()
-        DidRegistry.clear()
     }
 
     @Test
@@ -77,8 +74,7 @@ class GanacheEoIntegrationTest {
             )
         )
 
-        BlockchainRegistry.register(chainId, anchorClient)
-        DidRegistry.register(didMethod)
+        val blockchainRegistry = DefaultBlockchainAnchorRegistry().apply { register(chainId, anchorClient) }
 
         // Step 1: Create a DID for the issuer
         val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
@@ -254,7 +250,8 @@ class GanacheEoIntegrationTest {
             vc = vcWithDigest,
             linkset = linksetWithDigest,
             artifacts = artifacts,
-            anchorRef = anchorResult.ref
+            anchorRef = anchorResult.ref,
+            registry = blockchainRegistry
         )
 
         // Verify all steps passed
@@ -311,8 +308,6 @@ class GanacheEoIntegrationTest {
                 "privateKey" to privateKey
             )
         )
-
-        BlockchainRegistry.register(chainId, anchorClient)
 
         // Create a simple EO dataset digest payload
         val digestPayload = buildJsonObject {

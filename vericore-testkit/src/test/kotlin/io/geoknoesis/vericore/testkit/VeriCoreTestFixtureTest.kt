@@ -1,12 +1,8 @@
 package io.geoknoesis.vericore.testkit
 
-import io.geoknoesis.vericore.anchor.BlockchainRegistry
-import io.geoknoesis.vericore.did.DidRegistry
 import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 
@@ -14,13 +10,6 @@ import kotlin.test.*
  * Comprehensive tests for VeriCoreTestFixture.
  */
 class VeriCoreTestFixtureTest {
-
-    @BeforeEach
-    @AfterEach
-    fun cleanup() {
-        DidRegistry.clear()
-        BlockchainRegistry.clear()
-    }
 
     @Test
     fun `test builder creates fixture with defaults`() = runBlocking {
@@ -108,13 +97,13 @@ class VeriCoreTestFixtureTest {
             .withInMemoryBlockchainClient("algorand:testnet")
             .build()
         
-        assertNotNull(BlockchainRegistry.get("algorand:testnet"))
-        assertNotNull(DidRegistry.get("key"))
+        assertNotNull(fixture.getBlockchainRegistry().get("algorand:testnet"))
+        assertNotNull(fixture.getDidRegistry().get("key"))
         
         fixture.close()
         
-        assertNull(BlockchainRegistry.get("algorand:testnet"))
-        assertNull(DidRegistry.get("key"))
+        assertNull(fixture.getBlockchainRegistry().get("algorand:testnet"))
+        assertNull(fixture.getDidRegistry().get("key"))
     }
 
     @Test

@@ -1,10 +1,11 @@
 package io.geoknoesis.vericore.testkit
 
 import io.geoknoesis.vericore.anchor.BlockchainAnchorClient
-import io.geoknoesis.vericore.anchor.BlockchainRegistry
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
+import io.geoknoesis.vericore.credential.CredentialServiceRegistry
 import io.geoknoesis.vericore.did.DidDocument
 import io.geoknoesis.vericore.did.DidMethod
-import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
@@ -40,6 +41,9 @@ import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 class VeriCoreTestFixture private constructor(
     private val kms: io.geoknoesis.vericore.kms.KeyManagementService,
     private val didMethod: DidMethod,
+    private val didRegistry: DidMethodRegistry,
+    private val blockchainRegistry: BlockchainAnchorRegistry,
+    private val credentialRegistry: CredentialServiceRegistry,
     private val blockchainClients: Map<String, BlockchainAnchorClient>
 ) : AutoCloseable {
     
@@ -52,6 +56,11 @@ class VeriCoreTestFixture private constructor(
      * Gets the DID Method.
      */
     fun getDidMethod(): DidMethod = didMethod
+
+    /**
+     * Exposes the DID registry used by the fixture.
+     */
+    fun getDidRegistry(): DidMethodRegistry = didRegistry
     
     /**
      * Gets a blockchain anchor client by chain ID.
@@ -62,6 +71,10 @@ class VeriCoreTestFixture private constructor(
     fun getBlockchainClient(chainId: String): BlockchainAnchorClient? {
         return blockchainClients[chainId]
     }
+
+    fun getBlockchainRegistry(): BlockchainAnchorRegistry = blockchainRegistry
+
+    fun getCredentialRegistry(): CredentialServiceRegistry = credentialRegistry
     
     /**
      * Gets all registered blockchain clients.
@@ -82,8 +95,9 @@ class VeriCoreTestFixture private constructor(
      * Cleans up all registries (for testing).
      */
     override fun close() {
-        DidRegistry.clear()
-        BlockchainRegistry.clear()
+        didRegistry.clear()
+        blockchainRegistry.clear()
+        credentialRegistry.clear()
     }
     
     /**
@@ -93,6 +107,9 @@ class VeriCoreTestFixture private constructor(
         private var kms: io.geoknoesis.vericore.kms.KeyManagementService? = null
         private var didMethod: DidMethod? = null
         private val blockchainClients = mutableMapOf<String, BlockchainAnchorClient>()
+        private var didRegistry: DidMethodRegistry? = null
+        private var blockchainRegistry: BlockchainAnchorRegistry? = null
+        private var credentialRegistry: CredentialServiceRegistry? = null
         
         /**
          * Sets the Key Management Service.
@@ -156,16 +173,24 @@ class VeriCoreTestFixture private constructor(
         fun build(): VeriCoreTestFixture {
             val kmsInstance = kms ?: InMemoryKeyManagementService()
             val didMethodInstance = didMethod ?: DidKeyMockMethod(kmsInstance)
-            
-            // Register DID method
-            DidRegistry.register(didMethodInstance)
-            
-            // Register blockchain clients
-            blockchainClients.forEach { (chainId, client) ->
-                BlockchainRegistry.register(chainId, client)
+            val didRegistryInstance = (didRegistry ?: DidMethodRegistry()).also {
+                it.register(didMethodInstance)
             }
+            val blockchainRegistryInstance = (blockchainRegistry ?: BlockchainAnchorRegistry()).also { registry ->
+                blockchainClients.forEach { (chainId, client) ->
+                    registry.register(chainId, client)
+                }
+            }
+            val credentialRegistryInstance = credentialRegistry ?: CredentialServiceRegistry.create()
             
-            return VeriCoreTestFixture(kmsInstance, didMethodInstance, blockchainClients.toMap())
+            return VeriCoreTestFixture(
+                kms = kmsInstance,
+                didMethod = didMethodInstance,
+                didRegistry = didRegistryInstance,
+                blockchainRegistry = blockchainRegistryInstance,
+                credentialRegistry = credentialRegistryInstance,
+                blockchainClients = blockchainClients.toMap()
+            )
         }
     }
     

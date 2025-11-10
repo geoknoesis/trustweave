@@ -1,6 +1,6 @@
 package io.geoknoesis.vericore.waltid
 
-import io.geoknoesis.vericore.did.DidRegistry
+import io.geoknoesis.vericore.did.DidMethodRegistry
 import io.geoknoesis.vericore.did.spi.DidMethodProvider
 import io.geoknoesis.vericore.kms.KeyManagementService
 import io.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider
@@ -18,7 +18,10 @@ object WaltIdIntegration {
      * @param options Configuration options
      * @return A WaltIdIntegrationResult containing registered services
      */
-    fun discoverAndRegister(options: Map<String, Any?> = emptyMap()): WaltIdIntegrationResult {
+    fun discoverAndRegister(
+        registry: DidMethodRegistry,
+        options: Map<String, Any?> = emptyMap()
+    ): WaltIdIntegrationResult {
         // Discover KMS providers
         val kmsProviders = ServiceLoader.load(KeyManagementServiceProvider::class.java)
         val waltIdKmsProvider = kmsProviders.find { it.name == "waltid" }
@@ -36,13 +39,14 @@ object WaltIdIntegration {
         for (methodName in waltIdDidProvider.supportedMethods) {
             val method = waltIdDidProvider.create(methodName, options + mapOf("kms" to kms))
             if (method != null) {
-                DidRegistry.register(method)
+                registry.register(method)
                 registeredMethods.add(methodName)
             }
         }
 
         return WaltIdIntegrationResult(
             kms = kms,
+            registry = registry,
             registeredDidMethods = registeredMethods
         )
     }
@@ -57,6 +61,7 @@ object WaltIdIntegration {
      */
     fun setup(
         kms: KeyManagementService,
+        registry: DidMethodRegistry,
         didMethods: List<String> = listOf("key", "web"),
         options: Map<String, Any?> = emptyMap()
     ): WaltIdIntegrationResult {
@@ -71,7 +76,7 @@ object WaltIdIntegration {
             if (methodName in waltIdDidProvider.supportedMethods) {
                 val method = waltIdDidProvider.create(methodName, options + mapOf("kms" to kms))
                 if (method != null) {
-                    DidRegistry.register(method)
+                    registry.register(method)
                     registeredMethods.add(methodName)
                 }
             }
@@ -79,6 +84,7 @@ object WaltIdIntegration {
 
         return WaltIdIntegrationResult(
             kms = kms,
+            registry = registry,
             registeredDidMethods = registeredMethods
         )
     }
@@ -89,6 +95,7 @@ object WaltIdIntegration {
  */
 data class WaltIdIntegrationResult(
     val kms: KeyManagementService,
+    val registry: DidMethodRegistry,
     val registeredDidMethods: List<String>
 )
 

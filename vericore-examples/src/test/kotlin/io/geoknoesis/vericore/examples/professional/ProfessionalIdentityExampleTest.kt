@@ -48,7 +48,7 @@ class ProfessionalIdentityExampleTest {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        val professionalDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val professionalDid = didMethod.createDid()
         
         val wallet = InMemoryWallet(
             walletDid = professionalDid.id,
@@ -113,7 +113,7 @@ class ProfessionalIdentityExampleTest {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        val professionalDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val professionalDid = didMethod.createDid()
         
         val wallet = InMemoryWallet(
             walletDid = professionalDid.id,
@@ -170,7 +170,7 @@ class ProfessionalIdentityExampleTest {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        val professionalDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val professionalDid = didMethod.createDid()
         
         val wallet = InMemoryWallet(
             walletDid = professionalDid.id,
@@ -208,7 +208,7 @@ class ProfessionalIdentityExampleTest {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        val professionalDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val professionalDid = didMethod.createDid()
         
         val wallet = InMemoryWallet(
             walletDid = professionalDid.id,
@@ -250,7 +250,7 @@ class ProfessionalIdentityExampleTest {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        val professionalDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val professionalDid = didMethod.createDid()
         
         val wallet = InMemoryWallet(
             walletDid = professionalDid.id,
@@ -307,7 +307,7 @@ class ProfessionalIdentityExampleTest {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        val professionalDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val professionalDid = didMethod.createDid()
         
         val wallet = InMemoryWallet(
             walletDid = professionalDid.id,
@@ -356,7 +356,7 @@ class ProfessionalIdentityExampleTest {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        val professionalDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val professionalDid = didMethod.createDid()
         
         val wallet = InMemoryWallet(
             walletDid = professionalDid.id,

@@ -10,6 +10,7 @@ import io.geoknoesis.vericore.credential.wallet.CredentialOrganization
 import io.geoknoesis.vericore.credential.wallet.CredentialPresentation
 import io.geoknoesis.vericore.credential.wallet.DidManagement
 import io.geoknoesis.vericore.credential.wallet.Wallet
+import io.geoknoesis.vericore.did.DidCreationOptions
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.time.Instant
@@ -317,7 +318,7 @@ class InMemoryWallet(
         managedDids.add(holderDid)
     }
     
-    override suspend fun createDid(method: String, options: Map<String, Any?>): String {
+    override suspend fun createDid(method: String, options: DidCreationOptions): String {
         val did = "did:$method:test-${UUID.randomUUID()}"
         managedDids.add(did)
         return did

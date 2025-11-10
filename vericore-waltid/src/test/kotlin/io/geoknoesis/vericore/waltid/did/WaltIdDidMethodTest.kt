@@ -15,7 +15,7 @@ class WaltIdKeyMethodTest {
         val kms = InMemoryKeyManagementService()
         val method = WaltIdKeyMethod(kms)
 
-        val document = method.createDid(mapOf("algorithm" to "Ed25519"))
+        val document = method.createDid()
 
         assertNotNull(document.id)
         assertTrue(document.id.startsWith("did:key:"))
@@ -70,7 +70,11 @@ class WaltIdWebMethodTest {
         val kms = InMemoryKeyManagementService()
         val method = WaltIdWebMethod(kms)
 
-        val document = method.createDid(mapOf("domain" to "example.com", "algorithm" to "Ed25519"))
+        val document = method.createDid(
+            didCreationOptions {
+                property("domain", "example.com")
+            }
+        )
 
         assertNotNull(document.id)
         assertEquals("did:web:example.com", document.id)
@@ -102,9 +106,9 @@ class WaltIdDidMethodProviderTest {
         assertTrue(provider.supportedMethods.contains("key"))
         assertTrue(provider.supportedMethods.contains("web"))
 
-        val method = provider.create("key", mapOf("kms" to kms))
+        val method = provider.create("key", didCreationOptions { property("kms", kms) })
         assertNotNull(method)
-        assertEquals("key", method?.method)
+        assertEquals("key", method.method)
     }
 
     @Test
@@ -112,9 +116,9 @@ class WaltIdDidMethodProviderTest {
         val kms = InMemoryKeyManagementService()
         val provider = WaltIdDidMethodProvider()
 
-        val method = provider.create("web", mapOf("kms" to kms))
+        val method = provider.create("web", didCreationOptions { property("kms", kms) })
         assertNotNull(method)
-        assertEquals("web", method?.method)
+        assertEquals("web", method.method)
     }
 
     @Test
@@ -122,7 +126,7 @@ class WaltIdDidMethodProviderTest {
         val kms = InMemoryKeyManagementService()
         val provider = WaltIdDidMethodProvider()
 
-        val method = provider.create("unsupported", mapOf("kms" to kms))
+        val method = provider.create("unsupported", didCreationOptions { property("kms", kms) })
         assertEquals(null, method)
     }
 }

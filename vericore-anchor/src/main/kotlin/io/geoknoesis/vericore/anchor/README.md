@@ -11,7 +11,7 @@ The `io.geoknoesis.vericore.anchor` package provides chain-agnostic interfaces a
 - **`AbstractBlockchainAnchorClient`**: Base class reducing code duplication across adapters (~40% reduction)
 - **`AnchorRef`**: Reference to a blockchain anchor (chain ID + transaction hash)
 - **`AnchorResult`**: Result of anchoring operations
-- **`BlockchainRegistry`**: Registry for managing blockchain clients by chain ID
+Use `BlockchainAnchorRegistry` instances (or `VeriCoreContext.blockchainRegistry()`) to manage clients explicitly.
 - **`ChainId`**: Type-safe chain identifier (CAIP-2 format) with compile-time validation
 
 ### Helper Functions
@@ -60,7 +60,8 @@ val options = AlgorandOptions(
 
 // Create client with type-safe configuration
 val client = AlgorandBlockchainAnchorClient(chainId.toString(), options)
-BlockchainRegistry.register(chainId.toString(), client)
+val registry = BlockchainAnchorRegistry()
+registry.register(chainId.toString(), client)
 
 // Anchor data
 val payload = buildJsonObject { put("data", "value") }
@@ -201,7 +202,7 @@ Chain IDs follow CAIP-2 format and are type-safe:
 
 ## Thread Safety
 
-- **`BlockchainRegistry`** is thread-safe for concurrent access
+`BlockchainAnchorRegistry` instances are thread-safe for concurrent access when using the default implementation.
 - **`BlockchainAnchorClient`** implementations should be thread-safe
 - All operations use Kotlin coroutines for non-blocking I/O
 - In-memory storage uses `ConcurrentHashMap` for thread safety

@@ -25,10 +25,11 @@ class CredentialIssuerAdditionalBranchesTest {
 
     private lateinit var issuer: CredentialIssuer
     private val issuerDid = "did:key:issuer123"
+    private lateinit var proofRegistry: ProofGeneratorRegistry
 
     @BeforeEach
     fun setup() {
-        ProofGeneratorRegistry.clear()
+        proofRegistry = ProofGeneratorRegistry()
         SchemaRegistry.clear()
         SchemaValidatorRegistry.clear()
         SchemaValidatorRegistry.register(JsonSchemaValidator())
@@ -41,17 +42,18 @@ class CredentialIssuerAdditionalBranchesTest {
             signer = signer,
             getPublicKeyId = { "did:key:issuer123#key-1" }
         )
-        ProofGeneratorRegistry.register(proofGenerator)
+        proofRegistry.register(proofGenerator)
         
         issuer = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { did -> did == issuerDid }
+            resolveDid = { did -> did == issuerDid },
+            proofRegistry = proofRegistry
         )
     }
 
     @AfterEach
     fun cleanup() {
-        ProofGeneratorRegistry.clear()
+        proofRegistry.clear()
         SchemaRegistry.clear()
         SchemaValidatorRegistry.clear()
     }
@@ -196,8 +198,9 @@ class CredentialIssuerAdditionalBranchesTest {
     @Test
     fun `test issue with resolveDid returning false`() = runBlocking {
         val issuerWithFailedDidResolution = CredentialIssuer(
-            proofGenerator = ProofGeneratorRegistry.get("Ed25519Signature2020")!!,
-            resolveDid = { false }
+            proofGenerator = proofRegistry.get("Ed25519Signature2020")!!,
+            resolveDid = { false },
+            proofRegistry = proofRegistry
         )
         
         val credential = createTestCredential()
@@ -211,8 +214,9 @@ class CredentialIssuerAdditionalBranchesTest {
     @Test
     fun `test issue with resolveDid throwing exception`() = runBlocking {
         val issuerWithThrowingDidResolution = CredentialIssuer(
-            proofGenerator = ProofGeneratorRegistry.get("Ed25519Signature2020")!!,
-            resolveDid = { throw RuntimeException("DID resolution failed") }
+            proofGenerator = proofRegistry.get("Ed25519Signature2020")!!,
+            resolveDid = { throw RuntimeException("DID resolution failed") },
+            proofRegistry = proofRegistry
         )
         
         val credential = createTestCredential()
@@ -228,7 +232,8 @@ class CredentialIssuerAdditionalBranchesTest {
     fun `test issue with proofGenerator from registry`() = runBlocking {
         val issuerWithoutDirectGenerator = CredentialIssuer(
             proofGenerator = null,
-            resolveDid = { did -> did == issuerDid }
+            resolveDid = { did -> did == issuerDid },
+            proofRegistry = proofRegistry
         )
         
         val credential = createTestCredential()
@@ -241,11 +246,12 @@ class CredentialIssuerAdditionalBranchesTest {
 
     @Test
     fun `test issue with proofGenerator not in registry`() = runBlocking {
-        ProofGeneratorRegistry.clear()
+        val emptyRegistry = ProofGeneratorRegistry()
         
         val issuerWithoutGenerator = CredentialIssuer(
             proofGenerator = null,
-            resolveDid = { did -> did == issuerDid }
+            resolveDid = { did -> did == issuerDid },
+            proofRegistry = emptyRegistry
         )
         
         val credential = createTestCredential()

@@ -1,5 +1,6 @@
 package io.geoknoesis.vericore.godiddy.spi
 
+import io.geoknoesis.vericore.did.DidCreationOptions
 import io.geoknoesis.vericore.did.DidMethod
 import io.geoknoesis.vericore.did.spi.DidMethodProvider
 import io.geoknoesis.vericore.godiddy.GodiddyClient
@@ -32,7 +33,7 @@ class GodiddyDidMethodProvider : DidMethodProvider {
         "ensip25", "ensip26", "ensip27", "ensip28", "ensip29", "ensip30"
     )
 
-    override fun create(methodName: String, options: Map<String, Any?>): DidMethod? {
+    override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
         // Create configuration from options
         val config = GodiddyConfig.fromOptions(options)
         val client = GodiddyClient(config)

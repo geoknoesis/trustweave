@@ -85,7 +85,7 @@ class InMemoryEoTestIntegrationExample : BaseEoIntegrationTest() {
         didRegistry.register(didMethod)
         
         // Create issuer DID
-        val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
         
         // Create anchor client

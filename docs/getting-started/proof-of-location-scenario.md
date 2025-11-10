@@ -208,10 +208,10 @@ fun main() = runBlocking {
     
     // Step 2: Create DIDs
     println("\nStep 2: Creating DIDs...")
-    val locationProviderDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val locationProviderDid = didMethod.createDid()
     println("Location Provider DID: ${locationProviderDid.id}")
     
-    val deviceDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val deviceDid = didMethod.createDid()
     println("Device DID: ${deviceDid.id}")
     
     // Step 3: Create location wallet
@@ -273,13 +273,12 @@ fun main() = runBlocking {
         getPublicKeyId = { keyId -> issuerKey.id }
     )
 
-val didResolver = CredentialDidResolver { did ->
-    didRegistry.resolve(did).toCredentialDidResolution()
-}
+    val proofRegistry = ProofGeneratorRegistry().apply { register(proofGenerator) }
     
     val credentialIssuer = CredentialIssuer(
         proofGenerator = proofGenerator,
-    resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
+        resolveDid = { did -> didRegistry.resolve(did) != null },
+        proofRegistry = proofRegistry
     )
     
     val issuedCredential = credentialIssuer.issue(

@@ -21,7 +21,7 @@ class VeriCoreTest {
     @Test
     fun `test createDid with default options`() = runBlocking {
         val vericore = VeriCore.create()
-        val didDoc = vericore.createDid()
+        val didDoc = vericore.createDid().getOrThrow()
         
         assertNotNull(didDoc)
         assertNotNull(didDoc.id)
@@ -31,9 +31,9 @@ class VeriCoreTest {
     @Test
     fun `test resolveDid`() = runBlocking {
         val vericore = VeriCore.create()
-        val didDoc = vericore.createDid()
+        val didDoc = vericore.createDid().getOrThrow()
         
-        val result = vericore.resolveDid(didDoc.id)
+        val result = vericore.resolveDid(didDoc.id).getOrThrow()
         
         assertNotNull(result)
         assertNotNull(result.document)
@@ -43,7 +43,7 @@ class VeriCoreTest {
     @Test
     fun `test issueCredential`() = runBlocking {
         val vericore = VeriCore.create()
-        val did = vericore.createDid()
+        val did = vericore.createDid().getOrThrow()
         val issuerKeyId = did.verificationMethod.first().id
         
         val credential = vericore.issueCredential(
@@ -54,7 +54,7 @@ class VeriCoreTest {
                 put("name", "Test Subject")
             },
             types = listOf("TestCredential")
-        )
+        ).getOrThrow()
         
         assertNotNull(credential)
         assertEquals(did.id, credential.issuer)
@@ -64,7 +64,7 @@ class VeriCoreTest {
     @Test
     fun `test verifyCredential`() = runBlocking {
         val vericore = VeriCore.create()
-        val did = vericore.createDid()
+        val did = vericore.createDid().getOrThrow()
         val issuerKeyId = did.verificationMethod.first().id
         
         val credential = vericore.issueCredential(
@@ -75,9 +75,9 @@ class VeriCoreTest {
                 put("name", "Test Subject")
             },
             types = listOf("TestCredential")
-        )
+        ).getOrThrow()
         
-        val result = vericore.verifyCredential(credential)
+        val result = vericore.verifyCredential(credential).getOrThrow()
         
         assertNotNull(result)
         assertTrue(result.valid)
@@ -86,9 +86,9 @@ class VeriCoreTest {
     @Test
     fun `test createWallet`() = runBlocking {
         val vericore = VeriCore.create()
-        val did = vericore.createDid()
+        val did = vericore.createDid().getOrThrow()
         
-        val wallet = vericore.createWallet(holderDid = did.id)
+        val wallet = vericore.createWallet(holderDid = did.id).getOrThrow()
         
         assertNotNull(wallet)
         assertNotNull(wallet.walletId)
@@ -97,12 +97,12 @@ class VeriCoreTest {
     @Test
     fun `test createWallet with custom ID`() = runBlocking {
         val vericore = VeriCore.create()
-        val did = vericore.createDid()
+        val did = vericore.createDid().getOrThrow()
         
         val wallet = vericore.createWallet(
             holderDid = did.id,
             walletId = "my-custom-wallet"
-        )
+        ).getOrThrow()
         
         assertNotNull(wallet)
         assertEquals("my-custom-wallet", wallet.walletId)
@@ -114,9 +114,9 @@ class VeriCoreTest {
         val vericore = VeriCore.create()
         
         // Create DIDs for issuer and holder
-        val issuerDid = vericore.createDid()
+        val issuerDid = vericore.createDid().getOrThrow()
         val issuerKeyId = issuerDid.verificationMethod.first().id
-        val holderDid = vericore.createDid()
+        val holderDid = vericore.createDid().getOrThrow()
         
         // Issue a credential
         val credential = vericore.issueCredential(
@@ -128,14 +128,14 @@ class VeriCoreTest {
                 put("degree", "Bachelor of Science")
             },
             types = listOf("UniversityDegreeCredential")
-        )
+        ).getOrThrow()
         
         // Verify the credential
-        val verificationResult = vericore.verifyCredential(credential)
+        val verificationResult = vericore.verifyCredential(credential).getOrThrow()
         assertTrue(verificationResult.valid)
         
         // Create wallet and store credential
-        val wallet = vericore.createWallet(holderDid = holderDid.id)
+        val wallet = vericore.createWallet(holderDid = holderDid.id).getOrThrow()
         val credentialId = requireNotNull(credential.id) { "Issued credential should contain an id" }
         wallet.store(credential)
         

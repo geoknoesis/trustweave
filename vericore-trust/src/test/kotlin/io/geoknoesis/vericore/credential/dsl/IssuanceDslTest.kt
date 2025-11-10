@@ -52,7 +52,7 @@ class IssuanceDslTest {
     fun `test issuance with inline credential builder`() = runBlocking {
         val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         val issuerDidId = issuerDidDoc.id
         
         val issuedCredential = trustLayer.issue {
@@ -79,7 +79,7 @@ class IssuanceDslTest {
     fun `test issuance with pre-built credential`() = runBlocking {
         val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         val issuerDidId = issuerDidDoc.id
         
         val credential = credential {
@@ -105,7 +105,7 @@ class IssuanceDslTest {
     fun `test issuance with custom proof type`() = runBlocking {
         val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         val issuerDidId = issuerDidDoc.id
         
         val issuedCredential = trustLayer.issue {
@@ -129,7 +129,7 @@ class IssuanceDslTest {
     fun `test issuance with challenge and domain`() = runBlocking {
         val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         val issuerDidId = issuerDidDoc.id
         
         val issuedCredential = trustLayer.issue {
@@ -155,7 +155,7 @@ class IssuanceDslTest {
     fun `test issuance requires credential`() = runBlocking {
         val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         val issuerDidId = issuerDidDoc.id
         
         assertFailsWith<IllegalStateException> {

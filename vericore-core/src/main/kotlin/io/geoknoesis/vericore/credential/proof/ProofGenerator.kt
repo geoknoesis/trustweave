@@ -2,6 +2,7 @@ package io.geoknoesis.vericore.credential.proof
 
 import io.geoknoesis.vericore.credential.models.Proof
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Pluggable proof generator interface.
@@ -51,59 +52,39 @@ data class ProofOptions(
     val additionalOptions: Map<String, Any?> = emptyMap()
 )
 
-/**
- * Registry for proof generators.
- * 
- * Allows registration and selection of proof generators by type.
- * 
- * **Thread Safety**: This registry is thread-safe for concurrent access.
- */
-object ProofGeneratorRegistry {
-    private val generators = mutableMapOf<String, ProofGenerator>()
-    
-    /**
-     * Register a proof generator.
-     * 
-     * @param generator Proof generator to register
-     */
-    fun register(generator: ProofGenerator) {
+interface ProofGeneratorRegistry {
+    fun register(generator: ProofGenerator)
+    fun unregister(proofType: String)
+    fun get(proofType: String): ProofGenerator?
+    fun getRegisteredTypes(): List<String>
+    fun isSupported(proofType: String): Boolean
+    fun snapshot(): ProofGeneratorRegistry
+    fun clear()
+}
+
+fun ProofGeneratorRegistry(): ProofGeneratorRegistry = DefaultProofGeneratorRegistry()
+
+class DefaultProofGeneratorRegistry internal constructor(
+    private val generators: MutableMap<String, ProofGenerator> = ConcurrentHashMap()
+) : ProofGeneratorRegistry {
+    override fun register(generator: ProofGenerator) {
         generators[generator.proofType] = generator
     }
-    
-    /**
-     * Get a proof generator by type.
-     * 
-     * @param proofType Proof type identifier
-     * @return Proof generator, or null if not found
-     */
-    fun get(proofType: String): ProofGenerator? {
-        return generators[proofType]
+
+    override fun unregister(proofType: String) {
+        generators.remove(proofType)
     }
-    
-    /**
-     * Get all registered proof types.
-     * 
-     * @return List of proof type identifiers
-     */
-    fun getRegisteredTypes(): List<String> {
-        return generators.keys.toList()
-    }
-    
-    /**
-     * Check if a proof type is supported.
-     * 
-     * @param proofType Proof type identifier
-     * @return true if generator is registered
-     */
-    fun isSupported(proofType: String): Boolean {
-        return generators.containsKey(proofType)
-    }
-    
-    /**
-     * Clear all registered generators.
-     * Useful for testing.
-     */
-    fun clear() {
+
+    override fun get(proofType: String): ProofGenerator? = generators[proofType]
+
+    override fun getRegisteredTypes(): List<String> = generators.keys.toList()
+
+    override fun isSupported(proofType: String): Boolean = generators.containsKey(proofType)
+
+    override fun snapshot(): ProofGeneratorRegistry =
+        DefaultProofGeneratorRegistry(ConcurrentHashMap(generators))
+
+    override fun clear() {
         generators.clear()
     }
 }

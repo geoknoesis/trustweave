@@ -17,9 +17,9 @@ class DidKeyMockMethod(
 
     private val documents = mutableMapOf<String, DidDocument>()
 
-    override suspend fun createDid(options: Map<String, Any?>): DidDocument {
-        val algorithm = options["algorithm"] as? String ?: "Ed25519"
-        val keyHandle = kms.generateKey(algorithm, options)
+    override suspend fun createDid(options: DidCreationOptions): DidDocument {
+        val algorithm = options.algorithm.algorithmName
+        val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
         
         // Create a simplified did:key identifier
         val didId = "z${UUID.randomUUID().toString().replace("-", "")}"

@@ -67,7 +67,7 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val vericore = VeriCore.create()
-    val did = vericore.createDid()
+    val did = vericore.createDid().getOrThrow()
     println("Created DID: ${did.id}")
 }
 ```

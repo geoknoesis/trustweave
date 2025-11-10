@@ -22,7 +22,8 @@ import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 data class TrustLayerRegistries(
     val didRegistry: DidMethodRegistry = DidMethodRegistry(),
     val blockchainRegistry: BlockchainAnchorRegistry = BlockchainAnchorRegistry(),
-    val credentialRegistry: CredentialServiceRegistry = CredentialServiceRegistry.create()
+    val credentialRegistry: CredentialServiceRegistry = CredentialServiceRegistry.create(),
+    val proofRegistry: ProofGeneratorRegistry = ProofGeneratorRegistry()
 )
 
 /**
@@ -243,7 +244,7 @@ class TrustLayerConfig private constructor(
             
             // Create proof generator
             val proofGenerator = createProofGenerator(defaultProofType, resolvedKms, finalSigner)
-            ProofGeneratorRegistry.register(proofGenerator)
+            registries.proofRegistry.register(proofGenerator)
             
             // Resolve status list manager if revocation is configured
             val resolvedStatusListManager = if (revocationProvider != null) {
@@ -270,7 +271,8 @@ class TrustLayerConfig private constructor(
                 resolveDid = { did ->
                     val resolution = credentialDidResolver.resolve(did)
                     resolution?.isResolvable ?: true
-                }
+                },
+                proofRegistry = registries.proofRegistry
             )
             
             // Resolve wallet factory
@@ -328,7 +330,7 @@ class TrustLayerConfig private constructor(
         ): DidMethod {
             requireNotNull(kms) { "KMS cannot be null when resolving DID method: $methodName" }
             val factory = didMethodFactory ?: getDefaultDidMethodFactory()
-            val method = factory.create(methodName, config, kms) as? DidMethod
+            val method = factory.create(methodName, config.toOptions(kms), kms) as? DidMethod
             return method ?: throw IllegalStateException(
                 "DID method '$methodName' not found. " +
                 "Ensure appropriate DID method provider is on classpath."
@@ -525,14 +527,22 @@ class TrustLayerConfig private constructor(
      * DID method configuration.
      */
     data class DidMethodConfig(
-        val algorithm: String? = null,
+        val algorithm: io.geoknoesis.vericore.did.DidCreationOptions.KeyAlgorithm? = null,
         val domain: String? = null,
-        val options: Map<String, Any?> = emptyMap()
+        val additionalProperties: Map<String, Any?> = emptyMap()
     ) {
-        fun toOptions(kms: Any): Map<String, Any?> {
-            return options + mapOf("kms" to kms) + 
-                (algorithm?.let { mapOf("algorithm" to it) } ?: emptyMap()) +
-                (domain?.let { mapOf("domain" to it) } ?: emptyMap())
+        fun toOptions(kms: Any): io.geoknoesis.vericore.did.DidCreationOptions {
+            val resolvedAlgorithm = algorithm ?: io.geoknoesis.vericore.did.DidCreationOptions.KeyAlgorithm.ED25519
+            val props = buildMap<String, Any?> {
+                putAll(additionalProperties)
+                put("kms", kms)
+                domain?.let { put("domain", it) }
+            }
+            return io.geoknoesis.vericore.did.DidCreationOptions(
+                algorithm = resolvedAlgorithm,
+                purposes = listOf(io.geoknoesis.vericore.did.DidCreationOptions.KeyPurpose.AUTHENTICATION),
+                additionalProperties = props
+            )
         }
     }
     
@@ -540,12 +550,16 @@ class TrustLayerConfig private constructor(
      * DID method configuration builder.
      */
     class DidMethodConfigBuilder {
-        private var algorithm: String? = null
+        private var algorithm: io.geoknoesis.vericore.did.DidCreationOptions.KeyAlgorithm? = null
         private var domain: String? = null
         private val options = mutableMapOf<String, Any?>()
         
         fun algorithm(name: String) {
-            algorithm = name
+            algorithm = io.geoknoesis.vericore.did.DidCreationOptions.KeyAlgorithm.fromName(name)
+        }
+        
+        fun algorithm(value: io.geoknoesis.vericore.did.DidCreationOptions.KeyAlgorithm) {
+            algorithm = value
         }
         
         fun domain(name: String) {

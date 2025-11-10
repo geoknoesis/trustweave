@@ -168,6 +168,13 @@ fun didCreationOptions(block: DidCreationOptionsBuilder.() -> Unit): DidCreation
 }
 
 /**
+ * Convenience extension for creating a DID using a builder DSL.
+ */
+suspend fun DidMethod.createDid(
+    configure: DidCreationOptionsBuilder.() -> Unit
+): DidDocument = createDid(didCreationOptions(configure))
+
+/**
  * Builder for DidCreationOptions.
  */
 class DidCreationOptionsBuilder {

@@ -82,7 +82,7 @@ fun main() = runBlocking {
     val registry = result.registry
 
     val keyMethod = registry.get("key")
-    val document = keyMethod!!.createDid(mapOf("algorithm" to "Ed25519"))
+    val document = keyMethod!!.createDid()
     println("Created DID: ${document.id}")
 
     val resolved = registry.resolve(document.id)

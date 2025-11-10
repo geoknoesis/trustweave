@@ -3,6 +3,9 @@ package io.geoknoesis.vericore.examples
 import io.geoknoesis.vericore.anchor.BlockchainAnchorClient
 import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import io.geoknoesis.vericore.anchor.DefaultBlockchainAnchorRegistry
+import io.geoknoesis.vericore.credential.proof.DefaultProofGeneratorRegistry
+import io.geoknoesis.vericore.credential.proof.ProofGenerator
+import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
 import io.geoknoesis.vericore.did.DefaultDidMethodRegistry
 import io.geoknoesis.vericore.did.DidMethod
 import io.geoknoesis.vericore.did.DidMethodRegistry
@@ -27,3 +30,9 @@ fun createTestBlockchainRegistry(vararg clients: Pair<String, BlockchainAnchorCl
 }
 
 fun BlockchainAnchorRegistry.hasChain(chainId: String): Boolean = get(chainId) != null
+
+fun createTestProofRegistry(vararg generators: ProofGenerator): ProofGeneratorRegistry {
+    return DefaultProofGeneratorRegistry().apply {
+        generators.forEach { register(it) }
+    }
+}

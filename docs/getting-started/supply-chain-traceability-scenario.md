@@ -243,13 +243,13 @@ fun main() = runBlocking {
     
     // Step 2: Create supply chain participant DIDs
     println("\nStep 2: Creating supply chain participant DIDs...")
-    val manufacturerDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val manufacturerDid = didMethod.createDid()
     println("Manufacturer DID: ${manufacturerDid.id}")
     
-    val distributorDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val distributorDid = didMethod.createDid()
     println("Distributor DID: ${distributorDid.id}")
     
-    val retailerDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val retailerDid = didMethod.createDid()
     println("Retailer DID: ${retailerDid.id}")
     
     // Step 3: Create product
@@ -280,6 +280,7 @@ fun main() = runBlocking {
         signer = { data, keyId -> manufacturerKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> manufacturerKey.id }
     )
+    val manufacturerProofRegistry = ProofGeneratorRegistry().apply { register(manufacturerProofGenerator) }
     
 val didResolver = CredentialDidResolver { did ->
     didRegistry.resolve(did).toCredentialDidResolution()
@@ -287,7 +288,8 @@ val didResolver = CredentialDidResolver { did ->
     
     val manufacturerIssuer = CredentialIssuer(
         proofGenerator = manufacturerProofGenerator,
-        resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
+        resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true },
+        proofRegistry = manufacturerProofRegistry
     )
     
     val issuedOriginCredential = manufacturerIssuer.issue(
@@ -345,10 +347,12 @@ val didResolver = CredentialDidResolver { did ->
         signer = { data, keyId -> distributorKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> distributorKey.id }
     )
+    val distributorProofRegistry = ProofGeneratorRegistry().apply { register(distributorProofGenerator) }
     
     val distributorIssuer = CredentialIssuer(
         proofGenerator = distributorProofGenerator,
-        resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
+        resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true },
+        proofRegistry = distributorProofRegistry
     )
     
     val issuedTransferCredential = distributorIssuer.issue(
@@ -405,10 +409,12 @@ val didResolver = CredentialDidResolver { did ->
         signer = { data, keyId -> retailerKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> retailerKey.id }
     )
+    val retailerProofRegistry = ProofGeneratorRegistry().apply { register(retailerProofGenerator) }
     
     val retailerIssuer = CredentialIssuer(
         proofGenerator = retailerProofGenerator,
-        resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
+        resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true },
+        proofRegistry = retailerProofRegistry
     )
     
     val issuedSaleCredential = retailerIssuer.issue(

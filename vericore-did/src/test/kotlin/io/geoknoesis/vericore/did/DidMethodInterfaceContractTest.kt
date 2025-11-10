@@ -4,6 +4,8 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 import java.time.Instant
+import io.geoknoesis.vericore.did.DidCreationOptions
+import io.geoknoesis.vericore.did.didCreationOptions
 
 /**
  * Comprehensive interface contract tests for DidMethod.
@@ -31,9 +33,9 @@ class DidMethodInterfaceContractTest {
     @Test
     fun `test DidMethod createDid with options`() = runBlocking {
         val method = createMockMethod("key")
-        val options = mapOf<String, Any?>(
-            "keyType" to "Ed25519"
-        )
+        val options = didCreationOptions {
+            property("keyType", "Ed25519")
+        }
         
         val document = method.createDid(options)
         
@@ -152,7 +154,7 @@ class DidMethodInterfaceContractTest {
             private val documents = mutableMapOf<String, DidDocument>()
             private val deactivated = mutableSetOf<String>()
             
-            override suspend fun createDid(options: Map<String, Any?>): DidDocument {
+            override suspend fun createDid(options: DidCreationOptions): DidDocument {
                 val id = "did:$methodName:${java.util.UUID.randomUUID().toString().take(8)}"
                 val doc = DidDocument(
                     id = id,

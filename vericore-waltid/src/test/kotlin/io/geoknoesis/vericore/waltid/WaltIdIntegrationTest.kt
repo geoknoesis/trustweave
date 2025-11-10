@@ -45,7 +45,7 @@ class WaltIdIntegrationTest {
         val keyMethod = registry.get("key")
         assertNotNull(keyMethod)
 
-        val document = keyMethod!!.createDid(mapOf("algorithm" to "Ed25519"))
+        val document = keyMethod!!.createDid()
         assertNotNull(document.id)
         assertTrue(document.id.startsWith("did:key:"))
 

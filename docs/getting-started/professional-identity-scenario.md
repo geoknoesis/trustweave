@@ -175,7 +175,7 @@ fun main() = runBlocking {
     val didMethod = DidKeyMockMethod(kms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
     
-    val professionalDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val professionalDid = didMethod.createDid()
     println("Professional DID: ${professionalDid.id}")
     
     // Step 2: Create professional wallet

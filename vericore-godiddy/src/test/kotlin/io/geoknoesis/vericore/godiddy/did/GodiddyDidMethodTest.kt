@@ -49,7 +49,7 @@ class GodiddyDidMethodTest {
         val method = GodiddyDidMethod("test", resolver, null)
         
         assertFailsWith<VeriCoreException> {
-            method.createDid(emptyMap())
+            method.createDid()
         }
         
         client.close()

@@ -1,6 +1,8 @@
 package io.geoknoesis.vericore.did
 
 import kotlinx.coroutines.runBlocking
+import io.geoknoesis.vericore.did.DidCreationOptions
+import io.geoknoesis.vericore.did.didCreationOptions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -22,7 +24,7 @@ class DidMethodEdgeCasesTest {
     fun `test DidMethod createDid with empty options`() = runBlocking {
         val method = createMockDidMethod("test")
         
-        val doc = method.createDid(emptyMap())
+        val doc = method.createDid()
         
         assertNotNull(doc)
         assertTrue(doc.id.startsWith("did:test:"))
@@ -32,7 +34,12 @@ class DidMethodEdgeCasesTest {
     fun `test DidMethod createDid with options`() = runBlocking {
         val method = createMockDidMethod("test")
         
-        val doc = method.createDid(mapOf("keyId" to "key-123", "algorithm" to "Ed25519"))
+        val doc = method.createDid(
+            didCreationOptions {
+                algorithm = DidCreationOptions.KeyAlgorithm.ED25519
+                property("keyId", "key-123")
+            }
+        )
         
         assertNotNull(doc)
     }
@@ -144,7 +151,7 @@ class DidMethodEdgeCasesTest {
         val method = object : DidMethod {
             override val method = "test"
             
-            override suspend fun createDid(options: Map<String, Any?>) = DidDocument(id = "did:test:123")
+            override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = "did:test:123")
             
             override suspend fun resolveDid(did: String) = DidResolutionResult(
                 document = DidDocument(id = did),
@@ -174,7 +181,7 @@ class DidMethodEdgeCasesTest {
         val method = object : DidMethod {
             override val method = "test"
             
-            override suspend fun createDid(options: Map<String, Any?>) = DidDocument(id = "did:test:123")
+            override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = "did:test:123")
             
             override suspend fun resolveDid(did: String) = DidResolutionResult(
                 document = null,
@@ -233,9 +240,10 @@ class DidMethodEdgeCasesTest {
         return object : DidMethod {
             override val method = methodName
             
-            override suspend fun createDid(options: Map<String, Any?>) = DidDocument(
-                id = "did:$methodName:${options["keyId"] ?: "123"}"
-            )
+            override suspend fun createDid(options: DidCreationOptions): DidDocument {
+                val keyId = options.additionalProperties["keyId"] as? String ?: "123"
+                return DidDocument(id = "did:$methodName:$keyId")
+            }
             
             override suspend fun resolveDid(did: String) = DidResolutionResult(
                 document = DidDocument(id = did)

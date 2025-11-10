@@ -77,7 +77,7 @@ class GanacheEoIntegrationTest {
         val blockchainRegistry = DefaultBlockchainAnchorRegistry().apply { register(chainId, anchorClient) }
 
         // Step 1: Create a DID for the issuer
-        val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
         assertNotNull(issuerDid)
 

@@ -62,7 +62,7 @@ class IssuanceBuilderBranchCoverageTest {
     fun `test branch credential from inline builder`() = runBlocking {
         val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         
         val issuedCredential = trustLayer.issue {
             credential {
@@ -83,7 +83,7 @@ class IssuanceBuilderBranchCoverageTest {
     fun `test branch credential from pre-built`() = runBlocking {
         val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         
         val preBuiltCredential = credential {
             type("PersonCredential")
@@ -125,7 +125,7 @@ class IssuanceBuilderBranchCoverageTest {
     fun `test branch issuer DID provided`() = runBlocking {
         val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         
         val issuedCredential = trustLayer.issue {
             credential {
@@ -147,7 +147,7 @@ class IssuanceBuilderBranchCoverageTest {
     @Test
     fun `test branch key ID required error`() = runBlocking {
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         
         assertFailsWith<IllegalStateException> {
             trustLayer.issue {
@@ -170,7 +170,7 @@ class IssuanceBuilderBranchCoverageTest {
     fun `test branch proof type from default config`() = runBlocking {
         val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         
         val issuedCredential = trustLayer.issue {
             credential {
@@ -193,7 +193,7 @@ class IssuanceBuilderBranchCoverageTest {
     fun `test branch proof type from custom value`() = runBlocking {
         val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         
         val issuedCredential = trustLayer.issue {
             credential {
@@ -218,7 +218,7 @@ class IssuanceBuilderBranchCoverageTest {
     fun `test branch challenge provided`() = runBlocking {
         val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         
         val issuedCredential = trustLayer.issue {
             credential {
@@ -241,7 +241,7 @@ class IssuanceBuilderBranchCoverageTest {
     fun `test branch domain provided`() = runBlocking {
         val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         
         val issuedCredential = trustLayer.issue {
             credential {
@@ -264,7 +264,7 @@ class IssuanceBuilderBranchCoverageTest {
     fun `test branch challenge and domain both provided`() = runBlocking {
         val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         
         val issuedCredential = trustLayer.issue {
             credential {
@@ -291,7 +291,7 @@ class IssuanceBuilderBranchCoverageTest {
     fun `test branch auto-anchor disabled in config`() = runBlocking {
         val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         
         val issuedCredential = trustLayer.issue {
             credential {
@@ -333,7 +333,7 @@ class IssuanceBuilderBranchCoverageTest {
         
         val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         
         val issuedCredential = trustLayerWithAutoAnchor.issue {
             credential {
@@ -373,7 +373,7 @@ class IssuanceBuilderBranchCoverageTest {
         
         val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         
         val issuedCredential = trustLayerWithAnchor.issue {
             credential {
@@ -409,7 +409,7 @@ class IssuanceBuilderBranchCoverageTest {
         
         val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         
         // Should fail when trying to anchor without chain ID
         assertFailsWith<IllegalStateException> {
@@ -446,7 +446,7 @@ class IssuanceBuilderBranchCoverageTest {
         
         val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         
         assertFailsWith<IllegalStateException> {
             trustLayerWithAutoAnchor.issue {
@@ -488,7 +488,7 @@ class IssuanceBuilderBranchCoverageTest {
         
         val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
         val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDidDoc: DidDocument = didMethod.createDid()
         
         // Anchoring may fail, but credential should still be issued
         val issuedCredential = trustLayerWithAutoAnchor.issue {

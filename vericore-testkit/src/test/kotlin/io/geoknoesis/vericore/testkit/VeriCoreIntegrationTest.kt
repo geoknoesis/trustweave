@@ -38,7 +38,7 @@ class VeriCoreIntegrationTest {
         val anchorClient = InMemoryBlockchainAnchorClient("algorand:mainnet", "app-123")
         
         // Step 1: Create a DID
-        val didDocument = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val didDocument = didMethod.createDid()
         assertNotNull(didDocument.id)
         println("Created DID: ${didDocument.id}")
 

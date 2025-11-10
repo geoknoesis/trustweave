@@ -8,6 +8,7 @@ import io.geoknoesis.vericore.credential.models.VerifiableCredential
 import io.geoknoesis.vericore.credential.models.VerifiablePresentation
 import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
 import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
+import io.geoknoesis.vericore.credential.proof.ProofGenerator
 import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
@@ -27,10 +28,12 @@ class PresentationServiceMoreBranchesTest {
     private lateinit var presentationService: PresentationService
     private val holderDid = "did:key:holder123"
     private val issuerDid = "did:key:issuer123"
+    private lateinit var proofRegistry: ProofGeneratorRegistry
+    private lateinit var credentialVerifier: CredentialVerifier
 
     @BeforeEach
     fun setup() {
-        ProofGeneratorRegistry.clear()
+        proofRegistry = ProofGeneratorRegistry()
         
         val signer: suspend (ByteArray, String) -> ByteArray = { data, _ ->
             "mock-signature-${UUID.randomUUID()}".toByteArray()
@@ -40,20 +43,31 @@ class PresentationServiceMoreBranchesTest {
             signer = signer,
             getPublicKeyId = { "did:key:holder123#key-1" }
         )
-        ProofGeneratorRegistry.register(proofGenerator)
-        
-        presentationService = PresentationService(
+        proofRegistry.register(proofGenerator)
+
+        credentialVerifier = CredentialVerifier(
+            booleanDidResolver { did -> did == issuerDid || did == holderDid }
+        )
+
+        presentationService = newService(
             proofGenerator = proofGenerator,
-            credentialVerifier = CredentialVerifier(
-                booleanDidResolver { did -> did == issuerDid || did == holderDid }
-            )
+            verifier = credentialVerifier
         )
     }
 
     @AfterEach
     fun cleanup() {
-        ProofGeneratorRegistry.clear()
+        proofRegistry.clear()
     }
+
+    private fun newService(
+        proofGenerator: ProofGenerator? = null,
+        verifier: CredentialVerifier? = credentialVerifier
+    ): PresentationService = PresentationService(
+        proofGenerator = proofGenerator,
+        credentialVerifier = verifier,
+        proofRegistry = proofRegistry
+    )
 
     // ========== Presentation Creation Branches ==========
 

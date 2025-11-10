@@ -74,7 +74,7 @@ class DefaultVerificationMethodAccessImpl : VerificationMethodAccess {
  * Default implementation of DidMethodService that returns stub values.
  */
 class DefaultDidMethodServiceImpl : DidMethodService {
-    override suspend fun createDid(didMethod: Any, options: Map<String, Any?>): Any {
+    override suspend fun createDid(didMethod: Any, options: Any?): Any {
         return "did:key:stub"
     }
 
@@ -167,7 +167,7 @@ fun Any.getKeyId(): String = "stub-key-id"
 /**
  * Extension methods for DidMethodService.
  */
-suspend fun Any.createDid(options: Map<String, Any?> = emptyMap()): Any {
+suspend fun Any.createDid(options: Any? = null): Any {
     return "did:key:stub"
 }
 

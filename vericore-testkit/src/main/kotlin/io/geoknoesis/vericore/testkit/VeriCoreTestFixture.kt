@@ -3,9 +3,12 @@ package io.geoknoesis.vericore.testkit
 import io.geoknoesis.vericore.anchor.BlockchainAnchorClient
 import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import io.geoknoesis.vericore.credential.CredentialServiceRegistry
+import io.geoknoesis.vericore.did.DidCreationOptions
+import io.geoknoesis.vericore.did.DidCreationOptions.KeyAlgorithm
 import io.geoknoesis.vericore.did.DidDocument
 import io.geoknoesis.vericore.did.DidMethod
 import io.geoknoesis.vericore.did.DidMethodRegistry
+import io.geoknoesis.vericore.did.didCreationOptions
 import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
@@ -88,7 +91,12 @@ class VeriCoreTestFixture private constructor(
      * @return The created DID document
      */
     suspend fun createIssuerDid(algorithm: String = "Ed25519"): DidDocument {
-        return didMethod.createDid(mapOf("algorithm" to algorithm))
+        val keyAlgorithm = KeyAlgorithm.fromName(algorithm) ?: KeyAlgorithm.ED25519
+        return didMethod.createDid(
+            didCreationOptions {
+                this.algorithm = keyAlgorithm
+            }
+        )
     }
     
     /**

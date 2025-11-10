@@ -106,7 +106,8 @@ Optional interface for DID management.
 interface DidManagement {
     val walletDid: String
     val holderDid: String
-    suspend fun createDid(method: String, options: Map<String, Any?> = emptyMap()): String
+    suspend fun createDid(method: String, options: DidCreationOptions = DidCreationOptions()): String
+    suspend fun createDid(method: String, configure: DidCreationOptionsBuilder.() -> Unit): String
     suspend fun getDids(): List<String>
     suspend fun getPrimaryDid(): String
     suspend fun setPrimaryDid(did: String): Boolean

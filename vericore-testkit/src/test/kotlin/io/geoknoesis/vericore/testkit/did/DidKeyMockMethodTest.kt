@@ -25,7 +25,7 @@ class DidKeyMockMethodTest {
 
     @Test
     fun `test create DID with default algorithm`() = runBlocking {
-        val document = didMethod.createDid(emptyMap())
+        val document = didMethod.createDid()
 
         assertNotNull(document)
         assertTrue(document.id.startsWith("did:key:z"))
@@ -38,7 +38,7 @@ class DidKeyMockMethodTest {
 
     @Test
     fun `test create DID with Ed25519 algorithm`() = runBlocking {
-        val document = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val document = didMethod.createDid()
 
         assertNotNull(document)
         assertEquals("Ed25519VerificationKey2020", document.verificationMethod.first().type)
@@ -46,15 +46,23 @@ class DidKeyMockMethodTest {
 
     @Test
     fun `test create DID with Secp256k1 algorithm`() = runBlocking {
-        val document = didMethod.createDid(mapOf("algorithm" to "SECP256K1"))
+        val document = didMethod.createDid(
+            didCreationOptions {
+                algorithm = DidCreationOptions.KeyAlgorithm.SECP256K1
+            }
+        )
 
         assertNotNull(document)
         assertEquals("EcdsaSecp256k1VerificationKey2019", document.verificationMethod.first().type)
     }
 
     @Test
-    fun `test create DID with unknown algorithm`() = runBlocking {
-        val document = didMethod.createDid(mapOf("algorithm" to "Unknown"))
+    fun `test create DID with fallback algorithm`() = runBlocking {
+        val document = didMethod.createDid(
+            didCreationOptions {
+                algorithm = DidCreationOptions.KeyAlgorithm.P256
+            }
+        )
 
         assertNotNull(document)
         assertEquals("JsonWebKey2020", document.verificationMethod.first().type)
@@ -62,7 +70,7 @@ class DidKeyMockMethodTest {
 
     @Test
     fun `test resolve DID after creation`() = runBlocking {
-        val document = didMethod.createDid(emptyMap())
+        val document = didMethod.createDid()
         val did = document.id
 
         val result = didMethod.resolveDid(did)
@@ -85,7 +93,7 @@ class DidKeyMockMethodTest {
 
     @Test
     fun `test update DID`() = runBlocking {
-        val document = didMethod.createDid(emptyMap())
+        val document = didMethod.createDid()
         val did = document.id
 
         val updated = didMethod.updateDid(did) { doc ->
@@ -113,7 +121,7 @@ class DidKeyMockMethodTest {
 
     @Test
     fun `test deactivate DID`() = runBlocking {
-        val document = didMethod.createDid(emptyMap())
+        val document = didMethod.createDid()
         val did = document.id
 
         val result = didMethod.deactivateDid(did)
@@ -132,8 +140,8 @@ class DidKeyMockMethodTest {
 
     @Test
     fun `test clear all DIDs`() = runBlocking {
-        val doc1 = didMethod.createDid(emptyMap())
-        val doc2 = didMethod.createDid(emptyMap())
+        val doc1 = didMethod.createDid()
+        val doc2 = didMethod.createDid()
 
         didMethod.clear()
 
@@ -143,7 +151,7 @@ class DidKeyMockMethodTest {
 
     @Test
     fun `test verification method controller matches DID`() = runBlocking {
-        val document = didMethod.createDid(emptyMap())
+        val document = didMethod.createDid()
 
         document.verificationMethod.forEach { vm ->
             assertEquals(document.id, vm.controller)
@@ -152,7 +160,7 @@ class DidKeyMockMethodTest {
 
     @Test
     fun `test verification method ID format`() = runBlocking {
-        val document = didMethod.createDid(emptyMap())
+        val document = didMethod.createDid()
 
         document.verificationMethod.forEach { vm ->
             assertTrue(vm.id.startsWith(document.id))

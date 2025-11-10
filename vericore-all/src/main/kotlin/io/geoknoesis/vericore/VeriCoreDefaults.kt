@@ -2,6 +2,8 @@ package io.geoknoesis.vericore
 
 import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import io.geoknoesis.vericore.credential.CredentialServiceRegistry
+import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
+import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
 import io.geoknoesis.vericore.did.DidMethodRegistry
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
@@ -23,13 +25,23 @@ object VeriCoreDefaults {
         val didRegistry = DidMethodRegistry()
         val didMethod = DidKeyMockMethod(kms)
         didRegistry.register(didMethod)
+        val proofRegistry = ProofGeneratorRegistry().apply {
+            register(
+                Ed25519ProofGenerator(
+                    signer = { data, keyId ->
+                        kms.sign(keyId, data)
+                    }
+                )
+            )
+        }
 
         return VeriCoreConfig(
             kms = kms,
             walletFactory = walletFactory,
             didRegistry = didRegistry,
             blockchainRegistry = BlockchainAnchorRegistry(),
-            credentialRegistry = CredentialServiceRegistry.create()
+            credentialRegistry = CredentialServiceRegistry.create(),
+            proofRegistry = proofRegistry
         )
     }
 }

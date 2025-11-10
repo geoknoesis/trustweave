@@ -248,18 +248,18 @@ fun main() = runBlocking {
     
     // Step 2: Create government agency DIDs
     println("\nStep 2: Creating government agency DIDs...")
-    val dmvDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val dmvDid = didMethod.createDid()
     println("DMV DID: ${dmvDid.id}")
     
-    val passportOfficeDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val passportOfficeDid = didMethod.createDid()
     println("Passport Office DID: ${passportOfficeDid.id}")
     
-    val taxAuthorityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val taxAuthorityDid = didMethod.createDid()
     println("Tax Authority DID: ${taxAuthorityDid.id}")
     
     // Step 3: Create citizen DID
     println("\nStep 3: Creating citizen DID...")
-    val citizenDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val citizenDid = didMethod.createDid()
     println("Citizen DID: ${citizenDid.id}")
     
     // Step 4: Create citizen identity wallet
@@ -288,13 +288,12 @@ fun main() = runBlocking {
         signer = { data, keyId -> dmvKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> dmvKey.id }
     )
-    ProofGeneratorRegistry.register(dmvProofGenerator)
+    val dmvProofRegistry = ProofGeneratorRegistry().apply { register(dmvProofGenerator) }
     
     val dmvIssuer = CredentialIssuer(
         proofGenerator = dmvProofGenerator,
-        didResolver = CredentialDidResolver { did ->
-            didRegistry.resolve(did).toCredentialDidResolution()
-        }
+        resolveDid = { did -> didRegistry.resolve(did) != null },
+        proofRegistry = dmvProofRegistry
     )
     
     val issuedDriversLicense = dmvIssuer.issue(
@@ -328,13 +327,12 @@ fun main() = runBlocking {
         signer = { data, keyId -> passportOfficeKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> passportKey.id }
     )
-    ProofGeneratorRegistry.register(passportProofGenerator)
+    val passportProofRegistry = ProofGeneratorRegistry().apply { register(passportProofGenerator) }
     
     val passportIssuer = CredentialIssuer(
         proofGenerator = passportProofGenerator,
-        didResolver = CredentialDidResolver { did ->
-            didRegistry.resolve(did).toCredentialDidResolution()
-        }
+        resolveDid = { did -> didRegistry.resolve(did) != null },
+        proofRegistry = passportProofRegistry
     )
     
     val issuedPassport = passportIssuer.issue(
@@ -362,13 +360,12 @@ fun main() = runBlocking {
         signer = { data, keyId -> taxAuthorityKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> taxKey.id }
     )
-    ProofGeneratorRegistry.register(taxProofGenerator)
+    val taxProofRegistry = ProofGeneratorRegistry().apply { register(taxProofGenerator) }
     
     val taxIssuer = CredentialIssuer(
         proofGenerator = taxProofGenerator,
-        didResolver = CredentialDidResolver { did ->
-            didRegistry.resolve(did).toCredentialDidResolution()
-        }
+        resolveDid = { did -> didRegistry.resolve(did) != null },
+        proofRegistry = taxProofRegistry
     )
     
     val issuedTaxCredential = taxIssuer.issue(

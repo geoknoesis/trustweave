@@ -251,13 +251,13 @@ fun main() = runBlocking {
     // National Education Authority DID
     // Represents the Ministry of Higher Education and Scientific Research
     // This is the trusted issuer of national credentials
-    val authorityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val authorityDid = didMethod.createDid()
     println("National Education Authority DID: ${authorityDid.id}")
     
     // Educational Institution DID
     // Example: University of Algiers, University of Oran, etc.
     // Institutions are registered with the national authority
-    val institutionDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val institutionDid = didMethod.createDid()
     println("Educational Institution DID: ${institutionDid.id}")
     
     // Create institution registration credential
@@ -300,7 +300,7 @@ import java.time.Instant
     // Student DID
     // Represents individual student
     // Students own their DIDs and credentials
-    val studentDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val studentDid = didMethod.createDid()
     println("Student DID: ${studentDid.id}")
     
     // Create AlgeroPass enrollment credential
@@ -607,7 +607,7 @@ import io.geoknoesis.vericore.credential.CredentialVerificationOptions
     println("\nStep 8: Creating transfer credential...")
     
     // Target institution for transfer
-    val targetInstitutionDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val targetInstitutionDid = didMethod.createDid()
     
     // Transfer credential enables student to transfer
     // This is issued by the national authority and references both institutions

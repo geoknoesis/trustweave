@@ -17,29 +17,7 @@ interface DidMethod {
      * @param options Method-specific options for DID creation
      * @return The initial DID Document
      */
-    suspend fun createDid(options: Map<String, Any?> = emptyMap()): DidDocument
-    
-    /**
-     * Creates a new DID using type-safe options.
-     * 
-     * This method provides compile-time type safety over the Map-based version.
-     * Default implementation delegates to [createDid] with map conversion.
-     * 
-     * **Example:**
-     * ```kotlin
-     * val options = DidCreationOptions(
-     *     algorithm = KeyAlgorithm.ED25519,
-     *     purposes = listOf(KeyPurpose.AUTHENTICATION)
-     * )
-     * val document = didMethod.createDid(options)
-     * ```
-     * 
-     * @param options Type-safe creation options
-     * @return The initial DID Document
-     */
-    suspend fun createDid(options: DidCreationOptions): DidDocument {
-        return createDid(options.toMap())
-    }
+    suspend fun createDid(options: DidCreationOptions = DidCreationOptions()): DidDocument
 
     /**
      * Resolves a DID to its DID Document.

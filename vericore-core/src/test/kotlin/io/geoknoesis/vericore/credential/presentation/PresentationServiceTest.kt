@@ -10,6 +10,7 @@ import io.geoknoesis.vericore.credential.models.VerifiableCredential
 import io.geoknoesis.vericore.credential.models.VerifiablePresentation
 import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
 import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
+import io.geoknoesis.vericore.credential.proof.ProofGenerator
 import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
@@ -28,10 +29,11 @@ class PresentationServiceTest {
     private lateinit var credentialVerifier: CredentialVerifier
     private val holderDid = "did:key:holder123"
     private val keyId = "key-1"
+    private lateinit var proofRegistry: ProofGeneratorRegistry
 
     @BeforeEach
     fun setup() {
-        ProofGeneratorRegistry.clear()
+        proofRegistry = ProofGeneratorRegistry()
         
         // Create a simple mock signer for testing
         val signer: suspend (ByteArray, String) -> ByteArray = { _, _ ->
@@ -43,22 +45,28 @@ class PresentationServiceTest {
             signer = signer,
             getPublicKeyId = { "did:key:holder123#key-1" }
         )
-        ProofGeneratorRegistry.register(proofGenerator)
+        proofRegistry.register(proofGenerator)
         
         credentialVerifier = CredentialVerifier(
             CredentialDidResolver { CredentialDidResolution(isResolvable = true) }
         )
         
-        service = PresentationService(
-            proofGenerator = proofGenerator,
-            credentialVerifier = credentialVerifier
-        )
+        service = newService(proofGenerator = proofGenerator)
     }
 
     @AfterEach
     fun cleanup() {
-        ProofGeneratorRegistry.clear()
+        proofRegistry.clear()
     }
+
+    private fun newService(
+        proofGenerator: ProofGenerator? = null,
+        verifier: CredentialVerifier? = credentialVerifier
+    ): PresentationService = PresentationService(
+        proofGenerator = proofGenerator,
+        credentialVerifier = verifier,
+        proofRegistry = proofRegistry
+    )
 
     @Test
     fun `test create presentation successfully`() = runBlocking {
@@ -286,9 +294,9 @@ class PresentationServiceTest {
 
     @Test
     fun `test create presentation uses proof generator from registry`() = runBlocking {
-        val serviceWithoutGenerator = PresentationService(
+        val serviceWithoutGenerator = newService(
             proofGenerator = null,
-            credentialVerifier = credentialVerifier
+            verifier = credentialVerifier
         )
         val credentials = listOf(createTestCredential())
         val options = PresentationOptions(
@@ -305,10 +313,10 @@ class PresentationServiceTest {
 
     @Test
     fun `test create presentation fails when proof generator not found`() = runBlocking {
-        ProofGeneratorRegistry.clear()
-        val serviceWithoutGenerator = PresentationService(
+        proofRegistry.clear()
+        val serviceWithoutGenerator = newService(
             proofGenerator = null,
-            credentialVerifier = credentialVerifier
+            verifier = credentialVerifier
         )
         val credentials = listOf(createTestCredential())
         val options = PresentationOptions(

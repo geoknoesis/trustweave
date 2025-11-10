@@ -17,7 +17,7 @@ fun main() = runBlocking {
     val vericore = VeriCore.create()
     
     // 2. Create a DID
-    val did = vericore.createDid()
+    val did = vericore.createDid().getOrThrow()
     
     // 3. Issue a credential
     val credential = vericore.issueCredential(
@@ -28,14 +28,14 @@ fun main() = runBlocking {
             put("name", "Alice")
         },
         types = listOf("PersonCredential")
-    )
+    ).getOrThrow()
     
     // 4. Verify the credential
-    val result = vericore.verifyCredential(credential)
+    val result = vericore.verifyCredential(credential).getOrThrow()
     println("Valid: ${result.valid}")
     
     // 5. Store in wallet
-    val wallet = vericore.createWallet(holderDid = "did:key:alice")
+    val wallet = vericore.createWallet(holderDid = "did:key:alice").getOrThrow()
     wallet.store(credential)
     
     println("✅ Complete!")
@@ -95,8 +95,8 @@ VeriCore provides multiple APIs for different use cases:
 
 ```kotlin
 val vericore = VeriCore.create()
-val did = vericore.createDid()
-val credential = vericore.issueCredential(...)
+val did = vericore.createDid().getOrThrow()
+val credential = vericore.issueCredential(...).getOrThrow()
 ```
 
 **Pros:** Simple, type-safe, sensible defaults  
@@ -174,11 +174,11 @@ fun main() = runBlocking {
     val vericore = VeriCore.create()
     
     // Create a DID (uses default "key" method)
-    val document = vericore.createDid()
+    val document = vericore.createDid().getOrThrow()
     println("Created DID: ${document.id}")
     
     // Resolve the DID
-    val result = vericore.resolveDid(document.id)
+    val result = vericore.resolveDid(document.id).getOrThrow()
     println("Resolved document: ${result.document?.id}")
 }
 ```
@@ -213,6 +213,8 @@ fun main() = runBlocking {
 ### Example: Managing Credentials with Wallets (New Simple API)
 
 ```kotlin
+import io.geoknoesis.vericore.VeriCore
+import io.geoknoesis.vericore.credential.wallet.WalletProvider
 import io.geoknoesis.vericore.credential.wallet.Wallets
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
 import io.geoknoesis.vericore.credential.wallet.CredentialOrganization
@@ -252,6 +254,18 @@ fun main() = runBlocking {
         notExpired()
         valid()
     }
+
+    // Or create a custom wallet via VeriCore with typed options
+    val vericore = VeriCore.create()
+    val customWallet = vericore.createWallet(
+        holderDid = "did:key:holder",
+        provider = WalletProvider.custom("postgres")
+    ) {
+        label = "Production Wallet"
+        storagePath = "/var/lib/wallets/holder"
+        property("connectionString", System.getenv("WALLET_DB_URL"))
+    }.getOrThrow()
+    println("Custom wallet provider registered: ${customWallet.javaClass.simpleName}")
     
     // Create a presentation
     if (wallet is CredentialPresentation) {
@@ -354,7 +368,7 @@ fun main() = runBlocking {
     }
     
     // 2. Create a DID for the issuer
-    val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val issuerDoc = didMethod.createDid()
     val issuerDid = issuerDoc.id
     
     // 3. Create a verifiable credential payload
@@ -662,7 +676,7 @@ fun main() = runBlocking {
     
     // Create a DID using walt.id
     val keyMethod = registry.get("key")
-    val document = keyMethod!!.createDid(mapOf("algorithm" to "Ed25519"))
+    val document = keyMethod!!.createDid()
     println("Created DID: ${document.id}")
 }
 ```

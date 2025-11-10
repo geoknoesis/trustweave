@@ -507,6 +507,8 @@ import io.ktor.server.routing.*
 import io.ktor.http.*
 import io.geoknoesis.vericore.VeriCore
 import io.geoknoesis.vericore.cloud.services.UsageService
+import io.geoknoesis.vericore.did.DidCreationOptions
+import io.geoknoesis.vericore.did.didCreationOptions
 import kotlinx.serialization.Serializable
 
 fun Route.didRoutes(
@@ -529,11 +531,22 @@ fun Route.didRoutes(
                 return@post
             }
             
+            // Convert incoming request options to typed DidCreationOptions
+            val didOptions = request.options?.let { opts ->
+                didCreationOptions {
+                    opts["algorithm"]?.let { name ->
+                        DidCreationOptions.KeyAlgorithm.fromName(name)?.let { algorithm = it }
+                    }
+                    opts.filterKeys { it != "algorithm" }
+                        .forEach { (key, value) -> property(key, value) }
+                }
+            } ?: DidCreationOptions()
+
             // Create DID
             val didDocument = vericore.createDid(
                 method = request.method ?: "key",
-                options = request.options ?: emptyMap()
-            )
+                options = didOptions
+            ).getOrThrow()
             
             // Track usage
             usageService.incrementDidCreated(org.id)
@@ -551,7 +564,7 @@ fun Route.didRoutes(
             val did = call.parameters["did"] ?: throw IllegalArgumentException("DID required")
             
             // Resolve
-            val result = vericore.resolveDid(did)
+            val result = vericore.resolveDid(did).getOrThrow()
             
             // Track usage
             usageService.incrementApiCall(org.id)
@@ -640,7 +653,7 @@ fun Route.credentialRoutes(
                 credentialSubject = request.credentialSubject,
                 types = request.types ?: listOf("VerifiableCredential"),
                 expirationDate = request.expirationDate
-            )
+            ).getOrThrow()
             
             // Track usage
             usageService.incrementCredentialIssued(org.id)
@@ -660,7 +673,7 @@ fun Route.credentialRoutes(
             val result = vericore.verifyCredential(
                 credential = request.credential,
                 options = request.options ?: io.geoknoesis.vericore.credential.CredentialVerificationOptions()
-            )
+            ).getOrThrow()
             
             // Track usage
             usageService.incrementApiCall(org.id)

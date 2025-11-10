@@ -42,7 +42,7 @@ fun main() = runBlocking {
     }
     
     // Step 2: Create a DID for the issuer
-    val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val issuerDoc = didMethod.createDid()
     val issuerDid = issuerDoc.id
     println("Created issuer DID: $issuerDid")
     
@@ -116,7 +116,7 @@ val anchorClient = InMemoryBlockchainAnchorClient("algorand:mainnet")
 ### DID Creation
 
 ```kotlin
-val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+val issuerDoc = didMethod.createDid()
 ```
 
 Creates a DID using the Ed25519 algorithm. The DID document contains verification methods and authentication capabilities.

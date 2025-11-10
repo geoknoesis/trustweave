@@ -16,9 +16,11 @@ import kotlin.test.*
  */
 class CredentialIssuerAdditionalBranchCoverageTest {
 
+    private lateinit var proofRegistry: ProofGeneratorRegistry
+
     @BeforeEach
     fun setup() {
-        ProofGeneratorRegistry.clear()
+        proofRegistry = ProofGeneratorRegistry()
         SchemaRegistry.clear()
     }
 
@@ -27,7 +29,7 @@ class CredentialIssuerAdditionalBranchCoverageTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        val issuer = CredentialIssuer(proofGenerator = generator)
+        val issuer = CredentialIssuer(proofGenerator = generator, proofRegistry = proofRegistry)
         
         val credential = createTestCredential(issuerDid = "did:key:issuer")
         val result = issuer.issue(credential, "did:key:issuer", "key-1")
@@ -40,9 +42,9 @@ class CredentialIssuerAdditionalBranchCoverageTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        ProofGeneratorRegistry.register(generator)
+        proofRegistry.register(generator)
         
-        val issuer = CredentialIssuer(proofGenerator = null)
+        val issuer = CredentialIssuer(proofGenerator = null, proofRegistry = proofRegistry)
         
         val credential = createTestCredential(issuerDid = "did:key:issuer")
         val options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
@@ -58,7 +60,8 @@ class CredentialIssuerAdditionalBranchCoverageTest {
         )
         val issuer = CredentialIssuer(
             proofGenerator = generator,
-            resolveDid = { false }
+            resolveDid = { false },
+            proofRegistry = proofRegistry
         )
         
         val credential = createTestCredential(issuerDid = "did:key:issuer")
@@ -75,7 +78,8 @@ class CredentialIssuerAdditionalBranchCoverageTest {
         )
         val issuer = CredentialIssuer(
             proofGenerator = generator,
-            resolveDid = { throw RuntimeException("DID resolution failed") }
+            resolveDid = { throw RuntimeException("DID resolution failed") },
+            proofRegistry = proofRegistry
         )
         
         val credential = createTestCredential(issuerDid = "did:key:issuer")
@@ -90,7 +94,7 @@ class CredentialIssuerAdditionalBranchCoverageTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        val issuer = CredentialIssuer(proofGenerator = generator)
+        val issuer = CredentialIssuer(proofGenerator = generator, proofRegistry = proofRegistry)
         
         val schema = io.geoknoesis.vericore.credential.models.CredentialSchema(
             id = "schema-1",
@@ -117,7 +121,7 @@ class CredentialIssuerAdditionalBranchCoverageTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        val issuer = CredentialIssuer(proofGenerator = generator)
+        val issuer = CredentialIssuer(proofGenerator = generator, proofRegistry = proofRegistry)
         
         val credential = createTestCredential(issuerDid = "did:key:issuer")
         val options = CredentialIssuanceOptions(
@@ -134,7 +138,7 @@ class CredentialIssuerAdditionalBranchCoverageTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        val issuer = CredentialIssuer(proofGenerator = generator)
+        val issuer = CredentialIssuer(proofGenerator = generator, proofRegistry = proofRegistry)
         
         val credential = createTestCredential(issuerDid = "did:key:issuer")
         val options = CredentialIssuanceOptions(challenge = "challenge-123")
@@ -149,7 +153,7 @@ class CredentialIssuerAdditionalBranchCoverageTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        val issuer = CredentialIssuer(proofGenerator = generator)
+        val issuer = CredentialIssuer(proofGenerator = generator, proofRegistry = proofRegistry)
         
         val credential = createTestCredential(issuerDid = "did:key:issuer")
         val options = CredentialIssuanceOptions(domain = "example.com")

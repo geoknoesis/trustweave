@@ -28,7 +28,9 @@ import kotlinx.coroutines.withContext
  * }
  * ```
  */
-class PresentationBuilder {
+class PresentationBuilder(
+    private val presentationService: PresentationService = PresentationService()
+) {
     private val credentials = mutableListOf<VerifiableCredential>()
     private var holderDid: String? = null
     private var proofType: String = "Ed25519Signature2020"
@@ -117,11 +119,7 @@ class PresentationBuilder {
             disclosedFields = disclosedFields
         )
         
-        // PresentationService is in vericore-core, so we can use it directly
-        // Using default parameters (both null)
-        val service = PresentationService()
-        
-        service.createPresentation(
+        presentationService.createPresentation(
             credentials = credentials,
             holderDid = holder,
             options = options
@@ -157,6 +155,18 @@ class SelectiveDisclosureBuilder {
  */
 suspend fun presentation(block: PresentationBuilder.() -> Unit): VerifiablePresentation {
     val builder = PresentationBuilder()
+    builder.block()
+    return builder.build()
+}
+
+/**
+ * DSL function to create a presentation with a custom [PresentationService].
+ */
+suspend fun presentation(
+    service: PresentationService,
+    block: PresentationBuilder.() -> Unit
+): VerifiablePresentation {
+    val builder = PresentationBuilder(service)
     builder.block()
     return builder.build()
 }

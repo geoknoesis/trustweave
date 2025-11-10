@@ -3,11 +3,8 @@ package io.geoknoesis.vericore.credential.wallet
 import io.geoknoesis.vericore.credential.PresentationOptions
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
 import io.geoknoesis.vericore.credential.models.VerifiablePresentation
-import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
-import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 
@@ -16,15 +13,6 @@ import kotlin.test.*
  * Tests all methods, branches, and edge cases.
  */
 class CredentialPresentationInterfaceContractTest {
-
-    @BeforeEach
-    fun setup() {
-        ProofGeneratorRegistry.clear()
-        val generator = Ed25519ProofGenerator(
-            signer = { _, _ -> byteArrayOf(1, 2, 3) }
-        )
-        ProofGeneratorRegistry.register(generator)
-    }
 
     @Test
     fun `test CredentialPresentation createPresentation returns presentation`() = runBlocking {

@@ -1,5 +1,6 @@
 package io.geoknoesis.vericore.godiddy
 
+import io.geoknoesis.vericore.did.DidCreationOptions
 import io.geoknoesis.vericore.did.DidMethodRegistry
 import io.geoknoesis.vericore.did.spi.DidMethodProvider
 import io.geoknoesis.vericore.godiddy.issuer.GodiddyIssuer
@@ -23,7 +24,7 @@ object GodiddyIntegration {
      */
     fun discoverAndRegister(
         registry: DidMethodRegistry,
-        options: Map<String, Any?> = emptyMap()
+        options: DidCreationOptions = DidCreationOptions()
     ): GodiddyIntegrationResult {
         // Create configuration from options
         val config = GodiddyConfig.fromOptions(options)
@@ -84,11 +85,11 @@ object GodiddyIntegration {
         baseUrl: String? = null,
         registry: DidMethodRegistry,
         didMethods: List<String>? = null,
-        options: Map<String, Any?> = emptyMap()
+        options: DidCreationOptions = DidCreationOptions()
     ): GodiddyIntegrationResult {
         // Merge baseUrl into options if provided
         val mergedOptions = if (baseUrl != null) {
-            options + mapOf("baseUrl" to baseUrl)
+            options.copy(additionalProperties = options.additionalProperties + ("baseUrl" to baseUrl))
         } else {
             options
         }

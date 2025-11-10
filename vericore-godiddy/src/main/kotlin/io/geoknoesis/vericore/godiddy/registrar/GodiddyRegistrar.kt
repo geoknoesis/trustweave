@@ -1,6 +1,7 @@
 package io.geoknoesis.vericore.godiddy.registrar
 
 import io.geoknoesis.vericore.core.VeriCoreException
+import io.geoknoesis.vericore.did.DidCreationOptions
 import io.geoknoesis.vericore.did.DidDocument
 import io.geoknoesis.vericore.godiddy.GodiddyClient
 import io.geoknoesis.vericore.godiddy.models.*
@@ -21,13 +22,13 @@ class GodiddyRegistrar(
      * @param options Method-specific options for DID creation
      * @return The created DID Document
      */
-    suspend fun createDid(method: String, options: Map<String, Any?>): DidDocument = withContext(Dispatchers.IO) {
+    suspend fun createDid(method: String, options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
         try {
             // Universal Registrar endpoint: POST /1.0/operations
             val path = "/1.0/operations"
             
             // Convert options to JsonElement map
-            val jsonOptions = options.mapValues { (_, value) ->
+            val jsonOptions = options.toMap().mapValues { (_, value) ->
                 when (value) {
                     is String -> JsonPrimitive(value)
                     is Number -> JsonPrimitive(value.toDouble())

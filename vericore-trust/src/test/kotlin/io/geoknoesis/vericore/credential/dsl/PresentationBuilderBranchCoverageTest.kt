@@ -1,6 +1,7 @@
 package io.geoknoesis.vericore.credential.dsl
 
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
+import io.geoknoesis.vericore.credential.presentation.PresentationService
 import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
 import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
 import kotlinx.coroutines.runBlocking
@@ -17,19 +18,19 @@ import kotlin.test.*
  */
 class PresentationBuilderBranchCoverageTest {
 
+    private lateinit var presentationService: PresentationService
+
     @BeforeEach
     fun setup() {
-        ProofGeneratorRegistry.clear()
         val proofGenerator = Ed25519ProofGenerator(
             signer = { _, _ -> "mock-signature-${UUID.randomUUID()}".toByteArray() },
             getPublicKeyId = { "did:key:holder#key-1" }
         )
-        ProofGeneratorRegistry.register(proofGenerator)
-    }
-
-    @AfterEach
-    fun cleanup() {
-        ProofGeneratorRegistry.clear()
+        val proofRegistry = ProofGeneratorRegistry().apply { register(proofGenerator) }
+        presentationService = PresentationService(
+            proofGenerator = proofGenerator,
+            proofRegistry = proofRegistry
+        )
     }
 
     // ========== Credentials Required Branches ==========
@@ -37,7 +38,7 @@ class PresentationBuilderBranchCoverageTest {
     @Test
     fun `test branch credentials required error`() = runBlocking {
         assertFailsWith<IllegalStateException> {
-            presentation {
+            presentation(presentationService) {
                 holder("did:key:holder")
                 // Missing credentials
             }
@@ -56,7 +57,7 @@ class PresentationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val presentation = presentation {
+        val presentation = presentation(presentationService) {
             credentials(credential)
             holder("did:key:holder")
         }
@@ -85,7 +86,7 @@ class PresentationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val presentation = presentation {
+        val presentation = presentation(presentationService) {
             credentials(credential1, credential2)
             holder("did:key:holder")
         }
@@ -115,7 +116,7 @@ class PresentationBuilderBranchCoverageTest {
             }
         )
         
-        val presentation = presentation {
+        val presentation = presentation(presentationService) {
             credentials(credentials)
             holder("did:key:holder")
         }
@@ -138,7 +139,7 @@ class PresentationBuilderBranchCoverageTest {
         }
         
         assertFailsWith<IllegalStateException> {
-            presentation {
+            presentation(presentationService) {
                 credentials(credential)
                 // Missing holder
             }
@@ -156,7 +157,7 @@ class PresentationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val presentation = presentation {
+        val presentation = presentation(presentationService) {
             credentials(credential)
             holder("did:key:holder")
         }

@@ -1,5 +1,9 @@
 package io.geoknoesis.vericore.credential.wallet
 
+import io.geoknoesis.vericore.did.DidCreationOptions
+import io.geoknoesis.vericore.did.DidCreationOptionsBuilder
+import io.geoknoesis.vericore.did.didCreationOptions
+
 /**
  * DID management capability for wallets.
  * 
@@ -41,7 +45,10 @@ interface DidManagement {
      * @param options Method-specific options
      * @return Created DID string
      */
-    suspend fun createDid(method: String, options: Map<String, Any?> = emptyMap()): String
+    suspend fun createDid(method: String, options: DidCreationOptions = DidCreationOptions()): String
+
+    suspend fun createDid(method: String, configure: DidCreationOptionsBuilder.() -> Unit): String =
+        createDid(method, didCreationOptions(configure))
     
     /**
      * Get all DIDs managed by this wallet.

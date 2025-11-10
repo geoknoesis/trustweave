@@ -4,6 +4,7 @@ import io.geoknoesis.vericore.spi.services.*
 import io.geoknoesis.vericore.kms.KeyManagementService
 import io.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider
 import io.geoknoesis.vericore.did.DidMethod
+import io.geoknoesis.vericore.did.DidCreationOptions
 import io.geoknoesis.vericore.did.spi.DidMethodProvider
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
@@ -83,12 +84,18 @@ class TestkitDidMethodFactory : DidMethodFactory {
                         ?: throw IllegalArgumentException("KMS must be KeyManagementService instance")
                     
                     // Convert config to options map
-                    val configMap = when (config) {
-                        is Map<*, *> -> config as Map<String, Any?>
-                        else -> emptyMap<String, Any?>()
+                    var creationOptions = when (config) {
+                        is DidCreationOptions -> config
+                        is Map<*, *> -> DidCreationOptions.fromMap(config as Map<String, Any?>)
+                        else -> DidCreationOptions()
+                    }
+                    if (!creationOptions.additionalProperties.containsKey("kms")) {
+                        creationOptions = creationOptions.copy(
+                            additionalProperties = creationOptions.additionalProperties + ("kms" to keyManagementService)
+                        )
                     }
                     
-                    val method = provider.create(methodName, configMap)
+                    val method = provider.create(methodName, creationOptions)
                     if (method != null) {
                         return method as Any
                     }

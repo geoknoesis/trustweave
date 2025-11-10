@@ -15,12 +15,13 @@ import java.util.UUID
  */
 class ProofGeneratorRegistryTest {
 
+    private lateinit var registry: ProofGeneratorRegistry
     private lateinit var generator1: ProofGenerator
     private lateinit var generator2: ProofGenerator
 
     @BeforeEach
     fun setup() {
-        ProofGeneratorRegistry.clear()
+        registry = ProofGeneratorRegistry()
         
         generator1 = Ed25519ProofGenerator(
             signer = { data, _ -> "signature-1-${UUID.randomUUID()}".toByteArray() },
@@ -47,23 +48,23 @@ class ProofGeneratorRegistryTest {
 
     @AfterEach
     fun cleanup() {
-        ProofGeneratorRegistry.clear()
+        registry.clear()
     }
 
     @Test
     fun `test register generator`() = runBlocking {
-        ProofGeneratorRegistry.register(generator1)
+        registry.register(generator1)
         
-        assertTrue(ProofGeneratorRegistry.isSupported("Ed25519Signature2020"))
-        assertEquals(generator1, ProofGeneratorRegistry.get("Ed25519Signature2020"))
+        assertTrue(registry.isSupported("Ed25519Signature2020"))
+        assertEquals(generator1, registry.get("Ed25519Signature2020"))
     }
 
     @Test
     fun `test get generator by type`() = runBlocking {
-        ProofGeneratorRegistry.register(generator1)
-        ProofGeneratorRegistry.register(generator2)
+        registry.register(generator1)
+        registry.register(generator2)
         
-        val retrieved = ProofGeneratorRegistry.get("Ed25519Signature2020")
+        val retrieved = registry.get("Ed25519Signature2020")
         
         assertNotNull(retrieved)
         assertEquals("Ed25519Signature2020", retrieved?.proofType)
@@ -71,15 +72,15 @@ class ProofGeneratorRegistryTest {
 
     @Test
     fun `test get generator returns null when not found`() = runBlocking {
-        assertNull(ProofGeneratorRegistry.get("NonexistentProofType"))
+        assertNull(registry.get("NonexistentProofType"))
     }
 
     @Test
     fun `test getRegisteredTypes returns all types`() = runBlocking {
-        ProofGeneratorRegistry.register(generator1)
-        ProofGeneratorRegistry.register(generator2)
+        registry.register(generator1)
+        registry.register(generator2)
         
-        val types = ProofGeneratorRegistry.getRegisteredTypes()
+        val types = registry.getRegisteredTypes()
         
         assertEquals(2, types.size)
         assertTrue(types.contains("Ed25519Signature2020"))
@@ -88,42 +89,42 @@ class ProofGeneratorRegistryTest {
 
     @Test
     fun `test isSupported returns true for registered type`() = runBlocking {
-        ProofGeneratorRegistry.register(generator1)
+        registry.register(generator1)
         
-        assertTrue(ProofGeneratorRegistry.isSupported("Ed25519Signature2020"))
-        assertFalse(ProofGeneratorRegistry.isSupported("NonexistentProofType"))
+        assertTrue(registry.isSupported("Ed25519Signature2020"))
+        assertFalse(registry.isSupported("NonexistentProofType"))
     }
 
     @Test
     fun `test clear removes all generators`() = runBlocking {
-        ProofGeneratorRegistry.register(generator1)
-        ProofGeneratorRegistry.register(generator2)
-        assertEquals(2, ProofGeneratorRegistry.getRegisteredTypes().size)
+        registry.register(generator1)
+        registry.register(generator2)
+        assertEquals(2, registry.getRegisteredTypes().size)
         
-        ProofGeneratorRegistry.clear()
+        registry.clear()
         
-        assertEquals(0, ProofGeneratorRegistry.getRegisteredTypes().size)
-        assertFalse(ProofGeneratorRegistry.isSupported("Ed25519Signature2020"))
+        assertEquals(0, registry.getRegisteredTypes().size)
+        assertFalse(registry.isSupported("Ed25519Signature2020"))
     }
 
     @Test
     fun `test register overwrites existing generator`() = runBlocking {
-        ProofGeneratorRegistry.register(generator1)
+        registry.register(generator1)
         
         val newGenerator = Ed25519ProofGenerator(
             signer = { data, _ -> "new-signature".toByteArray() },
             getPublicKeyId = { "did:key:new#key-1" }
         )
         
-        ProofGeneratorRegistry.register(newGenerator)
+        registry.register(newGenerator)
         
-        val retrieved = ProofGeneratorRegistry.get("Ed25519Signature2020")
+        val retrieved = registry.get("Ed25519Signature2020")
         assertEquals(newGenerator, retrieved)
     }
 
     @Test
     fun `test generate proof with registered generator`() = runBlocking {
-        ProofGeneratorRegistry.register(generator1)
+        registry.register(generator1)
         val credential = createTestCredential()
         
         val proof = generator1.generateProof(
@@ -139,7 +140,7 @@ class ProofGeneratorRegistryTest {
 
     @Test
     fun `test generate proof with options`() = runBlocking {
-        ProofGeneratorRegistry.register(generator1)
+        registry.register(generator1)
         val credential = createTestCredential()
         
         val proof = generator1.generateProof(

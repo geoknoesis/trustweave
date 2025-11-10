@@ -68,7 +68,7 @@ fun main() = runBlocking {
     // Example: did:key:zABC123... (self-contained, no external registration)
     
     // Create a DID using Ed25519 algorithm (modern, efficient cryptographic algorithm)
-    val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val issuerDoc = didMethod.createDid()
     val issuerDid = issuerDoc.id
     
     // The DID Document contains:

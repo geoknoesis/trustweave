@@ -54,7 +54,7 @@ class EarthObservationExampleTest {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         
-        val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
 
         assertNotNull(issuerDid)
@@ -68,7 +68,7 @@ class EarthObservationExampleTest {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         
-        val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
 
         // Create metadata artifact
@@ -112,7 +112,7 @@ class EarthObservationExampleTest {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         
-        val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
 
         // Create artifacts
@@ -179,7 +179,7 @@ class EarthObservationExampleTest {
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
         
-        val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
 
         // Create linkset
@@ -238,7 +238,7 @@ class EarthObservationExampleTest {
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
         val blockchainRegistry = DefaultBlockchainAnchorRegistry().apply { register(chainId, anchorClient) }
         
-        val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
 
         // Create artifacts
@@ -378,7 +378,7 @@ class EarthObservationExampleTest {
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
         
-        val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
 
         // Create linkset

@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import io.geoknoesis.vericore.did.DidCreationOptions
 
 class DidTest {
 
@@ -55,7 +56,7 @@ class DidRegistryTest {
     fun `DidRegistry should register and retrieve methods`() {
         val mockMethod = object : DidMethod {
             override val method = "test"
-            override suspend fun createDid(options: Map<String, Any?>) = TODO()
+            override suspend fun createDid(options: DidCreationOptions) = TODO()
             override suspend fun resolveDid(did: String) = TODO()
             override suspend fun updateDid(did: String, updater: (DidDocument) -> DidDocument) = TODO()
             override suspend fun deactivateDid(did: String) = TODO()
@@ -136,7 +137,7 @@ class DidRegistryTest {
         return object : DidMethod {
             override val method = methodName
             
-            override suspend fun createDid(options: Map<String, Any?>) = DidDocument(
+            override suspend fun createDid(options: DidCreationOptions) = DidDocument(
                 id = "did:$methodName:123"
             )
             

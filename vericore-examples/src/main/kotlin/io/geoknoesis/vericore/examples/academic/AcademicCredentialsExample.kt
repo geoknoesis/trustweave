@@ -45,10 +45,10 @@ fun main() = runBlocking {
         ?: InMemoryKeyManagementService()
     val didMethod = DidKeyMockMethod(kms)
     
-    val universityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val universityDid = didMethod.createDid()
     println("University DID: ${universityDid.id}")
     
-    val studentDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val studentDid = didMethod.createDid()
     println("Student DID: ${studentDid.id}")
     
     // Step 3: Create student wallet using DSL

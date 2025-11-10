@@ -16,13 +16,16 @@ import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
 import io.geoknoesis.vericore.credential.wallet.Wallet
 import io.geoknoesis.vericore.credential.wallet.WalletProvider
 import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
+import io.geoknoesis.vericore.credential.proof.ProofGenerator
 import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
 import io.geoknoesis.vericore.did.Did
 import io.geoknoesis.vericore.did.DidCreationOptions
+import io.geoknoesis.vericore.did.DidCreationOptionsBuilder
 import io.geoknoesis.vericore.did.DidDocument
 import io.geoknoesis.vericore.did.DidMethod
 import io.geoknoesis.vericore.did.DidResolutionResult
 import io.geoknoesis.vericore.did.DidMethodRegistry
+import io.geoknoesis.vericore.did.didCreationOptions
 import io.geoknoesis.vericore.kms.KeyManagementService
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
@@ -37,9 +40,9 @@ import java.util.UUID
  * **Quick Start:**
  * ```kotlin
  * val vericore = VeriCore.create()
- * val did = vericore.createDid()
- * val credential = vericore.issueCredential(did, keyId) { ... }
- * val valid = vericore.verifyCredential(credential)
+     * val did = vericore.createDid().getOrThrow()
+     * val credential = vericore.issueCredential(did, keyId) { ... }.getOrThrow()
+     * val valid = vericore.verifyCredential(credential).getOrThrow()
  * ```
  * 
  * **Custom Configuration:**
@@ -66,32 +69,48 @@ class VeriCore private constructor(
      * 
      * **Example:**
      * ```kotlin
-     * val did = vericore.createDid()  // Uses default "key" method
-     * val webDid = vericore.createDid(method = "web")
+     * val did = vericore.createDid().getOrThrow()  // Uses default "key" method
+     * val webDid = vericore.createDid(method = "web").getOrThrow()
      * ```
      * 
      * @param method DID method name (default: "key")
      * @param options Method-specific creation options
-     * @return The created DID document
+     * @return Result containing the created DID document
      * @throws IllegalArgumentException if the method is not registered
      */
     suspend fun createDid(
         method: String = "key",
-        options: Map<String, Any?> = emptyMap()
-    ): DidDocument {
+        options: DidCreationOptions = DidCreationOptions()
+    ): Result<DidDocument> = runCatching {
         val didMethod = context.getDidMethod(method)
             ?: throw IllegalArgumentException(
                 "DID method '$method' not registered. Available methods: ${context.getAvailableDidMethods()}"
             )
-        return didMethod.createDid(options)
+        didMethod.createDid(options)
     }
-    
+
+    /**
+     * Creates a DID using a fluent builder for [DidCreationOptions].
+     *
+     * **Example:**
+     * ```kotlin
+     * val did = vericore.createDid("key") {
+     *     algorithm = DidCreationOptions.KeyAlgorithm.ED25519
+     *     purpose(DidCreationOptions.KeyPurpose.AUTHENTICATION)
+     * }.getOrThrow()
+     * ```
+     */
+    suspend fun createDid(
+        method: String = "key",
+        configure: DidCreationOptionsBuilder.() -> Unit
+    ): Result<DidDocument> = createDid(method, didCreationOptions(configure))
+
     /**
      * Resolves a DID to its document.
      * 
      * **Example:**
      * ```kotlin
-     * val result = vericore.resolveDid("did:key:z6Mkfriq...")
+     * val result = vericore.resolveDid("did:key:z6Mkfriq...").getOrThrow()
      * if (result.document != null) {
      *     println("DID resolved: ${result.document.id}")
      * }
@@ -101,9 +120,8 @@ class VeriCore private constructor(
      * @return Resolution result containing the document and metadata
      * @throws IllegalArgumentException if the DID method is not registered
      */
-    suspend fun resolveDid(did: String): DidResolutionResult {
-        return context.resolveDid(did)
-    }
+    suspend fun resolveDid(did: String): Result<DidResolutionResult> =
+        runCatching { context.resolveDid(did) }
     
     // ========================================
     // Credential Operations
@@ -122,7 +140,7 @@ class VeriCore private constructor(
      *         put("name", "Alice")
      *     },
      *     types = listOf("PersonCredential")
-     * )
+     * ).getOrThrow()
      * ```
      * 
      * @param issuerDid DID of the credential issuer
@@ -130,7 +148,7 @@ class VeriCore private constructor(
      * @param credentialSubject The credential subject as JSON
      * @param types Credential types (VerifiableCredential is added automatically)
      * @param expirationDate Optional expiration date (ISO 8601)
-     * @return The issued credential with proof
+     * @return Result containing the issued credential with proof
      */
     suspend fun issueCredential(
         issuerDid: String,
@@ -138,7 +156,7 @@ class VeriCore private constructor(
         credentialSubject: kotlinx.serialization.json.JsonElement,
         types: List<String> = listOf("VerifiableCredential"),
         expirationDate: String? = null
-    ): VerifiableCredential {
+    ): Result<VerifiableCredential> = runCatching {
         val normalizedKeyId = normalizeKeyId(issuerKeyId)
         val credentialId = "urn:uuid:${UUID.randomUUID()}"
         val credential = VerifiableCredential(
@@ -149,14 +167,13 @@ class VeriCore private constructor(
             issuanceDate = java.time.Instant.now().toString(),
             expirationDate = expirationDate
         )
-        
-        // Create a proof generator from the KMS
+
         val proofGenerator = Ed25519ProofGenerator(
             signer = { data, keyId -> context.kms.sign(normalizeKeyId(keyId), data) }
         )
-        
+
         val issuer = CredentialIssuer(proofGenerator)
-        return issuer.issue(credential, issuerDid, normalizedKeyId)
+        issuer.issue(credential, issuerDid, normalizedKeyId)
     }
     
     /**
@@ -164,7 +181,7 @@ class VeriCore private constructor(
      * 
      * **Example:**
      * ```kotlin
-     * val result = vericore.verifyCredential(credential)
+     * val result = vericore.verifyCredential(credential).getOrThrow()
      * if (result.valid) {
      *     println("Credential is valid")
      * } else {
@@ -174,12 +191,12 @@ class VeriCore private constructor(
      * 
      * @param credential The credential to verify
      * @param options Verification options (e.g., check revocation, expiration)
-     * @return Verification result with detailed status
+     * @return Result containing verification details
      */
     suspend fun verifyCredential(
         credential: VerifiableCredential,
         options: CredentialVerificationOptions = CredentialVerificationOptions()
-    ): CredentialVerificationResult {
+    ): Result<CredentialVerificationResult> = runCatching {
         val effectiveResolver = options.didResolver ?: CredentialDidResolver { did ->
             runCatching { context.resolveDid(did) }
                 .getOrNull()
@@ -192,7 +209,7 @@ class VeriCore private constructor(
         } else {
             options
         }
-        return verifier.verify(credential, adjustedOptions)
+        verifier.verify(credential, adjustedOptions)
     }
     
     // ========================================
@@ -204,7 +221,7 @@ class VeriCore private constructor(
      * 
      * **Example:**
      * ```kotlin
-     * val wallet = vericore.createWallet("did:key:holder")
+     * val wallet = vericore.createWallet("did:key:holder").getOrThrow()
      * wallet.store(credential)
      * val credentials = wallet.query {
      *     byType("PersonCredential")
@@ -216,14 +233,14 @@ class VeriCore private constructor(
      * @param walletId Optional wallet identifier (generated if not provided)
      * @param provider Strongly typed wallet provider identifier (defaults to in-memory)
      * @param options Provider-specific configuration passed to the underlying [WalletFactory]
-     * @return A new wallet instance
+     * @return Result containing the new wallet instance
      */
     suspend fun createWallet(
         holderDid: String,
         walletId: String = UUID.randomUUID().toString(),
         provider: WalletProvider = WalletProvider.InMemory,
         options: Map<String, Any?> = emptyMap()
-    ): Wallet {
+    ): Result<Wallet> = runCatching {
         val wallet = context.walletFactory.create(
             providerName = provider.id,
             walletId = walletId,
@@ -231,10 +248,35 @@ class VeriCore private constructor(
             options = options
         )
 
-        return wallet as? Wallet ?: throw IllegalStateException(
+        wallet as? Wallet ?: throw IllegalStateException(
             "WalletFactory returned unsupported instance: ${wallet?.let { it::class.qualifiedName }}"
         )
     }
+
+    /**
+     * Creates a wallet using a fluent options builder.
+     *
+     * **Example:**
+     * ```kotlin
+     * val wallet = vericore.createWallet("did:key:holder") {
+     *     label = "Holder Wallet"
+     *     storagePath = "/wallets/holder"
+     *     property("autoUnlock", true)
+     * }.getOrThrow()
+     * ```
+     */
+    suspend fun createWallet(
+        holderDid: String,
+        walletId: String = UUID.randomUUID().toString(),
+        provider: WalletProvider = WalletProvider.InMemory,
+        configure: WalletOptionsBuilder.() -> Unit
+    ): Result<Wallet> =
+        createWallet(
+            holderDid = holderDid,
+            walletId = walletId,
+            provider = provider,
+            options = walletOptions(configure)
+        )
     
     // ========================================
     // Blockchain Anchoring
@@ -409,7 +451,8 @@ class VeriCoreContext private constructor(
     internal val walletFactory: WalletFactory,
     internal val didRegistry: DidMethodRegistry,
     internal val blockchainRegistry: BlockchainAnchorRegistry,
-    internal val credentialRegistry: CredentialServiceRegistry
+    internal val credentialRegistry: CredentialServiceRegistry,
+    internal val proofRegistry: ProofGeneratorRegistry
 ) {
     
     /**
@@ -445,6 +488,8 @@ class VeriCoreContext private constructor(
     fun blockchainRegistry(): BlockchainAnchorRegistry = blockchainRegistry
 
     fun credentialRegistry(): CredentialServiceRegistry = credentialRegistry
+
+    fun proofRegistry(): ProofGeneratorRegistry = proofRegistry
     
     companion object {
         fun fromConfig(config: VeriCoreConfig): VeriCoreContext {
@@ -453,7 +498,8 @@ class VeriCoreContext private constructor(
                 walletFactory = config.walletFactory,
                 didRegistry = config.didRegistry,
                 blockchainRegistry = config.blockchainRegistry,
-                credentialRegistry = config.credentialRegistry
+                credentialRegistry = config.credentialRegistry,
+                proofRegistry = config.proofRegistry
             )
         }
     }
@@ -467,14 +513,16 @@ data class VeriCoreConfig(
     val walletFactory: WalletFactory,
     val didRegistry: DidMethodRegistry,
     val blockchainRegistry: BlockchainAnchorRegistry = BlockchainAnchorRegistry(),
-    val credentialRegistry: CredentialServiceRegistry = CredentialServiceRegistry.create()
+    val credentialRegistry: CredentialServiceRegistry = CredentialServiceRegistry.create(),
+    val proofRegistry: ProofGeneratorRegistry = ProofGeneratorRegistry()
 ) {
     fun toBuilder(): Builder = Builder(
         kms = kms,
         walletFactory = walletFactory,
         didRegistry = didRegistry.snapshot(),
         blockchainRegistry = blockchainRegistry.snapshot(),
-        credentialRegistry = credentialRegistry.snapshot()
+        credentialRegistry = credentialRegistry.snapshot(),
+        proofRegistry = proofRegistry.snapshot()
     )
     
     class Builder internal constructor(
@@ -482,7 +530,8 @@ data class VeriCoreConfig(
         private var walletFactory: WalletFactory?,
         private val didRegistry: DidMethodRegistry,
         private val blockchainRegistry: BlockchainAnchorRegistry,
-        private val credentialRegistry: CredentialServiceRegistry
+        private val credentialRegistry: CredentialServiceRegistry,
+        private val proofRegistry: ProofGeneratorRegistry
     ) {
         fun kms(kms: KeyManagementService) {
             this.kms = kms
@@ -507,6 +556,14 @@ data class VeriCoreConfig(
         fun unregisterCredentialService(providerName: String) {
             credentialRegistry.unregister(providerName)
         }
+
+        fun registerProofGenerator(generator: ProofGenerator) {
+            proofRegistry.register(generator)
+        }
+
+        fun unregisterProofGenerator(proofType: String) {
+            proofRegistry.unregister(proofType)
+        }
         
         fun removeBlockchainClient(chainId: String) {
             blockchainRegistry.unregister(chainId)
@@ -526,7 +583,8 @@ data class VeriCoreConfig(
                 walletFactory = walletFactory,
                 didRegistry = didRegistry.snapshot(),
                 blockchainRegistry = blockchainRegistry.snapshot(),
-                credentialRegistry = credentialRegistry.snapshot()
+                credentialRegistry = credentialRegistry.snapshot(),
+                proofRegistry = proofRegistry.snapshot()
             )
         }
     }
@@ -539,5 +597,62 @@ data class VeriCoreConfig(
         )
         fun default(): VeriCoreConfig = VeriCoreDefaults.inMemoryTest()
     }
+}
+
+
+/**
+ * Builder for constructing wallet creation options in a type-safe manner.
+ */
+class WalletOptionsBuilder {
+    /**
+     * Optional human-readable label associated with the wallet.
+     */
+    var label: String? = null
+
+    /**
+     * Optional storage path used by file-based wallet providers.
+     */
+    var storagePath: String? = null
+
+    /**
+     * Optional encryption key or password material used by secure wallets.
+     */
+    var encryptionKey: String? = null
+
+    private val customProperties = mutableMapOf<String, Any?>()
+
+    /**
+     * Adds a provider-specific option that doesn't have a dedicated property.
+     */
+    fun property(key: String, value: Any?) {
+        customProperties[key] = value
+    }
+
+    internal fun build(): Map<String, Any?> {
+        val options = mutableMapOf<String, Any?>()
+        label?.let { options["label"] = it }
+        storagePath?.let { options["storagePath"] = it }
+        encryptionKey?.let { options["encryptionKey"] = it }
+        options.putAll(customProperties)
+        return options
+    }
+}
+
+/**
+ * Convenience builder for wallet creation options.
+ *
+ * **Example:**
+ * ```kotlin
+ * val options = walletOptions {
+ *     label = "Holder Wallet"
+ *     storagePath = "/wallets/holders/alice"
+ *     property("autoUnlock", true)
+ * }
+ * ```
+ */
+fun walletOptions(block: WalletOptionsBuilder.() -> Unit): Map<String, Any?> {
+    val builder = WalletOptionsBuilder()
+    builder.block()
+    return builder.build()
 }
 

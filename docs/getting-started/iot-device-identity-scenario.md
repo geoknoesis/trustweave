@@ -247,7 +247,7 @@ fun main() = runBlocking {
     // Manufacturer DID serves as trust anchor
     // All device attestation credentials will be issued by this DID
     // This proves devices are from legitimate manufacturer
-    val manufacturerDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val manufacturerDid = didMethod.createDid()
     println("Manufacturer DID: ${manufacturerDid.id}")
     
     // Step 3: Create device DID
@@ -256,7 +256,7 @@ fun main() = runBlocking {
     // Device DID provides persistent identity for the IoT device
     // This DID will be used throughout device lifecycle
     // Even if device changes networks or owners, DID persists
-    val deviceDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val deviceDid = didMethod.createDid()
     println("Device DID: ${deviceDid.id}")
     
     // Step 4: Create network gateway DID
@@ -264,7 +264,7 @@ fun main() = runBlocking {
     
     // Gateway DID represents the network gateway that controls access
     // This DID will issue network authorization credentials
-    val gatewayDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val gatewayDid = didMethod.createDid()
     println("Gateway DID: ${gatewayDid.id}")
 ```
 
@@ -357,16 +357,17 @@ import java.time.Instant
         getPublicKeyId = { keyId -> manufacturerKey.id }
     )
     
-    // Register proof generator so it can be used
-    ProofGeneratorRegistry.register(manufacturerProofGenerator)
+    // Register proof generator in a local registry
+    val manufacturerProofRegistry = ProofGeneratorRegistry().apply {
+        register(manufacturerProofGenerator)
+    }
     
     // Create credential issuer that uses the proof generator
     // The resolveDid function checks if DIDs are valid (simplified for example)
     val manufacturerIssuer = CredentialIssuer(
         proofGenerator = manufacturerProofGenerator,
-        didResolver = CredentialDidResolver { did ->
-            didRegistry.resolve(did).toCredentialDidResolution()
-        }
+        resolveDid = { did -> didRegistry.resolve(did) != null },
+        proofRegistry = manufacturerProofRegistry
     )
     
     // Issue the credential with cryptographic proof
@@ -513,13 +514,14 @@ import java.time.Instant
         signer = { data, keyId -> gatewayKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> gatewayKey.id }
     )
-    ProofGeneratorRegistry.register(gatewayProofGenerator)
+    val gatewayProofRegistry = ProofGeneratorRegistry().apply {
+        register(gatewayProofGenerator)
+    }
     
     val gatewayIssuer = CredentialIssuer(
         proofGenerator = gatewayProofGenerator,
-        didResolver = CredentialDidResolver { did ->
-            didRegistry.resolve(did).toCredentialDidResolution()
-        }
+        resolveDid = { did -> didRegistry.resolve(did) != null },
+        proofRegistry = gatewayProofRegistry
     )
     
     val issuedNetworkAuth = gatewayIssuer.issue(
@@ -621,7 +623,7 @@ import io.geoknoesis.vericore.credential.CredentialVerificationOptions
     println("\nStep 10: Setting up device-to-device communication...")
     
     // Create second device for communication example
-    val device2Did = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val device2Did = didMethod.createDid()
     println("Second device DID: ${device2Did.id}")
     
     // Device 1 wants to communicate with Device 2

@@ -1,5 +1,6 @@
 package io.geoknoesis.vericore.did.spi
 
+import io.geoknoesis.vericore.did.DidCreationOptions
 import io.geoknoesis.vericore.did.DidMethod
 
 /**
@@ -14,7 +15,7 @@ interface DidMethodProvider {
      * @param options Configuration options for the method
      * @return A DidMethod instance, or null if this provider doesn't support the method
      */
-    fun create(methodName: String, options: Map<String, Any?> = emptyMap()): DidMethod?
+    fun create(methodName: String, options: DidCreationOptions = DidCreationOptions()): DidMethod?
 
     /**
      * The name/identifier of this provider (e.g., "waltid", "mock").

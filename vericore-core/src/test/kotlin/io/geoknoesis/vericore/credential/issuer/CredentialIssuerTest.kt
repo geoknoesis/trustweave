@@ -25,10 +25,11 @@ class CredentialIssuerTest {
     private lateinit var issuer: CredentialIssuer
     private val issuerDid = "did:key:issuer123"
     private val keyId = "key-1"
+    private lateinit var proofRegistry: ProofGeneratorRegistry
 
     @BeforeEach
     fun setup() {
-        ProofGeneratorRegistry.clear()
+        proofRegistry = ProofGeneratorRegistry()
         SchemaRegistry.clear()
         SchemaValidatorRegistry.clear()
         
@@ -45,17 +46,18 @@ class CredentialIssuerTest {
             signer = signer,
             getPublicKeyId = { "did:key:issuer123#key-1" }
         )
-        ProofGeneratorRegistry.register(proofGenerator)
+        proofRegistry.register(proofGenerator)
         
         issuer = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { did -> did == issuerDid }
+            resolveDid = { did -> did == issuerDid },
+            proofRegistry = proofRegistry
         )
     }
 
     @AfterEach
     fun cleanup() {
-        ProofGeneratorRegistry.clear()
+        proofRegistry.clear()
         SchemaRegistry.clear()
         SchemaValidatorRegistry.clear()
     }
@@ -152,7 +154,8 @@ class CredentialIssuerTest {
     @Test
     fun `test issue credential fails when DID cannot be resolved`() = runBlocking {
         val issuerWithFailedDid = CredentialIssuer(
-            resolveDid = { false }
+            resolveDid = { false },
+            proofRegistry = proofRegistry
         )
         val credential = createTestCredential()
         
@@ -243,7 +246,8 @@ class CredentialIssuerTest {
     fun `test issue credential uses proof generator from registry`() = runBlocking {
         val issuerWithoutGenerator = CredentialIssuer(
             proofGenerator = null,
-            resolveDid = { did -> did == issuerDid }
+            resolveDid = { did -> did == issuerDid },
+            proofRegistry = proofRegistry
         )
         val credential = createTestCredential()
         
@@ -260,10 +264,11 @@ class CredentialIssuerTest {
 
     @Test
     fun `test issue credential fails when proof generator not found`() = runBlocking {
-        ProofGeneratorRegistry.clear()
+        val emptyRegistry = ProofGeneratorRegistry()
         val issuerWithoutGenerator = CredentialIssuer(
             proofGenerator = null,
-            resolveDid = { did -> did == issuerDid }
+            resolveDid = { did -> did == issuerDid },
+            proofRegistry = emptyRegistry
         )
         val credential = createTestCredential()
         

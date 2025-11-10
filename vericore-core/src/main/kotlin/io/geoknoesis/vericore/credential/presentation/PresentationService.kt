@@ -83,7 +83,8 @@ data class PresentationQuery(
  */
 class PresentationService(
     private val proofGenerator: ProofGenerator? = null,
-    private val credentialVerifier: CredentialVerifier? = null
+    private val credentialVerifier: CredentialVerifier? = null,
+    private val proofRegistry: ProofGeneratorRegistry = ProofGeneratorRegistry()
 ) {
     /**
      * Create a verifiable presentation from credentials.
@@ -242,9 +243,8 @@ class PresentationService(
     /**
      * Get proof generator by type.
      */
-    private fun getProofGenerator(proofType: String): ProofGenerator {
-        return ProofGeneratorRegistry.get(proofType)
+    private fun getProofGenerator(proofType: String): ProofGenerator =
+        proofRegistry.get(proofType)
             ?: throw IllegalArgumentException("No proof generator registered for type: $proofType")
-    }
 }
 

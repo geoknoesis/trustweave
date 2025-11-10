@@ -115,10 +115,10 @@ class WaltIdKeyMethod(
 
     override val method: String = "key"
 
-    override suspend fun createDid(options: Map<String, Any?>): DidDocument = withContext(Dispatchers.IO) {
+    override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
         try {
-            val algorithm = options["algorithm"] as? String ?: "Ed25519"
-            val keyHandle = kms.generateKey(algorithm, options)
+            val algorithm = options.algorithm.algorithmName
+            val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
 
             // Use walt.id to create did:key
             // val waltIdDid = WaltIdDid.create("key", keyHandle.publicKeyJwk)
@@ -186,13 +186,13 @@ class WaltIdWebMethod(
 
     override val method: String = "web"
 
-    override suspend fun createDid(options: Map<String, Any?>): DidDocument = withContext(Dispatchers.IO) {
+    override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
         try {
-            val domain = options["domain"] as? String
+            val domain = options.additionalProperties["domain"] as? String
                 ?: throw IllegalArgumentException("did:web requires 'domain' option")
             
-            val algorithm = options["algorithm"] as? String ?: "Ed25519"
-            val keyHandle = kms.generateKey(algorithm, options)
+            val algorithm = options.algorithm.algorithmName
+            val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
 
             // Use walt.id to create did:web
             // val waltIdDid = WaltIdDid.create("web", domain, keyHandle.publicKeyJwk)
@@ -256,13 +256,13 @@ class WaltIdDidMethodProvider : DidMethodProvider {
     override val name: String = "waltid"
     override val supportedMethods: List<String> = listOf("key", "web")
 
-    override fun create(methodName: String, options: Map<String, Any?>): DidMethod? {
+    override fun create(methodName: String, options: io.geoknoesis.vericore.did.DidCreationOptions): DidMethod? {
         // Get KMS from options or discover it via SPI
-        val kms = options["kms"] as? KeyManagementService
+        val kms = options.additionalProperties["kms"] as? KeyManagementService
             ?: run {
                 // Try to discover KMS via SPI
                 val kmsProviders = java.util.ServiceLoader.load(io.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider::class.java)
-                kmsProviders.find { it.name == "waltid" }?.create(options)
+                kmsProviders.find { it.name == "waltid" }?.create(options.additionalProperties)
                     ?: throw IllegalStateException("No KeyManagementService available. Provide 'kms' in options or ensure walt.id KMS provider is registered.")
             }
 

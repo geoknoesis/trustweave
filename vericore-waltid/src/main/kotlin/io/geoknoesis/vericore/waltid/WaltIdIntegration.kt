@@ -1,5 +1,6 @@
 package io.geoknoesis.vericore.waltid
 
+import io.geoknoesis.vericore.did.DidCreationOptions
 import io.geoknoesis.vericore.did.DidMethodRegistry
 import io.geoknoesis.vericore.did.spi.DidMethodProvider
 import io.geoknoesis.vericore.kms.KeyManagementService
@@ -20,14 +21,14 @@ object WaltIdIntegration {
      */
     fun discoverAndRegister(
         registry: DidMethodRegistry,
-        options: Map<String, Any?> = emptyMap()
+        options: DidCreationOptions = DidCreationOptions()
     ): WaltIdIntegrationResult {
         // Discover KMS providers
         val kmsProviders = ServiceLoader.load(KeyManagementServiceProvider::class.java)
         val waltIdKmsProvider = kmsProviders.find { it.name == "waltid" }
             ?: throw IllegalStateException("walt.id KMS provider not found. Ensure vericore-waltid is on classpath.")
 
-        val kms = waltIdKmsProvider.create(options)
+        val kms = waltIdKmsProvider.create(options.additionalProperties)
 
         // Discover DID method providers
         val didProviders = ServiceLoader.load(DidMethodProvider::class.java)
@@ -37,7 +38,10 @@ object WaltIdIntegration {
         // Register supported DID methods
         val registeredMethods = mutableListOf<String>()
         for (methodName in waltIdDidProvider.supportedMethods) {
-            val method = waltIdDidProvider.create(methodName, options + mapOf("kms" to kms))
+            val methodOptions = options.copy(
+                additionalProperties = options.additionalProperties + ("kms" to kms)
+            )
+            val method = waltIdDidProvider.create(methodName, methodOptions)
             if (method != null) {
                 registry.register(method)
                 registeredMethods.add(methodName)
@@ -63,7 +67,7 @@ object WaltIdIntegration {
         kms: KeyManagementService,
         registry: DidMethodRegistry,
         didMethods: List<String> = listOf("key", "web"),
-        options: Map<String, Any?> = emptyMap()
+        options: DidCreationOptions = DidCreationOptions()
     ): WaltIdIntegrationResult {
         // Discover DID method provider
         val didProviders = ServiceLoader.load(DidMethodProvider::class.java)
@@ -74,7 +78,10 @@ object WaltIdIntegration {
         val registeredMethods = mutableListOf<String>()
         for (methodName in didMethods) {
             if (methodName in waltIdDidProvider.supportedMethods) {
-                val method = waltIdDidProvider.create(methodName, options + mapOf("kms" to kms))
+                val methodOptions = options.copy(
+                    additionalProperties = options.additionalProperties + ("kms" to kms)
+                )
+                val method = waltIdDidProvider.create(methodName, methodOptions)
                 if (method != null) {
                     registry.register(method)
                     registeredMethods.add(methodName)

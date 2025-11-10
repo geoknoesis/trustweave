@@ -1,7 +1,9 @@
 package io.geoknoesis.vericore.godiddy.registrar
 
 import io.geoknoesis.vericore.core.VeriCoreException
+import io.geoknoesis.vericore.did.DidCreationOptions
 import io.geoknoesis.vericore.did.DidDocument
+import io.geoknoesis.vericore.did.didCreationOptions
 import io.geoknoesis.vericore.godiddy.GodiddyClient
 import io.geoknoesis.vericore.godiddy.GodiddyConfig
 import kotlinx.coroutines.runBlocking
@@ -21,9 +23,9 @@ class GodiddyRegistrarBranchCoverageTest {
         
         // This will fail in real scenario, but we test the branch
         try {
-            val options = mapOf<String, Any?>(
-                "keyType" to "Ed25519"
-            )
+            val options = didCreationOptions {
+                property("keyType", "Ed25519")
+            }
             val result = registrar.createDid("key", options)
             assertNotNull(result)
         } catch (e: Exception) {
@@ -42,7 +44,7 @@ class GodiddyRegistrarBranchCoverageTest {
         
         // This will fail in real scenario, but we test the branch
         try {
-            val result = registrar.createDid("key", emptyMap())
+            val result = registrar.createDid("key", DidCreationOptions())
             assertNotNull(result)
         } catch (e: Exception) {
             // Expected to fail without mock
@@ -60,7 +62,7 @@ class GodiddyRegistrarBranchCoverageTest {
         
         // This will fail in real scenario, but we test the branch
         try {
-            val result = registrar.createDid("key", emptyMap())
+            val result = registrar.createDid("key", DidCreationOptions())
             assertNotNull(result)
         } catch (e: Exception) {
             // Expected to fail without mock
@@ -136,13 +138,15 @@ class GodiddyRegistrarBranchCoverageTest {
         
         // Test conversion logic indirectly through createDid
         try {
-            val options = mapOf<String, Any?>(
-                "string" to "value",
-                "number" to 123,
-                "boolean" to true,
-                "map" to mapOf("key" to "value"),
-                "list" to listOf("item1", "item2"),
-                "null" to null
+            val options = DidCreationOptions(
+                additionalProperties = mapOf(
+                    "string" to "value",
+                    "number" to 123,
+                    "boolean" to true,
+                    "map" to mapOf("key" to "value"),
+                    "list" to listOf("item1", "item2"),
+                    "null" to null
+                )
             )
             val result = registrar.createDid("key", options)
             assertNotNull(result)

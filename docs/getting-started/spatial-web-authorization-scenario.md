@@ -277,7 +277,7 @@ fun main() = runBlocking {
     
     // Step 2: Create DIDs for domain authority
     println("\nStep 2: Creating domain authority DID...")
-    val domainAuthorityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val domainAuthorityDid = didMethod.createDid()
     println("Domain Authority DID: ${domainAuthorityDid.id}")
     
     // Step 3: Create spatial domain
@@ -308,19 +308,19 @@ fun main() = runBlocking {
     println("\nStep 4: Creating entity DIDs...")
     
     // Agent: Drone
-    val droneAgentDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val droneAgentDid = didMethod.createDid()
     println("Agent (Drone) DID: ${droneAgentDid.id}")
     
     // Activity: Data Collection
-    val dataCollectionActivityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val dataCollectionActivityDid = didMethod.createDid()
     println("Activity (Data Collection) DID: ${dataCollectionActivityDid.id}")
     
     // Thing: Environmental Sensor
-    val sensorThingDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val sensorThingDid = didMethod.createDid()
     println("Thing (Sensor) DID: ${sensorThingDid.id}")
     
     // Spatial Feature: Monitoring Zone
-    val monitoringZoneDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val monitoringZoneDid = didMethod.createDid()
     println("Spatial Feature (Monitoring Zone) DID: ${monitoringZoneDid.id}")
     
     // Step 5: Create authorization credential
@@ -364,13 +364,12 @@ fun main() = runBlocking {
         getPublicKeyId = { keyId -> authorityKey.id }
     )
 
-val didResolver = CredentialDidResolver { did ->
-    didRegistry.resolve(did).toCredentialDidResolution()
-}
+    val proofRegistry = ProofGeneratorRegistry().apply { register(proofGenerator) }
     
     val credentialIssuer = CredentialIssuer(
         proofGenerator = proofGenerator,
-    resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
+        resolveDid = { did -> didRegistry.resolve(did) != null },
+        proofRegistry = proofRegistry
     )
     
     val issuedCredential = credentialIssuer.issue(

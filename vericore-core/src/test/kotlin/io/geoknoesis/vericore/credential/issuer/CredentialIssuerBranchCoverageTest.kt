@@ -24,10 +24,11 @@ class CredentialIssuerBranchCoverageTest {
 
     private lateinit var issuer: CredentialIssuer
     private val issuerDid = "did:key:issuer123"
+    private lateinit var proofRegistry: ProofGeneratorRegistry
 
     @BeforeEach
     fun setup() {
-        ProofGeneratorRegistry.clear()
+        proofRegistry = ProofGeneratorRegistry()
         SchemaRegistry.clear()
         SchemaValidatorRegistry.clear()
         SchemaValidatorRegistry.register(JsonSchemaValidator())
@@ -40,17 +41,18 @@ class CredentialIssuerBranchCoverageTest {
             signer = signer,
             getPublicKeyId = { "did:key:issuer123#key-1" }
         )
-        ProofGeneratorRegistry.register(proofGenerator)
+        proofRegistry.register(proofGenerator)
         
         issuer = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { did -> did == issuerDid }
+            resolveDid = { did -> did == issuerDid },
+            proofRegistry = proofRegistry
         )
     }
 
     @AfterEach
     fun cleanup() {
-        ProofGeneratorRegistry.clear()
+        proofRegistry.clear()
         SchemaRegistry.clear()
         SchemaValidatorRegistry.clear()
     }
@@ -127,11 +129,12 @@ class CredentialIssuerBranchCoverageTest {
             signer = { data, _ -> "mock-signature".toByteArray() },
             getPublicKeyId = { "did:key:issuer123#key-1" }
         )
-        ProofGeneratorRegistry.register(proofGenerator)
+        proofRegistry.register(proofGenerator)
         
         val issuerWithoutGenerator = CredentialIssuer(
             proofGenerator = null,
-            resolveDid = { did -> did == issuerDid }
+            resolveDid = { did -> did == issuerDid },
+            proofRegistry = proofRegistry
         )
         val credential = createTestCredential()
         
@@ -147,10 +150,11 @@ class CredentialIssuerBranchCoverageTest {
 
     @Test
     fun `test branch proof generator not found in registry`() = runBlocking {
-        ProofGeneratorRegistry.clear()
+        val emptyRegistry = ProofGeneratorRegistry()
         val issuerWithoutGenerator = CredentialIssuer(
             proofGenerator = null,
-            resolveDid = { did -> did == issuerDid }
+            resolveDid = { did -> did == issuerDid },
+            proofRegistry = emptyRegistry
         )
         val credential = createTestCredential()
         
@@ -181,11 +185,11 @@ class CredentialIssuerBranchCoverageTest {
             signer = { data, _ -> "mock-signature".toByteArray() },
             getPublicKeyId = { "did:key:issuer123#key-1" }
         )
-        ProofGeneratorRegistry.register(proofGenerator)
         
         val issuerWithFailedDid = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { false }
+            resolveDid = { false },
+            proofRegistry = proofRegistry
         )
         val credential = createTestCredential()
         
@@ -200,11 +204,11 @@ class CredentialIssuerBranchCoverageTest {
             signer = { data, _ -> "mock-signature".toByteArray() },
             getPublicKeyId = { "did:key:issuer123#key-1" }
         )
-        ProofGeneratorRegistry.register(proofGenerator)
         
         val issuerWithThrowingDid = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { throw RuntimeException("DID resolution failed") }
+            resolveDid = { throw RuntimeException("DID resolution failed") },
+            proofRegistry = proofRegistry
         )
         val credential = createTestCredential()
         

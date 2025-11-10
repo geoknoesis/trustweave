@@ -1,6 +1,7 @@
 package io.geoknoesis.vericore.did.services
 
 import io.geoknoesis.vericore.spi.services.DidMethodService
+import io.geoknoesis.vericore.did.DidCreationOptions
 import io.geoknoesis.vericore.did.DidMethod
 import io.geoknoesis.vericore.did.DidDocument
 import kotlinx.coroutines.Dispatchers
@@ -16,13 +17,18 @@ class DidMethodServiceAdapter : DidMethodService {
     
     override suspend fun createDid(
         didMethod: Any,
-        options: Map<String, Any?>
+        options: Any?
     ): Any = withContext(Dispatchers.IO) {
         val method = didMethod as? DidMethod
             ?: throw IllegalArgumentException("Expected DidMethod, got ${didMethod.javaClass.name}")
         
-        // Call createDid directly since we have the actual type
-        val document = method.createDid(options)
+        val creationOptions = when (options) {
+            null -> DidCreationOptions()
+            is DidCreationOptions -> options
+            else -> error("Expected DidCreationOptions, got ${options::class.qualifiedName}")
+        }
+
+        val document = method.createDid(creationOptions)
         return@withContext document as Any
     }
     

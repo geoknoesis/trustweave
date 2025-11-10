@@ -162,13 +162,3 @@ open class DidLinkedCredentialService(
     }
 }
 
-@Deprecated(
-    message = "Renamed to DidLinkedCredentialService to better communicate intent.",
-    replaceWith = ReplaceWith("DidLinkedCredentialService(didRegistry, credentialIssuer)"),
-    level = DeprecationLevel.WARNING
-)
-class DidCredentialService(
-    didRegistry: DidMethodRegistry,
-    credentialIssuer: CredentialIssuer
-) : DidLinkedCredentialService(didRegistry, credentialIssuer)
-

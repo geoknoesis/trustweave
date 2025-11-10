@@ -189,12 +189,12 @@ fun main() = runBlocking {
     
     // Journalist DID represents individual journalist
     // This provides persistent identity across platforms
-    val journalistDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val journalistDid = didMethod.createDid()
     println("Journalist DID: ${journalistDid.id}")
     
     // Organization DID represents news organization
     // Organizations can issue credentials to journalists
-    val organizationDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val organizationDid = didMethod.createDid()
     println("Organization DID: ${organizationDid.id}")
     
     // Create journalist credential issued by organization
@@ -252,7 +252,7 @@ import java.time.Instant
     )
     
     // Create article DID
-    val articleDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val articleDid = didMethod.createDid()
     println("Article DID: ${articleDid.id}")
     println("Content Hash: $contentHash")
 ```
@@ -366,7 +366,7 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
     println("\nStep 6: Tracking content modifications...")
     
     // Editor DID
-    val editorDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val editorDid = didMethod.createDid()
     
     // Modified article content
     val modifiedContent = """
@@ -483,7 +483,7 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
     println("\nStep 8: Creating fact-check credential...")
     
     // Fact-checker DID
-    val factCheckerDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val factCheckerDid = didMethod.createDid()
     
     // Fact-check credential verifies article claims
     val factCheckCredential = VerifiableCredential(
@@ -518,13 +518,14 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
         signer = { data, keyId -> journalistKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> factCheckerKey.id }
     )
-    ProofGeneratorRegistry.register(factCheckerProofGenerator)
+    val factCheckerProofRegistry = ProofGeneratorRegistry().apply {
+        register(factCheckerProofGenerator)
+    }
     
     val factCheckerIssuer = CredentialIssuer(
         proofGenerator = factCheckerProofGenerator,
-        didResolver = CredentialDidResolver { did ->
-            didRegistry.resolve(did).toCredentialDidResolution()
-        }
+        resolveDid = { did -> didRegistry.resolve(did) != null },
+        proofRegistry = factCheckerProofRegistry
     )
     
     val issuedFactCheckCredential = factCheckerIssuer.issue(

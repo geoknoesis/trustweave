@@ -7,6 +7,7 @@ import io.geoknoesis.vericore.credential.models.VerifiableCredential
 import io.geoknoesis.vericore.credential.models.VerifiablePresentation
 import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
 import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
+import io.geoknoesis.vericore.credential.proof.ProofGenerator
 import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
@@ -19,17 +20,28 @@ import kotlin.test.*
  */
 class PresentationServiceAdditionalBranchCoverageTest {
 
+    private lateinit var proofRegistry: ProofGeneratorRegistry
+
     @BeforeEach
     fun setup() {
-        ProofGeneratorRegistry.clear()
+        proofRegistry = ProofGeneratorRegistry()
     }
+
+    private fun newService(
+        proofGenerator: ProofGenerator? = null,
+        verifier: CredentialVerifier? = null
+    ): PresentationService = PresentationService(
+        proofGenerator = proofGenerator,
+        credentialVerifier = verifier,
+        proofRegistry = proofRegistry
+    )
 
     @Test
     fun `test PresentationService createPresentation with proofGenerator in constructor`() = runBlocking {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        val service = PresentationService(proofGenerator = generator)
+        val service = newService(proofGenerator = generator)
         
         val credential = createTestCredential()
         val options = PresentationOptions(
@@ -52,9 +64,9 @@ class PresentationServiceAdditionalBranchCoverageTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        ProofGeneratorRegistry.register(generator)
+        proofRegistry.register(generator)
         
-        val service = PresentationService(proofGenerator = null)
+        val service = newService(proofGenerator = null)
         
         val credential = createTestCredential()
         val options = PresentationOptions(
@@ -74,7 +86,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
     @Test
     fun `test PresentationService createPresentation without proofType`() = runBlocking {
-        val service = PresentationService()
+        val service = newService()
         
         val credential = createTestCredential()
         val options = PresentationOptions(
@@ -93,7 +105,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
     @Test
     fun `test PresentationService createPresentation without keyId`() = runBlocking {
-        val service = PresentationService()
+        val service = newService()
         
         val credential = createTestCredential()
         val options = PresentationOptions(
@@ -113,7 +125,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
     @Test
     fun `test PresentationService verifyPresentation with proof`() = runBlocking {
-        val service = PresentationService()
+        val service = newService()
         
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
@@ -137,7 +149,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
     @Test
     fun `test PresentationService verifyPresentation without proof`() = runBlocking {
-        val service = PresentationService()
+        val service = newService()
         
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
@@ -156,7 +168,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
     @Test
     fun `test PresentationService verifyPresentation with invalid proof`() = runBlocking {
-        val service = PresentationService()
+        val service = newService()
         
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
@@ -179,7 +191,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
     @Test
     fun `test PresentationService verifyPresentation with challenge verification`() = runBlocking {
-        val service = PresentationService()
+        val service = newService()
         
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
@@ -209,7 +221,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
     @Test
     fun `test PresentationService verifyPresentation with challenge mismatch`() = runBlocking {
-        val service = PresentationService()
+        val service = newService()
         
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
@@ -240,7 +252,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
     @Test
     fun `test PresentationService verifyPresentation with no challenge when verifyChallenge is true`() = runBlocking {
-        val service = PresentationService()
+        val service = newService()
         
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
@@ -270,7 +282,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
     @Test
     fun `test PresentationService verifyPresentation with domain verification`() = runBlocking {
-        val service = PresentationService()
+        val service = newService()
         
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
@@ -300,7 +312,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
     @Test
     fun `test PresentationService verifyPresentation with domain mismatch`() = runBlocking {
-        val service = PresentationService()
+        val service = newService()
         
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
@@ -332,7 +344,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
     @Test
     fun `test PresentationService verifyPresentation with credential verification`() = runBlocking {
         val verifier = CredentialVerifier()
-        val service = PresentationService(credentialVerifier = verifier)
+        val service = newService(verifier = verifier)
         
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
@@ -360,7 +372,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
     @Test
     fun `test PresentationService verifyPresentation without credentialVerifier`() = runBlocking {
-        val service = PresentationService(credentialVerifier = null)
+        val service = newService(verifier = null)
         
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
@@ -388,7 +400,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
     @Test
     fun `test PresentationService createSelectiveDisclosure`() = runBlocking {
-        val service = PresentationService()
+        val service = newService()
         
         val credential = createTestCredential()
         val options = PresentationOptions(holderDid = "did:key:holder")

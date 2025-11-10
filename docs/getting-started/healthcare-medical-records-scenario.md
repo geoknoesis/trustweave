@@ -243,13 +243,13 @@ fun main() = runBlocking {
     
     // Step 2: Create DIDs
     println("\nStep 2: Creating DIDs...")
-    val hospitalDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val hospitalDid = didMethod.createDid()
     println("Hospital DID: ${hospitalDid.id}")
     
-    val patientDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val patientDid = didMethod.createDid()
     println("Patient DID: ${patientDid.id}")
     
-    val specialistDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val specialistDid = didMethod.createDid()
     println("Specialist DID: ${specialistDid.id}")
     
     // Step 3: Create patient wallet
@@ -277,14 +277,12 @@ fun main() = runBlocking {
         signer = { data, keyId -> hospitalKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> hospitalKey.id }
     )
+    val proofRegistry = ProofGeneratorRegistry().apply { register(proofGenerator) }
     
-val didResolver = CredentialDidResolver { did ->
-    didRegistry.resolve(did).toCredentialDidResolution()
-}
-
     val credentialIssuer = CredentialIssuer(
         proofGenerator = proofGenerator,
-    resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
+        resolveDid = { did -> didRegistry.resolve(did) != null },
+        proofRegistry = proofRegistry
     )
     
     val issuedPrescription = credentialIssuer.issue(

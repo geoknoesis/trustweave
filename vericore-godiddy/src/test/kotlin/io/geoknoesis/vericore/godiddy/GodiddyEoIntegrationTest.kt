@@ -55,7 +55,7 @@ class GodiddyEoIntegrationTest {
             val kms = io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService()
             val fallbackMethod = io.geoknoesis.vericore.testkit.did.DidKeyMockMethod(kms)
             result.registry.register(fallbackMethod)
-            val issuerDoc = fallbackMethod.createDid(mapOf("algorithm" to "Ed25519"))
+            val issuerDoc = fallbackMethod.createDid()
             val issuerDid = issuerDoc.id
             assertNotNull(issuerDid)
             // Continue with fallback method
@@ -70,14 +70,14 @@ class GodiddyEoIntegrationTest {
         }
         
         val issuerDoc = try {
-            keyMethod.createDid(mapOf("algorithm" to "Ed25519"))
+            keyMethod.createDid()
         } catch (e: Exception) {
             println("Warning: DID creation via GoDiddy failed: ${e.message}. Using fallback.")
             // Use in-memory DID method as fallback
             val kms = io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService()
             val fallbackMethod = io.geoknoesis.vericore.testkit.did.DidKeyMockMethod(kms)
             result.registry.register(fallbackMethod)
-            fallbackMethod.createDid(mapOf("algorithm" to "Ed25519"))
+            fallbackMethod.createDid()
         }
         val issuerDid = issuerDoc.id
         assertNotNull(issuerDid)
@@ -376,7 +376,7 @@ class GodiddyEoIntegrationTest {
         }
         
         val issuerDoc = try {
-            keyMethod.createDid(mapOf("algorithm" to "Ed25519"))
+            keyMethod.createDid()
         } catch (e: Exception) {
             println("Skipping test: DID creation failed: ${e.message}")
             return@runBlocking

@@ -1,6 +1,8 @@
 package io.geoknoesis.vericore.waltid
 
+import io.geoknoesis.vericore.did.DidCreationOptions
 import io.geoknoesis.vericore.did.DidMethodRegistry
+import io.geoknoesis.vericore.did.didCreationOptions
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -37,7 +39,7 @@ class WaltIdEndToEndTest {
         assertNotNull(keyMethod, "did:key method should be registered")
         
         // Create a DID
-        val document = keyMethod!!.createDid(mapOf("algorithm" to "Ed25519"))
+        val document = keyMethod!!.createDid()
         assertNotNull(document.id, "DID should have an ID")
         assertTrue(document.id.startsWith("did:key:"), "DID should be did:key format")
         assertTrue(document.verificationMethod.isNotEmpty(), "DID document should have verification methods")
@@ -56,10 +58,12 @@ class WaltIdEndToEndTest {
         val webMethod = registry.get("web")
         assertNotNull(webMethod, "did:web method should be registered")
         
-        val document = webMethod!!.createDid(mapOf(
-            "domain" to "example.com",
-            "algorithm" to "Ed25519"
-        ))
+        val document = webMethod!!.createDid(
+            didCreationOptions {
+                property("domain", "example.com")
+                algorithm = DidCreationOptions.KeyAlgorithm.ED25519
+            }
+        )
         
         assertNotNull(document.id)
         assertEquals("did:web:example.com", document.id)
@@ -74,7 +78,7 @@ class WaltIdEndToEndTest {
         
         // 1. Create a DID for an issuer
         val keyMethod = registry.get("key")!!
-        val issuerDoc = keyMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDoc = keyMethod.createDid()
         val issuerDid = issuerDoc.id
         
         // 2. Verify the DID can be resolved
@@ -104,7 +108,11 @@ class WaltIdEndToEndTest {
         
         // Create DIDs using both methods
         val keyDoc = keyMethod!!.createDid()
-        val webDoc = webMethod!!.createDid(mapOf("domain" to "test.com"))
+        val webDoc = webMethod!!.createDid(
+            didCreationOptions {
+                property("domain", "test.com")
+            }
+        )
         
         assertTrue(keyDoc.id.startsWith("did:key:"))
         assertTrue(webDoc.id.startsWith("did:web:"))

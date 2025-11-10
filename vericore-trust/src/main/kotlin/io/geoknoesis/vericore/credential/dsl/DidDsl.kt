@@ -1,11 +1,11 @@
 package io.geoknoesis.vericore.credential.dsl
 
+import io.geoknoesis.vericore.did.DidCreationOptions
+import io.geoknoesis.vericore.did.DidCreationOptionsBuilder
+import io.geoknoesis.vericore.did.DidMethod
 import io.geoknoesis.vericore.spi.services.DidMethodService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlin.reflect.full.callSuspend
-import kotlin.reflect.full.memberFunctions
-import kotlin.reflect.jvm.isAccessible
 
 /**
  * DID Builder DSL.
@@ -25,8 +25,7 @@ class DidBuilder(
     private val context: TrustLayerContext
 ) {
     private var method: String? = null
-    private var algorithm: String? = null
-    private val options = mutableMapOf<String, Any?>()
+    private val optionsBuilder = DidCreationOptionsBuilder()
     
     /**
      * Set DID method (e.g., "key", "web", "ion").
@@ -39,15 +38,16 @@ class DidBuilder(
      * Set key algorithm (e.g., "Ed25519", "secp256k1").
      */
     fun algorithm(name: String) {
-        this.algorithm = name
-        options["algorithm"] = name
+        val keyAlgorithm = DidCreationOptions.KeyAlgorithm.fromName(name)
+            ?: throw IllegalArgumentException("Unsupported key algorithm: $name")
+        optionsBuilder.algorithm = keyAlgorithm
     }
     
     /**
      * Add custom option for DID creation.
      */
     fun option(key: String, value: Any?) {
-        options[key] = value
+        optionsBuilder.property(key, value)
     }
     
     /**
@@ -60,49 +60,14 @@ class DidBuilder(
             "DID method is required. Use method(\"key\") or method(\"web\") etc."
         )
         
-        // Get DID method from trust layer
-        val didMethod = context.getDidMethod(methodName)
+        val didMethod = context.getDidMethod(methodName) as? DidMethod
             ?: throw IllegalStateException(
                 "DID method '$methodName' is not configured in trust layer. " +
                 "Configure it in trustLayer { did { method(\"$methodName\") { ... } } }"
             )
         
-        // Prepare options
-        val createOptions = mutableMapOf<String, Any?>()
-        createOptions.putAll(options)
-        if (algorithm != null && !createOptions.containsKey("algorithm")) {
-            createOptions["algorithm"] = algorithm
-        }
-        
-        // Invoke the DID method directly via reflection
-        val document = invokeSuspendFunction(didMethod, "createDid", createOptions)
-            ?: throw IllegalStateException("createDid on '$methodName' returned null")
-
-        val didId = extractDidId(document)
-            ?: throw IllegalStateException("createDid on '$methodName' returned document without id")
-
-        return@withContext didId
-    }
-}
-
-private suspend fun invokeSuspendFunction(target: Any, methodName: String, vararg args: Any?): Any? {
-    val function = target::class.memberFunctions.firstOrNull { fn ->
-        fn.name == methodName && fn.parameters.size == args.size + 1
-    } ?: throw NoSuchMethodException("Method $methodName with ${args.size} arguments not found on ${target::class.qualifiedName}")
-
-    function.isAccessible = true
-    return function.callSuspend(target, *args)
-}
-
-private fun extractDidId(document: Any): String? {
-    return try {
-        val method = document::class.java.methods.firstOrNull { it.name == "getId" && it.parameterCount == 0 }
-        method?.let {
-            it.isAccessible = true
-            it.invoke(document) as? String
-        }
-    } catch (_: Exception) {
-        null
+        val document = didMethod.createDid(optionsBuilder.build())
+        return@withContext document.id
     }
 }
 

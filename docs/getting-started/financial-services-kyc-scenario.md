@@ -247,16 +247,16 @@ fun main() = runBlocking {
     
     // Step 2: Create DIDs
     println("\nStep 2: Creating DIDs...")
-    val kycProviderDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val kycProviderDid = didMethod.createDid()
     println("KYC Provider DID: ${kycProviderDid.id}")
     
-    val bankDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val bankDid = didMethod.createDid()
     println("Bank DID: ${bankDid.id}")
     
-    val cryptoExchangeDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val cryptoExchangeDid = didMethod.createDid()
     println("Crypto Exchange DID: ${cryptoExchangeDid.id}")
     
-    val customerDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val customerDid = didMethod.createDid()
     println("Customer DID: ${customerDid.id}")
     
     // Step 3: Create customer wallet

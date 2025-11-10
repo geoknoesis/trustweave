@@ -45,7 +45,7 @@ class IntegrityVerificationTest {
         val blockchainRegistry = BlockchainAnchorRegistry().also { it.register(chainId, anchorClient) }
 
         // Step 1: Create a DID for the issuer
-        val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
         assertNotNull(issuerDid)
 
@@ -176,7 +176,7 @@ class IntegrityVerificationTest {
         
         val (_, blockchainRegistry) = registerEnvironment(didMethod, chainId, anchorClient)
 
-        val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
 
         // Create VC without evidence first (to compute digest) - use fixed timestamp
@@ -240,7 +240,7 @@ class IntegrityVerificationTest {
         
         val (_, blockchainRegistry) = registerEnvironment(didMethod, chainId, anchorClient)
 
-        val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
 
         // Create anchor service in DID document
@@ -285,7 +285,7 @@ class IntegrityVerificationTest {
         
         val (_, blockchainRegistry) = registerEnvironment(didMethod, chainId, anchorClient)
 
-        val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
 
         // Create VC without credential status first (to compute digest) - use fixed timestamp
@@ -350,7 +350,7 @@ class IntegrityVerificationTest {
         
         val (_, blockchainRegistry) = registerEnvironment(didMethod, chainId, anchorClient)
 
-        val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
 
         // Create VC and anchor it - use fixed timestamp
@@ -404,7 +404,7 @@ class IntegrityVerificationTest {
         
         val (_, blockchainRegistry) = registerEnvironment(didMethod, chainId, anchorClient)
 
-        val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
 
         // Create multiple digests
@@ -442,7 +442,7 @@ class IntegrityVerificationTest {
         
         val (_, blockchainRegistry) = registerEnvironment(didMethod, chainId, anchorClient)
 
-        val issuerDoc = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
 
         // Create original artifact

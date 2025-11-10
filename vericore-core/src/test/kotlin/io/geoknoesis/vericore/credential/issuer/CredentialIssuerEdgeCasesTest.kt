@@ -25,10 +25,11 @@ class CredentialIssuerEdgeCasesTest {
     private lateinit var issuer: CredentialIssuer
     private val issuerDid = "did:key:issuer123"
     private val keyId = "key-1"
+    private lateinit var proofRegistry: ProofGeneratorRegistry
 
     @BeforeEach
     fun setup() {
-        ProofGeneratorRegistry.clear()
+        proofRegistry = ProofGeneratorRegistry()
         SchemaRegistry.clear()
         SchemaValidatorRegistry.clear()
         SchemaValidatorRegistry.register(JsonSchemaValidator())
@@ -41,17 +42,18 @@ class CredentialIssuerEdgeCasesTest {
             signer = signer,
             getPublicKeyId = { "did:key:issuer123#key-1" }
         )
-        ProofGeneratorRegistry.register(proofGenerator)
+        proofRegistry.register(proofGenerator)
         
         issuer = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { did -> did == issuerDid }
+            resolveDid = { did -> did == issuerDid },
+            proofRegistry = proofRegistry
         )
     }
 
     @AfterEach
     fun cleanup() {
-        ProofGeneratorRegistry.clear()
+        proofRegistry.clear()
         SchemaRegistry.clear()
         SchemaValidatorRegistry.clear()
     }

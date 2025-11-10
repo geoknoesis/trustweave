@@ -27,14 +27,12 @@ data class GodiddyConfig(
          */
         fun default(): GodiddyConfig = GodiddyConfig()
         
-        /**
-         * Creates configuration from options map.
-         */
-        fun fromOptions(options: Map<String, Any?>): GodiddyConfig {
+        fun fromOptions(options: io.geoknoesis.vericore.did.DidCreationOptions): GodiddyConfig {
+            val props = options.additionalProperties
             return GodiddyConfig(
-                baseUrl = options["baseUrl"] as? String ?: default().baseUrl,
-                timeout = (options["timeout"] as? Number)?.toLong() ?: default().timeout,
-                apiKey = options["apiKey"] as? String
+                baseUrl = props["baseUrl"] as? String ?: default().baseUrl,
+                timeout = (props["timeout"] as? Number)?.toLong() ?: default().timeout,
+                apiKey = props["apiKey"] as? String
             )
         }
     }

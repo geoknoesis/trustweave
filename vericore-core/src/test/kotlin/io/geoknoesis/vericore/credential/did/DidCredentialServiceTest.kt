@@ -5,6 +5,7 @@ import io.geoknoesis.vericore.credential.models.VerifiableCredential
 import io.geoknoesis.vericore.credential.issuer.CredentialIssuer
 import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
 import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
+import io.geoknoesis.vericore.did.DidCreationOptions
 import io.geoknoesis.vericore.did.DidDocument
 import io.geoknoesis.vericore.did.DidMethod
 import io.geoknoesis.vericore.did.DidMethodRegistry
@@ -25,10 +26,11 @@ class DidLinkedCredentialServiceTest {
     private lateinit var credentialIssuer: CredentialIssuer
     private lateinit var didCredentialService: DidLinkedCredentialService
     private lateinit var didRegistry: DidMethodRegistry
+    private lateinit var proofRegistry: ProofGeneratorRegistry
 
     @BeforeEach
     fun setup() {
-        ProofGeneratorRegistry.clear()
+        proofRegistry = ProofGeneratorRegistry()
         
         val signer: suspend (ByteArray, String) -> ByteArray = { data, _ ->
             "signature-${UUID.randomUUID()}".toByteArray()
@@ -38,19 +40,20 @@ class DidLinkedCredentialServiceTest {
             signer = signer,
             getPublicKeyId = { "did:key:issuer#key-1" }
         )
-        ProofGeneratorRegistry.register(proofGenerator)
+        proofRegistry.register(proofGenerator)
         
         credentialIssuer = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { did -> did.startsWith("did:key:") }
+            resolveDid = { did -> did.startsWith("did:key:") },
+            proofRegistry = proofRegistry
         )
         
         didRegistry = DefaultDidMethodRegistry().also { registry ->
             registry.register(object : DidMethod {
                 override val method: String = "key"
 
-                override suspend fun createDid(options: Map<String, Any?>): DidDocument {
-                    val id = options["id"] as? String ?: "did:key:${UUID.randomUUID()}"
+                override suspend fun createDid(options: DidCreationOptions): DidDocument {
+                    val id = options.additionalProperties["id"] as? String ?: "did:key:${UUID.randomUUID()}"
                     return DidDocument(id = id)
                 }
 

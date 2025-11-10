@@ -48,7 +48,7 @@ fun main() = runBlocking {
     val didMethod = DidKeyMockMethod(kms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
 
-    val document = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val document = didMethod.createDid()
     println("Created DID: ${document.id}")
 
     val resolution = didRegistry.resolve(document.id)

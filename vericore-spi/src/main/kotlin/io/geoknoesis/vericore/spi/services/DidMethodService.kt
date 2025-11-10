@@ -15,7 +15,7 @@ interface DidMethodService {
      */
     suspend fun createDid(
         didMethod: Any, // DidMethod - using Any to avoid dependency
-        options: Map<String, Any?>
+        options: Any? = null // DidCreationOptions - using Any to avoid dependency
     ): Any // DidDocument - using Any to avoid dependency
 
     /**

@@ -1,6 +1,7 @@
 package io.geoknoesis.vericore.waltid
 
 import io.geoknoesis.vericore.core.VeriCoreException
+import io.geoknoesis.vericore.did.didCreationOptions
 import io.geoknoesis.vericore.kms.KeyNotFoundException
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -70,7 +71,7 @@ class WaltIdErrorHandlingTest {
         // If no KMS is provided and SPI discovery fails, should throw
         // Note: This test may need adjustment based on actual SPI discovery behavior
         try {
-            val method = provider.create("key", emptyMap())
+            val method = provider.create("key")
             // If SPI discovery works, method might be created
             // If not, exception should be thrown
             assertNotNull(method, "Method should be created if KMS is discoverable via SPI")
@@ -86,7 +87,7 @@ class WaltIdErrorHandlingTest {
         val kms = io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService()
         val provider = io.geoknoesis.vericore.waltid.did.WaltIdDidMethodProvider()
         
-        val method = provider.create("unsupported-method", mapOf("kms" to kms))
+        val method = provider.create("unsupported-method", didCreationOptions { property("kms", kms) })
         assertNull(method, "Unsupported method should return null")
     }
 

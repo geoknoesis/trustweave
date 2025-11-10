@@ -1,6 +1,7 @@
 package io.geoknoesis.vericore.godiddy.did
 
 import io.geoknoesis.vericore.core.VeriCoreException
+import io.geoknoesis.vericore.did.DidCreationOptions
 import io.geoknoesis.vericore.did.DidDocument
 import io.geoknoesis.vericore.did.DidMethod
 import io.geoknoesis.vericore.did.DidResolutionResult
@@ -19,7 +20,7 @@ class GodiddyDidMethod(
     private val registrar: GodiddyRegistrar?
 ) : DidMethod {
 
-    override suspend fun createDid(options: Map<String, Any?>): DidDocument = withContext(Dispatchers.IO) {
+    override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
         if (registrar == null) {
             throw VeriCoreException("Universal Registrar not available. Cannot create DID with method $method")
         }

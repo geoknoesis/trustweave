@@ -1,6 +1,7 @@
 package io.geoknoesis.vericore.credential.wallet
 
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
+import io.geoknoesis.vericore.did.DidCreationOptions
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
@@ -329,7 +330,7 @@ class WalletInterfaceTest {
             override suspend fun delete(credentialId: String) = storage.remove(credentialId) != null
             override suspend fun query(query: CredentialQueryBuilder.() -> Unit) = emptyList<VerifiableCredential>()
             
-            override suspend fun createDid(method: String, options: Map<String, Any?>) = "did:key:new"
+            override suspend fun createDid(method: String, options: DidCreationOptions) = "did:key:new"
             override suspend fun getDids() = listOf(walletDid)
             override suspend fun getPrimaryDid() = walletDid
             override suspend fun setPrimaryDid(did: String) = true

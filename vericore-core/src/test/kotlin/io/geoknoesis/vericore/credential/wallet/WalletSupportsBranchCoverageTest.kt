@@ -1,6 +1,7 @@
 package io.geoknoesis.vericore.credential.wallet
 
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
+import io.geoknoesis.vericore.did.DidCreationOptions
 import kotlin.reflect.KClass
 import kotlinx.serialization.json.*
 import kotlin.test.*
@@ -233,7 +234,7 @@ class WalletSupportsBranchCoverageTest {
             override suspend fun delete(credentialId: String) = storage.remove(credentialId) != null
             override suspend fun query(query: CredentialQueryBuilder.() -> Unit): List<VerifiableCredential> = storage.values.toList()
 
-            override suspend fun createDid(method: String, options: Map<String, Any?>) = "did:$method:123"
+            override suspend fun createDid(method: String, options: DidCreationOptions) = "did:$method:123"
             override suspend fun getDids() = listOf(walletDid)
             override suspend fun getPrimaryDid() = walletDid
             override suspend fun setPrimaryDid(did: String) = false

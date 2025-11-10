@@ -228,7 +228,7 @@ fun main() = runBlocking {
     // Source entity represents original data before any processing
     // In image processing example, this would be the original photograph
     // The DID provides persistent identity that survives transformations
-    val sourceEntityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val sourceEntityDid = didMethod.createDid()
     println("Source Entity DID: ${sourceEntityDid.id}")
     
     // Create entity credential for source
@@ -269,13 +269,13 @@ fun main() = runBlocking {
     // Activity DID represents a processing step
     // In PROV-O, activities are things that happen and transform entities
     // Example: "resize-image", "apply-filter", "crop-image"
-    val resizeActivityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val resizeActivityDid = didMethod.createDid()
     println("Activity (Resize) DID: ${resizeActivityDid.id}")
     
     // Agent DID represents who or what performed the activity
     // This could be a person, software service, or automated system
     // Example: "image-processing-service", "user-alice"
-    val processingAgentDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val processingAgentDid = didMethod.createDid()
     println("Agent (Image Processor) DID: ${processingAgentDid.id}")
 ```
 
@@ -352,7 +352,7 @@ import java.time.Instant
     // Derived entity is the result of processing
     // In PROV-O, activities generate new entities from used entities
     // This entity is the resized image
-    val derivedEntityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val derivedEntityDid = didMethod.createDid()
     println("Derived Entity DID: ${derivedEntityDid.id}")
     
     // Step 6: Create provenance chain credential
@@ -441,14 +441,15 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
         signer = { data, keyId -> processorKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> agentKey.id }
     )
-    ProofGeneratorRegistry.register(agentProofGenerator)
+    val agentProofRegistry = ProofGeneratorRegistry().apply {
+        register(agentProofGenerator)
+    }
     
     // Create credential issuer
     val agentIssuer = CredentialIssuer(
         proofGenerator = agentProofGenerator,
-        didResolver = CredentialDidResolver { did ->
-            didRegistry.resolve(did).toCredentialDidResolution()
-        }
+        resolveDid = { did -> didRegistry.resolve(did) != null },
+        proofRegistry = agentProofRegistry
     )
     
     // Issue activity credential
@@ -495,8 +496,8 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
     // Example: Original Image → Resize → Apply Filter → Crop → Final Image
     
     // Step 2: Apply filter to resized image
-    val filterActivityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
-    val filteredEntityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val filterActivityDid = didMethod.createDid()
+    val filteredEntityDid = didMethod.createDid()
     
     // Create filter activity credential
     val filterActivityCredential = VerifiableCredential(

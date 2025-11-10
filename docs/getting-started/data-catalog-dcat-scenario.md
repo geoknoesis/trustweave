@@ -240,12 +240,12 @@ import java.time.Instant
     
     // Publisher DID represents data publisher
     // Example: Government agency, enterprise department
-    val publisherDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val publisherDid = didMethod.createDid()
     println("Publisher DID: ${publisherDid.id}")
     
     // Dataset DID represents the dataset
     // This provides persistent identifier for the dataset
-    val datasetDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val datasetDid = didMethod.createDid()
     println("Dataset DID: ${datasetDid.id}")
     
     // Dataset information following DCAT vocabulary
@@ -400,14 +400,15 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
         signer = { data, keyId -> publisherKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> publisherKey.id }
     )
-    ProofGeneratorRegistry.register(publisherProofGenerator)
+    val proofRegistry = ProofGeneratorRegistry().apply {
+        register(publisherProofGenerator)
+    }
     
     // Create credential issuer
     val publisherIssuer = CredentialIssuer(
         proofGenerator = publisherProofGenerator,
-        didResolver = CredentialDidResolver { did ->
-            didRegistry.resolve(did).toCredentialDidResolution()
-        }
+        resolveDid = { did -> didRegistry.resolve(did) != null },
+        proofRegistry = proofRegistry
     )
     
     // Issue dataset credential
@@ -440,7 +441,7 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
     println("\nStep 6: Creating data catalog...")
     
     // Catalog manager DID
-    val catalogManagerDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+    val catalogManagerDid = didMethod.createDid()
     
     // DCAT catalog description
     val dcatCatalog = buildJsonObject {
@@ -515,13 +516,14 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
         signer = { data, keyId -> catalogKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> catalogKey.id }
     )
-    ProofGeneratorRegistry.register(catalogProofGenerator)
+    val catalogProofRegistry = ProofGeneratorRegistry().apply {
+        register(catalogProofGenerator)
+    }
     
     val catalogIssuer = CredentialIssuer(
         proofGenerator = catalogProofGenerator,
-        didResolver = CredentialDidResolver { did ->
-            didRegistry.resolve(did).toCredentialDidResolution()
-        }
+        resolveDid = { did -> didRegistry.resolve(did) != null },
+        proofRegistry = catalogProofRegistry
     )
     
     val issuedCatalogRecord = catalogIssuer.issue(

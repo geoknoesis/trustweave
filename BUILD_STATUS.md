@@ -110,8 +110,8 @@ dependencies {
 }
 
 val vericore = VeriCore.create()
-val did = vericore.createDid()
-val credential = vericore.issueCredential(...)
+val did = vericore.createDid().getOrThrow()
+val credential = vericore.issueCredential(...).getOrThrow()
 val wallet = Wallets.inMemory(holderDid = did.id)
 ```
 
@@ -142,7 +142,7 @@ dependencies {
 
 // In your code
 val vericore = VeriCore.create()
-// Use vericore.createDid(), vericore.issueCredential(), etc.
+// Use vericore.createDid().getOrThrow(), vericore.issueCredential(...).getOrThrow(), etc.
 ```
 
 ### For Existing Projects Using DSL

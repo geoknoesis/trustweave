@@ -6,12 +6,13 @@ import io.geoknoesis.vericore.credential.PresentationOptions
 import io.geoknoesis.vericore.credential.issuer.CredentialIssuer
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
 import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
-import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
+import io.geoknoesis.vericore.examples.createTestProofRegistry
 import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
 import io.geoknoesis.vericore.credential.wallet.CredentialQueryBuilder
 import io.geoknoesis.vericore.credential.did.CredentialDidResolver
 import io.geoknoesis.vericore.examples.canResolveDid
 import io.geoknoesis.vericore.examples.createTestDidRegistry
+import io.geoknoesis.vericore.examples.createTestProofRegistry
 import io.geoknoesis.vericore.did.toCredentialDidResolution
 import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
@@ -63,14 +64,13 @@ class AcademicCredentialsExampleTest {
     @Test
     fun `test DID creation`() = runBlocking {
         // Setup
-        ProofGeneratorRegistry.clear()
         val universityKms = InMemoryKeyManagementService()
         val studentKms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(universityKms)
         val didRegistry = createTestDidRegistry(didMethod)
         
-        val universityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
-        val studentDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val universityDid = didMethod.createDid()
+        val studentDid = didMethod.createDid()
         
         // Verify DIDs are created
         assertNotNull(universityDid.id)
@@ -90,7 +90,7 @@ class AcademicCredentialsExampleTest {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val didRegistry = createTestDidRegistry(didMethod)
-        val studentDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val studentDid = didMethod.createDid()
         
         val studentWallet = InMemoryWallet(
             walletDid = studentDid.id,
@@ -107,13 +107,12 @@ class AcademicCredentialsExampleTest {
     @Test
     fun `test credential issuance`() = runBlocking {
         // Setup
-        ProofGeneratorRegistry.clear()
         val universityKms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(universityKms)
         val didRegistry = createTestDidRegistry(didMethod)
         
-        val universityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
-        val studentDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val universityDid = didMethod.createDid()
+        val studentDid = didMethod.createDid()
         
         // Create degree credential
         val degreeCredential = createDegreeCredential(
@@ -131,11 +130,12 @@ class AcademicCredentialsExampleTest {
             signer = { data, _ -> universityKms.sign(issuerKey.id, data) },
             getPublicKeyId = { issuerKey.id }
         )
-        ProofGeneratorRegistry.register(proofGenerator)
+        val proofRegistry = createTestProofRegistry(proofGenerator)
 
         val credentialIssuer = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { did -> didRegistry.canResolveDid(did) }
+            resolveDid = { did -> didRegistry.canResolveDid(did) },
+            proofRegistry = proofRegistry
         )
 
         val issuedCredential = credentialIssuer.issue(
@@ -155,14 +155,13 @@ class AcademicCredentialsExampleTest {
     @Test
     fun `test credential storage`() = runBlocking {
         // Setup
-        ProofGeneratorRegistry.clear()
         val universityKms = InMemoryKeyManagementService()
         val studentKms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(universityKms)
         val didRegistry = createTestDidRegistry(didMethod)
         
-        val universityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
-        val studentDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val universityDid = didMethod.createDid()
+        val studentDid = didMethod.createDid()
         
         val studentWallet = InMemoryWallet(
             walletDid = studentDid.id,
@@ -184,11 +183,12 @@ class AcademicCredentialsExampleTest {
             signer = { data, _ -> universityKms.sign(issuerKey.id, data) },
             getPublicKeyId = { issuerKey.id }
         )
-        ProofGeneratorRegistry.register(proofGenerator)
+        val proofRegistry = createTestProofRegistry(proofGenerator)
 
         val credentialIssuer = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { did -> didRegistry.canResolveDid(did) }
+            resolveDid = { did -> didRegistry.canResolveDid(did) },
+            proofRegistry = proofRegistry
         )
 
         val issuedCredential = credentialIssuer.issue(
@@ -211,13 +211,12 @@ class AcademicCredentialsExampleTest {
     @Test
     fun `test credential organization`() = runBlocking {
         // Setup
-        ProofGeneratorRegistry.clear()
         val universityKms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(universityKms)
         val didRegistry = createTestDidRegistry(didMethod)
         
-        val universityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
-        val studentDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val universityDid = didMethod.createDid()
+        val studentDid = didMethod.createDid()
         
         val studentWallet = InMemoryWallet(
             walletDid = studentDid.id,
@@ -239,11 +238,12 @@ class AcademicCredentialsExampleTest {
             signer = { data, _ -> universityKms.sign(issuerKey.id, data) },
             getPublicKeyId = { issuerKey.id }
         )
-        ProofGeneratorRegistry.register(proofGenerator)
+        val proofRegistry = createTestProofRegistry(proofGenerator)
 
         val credentialIssuer = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { did -> didRegistry.canResolveDid(did) }
+            resolveDid = { did -> didRegistry.canResolveDid(did) },
+            proofRegistry = proofRegistry
         )
 
         val issuedCredential = credentialIssuer.issue(
@@ -282,13 +282,12 @@ class AcademicCredentialsExampleTest {
     @Test
     fun `test credential querying`() = runBlocking {
         // Setup
-        ProofGeneratorRegistry.clear()
         val universityKms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(universityKms)
         val didRegistry = createTestDidRegistry(didMethod)
         
-        val universityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
-        val studentDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val universityDid = didMethod.createDid()
+        val studentDid = didMethod.createDid()
         
         val studentWallet = InMemoryWallet(
             walletDid = studentDid.id,
@@ -310,11 +309,12 @@ class AcademicCredentialsExampleTest {
             signer = { data, _ -> universityKms.sign(issuerKey.id, data) },
             getPublicKeyId = { issuerKey.id }
         )
-        ProofGeneratorRegistry.register(proofGenerator)
+        val proofRegistry = createTestProofRegistry(proofGenerator)
 
         val credentialIssuer = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { did -> didRegistry.canResolveDid(did) }
+            resolveDid = { did -> didRegistry.canResolveDid(did) },
+            proofRegistry = proofRegistry
         )
 
         val issuedCredential = credentialIssuer.issue(
@@ -338,13 +338,12 @@ class AcademicCredentialsExampleTest {
     @Test
     fun `test presentation creation`() = runBlocking {
         // Setup
-        ProofGeneratorRegistry.clear()
         val universityKms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(universityKms)
         val didRegistry = createTestDidRegistry(didMethod)
         
-        val universityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
-        val studentDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val universityDid = didMethod.createDid()
+        val studentDid = didMethod.createDid()
         
         val studentWallet = InMemoryWallet(
             walletDid = studentDid.id,
@@ -366,11 +365,12 @@ class AcademicCredentialsExampleTest {
             signer = { data, _ -> universityKms.sign(issuerKey.id, data) },
             getPublicKeyId = { issuerKey.id }
         )
-        ProofGeneratorRegistry.register(proofGenerator)
+        val proofRegistry = createTestProofRegistry(proofGenerator)
 
         val credentialIssuer = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { did -> didRegistry.canResolveDid(did) }
+            resolveDid = { did -> didRegistry.canResolveDid(did) },
+            proofRegistry = proofRegistry
         )
 
         val issuedCredential = credentialIssuer.issue(
@@ -402,13 +402,12 @@ class AcademicCredentialsExampleTest {
     @Test
     fun `test credential verification`() = runBlocking {
         // Setup
-        ProofGeneratorRegistry.clear()
         val universityKms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(universityKms)
         val didRegistry = createTestDidRegistry(didMethod)
         
-        val universityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
-        val studentDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val universityDid = didMethod.createDid()
+        val studentDid = didMethod.createDid()
         
         // Create and issue credential
         val degreeCredential = createDegreeCredential(
@@ -425,11 +424,12 @@ class AcademicCredentialsExampleTest {
             signer = { data, _ -> universityKms.sign(issuerKey.id, data) },
             getPublicKeyId = { issuerKey.id }
         )
-        ProofGeneratorRegistry.register(proofGenerator)
+        val proofRegistry = createTestProofRegistry(proofGenerator)
 
         val credentialIssuer = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { did -> didRegistry.canResolveDid(did) }
+            resolveDid = { did -> didRegistry.canResolveDid(did) },
+            proofRegistry = proofRegistry
         )
 
         val issuedCredential = credentialIssuer.issue(
@@ -464,13 +464,12 @@ class AcademicCredentialsExampleTest {
     @Test
     fun `test wallet statistics`() = runBlocking {
         // Setup
-        ProofGeneratorRegistry.clear()
         val universityKms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(universityKms)
         val didRegistry = createTestDidRegistry(didMethod)
         
-        val universityDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
-        val studentDid = didMethod.createDid(mapOf("algorithm" to "Ed25519"))
+        val universityDid = didMethod.createDid()
+        val studentDid = didMethod.createDid()
         
         val studentWallet = InMemoryWallet(
             walletDid = studentDid.id,
@@ -496,11 +495,12 @@ class AcademicCredentialsExampleTest {
             signer = { data, _ -> universityKms.sign(issuerKey.id, data) },
             getPublicKeyId = { issuerKey.id }
         )
-        ProofGeneratorRegistry.register(proofGenerator)
+        val proofRegistry = createTestProofRegistry(proofGenerator)
 
         val credentialIssuer = CredentialIssuer(
             proofGenerator = proofGenerator,
-            resolveDid = { did -> didRegistry.canResolveDid(did) }
+            resolveDid = { did -> didRegistry.canResolveDid(did) },
+            proofRegistry = proofRegistry
         )
 
         val issuedCredential = credentialIssuer.issue(

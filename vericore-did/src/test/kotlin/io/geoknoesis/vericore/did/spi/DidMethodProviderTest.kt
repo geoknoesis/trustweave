@@ -1,9 +1,10 @@
 package io.geoknoesis.vericore.did.spi
 
+import io.geoknoesis.vericore.did.DidCreationOptions
 import io.geoknoesis.vericore.did.DidDocument
 import io.geoknoesis.vericore.did.DidMethod
 import io.geoknoesis.vericore.did.DidResolutionResult
-import kotlinx.coroutines.runBlocking
+import io.geoknoesis.vericore.did.didCreationOptions
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 
@@ -50,7 +51,7 @@ class DidMethodProviderTest {
             override val name = "mock"
             override val supportedMethods = listOf("test", "mock")
             
-            override fun create(methodName: String, options: Map<String, Any?>): DidMethod? {
+            override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
                 if (!supportedMethods.contains(methodName)) {
                     return null
                 }
@@ -58,7 +59,7 @@ class DidMethodProviderTest {
                 return object : DidMethod {
                     override val method = methodName
                     
-                    override suspend fun createDid(options: Map<String, Any?>) = DidDocument(
+                    override suspend fun createDid(options: DidCreationOptions) = DidDocument(
                         id = "did:$methodName:123"
                     )
                     

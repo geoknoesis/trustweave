@@ -12,16 +12,8 @@ import io.geoknoesis.vericore.spi.SchemaFormat
  * This interface provides a unified API for credential operations regardless
  * of the underlying provider.
  * 
- * **Example Usage**:
- * ```kotlin
- * // Register a credential service
- * val service = WaltIdCredentialService(...)
- * CredentialRegistry.register(service)
- * 
- * // Use unified API
- * val credential = CredentialRegistry.issue(credential, options)
- * val result = CredentialRegistry.verify(credential, options)
- * ```
+ * Implementations are typically registered with a `CredentialServiceRegistry`
+ * that is carried inside `VeriCoreContext`.
  */
 interface CredentialService {
     /**

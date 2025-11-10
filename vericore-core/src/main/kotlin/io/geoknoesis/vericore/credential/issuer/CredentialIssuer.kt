@@ -32,7 +32,8 @@ import kotlinx.coroutines.withContext
  */
 class CredentialIssuer(
     private val proofGenerator: ProofGenerator? = null,
-    private val resolveDid: suspend (String) -> Boolean = { true } // Default: assume DID is valid
+    private val resolveDid: suspend (String) -> Boolean = { true }, // Default: assume DID is valid
+    private val proofRegistry: ProofGeneratorRegistry = ProofGeneratorRegistry()
 ) {
     /**
      * Issue a verifiable credential.
@@ -136,9 +137,8 @@ class CredentialIssuer(
     /**
      * Get proof generator by type.
      */
-    private fun getProofGenerator(proofType: String): ProofGenerator {
-        return ProofGeneratorRegistry.get(proofType)
+    private fun getProofGenerator(proofType: String): ProofGenerator =
+        proofRegistry.get(proofType)
             ?: throw IllegalArgumentException("No proof generator registered for type: $proofType")
-    }
 }
 

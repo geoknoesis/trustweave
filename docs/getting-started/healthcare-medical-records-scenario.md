@@ -469,7 +469,7 @@ val didResolver = CredentialDidResolver { did ->
         credentialDigest = prescriptionDigest
     )
     
-    val anchorResult = anchorTyped(
+    val anchorResult = blockchainRegistry.anchorTyped(
         value = consentRecord,
         serializer = ConsentRecord.serializer(),
         targetChainId = "eip155:1"

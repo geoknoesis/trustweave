@@ -169,7 +169,6 @@ import io.geoknoesis.vericore.did.DidMethodRegistry
 import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import io.geoknoesis.vericore.anchor.anchorTyped
 import io.geoknoesis.vericore.anchor.AnchorResult
-import io.geoknoesis.vericore.anchor.readTyped
 import kotlinx.serialization.json.Json
 
 @Serializable
@@ -308,7 +307,7 @@ val didResolver = CredentialDidResolver { did ->
         credentialDigest = credentialDigest
     )
     
-    val anchorResult = anchorTyped(
+    val anchorResult = blockchainRegistry.anchorTyped(
         value = locationProof,
         serializer = LocationProof.serializer(),
         targetChainId = "eip155:1"
@@ -421,7 +420,7 @@ val didResolver = CredentialDidResolver { did ->
     
     // Step 13: Verify blockchain anchor
     println("\nStep 13: Verifying blockchain anchor...")
-    val retrievedProof = io.geoknoesis.vericore.anchor.readTyped<LocationProof>(
+    val retrievedProof = blockchainRegistry.readTyped<LocationProof>(
         ref = anchorResult.ref,
         serializer = LocationProof.serializer()
     )
@@ -515,7 +514,7 @@ val locationProof = LocationProof(
     credentialDigest = credentialDigest
 )
 
-val anchorResult = anchorTyped(
+val anchorResult = blockchainRegistry.anchorTyped(
     value = locationProof,
     serializer = LocationProof.serializer(),
     targetChainId = "eip155:1"
@@ -965,6 +964,7 @@ fun createGeospatialDatasetCredential(
 // Anchor dataset metadata to blockchain
 fun anchorGeospatialDataset(
     dataset: GeospatialDataset,
+    blockchainRegistry: BlockchainAnchorRegistry,
     chainId: String
 ): AnchorResult {
     val credential = createGeospatialDatasetCredential(dataset, dataset.providerDid)
@@ -972,9 +972,9 @@ fun anchorGeospatialDataset(
         Json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
     )
     
-    return anchorTyped(
-        value = dataset,
-        serializer = GeospatialDataset.serializer(),
+    return blockchainRegistry.anchorTyped(
+        value = LocationProof(dataset, digest),
+        serializer = LocationProof.serializer(),
         targetChainId = chainId
     )
 }

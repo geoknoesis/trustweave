@@ -406,10 +406,10 @@ val didResolver = CredentialDidResolver { did ->
         credentialDigest = credentialDigest
     )
     
-    val anchorResult = anchorTyped(
+    val anchorResult = blockchainRegistry.anchorTyped(
         value = activityAuth,
         serializer = ActivityAuthorization.serializer(),
-        targetChainId = "eip155:1"
+        targetChainId = "eip155:137"
     )
     
     println("Authorization anchored:")

@@ -319,7 +319,7 @@ val didResolver = CredentialDidResolver { did ->
         credentialDigest = originDigest
     )
     
-    val originAnchorResult = anchorTyped(
+    val originAnchorResult = blockchainRegistry.anchorTyped(
         value = originEvent,
         serializer = SupplyChainEvent.serializer(),
         targetChainId = "eip155:1"
@@ -381,7 +381,7 @@ val didResolver = CredentialDidResolver { did ->
         previousEventDigest = originDigest
     )
     
-    val transferAnchorResult = anchorTyped(
+    val transferAnchorResult = blockchainRegistry.anchorTyped(
         value = transferEvent,
         serializer = SupplyChainEvent.serializer(),
         targetChainId = "eip155:1"

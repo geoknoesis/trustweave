@@ -712,7 +712,7 @@ data class AlgeroPassRecord(
     )
     
     // Anchor to blockchain
-    val anchorResult = anchorTyped(
+    val anchorResult = blockchainRegistry.anchorTyped(
         value = algeroPassRecord,
         serializer = AlgeroPassRecord.serializer(),
         targetChainId = "eip155:1"

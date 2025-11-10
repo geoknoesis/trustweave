@@ -654,10 +654,10 @@ data class ContentProvenanceRecord(
     )
     
     // Anchor to blockchain
-    val anchorResult = anchorTyped(
+    val anchorResult = blockchainRegistry.anchorTyped(
         value = provenanceRecord,
         serializer = ContentProvenanceRecord.serializer(),
-        targetChainId = "eip155:1"
+        targetChainId = "eip155:137"
     )
     
     println("Content anchored to blockchain:")

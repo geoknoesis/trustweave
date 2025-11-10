@@ -654,7 +654,7 @@ data class CatalogRecord(
     )
     
     // Anchor to blockchain
-    val anchorResult = anchorTyped(
+    val anchorResult = blockchainRegistry.anchorTyped(
         value = catalogRecord,
         serializer = CatalogRecord.serializer(),
         targetChainId = "eip155:1"

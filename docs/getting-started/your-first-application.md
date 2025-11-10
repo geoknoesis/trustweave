@@ -70,7 +70,7 @@ fun main() = runBlocking {
         issuer = issuerDid
     )
     
-    val anchorResult = anchorTyped(
+    val anchorResult = blockchainRegistry.anchorTyped(
         value = digestObj,
         serializer = VerifiableCredentialDigest.serializer(),
         targetChainId = "algorand:mainnet"
@@ -81,7 +81,7 @@ fun main() = runBlocking {
     println("Timestamp: ${anchorResult.timestamp}")
     
     // Step 6: Verify by reading back
-    val retrieved = readTyped<VerifiableCredentialDigest>(
+    val retrieved = blockchainRegistry.readTyped<VerifiableCredentialDigest>(
         ref = anchorResult.ref,
         serializer = VerifiableCredentialDigest.serializer()
     )
@@ -132,7 +132,7 @@ Computes a SHA-256 digest with multibase encoding. The JSON is automatically can
 ### Blockchain Anchoring
 
 ```kotlin
-val anchorResult = anchorTyped(...)
+val anchorResult = blockchainRegistry.anchorTyped(...)
 ```
 
 Anchors the digest object to the blockchain. Returns an `AnchorResult` with a reference (`AnchorRef`) that can be used to read the data back.
@@ -140,7 +140,7 @@ Anchors the digest object to the blockchain. Returns an `AnchorResult` with a re
 ### Verification
 
 ```kotlin
-val retrieved = readTyped<VerifiableCredentialDigest>(...)
+val retrieved = blockchainRegistry.readTyped<VerifiableCredentialDigest>(...)
 ```
 
 Reads the anchored data back from the blockchain and verifies it matches the original digest.

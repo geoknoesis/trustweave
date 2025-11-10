@@ -23,10 +23,14 @@ The tests use Testcontainers to:
 
 ```kotlin
 import io.geoknoesis.vericore.ganache.GanacheIntegration
-import io.geoknoesis.vericore.anchor.*
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 // Private key is REQUIRED - no fallback to in-memory storage
+val blockchainRegistry = BlockchainAnchorRegistry()
 val client = GanacheIntegration.setup(
+    blockchainRegistry = blockchainRegistry,
     chainId = "eip155:1337",
     rpcUrl = "http://localhost:8545",
     privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"

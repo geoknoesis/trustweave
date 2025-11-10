@@ -741,7 +741,7 @@ fun createEntityCredential(
 **Rationale**:
 - **Immutability**: Cannot be tampered with
 - **Audit Trail**: Permanent record
-- **Verification**: Anyone can verify provenance
+- **Verification**: Anyone can verify
 - **Non-Repudiation**: Agents cannot deny activities
 
 ```kotlin
@@ -788,10 +788,10 @@ data class ProvenanceRecord(
     )
     
     // Anchor to blockchain
-    val anchorResult = anchorTyped(
+    val anchorResult = blockchainRegistry.anchorTyped(
         value = provenanceRecord,
         serializer = ProvenanceRecord.serializer(),
-        targetChainId = "eip155:1"
+        targetChainId = "eip155:137"
     )
     
     println("Provenance anchored to blockchain:")

@@ -1,6 +1,6 @@
 package io.geoknoesis.vericore.ganache
 
-import io.geoknoesis.vericore.anchor.BlockchainRegistry
+import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 
 /**
  * Integration helper for Ganache blockchain adapter.
@@ -17,6 +17,7 @@ object GanacheIntegration {
      * @return The created GanacheBlockchainAnchorClient
      */
     fun setup(
+        blockchainRegistry: BlockchainAnchorRegistry,
         chainId: String = GanacheBlockchainAnchorClient.LOCAL,
         rpcUrl: String = "http://localhost:8545",
         privateKey: String,
@@ -29,7 +30,7 @@ object GanacheIntegration {
         contractAddress?.let { options["contractAddress"] = it }
         
         val client = GanacheBlockchainAnchorClient(chainId, options)
-        BlockchainRegistry.register(chainId, client)
+        blockchainRegistry.register(chainId, client)
         return client
     }
 }

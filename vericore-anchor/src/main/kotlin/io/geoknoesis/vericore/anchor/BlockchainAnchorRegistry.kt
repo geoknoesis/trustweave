@@ -44,19 +44,3 @@ suspend fun <T> BlockchainAnchorRegistry.readTyped(
     return kotlinx.serialization.json.Json.decodeFromJsonElement(serializer, result.payload)
 }
 
-suspend fun <T> anchorTyped(
-    value: T,
-    serializer: kotlinx.serialization.KSerializer<T>,
-    targetChainId: String,
-    mediaType: String = "application/json"
-): AnchorResult = BlockchainRegistry.withRegistry {
-    anchorTyped(value, serializer, targetChainId, mediaType)
-}
-
-suspend fun <T> readTyped(
-    ref: AnchorRef,
-    serializer: kotlinx.serialization.KSerializer<T>
-): T = BlockchainRegistry.withRegistry {
-    readTyped(ref, serializer)
-}
-

@@ -721,10 +721,10 @@ data class DeviceIdentityRecord(
     
     // Anchor to blockchain
     // This creates immutable record that cannot be tampered with
-    val anchorResult = anchorTyped(
+    val anchorResult = blockchainRegistry.anchorTyped(
         value = deviceIdentityRecord,
         serializer = DeviceIdentityRecord.serializer(),
-        targetChainId = "eip155:1"
+        targetChainId = "eip155:137"
     )
     
     println("Device identity anchored to blockchain:")

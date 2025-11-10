@@ -461,7 +461,7 @@ fun main() = runBlocking {
         credentialDigest = licenseDigest
     )
     
-    val anchorResult = anchorTyped(
+    val anchorResult = blockchainRegistry.anchorTyped(
         value = identityDoc,
         serializer = IdentityDocument.serializer(),
         targetChainId = "eip155:1"

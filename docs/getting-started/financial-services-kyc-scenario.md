@@ -349,7 +349,7 @@ val didResolver = CredentialDidResolver { did ->
         complianceStatus = "compliant"
     )
     
-    val anchorResult = anchorTyped(
+    val anchorResult = blockchainRegistry.anchorTyped(
         value = kycRecord,
         serializer = KYCRecord.serializer(),
         targetChainId = "eip155:1"

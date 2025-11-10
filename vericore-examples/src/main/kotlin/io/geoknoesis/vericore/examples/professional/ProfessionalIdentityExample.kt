@@ -2,6 +2,8 @@ package io.geoknoesis.vericore.examples.professional
 
 import io.geoknoesis.vericore.credential.dsl.*
 import io.geoknoesis.vericore.credential.models.VerifiableCredential
+import io.geoknoesis.vericore.credential.presentation.PresentationService
+import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
 import io.geoknoesis.vericore.credential.wallet.CredentialOrganization
 import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
@@ -17,6 +19,11 @@ fun main() = runBlocking {
     // Create KMS first so we can use it for key generation and signing
     val kms = InMemoryKeyManagementService()
     val kmsRef = kms // Capture for closure
+    val presentationService = PresentationService(
+        proofGenerator = Ed25519ProofGenerator(
+            signer = { data, keyId -> kmsRef.sign(keyId, data) }
+        )
+    )
     
     val trustLayer = trustLayer {
         keys {
@@ -292,8 +299,10 @@ fun main() = runBlocking {
     val professionalKey = kms.generateKey("Ed25519", mapOf("keyId" to "professional-key"))
     
     // Presentation for job application using wallet presentation DSL
-    val jobApplicationPresentation = wallet.presentation {
-        fromWallet(masterId, job1Id, job2Id, awsCertId)
+    val jobApplicationCredentials = listOf(masterId, job1Id, job2Id, awsCertId)
+        .mapNotNull { wallet.get(it) }
+    val jobApplicationPresentation = presentation(presentationService) {
+        credentials(jobApplicationCredentials)
         holder(professionalDid)
         challenge("job-application-${Instant.now().toEpochMilli()}")
         proofType(ProofTypes.ED25519)
@@ -314,11 +323,12 @@ fun main() = runBlocking {
     println("Job application presentation created with ${jobApplicationPresentation.verifiableCredential.size} credentials")
     
     // Presentation for professional profile using query-based presentation
-    val profilePresentation = wallet.presentation {
-        fromQuery {
-            byTypes("MasterDegreeCredential", "EmploymentCredential", "CertificationCredential")
-            valid()
-        }
+    val profileCredentials = wallet.queryEnhanced {
+        byTypes("MasterDegreeCredential", "EmploymentCredential", "CertificationCredential")
+        valid()
+    }
+    val profilePresentation = presentation(presentationService) {
+        credentials(profileCredentials)
         holder(professionalDid)
         proofType(ProofTypes.ED25519)
         keyId(professionalKey.id)

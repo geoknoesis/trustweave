@@ -405,7 +405,7 @@ class VeriCore private constructor(
          * 
          * @return VeriCore instance with default configuration
          */
-        fun create(): VeriCore = create(VeriCoreConfig.default())
+        fun create(): VeriCore = create(VeriCoreDefaults.inMemoryTest())
         
         /**
          * Creates a VeriCore instance from a configuration object.
@@ -433,7 +433,7 @@ class VeriCore private constructor(
          * @return Configured VeriCore instance
          */
         fun create(configure: VeriCoreConfig.Builder.() -> Unit): VeriCore {
-            val builder = VeriCoreConfig.default().toBuilder()
+            val builder = VeriCoreDefaults.inMemoryTest().toBuilder()
             builder.configure()
             return create(builder.build())
         }
@@ -589,14 +589,7 @@ data class VeriCoreConfig(
         }
     }
     
-    companion object {
-        @Deprecated(
-            message = "Use VeriCoreDefaults.inMemoryTest() or construct a VeriCoreConfig manually.",
-            replaceWith = ReplaceWith("VeriCoreDefaults.inMemoryTest()"),
-            level = DeprecationLevel.WARNING
-        )
-        fun default(): VeriCoreConfig = VeriCoreDefaults.inMemoryTest()
-    }
+    companion object
 }
 
 

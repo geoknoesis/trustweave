@@ -329,7 +329,7 @@ class PresentationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val presentation = presentation {
+        val presentation = presentation(presentationService) {
             credentials(credential)
             holder("did:key:holder")
             keyId("key-1")
@@ -427,7 +427,7 @@ class PresentationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val presentation = presentation {
+        val presentation = presentation(presentationService) {
             credentials(credential)
             holder("did:key:holder")
             challenge("challenge-123")

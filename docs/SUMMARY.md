@@ -60,6 +60,8 @@
   * [Credential Issuance Tutorial](tutorials/credential-issuance-tutorial.md)
 
 * [Advanced Topics](advanced/README.md)
+  * [Key Rotation](advanced/key-rotation.md)
+  * [Verification Policies](advanced/verification-policies.md)
   * [Service Provider Interface (SPI)](advanced/spi.md)
   * [Creating Custom Adapters](advanced/custom-adapters.md)
   * [Error Handling](advanced/error-handling.md)
@@ -77,4 +79,6 @@
   * [Code Style](contributing/code-style.md)
   * [Testing Guidelines](contributing/testing-guidelines.md)
   * [Pull Request Process](contributing/pull-request-process.md)
+
+* [FAQ](faq.md)
 

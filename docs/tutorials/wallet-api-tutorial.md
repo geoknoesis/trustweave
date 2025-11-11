@@ -2,6 +2,8 @@
 
 This tutorial provides a comprehensive guide to using VeriCore's Wallet API. You'll learn how to create wallets, store credentials, organize them, and create presentations.
 
+> Tip: The runnable quick-start sample (`./gradlew :vericore-examples:runQuickStartSample`) mirrors the core flows below. Clone it as a starting point before wiring more advanced wallet logic.
+
 ## Prerequisites
 
 - Basic understanding of Kotlin

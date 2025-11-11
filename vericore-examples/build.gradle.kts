@@ -13,6 +13,7 @@ dependencies {
     implementation(project(":vericore-spi"))
     implementation(project(":vericore-trust"))
     implementation(project(":vericore-json"))
+    implementation(project(":vericore-all"))
     implementation(project(":vericore-anchor"))
     implementation(project(":vericore-did"))
     implementation(project(":vericore-kms"))
@@ -122,6 +123,13 @@ tasks.register<JavaExec>("runNationalEducation") {
     group = "examples"
     description = "Run National Education Credentials Algeria scenario example"
     mainClass.set("com.geoknoesis.vericore.examples.national.NationalEducationExampleKt")
+    classpath = sourceSets["main"].runtimeClasspath
+}
+
+tasks.register<JavaExec>("runQuickStartSample") {
+    group = "examples"
+    description = "Run Quick Start credential issuance sample"
+    mainClass.set("com.geoknoesis.vericore.examples.quickstart.QuickStartSampleKt")
     classpath = sourceSets["main"].runtimeClasspath
 }
 

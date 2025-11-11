@@ -1,6 +1,37 @@
 # Architecture Overview
 
-VeriCore follows a modular, pluggable architecture that enables flexibility and extensibility.
+VeriCore follows a modular, pluggable architecture that enables flexibility and extensibility. This page ties the high-level mental model—DIDs, credentials, proofs, anchoring—into the modules you will touch as you build a trust layer.
+
+## End-to-End Identity Flow
+
+```mermaid
+sequenceDiagram
+    participant App as Application / SDK Client
+    participant DID as DidMethodRegistry<br/>+ DidMethod
+    participant KMS as KeyManagementService
+    participant VC as CredentialServiceRegistry<br/>+ Issuer
+    participant Anchor as BlockchainAnchorClient
+
+    App->>DID: request method("key")
+    DID->>KMS: generateKey(algorithm)
+    KMS-->>DID: KeyHandle
+    DID-->>App: DidDocument
+    App->>VC: issueCredential(did, claims)
+    VC->>KMS: sign(canonicalCredential)
+    VC-->>App: VerifiableCredential (+ proof)
+    App->>Anchor: writePayload(credentialDigest)
+    Anchor-->>App: AnchorResult (AnchorRef)
+    note over App,Anchor: Store DID, VC, AnchorRef<br/>Verify later via VeriCore.verifyCredential()
+```
+
+**Roles and relationships**
+
+- **DID creation**: `DidMethodRegistry` resolves a method implementation, which collaborates with `KeyManagementService` to mint keys and returns a W3C-compliant `DidDocument`.
+- **Credential issuance**: The `CredentialServiceRegistry` hands off to an issuer that canonicalises the payload, signs it through the same KMS, and produces a `VerifiableCredential` with a proof.
+- **Anchoring**: The credential digest (or any payload) flows through `BlockchainAnchorClient`, yielding an `AnchorRef` teams can persist for tamper evidence.
+- **Verification**: When verifying, VeriCore pulls the DID document, replays canonicalisation + signature validation, and optionally checks the anchor reference.
+
+Use this flow as a mental checklist: if you know which step you are implementing, the linked module sections below show the relevant interfaces and extension points.
 
 ## Module Structure
 

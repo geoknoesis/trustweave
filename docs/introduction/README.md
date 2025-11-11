@@ -1,5 +1,7 @@
 # Introduction
 
+> VeriCore is built and supported by [Geoknoesis LLC](https://www.geoknoesis.com), a standards-focused identity company. This introduction reflects Geoknoesis’ reference architecture for modern trust systems.
+
 Welcome to VeriCore! This section provides an overview of the library, its purpose, and how it fits into the decentralized identity and trust ecosystem.
 
 ## What You'll Learn

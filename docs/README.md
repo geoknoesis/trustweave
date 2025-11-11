@@ -2,11 +2,16 @@
 
 Welcome to the VeriCore developer documentation!
 
+> VeriCore is a Geoknoesis LLC product. Learn more at [www.geoknoesis.com](https://www.geoknoesis.com).
+
 ## Quick Start
 
 - [Installation](getting-started/installation.md) - Get started with VeriCore
 - [Quick Start Guide](getting-started/quick-start.md) - Your first VeriCore application
 - [Use Case Scenarios](getting-started/README.md) - Real-world examples
+- [Architecture Overview](introduction/architecture-overview.md) - Visual flow of DID ➜ credential ➜ proof ➜ anchoring
+- [Advanced Topics](advanced/key-rotation.md) - Key rotation, verification policies, and more
+- [FAQ](faq.md) - Quick answers about samples, licensing, and integrations
 
 ## What is VeriCore?
 
@@ -56,7 +61,11 @@ Explore real-world use cases:
 
 ## Contributing
 
-Found an error or want to improve the documentation? See our [Contributing Guide](../contributing/README.md).
+Found an error or want to improve the documentation? See our [Contributing Guide](contributing/README.md).
+
+## Licensing
+
+VeriCore is available under a dual license model: open source for non-commercial and educational use, and a commercial license from Geoknoesis LLC for production deployments. See the [Licensing Overview](licensing/README.md) for details.
 
 ## License
 

@@ -15,6 +15,13 @@ dependencies {
 }
 ```
 
+**What this does**  
+- Pulls in every public VeriCore module (core APIs, DID support, KMS, anchoring, DSLs) with a single coordinate so you never chase transitive dependencies.  
+- Adds `vericore-testkit` for the in-memory DID/KMS/wallet implementations used in the tutorials and automated tests.
+
+**Design significance**  
+VeriCore promotes a “batteries included” experience for newcomers. The monolithic artifact keeps onboarding simple; when you graduate to production you can swap in individual modules without changing API usage.
+
 ## Step 2: Bootstrap VeriCore and compute a digest
 
 **Why:** Most flows start by hashing JSON so signatures and anchors are stable.  
@@ -41,6 +48,17 @@ fun main() = runBlocking {
 }
 ```
 
+**What this does**  
+- Instantiates VeriCore with sensible defaults (in-memory registries) suitable for playground and unit tests.  
+- Builds a credential payload using Kotlinx Serialization builders so the structure is type-safe.  
+- Canonicalises and hashes the payload, returning a multibase-encoded digest you can anchor or sign.
+
+**Result**  
+`DigestUtils.sha256DigestMultibase` prints a deterministic digest (for example `u5v...`) that becomes the integrity reference for later steps.
+
+**Design significance**  
+Everything in VeriCore assumes deterministic canonicalization, so the very first code sample reinforces the pattern: serialize → canonicalize → hash → sign/anchor. This is the backbone of interoperability.
+
 ## Step 3: Create a DID with typed options
 
 **Why:** You need an issuer DID before issuing credentials.  
@@ -57,14 +75,24 @@ val issuerDid = vericore.createDid {
 println("Issuer DID: $issuerDid")
 ```
 
+**What this does**  
+- Calls the facade to provision a DID using the default registry (in this case `did:key`).  
+- Supplies typed options instead of raw maps, so the compiler validates algorithm names and properties.  
+- Returns the fully materialised DID document and extracts its identifier.
+
+**Result**  
+`issuerDid` now holds a resolvable DID such as `did:key:z6M...` that acts as the issuer for credentials.
+
+**Design significance**  
+Typed builders (`DidCreationOptions`) are a core design choice: they prevent misconfigured DID creation at compile time and make IDE autocompletion an onboarding tool rather than documentation guesswork.
+
 ## Step 4: Issue a credential and store it
 
 **Why:** Credential issuance is the heart of most VeriCore solutions.  
 **How it works:** The facade orchestrates KMS, proofs, and registries, returning a `Result<VerifiableCredential>`.  
-**How simple:** Provide typed issuance options; the API handles proof generation and validation.
+**How simple:** Provide the issuer DID/key and credential subject JSON; the API handles proof generation and validation.
 
 ```kotlin
-import com.geoknoesis.vericore.credential.issueCredentialOptions
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -76,12 +104,26 @@ val credential = vericore.issueCredential(
         put("id", "did:key:holder-123")
         put("name", "Alice")
     },
-    types = listOf("PersonCredential"),
-    options = issueCredentialOptions { validityDays = 365 }
+    types = listOf("PersonCredential")
 ).getOrThrow()
 
 println("Issued credential id: ${credential.id}")
 ```
+
+**What this does**  
+- Invokes the credential issuance facade which orchestrates key lookup/generation, proof creation, and credential assembly.  
+- Configures the credential subject payload and credential types.  
+- Returns a signed `VerifiableCredential` wrapped in `Result`.
+
+**Result**  
+The printed ID corresponds to a tamper-evident credential JSON object that you can store, present, or anchor.
+
+**Design significance**  
+Facades embrace VeriCore’s “everything returns `Result<T>`” philosophy. By forcing the caller to handle success and failure explicitly, flows stay predictable in production and testable in unit harnesses.
+
+> ✅ **Run the sample**  
+> The full quick-start flow lives in `vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/quickstart/QuickStartSample.kt`.  
+> Execute it locally with `./gradlew :vericore-examples:runQuickStartSample`.
 
 ## Step 5: Verify and (optionally) anchor
 
@@ -107,6 +149,34 @@ val anchorClient = anchorRegistry.get("inmemory:anchor")
 val anchorResult = anchorClient?.writePayload(Json.parseToJsonElement(digestPayload))
 println("Anchored digest tx: ${anchorResult?.ref?.txHash}")
 ```
+
+**What this does**  
+- Verifies the credential by rebuilding proofs and performing validity checks (`verification.valid`).  
+- Registers an in-memory blockchain client and writes the credential JSON to the anchor client.  
+- Prints the synthetic transaction hash returned by the anchor client (useful for unit assertions).
+
+**Result**  
+You get both a verification summary and an `AnchorRef` representing the write operation. In production you’d persist `AnchorRef` for audits and use a real chain adapter.
+
+**Design significance**  
+Anchoring is abstracted behind the same interface regardless of provider. The sample sticks to the in-memory implementation, but the code path is identical for Algorand, Polygon, Indy, or future adapters—making environment swaps low risk.
+
+## Handling errors and verification failures
+
+Use `Result.fold` or `runCatching` so you surface validation errors early:
+
+```kotlin
+vericore.verifyCredential(credential).fold(
+    onSuccess = { result ->
+        require(result.valid) { "Credential invalid: ${result.errors}" }
+    },
+    onFailure = { error ->
+        logger.warn("Verification failed", error)
+    }
+)
+```
+
+Anchoring can also fail (network hiccups, missing credentials). Wrap calls in `runCatching` and add retries when targeting public chains. The runnable sample demonstrates both patterns end-to-end.
 
 ## Scenario Playbook
 

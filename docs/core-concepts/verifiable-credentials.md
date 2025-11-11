@@ -1,5 +1,95 @@
 # Verifiable Credentials (VCs)
 
+> VeriCore expansions in this guide are authored by [Geoknoesis LLC](https://www.geoknoesis.com). They reflect Geoknoesis’ recommended patterns for W3C Verifiable Credentials on the JVM.
+
+## What is a Verifiable Credential?
+
+A **Verifiable Credential** is a tamper-evident attestation following the W3C VC Data Model. It combines:
+
+1. **Metadata** – issuer, issuance/expiration dates, schema references.  
+2. **Credential subject** – the claims being asserted (`name`, `degree`, `license`, etc.).  
+3. **Proof** – cryptographic signature binding the issuer to the credential content.
+
+## Why VCs matter in VeriCore
+
+- They are the unit of trust flowing between issuers and verifiers.  
+- Wallets store VCs, anchor clients notarise them, and verification routines replay the proofs.  
+- Typed builders and canonicalisation keep the credential lifecycle consistent across DID methods and signature suites.
+
+## How VeriCore issues and verifies VCs
+
+| Component | Purpose |
+|-----------|---------|
+| `CredentialServiceRegistry` | Discovers issuer/verifier services (in-memory or SPI). |
+| `VeriCore.issueCredential` | High-level facade performing canonicalisation, signing, and proof attachment. |
+| `VeriCore.verifyCredential` | Rebuilds canonical form, resolves DIDs, validates proofs, and returns `CredentialVerificationResult`. |
+| `CredentialIssuanceOptions` | Lower-level SPI options (validity window, schema hints) when using `CredentialServiceRegistry`. |
+
+Detailed API signatures live in the [Credential Service API reference](../api-reference/credential-service-api.md).
+
+### Example: issuing a credential
+
+```kotlin
+import com.geoknoesis.vericore.VeriCore
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+
+suspend fun issueEmployeeBadge(vericore: VeriCore, issuerDid: String, issuerKeyId: String) =
+    vericore.issueCredential(
+        issuerDid = issuerDid,
+        issuerKeyId = issuerKeyId,
+        credentialSubject = buildJsonObject {
+            put("id", "did:key:holder-123")
+            put("role", "Site Reliability Engineer")
+            put("level", "L5")
+        },
+        types = listOf("VerifiableCredential", "EmploymentCredential")
+    ).getOrThrow()
+```
+
+VeriCore automatically:
+
+- Canonicalises the JSON payload using JSON Canonicalization Scheme (JCS).  
+- Signs the digest through the configured `KeyManagementService`.  
+- Embeds the resulting proof (`Ed25519Signature2020` by default) into the VC.  
+- Returns a `VerifiableCredential` data class that you can store or present.
+
+### Example: verifying a credential
+
+```kotlin
+import com.geoknoesis.vericore.credential.verifyCredential
+
+suspend fun verifyBadge(vericore: VeriCore, credential: com.geoknoesis.vericore.credential.models.VerifiableCredential) =
+    vericore.verifyCredential(credential).fold(
+        onSuccess = { result ->
+            require(result.valid) { "Proofs failed: ${result.errors}" }
+            println("Credential verified with checks: ${result.checks}")
+        },
+        onFailure = { error ->
+            println("Verification failed: ${error.message}")
+        }
+    )
+```
+
+Verification resolves the issuer DID document, checks the signature suites, and applies optional policies (expiration, schema, revocation when present).
+
+## Practical usage tips
+
+- **SPI-level options** – drop down to `CredentialServiceRegistry` and supply `CredentialIssuanceOptions` when you need custom proof types, schema hints, or audiences.  
+- **Anchoring** – store the credential digest with a `BlockchainAnchorClient` to prove freshness (see [Blockchain Anchoring](blockchain-anchoring.md)).  
+- **Revocation** – integrate status endpoints by adding `credentialStatus` claims; custom verification policies can enforce them.  
+- **Error handling** – wrap issuance and verification with `Result.fold` / `runCatching` to surface validation errors clearly to API consumers.
+
+## See also
+
+- [Credential Service API](../api-reference/credential-service-api.md) for parameter details and SPI guidance.  
+- [Quick Start – Step 4 & 5](../getting-started/quick-start.md#step-4-issue-a-credential-and-store-it) for a runnable walkthrough.  
+- [Wallets](wallets.md) for storage and presentation.  
+- [Architecture Overview](../introduction/architecture-overview.md) for the credential flow diagram.
+# Verifiable Credentials (VCs)
+
+> VeriCore and this guide are maintained by [Geoknoesis LLC](https://www.geoknoesis.com). Geoknoesis provides both the open source toolkit and the commercial support offerings referenced below.
+
 ## What is a Verifiable Credential?
 
 A **Verifiable Credential (VC)** is a tamper-evident credential that follows the W3C Verifiable Credentials Data Model 1.1. It enables you to make claims about yourself or others in a way that is cryptographically verifiable.

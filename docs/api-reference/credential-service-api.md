@@ -36,6 +36,15 @@ interface CredentialService {
 }
 ```
 
+#### Method summary
+
+| Method | Purpose | Returns | Exceptions | Notes |
+|--------|---------|---------|------------|-------|
+| `issueCredential` | Canonicalise + sign a VC. | `VerifiableCredential` (with proof). | `IllegalArgumentException` for unsupported proof types or schemas. | Used by `VeriCore.issueCredential` facade. |
+| `verifyCredential` | Validate a VC’s proof and optional policies. | `CredentialVerificationResult` | `IllegalStateException` if configuration missing (resolver, status service). | Returns `valid=false` when checks fail. |
+| `createPresentation` | Assemble a verifiable presentation. | `VerifiablePresentation` | Depends on provider (unsupported -> `UnsupportedOperationException`). | Typically optional; many issuers delegate to wallet presentation services. |
+| `verifyPresentation` | Validate presentation proofs and challenges. | `PresentationVerificationResult` | `IllegalArgumentException` for invalid challenge/domain. | Verifiers should check `result.errors`. |
+
 ### CredentialServiceProvider
 
 Providers bridge ServiceLoader discovery and actual `CredentialService` instances.
@@ -49,6 +58,10 @@ interface CredentialServiceProvider {
     ): CredentialService?
 }
 ```
+
+| Method | Returns | Exceptions | Notes |
+|--------|---------|------------|-------|
+| `create` | `CredentialService?` | – | Return `null` to opt out (e.g., disabled). Called by `CredentialServiceRegistry`. |
 
 ## CredentialServiceCreationOptions
 
@@ -73,6 +86,8 @@ val options = CredentialServiceCreationOptionsBuilder().apply {
 | `endpoint` | `String?` | Base URL or connection identifier for remote services. |
 | `apiKey` | `String?` | Secret token or credential used during initialization. |
 | `additionalProperties` | `Map<String, Any?>` | Provider specific data injected via `property("name", value)`. |
+
+> Providers may throw `IllegalArgumentException` when required fields (endpoint, apiKey) are missing. Use typed builder setters to catch issues at compile time.
 
 Providers can still interoperate with code that expects maps through `toLegacyMap()`:
 
@@ -116,4 +131,9 @@ val credential = registry.issue(
 ```
 
 `additionalOptions` on the issuance/verification options remain a map because they carry per-call data, whereas the provider-level configuration is now strongly typed.
+
+## Related samples
+
+- [`QuickStartSample`](../../vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/quickstart/QuickStartSample.kt) demonstrates issuance, verification, and anchoring using the default in-memory provider chain.
+- Scenario examples in `vericore-examples` showcase custom providers (HTTP issuers, GoDiddy integrations).
 

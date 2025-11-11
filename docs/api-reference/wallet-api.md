@@ -19,6 +19,13 @@ interface Wallet : CredentialStorage {
     fun <T : Any> supports(capability: KClass<T>): Boolean
     suspend fun getStatistics(): WalletStatistics
 }
+
+#### Method summary
+
+| Method | Returns | Exceptions | Notes |
+|--------|---------|------------|-------|
+| `supports(capability)` | `Boolean` | – | Detect optional interfaces (presentation, DID management, etc.). |
+| `getStatistics()` | `WalletStatistics` | `IllegalStateException` if the backing store cannot compute statistics. | Useful for dashboards and monitoring. |
 ```
 
 ### CredentialStorage
@@ -33,6 +40,16 @@ interface CredentialStorage {
     suspend fun delete(credentialId: String): Boolean
     suspend fun query(query: CredentialQueryBuilder.() -> Unit): List<VerifiableCredential>
 }
+
+#### Method summary
+
+| Method | Parameters | Returns | Exceptions | Notes |
+|--------|------------|---------|------------|-------|
+| `store` | `credential` | `String` (stored id) | `IllegalStateException` if storage is read-only or full. | Canonicalises the credential content before persistence. |
+| `get` | `credentialId` | `VerifiableCredential?` | – | Returns `null` when not found. |
+| `list` | `filter` | `List<VerifiableCredential>` | – | `filter` is optional and may be ignored by simple stores. |
+| `delete` | `credentialId` | `Boolean` | – | `true` if a credential was removed. |
+| `query` | `CredentialQueryBuilder.() -> Unit` | `List<VerifiableCredential>` | `IllegalArgumentException` when a query clause is unsupported. | Compose filters via builder functions (`byIssuer`, `notExpired`, etc.). |
 ```
 
 ### CredentialOrganization
@@ -62,6 +79,15 @@ interface CredentialOrganization {
     suspend fun getMetadata(credentialId: String): CredentialMetadata?
     suspend fun updateNotes(credentialId: String, notes: String?): Boolean
 }
+
+#### Method summary
+
+| Method | Returns | Exceptions | Notes |
+|--------|---------|------------|-------|
+| `createCollection` | `String` (collectionId) | `IllegalArgumentException` when the name already exists. | Use for folders/projects. |
+| `addToCollection` / `removeFromCollection` | `Boolean` | – | `false` indicates missing credential or collection. |
+| `tagCredential` / `untagCredential` | `Boolean` | – | Implementations may normalise tags to lowercase. |
+| `addMetadata` | `Boolean` | `IllegalStateException` if metadata updates unsupported. | Ideal for provenance/data catalog info. |
 ```
 
 ### CredentialLifecycle
@@ -76,6 +102,8 @@ interface CredentialLifecycle {
     suspend fun refreshCredential(credentialId: String): VerifiableCredential?
 }
 ```
+
+> Implementations may throw `UnsupportedOperationException` when lifecycle features are disabled.
 
 ### CredentialPresentation
 
@@ -98,6 +126,13 @@ interface CredentialPresentation {
 }
 ```
 
+#### Method summary
+
+| Method | Purpose | Exceptions | Notes |
+|--------|---------|------------|-------|
+| `createPresentation` | Build a verifiable presentation from stored credential IDs. | `IllegalArgumentException` when required fields in `PresentationOptions` are missing. | Uses configured proof generator; ensure holder DID has signing keys. |
+| `createSelectiveDisclosure` | Produce a filtered presentation revealing selected fields. | Same as above. | Default implementation delegates to `createPresentation`. |
+
 ### DidManagement
 
 Optional interface for DID management.
@@ -115,6 +150,12 @@ interface DidManagement {
 }
 ```
 
+| Method | Returns | Exceptions | Notes |
+|--------|---------|------------|-------|
+| `createDid` | DID string | `IllegalArgumentException` when method not registered. | Overload allows typed builder. |
+| `getDids` / `getPrimaryDid` | `List<String>` / `String` | – | Use to display wallet inventory. |
+| `resolveDid` | `DidDocument?` | `IllegalStateException` if no resolver configured. | Handy for UX that surfaces DID metadata. |
+
 ### KeyManagement
 
 Optional interface for key management.
@@ -131,6 +172,12 @@ interface KeyManagement {
     suspend fun sign(keyId: String, data: ByteArray): ByteArray
 }
 ```
+
+| Method | Returns | Exceptions | Notes |
+|--------|---------|------------|-------|
+| `generateKey` | `KeyInfo` | `IllegalArgumentException` for unknown algorithms. | Delegates to the configured `KeyManagementService`. |
+| `deleteKey` | `Boolean` | `IllegalStateException` if removal unsupported. | `true` indicates the key was removed. |
+| `sign` | `ByteArray` | `IllegalStateException` when key missing/inactive. | Input should already be canonicalised. |
 
 ### CredentialIssuance
 

@@ -21,48 +21,62 @@ This tutorial provides a comprehensive guide to using VeriCore's Wallet API. You
 
 ## Creating a Wallet
 
-### Basic Wallet
-
-Start with a simple wallet for basic credential storage:
+### Facade Wallet (Recommended)
 
 ```kotlin
-import io.geoknoesis.vericore.testkit.credential.BasicWallet
+import io.geoknoesis.vericore.VeriCore
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    // Create a basic wallet
-    val wallet = BasicWallet()
-    
+    val vericore = VeriCore.create()
+
+    val wallet = vericore.createWallet(
+        holderDid = "did:key:holder"
+    ) {
+        label = "Holder Wallet"
+        enableOrganization = true
+        enablePresentation = true
+        property("storagePath", "/var/lib/vericore/wallets/holder")
+    }.getOrThrow()
+
     println("Wallet ID: ${wallet.walletId}")
-    // Output: Wallet ID: 550e8400-e29b-41d4-a716-446655440000
 }
 ```
 
-### Full-Featured Wallet
-
-For testing, use `InMemoryWallet` with all capabilities:
+### Trust Layer DSL
 
 ```kotlin
-import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
+import io.geoknoesis.vericore.credential.dsl.trustLayer
+import kotlinx.coroutines.runBlocking
 
-val wallet = InMemoryWallet(
-    walletDid = "did:key:test-wallet",
-    holderDid = "did:key:test-holder"
-)
+fun main() = runBlocking {
+    val trustLayer = trustLayer {
+        keys { provider("inMemory") }
+        did { method("key") }
+    }
+
+    val wallet = trustLayer.wallet {
+        id("team-wallet")
+        holder("did:key:team-holder")
+        enableOrganization()
+        enablePresentation()
+        option("connectionString", "jdbc:postgresql://localhost/wallets")
+    }
+
+    println("Wallet DID: ${wallet.walletId}")
+}
 ```
 
-### Using WalletBuilder
+### Testkit Wallets
 
-Build wallets with specific capabilities:
+`BasicWallet` and `InMemoryWallet` remain available for lightweight unit tests:
 
 ```kotlin
-import io.geoknoesis.vericore.credential.wallet.WalletBuilder
+import io.geoknoesis.vericore.testkit.credential.BasicWallet
+import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
 
-val wallet = WalletBuilder()
-    .withWalletId("my-wallet")
-    .enableOrganization()
-    .enableLifecycle()
-    .build()
+val basic = BasicWallet()
+val inMemory = InMemoryWallet(holderDid = "did:key:test-holder")
 ```
 
 ## Storing Credentials

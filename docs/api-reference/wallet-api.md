@@ -246,6 +246,52 @@ data class WalletStatistics(
 )
 ```
 
+## Provider Configuration
+
+### WalletCreationOptions
+
+`WalletCreationOptions` is shared by the VeriCore facade, the Trust Layer DSL, and custom `WalletFactory` implementations. It removes the need for untyped `Map<String, Any?>` configuration.
+
+```kotlin
+import io.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+
+val options = WalletCreationOptionsBuilder().apply {
+    label = "Production Wallet"
+    storagePath = "/var/lib/vericore/wallets/holder-42"
+    enableOrganization = true
+    enablePresentation = true
+    property("connectionString", System.getenv("WALLET_DB_URL"))
+}.build()
+```
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `label` | `String?` | Optional human readable label shown in dashboards or UIs |
+| `storagePath` | `String?` | File system or bucket path for providers that persist data |
+| `encryptionKey` | `String?` | Secret material for at-rest encryption |
+| `enableOrganization` | `Boolean` | Signals that collection/tag capabilities should be enabled |
+| `enablePresentation` | `Boolean` | Enables selective disclosure and presentation builders |
+| `additionalProperties` | `Map<String, Any?>` | Provider specific settings added via `property("key", value)` |
+
+A custom factory receives the same object:
+
+```kotlin
+class PostgresWalletFactory : WalletFactory {
+    override suspend fun create(
+        providerName: String,
+        walletId: String?,
+        walletDid: String?,
+        holderDid: String?,
+        options: WalletCreationOptions
+    ): Any {
+        val connection = options.additionalProperties["connectionString"] as? String
+            ?: error("connectionString is required")
+        require(options.enablePresentation) { "Presentations must be enabled for Postgres wallets" }
+        // build and return wallet instance
+    }
+}
+```
+
 ## Extension Functions
 
 ### Type-Safe Capability Access
@@ -277,22 +323,30 @@ directory.clear()
 
 ## WalletBuilder
 
-Builder for creating wallets.
+The Trust Layer DSL exposes a `wallet { ... }` builder backed by `WalletCreationOptionsBuilder`:
 
 ```kotlin
-class WalletBuilder {
-    fun withWalletId(id: String): WalletBuilder
-    fun withWalletDid(did: String): WalletBuilder
-    fun withHolderDid(did: String): WalletBuilder
-    fun enableOrganization(): WalletBuilder
-    fun enableLifecycle(): WalletBuilder
-    fun enablePresentation(presentationService: Any? = null): WalletBuilder
-    fun enableDidManagement(didRegistry: Any): WalletBuilder
-    fun enableKeyManagement(kms: Any): WalletBuilder
-    fun enableIssuance(credentialIssuer: Any): WalletBuilder
-    suspend fun build(): Wallet
+val wallet = trustLayer.wallet {
+    id("my-wallet")
+    holder("did:key:holder")
+    enableOrganization()
+    enablePresentation()
+    option("connectionString", "jdbc:postgresql://localhost/vericore")
 }
 ```
+
+Available builder functions:
+
+| Function | Description |
+|----------|-------------|
+| `id(String)` | Override the generated wallet identifier |
+| `holder(String)` | Set the holder DID (required) |
+| `walletDid(String)` | Override the wallet DID (defaults to `did:key:test-wallet-<id>`) |
+| `provider(String)` | Select a provider by name (defaults to `inMemory`) |
+| `inMemory()` / `basic()` | Convenience methods that set the provider |
+| `enableOrganization()` | Turns on collections, tags, and metadata features |
+| `enablePresentation()` | Enables presentation and selective disclosure support |
+| `option(key, value)` | Add provider-specific configuration (stored in `additionalProperties`) |
 
 ## Implementations
 

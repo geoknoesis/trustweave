@@ -43,6 +43,7 @@
   - Data models
   - Extension functions
   - Usage examples
+- **[Credential Service API](../docs/api-reference/credential-service-api.md)**: SPI and typed options for issuers/verifiers
 
 ## Module Documentation
 

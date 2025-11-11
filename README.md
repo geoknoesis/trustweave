@@ -8,37 +8,63 @@ A **neutral, reusable trust and identity core** library for Kotlin, designed to 
 
 ```kotlin
 import io.geoknoesis.vericore.VeriCore
+import io.geoknoesis.vericore.did.didCreationOptions
+import io.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
-    // 1. Create VeriCore instance
     val vericore = VeriCore.create()
-    
-    // 2. Create a DID
-    val did = vericore.createDid().getOrThrow()
-    
-    // 3. Issue a credential
+
+    val didDocument = vericore.createDid(
+        method = "key",
+        options = didCreationOptions {
+            algorithm = io.geoknoesis.vericore.did.DidCreationOptions.KeyAlgorithm.ED25519
+        }
+    ).getOrThrow()
+
     val credential = vericore.issueCredential(
-        issuerDid = did.id,
-        issuerKeyId = did.id,  // Simplified for demo
+        issuerDid = didDocument.id,
+        issuerKeyId = didDocument.id,
         credentialSubject = buildJsonObject {
             put("id", "did:key:subject")
             put("name", "Alice")
         },
         types = listOf("PersonCredential")
     ).getOrThrow()
-    
-    // 4. Verify the credential
-    val result = vericore.verifyCredential(credential).getOrThrow()
-    println("Valid: ${result.valid}")
-    
-    // 5. Store in wallet
-    val wallet = vericore.createWallet(holderDid = "did:key:alice").getOrThrow()
+
+    val verification = vericore.verifyCredential(credential).getOrThrow()
+    println("Credential valid: ${verification.valid}")
+
+    val wallet = vericore.createWallet(
+        holderDid = "did:key:alice"
+    ) {
+        label = "Alice Wallet"
+        enablePresentation = true
+        property("autoUnlock", true)
+    }.getOrThrow()
+
     wallet.store(credential)
-    
-    println("✅ Complete!")
+    println("✅ Stored credential in ${wallet.walletId}")
+}
+```
+
+## Developer Experience Highlights ✨
+
+- **Typed configuration builders everywhere.** Create DIDs, wallets, and service adapters with compile-time safe options (`didCreationOptions { … }`, `WalletCreationOptionsBuilder`, `credentialServiceCreationOptions { … }`).
+- **Predictable error handling.** All facade operations return `Result<T>` so you decide whether to `getOrThrow()`, fold, or map errors.
+- **Composable DSLs.** Configure the Trust Layer once and reuse it for workflows: credential issuance, verification, wallets, delegation.
+- **SPI-ready from day one.** Drop in your own `WalletFactory` or `CredentialServiceProvider` without reflection or map juggling.
+
+```kotlin
+import io.geoknoesis.vericore.spi.services.credentialServiceCreationOptions
+
+val options = credentialServiceCreationOptions {
+    enabled = true
+    endpoint = "https://issuer.example.com"
+    apiKey = System.getenv("ISSUER_API_KEY")
+    property("batchSize", 100)
 }
 ```
 
@@ -102,18 +128,25 @@ val credential = vericore.issueCredential(...).getOrThrow()
 **Pros:** Simple, type-safe, sensible defaults  
 **Cons:** Less configuration flexibility
 
-### 2. **Wallets Factory** (For Credential Storage) 📦
+### 2. **Wallets & Wallet Factory** (For Credential Storage) 📦
 
-**Use when:** You need to store and manage credentials
+**Use when:** You need type-safe credential storage with optional capabilities
 
 ```kotlin
-val wallet = Wallets.inMemory(holderDid = "did:key:alice")
-wallet.store(credential)
-val credentials = wallet.query { byType("PersonCredential") }
+val wallet = vericore.createWallet(
+    holderDid = "did:key:alice"
+) {
+    label = "Alice Wallet"
+    enableOrganization = true
+    enablePresentation = true
+    property("storagePath", "/var/lib/wallets/alice")
+}.getOrThrow()
 ```
 
-**Pros:** Clean API, no builder exceptions  
-**Cons:** In-memory only (for now)
+Need an in-memory instance for tests? `Wallets.inMemory(holderDid)` still exists for quick fixtures.
+
+**Pros:** Typed options, capability toggles, no reflection  
+**Cons:** Provide your own `WalletFactory` for production storage
 
 ### 3. **Direct APIs** (For Advanced Users) ⚙️
 
@@ -140,6 +173,16 @@ val trustLayer = trustLayer {
 
 **Pros:** Declarative, readable configuration  
 **Cons:** Learning curve for DSL syntax
+
+### Typed Configuration Building Blocks
+
+| What | Builder | Example |
+|------|---------|---------|
+| DID creation | `didCreationOptions { … }` | `algorithm = DidCreationOptions.KeyAlgorithm.ED25519` |
+| Wallet creation | `WalletCreationOptionsBuilder` via `createWallet { … }` | `enablePresentation = true; property("storagePath", "/data/wallets")` |
+| Credential services | `credentialServiceCreationOptions { … }` | `endpoint = "https://issuer.example.com"; apiKey = secret` |
+
+Every builder lives in a public package, so the same typed DSL is available whether you call the facade, wire up a `TrustLayerConfig`, or implement your own SPI provider.
 
 ---
 
@@ -885,6 +928,7 @@ Comprehensive documentation is available in the [`docs/`](docs/) directory:
   - [Proof of Location](docs/getting-started/proof-of-location-scenario.md) - Geospatial location proofs
   - [Spatial Web Authorization](docs/getting-started/spatial-web-authorization-scenario.md) - DID-based spatial authorization
 - **[API Reference](docs/api-reference/)**: Detailed API documentation
+- **[Credential Service API](docs/api-reference/credential-service-api.md)**: Typed SPI for issuers and verifiers
 - **[Getting Started](docs/getting-started/)**: Installation and quick start guides
 - **[Optimization Summary](OPTIMIZATION_COMPLETE.md)**: Summary of codebase optimizations
 - **[Module READMEs](vericore-anchor/src/main/kotlin/io/geoknoesis/vericore/anchor/README.md)**: Detailed module documentation

@@ -117,7 +117,7 @@ class DefaultWalletFactoryImpl : WalletFactory {
         walletId: String?,
         walletDid: String?,
         holderDid: String?,
-        options: Map<String, Any?>
+        options: WalletCreationOptions
     ): Any {
         throw UnsupportedOperationException(
             "DefaultWalletFactoryImpl is a stub. " +
@@ -191,7 +191,7 @@ suspend fun Any.create(
     holderDid: String,
     walletId: String? = null,
     walletDid: String? = null,
-    options: Map<String, Any?> = emptyMap()
+    options: WalletCreationOptions = WalletCreationOptions()
 ): Any {
     return object {
         val walletId = walletId ?: "stub-wallet"

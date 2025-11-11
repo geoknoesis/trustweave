@@ -23,7 +23,7 @@ interface WalletFactory {
         walletId: String? = null,
         walletDid: String? = null,
         holderDid: String? = null,
-        options: Map<String, Any?> = emptyMap()
+        options: WalletCreationOptions = WalletCreationOptions()
     ): Any
 
     /**
@@ -39,9 +39,10 @@ interface WalletFactory {
     suspend fun createInMemory(
         walletId: String? = null,
         walletDid: String? = null,
-        holderDid: String? = null
+        holderDid: String? = null,
+        options: WalletCreationOptions = WalletCreationOptions()
     ): Any {
-        return create("inMemory", walletId, walletDid, holderDid)
+        return create("inMemory", walletId, walletDid, holderDid, options)
     }
 }
 

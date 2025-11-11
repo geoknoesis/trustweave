@@ -1,6 +1,7 @@
 package io.geoknoesis.vericore.credential.dsl
 
 import io.geoknoesis.vericore.credential.wallet.Wallet
+import io.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -26,9 +27,7 @@ class WalletBuilder(
     private var holderDid: String? = null
     private var walletDid: String? = null
     private var provider: String = "inMemory" // Default to inMemory for testing
-    private var enableOrganization: Boolean = false
-    private var enablePresentation: Boolean = false
-    private val options = mutableMapOf<String, Any?>()
+    private val optionsBuilder = WalletCreationOptionsBuilder()
     
     /**
      * Set wallet ID.
@@ -76,21 +75,21 @@ class WalletBuilder(
      * Add custom option for wallet creation.
      */
     fun option(key: String, value: Any?) {
-        options[key] = value
+        optionsBuilder.property(key, value)
     }
     
     /**
      * Enable organization capabilities (collections, tags).
      */
     fun enableOrganization() {
-        this.enableOrganization = true
+        this.optionsBuilder.enableOrganization = true
     }
     
     /**
      * Enable presentation capabilities.
      */
     fun enablePresentation() {
-        this.enablePresentation = true
+        this.optionsBuilder.enablePresentation = true
     }
     
     /**
@@ -101,13 +100,7 @@ class WalletBuilder(
         val walletDidStr = walletDid ?: "did:key:test-wallet-$walletIdStr"
         
         // Add organization and presentation flags to options if needed
-        val finalOptions = options.toMutableMap()
-        if (enableOrganization) {
-            finalOptions["enableOrganization"] = true
-        }
-        if (enablePresentation) {
-            finalOptions["enablePresentation"] = true
-        }
+        val finalOptions = optionsBuilder.build()
         
         // Use WalletFactory from TrustLayerContext
         val walletFactory = context.getWalletFactory()

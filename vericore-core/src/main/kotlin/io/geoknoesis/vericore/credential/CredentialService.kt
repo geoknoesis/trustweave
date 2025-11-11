@@ -102,7 +102,7 @@ interface CredentialServiceProvider {
      * @param options Configuration options
      * @return Credential service instance, or null if creation failed
      */
-    fun create(options: Map<String, Any?>): CredentialService?
+    fun create(options: CredentialServiceCreationOptions = CredentialServiceCreationOptions()): CredentialService?
 }
 
 /**
@@ -197,4 +197,56 @@ data class PresentationVerificationResult(
     val domainValid: Boolean = false,
     val credentialResults: List<CredentialVerificationResult> = emptyList()
 )
+
+/**
+ * Structured configuration passed to [CredentialServiceProvider.create].
+ *
+ * Keeps common toggles explicit while still allowing provider-specific
+ * properties through [additionalProperties]. Providers that still expect legacy
+ * map-based configuration can use [toLegacyMap].
+ */
+data class CredentialServiceCreationOptions(
+    val enabled: Boolean = true,
+    val priority: Int? = null,
+    val endpoint: String? = null,
+    val apiKey: String? = null,
+    val additionalProperties: Map<String, Any?> = emptyMap()
+) {
+    fun toLegacyMap(): Map<String, Any?> = buildMap {
+        put("enabled", enabled)
+        priority?.let { put("priority", it) }
+        endpoint?.let { put("endpoint", it) }
+        apiKey?.let { put("apiKey", it) }
+        putAll(additionalProperties)
+    }
+}
+
+class CredentialServiceCreationOptionsBuilder {
+    var enabled: Boolean = true
+    var priority: Int? = null
+    var endpoint: String? = null
+    var apiKey: String? = null
+    private val properties = mutableMapOf<String, Any?>()
+
+    fun property(key: String, value: Any?) {
+        properties[key] = value
+    }
+
+    fun build(): CredentialServiceCreationOptions =
+        CredentialServiceCreationOptions(
+            enabled = enabled,
+            priority = priority,
+            endpoint = endpoint,
+            apiKey = apiKey,
+            additionalProperties = properties.toMap()
+        )
+}
+
+fun credentialServiceCreationOptions(
+    block: CredentialServiceCreationOptionsBuilder.() -> Unit
+): CredentialServiceCreationOptions {
+    val builder = CredentialServiceCreationOptionsBuilder()
+    builder.block()
+    return builder.build()
+}
 

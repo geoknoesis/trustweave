@@ -16,21 +16,21 @@ class CredentialServiceProviderTest {
     fun `test CredentialServiceProvider interface contract`() {
         val provider = object : CredentialServiceProvider {
             override val name = "test-provider"
-            override fun create(options: Map<String, Any?>): CredentialService? {
+            override fun create(options: CredentialServiceCreationOptions): CredentialService? {
                 return null
             }
         }
 
         assertEquals("test-provider", provider.name)
-        assertNull(provider.create(emptyMap()))
+        assertNull(provider.create())
     }
 
     @Test
     fun `test CredentialServiceProvider create with options`() {
         val provider = object : CredentialServiceProvider {
             override val name = "test-provider"
-            override fun create(options: Map<String, Any?>): CredentialService? {
-                return if (options.containsKey("enabled") && options["enabled"] == true) {
+            override fun create(options: CredentialServiceCreationOptions): CredentialService? {
+                return if (options.enabled) {
                     createMockService()
                 } else {
                     null
@@ -38,9 +38,8 @@ class CredentialServiceProviderTest {
             }
         }
 
-        assertNull(provider.create(emptyMap()))
-        assertNull(provider.create(mapOf("enabled" to false)))
-        assertNotNull(provider.create(mapOf("enabled" to true)))
+        assertNull(provider.create(CredentialServiceCreationOptions(enabled = false)))
+        assertNotNull(provider.create())
     }
 
     @Test

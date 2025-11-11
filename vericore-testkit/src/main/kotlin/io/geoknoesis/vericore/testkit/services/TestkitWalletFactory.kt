@@ -1,6 +1,7 @@
 package io.geoknoesis.vericore.testkit.services
 
 import io.geoknoesis.vericore.spi.services.WalletFactory
+import io.geoknoesis.vericore.spi.services.WalletCreationOptions
 import io.geoknoesis.vericore.credential.wallet.Wallet
 import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
 import io.geoknoesis.vericore.testkit.credential.BasicWallet
@@ -18,7 +19,7 @@ class TestkitWalletFactory : WalletFactory {
         walletId: String?,
         walletDid: String?,
         holderDid: String?,
-        options: Map<String, Any?>
+        options: WalletCreationOptions
     ): Wallet {
         return when (providerName.lowercase()) {
             "inmemory", "in_memory", "in-memory" -> {
@@ -46,9 +47,10 @@ class TestkitWalletFactory : WalletFactory {
     override suspend fun createInMemory(
         walletId: String?,
         walletDid: String?,
-        holderDid: String?
+        holderDid: String?,
+        options: WalletCreationOptions
     ): Wallet {
-        return create("inMemory", walletId, walletDid, holderDid)
+        return create("inMemory", walletId, walletDid, holderDid, options)
     }
 }
 

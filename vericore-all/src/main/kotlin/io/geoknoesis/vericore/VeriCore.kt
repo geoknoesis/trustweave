@@ -4,6 +4,8 @@ import io.geoknoesis.vericore.anchor.AnchorResult
 import io.geoknoesis.vericore.anchor.BlockchainAnchorClient
 import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import io.geoknoesis.vericore.spi.services.WalletFactory
+import io.geoknoesis.vericore.spi.services.WalletCreationOptions
+import io.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
 import io.geoknoesis.vericore.credential.CredentialService
 import io.geoknoesis.vericore.credential.CredentialServiceRegistry
 import io.geoknoesis.vericore.credential.CredentialVerificationOptions
@@ -239,7 +241,7 @@ class VeriCore private constructor(
         holderDid: String,
         walletId: String = UUID.randomUUID().toString(),
         provider: WalletProvider = WalletProvider.InMemory,
-        options: Map<String, Any?> = emptyMap()
+        options: WalletCreationOptions = WalletCreationOptions()
     ): Result<Wallet> = runCatching {
         val wallet = context.walletFactory.create(
             providerName = provider.id,
@@ -597,38 +599,43 @@ data class VeriCoreConfig(
  * Builder for constructing wallet creation options in a type-safe manner.
  */
 class WalletOptionsBuilder {
-    /**
-     * Optional human-readable label associated with the wallet.
-     */
-    var label: String? = null
+    private val delegate = WalletCreationOptionsBuilder()
 
-    /**
-     * Optional storage path used by file-based wallet providers.
-     */
-    var storagePath: String? = null
+    var label: String?
+        get() = delegate.label
+        set(value) {
+            delegate.label = value
+        }
 
-    /**
-     * Optional encryption key or password material used by secure wallets.
-     */
-    var encryptionKey: String? = null
+    var storagePath: String?
+        get() = delegate.storagePath
+        set(value) {
+            delegate.storagePath = value
+        }
 
-    private val customProperties = mutableMapOf<String, Any?>()
+    var encryptionKey: String?
+        get() = delegate.encryptionKey
+        set(value) {
+            delegate.encryptionKey = value
+        }
 
-    /**
-     * Adds a provider-specific option that doesn't have a dedicated property.
-     */
+    var enableOrganization: Boolean
+        get() = delegate.enableOrganization
+        set(value) {
+            delegate.enableOrganization = value
+        }
+
+    var enablePresentation: Boolean
+        get() = delegate.enablePresentation
+        set(value) {
+            delegate.enablePresentation = value
+        }
+
     fun property(key: String, value: Any?) {
-        customProperties[key] = value
+        delegate.property(key, value)
     }
 
-    internal fun build(): Map<String, Any?> {
-        val options = mutableMapOf<String, Any?>()
-        label?.let { options["label"] = it }
-        storagePath?.let { options["storagePath"] = it }
-        encryptionKey?.let { options["encryptionKey"] = it }
-        options.putAll(customProperties)
-        return options
-    }
+    internal fun build(): WalletCreationOptions = delegate.build()
 }
 
 /**
@@ -643,7 +650,7 @@ class WalletOptionsBuilder {
  * }
  * ```
  */
-fun walletOptions(block: WalletOptionsBuilder.() -> Unit): Map<String, Any?> {
+fun walletOptions(block: WalletOptionsBuilder.() -> Unit): WalletCreationOptions {
     val builder = WalletOptionsBuilder()
     builder.block()
     return builder.build()

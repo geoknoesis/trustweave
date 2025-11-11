@@ -1,6 +1,8 @@
 package io.geoknoesis.vericore.credential.dsl
 
 import io.geoknoesis.vericore.credential.wallet.Wallet
+import io.geoknoesis.vericore.spi.services.WalletCreationOptions
+import io.geoknoesis.vericore.spi.services.WalletFactory
 import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
@@ -87,6 +89,57 @@ class WalletDslTest {
                 // Missing holder DID
             }
         }
+    }
+
+    @Test
+    fun `test wallet builder propagates typed options to factory`() = runBlocking {
+        val capturingFactory = CapturingWalletFactory()
+        val trustLayerWithFactory = trustLayer {
+            factories(walletFactory = capturingFactory)
+            keys { provider("inMemory") }
+            did { method("key") {} }
+        }
+
+        trustLayerWithFactory.wallet {
+            holder("did:key:holder")
+            enableOrganization()
+            enablePresentation()
+            option("customFeature", true)
+        }
+
+        val captured = capturingFactory.lastOptions ?: fail("Expected options to be captured")
+        assertTrue(captured.enableOrganization)
+        assertTrue(captured.enablePresentation)
+        assertEquals(true, captured.additionalProperties["customFeature"])
+    }
+
+    private class CapturingWalletFactory : WalletFactory {
+        var lastOptions: WalletCreationOptions? = null
+
+        override suspend fun create(
+            providerName: String,
+            walletId: String?,
+            walletDid: String?,
+            holderDid: String?,
+            options: WalletCreationOptions
+        ): Any {
+            lastOptions = options
+            val finalWalletId = walletId ?: "captured-wallet"
+            val finalHolderDid = holderDid ?: "did:key:holder-$finalWalletId"
+            val finalWalletDid = walletDid ?: "did:key:test-wallet-$finalWalletId"
+            return InMemoryWallet(
+                walletId = finalWalletId,
+                walletDid = finalWalletDid,
+                holderDid = finalHolderDid
+            )
+        }
+
+        override suspend fun createInMemory(
+            walletId: String?,
+            walletDid: String?,
+            holderDid: String?,
+            options: WalletCreationOptions
+        ): Any = create("inMemory", walletId, walletDid, holderDid, options)
     }
 }
 

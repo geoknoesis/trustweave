@@ -55,7 +55,7 @@ interface CredentialServiceProvider {
 `CredentialServiceCreationOptions` replaces the old `Map<String, Any?>` pattern with a structured configuration object.
 
 ```kotlin
-import io.geoknoesis.vericore.credential.CredentialServiceCreationOptionsBuilder
+import com.geoknoesis.vericore.credential.CredentialServiceCreationOptionsBuilder
 
 val options = CredentialServiceCreationOptionsBuilder().apply {
     enabled = true

@@ -241,7 +241,7 @@ dependencies {
     implementation("io.ktor:ktor-server-rate-limit-jvm")
     
     // VeriCore
-    implementation("io.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
     
     // Database
     implementation("org.jetbrains.exposed:exposed-core:0.45.0")
@@ -269,11 +269,11 @@ dependencies {
 ### **Application.kt:**
 
 ```kotlin
-package io.geoknoesis.vericore.cloud
+package com.geoknoesis.vericore.cloud
 
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
-import io.geoknoesis.vericore.cloud.plugins.*
+import com.geoknoesis.vericore.cloud.plugins.*
 
 fun main(args: Array<String>) {
     EngineMain.main(args)
@@ -360,7 +360,7 @@ object UsageRecords : UUIDTable("usage_records") {
 
 ```kotlin
 // src/main/kotlin/services/UsageService.kt
-package io.geoknoesis.vericore.cloud.services
+package com.geoknoesis.vericore.cloud.services
 
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.sync.RedisCommands
@@ -467,7 +467,7 @@ data class UsageSnapshot(
 
 ```kotlin
 // src/main/kotlin/plugins/RateLimiting.kt
-package io.geoknoesis.vericore.cloud.plugins
+package com.geoknoesis.vericore.cloud.plugins
 
 import io.ktor.server.application.*
 import io.ktor.server.plugins.ratelimit.*
@@ -498,17 +498,17 @@ fun Application.configureRateLimiting() {
 
 ```kotlin
 // src/main/kotlin/routes/DidRoutes.kt
-package io.geoknoesis.vericore.cloud.routes
+package com.geoknoesis.vericore.cloud.routes
 
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.http.*
-import io.geoknoesis.vericore.VeriCore
-import io.geoknoesis.vericore.cloud.services.UsageService
-import io.geoknoesis.vericore.did.DidCreationOptions
-import io.geoknoesis.vericore.did.didCreationOptions
+import com.geoknoesis.vericore.VeriCore
+import com.geoknoesis.vericore.cloud.services.UsageService
+import com.geoknoesis.vericore.did.DidCreationOptions
+import com.geoknoesis.vericore.did.didCreationOptions
 import kotlinx.serialization.Serializable
 
 fun Route.didRoutes(
@@ -593,14 +593,14 @@ data class CreateDidRequest(
 @Serializable
 data class DidResponse(
     val id: String,
-    val document: io.geoknoesis.vericore.did.DidDocument,
+    val document: com.geoknoesis.vericore.did.DidDocument,
     val createdAt: Long
 )
 
 @Serializable
 data class DidResolutionResponse(
-    val document: io.geoknoesis.vericore.did.DidDocument,
-    val metadata: io.geoknoesis.vericore.did.ResolutionMetadata?
+    val document: com.geoknoesis.vericore.did.DidDocument,
+    val metadata: com.geoknoesis.vericore.did.ResolutionMetadata?
 )
 
 @Serializable
@@ -614,15 +614,15 @@ data class ErrorResponse(
 
 ```kotlin
 // src/main/kotlin/routes/CredentialRoutes.kt
-package io.geoknoesis.vericore.cloud.routes
+package com.geoknoesis.vericore.cloud.routes
 
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.http.*
-import io.geoknoesis.vericore.VeriCore
-import io.geoknoesis.vericore.cloud.services.UsageService
+import com.geoknoesis.vericore.VeriCore
+import com.geoknoesis.vericore.cloud.services.UsageService
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -672,7 +672,7 @@ fun Route.credentialRoutes(
             // Verify
             val result = vericore.verifyCredential(
                 credential = request.credential,
-                options = request.options ?: io.geoknoesis.vericore.credential.CredentialVerificationOptions()
+                options = request.options ?: com.geoknoesis.vericore.credential.CredentialVerificationOptions()
             ).getOrThrow()
             
             // Track usage
@@ -698,14 +698,14 @@ data class IssueCredentialRequest(
 
 @Serializable
 data class CredentialResponse(
-    val credential: io.geoknoesis.vericore.credential.models.VerifiableCredential,
+    val credential: com.geoknoesis.vericore.credential.models.VerifiableCredential,
     val issuedAt: Long
 )
 
 @Serializable
 data class VerifyCredentialRequest(
-    val credential: io.geoknoesis.vericore.credential.models.VerifiableCredential,
-    val options: io.geoknoesis.vericore.credential.CredentialVerificationOptions? = null
+    val credential: com.geoknoesis.vericore.credential.models.VerifiableCredential,
+    val options: com.geoknoesis.vericore.credential.CredentialVerificationOptions? = null
 )
 
 @Serializable
@@ -724,7 +724,7 @@ data class VerificationResponse(
 
 ```kotlin
 // src/main/kotlin/routes/BillingRoutes.kt
-package io.geoknoesis.vericore.cloud.routes
+package com.geoknoesis.vericore.cloud.routes
 
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -834,7 +834,7 @@ data class MessageResponse(
 
 ```kotlin
 // src/main/kotlin/routes/WebhookRoutes.kt
-package io.geoknoesis.vericore.cloud.routes
+package com.geoknoesis.vericore.cloud.routes
 
 import io.ktor.server.application.*
 import io.ktor.server.request.*

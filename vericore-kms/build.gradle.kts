@@ -3,7 +3,7 @@ plugins {
     kotlin("jvm")
 }
 
-group = "io.geoknoesis.vericore"
+group = "com.geoknoesis.vericore"
 version = "1.0.0-SNAPSHOT"
 
 dependencies {

@@ -16,8 +16,8 @@ other VeriCore modules implement or consume.
 ## Typical Usage
 
 ```kotlin
-import io.geoknoesis.vericore.spi.services.AdapterLoader
-import io.geoknoesis.vericore.spi.PluginRegistry
+import com.geoknoesis.vericore.spi.services.AdapterLoader
+import com.geoknoesis.vericore.spi.PluginRegistry
 
 // Locate DID method service at runtime
 val didMethodService = AdapterLoader.didMethodService()

@@ -10,8 +10,8 @@ Get started with VeriCore in 5 minutes! This guide will walk you through creatin
 
 ```kotlin
 dependencies {
-    implementation("io.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
-    testImplementation("io.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    testImplementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -22,8 +22,8 @@ dependencies {
 **How simple:** One helper call, no manual canonicalisation.
 
 ```kotlin
-import io.geoknoesis.vericore.VeriCore
-import io.geoknoesis.vericore.json.DigestUtils
+import com.geoknoesis.vericore.VeriCore
+import com.geoknoesis.vericore.json.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -48,10 +48,10 @@ fun main() = runBlocking {
 **How simple:** Configure only what you need using a fluent builder—defaults cover the rest.
 
 ```kotlin
-import io.geoknoesis.vericore.did.didCreationOptions
+import com.geoknoesis.vericore.did.didCreationOptions
 
 val issuerDid = vericore.createDid {
-    algorithm = io.geoknoesis.vericore.did.DidCreationOptions.KeyAlgorithm.ED25519
+    algorithm = com.geoknoesis.vericore.did.DidCreationOptions.KeyAlgorithm.ED25519
 }.getOrThrow().id
 
 println("Issuer DID: $issuerDid")
@@ -64,7 +64,7 @@ println("Issuer DID: $issuerDid")
 **How simple:** Provide typed issuance options; the API handles proof generation and validation.
 
 ```kotlin
-import io.geoknoesis.vericore.credential.issueCredentialOptions
+import com.geoknoesis.vericore.credential.issueCredentialOptions
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -90,8 +90,8 @@ println("Issued credential id: ${credential.id}")
 **How simple:** One call to verify, one helper to anchor when you need persistence.
 
 ```kotlin
-import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
-import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
+import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 

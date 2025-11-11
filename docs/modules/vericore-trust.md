@@ -14,8 +14,8 @@ between credential workflows and registry/provider integrations.
 ## Usage
 
 ```kotlin
-import io.geoknoesis.vericore.trust.TrustRegistry
-import io.geoknoesis.vericore.trust.TrustAnchorMetadata
+import com.geoknoesis.vericore.trust.TrustRegistry
+import com.geoknoesis.vericore.trust.TrustAnchorMetadata
 
 suspend fun seedTrust(registry: TrustRegistry) {
     registry.addTrustAnchor(

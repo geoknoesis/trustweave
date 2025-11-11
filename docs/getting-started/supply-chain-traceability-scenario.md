@@ -167,14 +167,14 @@ Add VeriCore dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core VeriCore modules
-    implementation("io.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
     
     // Test kit for in-memory implementations
-    implementation("io.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -189,22 +189,22 @@ dependencies {
 Here's a complete example demonstrating supply chain traceability:
 
 ```kotlin
-import io.geoknoesis.vericore.credential.models.VerifiableCredential
-import io.geoknoesis.vericore.credential.models.VerifiablePresentation
-import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
-import io.geoknoesis.vericore.credential.CredentialVerificationOptions
-import io.geoknoesis.vericore.credential.PresentationOptions
-import io.geoknoesis.vericore.credential.issuer.CredentialIssuer
-import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
-import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
-import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
-import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
-import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
-import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
-import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
-import io.geoknoesis.vericore.anchor.anchorTyped
-import io.geoknoesis.vericore.did.DidMethodRegistry
+import com.geoknoesis.vericore.credential.models.VerifiableCredential
+import com.geoknoesis.vericore.credential.models.VerifiablePresentation
+import com.geoknoesis.vericore.credential.CredentialIssuanceOptions
+import com.geoknoesis.vericore.credential.CredentialVerificationOptions
+import com.geoknoesis.vericore.credential.PresentationOptions
+import com.geoknoesis.vericore.credential.issuer.CredentialIssuer
+import com.geoknoesis.vericore.credential.verifier.CredentialVerifier
+import com.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
+import com.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
+import com.geoknoesis.vericore.testkit.credential.InMemoryWallet
+import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
+import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
+import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
+import com.geoknoesis.vericore.anchor.anchorTyped
+import com.geoknoesis.vericore.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
@@ -306,9 +306,9 @@ val didResolver = CredentialDidResolver { did ->
     
     // Step 5: Anchor origin event to blockchain
     println("\nStep 5: Anchoring origin event to blockchain...")
-    val originDigest = io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
+    val originDigest = com.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
-            io.geoknoesis.vericore.credential.models.VerifiableCredential.serializer(),
+            com.geoknoesis.vericore.credential.models.VerifiableCredential.serializer(),
             issuedOriginCredential
         )
     )
@@ -369,9 +369,9 @@ val didResolver = CredentialDidResolver { did ->
     
     // Step 7: Anchor transfer event
     println("\nStep 7: Anchoring transfer event...")
-    val transferDigest = io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
+    val transferDigest = com.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
-            io.geoknoesis.vericore.credential.models.VerifiableCredential.serializer(),
+            com.geoknoesis.vericore.credential.models.VerifiableCredential.serializer(),
             issuedTransferCredential
         )
     )
@@ -508,10 +508,10 @@ fun createOriginCredential(
         },
         issuanceDate = Instant.now().toString(),
         expirationDate = null,
-        credentialSchema = io.geoknoesis.vericore.credential.models.CredentialSchema(
+        credentialSchema = com.geoknoesis.vericore.credential.models.CredentialSchema(
             id = "https://example.com/schemas/origin-credential.json",
             type = "JsonSchemaValidator2018",
-            schemaFormat = io.geoknoesis.vericore.spi.SchemaFormat.JSON_SCHEMA
+            schemaFormat = com.geoknoesis.vericore.spi.SchemaFormat.JSON_SCHEMA
         )
     )
 }
@@ -540,10 +540,10 @@ fun createTransferCredential(
         },
         issuanceDate = Instant.now().toString(),
         expirationDate = null,
-        credentialSchema = io.geoknoesis.vericore.credential.models.CredentialSchema(
+        credentialSchema = com.geoknoesis.vericore.credential.models.CredentialSchema(
             id = "https://example.com/schemas/transfer-credential.json",
             type = "JsonSchemaValidator2018",
-            schemaFormat = io.geoknoesis.vericore.spi.SchemaFormat.JSON_SCHEMA
+            schemaFormat = com.geoknoesis.vericore.spi.SchemaFormat.JSON_SCHEMA
         )
     )
 }
@@ -572,10 +572,10 @@ fun createSaleCredential(
         },
         issuanceDate = Instant.now().toString(),
         expirationDate = null,
-        credentialSchema = io.geoknoesis.vericore.credential.models.CredentialSchema(
+        credentialSchema = com.geoknoesis.vericore.credential.models.CredentialSchema(
             id = "https://example.com/schemas/sale-credential.json",
             type = "JsonSchemaValidator2018",
-            schemaFormat = io.geoknoesis.vericore.spi.SchemaFormat.JSON_SCHEMA
+            schemaFormat = com.geoknoesis.vericore.spi.SchemaFormat.JSON_SCHEMA
         )
     )
 }
@@ -606,9 +606,9 @@ fun verifyProvenanceChain(credentials: List<VerifiableCredential>): Boolean {
         val current = credentials[i]
         val previous = credentials[i - 1]
         
-        val previousDigest = io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
+        val previousDigest = com.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
             Json.encodeToJsonElement(
-                io.geoknoesis.vericore.credential.models.VerifiableCredential.serializer(),
+                com.geoknoesis.vericore.credential.models.VerifiableCredential.serializer(),
                 previous
             )
         )

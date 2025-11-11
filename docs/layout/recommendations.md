@@ -18,11 +18,11 @@
 
 | Current Package | Proposed Destination | Rationale |
 | --- | --- | --- |
-| `io.geoknoesis.vericore.core.services` | ✅ `vericore-spi` (`io.geoknoesis.vericore.spi.services`) | Adapter loading and services migrated |
-| `io.geoknoesis.vericore.trust` | ✅ `vericore-trust` | Trust DSL runtime relocated |
-| `io.geoknoesis.vericore.did.delegation` | `vericore-did.delegation` | Keeps DID-specific flows alongside other DID tooling |
-| `io.geoknoesis.vericore.credential.dsl` | Split between `vericore-core.credential.dsl` (domain builders) and `vericore-trust.dsl` (trust-layer wiring) | Clarifies boundary between credential manipulation and runtime configuration |
-| `io.geoknoesis.vericore.credential.wallet` | Consider `wallet` submodule if wallet providers grow further | Provides space for wallet registry replacements without polluting credential root package |
+| `com.geoknoesis.vericore.core.services` | ✅ `vericore-spi` (`com.geoknoesis.vericore.spi.services`) | Adapter loading and services migrated |
+| `com.geoknoesis.vericore.trust` | ✅ `vericore-trust` | Trust DSL runtime relocated |
+| `com.geoknoesis.vericore.did.delegation` | `vericore-did.delegation` | Keeps DID-specific flows alongside other DID tooling |
+| `com.geoknoesis.vericore.credential.dsl` | Split between `vericore-core.credential.dsl` (domain builders) and `vericore-trust.dsl` (trust-layer wiring) | Clarifies boundary between credential manipulation and runtime configuration |
+| `com.geoknoesis.vericore.credential.wallet` | Consider `wallet` submodule if wallet providers grow further | Provides space for wallet registry replacements without polluting credential root package |
 
 ## 3. Documentation & Navigation
 - Introduce a top-level `docs/modules/overview.md` linking each module to its responsibilities and entry points.

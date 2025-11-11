@@ -22,8 +22,8 @@ The tests use Testcontainers to:
 ### Basic Setup
 
 ```kotlin
-import io.geoknoesis.vericore.ganache.GanacheIntegration
-import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
+import com.geoknoesis.vericore.ganache.GanacheIntegration
+import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -43,10 +43,10 @@ val result = client.writePayload(payload)
 ### Direct Client Usage with Type-Safe Options
 
 ```kotlin
-import io.geoknoesis.vericore.ganache.GanacheBlockchainAnchorClient
-import io.geoknoesis.vericore.anchor.*
-import io.geoknoesis.vericore.anchor.options.GanacheOptions
-import io.geoknoesis.vericore.anchor.ChainId
+import com.geoknoesis.vericore.ganache.GanacheBlockchainAnchorClient
+import com.geoknoesis.vericore.anchor.*
+import com.geoknoesis.vericore.anchor.options.GanacheOptions
+import com.geoknoesis.vericore.anchor.ChainId
 
 // Type-safe chain ID
 val chainId = ChainId.Eip155.GanacheLocal
@@ -73,8 +73,8 @@ client.use {
 ### Direct Client Usage (Legacy Map-based Options)
 
 ```kotlin
-import io.geoknoesis.vericore.ganache.GanacheBlockchainAnchorClient
-import io.geoknoesis.vericore.anchor.*
+import com.geoknoesis.vericore.ganache.GanacheBlockchainAnchorClient
+import com.geoknoesis.vericore.anchor.*
 
 val client = GanacheBlockchainAnchorClient(
     chainId = "eip155:1337",
@@ -95,7 +95,7 @@ val retrieved = client.readPayload(anchorResult.ref)
 
 **Type-Safe Options (Recommended)**:
 ```kotlin
-import io.geoknoesis.vericore.anchor.options.GanacheOptions
+import com.geoknoesis.vericore.anchor.options.GanacheOptions
 
 val options = GanacheOptions(
     rpcUrl = "http://localhost:8545",  // Optional, default: "http://localhost:8545"
@@ -152,7 +152,7 @@ Tests use Testcontainers to:
 The adapter uses structured exception handling with rich error context:
 
 ```kotlin
-import io.geoknoesis.vericore.anchor.exceptions.*
+import com.geoknoesis.vericore.anchor.exceptions.*
 
 try {
     val result = client.writePayload(payload)
@@ -182,7 +182,7 @@ try {
 
 **Type-Safe Chain ID (Recommended)**:
 ```kotlin
-import io.geoknoesis.vericore.anchor.ChainId
+import com.geoknoesis.vericore.anchor.ChainId
 
 val chainId = ChainId.Eip155.GanacheLocal  // "eip155:1337"
 ```

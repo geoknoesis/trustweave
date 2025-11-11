@@ -126,17 +126,17 @@ Add VeriCore dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core VeriCore modules
-    implementation("io.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
     
     // Test kit for in-memory implementations
-    implementation("io.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
     
     // Optional: Algorand adapter for real blockchain anchoring
-    implementation("io.geoknoesis.vericore:vericore-algorand:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-algorand:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -153,14 +153,14 @@ Here's a complete example demonstrating the EO integrity workflow:
 ```kotlin
 package com.example.eo
 
-import io.geoknoesis.vericore.anchor.*
-import io.geoknoesis.vericore.did.*
-import io.geoknoesis.vericore.json.DigestUtils
-import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
-import io.geoknoesis.vericore.testkit.integrity.IntegrityVerifier
-import io.geoknoesis.vericore.testkit.integrity.TestDataBuilders
-import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
+import com.geoknoesis.vericore.anchor.*
+import com.geoknoesis.vericore.did.*
+import com.geoknoesis.vericore.json.DigestUtils
+import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
+import com.geoknoesis.vericore.testkit.integrity.IntegrityVerifier
+import com.geoknoesis.vericore.testkit.integrity.TestDataBuilders
+import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 
@@ -662,7 +662,7 @@ So far, we've used an in-memory blockchain client for testing. For production, y
 Replace the in-memory client with Algorand:
 
 ```kotlin
-import io.geoknoesis.vericore.algorand.AlgorandBlockchainAnchorClient
+import com.geoknoesis.vericore.algorand.AlgorandBlockchainAnchorClient
 
 // Replace this:
 // val anchorClient = InMemoryBlockchainAnchorClient(chainId)

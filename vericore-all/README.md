@@ -8,12 +8,12 @@ Instead of adding multiple dependencies:
 
 ```kotlin
 dependencies {
-    implementation("io.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
-    testImplementation("io.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
+    testImplementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -21,7 +21,7 @@ You can simply use:
 
 ```kotlin
 dependencies {
-    implementation("io.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -49,20 +49,20 @@ Optional modules must be added explicitly if needed:
 
 ```kotlin
 dependencies {
-    implementation("io.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
     
     // Add blockchain adapters as needed
-    implementation("io.geoknoesis.vericore:vericore-algorand:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-algorand:1.0.0-SNAPSHOT")
     
     // Add integration modules as needed
-    implementation("io.geoknoesis.vericore:vericore-waltid:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-waltid:1.0.0-SNAPSHOT")
 }
 ```
 
 ## Quick Start
 
 ```kotlin
-import io.geoknoesis.vericore.VeriCore
+import com.geoknoesis.vericore.VeriCore
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {

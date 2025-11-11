@@ -52,8 +52,8 @@ A Verifiable Credential contains:
 A credential is **issued** by an issuer to a subject:
 
 ```kotlin
-import io.geoknoesis.vericore.credential.models.VerifiableCredential
-import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
+import com.geoknoesis.vericore.credential.models.VerifiableCredential
+import com.geoknoesis.vericore.credential.CredentialIssuanceOptions
 
 // Create credential (without proof)
 val credential = VerifiableCredential(
@@ -82,7 +82,7 @@ val issuedCredential = credentialService.issueCredential(
 Store credentials in a wallet:
 
 ```kotlin
-import io.geoknoesis.vericore.testkit.credential.BasicWallet
+import com.geoknoesis.vericore.testkit.credential.BasicWallet
 
 val wallet = BasicWallet()
 val credentialId = wallet.store(issuedCredential)
@@ -93,8 +93,8 @@ val credentialId = wallet.store(issuedCredential)
 Create a **Verifiable Presentation** to share credentials:
 
 ```kotlin
-import io.geoknoesis.vericore.credential.models.VerifiablePresentation
-import io.geoknoesis.vericore.credential.PresentationOptions
+import com.geoknoesis.vericore.credential.models.VerifiablePresentation
+import com.geoknoesis.vericore.credential.PresentationOptions
 
 val presentation = VerifiablePresentation(
     type = listOf("VerifiablePresentation"),
@@ -109,11 +109,11 @@ val presentation = VerifiablePresentation(
 Verify a credential or presentation:
 
 ```kotlin
-import io.geoknoesis.vericore.credential.CredentialVerificationOptions
-import io.geoknoesis.vericore.credential.did.CredentialDidResolver
-import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
-import io.geoknoesis.vericore.did.DidMethodRegistry
-import io.geoknoesis.vericore.did.toCredentialDidResolution
+import com.geoknoesis.vericore.credential.CredentialVerificationOptions
+import com.geoknoesis.vericore.credential.did.CredentialDidResolver
+import com.geoknoesis.vericore.credential.verifier.CredentialVerifier
+import com.geoknoesis.vericore.did.DidMethodRegistry
+import com.geoknoesis.vericore.did.toCredentialDidResolution
 
 val didRegistry = DidMethodRegistry()
 // register DID methods here, e.g. didRegistry.register(didMethod)

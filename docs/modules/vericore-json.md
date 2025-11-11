@@ -132,7 +132,7 @@ Digests are encoded using multibase with base58btc encoding:
 ### Computing a Digest
 
 ```kotlin
-import io.geoknoesis.vericore.json.DigestUtils
+import com.geoknoesis.vericore.json.DigestUtils
 import kotlinx.serialization.json.*
 
 val vc = buildJsonObject {

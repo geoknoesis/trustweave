@@ -126,14 +126,14 @@ Add VeriCore dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core VeriCore modules
-    implementation("io.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
     
     // Test kit for in-memory implementations
-    implementation("io.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -148,20 +148,20 @@ dependencies {
 Here's a complete example that demonstrates the full academic credential flow:
 
 ```kotlin
-import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
-import io.geoknoesis.vericore.credential.CredentialVerificationOptions
-import io.geoknoesis.vericore.credential.PresentationOptions
-import io.geoknoesis.vericore.credential.did.CredentialDidResolver
-import io.geoknoesis.vericore.credential.issuer.CredentialIssuer
-import io.geoknoesis.vericore.credential.models.CredentialSchema
-import io.geoknoesis.vericore.credential.models.VerifiableCredential
-import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
-import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
-import io.geoknoesis.vericore.did.DidMethodRegistry
-import io.geoknoesis.vericore.did.toCredentialDidResolution
-import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
-import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
-import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
+import com.geoknoesis.vericore.credential.CredentialIssuanceOptions
+import com.geoknoesis.vericore.credential.CredentialVerificationOptions
+import com.geoknoesis.vericore.credential.PresentationOptions
+import com.geoknoesis.vericore.credential.did.CredentialDidResolver
+import com.geoknoesis.vericore.credential.issuer.CredentialIssuer
+import com.geoknoesis.vericore.credential.models.CredentialSchema
+import com.geoknoesis.vericore.credential.models.VerifiableCredential
+import com.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
+import com.geoknoesis.vericore.credential.verifier.CredentialVerifier
+import com.geoknoesis.vericore.did.DidMethodRegistry
+import com.geoknoesis.vericore.did.toCredentialDidResolution
+import com.geoknoesis.vericore.testkit.credential.InMemoryWallet
+import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
+import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put

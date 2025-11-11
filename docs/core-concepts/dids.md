@@ -82,8 +82,8 @@ Different DID methods use different mechanisms for creating and resolving DIDs:
 ### Creating a DID
 
 ```kotlin
-import io.geoknoesis.vericore.did.DidMethodRegistry
-import io.geoknoesis.vericore.did.DidMethod
+import com.geoknoesis.vericore.did.DidMethodRegistry
+import com.geoknoesis.vericore.did.DidMethod
 
 // Register a DID method
 val didMethod: DidMethod = // ... get DID method

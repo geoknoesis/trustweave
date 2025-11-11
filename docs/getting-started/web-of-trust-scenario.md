@@ -18,7 +18,7 @@ The web of trust scenario demonstrates how to:
 ### Step 1: Configure Trust Layer with Trust Registry
 
 ```kotlin
-import io.geoknoesis.vericore.credential.dsl.*
+import com.geoknoesis.vericore.credential.dsl.*
 import java.time.Instant
 import kotlinx.coroutines.runBlocking
 

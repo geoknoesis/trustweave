@@ -106,7 +106,7 @@ The new VeriCore API is complete and ready to use:
 
 ```kotlin
 dependencies {
-    implementation("io.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
 }
 
 val vericore = VeriCore.create()
@@ -137,7 +137,7 @@ Use the new API - it works perfectly:
 ```kotlin
 // In build.gradle.kts
 dependencies {
-    implementation("io.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
 }
 
 // In your code

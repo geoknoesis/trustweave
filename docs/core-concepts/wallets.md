@@ -29,7 +29,7 @@ VeriCore wallets support different capabilities through a **composable interface
 A **Basic Wallet** provides only core credential storage:
 
 ```kotlin
-import io.geoknoesis.vericore.testkit.credential.BasicWallet
+import com.geoknoesis.vericore.testkit.credential.BasicWallet
 
 val wallet = BasicWallet()
 // Supports: store, get, list, delete, query
@@ -40,7 +40,7 @@ val wallet = BasicWallet()
 A **Full-Featured Wallet** implements all capabilities:
 
 ```kotlin
-import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
+import com.geoknoesis.vericore.testkit.credential.InMemoryWallet
 
 val wallet = InMemoryWallet(
     walletDid = "did:key:wallet",
@@ -127,7 +127,7 @@ if (wallet.capabilities.supports("collections")) {
 Create your own directory when you need to manage multiple wallets:
 
 ```kotlin
-import io.geoknoesis.vericore.credential.wallet.WalletDirectory
+import com.geoknoesis.vericore.credential.wallet.WalletDirectory
 
 val directory = WalletDirectory()
 

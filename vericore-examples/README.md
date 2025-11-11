@@ -5,17 +5,17 @@ This module contains runnable examples demonstrating various use cases for VeriC
 ## Available Examples
 
 ### Earth Observation
-- **File**: `io.geoknoesis.vericore.examples.eo.EarthObservationExample`
+- **File**: `com.geoknoesis.vericore.examples.eo.EarthObservationExample`
 - **Description**: Demonstrates EO data integrity workflow with artifacts, linksets, VCs, and blockchain anchoring
 - **Run**: `./gradlew :vericore-examples:runEarthObservation`
 
 ### Academic Credentials
-- **File**: `io.geoknoesis.vericore.examples.academic.AcademicCredentialsExample`
+- **File**: `com.geoknoesis.vericore.examples.academic.AcademicCredentialsExample`
 - **Description**: Shows how universities issue degree credentials and students manage them in wallets
 - **Run**: `./gradlew :vericore-examples:runAcademicCredentials`
 
 ### Professional Identity
-- **File**: `io.geoknoesis.vericore.examples.professional.ProfessionalIdentityExample`
+- **File**: `com.geoknoesis.vericore.examples.professional.ProfessionalIdentityExample`
 - **Description**: Demonstrates professional credential wallet with education, work experience, and certifications
 - **Run**: `./gradlew :vericore-examples:runProfessionalIdentity`
 

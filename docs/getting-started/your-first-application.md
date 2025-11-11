@@ -13,12 +13,12 @@ This example shows how to:
 6. Read it back and verify
 
 ```kotlin
-import io.geoknoesis.vericore.anchor.*
-import io.geoknoesis.vericore.did.*
-import io.geoknoesis.vericore.json.DigestUtils
-import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
-import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
+import com.geoknoesis.vericore.anchor.*
+import com.geoknoesis.vericore.did.*
+import com.geoknoesis.vericore.json.DigestUtils
+import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
+import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlinx.serialization.Serializable

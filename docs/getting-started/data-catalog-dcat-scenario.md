@@ -164,14 +164,14 @@ Add VeriCore dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core VeriCore modules
-    implementation("io.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
     
     // Test kit for in-memory implementations
-    implementation("io.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -194,9 +194,9 @@ dependencies {
 - **Verification**: Anyone can verify credentials came from publisher
 
 ```kotlin
-import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
-import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
-import io.geoknoesis.vericore.did.DidMethodRegistry
+import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
+import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
+import com.geoknoesis.vericore.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -230,7 +230,7 @@ fun main() = runBlocking {
 - **Verification**: Consumers can verify dataset credentials
 
 ```kotlin
-import io.geoknoesis.vericore.credential.models.VerifiableCredential
+import com.geoknoesis.vericore.credential.models.VerifiableCredential
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
@@ -343,8 +343,8 @@ import java.time.Instant
     
     // Compute digest of DCAT dataset description
     // This provides integrity check for the dataset metadata
-    val datasetDigest = io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
-        io.geoknoesis.vericore.json.Json.encodeToJsonElement(dcatDataset)
+    val datasetDigest = com.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
+        com.geoknoesis.vericore.json.Json.encodeToJsonElement(dcatDataset)
     )
     
     // Dataset credential wraps DCAT description with verifiable proof
@@ -384,10 +384,10 @@ import java.time.Instant
 - **Verification**: Anyone can verify credential authenticity
 
 ```kotlin
-import io.geoknoesis.vericore.credential.issuer.CredentialIssuer
-import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
-import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
-import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
+import com.geoknoesis.vericore.credential.issuer.CredentialIssuer
+import com.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
+import com.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
+import com.geoknoesis.vericore.credential.CredentialIssuanceOptions
 
     // Step 5: Issue dataset credential with proof
     println("\nStep 5: Issuing dataset credential...")
@@ -501,8 +501,8 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
                 put("datasetTitle", datasetTitle)
                 put("registrationDate", Instant.now().toString())
                 put("status", "published")
-                put("catalogDigest", io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
-                    io.geoknoesis.vericore.json.Json.encodeToJsonElement(dcatCatalog)
+                put("catalogDigest", com.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
+                    com.geoknoesis.vericore.json.Json.encodeToJsonElement(dcatCatalog)
                 ))
             })
         },
@@ -552,8 +552,8 @@ import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
 - **Trust**: Builds trust in dataset descriptions
 
 ```kotlin
-import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
-import io.geoknoesis.vericore.credential.CredentialVerificationOptions
+import com.geoknoesis.vericore.credential.verifier.CredentialVerifier
+import com.geoknoesis.vericore.credential.CredentialVerificationOptions
 
     // Step 8: Verify dataset credentials
     println("\nStep 8: Verifying dataset credentials...")
@@ -614,9 +614,9 @@ import io.geoknoesis.vericore.credential.CredentialVerificationOptions
 - **Integrity**: Prevents catalog tampering
 
 ```kotlin
-import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
-import io.geoknoesis.vericore.anchor.anchorTyped
+import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
+import com.geoknoesis.vericore.anchor.anchorTyped
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -639,7 +639,7 @@ data class CatalogRecord(
     }
     
     // Create catalog record
-    val catalogDigest = io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
+    val catalogDigest = com.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
             VerifiableCredential.serializer(),
             issuedCatalogRecord

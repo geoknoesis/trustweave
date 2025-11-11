@@ -7,9 +7,9 @@ A **neutral, reusable trust and identity core** library for Kotlin, designed to 
 ## Quick Start (30 Seconds) ⚡
 
 ```kotlin
-import io.geoknoesis.vericore.VeriCore
-import io.geoknoesis.vericore.did.didCreationOptions
-import io.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.geoknoesis.vericore.VeriCore
+import com.geoknoesis.vericore.did.didCreationOptions
+import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -20,7 +20,7 @@ fun main() = runBlocking {
     val didDocument = vericore.createDid(
         method = "key",
         options = didCreationOptions {
-            algorithm = io.geoknoesis.vericore.did.DidCreationOptions.KeyAlgorithm.ED25519
+            algorithm = com.geoknoesis.vericore.did.DidCreationOptions.KeyAlgorithm.ED25519
         }
     ).getOrThrow()
 
@@ -58,7 +58,7 @@ fun main() = runBlocking {
 - **SPI-ready from day one.** Drop in your own `WalletFactory` or `CredentialServiceProvider` without reflection or map juggling.
 
 ```kotlin
-import io.geoknoesis.vericore.spi.services.credentialServiceCreationOptions
+import com.geoknoesis.vericore.spi.services.credentialServiceCreationOptions
 
 val options = credentialServiceCreationOptions {
     enabled = true
@@ -75,8 +75,8 @@ Add VeriCore to your project:
 ```kotlin
 dependencies {
     // All-in-one dependency (recommended)
-    implementation("io.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")  // For testing
+    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")  // For testing
 }
 ```
 
@@ -191,7 +191,7 @@ Every builder lives in a public package, so the same typed DSL is available whet
 ### Example: Computing a JSON Digest
 
 ```kotlin
-import io.geoknoesis.vericore.json.DigestUtils
+import com.geoknoesis.vericore.json.DigestUtils
 import kotlinx.serialization.json.*
 
 fun main() {
@@ -209,7 +209,7 @@ fun main() {
 ### Example: Creating a DID (New Simple API)
 
 ```kotlin
-import io.geoknoesis.vericore.VeriCore
+import com.geoknoesis.vericore.VeriCore
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -230,9 +230,9 @@ fun main() = runBlocking {
 <summary>Advanced: Using Direct APIs</summary>
 
 ```kotlin
-import io.geoknoesis.vericore.did.*
-import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
-import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
+import com.geoknoesis.vericore.did.*
+import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
+import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -256,11 +256,11 @@ fun main() = runBlocking {
 ### Example: Managing Credentials with Wallets (New Simple API)
 
 ```kotlin
-import io.geoknoesis.vericore.VeriCore
-import io.geoknoesis.vericore.credential.wallet.WalletProvider
-import io.geoknoesis.vericore.credential.wallet.Wallets
-import io.geoknoesis.vericore.credential.models.VerifiableCredential
-import io.geoknoesis.vericore.credential.wallet.CredentialOrganization
+import com.geoknoesis.vericore.VeriCore
+import com.geoknoesis.vericore.credential.wallet.WalletProvider
+import com.geoknoesis.vericore.credential.wallet.Wallets
+import com.geoknoesis.vericore.credential.models.VerifiableCredential
+import com.geoknoesis.vericore.credential.wallet.CredentialOrganization
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -332,8 +332,8 @@ fun main() = runBlocking {
 ### Example: Anchoring Data to a Blockchain
 
 ```kotlin
-import io.geoknoesis.vericore.anchor.*
-import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.geoknoesis.vericore.anchor.*
+import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlinx.serialization.Serializable
@@ -379,15 +379,15 @@ val retrieved = blockchainRegistry.readTyped<VerifiableCredentialDigest>(
 ### Example: Complete Workflow
 
 ```kotlin
-import io.geoknoesis.vericore.anchor.AnchorResult
-import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
-import io.geoknoesis.vericore.anchor.anchorTyped
-import io.geoknoesis.vericore.anchor.readTyped
-import io.geoknoesis.vericore.did.DidMethodRegistry
-import io.geoknoesis.vericore.json.DigestUtils
-import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
-import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
+import com.geoknoesis.vericore.anchor.AnchorResult
+import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
+import com.geoknoesis.vericore.anchor.anchorTyped
+import com.geoknoesis.vericore.anchor.readTyped
+import com.geoknoesis.vericore.did.DidMethodRegistry
+import com.geoknoesis.vericore.json.DigestUtils
+import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
+import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlinx.serialization.Serializable
@@ -478,7 +478,7 @@ JSON canonicalization and digest utilities with performance optimizations:
 
 **Performance Configuration**:
 ```kotlin
-import io.geoknoesis.vericore.json.DigestUtils
+import com.geoknoesis.vericore.json.DigestUtils
 
 // Disable caching for memory-constrained environments
 DigestUtils.enableDigestCache = false
@@ -521,8 +521,8 @@ Blockchain anchoring abstraction with comprehensive type safety and error handli
 
 **Type-Safe Configuration**:
 ```kotlin
-import io.geoknoesis.vericore.anchor.options.AlgorandOptions
-import io.geoknoesis.vericore.anchor.ChainId
+import com.geoknoesis.vericore.anchor.options.AlgorandOptions
+import com.geoknoesis.vericore.anchor.ChainId
 
 // Type-safe chain ID
 val chainId = ChainId.Algorand.Testnet
@@ -539,7 +539,7 @@ val client = AlgorandBlockchainAnchorClient(chainId.toString(), options)
 
 **Exception Handling**:
 ```kotlin
-import io.geoknoesis.vericore.anchor.exceptions.*
+import com.geoknoesis.vericore.anchor.exceptions.*
 
 try {
     val result = client.writePayload(payload)
@@ -579,7 +579,7 @@ In-memory test implementations and test utilities:
 
 **Test Fixture Example**:
 ```kotlin
-import io.geoknoesis.vericore.testkit.VeriCoreTestFixture
+import com.geoknoesis.vericore.testkit.VeriCoreTestFixture
 
 VeriCoreTestFixture.builder()
     .withInMemoryBlockchainClient("algorand:testnet")
@@ -670,7 +670,7 @@ Add the walt.id adapter module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("io.geoknoesis.vericore:vericore-waltid:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-waltid:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -679,8 +679,8 @@ dependencies {
 walt.id adapters are automatically discovered via Java ServiceLoader:
 
 ```kotlin
-import io.geoknoesis.vericore.waltid.WaltIdIntegration
-import io.geoknoesis.vericore.did.DidMethodRegistry
+import com.geoknoesis.vericore.waltid.WaltIdIntegration
+import com.geoknoesis.vericore.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -701,9 +701,9 @@ fun main() = runBlocking {
 You can also manually configure walt.id integration:
 
 ```kotlin
-import io.geoknoesis.vericore.waltid.WaltIdIntegration
-import io.geoknoesis.vericore.waltid.WaltIdKeyManagementService
-import io.geoknoesis.vericore.did.DidMethodRegistry
+import com.geoknoesis.vericore.waltid.WaltIdIntegration
+import com.geoknoesis.vericore.waltid.WaltIdKeyManagementService
+import com.geoknoesis.vericore.did.DidMethodRegistry
 
 fun main() = runBlocking {
     // Create walt.id KMS
@@ -753,7 +753,7 @@ Add the godiddy adapter module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("io.geoknoesis.vericore:vericore-godiddy:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-godiddy:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -762,8 +762,8 @@ dependencies {
 godiddy adapters are automatically discovered via Java ServiceLoader:
 
 ```kotlin
-import io.geoknoesis.vericore.godiddy.GodiddyIntegration
-import io.geoknoesis.vericore.did.DidMethodRegistry
+import com.geoknoesis.vericore.godiddy.GodiddyIntegration
+import com.geoknoesis.vericore.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -784,8 +784,8 @@ fun main() = runBlocking {
 You can manually configure godiddy integration with a custom base URL:
 
 ```kotlin
-import io.geoknoesis.vericore.godiddy.GodiddyIntegration
-import io.geoknoesis.vericore.did.DidMethodRegistry
+import com.geoknoesis.vericore.godiddy.GodiddyIntegration
+import com.geoknoesis.vericore.did.DidMethodRegistry
 
 fun main() = runBlocking {
     // Setup integration with custom base URL (for self-hosted instances)
@@ -835,8 +835,8 @@ val result = GodiddyIntegration.discoverAndRegister(
 ### Example: Issuing and Verifying Credentials
 
 ```kotlin
-import io.geoknoesis.vericore.godiddy.GodiddyIntegration
-import io.geoknoesis.vericore.did.DidMethodRegistry
+import com.geoknoesis.vericore.godiddy.GodiddyIntegration
+import com.geoknoesis.vericore.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 

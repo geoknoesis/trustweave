@@ -9,20 +9,20 @@ Add VeriCore dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core modules (required)
-    implementation("io.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
     
     // Test kit (for testing)
-    testImplementation("io.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    testImplementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
     
     // Optional: Integration modules
-    implementation("io.geoknoesis.vericore:vericore-waltid:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-godiddy:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-algorand:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-polygon:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-waltid:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-godiddy:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-algorand:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-polygon:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization (required)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -39,20 +39,20 @@ Add VeriCore dependencies to your `build.gradle`:
 ```groovy
 dependencies {
     // Core modules (required)
-    implementation 'io.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT'
-    implementation 'io.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT'
-    implementation 'io.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT'
-    implementation 'io.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT'
-    implementation 'io.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT'
+    implementation 'com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT'
+    implementation 'com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT'
+    implementation 'com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT'
+    implementation 'com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT'
+    implementation 'com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT'
     
     // Test kit (for testing)
-    testImplementation 'io.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT'
+    testImplementation 'com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT'
     
     // Optional: Integration modules
-    implementation 'io.geoknoesis.vericore:vericore-waltid:1.0.0-SNAPSHOT'
-    implementation 'io.geoknoesis.vericore:vericore-godiddy:1.0.0-SNAPSHOT'
-    implementation 'io.geoknoesis.vericore:vericore-algorand:1.0.0-SNAPSHOT'
-    implementation 'io.geoknoesis.vericore:vericore-polygon:1.0.0-SNAPSHOT'
+    implementation 'com.geoknoesis.vericore:vericore-waltid:1.0.0-SNAPSHOT'
+    implementation 'com.geoknoesis.vericore:vericore-godiddy:1.0.0-SNAPSHOT'
+    implementation 'com.geoknoesis.vericore:vericore-algorand:1.0.0-SNAPSHOT'
+    implementation 'com.geoknoesis.vericore:vericore-polygon:1.0.0-SNAPSHOT'
 }
 ```
 
@@ -64,34 +64,34 @@ Add VeriCore dependencies to your `pom.xml`:
 <dependencies>
     <!-- Core modules (required) -->
     <dependency>
-        <groupId>io.geoknoesis.vericore</groupId>
+        <groupId>com.geoknoesis.vericore</groupId>
         <artifactId>vericore-core</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
-        <groupId>io.geoknoesis.vericore</groupId>
+        <groupId>com.geoknoesis.vericore</groupId>
         <artifactId>vericore-json</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
-        <groupId>io.geoknoesis.vericore</groupId>
+        <groupId>com.geoknoesis.vericore</groupId>
         <artifactId>vericore-kms</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
-        <groupId>io.geoknoesis.vericore</groupId>
+        <groupId>com.geoknoesis.vericore</groupId>
         <artifactId>vericore-did</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
-        <groupId>io.geoknoesis.vericore</groupId>
+        <groupId>com.geoknoesis.vericore</groupId>
         <artifactId>vericore-anchor</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </dependency>
     
     <!-- Test kit (for testing) -->
     <dependency>
-        <groupId>io.geoknoesis.vericore</groupId>
+        <groupId>com.geoknoesis.vericore</groupId>
         <artifactId>vericore-testkit</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <scope>test</scope>
@@ -105,11 +105,11 @@ For a minimal setup, you only need:
 
 ```kotlin
 dependencies {
-    implementation("io.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
-    testImplementation("io.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
+    testImplementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
 }
 ```
 

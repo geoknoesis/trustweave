@@ -19,7 +19,7 @@ The trust layer configuration is the foundation of the DSL. It centralizes the s
 ### Basic Configuration
 
 ```kotlin
-import io.geoknoesis.vericore.credential.dsl.*
+import com.geoknoesis.vericore.credential.dsl.*
 
 val trustLayer = trustLayer {
     keys {
@@ -259,7 +259,7 @@ val presentation = presentation {
 Here's a complete example demonstrating the full DSL workflow:
 
 ```kotlin
-import io.geoknoesis.vericore.credential.dsl.*
+import com.geoknoesis.vericore.credential.dsl.*
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.temporal.ChronoUnit

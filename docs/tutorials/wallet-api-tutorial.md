@@ -24,7 +24,7 @@ This tutorial provides a comprehensive guide to using VeriCore's Wallet API. You
 ### Facade Wallet (Recommended)
 
 ```kotlin
-import io.geoknoesis.vericore.VeriCore
+import com.geoknoesis.vericore.VeriCore
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -46,7 +46,7 @@ fun main() = runBlocking {
 ### Trust Layer DSL
 
 ```kotlin
-import io.geoknoesis.vericore.credential.dsl.trustLayer
+import com.geoknoesis.vericore.credential.dsl.trustLayer
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -72,8 +72,8 @@ fun main() = runBlocking {
 `BasicWallet` and `InMemoryWallet` remain available for lightweight unit tests:
 
 ```kotlin
-import io.geoknoesis.vericore.testkit.credential.BasicWallet
-import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
+import com.geoknoesis.vericore.testkit.credential.BasicWallet
+import com.geoknoesis.vericore.testkit.credential.InMemoryWallet
 
 val basic = BasicWallet()
 val inMemory = InMemoryWallet(holderDid = "did:key:test-holder")
@@ -84,7 +84,7 @@ val inMemory = InMemoryWallet(holderDid = "did:key:test-holder")
 ### Basic Storage
 
 ```kotlin
-import io.geoknoesis.vericore.credential.models.VerifiableCredential
+import com.geoknoesis.vericore.credential.models.VerifiableCredential
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -137,7 +137,7 @@ println("Total credentials: ${allCredentials.size}")
 ### List with Filter
 
 ```kotlin
-import io.geoknoesis.vericore.credential.wallet.CredentialFilter
+import com.geoknoesis.vericore.credential.wallet.CredentialFilter
 
 val workCredentials = wallet.list(
     filter = CredentialFilter(
@@ -272,7 +272,7 @@ val specific = wallet.query {
 ### Basic Presentation
 
 ```kotlin
-import io.geoknoesis.vericore.credential.PresentationOptions
+import com.geoknoesis.vericore.credential.PresentationOptions
 
 if (wallet is CredentialPresentation) {
     val presentation = wallet.createPresentation(
@@ -407,7 +407,7 @@ wallet.withPresentation { presentation ->
 Manage multiple wallets with an instance-scoped directory:
 
 ```kotlin
-import io.geoknoesis.vericore.credential.wallet.WalletDirectory
+import com.geoknoesis.vericore.credential.wallet.WalletDirectory
 
 val directory = WalletDirectory()
 
@@ -431,9 +431,9 @@ val walletsWithCollections = directory.findByCapability("collections")
 Here's a complete example combining all features:
 
 ```kotlin
-import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
-import io.geoknoesis.vericore.credential.models.VerifiableCredential
-import io.geoknoesis.vericore.credential.PresentationOptions
+import com.geoknoesis.vericore.testkit.credential.InMemoryWallet
+import com.geoknoesis.vericore.credential.models.VerifiableCredential
+import com.geoknoesis.vericore.credential.PresentationOptions
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put

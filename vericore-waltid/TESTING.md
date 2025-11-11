@@ -62,7 +62,7 @@ gradle :vericore-waltid:test --tests "WaltIdDidMethodTest"
 
 ### Test SPI Discovery
 ```kotlin
-import io.geoknoesis.vericore.waltid.WaltIdIntegration
+import com.geoknoesis.vericore.waltid.WaltIdIntegration
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -74,7 +74,7 @@ fun main() = runBlocking {
 
 ### Test DID Creation
 ```kotlin
-import io.geoknoesis.vericore.waltid.WaltIdIntegration
+import com.geoknoesis.vericore.waltid.WaltIdIntegration
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {

@@ -113,8 +113,8 @@ val client = AlgorandBlockchainAnchorClient(
 
 **After** (Recommended):
 ```kotlin
-import io.geoknoesis.vericore.anchor.options.AlgorandOptions
-import io.geoknoesis.vericore.anchor.ChainId
+import com.geoknoesis.vericore.anchor.options.AlgorandOptions
+import com.geoknoesis.vericore.anchor.ChainId
 
 val chainId = ChainId.Algorand.Testnet
 val options = AlgorandOptions(
@@ -133,7 +133,7 @@ val chainId = "algorand:testnet"  // Typo-prone
 
 **After** (Recommended):
 ```kotlin
-import io.geoknoesis.vericore.anchor.ChainId
+import com.geoknoesis.vericore.anchor.ChainId
 
 val chainId = ChainId.Algorand.Testnet  // Compile-time safe
 ```
@@ -151,7 +151,7 @@ try {
 
 **After** (Recommended):
 ```kotlin
-import io.geoknoesis.vericore.anchor.exceptions.*
+import com.geoknoesis.vericore.anchor.exceptions.*
 
 try {
     val result = client.writePayload(payload)
@@ -175,7 +175,7 @@ val client = PolygonBlockchainAnchorClient(chainId, options)
 
 **After** (Recommended):
 ```kotlin
-import io.geoknoesis.vericore.anchor.options.PolygonOptions
+import com.geoknoesis.vericore.anchor.options.PolygonOptions
 
 val options = PolygonOptions(rpcUrl = "...", privateKey = "...")
 val client = PolygonBlockchainAnchorClient(chainId, options)

@@ -183,14 +183,14 @@ Add VeriCore dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core VeriCore modules
-    implementation("io.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("io.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
     
     // Test kit for in-memory implementations
-    implementation("io.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -205,23 +205,23 @@ dependencies {
 Here's a complete example demonstrating spatial web authorization:
 
 ```kotlin
-import io.geoknoesis.vericore.credential.models.VerifiableCredential
-import io.geoknoesis.vericore.credential.models.VerifiablePresentation
-import io.geoknoesis.vericore.credential.CredentialIssuanceOptions
-import io.geoknoesis.vericore.credential.CredentialVerificationOptions
-import io.geoknoesis.vericore.credential.PresentationOptions
-import io.geoknoesis.vericore.credential.issuer.CredentialIssuer
-import io.geoknoesis.vericore.credential.verifier.CredentialVerifier
-import io.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
-import io.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
-import io.geoknoesis.vericore.testkit.credential.InMemoryWallet
-import io.geoknoesis.vericore.testkit.did.DidKeyMockMethod
-import io.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
-import io.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import io.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
-import io.geoknoesis.vericore.anchor.anchorTyped
-import io.geoknoesis.vericore.anchor.AnchorResult
-import io.geoknoesis.vericore.did.DidMethodRegistry
+import com.geoknoesis.vericore.credential.models.VerifiableCredential
+import com.geoknoesis.vericore.credential.models.VerifiablePresentation
+import com.geoknoesis.vericore.credential.CredentialIssuanceOptions
+import com.geoknoesis.vericore.credential.CredentialVerificationOptions
+import com.geoknoesis.vericore.credential.PresentationOptions
+import com.geoknoesis.vericore.credential.issuer.CredentialIssuer
+import com.geoknoesis.vericore.credential.verifier.CredentialVerifier
+import com.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
+import com.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
+import com.geoknoesis.vericore.testkit.credential.InMemoryWallet
+import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
+import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
+import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
+import com.geoknoesis.vericore.anchor.anchorTyped
+import com.geoknoesis.vericore.anchor.AnchorResult
+import com.geoknoesis.vericore.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
@@ -349,10 +349,10 @@ fun main() = runBlocking {
         },
         issuanceDate = Instant.now().toString(),
         expirationDate = Instant.now().plus(30, ChronoUnit.DAYS).toString(),
-        credentialSchema = io.geoknoesis.vericore.credential.models.CredentialSchema(
+        credentialSchema = com.geoknoesis.vericore.credential.models.CredentialSchema(
             id = "https://example.com/schemas/activity-authorization.json",
             type = "JsonSchemaValidator2018",
-            schemaFormat = io.geoknoesis.vericore.spi.SchemaFormat.JSON_SCHEMA
+            schemaFormat = com.geoknoesis.vericore.spi.SchemaFormat.JSON_SCHEMA
         )
     )
     
@@ -387,9 +387,9 @@ fun main() = runBlocking {
     
     // Step 7: Anchor authorization to blockchain
     println("\nStep 7: Anchoring authorization to blockchain...")
-    val credentialDigest = io.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
+    val credentialDigest = com.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
-            io.geoknoesis.vericore.credential.models.VerifiableCredential.serializer(),
+            com.geoknoesis.vericore.credential.models.VerifiableCredential.serializer(),
             issuedCredential
         )
     )
@@ -896,7 +896,7 @@ fun revokeAuthorization(
 ): VerifiableCredential {
     // Add revocation status to credential
     return credential.copy(
-        credentialStatus = io.geoknoesis.vericore.credential.models.CredentialStatus(
+        credentialStatus = com.geoknoesis.vericore.credential.models.CredentialStatus(
             id = "https://example.com/revocation-list",
             type = "StatusList2021Entry",
             statusPurpose = "revocation",

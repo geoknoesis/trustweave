@@ -4,7 +4,7 @@ plugins {
     kotlin("plugin.serialization")
 }
 
-group = "io.geoknoesis.vericore"
+group = "com.geoknoesis.vericore"
 version = "1.0.0-SNAPSHOT"
 
 val WALTID_VERSION = "2025.1.0-PRE-RELEASE.5"

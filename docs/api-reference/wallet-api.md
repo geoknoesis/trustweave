@@ -256,7 +256,7 @@ data class WalletStatistics(
 `WalletCreationOptions` is shared by the VeriCore facade, the Trust Layer DSL, and custom `WalletFactory` implementations. It removes the need for untyped configuration blobs while still allowing provider-specific extensions.
 
 ```kotlin
-import io.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
 
 val options = WalletCreationOptionsBuilder().apply {
     label = "Production Wallet"

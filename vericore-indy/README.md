@@ -10,7 +10,7 @@ This module implements `BlockchainAnchorClient` for Hyperledger Indy ledgers, al
 
 **Type-Safe Chain IDs (Recommended)**:
 ```kotlin
-import io.geoknoesis.vericore.anchor.ChainId
+import com.geoknoesis.vericore.anchor.ChainId
 
 val sovrinMainnet = ChainId.Indy.SovrinMainnet      // "indy:mainnet:sovrin"
 val sovrinStaging = ChainId.Indy.SovrinStaging     // "indy:testnet:sovrin-staging"
@@ -30,14 +30,14 @@ Supported chain ID format: `indy:<network>:<pool-name>`
 
 ```kotlin
 dependencies {
-    implementation("io.geoknoesis.vericore:vericore-indy:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-indy:1.0.0-SNAPSHOT")
 }
 ```
 
 ### Automatic Discovery via SPI
 
 ```kotlin
-import io.geoknoesis.vericore.indy.IndyIntegration
+import com.geoknoesis.vericore.indy.IndyIntegration
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -51,9 +51,9 @@ fun main() = runBlocking {
 ### Manual Setup with Type-Safe Options
 
 ```kotlin
-import io.geoknoesis.vericore.indy.IndyIntegration
-import io.geoknoesis.vericore.anchor.options.IndyOptions
-import io.geoknoesis.vericore.anchor.ChainId
+import com.geoknoesis.vericore.indy.IndyIntegration
+import com.geoknoesis.vericore.anchor.options.IndyOptions
+import com.geoknoesis.vericore.anchor.ChainId
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -80,7 +80,7 @@ fun main() = runBlocking {
 ### Manual Setup (Legacy Map-based Options)
 
 ```kotlin
-import io.geoknoesis.vericore.indy.IndyIntegration
+import com.geoknoesis.vericore.indy.IndyIntegration
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -101,9 +101,9 @@ fun main() = runBlocking {
 ### Anchoring Data with Type-Safe Configuration
 
 ```kotlin
-import io.geoknoesis.vericore.anchor.*
-import io.geoknoesis.vericore.anchor.ChainId
-import io.geoknoesis.vericore.indy.IndyIntegration
+import com.geoknoesis.vericore.anchor.*
+import com.geoknoesis.vericore.anchor.ChainId
+import com.geoknoesis.vericore.indy.IndyIntegration
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlinx.serialization.Serializable

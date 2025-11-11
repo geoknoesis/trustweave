@@ -20,7 +20,7 @@
 ## 2. Key Packages inside `vericore-core`
 
 ```
-io.geoknoesis.vericore
+com.geoknoesis.vericore
 ├── credential.*           # primary issuance, verification, wallet APIs
 ├── did.delegation         # DID delegation util (still hosted here for now)
 └── core                   # shared constants/exceptions

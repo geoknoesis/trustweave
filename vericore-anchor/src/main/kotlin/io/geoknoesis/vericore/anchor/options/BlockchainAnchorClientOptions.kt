@@ -35,6 +35,11 @@ sealed class BlockchainAnchorClientOptions {
      * Converts options to a map for backward compatibility.
      */
     abstract fun toMap(): Map<String, Any?>
+
+    /**
+     * Retrieves a typed value from [toMap] representation.
+     */
+    inline fun <reified T> get(key: String): T? = (toMap()[key] as? T)
     
     companion object {
         /**

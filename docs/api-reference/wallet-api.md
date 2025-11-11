@@ -121,7 +121,10 @@ Optional interface for key management.
 
 ```kotlin
 interface KeyManagement {
-    suspend fun generateKey(algorithm: String, options: Map<String, Any?> = emptyMap()): String
+    suspend fun generateKey(
+        algorithm: String,
+        configure: KeyGenerationOptionsBuilder.() -> Unit = {}
+    ): KeyInfo
     suspend fun getKeys(): List<KeyInfo>
     suspend fun getKey(keyId: String): KeyInfo?
     suspend fun deleteKey(keyId: String): Boolean
@@ -250,7 +253,7 @@ data class WalletStatistics(
 
 ### WalletCreationOptions
 
-`WalletCreationOptions` is shared by the VeriCore facade, the Trust Layer DSL, and custom `WalletFactory` implementations. It removes the need for untyped `Map<String, Any?>` configuration.
+`WalletCreationOptions` is shared by the VeriCore facade, the Trust Layer DSL, and custom `WalletFactory` implementations. It removes the need for untyped configuration blobs while still allowing provider-specific extensions.
 
 ```kotlin
 import io.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
@@ -271,7 +274,7 @@ val options = WalletCreationOptionsBuilder().apply {
 | `encryptionKey` | `String?` | Secret material for at-rest encryption |
 | `enableOrganization` | `Boolean` | Signals that collection/tag capabilities should be enabled |
 | `enablePresentation` | `Boolean` | Enables selective disclosure and presentation builders |
-| `additionalProperties` | `Map<String, Any?>` | Provider specific settings added via `property("key", value)` |
+| `additionalProperties` | `Map<String, Any?>` | Provider-specific extensions added via `property("key", value)` |
 
 A custom factory receives the same object:
 
@@ -346,7 +349,7 @@ Available builder functions:
 | `inMemory()` / `basic()` | Convenience methods that set the provider |
 | `enableOrganization()` | Turns on collections, tags, and metadata features |
 | `enablePresentation()` | Enables presentation and selective disclosure support |
-| `option(key, value)` | Add provider-specific configuration (stored in `additionalProperties`) |
+| `option(key, value)` | Add provider-specific configuration (retrievable via `options.additionalProperties[key]`) |
 
 ## Implementations
 

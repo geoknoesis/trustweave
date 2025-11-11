@@ -1,30 +1,30 @@
 # Tutorials
 
-Welcome to VeriCore tutorials! These step-by-step guides will help you learn how to use VeriCore's APIs effectively.
+The tutorials in this section walk through complete VeriCore workflows, showing how typed options, DSLs, and Result-based responses fit together in runnable Kotlin.
 
 ## Available Tutorials
 
-1. [Wallet API Tutorial](wallet-api-tutorial.md) - Complete guide to managing credentials and identities with wallets
-2. [DID Operations Tutorial](did-operations-tutorial.md) - Learn how to create, resolve, and manage DIDs
-3. [Credential Issuance Tutorial](credential-issuance-tutorial.md) - Learn how to issue and verify credentials
+- [Wallet API Tutorial](wallet-api-tutorial.md) — build a holder wallet, mint keys, issue credentials, and verify presentations using the in-memory testkit.
+
+More advanced tracks (DID operations, issuance pipelines, trust-layer orchestration) are on the roadmap. If you have a scenario that should be documented next, open an issue or follow the contribution steps in the [Contributing Guide](../contributing/README.md).
 
 ## Prerequisites
 
-Before starting the tutorials, make sure you:
+Before diving in:
 
-- Have VeriCore installed (see [Installation](../getting-started/installation.md))
-- Understand basic Kotlin and coroutines
-- Have read the [Core Concepts](../core-concepts/README.md) section
+- Install VeriCore by following the [installation guide](../getting-started/installation.md).
+- Be comfortable with Kotlin coroutines and the `Result`-returning facade APIs.
+- Review the [getting started scenarios](../getting-started/README.md) so the option builders and DSL patterns feel familiar.
 
 ## Getting Started
 
-Start with the [Wallet API Tutorial](wallet-api-tutorial.md) to learn the fundamentals of credential management, then proceed to more advanced topics.
+Begin with the wallet tutorial above. Each code block now highlights **What it does**, **Result**, and **Design significance**, helping you map the API decisions back to production requirements.
 
 ## Next Steps
 
-After completing the tutorials:
+After you finish the tutorial:
 
-- Explore the [API Reference](../api-reference/README.md) for detailed API documentation
-- Check out [Examples](../examples/README.md) for real-world use cases
-- Read [Best Practices](../best-practices/README.md) for production guidelines
+- Deepen your verification strategy with the [Verification Policies](../advanced/verification-policies.md) guide.
+- Consult the [API reference](../api-reference/README.md) for parameter-by-parameter details.
+- Explore industry workflows in the [scenario playbook](../getting-started/README.md) to see how the same primitives adapt to different domains.
 

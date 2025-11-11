@@ -2,6 +2,16 @@
 
 This document provides a complete walkthrough of using VeriCore's web of trust features, including trust registries, delegation chains, and proof purpose validation.
 
+```kotlin
+dependencies {
+    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-trust:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+}
+```
+
+**Result:** These modules give you the trust-layer DSLs, registries, and in-memory mocks used throughout the walkthrough.
+
 ## Overview
 
 The web of trust scenario demonstrates how to:
@@ -44,7 +54,12 @@ fun main() = runBlocking {
         }
     }
 }
+
 ```
+
+**What this does:** Builds a `trustLayer` instance with in-memory KMS, DID method, credential defaults, and trust registry providers—perfect for local demos.
+
+**Outcome:** Returns a configured trust layer you reuse in subsequent steps to create DIDs, issue credentials, and resolve trust anchors.
 
 ### Step 2: Create DIDs for Entities
 
@@ -70,6 +85,10 @@ val hrDeptDid = trustLayer.createDid {
 }
 ```
 
+**What this does:** Issues four DIDs—university, company, student, and HR department—using the configured DID method.
+
+**Outcome:** Each actor has a resolvable identifier that upcoming trust and delegation steps can reference.
+
 ### Step 3: Set Up Trust Anchors
 
 ```kotlin
@@ -90,7 +109,12 @@ trustLayer.trust {
     val isUniversityTrusted = isTrusted(universityDid, "EducationCredential")
     println("University trusted for EducationCredential: $isUniversityTrusted")
 }
+
 ```
+
+**What this does:** Seeds the trust registry with anchors for the university and company, then confirms the university anchor is active for education credentials.
+
+**Outcome:** Subsequent verifications can rely on trust registry lookups instead of hard-coded issuer lists.
 
 ### Step 4: Issue Credentials with Trust Verification
 
@@ -135,6 +159,10 @@ if (verification.trustRegistryValid) {
 }
 ```
 
+**What this does:** Issues a degree credential and verifies it with trust registry and expiration checks enabled.
+
+**Outcome:** A positive result confirms both the issuer’s trust anchor and the credential’s validity window are satisfied.
+
 ### Step 5: Set Up Delegation
 
 ```kotlin
@@ -158,6 +186,10 @@ if (delegationResult.valid) {
     delegationResult.errors.forEach { println("   - $it") }
 }
 ```
+
+**What this does:** Adds capability delegation from the company to its HR department and validates the resulting delegation path.
+
+**Outcome:** A `valid` result proves the HR department may act on behalf of the company when issuing credentials.
 
 ### Step 6: Issue Credential Using Delegated Authority
 
@@ -195,6 +227,10 @@ println("  Trust Registry Valid: ${employmentVerification.trustRegistryValid}")
 println("  Delegation Valid: ${employmentVerification.delegationValid}")
 ```
 
+**What this does:** Issues an employment credential from the delegated HR DID and verifies it with both trust registry and delegation checks enabled.
+
+**Outcome:** Successful verification confirms the delegation chain and trust anchors are respected before the credential is accepted.
+
 ### Step 7: Find Trust Paths
 
 ```kotlin
@@ -216,6 +252,10 @@ trustLayer.trust {
 }
 ```
 
+**What this does:** Lists all trusted issuers for education credentials and attempts to compute a trust path between the university and company anchors.
+
+**Outcome:** If a path exists you receive the ordered DIDs and trust score, helping you diagnose trust relationships before accepting credentials.
+
 ### Step 8: Update DID Documents with New Fields
 
 ```kotlin
@@ -235,6 +275,10 @@ trustLayer.updateDid {
 
 println("✅ DID document updated with capability relationships and context")
 ```
+
+**What this does:** Augments the student DID document with capability invocation/delegation relationships and an expanded JSON-LD context.
+
+**Outcome:** The student can now sign documents and delegate capabilities while verifiers understand the DID document structure.
 
 ### Step 9: Use Proof Purpose Validation
 
@@ -276,7 +320,10 @@ println("Proof Purpose Validation:")
 println("  Valid: ${proofPurposeVerification.valid}")
 println("  Proof Purpose Valid: ${proofPurposeVerification.proofPurposeValid}")
 println("  Trust Registry Valid: ${proofPurposeVerification.trustRegistryValid}")
-```
+
+**What this does:** Ensures the issuer’s DID advertises `assertionMethod`, issues a credential with that proof purpose, and validates the proof purpose alongside trust and expiration checks.
+
+**Outcome:** A `proofPurposeValid` flag of `true` confirms the credential’s proof aligns with the declared purpose, preventing misuse in other contexts.
 
 ### Step 10: Complete Integration Example
 
@@ -345,6 +392,10 @@ fun completeWebOfTrustWorkflow() = runBlocking {
 }
 ```
 
+**What this does:** Demonstrates the full trust workflow in miniature—build a trust layer, establish anchors, issue a credential with proof purpose, and verify it with all checks enabled.
+
+**Outcome:** Use this function as a regression test to ensure future changes preserve the trust-layer guarantees.
+
 ## Real-World Use Cases
 
 ### University Credential Verification
@@ -359,6 +410,8 @@ trustLayer.trust {
     }
 }
 ```
+
+**Outcome:** Any verifier consulting the trust registry now recognises the university’s credentials automatically, reducing ad-hoc whitelists across institutions.
 
 ### Corporate Delegation
 
@@ -377,6 +430,8 @@ trustLayer.updateDid {
     addCapabilityDelegation("$hrManagerDid#key-1")
 }
 ```
+
+**Outcome:** A delegation ladder forms so HR staff can issue credentials while the executive team retains ultimate control over capability revocation.
 
 ### Multi-Party Trust Networks
 
@@ -400,6 +455,8 @@ trustLayer.trust {
     println("Trusted partners: ${partners.joinToString(", ")}")
 }
 ```
+
+**Outcome:** A single query returns every organisation trusted for partnership credentials, making it easy to surface network relationships to auditors or dashboards.
 
 ## Best Practices
 
@@ -431,6 +488,8 @@ try {
     println("Verification error: ${e.message}")
 }
 ```
+
+**Outcome:** Errors and warnings are surfaced explicitly so you can distinguish hard failures (invalid proofs, missing trust anchors) from advisory messages during troubleshooting.
 
 ## See Also
 

@@ -119,7 +119,7 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add VeriCore dependencies to your `build.gradle.kts`. These modules provide DID/credential APIs plus the in-memory services used to model newsroom workflows.
 
 ```kotlin
 dependencies {
@@ -133,6 +133,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
 ```
+
+**Result:** With dependencies in place you can execute the news provenance walkthrough without additional setup.
 
 ## Step 2: Setup and Create Journalist DID
 

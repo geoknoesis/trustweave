@@ -6,6 +6,14 @@
 
 A **Verifiable Credential** is a tamper-evident attestation following the W3C VC Data Model. It combines:
 
+```kotlin
+dependencies {
+    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+}
+```
+
+**Result:** Grants access to the credential builders and verification helpers referenced throughout this guide.
+
 1. **Metadata** – issuer, issuance/expiration dates, schema references.  
 2. **Credential subject** – the claims being asserted (`name`, `degree`, `license`, etc.).  
 3. **Proof** – cryptographic signature binding the issuer to the credential content.
@@ -45,7 +53,8 @@ suspend fun issueEmployeeBadge(vericore: VeriCore, issuerDid: String, issuerKeyI
         },
         types = listOf("VerifiableCredential", "EmploymentCredential")
     ).getOrThrow()
-```
+
+**Outcome:** Issues a signed credential using typed issuance options, returning a `VerifiableCredential` that downstream wallets or verifiers can consume.
 
 VeriCore automatically:
 
@@ -69,7 +78,8 @@ suspend fun verifyBadge(vericore: VeriCore, credential: com.geoknoesis.vericore.
             println("Verification failed: ${error.message}")
         }
     )
-```
+
+**Outcome:** Surfaces verification success or failure reasons, letting you guard business logic with `result.valid` and log granular errors.
 
 Verification resolves the issuer DID document, checks the signature suites, and applies optional policies (expiration, schema, revocation when present).
 
@@ -165,7 +175,8 @@ val issuedCredential = credentialService.issueCredential(
         keyId = issuerKeyId
     )
 )
-```
+
+**Outcome:** Produces a signed credential ready for distribution, anchored to the specific proof type and key you configured.
 
 ### 2. Storage
 
@@ -176,6 +187,8 @@ import com.geoknoesis.vericore.testkit.credential.BasicWallet
 
 val wallet = BasicWallet()
 val credentialId = wallet.store(issuedCredential)
+
+**Outcome:** Persists the credential in a wallet so it can be queried, organised, and presented later.
 ```
 
 ### 3. Presentation
@@ -192,6 +205,8 @@ val presentation = VerifiablePresentation(
     holder = subjectDid,
     proof = // ... proof of presentation
 )
+
+**Outcome:** Wraps one or more credentials in a holder-signed presentation, enabling selective disclosure downstream.
 ```
 
 ### 4. Verification
@@ -229,6 +244,8 @@ if (result.valid) {
 } else {
     println("Verification errors: ${result.errors}")
 }
+
+**Outcome:** Indicates whether the credential satisfied structural checks (expiration, DID resolution, optional revocation) and surfaces diagnostics for debugging.
 ```
 
 > **Important:** The built-in verifier performs structural checks today (proof fields, expiration, DID resolution). Integrate a dedicated cryptographic proof validator and revocation resolver for production deployments.

@@ -18,6 +18,26 @@ been extracted into the new `vericore-spi` and `vericore-trust` modules.
 - **Schema/Proof Utilities** – schema validation helpers and proof-purpose validator.
 - **Core Exceptions & Constants** – `VeriCoreException`, `VeriCoreConstants`, and related domain errors.
 
+Add the module alongside any DID/KMS components you require:
+
+```kotlin
+dependencies {
+    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+}
+```
+
+**Result:** Gradle exposes the credential domain APIs so you can build flows like issuing and storing credentials:
+
+```kotlin
+val credential = vericore.issueCredential(
+    issuerDid = issuerDid,
+    issuerKeyId = keyId,
+    credentialSubject = subjectJson
+).getOrThrow()
+```
+
+**Why it matters:** `vericore-core` centralises the issuance and wallet DSLs; pulling it into your project gives direct access to the domain objects and helper functions used across the tutorials.
+
 ## Dependencies
 
 - Depends on [`vericore-spi`](core-modules.md) for adapter/service abstractions.

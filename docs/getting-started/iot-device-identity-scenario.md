@@ -163,7 +163,7 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add VeriCore dependencies to your `build.gradle.kts`. These provide DID/credential APIs plus the in-memory services used for the IoT identity walkthrough.
 
 ```kotlin
 dependencies {
@@ -183,7 +183,8 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
-```
+
+**Result:** Once dependencies sync, you can run each IoT sample without additional setup.
 
 ## Step 2: Setup and Create Device Identity
 

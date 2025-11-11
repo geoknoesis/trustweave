@@ -1,42 +1,52 @@
 # Frequently Asked Questions
 
+VeriCore is produced by **Geoknoesis LLC** ([www.geoknoesis.com](https://www.geoknoesis.com)). This FAQ highlights the questions developers ask most often when wiring the SDK into real systems.
+
 ## How do I run the quick-start sample?
 
-Clone the repo, then execute:
+**Purpose:** Verify your toolchain and observe the issuance → verification → anchoring loop end to end.  
+**Command:** Run the Gradle helper task; it bootstraps in-memory services so no external dependencies are required.
 
 ```bash
 ./gradlew :vericore-examples:runQuickStartSample
 ```
 
-The sample issues a credential, verifies it (with proper error handling), and anchors the digest using the in-memory client. Use it as a template for your own experiments.
+**Result:** A credential is issued, verified with full error handling, and anchored via the in-memory blockchain client—use the output as a baseline for your own experiments.
 
 ## How do I add a new DID method?
 
-1. Implement `DidMethod` (and optionally `DidMethodProvider` for SPI).  
-2. Register it with `DidMethodRegistry` in your `VeriCoreConfig`.  
-3. Update wallets or services that create DIDs to reference the new method.  
+**Overview:** Implement the DID interface, register it, and point call sites at the new method name—no global singletons required.
 
-See [DIDs](core-concepts/dids.md) and the [Wallet API Reference – DidManagement](api-reference/wallet-api.md#didmanagement).
+1. Implement `DidMethod` (and optionally `DidMethodProvider` if you want SPI auto-discovery).  
+2. Register it with `DidMethodRegistry` while building your `VeriCoreConfig`.  
+3. Update wallets or services that create DIDs so they pass the new method identifier.  
+
+See [DIDs](core-concepts/dids.md) and [Wallet API – DidManagement](api-reference/wallet-api.md#didmanagement) for code samples that show the typed option builders involved.
 
 ## What licence applies to VeriCore?
 
-VeriCore uses a dual licence: open source for non-commercial and educational use, and a commercial licence from Geoknoesis LLC for production deployments. Details live in the [Licensing Overview](licensing/README.md).
+VeriCore uses a **dual licence**:
+
+- **Non-commercial / education:** open-source licence.  
+- **Commercial deployments:** Geoknoesis commercial licence.
+
+Details and contact paths live in the [Licensing Overview](licensing/README.md).
 
 ## How do I test without a blockchain or external KMS?
 
-Use `vericore-testkit` which provides in-memory DID methods, KMS, and anchor clients. They are deterministic, making unit tests and CI runs lightweight.
+Use `vericore-testkit`. It ships in-memory DID methods, KMS, and blockchain anchor clients that mirror the production interfaces. Because everything stays in process, your unit tests and CI runs remain deterministic and fast.
 
 ## Where can I find API signatures and parameters?
 
-- [Wallet API Reference](api-reference/wallet-api.md) for wallet capabilities and helper extensions.  
-- [Credential Service API Reference](api-reference/credential-service-api.md) for issuer/verifier SPI details.  
-- Module-level READMEs under `docs/modules/` describe additional utilities.
+- [Wallet API Reference](api-reference/wallet-api.md) — wallet capabilities, typed option builders, and extension helpers.  
+- [Credential Service API Reference](api-reference/credential-service-api.md) — issuer/verifier SPI contracts and factory options.  
+- Module guides under `docs/modules/` summarise additional utilities exposed by each artifact.
 
 ## How do I enforce stricter verification policies?
 
-Use `CredentialVerificationOptions` (see [Verification Policies](advanced/verification-policies.md)). You can enforce expiration, revocation, audience, and anchoring in addition to signature checks.
+Configure `CredentialVerificationOptions` (see [Verification Policies](advanced/verification-policies.md)). You can enable expiration checks, proof-purpose enforcement, anchoring requirements, revocation lookups, and domain/audience validation—all while receiving a structured `CredentialVerificationResult`.
 
 ## Where do I log issues or request features?
 
-Open an issue in the GitHub repository or reach out to the Geoknoesis team via [www.geoknoesis.com](https://www.geoknoesis.com). Contributions follow the [Contributing Guide](contributing/README.md).
+Open an issue in the GitHub repository or contact Geoknoesis LLC via [www.geoknoesis.com](https://www.geoknoesis.com). When contributing code or docs, follow the workflow outlined in the [Contributing Guide](contributing/README.md).
 

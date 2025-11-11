@@ -162,7 +162,7 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add VeriCore dependencies to your `build.gradle.kts`. These modules provide DID/credential APIs plus the in-memory services used to simulate the supply chain workflow.
 
 ```kotlin
 dependencies {
@@ -183,6 +183,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
 ```
+
+**Result:** After syncing, you can run the supply chain examples end-to-end without extra wiring.
 
 ## Step 2: Complete Example
 

@@ -15,22 +15,37 @@ Rotating signing keys keeps verifiable credential ecosystems resilient: compromi
 3. **Reconfigure the credential issuer** to use the new `keyId`.  
 4. **Maintain historic keys** so existing credentials remain verifiable until they expire or are re-issued.
 
+**Goal:** Create a fresh Ed25519 key and append it to an existing DID document while keeping the old key for historical verification.  
+**Prerequisites:** Build your `VeriCore` instance from a `VeriCoreConfig` so you retain direct access to the underlying KMS and DID registry.
+
 ```kotlin
 import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.did.didCreationOptions
+import com.geoknoesis.vericore.VeriCoreDefaults
 import kotlinx.coroutines.runBlocking
 
-fun rotateIssuer(vericore: VeriCore, issuerDid: String) = runBlocking {
-    val kms = vericore.context.kms
+fun rotateIssuerDid() = runBlocking {
+    val config = VeriCoreDefaults.inMemoryTest()
+    val vericore = VeriCore.create(config)
 
-    val newKey = kms.generateKey(
+    val issuerDocument = vericore.createDid().getOrThrow()
+    val issuerDid = issuerDocument.id
+
+    val newKey = config.kms.generateKey(
         algorithm = "Ed25519",
         options = mapOf("label" to "issuer-2025q1", "exportable" to false)
     )
 
-    vericore.updateDid(issuerDid) { document ->
+    val didMethod = checkNotNull(config.didRegistry.get("key")) {
+        "Register the DID method you issued with before rotating keys."
+    }
+
+    val updatedDocument = didMethod.updateDid(issuerDid) { document ->
+        val existingVm = requireNotNull(document.verificationMethod.firstOrNull()) {
+            "The DID document must expose at least one verification method before rotation."
+        }
+
         document.copy(
-            verificationMethod = document.verificationMethod + document.verificationMethod.first().copy(
+            verificationMethod = document.verificationMethod + existingVm.copy(
                 id = "$issuerDid#${newKey.id}",
                 publicKeyMultibase = newKey.publicKeyMultibase
             ),
@@ -38,9 +53,20 @@ fun rotateIssuer(vericore: VeriCore, issuerDid: String) = runBlocking {
         )
     }
 
-    println("Issuer DID rotated: ${issuerDid} now trusts ${newKey.id}")
+    println("Issuer DID rotated: ${updatedDocument.id} now trusts ${newKey.id}")
 }
 ```
+
+**What this does**  
+- Reuses the same configuration that bootstrapped `VeriCore` so the sample can call the KMS and DID registry directly.  
+- Generates a labelled Ed25519 key and appends it to the DID’s assertion methods without removing prior verification material.  
+- Prints the updated DID so you can verify the new fragment.
+
+**Result**  
+`updatedDocument` contains both the old and the new verification method entries, ensuring existing credentials remain verifiable while future credentials rely on the new key.
+
+**Design significance**  
+VeriCore keeps cryptographic operations behind typed services. Holding onto the original `VeriCoreConfig` is an intentional pattern: it lets advanced workflows (like manual key rotation) operate on the same single source of truth your facade uses internally.
 
 > Tip: use `vericore-testkit` to simulate rotation in tests—`InMemoryKeyManagementService` lets you assert that both old and new keys are available during the transition.
 
@@ -54,6 +80,9 @@ fun rotateIssuer(vericore: VeriCore, issuerDid: String) = runBlocking {
 
 After rotation update any issuance code to reference the new `keyId`:
 
+**Goal:** Switch issuance to the rotated key while you gradually retire the previous fragment.  
+**Prerequisites:** The DID document has already been updated and published to whichever resolver your ecosystem relies on.
+
 ```kotlin
 val credential = vericore.issueCredential(
     issuerDid = issuerDid,
@@ -63,7 +92,17 @@ val credential = vericore.issueCredential(
 ).getOrThrow()
 ```
 
-Keep issuing with the old key until the updated DID is published and cached by verifiers; then decommission it using `kms.deleteKey(oldKeyId)`.
+**What this does**  
+- Passes the rotated verification method fragment into `issueCredential`, so proofs reference the new key immediately.  
+- Returns `Result<VerifiableCredential>`, letting you integrate error handling with Kotlin’s idiomatic `Result` APIs.
+
+**Result**  
+A credential that is signed by the new key but still references the same issuer DID—verifiers will accept it once they consume the republished DID document.
+
+**Design significance**  
+The facade’s `Result`-returning APIs make rollout safe: you can stage credentials with the new key, inspect warnings, and only switch traffic once downstream verifiers confirm availability.
+
+Keep issuing with the old key until the updated DID is published and cached by verifiers; then decommission it using `config.kms.deleteKey(oldKeyId)`.
 
 > Need per-credential metadata (audience, schema IDs, previous key references)? Call `CredentialServiceRegistry.issue` directly with `CredentialIssuanceOptions` to supply those hints alongside the new key.
 

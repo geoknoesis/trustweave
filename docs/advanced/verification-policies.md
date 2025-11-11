@@ -15,15 +15,18 @@ Verifiers often need more than a boolean “valid/invalid”. VeriCore lets you 
 
 1. Configure the options object.  
 2. Call `VeriCore.verifyCredential` (or presentation variant).  
-3. Inspect `CredentialVerificationResult` for additional diagnostics (`valid`, `checks`, `errors`).  
+3. Inspect `CredentialVerificationResult` for detailed diagnostics (`valid`, `errors`, `warnings`, individual booleans).  
 4. Apply domain-specific rules to the result.
+
+**Goal:** Combine built-in verification switches with organisation-specific rules.  
+**Prerequisites:** A `VerifiableCredential` you want to vet and a `VeriCore` facade that is already configured with the necessary DID resolvers and status services.
 
 ```kotlin
 import com.geoknoesis.vericore.credential.CredentialVerificationOptions
 
 val options = CredentialVerificationOptions(
     checkExpiration = true,
-    checkSchema = true,
+    validateSchema = true,
     enforceStatus = true,
     expectedAudience = setOf("did:key:verifier-123"),
     requireAnchoring = true
@@ -32,18 +35,34 @@ val options = CredentialVerificationOptions(
 val result = vericore.verifyCredential(credential, options)
 result.fold(
     onSuccess = { verification ->
-        if (!verification.valid) {
-            println("Credential failed checks: ${verification.errors}")
-            require("ANCHOR" !in verification.errors.keys) { "Anchor missing" }
+        if (verification.valid) {
+            println(
+                "Credential verified. Proof=${verification.proofValid}, " +
+                    "issuer=${verification.issuerValid}, revocation=${verification.notRevoked}"
+            )
+            if (verification.warnings.isNotEmpty()) {
+                println("Warnings: ${verification.warnings.joinToString()}")
+            }
         } else {
-            println("Credential verified with checks: ${verification.checks}")
+            println("Credential failed checks: ${verification.errors.joinToString()}")
         }
     },
     onFailure = { error ->
-        println("Verification failed: ${error.message}")
+        println("Verification failed before policy evaluation: ${error.message}")
     }
 )
 ```
+
+**What this does**  
+- Enables the built-in expiration, schema, revocation, and anchoring checks, while asserting the expected audience DID.  
+- Uses Kotlin’s `Result` API to surface transport or resolver failures separately from business-rule violations.  
+- Logs granular booleans (`proofValid`, `notRevoked`, etc.) so you can drive dashboards or structured alerts.
+
+**Result**  
+A `CredentialVerificationResult` that captures pass/fail state plus individual flags. If any toggle fails, `valid` is `false` and the `errors` list carries human-readable reasons.
+
+**Design significance**  
+Instead of returning ad-hoc maps, VeriCore models verification output as a strongly typed data class. This keeps policy code expressive and makes it easy to unit test individual failure paths.
 
 ## Extending status and anchor checks
 
@@ -55,6 +74,8 @@ result.fold(
 
 Use `vericore-testkit` to simulate responses (expired credentials, revoked status, missing anchors). This ensures policy regressions surface in CI:
 
+**Goal:** Assert that an expired credential fails the configured policy before it reaches production.
+
 ```kotlin
 val expiredCredential = testFixture.createCredential {
     expirationDate = Instant.now().minusSeconds(60).toString()
@@ -62,6 +83,16 @@ val expiredCredential = testFixture.createCredential {
 val policyResult = vericore.verifyCredential(expiredCredential, options)
 assertFalse(policyResult.getOrThrow().valid)
 ```
+
+**What this does**  
+- Overrides the issuance helper to back-date the credential and trigger the expiration branch.  
+- Verifies that your policy configuration translates into a boolean failure rather than a silent warning.
+
+**Result**  
+The test fails if `valid` unexpectedly stays `true`, giving you confidence that future changes to verification defaults will not weaken enforcement.
+
+**Design significance**  
+By leaning on the same DSL-driven options you use in production, your tests double as executable documentation—future contributors see exactly which policy levers matter.
 
 ## See also
 

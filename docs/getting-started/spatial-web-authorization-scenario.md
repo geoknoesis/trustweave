@@ -178,7 +178,7 @@ Credentials that grant agents permission to:
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add VeriCore dependencies to your `build.gradle.kts`. These modules supply DID support, credential issuance, wallet storage, and the in-memory services used for spatial authorization.
 
 ```kotlin
 dependencies {
@@ -200,9 +200,11 @@ dependencies {
 }
 ```
 
+**Result:** Once dependencies sync you can run the spatial authorization samples without adding more adapters.
+
 ## Step 2: Complete Example
 
-Here's a complete example demonstrating spatial web authorization:
+Here’s the full spatial authorization workflow. Run it once to see identities, domain setup, credential issuance, verification, and anchoring working together end to end.
 
 ```kotlin
 import com.geoknoesis.vericore.credential.models.VerifiableCredential
@@ -429,7 +431,7 @@ fun main() = runBlocking {
     // Step 9: Verify authorization before activity
     println("\nStep 9: Verifying authorization before activity...")
     val verifier = CredentialVerifier(
-    defaultDidResolver = didResolver
+    defaultDidResolver = didRegistry.resolveDid
     )
     
     val verificationResult = verifier.verify(
@@ -438,7 +440,7 @@ fun main() = runBlocking {
         checkRevocation = false,
         checkExpiration = true,
         validateSchema = false,
-        didResolver = didResolver
+        didResolver = didRegistry.resolveDid
         )
     )
     
@@ -488,6 +490,8 @@ fun main() = runBlocking {
     println("\n=== Scenario Complete ===")
 }
 
+**Result:** Console output confirms each milestone—domain creation, authorization issuance, selective disclosure, verification, anchoring—giving you a baseline to compare against when customising the flow.
+
 // Helper function to check domain authorization
 fun checkDomainAuthorization(
     agentDid: String,
@@ -536,7 +540,6 @@ fun checkDomainAuthorization(
     
     return true
 }
-```
 
 ## Extensive Step-by-Step Breakdown
 

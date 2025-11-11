@@ -151,7 +151,7 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add VeriCore dependencies to your `build.gradle.kts`. These modules provide DID support, credential issuance, wallet storage, and the in-memory services used to model provenance workflows.
 
 ```kotlin
 dependencies {
@@ -172,6 +172,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
 ```
+
+**Result:** With the dependencies synced, you can run the provenance walkthrough without wiring additional adapters.
 
 ## Step 2: Setup and Create Entity DIDs
 

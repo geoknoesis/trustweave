@@ -162,7 +162,7 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add VeriCore dependencies to your `build.gradle.kts`. These cover DID management, credential issuance, wallet storage, and the in-memory services used in the healthcare walkthrough.
 
 ```kotlin
 dependencies {
@@ -184,9 +184,11 @@ dependencies {
 }
 ```
 
+**Result:** Once the dependencies sync you can run every snippet in this guide without additional setup.
+
 ## Step 2: Complete Example
 
-Here's a complete example demonstrating healthcare credential management:
+Here’s the full healthcare credential management flow. Execute it first to see the big picture, then read on for step-by-step explanations.
 
 ```kotlin
 import com.geoknoesis.vericore.credential.models.VerifiableCredential
@@ -503,6 +505,8 @@ fun main() = runBlocking {
     
     println("\n=== Scenario Complete ===")
 }
+
+**Result:** The program prints each milestone—DID creation, issuance, wallet storage, verification, anchoring—ending with a success message. Use that console output as your baseline when customising the scenario.
 
 fun createPrescriptionCredential(
     patientDid: String,

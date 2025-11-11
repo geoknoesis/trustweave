@@ -125,7 +125,7 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add VeriCore dependencies to your `build.gradle.kts`. These modules provide DID support, credential issuance, wallet storage, and the in-memory services used for location proofs.
 
 ```kotlin
 dependencies {
@@ -147,9 +147,11 @@ dependencies {
 }
 ```
 
+**Result:** With these dependencies synced, you can run the location proof samples without adding more modules or adapters.
+
 ## Step 2: Complete Example
 
-Here's a complete example demonstrating proof of location:
+Here’s the complete proof-of-location workflow. Execute it once to see the happy path (capture → issue → store → present → verify → anchor) before you inspect each step in detail.
 
 ```kotlin
 import com.geoknoesis.vericore.credential.models.VerifiableCredential
@@ -395,7 +397,7 @@ fun main() = runBlocking {
     
     // Step 12: Verify location credential
     println("\nStep 12: Verifying location credential...")
-    val verifier = CredentialVerifier(didResolver)
+    val verifier = CredentialVerifier(didRegistry.resolve(deviceDid.id) ?: throw IllegalArgumentException("Device DID not found"))
     
     val verificationResult = verifier.verify(
         credential = issuedCredential,
@@ -403,7 +405,7 @@ fun main() = runBlocking {
             checkRevocation = false,
             checkExpiration = false, // Location proofs don't expire
             validateSchema = false,
-            didResolver = didResolver
+            didResolver = { did -> didRegistry.resolve(did) != null }
         )
     )
     
@@ -446,13 +448,15 @@ fun main() = runBlocking {
     
     println("\n=== Scenario Complete ===")
 }
-```
+
+**Result:** Console output walks through each milestone—location capture, credential issuance, wallet storage, presentation, verification, anchoring. Use it as your regression baseline.
 
 ## Step-by-Step Breakdown
 
 ### Step 1: Setup Services
 
-Create key management services and blockchain client:
+Captures a raw location claim and sets up DID registries, wallets, and proof generators for both provider and verifier.
+- **Outcome:** The environment mirrors a decentralised location system without external infrastructure.
 
 ```kotlin
 val locationProviderKms = InMemoryKeyManagementService()
@@ -499,7 +503,8 @@ val locationCredential = VerifiableCredential(
 
 ### Step 4: Issue and Anchor
 
-Issue credential and anchor to blockchain:
+Issues a location credential with typed geospatial claims plus metadata (accuracy, method, timestamp).
+- **Outcome:** `locationCredential` is ready to store, present, and anchor.
 
 ```kotlin
 val issuedCredential = credentialIssuer.issue(...)
@@ -522,7 +527,8 @@ val anchorResult = blockchainRegistry.anchorTyped(
 
 ### Step 5: Store and Organize
 
-Store in wallet and organize:
+Stores the credential in the user’s wallet so it can be queried and presented later.
+- **Outcome:** The user gains custody of the proof for subsequent sharing.
 
 ```kotlin
 val credentialId = locationWallet.store(issuedCredential)

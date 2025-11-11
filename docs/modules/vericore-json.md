@@ -2,6 +2,16 @@
 
 The `vericore-json` module provides JSON canonicalization and digest computation utilities.
 
+Add it to your build when you need deterministic hashing:
+
+```kotlin
+dependencies {
+    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
+}
+```
+
+**Result:** Gradle pulls in the canonicalisation helpers so calls such as `DigestUtils.sha256DigestMultibase` are available in your project.
+
 ## Overview
 
 This module provides functions for:
@@ -146,30 +156,3 @@ val vc = buildJsonObject {
 val digest = DigestUtils.sha256DigestMultibase(vc)
 println("Digest: $digest")
 ```
-
-### Verifying Integrity
-
-```kotlin
-// Original content
-val original = buildJsonObject { put("value", 100) }
-val originalDigest = DigestUtils.sha256DigestMultibase(original)
-
-// Modified content
-val modified = buildJsonObject { put("value", 101) }
-val modifiedDigest = DigestUtils.sha256DigestMultibase(modified)
-
-// Verify
-assertNotEquals(originalDigest, modifiedDigest)
-```
-
-## Dependencies
-
-- `vericore-core` - Base types and exceptions
-- `kotlinx-serialization-json` - JSON handling
-
-## Next Steps
-
-- Learn about [vericore-did](vericore-did.md)
-- Explore [API Reference](../api-reference/json-api.md)
-- See [Examples](../examples/basic-examples.md)
-

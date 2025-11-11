@@ -2,6 +2,16 @@
 
 This tutorial provides a comprehensive guide to using VeriCore's Wallet API. You'll learn how to create wallets, store credentials, organize them, and create presentations.
 
+```kotlin
+dependencies {
+    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-trust:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+}
+```
+
+**Result:** Gives you the wallet DSL, trust layer builders, and in-memory implementations used throughout this tutorial.
+
 > Tip: The runnable quick-start sample (`./gradlew :vericore-examples:runQuickStartSample`) mirrors the core flows below. Clone it as a starting point before wiring more advanced wallet logic.
 
 ## Prerequisites
@@ -45,6 +55,8 @@ fun main() = runBlocking {
 }
 ```
 
+**Outcome:** Creates a production-style wallet via the VeriCore facade, complete with organization/presentation capabilities.
+
 ### Trust Layer DSL
 
 ```kotlin
@@ -69,6 +81,8 @@ fun main() = runBlocking {
 }
 ```
 
+**Outcome:** Builds a wallet from the trust-layer DSL, handy when you need more control over KMS/DID configuration.
+
 ### Testkit Wallets
 
 `BasicWallet` and `InMemoryWallet` remain available for lightweight unit tests:
@@ -80,6 +94,8 @@ import com.geoknoesis.vericore.testkit.credential.InMemoryWallet
 val basic = BasicWallet()
 val inMemory = InMemoryWallet(holderDid = "did:key:test-holder")
 ```
+
+**Outcome:** Shows the lightweight testkit wallets you can use in unit tests or prototypes.
 
 ## Storing Credentials
 
@@ -108,6 +124,8 @@ val credentialId = wallet.store(credential)
 println("Stored credential: $credentialId")
 ```
 
+**Outcome:** Persists a credential in the wallet and returns its storage identifier.
+
 ### Storing Multiple Credentials
 
 ```kotlin
@@ -115,6 +133,8 @@ val credentials = listOf(credential1, credential2, credential3)
 val credentialIds = credentials.map { wallet.store(it) }
 println("Stored ${credentialIds.size} credentials")
 ```
+
+**Outcome:** Demonstrates bulk storage patterns for credential lists.
 
 ## Retrieving Credentials
 
@@ -129,12 +149,16 @@ if (credential != null) {
 }
 ```
 
+**Outcome:** Retrieves a stored credential by ID and handles the nullable response.
+
 ### List All Credentials
 
 ```kotlin
 val allCredentials = wallet.list()
 println("Total credentials: ${allCredentials.size}")
 ```
+
+**Outcome:** Lists every credential in the wallet—useful for dashboards or audits.
 
 ### List with Filter
 
@@ -148,6 +172,8 @@ val workCredentials = wallet.list(
     )
 )
 ```
+
+**Outcome:** Shows how filter criteria narrow the result set without writing manual queries.
 
 ## Organizing Credentials
 
@@ -178,6 +204,8 @@ if (wallet is CredentialOrganization) {
 }
 ```
 
+**Outcome:** Creates collections, adds credentials, and lists collection metadata when the wallet supports organization.
+
 ### Tags
 
 Tag credentials for easy filtering:
@@ -202,6 +230,8 @@ if (wallet is CredentialOrganization) {
     wallet.untagCredential(credentialId, setOf("work"))
 }
 ```
+
+**Outcome:** Demonstrates tagging workflows—ideal for building saved searches or UI filters.
 
 ### Metadata
 

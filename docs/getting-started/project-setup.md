@@ -13,14 +13,10 @@ Set up your development environment for working with VeriCore.
 
 ### IntelliJ IDEA
 
-1. Install IntelliJ IDEA (Community or Ultimate)
-2. Install Kotlin plugin (usually included)
-3. Configure JDK:
-   - File → Project Structure → Project
-   - Set SDK to Java 21
-4. Import Gradle project:
-   - File → Open → Select `build.gradle.kts`
-   - Wait for Gradle sync
+1. Install IntelliJ IDEA (Community or Ultimate).
+2. Install Kotlin plugin (usually included).
+3. Configure JDK (File → Project Structure → Project) and set SDK to Java 21 so Gradle and the IDE use the same toolchain.
+4. Import the project (File → Open → `build.gradle.kts`) and wait for the initial Gradle sync to finish; this downloads dependencies and indexes the source.
 
 ### VS Code
 
@@ -46,12 +42,18 @@ Set up your development environment for working with VeriCore.
 
 ### Clone Repository
 
+Clone the codebase so you can build and run examples locally.
+
 ```bash
 git clone https://github.com/your-org/vericore.git
 cd vericore
 ```
 
+**Result:** You now have the repository checked out on your machine and are positioned at the project root.
+
 ### Build Project
+
+Use Gradle to compile all modules or run targeted workflows. The commands below rely on the Unix shell; Windows equivalents are shown in the next section.
 
 ```bash
 # Build all modules
@@ -64,7 +66,11 @@ cd vericore
 ./gradlew build -x test
 ```
 
+**Result:** `build/` directories appear under each module. Use `build -x test` when you need a fast compile without blocking on the full test suite.
+
 ### Windows
+
+On Windows shells use the Gradle wrapper with `.bat`.
 
 ```powershell
 # Build all modules
@@ -73,6 +79,8 @@ cd vericore
 # Run tests
 .\gradlew.bat test
 ```
+
+**Result:** Same as the Unix steps but without relying on Git Bash or WSL.
 
 ## Project Structure
 
@@ -97,6 +105,8 @@ vericore/
 
 ### Running Tests
 
+Gradle tasks let you execute tests for the whole workspace or specific modules/classes.
+
 ```bash
 # Run all tests
 ./gradlew test
@@ -108,6 +118,8 @@ vericore/
 ./gradlew :vericore-core:test --tests "VeriCoreExceptionTest"
 ```
 
+**Result:** Successful runs keep CI parity with local development; failures point you at the module or class that needs attention.
+
 ### Code Formatting
 
 VeriCore uses Kotlin's standard formatting. Use IntelliJ IDEA's auto-format:
@@ -117,6 +129,8 @@ VeriCore uses Kotlin's standard formatting. Use IntelliJ IDEA's auto-format:
 
 ### Linting
 
+Use ktlint to keep style consistent across contributors.
+
 ```bash
 # Run linting
 ./gradlew ktlintCheck
@@ -124,6 +138,8 @@ VeriCore uses Kotlin's standard formatting. Use IntelliJ IDEA's auto-format:
 # Auto-fix linting issues
 ./gradlew ktlintFormat
 ```
+
+**Result:** Lint violations surface before CI runs; the format task fixes common spacing/import issues automatically.
 
 ## Debugging
 
@@ -152,6 +168,8 @@ VeriCore uses Kotlin's standard formatting. Use IntelliJ IDEA's auto-format:
 }
 ```
 
+**Result:** VS Code can launch and attach to Kotlin processes using the adapter, giving you breakpoints and variable inspection similar to IntelliJ.
+
 ## Common Issues
 
 ### Java Version Mismatch
@@ -163,6 +181,8 @@ VeriCore uses Kotlin's standard formatting. Use IntelliJ IDEA's auto-format:
 java -version  # Should show 21.x.x
 ```
 
+**Result:** The command prints the active JDK version; if it’s not 21+, update `JAVA_HOME` before retrying builds.
+
 ### Gradle Daemon Issues
 
 **Error**: Build hangs or fails
@@ -172,6 +192,8 @@ java -version  # Should show 21.x.x
 ./gradlew --stop
 ./gradlew build
 ```
+
+**Result:** Restarts the background daemon, clearing stale caches or hung workers.
 
 ### Kotlin Version Conflicts
 

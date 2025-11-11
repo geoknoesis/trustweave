@@ -12,6 +12,8 @@ This example shows how to:
 5. Anchor the digest to a blockchain
 6. Read it back and verify
 
+The block below wires together in-memory services so you can run the whole workflow locally without external infrastructure.
+
 ```kotlin
 import com.geoknoesis.vericore.anchor.*
 import com.geoknoesis.vericore.did.*
@@ -92,6 +94,8 @@ fun main() = runBlocking {
 }
 ```
 
+**Result:** Running the program prints the issuer DID, the anchored transaction metadata, and a final “Verification successful!” message, proving that the digest retrieved from the registry matches the original payload.
+
 ## Running the Example
 
 1. Create a new Kotlin file: `VeriCoreExample.kt`
@@ -103,47 +107,62 @@ fun main() = runBlocking {
 
 ### Service Setup
 
+Initialise the in-memory services that stand in for production infrastructure.
+
 ```kotlin
 val kms = InMemoryKeyManagementService()
 val didMethod = DidKeyMockMethod(kms)
 val anchorClient = InMemoryBlockchainAnchorClient("algorand:mainnet")
 ```
 
-- `InMemoryKeyManagementService`: In-memory KMS for testing
-- `DidKeyMockMethod`: Mock DID method implementation
-- `InMemoryBlockchainAnchorClient`: In-memory blockchain client for testing
+- `InMemoryKeyManagementService`: supplies Ed25519 keys on demand without external dependencies.
+- `DidKeyMockMethod`: produces `did:key` documents backed by the in-memory KMS.
+- `InMemoryBlockchainAnchorClient`: simulates anchoring on Algorand so you can verify results instantly.
+- **Outcome:** Together they let you issue credentials and anchor digests without touching real infrastructure.
 
 ### DID Creation
+
+Mint a DID document that represents the issuer.
 
 ```kotlin
 val issuerDoc = didMethod.createDid()
 ```
 
-Creates a DID using the Ed25519 algorithm. The DID document contains verification methods and authentication capabilities.
+- **What happens:** the mock method generates a new key pair, constructs a DID document, and returns it.
+- **Result:** `issuerDoc.id` is the DID string you will embed in credentials and anchors.
 
 ### Digest Computation
+
+Canonicalise and hash the credential payload.
 
 ```kotlin
 val digest = DigestUtils.sha256DigestMultibase(vcPayload)
 ```
 
-Computes a SHA-256 digest with multibase encoding. The JSON is automatically canonicalized (keys sorted) before hashing.
+- **What happens:** VeriCore applies JSON Canonicalization Scheme (JCS) and then hashes the bytes with SHA-256.
+- **Result:** `digest` is a multibase string you can store or anchor; identical payloads always produce the same value.
 
 ### Blockchain Anchoring
+
+Persist the digest to the in-memory blockchain client.
 
 ```kotlin
 val anchorResult = blockchainRegistry.anchorTyped(...)
 ```
 
-Anchors the digest object to the blockchain. Returns an `AnchorResult` with a reference (`AnchorRef`) that can be used to read the data back.
+- **What happens:** the registry serializes `VerifiableCredentialDigest`, stores it through the registered client, and returns an `AnchorResult`.
+- **Result:** `anchorResult.ref` contains the chain identifier and transaction hash you can log or share with verifiers.
 
 ### Verification
+
+Read the anchored record and compare it with the original payload.
 
 ```kotlin
 val retrieved = blockchainRegistry.readTyped<VerifiableCredentialDigest>(...)
 ```
 
-Reads the anchored data back from the blockchain and verifies it matches the original digest.
+- **What happens:** the client fetches the payload, deserializes it, and hands it back as `VerifiableCredentialDigest`.
+- **Result:** After the equality checks succeed you know the tamper-evident record matches your original digest.
 
 ## Next Steps
 

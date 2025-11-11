@@ -6,6 +6,15 @@
 
 Key management covers the generation, storage, rotation, and usage of cryptographic keys. In VeriCore, every DID method, credential issuance, and presentation flow relies on a `KeyManagementService` (KMS) abstraction.
 
+```kotlin
+dependencies {
+    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
+}
+```
+
+**Result:** Gives you the KMS interfaces and helpers referenced in the examples below.
+
 ## Why key management matters
 
 - **Proof integrity** – signing credentials and presentations requires private keys to stay secure.  
@@ -39,6 +48,8 @@ suspend fun issueSignerKey(kms: KeyManagementService): String {
 
 suspend fun signDigest(kms: KeyManagementService, keyId: String, digest: ByteArray): ByteArray =
     kms.sign(keyId, digest)
+
+**Outcome:** Demonstrates creating a labelled key and using it to sign digests via the KMS abstraction—no direct coupling to backing implementations.
 ```
 
 ### Example: wallet-level key generation
@@ -51,6 +62,8 @@ val keyHandle = wallet.withKeyManagement { keys ->
     }
 }
 println("Holder key created: ${keyHandle.id}")
+
+**Outcome:** Uses the wallet DSL to mint a holder key with custom metadata, returning the generated handle for later signing operations.
 ```
 
 ## Practical usage tips
@@ -113,6 +126,8 @@ val key = wallet.withKeyManagement { kms ->
     }
 }
 ```
+
+**Outcome:** Shows the typed builder API in action—making it easy to add provider-specific metadata while generating keys.
 
 Most APIs accept either strongly typed options or `Map<String, Any?>` fallbacks for legacy integrations.
 

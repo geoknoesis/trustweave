@@ -3,6 +3,14 @@
 The `vericore-trust` module provides the trust-layer building blocks that sit
 between credential workflows and registry/provider integrations.
 
+```kotlin
+dependencies {
+    implementation("com.geoknoesis.vericore:vericore-trust:1.0.0-SNAPSHOT")
+}
+```
+
+**Result:** Your project gains access to trust registries, trust path models, and helper DSLs used by the higher-level credential flows.
+
 ## Responsibilities
 
 - Trust registry interfaces (`TrustRegistry`, `TrustAnchorMetadata`,
@@ -27,19 +35,14 @@ suspend fun seedTrust(registry: TrustRegistry) {
 }
 ```
 
+**What this does:** Adds a trust anchor to the registry so future verifications can confirm whether `EducationCredential` issuers are trusted.
+
+**Outcome:** Downstream calls to `trustRegistry.resolve()` or trust-aware verifiers succeed without requiring direct issuer configuration in each workflow.
+
 Implementations can be provided by testkits (`InMemoryTrustRegistry`) or custom
 modules; they can be wrapped as `TrustRegistryService` via
 `vericore-spi`'s `TrustRegistryServiceAdapter`.
 
 ## Dependencies
 
-- Depends on [`vericore-spi`](vericore-spi.md) for adapter/service abstractions.
-- Consumed by [`vericore-core`](vericore-core.md) trust DSLs and by test kits.
-
-## Next Steps
-
-- Review [`vericore-testkit`](vericore-testkit.md) for the in-memory trust
-  registry implementation.
-- Update custom integrations to target the new module when wiring trust
-  registries.
-
+- Depends on [`

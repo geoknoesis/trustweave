@@ -2,6 +2,15 @@
 
 This document describes the SPI surface that credential issuers/verifiers plug into and the typed options used to configure providers.
 
+```kotlin
+dependencies {
+    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-spi:1.0.0-SNAPSHOT")
+}
+```
+
+**Result:** Your project can implement and register custom credential providers using the SPI documented below.
+
 ## Core Interfaces
 
 ### CredentialService

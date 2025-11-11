@@ -2,6 +2,14 @@
 
 Canonicalization ensures that logically equivalent JSON payloads produce identical byte representations. This is essential for hashing, signing, and anchoring: if two parties serialize the same credential differently, their digests (and therefore proofs) would diverge.
 
+```kotlin
+dependencies {
+    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
+}
+```
+
+**Result:** Lets you use `DigestUtils` and canonicalisation helpers shown in this guide.
+
 ## Why Canonicalize?
 
 - **Stable hashes** – order-insensitive JSON (maps/objects) would otherwise produce different digests when keys are rearranged.
@@ -20,6 +28,8 @@ import com.geoknoesis.vericore.json.DigestUtils
 val digest = DigestUtils.sha256DigestMultibase(jsonElement)
 println("Canonical digest: $digest")
 ```
+
+**Outcome:** Produces a deterministic multibase-encoded digest you can store alongside credentials, anchors, or proofs.
 
 The helper accepts either a `JsonElement` or raw JSON string. Use it whenever you need a canonical digest for anchors, proofs, or ledger commits.
 

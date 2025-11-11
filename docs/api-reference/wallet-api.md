@@ -2,6 +2,14 @@
 
 Complete API reference for VeriCore's Wallet system.
 
+```kotlin
+dependencies {
+    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+}
+```
+
+**Result:** Gradle exposes the wallet interfaces and DSLs referenced throughout this reference.
+
 ## Overview
 
 The Wallet API provides a unified interface for managing verifiable credentials and identities. It follows the Interface Segregation Principle (ISP) with composable capability interfaces.

@@ -17,7 +17,10 @@
 
 ## Tech Stack Overview
 
-### **Recommended Stack:**
+### **Recommended Stack**
+
+**Goal:** Summarise the opinionated stack Geoknoesis uses internally so you can mirror the SaaS reference implementation without second-guessing tooling choices.  
+**Result:** A Kotlin-first backend, modern TypeScript frontend, and pay-as-you-go infrastructure that stays light for early-stage deployments but scales with usage.
 
 ```kotlin
 object TechStack {
@@ -26,16 +29,16 @@ object TechStack {
     const val database = "PostgreSQL 16"
     const val orm = "Exposed (Kotlin SQL)"
     const val cache = "Redis"
-    
+
     // Frontend
     const val frontend = "React 18 + TypeScript"
     const val styling = "Tailwind CSS + shadcn/ui"
     const val stateManagement = "Zustand"
-    
+
     // Billing
     const val billing = "Stripe"
     const val analytics = "PostHog (or Mixpanel)"
-    
+
     // Deployment
     const val hosting = "Fly.io (or Railway)"
     const val cdn = "Cloudflare"
@@ -43,13 +46,15 @@ object TechStack {
 }
 ```
 
+**Design significance:** Every component is battle-tested with VeriCore. Kotlin end-to-end keeps skills transferable, and SaaS infrastructure choices minimise cold-start cost without locking you into proprietary tooling.
+
 ### **Why This Stack?**
 
-- ✅ **Ktor**: You already know Kotlin, keeps codebase consistent
-- ✅ **PostgreSQL**: Robust, handles subscriptions well
-- ✅ **Stripe**: Industry standard, handles all billing complexity
-- ✅ **Fly.io**: Simple deployment, global edge, $10-50/month to start
-- ✅ **React + Tailwind**: Fast development, modern UX
+- ✅ **Ktor**: Kotlin-native, easy to share domain models with the SDK.  
+- ✅ **PostgreSQL**: Strong transactional semantics for subscription and audit data.  
+- ✅ **Stripe**: SaaS-focused billing primitives, webhooks, dunning, and invoicing out of the box.  
+- ✅ **Fly.io**: Global edge deployment in minutes; costs stay predictable during experimentation.  
+- ✅ **React + Tailwind**: Rapid UI iteration with a rich ecosystem of components.
 
 ---
 
@@ -57,21 +62,23 @@ object TechStack {
 
 ### **1. Create Stripe Account**
 
+**Goal:** Install the Stripe CLI and wire webhooks into your local Ktor server.  
+**Result:** Webhook events appear in your development environment so you can exercise subscription state transitions without deploying infrastructure.
+
 ```bash
-# Install Stripe CLI
 brew install stripe/stripe-cli/stripe
-
-# Login
 stripe login
-
-# Set up webhook forwarding (for local dev)
 stripe listen --forward-to localhost:8080/webhooks/stripe
 ```
 
+**Design significance:** The CLI mirrors production webhook delivery semantics; aligning local dev with production reduces surprises when billing logic goes live.
+
 ### **2. Create Products & Prices**
 
+**Goal:** Seed Stripe with opinionated Starter/Pro plans so the rest of the guide can reference real price IDs.  
+**Prerequisites:** Export `STRIPE_SECRET_KEY` in your environment and add the Stripe Java SDK to your build script.
+
 ```kotlin
-// scripts/SetupStripeProducts.kt
 import com.stripe.Stripe
 import com.stripe.model.Product
 import com.stripe.model.Price
@@ -157,10 +164,15 @@ fun main() {
 }
 ```
 
+**Result:** Stripe returns product and price identifiers you can persist in configuration (see the next section).  
+**Design significance:** Driving provisioning through Kotlin scripts keeps the flow consistent with the rest of your stack and avoids brittle manual dashboard work.
+
 ### **3. Store Price IDs in Config**
 
+**Goal:** Centralise Stripe credentials and price IDs so your application code can inject them via typed configuration.  
+**Result:** The Ktor service reads a single configuration object and avoids scattering magic strings across handlers.
+
 ```kotlin
-// src/main/kotlin/config/StripeConfig.kt
 data class StripeConfig(
     val secretKey: String = System.getenv("STRIPE_SECRET_KEY"),
     val webhookSecret: String = System.getenv("STRIPE_WEBHOOK_SECRET"),
@@ -176,11 +188,16 @@ data class StripePrices(
 )
 ```
 
+**Design significance:** Using Kotlin data classes for configuration preserves type safety and makes it easy to supply overrides in tests or per-environment YAML/JSON parsers.
+
 ---
 
 ## Ktor Backend API
 
 ### **Project Structure:**
+
+**Goal:** Establish a baseline folder layout so your team knows where to place configuration, services, and VeriCore-facing routes.  
+**Result:** A conventional Ktor project with clear separation between plugins, domain models, and usage/billing services—mirroring Geoknoesis’ production layout.
 
 ```
 vericore-cloud/
@@ -217,6 +234,9 @@ vericore-cloud/
 ```
 
 ### **build.gradle.kts:**
+
+**Goal:** Declare all backend dependencies—Ktor, VeriCore, persistence, billing—and enable Kotlin serialization plugins.  
+**Result:** A single Gradle module that compiles the SaaS backend and aligns dependency versions with the main VeriCore distribution.
 
 ```kotlin
 plugins {
@@ -266,7 +286,12 @@ dependencies {
 }
 ```
 
+**Design significance:** Centralising versions here keeps build reproducibility high; matching Kotlin/Ktor versions with VeriCore avoids ABI drift when you embed the SDK.
+
 ### **Application.kt:**
+
+**Goal:** Wire Ktor’s entry point so every plugin (security, serialization, routing, rate limiting) is configured before requests arrive.  
+**Result:** A minimal `module` function that defers to dedicated plugin files—easier to test and override between environments.
 
 ```kotlin
 package com.geoknoesis.vericore.cloud
@@ -288,7 +313,12 @@ fun Application.module() {
 }
 ```
 
+**Design significance:** Treating configuration as plugins keeps the application modular; each concern can be toggled or replaced independently (for example, swapping authentication schemes in staging).
+
 ### **Database Models:**
+
+**Goal:** Persist organisations, subscriptions, API keys, and metered usage with Exposed table definitions.  
+**Result:** Relational tables that map directly onto billing and quota decisions while keeping audit timestamps for compliance.
 
 ```kotlin
 // src/main/kotlin/models/Tables.kt
@@ -352,11 +382,16 @@ object UsageRecords : UUIDTable("usage_records") {
 }
 ```
 
+**Design significance:** Capturing counters (issuance, verification, anchoring) and timestamps per organisation allows you to enforce tier limits and generate invoices without additional ETL.
+
 ---
 
 ## Usage Tracking
 
 ### **Usage Service:**
+
+**Goal:** Aggregate near-real-time usage metrics in Redis before flushing them to PostgreSQL for billing and dashboards.  
+**Result:** Lightweight counters that reset monthly and keep hot data in memory, reducing pressure on transactional storage.
 
 ```kotlin
 // src/main/kotlin/services/UsageService.kt
@@ -489,6 +524,8 @@ fun Application.configureRateLimiting() {
     }
 }
 ```
+
+**Design significance:** By funnelling every metric through typed suspend functions you can enforce throttling, wrap access in traces, and swap Redis for another cache without touching callers.
 
 ---
 

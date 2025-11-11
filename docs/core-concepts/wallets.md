@@ -2,91 +2,6 @@
 
 > Wallet guidance in VeriCore is authored by [Geoknoesis LLC](https://www.geoknoesis.com). Geoknoesis designs the composable wallet model and offers commercial support for production deployments.
 
-## What is a wallet?
-
-In VeriCore a wallet is a secure container for verifiable credentials, keys, and DID helpers. The API follows the Interface Segregation Principle—each capability is expressed as a separate interface and can be mixed in as needed.
-
-## Why wallets matter
-
-- **Credential lifecycle hub** – store, query, archive, and organise credentials issued to or by an entity.  
-- **Identity surface** – expose DID creation, key management, and presentation builders through a consistent Kotlin DSL.  
-- **Extensibility** – implement only the capabilities your use case requires (portable from in-memory to persistent stores).
-
-## How VeriCore composes wallets
-
-| Interface | Responsibility |
-|-----------|----------------|
-| `Wallet` | Base type exposing `walletId`, capability discovery (`supports`), and statistics. |
-| `CredentialStorage` | Core CRUD + query operations for credentials. |
-| `CredentialOrganization` | Collections, tags, metadata management. |
-| `CredentialLifecycle` | Archive/unarchive and refresh flows. |
-| `CredentialPresentation` | Build verifiable presentations and selective disclosures. |
-| `DidManagement` | Create and list DIDs scoped to the wallet. |
-| `KeyManagement` | Delegate key generation/lookup to underlying KMS. |
-
-See the [Wallet API Reference](../api-reference/wallet-api.md) for detailed signatures and extension helpers.
-
-### Example: building a wallet via the DSL
-
-```kotlin
-import com.geoknoesis.vericore.trust.wallet
-import com.geoknoesis.vericore.trust.trustLayer
-
-val trustLayer = trustLayer {
-    keys { provider("inMemory") }
-    did { method("key") {} }
-}
-
-val wallet = trustLayer.wallet {
-    holder("did:key:holder-123")
-    enableOrganization()
-    enablePresentation()
-    option("storagePath", "/data/wallets/holder-123")
-}
-
-// Store and query
-wallet.store(credential)
-val byIssuer = wallet.query {
-    byIssuer("did:key:issuer-xyz")
-    notExpired()
-}
-```
-
-### Example: capability detection
-
-```kotlin
-if (wallet.supports(com.geoknoesis.vericore.credential.wallet.CredentialPresentation::class)) {
-    wallet.withPresentation {
-        createPresentation(
-            credentialIds = listOf("cred-1"),
-            holderDid = "did:key:holder-123",
-            options = com.geoknoesis.vericore.credential.PresentationOptions(
-                holderDid = "did:key:holder-123",
-                proofType = "Ed25519Signature2020",
-                keyId = "did:key:holder-123#key-1"
-            )
-        )
-    }
-}
-```
-
-## Practical usage tips
-
-- **Capability checks** – gate optional features (`withPresentation`, `withOrganization`, etc.) to keep code resilient across wallet implementations.  
-- **Interoperate via interfaces** – accept `CredentialStorage` or `CredentialPresentation` rather than concrete classes to ease testing.  
-- **Workspace-scoped wallets** – generate wallet IDs and DID prefixes that align with your tenancy model; the DSL lets you set them explicitly.  
-- **Persistence** – implement your own `WalletFactory` and register it (see [Wallet API Reference – Factories](../api-reference/wallet-api.md#factories)).
-
-## See also
-
-- [Wallet API Reference](../api-reference/wallet-api.md) for all interfaces and helpers.  
-- [Quick Start](../getting-started/quick-start.md#step-4-issue-a-credential-and-store-it) for storing credentials.  
-- [DIDs](dids.md) to understand `DidManagement`.  
-- [Verifiable Credentials](verifiable-credentials.md) for the data wallet stores.
-# Wallets
-
-> Wallet guidance in VeriCore is authored by [Geoknoesis LLC](https://www.geoknoesis.com). Geoknoesis designs the composable wallet model and offers commercial support for production deployments.
-
 ## What is a Wallet?
 
 A **Wallet** in VeriCore is a secure container for managing your credentials and identities. It provides a unified interface for storing, organizing, and using verifiable credentials and DIDs.
@@ -122,6 +37,8 @@ val wallet = BasicWallet()
 // Supports: store, get, list, delete, query
 ```
 
+**Outcome:** Minimal footprint wallet suitable for unit tests or read-only credential storage.
+
 ### Full-Featured Wallet
 
 A **Full-Featured Wallet** implements all capabilities:
@@ -135,6 +52,8 @@ val wallet = InMemoryWallet(
 )
 // Supports: All capabilities
 ```
+
+**Outcome:** Provides the full capability surface (organization, presentation, DID/Key management) without external infrastructure.
 
 ## Type-Safe Capability Checking
 
@@ -162,6 +81,8 @@ if (wallet is CredentialPresentation) {
 }
 ```
 
+**Outcome:** Demonstrates Kotlin’s type-safe checks so you only invoke optional capabilities when the wallet actually implements them.
+
 ## Extension Functions
 
 VeriCore provides extension functions for elegant capability access:
@@ -187,6 +108,8 @@ wallet.withPresentation { presentation ->
 }
 ```
 
+**Outcome:** Extension helpers keep call sites concise while still handling capability checks behind the scenes.
+
 ## Runtime Capability Discovery
 
 For dynamic scenarios (e.g., UI), use runtime capability checking:
@@ -208,6 +131,8 @@ if (wallet.capabilities.supports("collections")) {
     // Show collection UI
 }
 ```
+
+**Outcome:** Supports scenarios where you need to drive UI or feature toggles based on the wallet’s advertised capabilities.
 
 ## Wallet Directory
 
@@ -234,6 +159,8 @@ val orgWallets = directory.findByCapability(CredentialOrganization::class)
 // Find wallets by feature name (dynamic)
 val walletsWithCollections = directory.findByCapability("collections")
 ```
+
+**Outcome:** A lightweight registry tracks wallets by ID or capability, making it easier to manage multi-tenant environments.
 
 ## Wallet Statistics
 
@@ -302,7 +229,8 @@ val workCredentials = wallet.query {
     bySubject(holderDid)
     notRevoked()
 }
-```
+
+**Outcome:** Shows how to combine query builders to fetch specific credential subsets (issuer, type, revocation state) in one call.
 
 ### Creating Presentations
 
@@ -327,7 +255,8 @@ if (wallet is CredentialPresentation) {
         options = PresentationOptions(...)
     )
 }
-```
+
+**Outcome:** Highlights how wallets supporting presentations can create full VPs or selective disclosures while keeping capability checks in place.
 
 ## Security Considerations
 
@@ -351,4 +280,14 @@ if (wallet is CredentialPresentation) {
 - Check out the [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) for hands-on examples
 - Explore the [Wallet API Reference](../api-reference/wallet-api.md)
 - Learn about [DIDs](dids.md) and [Verifiable Credentials](verifiable-credentials.md)
+
+ In VeriCore a wallet is a secure container for verifiable credentials, keys, and DID helpers. The API follows the Interface Segregation Principle—each capability is expressed as a separate interface and can be mixed in as needed.
+
+```kotlin
+dependencies {
+    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+}
+```
+
+**Result:** Brings the wallet interfaces and DSL helpers into scope so the examples below compile.
 

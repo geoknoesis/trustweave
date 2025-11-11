@@ -173,7 +173,7 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add VeriCore dependencies to your `build.gradle.kts`. These modules cover DID support, credential issuance, wallet storage, and the in-memory services used across the AlgeroPass scenario.
 
 ```kotlin
 dependencies {
@@ -194,6 +194,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
 ```
+
+**Result:** After syncing, you can execute every snippet in this guide without extra setup.
 
 ## Step 2: Setup and Create National Authority DID
 

@@ -167,7 +167,7 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add VeriCore dependencies to your `build.gradle.kts`. These modules provide DID creation, credential issuance, wallet management, and the in-memory services used in this government scenario.
 
 ```kotlin
 dependencies {
@@ -189,9 +189,11 @@ dependencies {
 }
 ```
 
+**Result:** After syncing, you can run the walkthrough without wiring additional adapters.
+
 ## Step 2: Complete Example
 
-Here's a complete example demonstrating government digital identity:
+Here’s the full government digital identity workflow. Run it once to see every step—from agency issuance to citizen presentation—before diving into the detailed breakdowns.
 
 ```kotlin
 import com.geoknoesis.vericore.credential.models.VerifiableCredential

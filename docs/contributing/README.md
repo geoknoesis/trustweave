@@ -1,13 +1,13 @@
 # Contributing to VeriCore Docs
 
-Thanks for helping improve the documentation! Clear, actionable docs are one of VeriCore’s biggest features. Follow the guidelines below to keep everything consistent and discoverable.
+VeriCore’s documentation is authored and maintained by **Geoknoesis LLC**, and community contributions are welcome. Use this guide as your checklist when filing issues or opening pull requests—every section explains the intent so that newcomers can match the house style quickly.
 
 ## Filing Issues
 
-- Document bugs or gaps via GitHub issues (`docs` label). Include:
-  - A short summary of the missing or confusing content.
-  - Page links and reproduction steps if you spotted outdated examples.
-- For typos or small fixes, feel free to open a pull request directly.
+- **Purpose:** Capture bugs, outdated snippets, or missing context.  
+  - Open a GitHub issue tagged `docs`, include the affected page paths, and describe what readers currently experience.  
+  - Attach reproduction steps or screenshots when the problem involves runnable code or failing commands.  
+- **Small fixes:** For obvious typos or broken links, feel free to submit a PR directly; call out any assumptions you made.
 
 ## Writing Style
 
@@ -15,7 +15,8 @@ Thanks for helping improve the documentation! Clear, actionable docs are one of 
 - **Tone** – conversational but professional. Avoid marketing fluff; emphasize how-tos and rationale.
 - **Formatting** – use Markdown with ATX headings. Prefer code fences with language tags (`kotlin`, `bash`, `json`).
 - **Terminology** – treat “VeriCore” as the product name; refer to modules in inline code (`vericore-trust`).
-- **Links** – make sure all relative links resolve from within `docs/`. Run the broken-link checker (planned) or manually verify paths.
+- **Snippets** – every code block must be bracketed by prose such as **What this does**, **Result**, or **Design significance**. Keep explanations *outside* the fenced block.
+- **Links** – make sure all relative links resolve from within `docs/`. Manual link sweeps are expected until the automated checker (tracked in `layout/migration-roadmap.md`) lands.
 
 ## Structure
 
@@ -26,11 +27,13 @@ Thanks for helping improve the documentation! Clear, actionable docs are one of 
 
 ## Submitting Changes
 
-1. Fork and create a feature branch (`docs/my-improvement`).
-2. Update or add Markdown files. Keep line length under ~120 chars for readability.
-3. Run `./gradlew dokkaHtml` (if available) or at minimum `./gradlew build` to ensure samples compile. When you touch quick-start content, also run `./gradlew :vericore-examples:runQuickStartSample` to keep the runnable demo green.
-4. Preview Markdown locally (VS Code, GitBook, or static site generator).
-5. Submit a PR describing the change. Mention related issues and screenshots when relevant.
+1. **Branching:** Fork and create a feature branch (`docs/my-improvement`) so reviewers can scope the diff easily.
+2. **Editing:** Update or add Markdown files. Keep line length under ~120 characters and follow the snippet narration rules above.
+3. **Verification:**  
+   - `./gradlew build` — ensures Kotlin samples and fixtures still compile.  
+   - `./gradlew :vericore-examples:runQuickStartSample` — required whenever you touch quick-start instructions or referenced code.
+4. **Preview:** Render Markdown locally (VS Code markdown preview, GitBook CLI, or equivalent) to check formatting.
+5. **Pull request:** Describe the change, list affected pages, mention related issues, and attach screenshots for visual updates.
 
 ## Code Samples
 
@@ -38,6 +41,7 @@ Thanks for helping improve the documentation! Clear, actionable docs are one of 
 - Prefer concise examples that compile. Include imports when not obvious.
 - When referencing build files, show `build.gradle.kts` snippets.
 - Tie examples back to runnable projects where possible (e.g., link to `vericore-examples:runQuickStartSample`).
+- Annotate each snippet with **What it does / Result / Design significance** so readers understand the intent immediately.
 
 ## Diagrams and Media
 
@@ -50,11 +54,11 @@ Thanks for helping improve the documentation! Clear, actionable docs are one of 
 
 ## Documentation Verification Checklist
 
-Run these commands before submitting substantial documentation changes:
+**Goal:** ensure documentation edits do not break runnable samples or navigation.
 
 - `./gradlew build` — ensures Kotlin samples (including docs/quick-start) compile.
 - `./gradlew :vericore-examples:runQuickStartSample` — validates the end-to-end quick-start flow.
 - Manual link review for new or renamed pages (link checker automation is planned).
 
-If you have questions, open an issue or reach out on the project discussion board. Thanks again for contributing! 
+If you have questions, open an issue or reach out on the project discussion board. Thanks again for helping us keep VeriCore’s documentation top-tier.
 

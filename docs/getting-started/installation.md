@@ -4,7 +4,7 @@ Add VeriCore to your Kotlin project using Gradle or Maven.
 
 ## Gradle (Kotlin DSL)
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add VeriCore dependencies to your `build.gradle.kts`. This brings in the core runtime, optional adapters, and the test kit you will use in the tutorials.
 
 ```kotlin
 dependencies {
@@ -32,9 +32,11 @@ dependencies {
 }
 ```
 
+**Result:** Gradle resolves the full VeriCore BOM plus kotlinx libraries so you can compile the sample code in this guide.
+
 ## Gradle (Groovy)
 
-Add VeriCore dependencies to your `build.gradle`:
+Add VeriCore dependencies to your `build.gradle`. Use this variant if your project still uses the Groovy DSL.
 
 ```groovy
 dependencies {
@@ -56,9 +58,11 @@ dependencies {
 }
 ```
 
+**Result:** The Groovy build picks up the same modules; no additional configuration is required besides applying the Kotlin and serialization plugins.
+
 ## Maven
 
-Add VeriCore dependencies to your `pom.xml`:
+Add VeriCore dependencies to your `pom.xml`. The snippet lists the minimum set needed to follow the scenarios.
 
 ```xml
 <dependencies>
@@ -99,9 +103,11 @@ Add VeriCore dependencies to your `pom.xml`:
 </dependencies>
 ```
 
+**Result:** Maven downloads the artifacts during the next `mvn compile`. If you rely on integrations, add the matching `<dependency>` entries just like the Gradle example.
+
 ## Minimal Setup
 
-For a minimal setup, you only need:
+For a minimal demo you can stick to a subset of modules. This keeps the footprint small when you only need DID creation, credential issuance, and anchoring.
 
 ```kotlin
 dependencies {
@@ -113,9 +119,11 @@ dependencies {
 }
 ```
 
+**Result:** You get the same APIs as `vericore-all` but can opt into additional modules later.
+
 ## Repository Configuration
 
-If using SNAPSHOT versions, ensure your repository configuration includes:
+If you pull SNAPSHOT builds, add the OSS Sonatype snapshot repository so Gradle/Maven can resolve them.
 
 ```kotlin
 repositories {
@@ -126,6 +134,8 @@ repositories {
     }
 }
 ```
+
+**Result:** Build tools know where to fetch snapshot artifacts; remove the block when you move to a stable release.
 
 ## Version Information
 

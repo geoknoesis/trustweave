@@ -134,25 +134,27 @@ Facades embrace VeriCore’s “everything returns `Result<T>`” philosophy. By
 ```kotlin
 import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 val verification = vericore.verifyCredential(credential).getOrThrow()
-println("Credential valid: ${verification.valid}")
+println("Credential valid: ${verification.valid} (proof=${verification.proofValid})")
 
 val anchorRegistry = BlockchainAnchorRegistry().apply {
     register("inmemory:anchor", InMemoryBlockchainAnchorClient("inmemory:anchor"))
 }
 
-val digestPayload = Json.encodeToString(credential)
-val anchorClient = anchorRegistry.get("inmemory:anchor")
-val anchorResult = anchorClient?.writePayload(Json.parseToJsonElement(digestPayload))
-println("Anchored digest tx: ${anchorResult?.ref?.txHash}")
+val anchorClient = requireNotNull(anchorRegistry.get("inmemory:anchor"))
+val payload = Json.encodeToJsonElement(
+    com.geoknoesis.vericore.credential.models.VerifiableCredential.serializer(),
+    credential
+)
+val anchorResult = anchorClient.writePayload(payload)
+println("Anchored digest tx: ${anchorResult.ref.txHash}")
 ```
 
 **What this does**  
 - Verifies the credential by rebuilding proofs and performing validity checks (`verification.valid`).  
-- Registers an in-memory blockchain client and writes the credential JSON to the anchor client.  
+- Registers an in-memory blockchain client and writes the credential JSON to the anchor client, converting it to a `JsonElement` first.  
 - Prints the synthetic transaction hash returned by the anchor client (useful for unit assertions).
 
 **Result**  

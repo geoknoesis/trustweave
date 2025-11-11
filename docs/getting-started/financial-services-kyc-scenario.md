@@ -167,7 +167,7 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add VeriCore dependencies to your `build.gradle.kts`. These libraries cover DID management, credential issuance, wallet storage, and the in-memory adapters the scenario relies on for KYC flows.
 
 ```kotlin
 dependencies {
@@ -189,9 +189,11 @@ dependencies {
 }
 ```
 
+**Result:** Gradle now resolves everything you need to run the snippets—no extra module wiring required.
+
 ## Step 2: Complete Example
 
-Here's a complete example demonstrating KYC credential management:
+Here’s the full KYC credential management workflow. Run it once to observe the happy path, then use the breakdowns that follow to understand each step in detail.
 
 ```kotlin
 import com.geoknoesis.vericore.credential.models.VerifiableCredential

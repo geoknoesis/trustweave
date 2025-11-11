@@ -2,6 +2,15 @@
 
 Anchoring creates an immutable audit trail for important events or payloads by writing a compact reference to a blockchain. VeriCore standardises the experience so you can leverage tamper evidence without becoming a chain expert.
 
+```kotlin
+dependencies {
+    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
+}
+```
+
+**Result:** Adds the anchoring registry and clients to your project so the examples below compile.
+
 ## Why anchor data?
 
 - **Integrity** – recompute a digest and compare it to the anchor; any change breaks the link.  

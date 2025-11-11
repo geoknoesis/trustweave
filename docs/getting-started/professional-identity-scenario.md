@@ -126,7 +126,7 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add VeriCore dependencies to your `build.gradle.kts`. These modules cover DID creation, wallet storage, and the in-memory tooling used for professional identity flows.
 
 ```kotlin
 dependencies {
@@ -148,9 +148,11 @@ dependencies {
 }
 ```
 
+**Result:** Syncing these dependencies prepares Gradle to compile every example below without further configuration.
+
 ## Step 2: Complete Example
 
-Here's a complete example demonstrating professional identity management:
+Here’s the full professional identity wallet flow. Execute it once to see the end-to-end experience before exploring the step-by-step explanations.
 
 ```kotlin
 import com.geoknoesis.vericore.credential.models.VerifiableCredential

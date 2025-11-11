@@ -121,7 +121,7 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add VeriCore dependencies to your `build.gradle.kts`. This pulls in the core runtime plus optional adapters the scenario uses (JSON, DID, anchoring, and the in-memory test kit).
 
 ```kotlin
 dependencies {
@@ -145,6 +145,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
 ```
+
+**Result:** Gradle resolves the full stack so every snippet below compiles with zero additional setup.
 
 ## Step 2: Complete Example
 
@@ -591,6 +593,8 @@ If someone tries to tamper with any part of the chain:
 - **Verifiable**: Anyone can verify the chain
 - **Efficient**: Only digests stored on blockchain (not full data)
 - **Standards-based**: Uses W3C standards (DIDs, VCs, JSON-LD)
+
+The console output highlights each milestone (service setup, artifact digests, issued credential ID, anchor reference) and finishes with a verification summary. Treat it as your baseline smoke test—when the output changes unexpectedly, you know a regression slipped in.
 
 ## Step 4: Running the Example
 

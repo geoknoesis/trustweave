@@ -3,6 +3,14 @@
 The `vericore-spi` module hosts the shared service and plugin abstractions that
 other VeriCore modules implement or consume.
 
+```kotlin
+dependencies {
+    implementation("com.geoknoesis.vericore:vericore-spi:1.0.0-SNAPSHOT")
+}
+```
+
+**Result:** Gradle exposes the plugin interfaces so you can register custom DID methods, KMS providers, or blockchain clients without pulling in the higher-level modules.
+
 ## Responsibilities
 
 - Adapter loading utilities (`AdapterLoader`) for discovering runtime providers
@@ -28,6 +36,10 @@ PluginRegistry.register(
     instance = myPlugin
 )
 ```
+
+**What this does:** Loads a DID method provider discovered via the SPI and registers your own plugin instance programmatically.
+
+**Outcome:** Your application can resolve custom adapters at runtime while keeping transitive dependencies clean.
 
 ## Dependencies
 

@@ -121,7 +121,7 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add VeriCore dependencies to your `build.gradle.kts`. These modules cover DID management, credential issuance, wallet storage, and the in-memory services used throughout this scenario.
 
 ```kotlin
 dependencies {
@@ -143,9 +143,11 @@ dependencies {
 }
 ```
 
+**Result:** After syncing, you can run every snippet below without adding more modules or adapters.
+
 ## Step 2: Complete Example
 
-Here's a complete example that demonstrates the full academic credential flow:
+Here’s the full academic credential flow in one place. Execute it to observe the baseline behaviour before diving into the details that follow.
 
 ```kotlin
 import com.geoknoesis.vericore.credential.CredentialIssuanceOptions
@@ -251,6 +253,8 @@ fun main() = runBlocking {
     println("Presentation holder: ${presentation.holder}")
 }
 
+**Result:** The script logs each milestone (DID creation, issuance, wallet storage, presentation verification). A concluding success message confirms the happy path—if that ever changes, use the printed checkpoints to debug.
+
 private fun createDegreeCredential(
     issuerDid: String,
     studentDid: String
@@ -280,7 +284,6 @@ private fun createDegreeCredential(
         )
     )
 }
-```
 
 ## Step-by-Step Breakdown
 

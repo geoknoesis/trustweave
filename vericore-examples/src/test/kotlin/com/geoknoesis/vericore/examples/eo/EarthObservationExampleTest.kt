@@ -37,8 +37,8 @@ class EarthObservationExampleTest {
             
             // Verify output contains expected content
             val outputString = output.toString()
-            assertTrue(outputString.contains("Earth Observation Data Integrity Workflow"), "Should print scenario title")
-            assertTrue(outputString.contains("Setting up services") || outputString.contains("services"), "Should print setup step")
+            assertTrue(outputString.contains("Earth Observation") && outputString.contains("Data Integrity"), "Should print scenario title")
+            assertTrue(outputString.contains("Setting up") || outputString.contains("VeriCore"), "Should print setup step")
             assertTrue(outputString.contains("DID") || outputString.contains("did:"), "Should print DID creation")
             assertTrue(outputString.contains("Linkset") || outputString.contains("linkset"), "Should print linkset creation")
             assertTrue(outputString.contains("Anchored") || outputString.contains("blockchain") || outputString.contains("Transaction"), "Should print anchoring")

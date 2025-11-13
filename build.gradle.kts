@@ -3,6 +3,7 @@
 
 plugins {
     id("org.jetbrains.kotlinx.kover") version "0.7.6" apply false
+    `maven-publish` apply false
 }
 
 allprojects {
@@ -39,6 +40,48 @@ subprojects {
     if (project.name != "buildSrc") {
         layout.buildDirectory.set(rootProject.layout.buildDirectory.dir("modules/${project.name}"))
         apply(plugin = "org.jetbrains.kotlinx.kover")
+    }
+}
+
+// Configure Maven publishing for all subprojects (except buildSrc)
+subprojects {
+    if (project.name != "buildSrc") {
+        apply(plugin = "maven-publish")
+        
+        publishing {
+            publications {
+                create<MavenPublication>("maven") {
+                    from(components["java"])
+                    
+                    pom {
+                        name.set(project.name)
+                        description.set(project.description ?: "")
+                        groupId.set("com.geoknoesis.vericore")
+                        artifactId.set(project.name)
+                        version.set(project.version.toString())
+                        
+                        licenses {
+                            license {
+                                name.set("AGPL-3.0")
+                                url.set("https://www.gnu.org/licenses/agpl-3.0.txt")
+                            }
+                        }
+                        
+                        developers {
+                            developer {
+                                id.set("vericore-team")
+                                name.set("VeriCore Team")
+                                email.set("info@geoknoesis.com")
+                            }
+                        }
+                    }
+                }
+            }
+            
+            repositories {
+                mavenLocal() // Publishes to ~/.m2/repository
+            }
+        }
     }
 }
 

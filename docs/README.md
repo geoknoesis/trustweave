@@ -89,27 +89,27 @@ dependencies {
 
 ## 🎯 Core Features
 
-### 🛡️ W3C Compliant
+- 🛡️ W3C Compliant
 
 Full support for W3C Verifiable Credentials 1.1 and DID Core 1.0 specifications
 
-### 🔑 Decentralized Identifiers
+- 🔑 Decentralized Identifiers
 
 Create, resolve, and manage DIDs with any DID method via pluggable interfaces
 
-### 📜 Verifiable Credentials
+- 📜 Verifiable Credentials
 
 Issue, verify, and manage verifiable credentials with cryptographic proofs
 
-### 🔗 Blockchain Anchoring
+- 🔗 Blockchain Anchoring
 
 Anchor data to any blockchain with chain-agnostic interfaces
 
-### 💼 Wallet Management
+- 💼 Wallet Management
 
 Store, organize, and present credentials with powerful wallet capabilities
 
-### 🔐 Key Management
+- 🔐 Key Management
 
 Pluggable key management supporting multiple algorithms and backends
 
@@ -156,22 +156,22 @@ VeriCore powers trust and identity systems across multiple domains. Explore **25
 VeriCore is built on a modular, pluggable architecture:
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    VeriCore Facade                       │
-│              (Unified API Entry Point)                   │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────┐
+│                    VeriCore Facade               │
+│              (Unified API Entry Point)           │
+└──────────────────────────────────────────────────┘
                           │
         ┌─────────────────┼─────────────────┐
         │                 │                 │
 ┌───────▼──────┐  ┌───────▼──────┐  ┌───────▼──────┐
-│  DID Layer   │  │ Credential    │  │   Wallet     │
-│              │  │   Service     │  │   Service    │
+│  DID Layer   │  │ Credential   │  │   Wallet     │
+│              │  │   Service    │  │   Service    │
 └───────┬──────┘  └───────┬──────┘  └───────┬──────┘
         │                 │                 │
 ┌───────▼─────────────────▼─────────────────▼───────┐
-│         Pluggable Adapters (SPI)                   │
-│  • DID Methods  • KMS  • Blockchains  • Services   │
-└────────────────────────────────────────────────────┘
+│         Pluggable Adapters (SPI)                  │
+│  • DID Methods  • KMS  • Blockchains  • Services  │
+└───────────────────────────────────────────────────┘
 ```
 
 **Key Design Principles:**

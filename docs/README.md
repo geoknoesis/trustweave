@@ -89,33 +89,29 @@ dependencies {
 
 ## 🎯 Core Features
 
-<div class="grid cards" markdown>
+### 🛡️ W3C Compliant
 
--   :material-shield-check:{ .lg .middle } __W3C Compliant__
+Full support for W3C Verifiable Credentials 1.1 and DID Core 1.0 specifications
 
-    Full support for W3C Verifiable Credentials 1.1 and DID Core 1.0 specifications
+### 🔑 Decentralized Identifiers
 
--   :material-key-variant:{ .lg .middle } __Decentralized Identifiers__
+Create, resolve, and manage DIDs with any DID method via pluggable interfaces
 
-    Create, resolve, and manage DIDs with any DID method via pluggable interfaces
+### 📜 Verifiable Credentials
 
--   :material-certificate:{ .lg .middle } __Verifiable Credentials__
+Issue, verify, and manage verifiable credentials with cryptographic proofs
 
-    Issue, verify, and manage verifiable credentials with cryptographic proofs
+### 🔗 Blockchain Anchoring
 
--   :material-link-variant:{ .lg .middle } __Blockchain Anchoring__
+Anchor data to any blockchain with chain-agnostic interfaces
 
-    Anchor data to any blockchain with chain-agnostic interfaces
+### 💼 Wallet Management
 
--   :material-wallet:{ .lg .middle } __Wallet Management__
+Store, organize, and present credentials with powerful wallet capabilities
 
-    Store, organize, and present credentials with powerful wallet capabilities
+### 🔐 Key Management
 
--   :material-lock:{ .lg .middle } __Key Management__
-
-    Pluggable key management supporting multiple algorithms and backends
-
-</div>
+Pluggable key management supporting multiple algorithms and backends
 
 ---
 
@@ -191,33 +187,29 @@ VeriCore is built on a modular, pluggable architecture:
 
 ## 📚 Documentation
 
-<div class="grid cards" markdown>
+### 🚀 [Getting Started](getting-started/quick-start.md)
 
--   :material-rocket-launch:{ .lg .middle } __[Getting Started](getting-started/quick-start.md)__
+Installation, quick start guide, and common patterns
 
-    Installation, quick start guide, and common patterns
+### 📖 [Core Concepts](core-concepts/README.md)
 
--   :material-book-open-variant:{ .lg .middle } __[Core Concepts](core-concepts/README.md)__
+DIDs, Verifiable Credentials, Wallets, and Blockchain Anchoring
 
-    DIDs, Verifiable Credentials, Wallets, and Blockchain Anchoring
+### 🔧 [API Reference](api-reference/core-api.md)
 
--   :material-code-tags:{ .lg .middle } __[API Reference](api-reference/core-api.md)__
+Complete API documentation with examples
 
-    Complete API documentation with examples
+### 🎓 [Use Case Scenarios](scenarios/README.md)
 
--   :material-school:{ .lg .middle } __[Use Case Scenarios](scenarios/README.md)__
+25+ complete, runnable examples for real-world use cases
 
-    25+ complete, runnable examples for real-world use cases
+### ⚙️ [Advanced Topics](advanced/key-rotation.md)
 
--   :material-cog:{ .lg .middle } __[Advanced Topics](advanced/key-rotation.md)__
+Key rotation, verification policies, plugin lifecycle, and more
 
-    Key rotation, verification policies, plugin lifecycle, and more
+### ❓ [FAQ](faq.md)
 
--   :material-help-circle:{ .lg .middle } __[FAQ](faq.md)__
-
-    Common questions and answers
-
-</div>
+Common questions and answers
 
 ---
 
@@ -333,25 +325,21 @@ val wallet = vericore.createWallet(holderDid = userDid) {
 
 ## 📖 Next Steps
 
-<div class="grid cards" markdown>
+### ▶️ [Quick Start](getting-started/quick-start.md)
 
--   :material-play-circle:{ .lg .middle } __[Quick Start](getting-started/quick-start.md)__
+Get up and running in 5 minutes
 
-    Get up and running in 5 minutes
+### 💡 [Use Case Scenarios](scenarios/README.md)
 
--   :material-lightbulb-on:{ .lg .middle } __[Use Case Scenarios](scenarios/README.md)__
+Explore 25+ real-world examples
 
-    Explore 25+ real-world examples
+### 📚 [Core Concepts](core-concepts/README.md)
 
--   :material-book-open-page-variant:{ .lg .middle } __[Core Concepts](core-concepts/README.md)__
+Learn the fundamentals
 
-    Learn the fundamentals
+### 🔌 [API Reference](api-reference/core-api.md)
 
--   :material-api:{ .lg .middle } __[API Reference](api-reference/core-api.md)__
-
-    Complete API documentation
-
-</div>
+Complete API documentation
 
 ---
 

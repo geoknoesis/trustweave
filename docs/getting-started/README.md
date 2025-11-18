@@ -19,18 +19,11 @@ Each guide below introduces a checkpoint in the onboarding journey. Follow them 
 
 ### Hands-on walkthroughs
 - [Quick Start](quick-start.md) – Your first VeriCore application with annotated code snippets.
-- [Earth Observation Scenario](earth-observation-scenario.md) – Satellite imagery credentialing end-to-end ⭐
-- [Academic Credentials Scenario](academic-credentials-scenario.md) – University credential system ⭐
-- [National Education Credentials Algeria Scenario](national-education-credentials-algeria-scenario.md) – AlgeroPass national credential system ⭐
-- [Professional Identity Scenario](professional-identity-scenario.md) – Professional credential wallet ⭐
-- [Proof of Location Scenario](proof-of-location-scenario.md) – Geospatial location proofs ⭐
-- [Spatial Web Authorization Scenario](spatial-web-authorization-scenario.md) – DID-based spatial authorization ⭐
-- [Digital Workflow & Provenance Scenario](digital-workflow-provenance-scenario.md) – PROV-O workflow provenance ⭐
-- [News Industry Scenario](news-industry-scenario.md) – Content provenance and authenticity ⭐
-- [Data Catalog & DCAT Scenario](data-catalog-dcat-scenario.md) – Verifiable data catalog with DCAT ⭐
-- [IoT Device Identity Scenario](iot-device-identity-scenario.md) – Connected device onboarding ⭐
-- [Healthcare Medical Records Scenario](healthcare-medical-records-scenario.md) – Patient credential workflows ⭐
-- [Supply Chain Traceability Scenario](supply-chain-traceability-scenario.md) – Logistics provenance ⭐
+- [Common Patterns](common-patterns.md) – Learn common usage patterns and best practices ⭐
+- [Troubleshooting](troubleshooting.md) – Common issues and solutions ⭐
+
+### Use Case Scenarios
+- **[View All Scenarios](../scenarios/README.md)** – Complete end-to-end workflows for real-world use cases
 
 ## What You'll Build
 

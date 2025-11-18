@@ -3,6 +3,9 @@ package com.geoknoesis.vericore
 import com.geoknoesis.vericore.anchor.AnchorResult
 import com.geoknoesis.vericore.anchor.BlockchainAnchorClient
 import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
+import com.geoknoesis.vericore.core.*
+import com.geoknoesis.vericore.core.vericoreCatching
+import com.geoknoesis.vericore.core.normalizeKeyId
 import com.geoknoesis.vericore.spi.services.WalletFactory
 import com.geoknoesis.vericore.spi.services.WalletCreationOptions
 import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
@@ -29,6 +32,7 @@ import com.geoknoesis.vericore.did.DidResolutionResult
 import com.geoknoesis.vericore.did.DidMethodRegistry
 import com.geoknoesis.vericore.did.didCreationOptions
 import com.geoknoesis.vericore.kms.KeyManagementService
+import com.geoknoesis.vericore.spi.PluginLifecycle
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import java.util.UUID
@@ -51,8 +55,17 @@ import java.util.UUID
  * ```kotlin
  * val vericore = VeriCore.create {
  *     kms = MyCustomKms()
- *     registerDidMethod(MyDidMethod())
- *     registerBlockchainClient("ethereum:mainnet", myClient)
+ *     walletFactory = MyWalletFactory()
+ *     
+ *     didMethods {
+ *         + DidKeyMethod()
+ *         + MyDidMethod()
+ *     }
+ *     
+ *     blockchain {
+ *         "ethereum:mainnet" to ethereumClient
+ *         "algorand:testnet" to algorandClient
+ *     }
  * }
  * ```
  * 
@@ -71,23 +84,43 @@ class VeriCore private constructor(
      * 
      * **Example:**
      * ```kotlin
+     * // Simple usage
      * val did = vericore.createDid().getOrThrow()  // Uses default "key" method
+     * 
+     * // With custom method
      * val webDid = vericore.createDid(method = "web").getOrThrow()
+     * 
+     * // With error handling
+     * val result = vericore.createDid()
+     * result.fold(
+     *     onSuccess = { did -> println("Created: ${did.id}") },
+     *     onFailure = { error -> println("Failed: ${error.message}") }
+     * )
      * ```
      * 
      * @param method DID method name (default: "key")
      * @param options Method-specific creation options
      * @return Result containing the created DID document
-     * @throws IllegalArgumentException if the method is not registered
      */
     suspend fun createDid(
         method: String = "key",
         options: DidCreationOptions = DidCreationOptions()
-    ): Result<DidDocument> = runCatching {
-        val didMethod = context.getDidMethod(method)
-            ?: throw IllegalArgumentException(
-                "DID method '$method' not registered. Available methods: ${context.getAvailableDidMethods()}"
+    ): Result<DidDocument> = vericoreCatching {
+        // Validate method is registered
+        val availableMethods = context.getAvailableDidMethods()
+        if (method !in availableMethods) {
+            throw VeriCoreError.DidMethodNotRegistered(
+                method = method,
+                availableMethods = availableMethods
             )
+        }
+        
+        val didMethod = context.getDidMethod(method)
+            ?: throw VeriCoreError.DidMethodNotRegistered(
+                method = method,
+                availableMethods = availableMethods
+            )
+        
         didMethod.createDid(options)
     }
 
@@ -112,18 +145,53 @@ class VeriCore private constructor(
      * 
      * **Example:**
      * ```kotlin
+     * // Simple usage
      * val result = vericore.resolveDid("did:key:z6Mkfriq...").getOrThrow()
      * if (result.document != null) {
      *     println("DID resolved: ${result.document.id}")
      * }
+     * 
+     * // With error handling
+     * val result = vericore.resolveDid("did:key:z6Mkfriq...")
+     * result.fold(
+     *     onSuccess = { resolution ->
+     *         if (resolution.document != null) {
+     *             println("DID resolved: ${resolution.document.id}")
+     *         } else {
+     *             println("DID not found")
+     *         }
+     *     },
+     *     onFailure = { error -> println("Resolution failed: ${error.message}") }
+     * )
      * ```
      * 
      * @param did The DID string to resolve
      * @return Resolution result containing the document and metadata
-     * @throws IllegalArgumentException if the DID method is not registered
      */
-    suspend fun resolveDid(did: String): Result<DidResolutionResult> =
-        runCatching { context.resolveDid(did) }
+    suspend fun resolveDid(did: String): Result<DidResolutionResult> = vericoreCatching {
+        // Validate DID format
+        DidValidator.validateFormat(did).let {
+            if (!it.isValid()) {
+                throw VeriCoreError.InvalidDidFormat(
+                    did = did,
+                    reason = it.errorMessage() ?: "Invalid DID format"
+                )
+            }
+        }
+        
+        // Validate method is registered
+        val availableMethods = context.getAvailableDidMethods()
+        DidValidator.validateMethod(did, availableMethods).let {
+            if (!it.isValid()) {
+                throw VeriCoreError.DidMethodNotRegistered(
+                    method = DidValidator.extractMethod(did) ?: "unknown",
+                    availableMethods = availableMethods
+                )
+            }
+        }
+        
+        context.resolveDid(did)
+    }
     
     // ========================================
     // Credential Operations
@@ -134,6 +202,7 @@ class VeriCore private constructor(
      * 
      * **Example:**
      * ```kotlin
+     * // Simple usage
      * val credential = vericore.issueCredential(
      *     issuerDid = "did:key:issuer",
      *     issuerKeyId = "key-1",
@@ -143,6 +212,13 @@ class VeriCore private constructor(
      *     },
      *     types = listOf("PersonCredential")
      * ).getOrThrow()
+     * 
+     * // With error handling
+     * val result = vericore.issueCredential(...)
+     * result.fold(
+     *     onSuccess = { credential -> println("Issued: ${credential.id}") },
+     *     onFailure = { error -> println("Issuance failed: ${error.message}") }
+     * )
      * ```
      * 
      * @param issuerDid DID of the credential issuer
@@ -158,7 +234,28 @@ class VeriCore private constructor(
         credentialSubject: kotlinx.serialization.json.JsonElement,
         types: List<String> = listOf("VerifiableCredential"),
         expirationDate: String? = null
-    ): Result<VerifiableCredential> = runCatching {
+    ): Result<VerifiableCredential> = vericoreCatching {
+        // Validate issuer DID format
+        DidValidator.validateFormat(issuerDid).let {
+            if (!it.isValid()) {
+                throw VeriCoreError.InvalidDidFormat(
+                    did = issuerDid,
+                    reason = it.errorMessage() ?: "Invalid issuer DID format"
+                )
+            }
+        }
+        
+        // Validate issuer DID method is registered
+        val availableMethods = context.getAvailableDidMethods()
+        DidValidator.validateMethod(issuerDid, availableMethods).let {
+            if (!it.isValid()) {
+                throw VeriCoreError.DidMethodNotRegistered(
+                    method = DidValidator.extractMethod(issuerDid) ?: "unknown",
+                    availableMethods = availableMethods
+                )
+            }
+        }
+        
         val normalizedKeyId = normalizeKeyId(issuerKeyId)
         val credentialId = "urn:uuid:${UUID.randomUUID()}"
         val credential = VerifiableCredential(
@@ -169,6 +266,17 @@ class VeriCore private constructor(
             issuanceDate = java.time.Instant.now().toString(),
             expirationDate = expirationDate
         )
+        
+        // Validate credential structure
+        CredentialValidator.validateStructure(credential).let {
+            if (!it.isValid()) {
+                throw VeriCoreError.CredentialInvalid(
+                    reason = it.errorMessage() ?: "Invalid credential structure",
+                    credentialId = credentialId,
+                    field = (it as? ValidationResult.Invalid)?.field
+                )
+            }
+        }
 
         val proofGenerator = Ed25519ProofGenerator(
             signer = { data, keyId -> context.kms.sign(normalizeKeyId(keyId), data) }
@@ -198,20 +306,14 @@ class VeriCore private constructor(
     suspend fun verifyCredential(
         credential: VerifiableCredential,
         options: CredentialVerificationOptions = CredentialVerificationOptions()
-    ): Result<CredentialVerificationResult> = runCatching {
-        val effectiveResolver = options.didResolver ?: CredentialDidResolver { did ->
+    ): Result<CredentialVerificationResult> = vericoreCatching {
+        val effectiveResolver = CredentialDidResolver { did ->
             runCatching { context.resolveDid(did) }
                 .getOrNull()
                 ?.toCredentialDidResolution()
         }
         val verifier = CredentialVerifier(defaultDidResolver = effectiveResolver)
-        @Suppress("DEPRECATION")
-        val adjustedOptions = if (options.didResolver == null) {
-            options.copy(didResolver = effectiveResolver)
-        } else {
-            options
-        }
-        verifier.verify(credential, adjustedOptions)
+        verifier.verify(credential, options)
     }
     
     // ========================================
@@ -223,13 +325,65 @@ class VeriCore private constructor(
      * 
      * **Example:**
      * ```kotlin
+     * // Simplest usage - just provide holder DID
      * val wallet = vericore.createWallet("did:key:holder").getOrThrow()
+     * 
+     * // With options builder
+     * val wallet = vericore.createWallet("did:key:holder") {
+     *     label = "Holder Wallet"
+     *     enableOrganization = true
+     * }.getOrThrow()
+     * 
+     * // Full control
+     * val wallet = vericore.createWallet(
+     *     holderDid = "did:key:holder",
+     *     provider = WalletProvider.Database,
+     *     options = walletOptions { ... }
+     * ).getOrThrow()
+     * 
      * wallet.store(credential)
      * val credentials = wallet.query {
      *     byType("PersonCredential")
      *     notExpired()
      * }
      * ```
+     * 
+     * @param holderDid DID of the wallet holder
+     * @return Result containing the new wallet instance
+     */
+    suspend fun createWallet(holderDid: String): Result<Wallet> =
+        createWallet(holderDid, WalletProvider.InMemory)
+
+    /**
+     * Creates a wallet with a specific provider.
+     * 
+     * @param holderDid DID of the wallet holder
+     * @param provider Wallet provider (defaults to InMemory)
+     * @return Result containing the new wallet instance
+     */
+    suspend fun createWallet(
+        holderDid: String,
+        provider: WalletProvider
+    ): Result<Wallet> =
+        createWallet(holderDid, UUID.randomUUID().toString(), provider)
+
+    /**
+     * Creates a wallet with a specific provider and wallet ID.
+     * 
+     * @param holderDid DID of the wallet holder
+     * @param walletId Wallet identifier (generated if not provided)
+     * @param provider Wallet provider (defaults to InMemory)
+     * @return Result containing the new wallet instance
+     */
+    suspend fun createWallet(
+        holderDid: String,
+        walletId: String,
+        provider: WalletProvider = WalletProvider.InMemory
+    ): Result<Wallet> =
+        createWallet(holderDid, walletId, provider, WalletCreationOptions())
+
+    /**
+     * Creates a wallet with full configuration options.
      * 
      * @param holderDid DID of the wallet holder
      * @param walletId Optional wallet identifier (generated if not provided)
@@ -241,7 +395,7 @@ class VeriCore private constructor(
         holderDid: String,
         walletId: String = UUID.randomUUID().toString(),
         provider: WalletProvider = WalletProvider.InMemory,
-        options: WalletCreationOptions = WalletCreationOptions()
+        options: WalletCreationOptions
     ): Result<Wallet> = runCatching {
         val wallet = context.walletFactory.create(
             providerName = provider.id,
@@ -266,16 +420,19 @@ class VeriCore private constructor(
      *     property("autoUnlock", true)
      * }.getOrThrow()
      * ```
+     * 
+     * @param holderDid DID of the wallet holder
+     * @param provider Wallet provider (defaults to InMemory)
+     * @param configure Options builder block
+     * @return Result containing the new wallet instance
      */
     suspend fun createWallet(
         holderDid: String,
-        walletId: String = UUID.randomUUID().toString(),
         provider: WalletProvider = WalletProvider.InMemory,
         configure: WalletOptionsBuilder.() -> Unit
     ): Result<Wallet> =
         createWallet(
             holderDid = holderDid,
-            walletId = walletId,
             provider = provider,
             options = walletOptions(configure)
         )
@@ -289,33 +446,61 @@ class VeriCore private constructor(
      * 
      * **Example:**
      * ```kotlin
+     * // Simple usage
      * val result = vericore.anchor(
      *     data = myData,
      *     serializer = MyData.serializer(),
      *     chainId = "algorand:testnet"
-     * )
+     * ).getOrThrow()
      * println("Anchored at: ${result.ref.txHash}")
+     * 
+     * // With error handling
+     * val result = vericore.anchor(...)
+     * result.fold(
+     *     onSuccess = { anchor -> println("Anchored at: ${anchor.ref.txHash}") },
+     *     onFailure = { error -> println("Anchoring failed: ${error.message}") }
+     * )
      * ```
      * 
      * @param data The data to anchor
      * @param serializer Kotlinx Serialization serializer for the data type
      * @param chainId Blockchain chain identifier (CAIP-2 format)
-     * @return Anchor result with transaction reference
-     * @throws IllegalArgumentException if no client is registered for the chain
+     * @return Result containing anchor result with transaction reference
      */
     suspend fun <T : Any> anchor(
         data: T,
         serializer: KSerializer<T>,
         chainId: String
-    ): AnchorResult {
+    ): Result<AnchorResult> = vericoreCatching {
+        // Validate chain ID format
+        ChainIdValidator.validateFormat(chainId).let {
+            if (!it.isValid()) {
+                throw VeriCoreError.ChainNotRegistered(
+                    chainId = chainId,
+                    availableChains = context.getAvailableChains()
+                )
+            }
+        }
+        
+        // Validate chain is registered
+        val availableChains = context.getAvailableChains()
+        ChainIdValidator.validateRegistered(chainId, availableChains).let {
+            if (!it.isValid()) {
+                throw VeriCoreError.ChainNotRegistered(
+                    chainId = chainId,
+                    availableChains = availableChains
+                )
+            }
+        }
+        
         val client = context.getBlockchainClient(chainId)
-            ?: throw IllegalArgumentException(
-                "No blockchain client registered for chain: $chainId. " +
-                "Available chains: ${context.getAvailableChains()}"
+            ?: throw VeriCoreError.ChainNotRegistered(
+                chainId = chainId,
+                availableChains = availableChains
             )
         
         val json = Json.encodeToJsonElement(serializer, data)
-        return client.writePayload(json)
+        client.writePayload(json)
     }
     
     /**
@@ -323,25 +508,47 @@ class VeriCore private constructor(
      * 
      * **Example:**
      * ```kotlin
+     * // Simple usage
      * val data = vericore.readAnchor<MyData>(
      *     ref = anchorRef,
      *     serializer = MyData.serializer()
+     * ).getOrThrow()
+     * 
+     * // With error handling
+     * val result = vericore.readAnchor<MyData>(...)
+     * result.fold(
+     *     onSuccess = { data -> println("Read: $data") },
+     *     onFailure = { error -> println("Read failed: ${error.message}") }
      * )
      * ```
      * 
      * @param ref The anchor reference
      * @param serializer Kotlinx Serialization serializer for the data type
-     * @return The deserialized data
+     * @return Result containing the deserialized data
      */
     suspend fun <T : Any> readAnchor(
         ref: com.geoknoesis.vericore.anchor.AnchorRef,
         serializer: KSerializer<T>
-    ): T {
+    ): Result<T> = vericoreCatching {
+        // Validate chain is registered
+        val availableChains = context.getAvailableChains()
+        ChainIdValidator.validateRegistered(ref.chainId, availableChains).let {
+            if (!it.isValid()) {
+                throw VeriCoreError.ChainNotRegistered(
+                    chainId = ref.chainId,
+                    availableChains = availableChains
+                )
+            }
+        }
+        
         val client = context.getBlockchainClient(ref.chainId)
-            ?: throw IllegalArgumentException("No blockchain client registered for chain: ${ref.chainId}")
+            ?: throw VeriCoreError.ChainNotRegistered(
+                chainId = ref.chainId,
+                availableChains = availableChains
+            )
         
         val result = client.readPayload(ref)
-        return Json.decodeFromJsonElement(serializer, result.payload)
+        Json.decodeFromJsonElement(serializer, result.payload)
     }
     
     // ========================================
@@ -352,6 +559,7 @@ class VeriCore private constructor(
      * Gets the underlying context for advanced usage.
      * 
      * Use this when you need direct access to registries or services.
+     * Most users should use the VeriCore facade methods instead.
      * 
      * @return The VeriCore context
      */
@@ -359,8 +567,15 @@ class VeriCore private constructor(
     
     /**
      * Registers a DID method on this VeriCore instance.
-     *
+     * 
      * Useful for adding methods after construction.
+     * 
+     * **Example:**
+     * ```kotlin
+     * vericore.registerDidMethod(DidWebMethod())
+     * ```
+     * 
+     * @param method The DID method implementation to register
      */
     fun registerDidMethod(method: DidMethod) {
         context.didRegistry.register(method)
@@ -368,28 +583,185 @@ class VeriCore private constructor(
     
     /**
      * Registers a blockchain client on this VeriCore instance.
+     * 
+     * Useful for adding blockchain clients after construction.
+     * 
+     * **Example:**
+     * ```kotlin
+     * vericore.registerBlockchainClient("ethereum:mainnet", ethereumClient)
+     * ```
+     * 
+     * @param chainId Chain ID in CAIP-2 format (e.g., "ethereum:mainnet")
+     * @param client Blockchain anchor client instance
      */
     fun registerBlockchainClient(chainId: String, client: BlockchainAnchorClient) {
         context.blockchainRegistry.register(chainId, client)
     }
     
     /**
-     * Lists registered DID method names.
+     * Gets available DID method names.
+     * 
+     * @return List of registered DID method names
      */
-    fun listDidMethods(): List<String> = context.didRegistry.getAllMethodNames()
+    fun getAvailableDidMethods(): List<String> = context.didRegistry.getAllMethodNames()
     
     /**
-     * Lists registered blockchain chain IDs.
+     * Gets available blockchain chain IDs.
+     * 
+     * @return List of registered blockchain chain IDs
      */
-    fun listBlockchainChains(): List<String> = context.blockchainRegistry.getAllChainIds()
+    fun getAvailableChains(): List<String> = context.blockchainRegistry.getAllChainIds()
+    
+    // ========================================
+    // Plugin Lifecycle Management
+    // ========================================
+    
+    /**
+     * Initializes all plugins that implement [PluginLifecycle].
+     * 
+     * This should be called after creating a VeriCore instance if you need
+     * to initialize plugins before use.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val vericore = VeriCore.create { ... }
+     * vericore.initialize().getOrThrow()
+     * ```
+     * 
+     * @param config Optional configuration map for plugins
+     * @return Result indicating success or failure
+     */
+    suspend fun initialize(config: Map<String, Any?> = emptyMap()): Result<Unit> = vericoreCatching {
+        val plugins = context.getAllPlugins()
+        val failures = mutableListOf<String>()
+        
+        plugins.forEach { plugin ->
+            if (plugin is PluginLifecycle) {
+                val pluginConfig = config[plugin::class.simpleName] as? Map<String, Any?> ?: emptyMap()
+                val initialized = plugin.initialize(pluginConfig)
+                if (!initialized) {
+                    failures.add("Plugin ${plugin::class.simpleName} failed to initialize")
+                }
+            }
+        }
+        
+        if (failures.isNotEmpty()) {
+            throw VeriCoreError.PluginInitializationFailed(
+                pluginId = "multiple",
+                reason = failures.joinToString("; ")
+            )
+        }
+    }
+    
+    /**
+     * Starts all plugins that implement [PluginLifecycle].
+     * 
+     * This should be called after [initialize] and before using VeriCore.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val vericore = VeriCore.create { ... }
+     * vericore.initialize().getOrThrow()
+     * vericore.start().getOrThrow()
+     * ```
+     * 
+     * @return Result indicating success or failure
+     */
+    suspend fun start(): Result<Unit> = vericoreCatching {
+        val plugins = context.getAllPlugins()
+        val failures = mutableListOf<String>()
+        
+        plugins.forEach { plugin ->
+            if (plugin is PluginLifecycle) {
+                val started = plugin.start()
+                if (!started) {
+                    failures.add("Plugin ${plugin::class.simpleName} failed to start")
+                }
+            }
+        }
+        
+        if (failures.isNotEmpty()) {
+            throw VeriCoreError.PluginInitializationFailed(
+                pluginId = "multiple",
+                reason = failures.joinToString("; ")
+            )
+        }
+    }
+    
+    /**
+     * Stops all plugins that implement [PluginLifecycle].
+     * 
+     * This should be called when shutting down VeriCore.
+     * Plugins are stopped in reverse order of initialization.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val vericore = VeriCore.create { ... }
+     * // ... use vericore ...
+     * vericore.stop().getOrThrow()
+     * ```
+     * 
+     * @return Result indicating success or failure
+     */
+    suspend fun stop(): Result<Unit> = vericoreCatching {
+        val plugins = context.getAllPlugins().reversed()
+        val failures = mutableListOf<String>()
+        
+        plugins.forEach { plugin ->
+            if (plugin is PluginLifecycle) {
+                try {
+                    val stopped = plugin.stop()
+                    if (!stopped) {
+                        failures.add("Plugin ${plugin::class.simpleName} failed to stop")
+                    }
+                } catch (e: Exception) {
+                    failures.add("Plugin ${plugin::class.simpleName} error during stop: ${e.message}")
+                }
+            }
+        }
+        
+        if (failures.isNotEmpty()) {
+            throw VeriCoreError.InvalidOperation(
+                code = "PLUGIN_STOP_FAILED",
+                message = "Some plugins failed to stop: ${failures.joinToString("; ")}",
+                context = emptyMap()
+            )
+        }
+    }
+    
+    /**
+     * Cleans up all plugins that implement [PluginLifecycle].
+     * 
+     * This should be called after [stop] for final cleanup.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val vericore = VeriCore.create { ... }
+     * // ... use vericore ...
+     * vericore.stop().getOrThrow()
+     * vericore.cleanup().getOrThrow()
+     * ```
+     * 
+     * @return Result indicating success or failure
+     */
+    suspend fun cleanup(): Result<Unit> = vericoreCatching {
+        val plugins = context.getAllPlugins().reversed()
+        
+        plugins.forEach { plugin ->
+            if (plugin is PluginLifecycle) {
+                try {
+                    plugin.cleanup()
+                } catch (e: Exception) {
+                    // Log but don't fail on cleanup errors
+                    // This is best effort cleanup
+                }
+            }
+        }
+    }
     
     // ========================================
     // Factory Methods
     // ========================================
-    
-    private fun normalizeKeyId(keyId: String): String {
-        return keyId.substringAfter('#', keyId)
-    }
 
     companion object {
         /**
@@ -407,7 +779,7 @@ class VeriCore private constructor(
          * 
          * @return VeriCore instance with default configuration
          */
-        fun create(): VeriCore = create(VeriCoreDefaults.inMemoryTest())
+        fun create(): VeriCore = create(VeriCoreDefaults.inMemory())
         
         /**
          * Creates a VeriCore instance from a configuration object.
@@ -420,14 +792,27 @@ class VeriCore private constructor(
         
         /**
          * Creates a VeriCore instance with custom configuration.
-         * Starts from [VeriCoreConfig.default] and applies overrides.
+         * Starts from defaults and applies overrides.
          *
-         * **Example:**
+         * **Example - DSL Style (Recommended):**
          * ```kotlin
          * val vericore = VeriCore.create {
-         *     kms(InMemoryKeyManagementService())
-         *     registerDidMethod(DidWebMethod())
-         *     registerBlockchainClient("ethereum:mainnet", ethereumClient)
+         *     kms = InMemoryKeyManagementService()
+         *     walletFactory = TestkitWalletFactory()
+         *     
+         *     didMethods {
+         *         + DidKeyMethod()
+         *         + DidWebMethod()
+         *     }
+         *     
+         *     blockchain {
+         *         "ethereum:mainnet" to ethereumClient
+         *         "algorand:testnet" to algorandClient
+         *     }
+         *     
+         *     credentialServices {
+         *         + MyCredentialService()
+         *     }
          * }
          * ```
          *
@@ -435,7 +820,7 @@ class VeriCore private constructor(
          * @return Configured VeriCore instance
          */
         fun create(configure: VeriCoreConfig.Builder.() -> Unit): VeriCore {
-            val builder = VeriCoreDefaults.inMemoryTest().toBuilder()
+            val builder = VeriCoreDefaults.inMemory().toBuilder()
             builder.configure()
             return create(builder.build())
         }
@@ -459,39 +844,139 @@ class VeriCoreContext private constructor(
     
     /**
      * Gets a DID method by name.
+     * 
+     * @param methodName The DID method name (e.g., "key", "web", "ion")
+     * @return The DID method if registered, null otherwise
      */
     fun getDidMethod(methodName: String): DidMethod? = didRegistry.get(methodName)
     
     /**
      * Gets available DID method names.
+     * 
+     * @return List of registered DID method names
      */
     fun getAvailableDidMethods(): List<String> = didRegistry.getAllMethodNames()
     
     /**
      * Gets a blockchain client by chain ID.
+     * 
+     * @param chainId Chain ID in CAIP-2 format (e.g., "ethereum:mainnet")
+     * @return The blockchain client if registered, null otherwise
      */
     fun getBlockchainClient(chainId: String): BlockchainAnchorClient? =
         blockchainRegistry.get(chainId)
     
     /**
      * Gets available blockchain chain IDs.
+     * 
+     * @return List of registered blockchain chain IDs
      */
     fun getAvailableChains(): List<String> = blockchainRegistry.getAllChainIds()
     
     /**
      * Resolves a DID using registered methods.
+     * 
+     * **Note:** This is a lower-level method that returns `DidResolutionResult` directly.
+     * For error handling with `Result<T>`, use [VeriCore.resolveDid] instead.
+     * This method may throw exceptions if resolution fails.
+     * 
+     * @param did The DID string to resolve
+     * @return Resolution result containing the document and metadata
      */
     suspend fun resolveDid(did: String): DidResolutionResult {
         return didRegistry.resolve(did)
     }
 
-    fun didMethodRegistry(): DidMethodRegistry = didRegistry
+    /**
+     * Gets the DID method registry.
+     * 
+     * @InternalApi This method exposes internal implementation details.
+     * Use [getDidMethod] and [getAvailableDidMethods] for public operations.
+     */
+    @PublishedApi
+    internal fun didMethodRegistry(): DidMethodRegistry = didRegistry
 
-    fun blockchainRegistry(): BlockchainAnchorRegistry = blockchainRegistry
+    /**
+     * Gets the blockchain anchor registry.
+     * 
+     * @InternalApi This method exposes internal implementation details.
+     * Use [getBlockchainClient] and [getAvailableChains] for public operations.
+     */
+    @PublishedApi
+    internal fun blockchainRegistry(): BlockchainAnchorRegistry = blockchainRegistry
 
-    fun credentialRegistry(): CredentialServiceRegistry = credentialRegistry
+    /**
+     * Gets the credential service registry.
+     * 
+     * @InternalApi This method exposes internal implementation details.
+     * Access through VeriCore facade methods instead.
+     */
+    @PublishedApi
+    internal fun credentialRegistry(): CredentialServiceRegistry = credentialRegistry
 
-    fun proofRegistry(): ProofGeneratorRegistry = proofRegistry
+    /**
+     * Gets the proof generator registry.
+     * 
+     * @InternalApi This method exposes internal implementation details.
+     * Access through VeriCore facade methods instead.
+     */
+    @PublishedApi
+    internal fun proofRegistry(): ProofGeneratorRegistry = proofRegistry
+    
+    /**
+     * Gets all plugins that implement PluginLifecycle from all registries.
+     * 
+     * @return List of all plugins that implement PluginLifecycle
+     */
+    fun getAllPlugins(): List<Any> {
+        val plugins = mutableListOf<Any>()
+        
+        // Add KMS if it implements PluginLifecycle
+        if (kms is PluginLifecycle) {
+            plugins.add(kms)
+        }
+        
+        // Add wallet factory if it implements PluginLifecycle
+        if (walletFactory is PluginLifecycle) {
+            plugins.add(walletFactory)
+        }
+        
+        // Add DID methods
+        didRegistry.getAllMethodNames().forEach { methodName ->
+            didRegistry.get(methodName)?.let { method ->
+                if (method is PluginLifecycle) {
+                    plugins.add(method)
+                }
+            }
+        }
+        
+        // Add blockchain clients
+        blockchainRegistry.getAllChainIds().forEach { chainId ->
+            blockchainRegistry.get(chainId)?.let { client ->
+                if (client is PluginLifecycle) {
+                    plugins.add(client)
+                }
+            }
+        }
+        
+        // Add credential services
+        credentialRegistry.getAll().values.forEach { service ->
+            if (service is PluginLifecycle) {
+                plugins.add(service)
+            }
+        }
+        
+        // Add proof generators
+        proofRegistry.getRegisteredTypes().forEach { proofType ->
+            proofRegistry.get(proofType)?.let { generator ->
+                if (generator is PluginLifecycle) {
+                    plugins.add(generator)
+                }
+            }
+        }
+        
+        return plugins
+    }
     
     companion object {
         fun fromConfig(config: VeriCoreConfig): VeriCoreContext {
@@ -535,46 +1020,192 @@ data class VeriCoreConfig(
         private val credentialRegistry: CredentialServiceRegistry,
         private val proofRegistry: ProofGeneratorRegistry
     ) {
-        fun kms(kms: KeyManagementService) {
-            this.kms = kms
+        /**
+         * Sets the Key Management Service.
+         * 
+         * **Example:**
+         * ```kotlin
+         * kms = InMemoryKeyManagementService()
+         * ```
+         */
+        var kms: KeyManagementService?
+            get() = this@Builder.kms
+            set(value) {
+                this@Builder.kms = value
+            }
+        
+        /**
+         * Sets the Wallet Factory.
+         * 
+         * **Example:**
+         * ```kotlin
+         * walletFactory = TestkitWalletFactory()
+         * ```
+         */
+        var walletFactory: WalletFactory?
+            get() = this@Builder.walletFactory
+            set(value) {
+                this@Builder.walletFactory = value
+            }
+        
+        /**
+         * DSL block for registering DID methods.
+         * 
+         * **Example:**
+         * ```kotlin
+         * didMethods {
+         *     + DidKeyMethod()
+         *     + DidWebMethod()
+         * }
+         * ```
+         */
+        fun didMethods(block: DidMethodsBuilder.() -> Unit) {
+            val builder = DidMethodsBuilder(didRegistry)
+            builder.block()
         }
         
-        fun walletFactory(walletFactory: WalletFactory) {
-            this.walletFactory = walletFactory
+        /**
+         * Internal builder for DID methods DSL.
+         */
+        private inner class DidMethodsBuilder(
+            private val registry: DidMethodRegistry
+        ) {
+            operator fun DidMethod.unaryPlus() {
+                registry.register(this)
+            }
         }
         
+        /**
+         * Registers a single DID method (backward compatibility).
+         */
         fun registerDidMethod(method: DidMethod) {
             didRegistry.register(method)
         }
         
+        /**
+         * DSL block for registering blockchain clients.
+         * 
+         * **Example:**
+         * ```kotlin
+         * blockchain {
+         *     "ethereum:mainnet" to ethereumClient
+         *     "algorand:testnet" to algorandClient
+         * }
+         * ```
+         */
+        fun blockchain(block: MutableMap<String, BlockchainAnchorClient>.() -> Unit) {
+            val clients = mutableMapOf<String, BlockchainAnchorClient>()
+            clients.block()
+            clients.forEach { (chainId, client) ->
+                blockchainRegistry.register(chainId, client)
+            }
+        }
+        
+        /**
+         * Registers a single blockchain client (backward compatibility).
+         */
         fun registerBlockchainClient(chainId: String, client: BlockchainAnchorClient) {
             blockchainRegistry.register(chainId, client)
         }
         
+        /**
+         * DSL block for registering credential services.
+         * 
+         * **Example:**
+         * ```kotlin
+         * credentialServices {
+         *     + MyCredentialService()
+         * }
+         * ```
+         */
+        fun credentialServices(block: CredentialServicesBuilder.() -> Unit) {
+            val builder = CredentialServicesBuilder(credentialRegistry)
+            builder.block()
+        }
+        
+        /**
+         * Internal builder for credential services DSL.
+         */
+        private inner class CredentialServicesBuilder(
+            private val registry: CredentialServiceRegistry
+        ) {
+            operator fun CredentialService.unaryPlus() {
+                registry.register(this)
+            }
+        }
+        
+        /**
+         * Registers a single credential service (backward compatibility).
+         */
         fun registerCredentialService(service: CredentialService) {
             credentialRegistry.register(service)
         }
         
+        /**
+         * Unregisters a credential service.
+         */
         fun unregisterCredentialService(providerName: String) {
             credentialRegistry.unregister(providerName)
         }
 
+        /**
+         * DSL block for registering proof generators.
+         * 
+         * **Example:**
+         * ```kotlin
+         * proofGenerators {
+         *     + Ed25519ProofGenerator(signer)
+         *     + BbsProofGenerator(signer)
+         * }
+         * ```
+         */
+        fun proofGenerators(block: ProofGeneratorsBuilder.() -> Unit) {
+            val builder = ProofGeneratorsBuilder(proofRegistry)
+            builder.block()
+        }
+        
+        /**
+         * Internal builder for proof generators DSL.
+         */
+        private inner class ProofGeneratorsBuilder(
+            private val registry: ProofGeneratorRegistry
+        ) {
+            operator fun ProofGenerator.unaryPlus() {
+                registry.register(this)
+            }
+        }
+        
+        /**
+         * Registers a single proof generator (backward compatibility).
+         */
         fun registerProofGenerator(generator: ProofGenerator) {
             proofRegistry.register(generator)
         }
 
+        /**
+         * Unregisters a proof generator.
+         */
         fun unregisterProofGenerator(proofType: String) {
             proofRegistry.unregister(proofType)
         }
         
+        /**
+         * Removes a blockchain client.
+         */
         fun removeBlockchainClient(chainId: String) {
             blockchainRegistry.unregister(chainId)
         }
         
+        /**
+         * Removes a DID method.
+         */
         fun removeDidMethod(methodName: String) {
             didRegistry.unregister(methodName)
         }
         
+        /**
+         * Builds the VeriCoreConfig from this builder.
+         */
         fun build(): VeriCoreConfig {
             val kms = requireNotNull(this.kms) { "KMS must be configured" }
             val walletFactory = requireNotNull(this.walletFactory) { "WalletFactory must be configured" }

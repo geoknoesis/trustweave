@@ -23,5 +23,6 @@ dependencies {
     testImplementation(project(":vericore-testkit"))
     testImplementation(project(":vericore-did"))
     testImplementation(project(":vericore-kms"))
+    testImplementation(project(":vericore-all")) // For VeriCore facade
 }
 

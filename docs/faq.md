@@ -46,6 +46,29 @@ Use `vericore-testkit`. It ships in-memory DID methods, KMS, and blockchain anch
 
 Configure `CredentialVerificationOptions` (see [Verification Policies](advanced/verification-policies.md)). You can enable expiration checks, proof-purpose enforcement, anchoring requirements, revocation lookups, and domain/audience validation—all while receiving a structured `CredentialVerificationResult`.
 
+## How do I handle errors in VeriCore?
+
+All VeriCore operations return `Result<T>` with structured `VeriCoreError` types:
+
+```kotlin
+import com.geoknoesis.vericore.core.*
+
+val result = vericore.createDid()
+result.fold(
+    onSuccess = { did -> println("Created: ${did.id}") },
+    onFailure = { error ->
+        when (error) {
+            is VeriCoreError.DidMethodNotRegistered -> {
+                println("Method not registered: ${error.method}")
+            }
+            else -> println("Error: ${error.message}")
+        }
+    }
+)
+```
+
+See [Error Handling](advanced/error-handling.md) for detailed error handling patterns and validation utilities.
+
 ## Where do I log issues or request features?
 
 Open an issue in the GitHub repository or contact Geoknoesis LLC via [www.geoknoesis.com](https://www.geoknoesis.com). When contributing code or docs, follow the workflow outlined in the [Contributing Guide](contributing/README.md).

@@ -1,171 +1,281 @@
 package com.geoknoesis.vericore.examples.eo
 
-import com.geoknoesis.vericore.anchor.AnchorRef
-import com.geoknoesis.vericore.anchor.AnchorResult
-import com.geoknoesis.vericore.anchor.BlockchainAnchorClient
-import com.geoknoesis.vericore.anchor.DefaultBlockchainAnchorRegistry
-import com.geoknoesis.vericore.did.DefaultDidMethodRegistry
-import com.geoknoesis.vericore.did.DidMethod
-import com.geoknoesis.vericore.json.DigestUtils
+import com.geoknoesis.vericore.VeriCore
+import com.geoknoesis.vericore.core.*
+import com.geoknoesis.vericore.credential.models.VerifiableCredential
 import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import com.geoknoesis.vericore.testkit.integrity.IntegrityVerifier
 import com.geoknoesis.vericore.testkit.integrity.TestDataBuilders
-import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
+import com.geoknoesis.vericore.anchor.DefaultBlockchainAnchorRegistry
+import com.geoknoesis.vericore.json.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
+import java.time.Instant
 
 /**
- * Earth Observation (EO) Data Integrity Example
+ * Earth Observation (EO) Data Integrity Example - Complete Scenario
  * 
- * This example demonstrates how to:
- * 1. Create a DID for a data provider
- * 2. Generate metadata, provenance, and quality reports
- * 3. Create a Linkset connecting all artifacts
- * 4. Issue a Verifiable Credential referencing the Linkset
- * 5. Anchor the VC digest to a blockchain
- * 6. Verify the complete integrity chain
+ * This example demonstrates a comprehensive EO data integrity workflow using VeriCore:
+ * 1. Setup VeriCore with blockchain anchoring
+ * 2. Create DID for data provider
+ * 3. Generate metadata, provenance, and quality report artifacts
+ * 4. Create Linkset connecting all artifacts
+ * 5. Issue Verifiable Credential referencing the Linkset
+ * 6. Anchor VC digest to blockchain
+ * 7. Read back anchored data
+ * 8. Verify the complete integrity chain
+ * 9. Verify the Verifiable Credential
+ * 
+ * This scenario demonstrates:
+ * - DID creation and resolution
+ * - Artifact creation with cryptographic digests
+ * - Linkset creation for artifact linking
+ * - Verifiable Credential issuance
+ * - Blockchain anchoring
+ * - Integrity chain verification
+ * - Error handling with Result types and VeriCoreError
+ * 
+ * Run: `./gradlew :vericore-examples:runEarthObservation`
  */
 fun main() = runBlocking {
-    println("=== Earth Observation Data Integrity Workflow ===\n")
+    println("=".repeat(70))
+    println("Earth Observation - Complete Data Integrity Scenario")
+    println("=".repeat(70))
+    println()
     
-    // ============================================================
-    // Step 1: Setup Services
-    // ============================================================
-    println("Step 1: Setting up services...")
-    
-    // Key Management Service (KMS): Manages cryptographic keys
-    // Think of it as a secure keychain for your application
-    val kms = InMemoryKeyManagementService()
-    
-    // DID Method: Defines how to create and resolve DIDs
-    // We're using did:key, which is simple and self-contained
-    // (no external registration needed - perfect for testing)
-    val didMethod = DidKeyMockMethod(kms)
-    
-    // Blockchain Client: Handles anchoring data to blockchains
-    // We're using an in-memory client for testing (no real blockchain needed)
-    // In production, you'd use AlgorandBlockchainAnchorClient for real anchoring
+    // Step 1: Setup VeriCore with blockchain anchoring
+    println("Step 1: Setting up VeriCore with blockchain anchoring...")
     val chainId = "algorand:testnet"
+    
+    // Create VeriCore instance with in-memory blockchain client for testing
+    // In production, use AlgorandBlockchainAnchorClient or other blockchain clients
+    // IMPORTANT: Store the client reference so we can reuse it for verification
     val anchorClient = InMemoryBlockchainAnchorClient(chainId)
+    val vericore = VeriCore.create {
+        registerBlockchainClient(chainId, anchorClient)
+    }
+    println("✓ VeriCore instance created")
+    println("✓ Blockchain client registered: $chainId")
+    println("  - Mode: In-memory (for testing)")
+    println("  - Note: In production, use real blockchain clients (Algorand, Ethereum, etc.)")
+    println()
     
-    // Register services in scoped registries so VeriCore can find them
-    val didRegistry = DefaultDidMethodRegistry().apply { register(didMethod) }
-    val blockchainRegistry = DefaultBlockchainAnchorRegistry().apply { register(chainId, anchorClient) }
-    
-    println("✓ Services configured")
-    println("  - Key Management: In-memory")
-    println("  - DID Method: did:key")
-    println("  - Blockchain: In-memory (testnet)\n")
-    
-    // ============================================================
-    // Step 2: Create DID for Data Provider
-    // ============================================================
+    // Step 2: Create DID for data provider
     println("Step 2: Creating DID for data provider...")
+    println("\n📤 REQUEST: Create DID")
+    println("  Purpose: Generate a decentralized identifier for the data provider")
+    println("  Method: key (default)")
+    println("  Parameters: Using default DID creation options")
     
-    // A DID (Decentralized Identifier) is like a digital identity card
-    // It uniquely identifies the data provider without relying on a central authority
-    // Example: did:key:zABC123... (self-contained, no external registration)
+    val issuerResult = vericore.createDid()
     
-    // Create a DID using Ed25519 algorithm (modern, efficient cryptographic algorithm)
-    val issuerDoc = didMethod.createDid()
-    val issuerDid = issuerDoc.id
+    issuerResult.fold(
+        onSuccess = { did ->
+            println("\n📥 RESPONSE: DID Created Successfully")
+            println("  ✓ DID Document ID: ${did.id}")
+            println("  ✓ Verification Methods Count: ${did.verificationMethod.size}")
+            println("\n  DID Document Details:")
+            println("    - ID: ${did.id}")
+            println("    - Context: ${did.context.joinToString(", ")}")
+            println("    - Verification Methods: ${did.verificationMethod.size}")
+            println("    - Authentication: ${did.authentication.size}")
+            println("    - Services: ${did.service.size}")
+            println("\n  Verification Methods:")
+            did.verificationMethod.forEachIndexed { index, vm ->
+                println("    ${index + 1}. ID: ${vm.id}")
+                println("       Type: ${vm.type}")
+                println("       Controller: ${vm.controller}")
+            }
+        },
+        onFailure = { error ->
+            println("\n📥 RESPONSE: DID Creation Failed")
+            when (error) {
+                is VeriCoreError.DidMethodNotRegistered -> {
+                    println("  ✗ Error Type: DidMethodNotRegistered")
+                    println("  ✗ Method: ${error.method}")
+                    println("  ✗ Available methods: ${error.availableMethods.joinToString(", ")}")
+                }
+                else -> {
+                    println("  ✗ Error: ${error.message}")
+                    println("  ✗ Error Type: ${error::class.simpleName}")
+                }
+            }
+            return@runBlocking
+        }
+    )
+    val issuerDid = issuerResult.getOrThrow()
+    val issuerKeyId = issuerDid.verificationMethod.first().id
+    println("\n  ✓ Selected Issuer Key ID: $issuerKeyId")
     
-    // The DID Document contains:
-    // - The DID itself (unique identifier)
-    // - Verification methods (public keys for signing/verification)
-    // - Authentication capabilities
+    // Resolve the DID to verify it's accessible
+    println("\n📤 REQUEST: Resolve DID")
+    println("  Purpose: Verify DID is accessible and can be resolved")
+    println("  DID: ${issuerDid.id}")
     
-    println("✓ Created issuer DID: $issuerDid")
-    println("  Verification Methods: ${issuerDoc.verificationMethod.size}")
-    println("  This DID represents the data provider's identity\n")
+    val issuerResolution = vericore.resolveDid(issuerDid.id)
+    issuerResolution.fold(
+        onSuccess = { resolution ->
+            println("\n📥 RESPONSE: DID Resolution")
+            val document = resolution.document
+            if (document != null) {
+                println("  ✓ Status: Resolved successfully")
+                println("  ✓ DID Document ID: ${document.id}")
+                println("  ✓ Verification Methods: ${document.verificationMethod.size}")
+            } else {
+                println("  ⚠ Status: No document found (may be in-memory)")
+            }
+        },
+        onFailure = { error ->
+            println("\n📥 RESPONSE: DID Resolution Failed")
+            println("  ✗ Error: ${error.message}")
+        }
+    )
+    println()
     
-    // ============================================================
     // Step 3: Create Artifacts (Metadata, Provenance, Quality)
-    // ============================================================
     println("Step 3: Creating EO dataset artifacts...")
+    println("\n" + "─".repeat(70))
+    println("ARTIFACT TRACEABILITY - Complete Request/Response Logging")
+    println("─".repeat(70))
     
     // Artifacts are the actual data documents that describe the EO dataset.
     // Each artifact gets a cryptographic digest (hash) that acts as a fingerprint.
     // If the artifact changes, the digest changes - making tampering detectable.
     
     // 1. Metadata Artifact: Describes WHAT the data is
-    //    - Title, description, spatial/temporal coverage
-    //    - Follows ISO 19115 / DCAT standards for geospatial metadata
+    println("\n📤 REQUEST: Create Metadata Artifact")
+    println("  Purpose: Create metadata document describing WHAT the EO dataset is")
+    println("  Standard: ISO 19115 / DCAT (geospatial metadata)")
+    println("  Parameters:")
+    println("    - ID: metadata-1")
+    println("    - Title: Sentinel-2 L2A Dataset - Central Europe")
+    println("    - Description: Atmospherically corrected Sentinel-2 Level 2A product covering Central Europe region")
+    
     val (metadataArtifact, metadataDigest) = TestDataBuilders.createMetadataArtifact(
         id = "metadata-1",
-        title = "Sentinel-2 L2A Dataset",
-        description = "Atmospherically corrected Sentinel-2 Level 2A product covering area XYZ"
+        title = "Sentinel-2 L2A Dataset - Central Europe",
+        description = "Atmospherically corrected Sentinel-2 Level 2A product covering Central Europe region"
     )
-    // metadataDigest is a hash like "uABC123..." - a unique fingerprint of the metadata
+    
+    println("\n📥 RESPONSE: Metadata Artifact Created")
+    println("  ✓ Artifact ID: ${metadataArtifact["id"]?.jsonPrimitive?.content}")
+    println("  ✓ Artifact Type: ${metadataArtifact["type"]?.jsonPrimitive?.content}")
+    println("  ✓ Digest (Multibase): $metadataDigest")
+    println("  ✓ Media Type: ${metadataArtifact["mediaType"]?.jsonPrimitive?.content ?: "application/json"}")
+    println("\n  Full Artifact Document:")
+    val artifactJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
+    println(artifactJson.encodeToString(JsonObject.serializer(), metadataArtifact))
     
     // 2. Provenance Artifact: Describes WHERE the data came from
-    //    - Who collected it, when, how
-    //    - Follows PROV (Provenance) standard
+    println("\n" + "─".repeat(70))
+    println("\n📤 REQUEST: Create Provenance Artifact")
+    println("  Purpose: Create provenance document describing WHERE the data came from")
+    println("  Standard: PROV (Provenance Ontology)")
+    println("  Parameters:")
+    println("    - ID: provenance-1")
+    println("    - Activity: EO Data Collection")
+    println("    - Agent: ${issuerDid.id}")
+    
     val (provenanceArtifact, provenanceDigest) = TestDataBuilders.createProvenanceArtifact(
         id = "provenance-1",
         activity = "EO Data Collection",
-        agent = issuerDid  // Links back to the DID we created in Step 2
+        agent = issuerDid.id  // Links back to the DID we created in Step 2
     )
-    // provenanceDigest is a hash of the provenance information
+    
+    println("\n📥 RESPONSE: Provenance Artifact Created")
+    println("  ✓ Artifact ID: ${provenanceArtifact["id"]?.jsonPrimitive?.content}")
+    println("  ✓ Artifact Type: ${provenanceArtifact["type"]?.jsonPrimitive?.content}")
+    println("  ✓ Digest (Multibase): $provenanceDigest")
+    println("  ✓ Media Type: ${provenanceArtifact["mediaType"]?.jsonPrimitive?.content ?: "application/json"}")
+    println("\n  Full Artifact Document:")
+    println(artifactJson.encodeToString(JsonObject.serializer(), provenanceArtifact))
     
     // 3. Quality Report Artifact: Describes HOW GOOD the data is
-    //    - Quality scores, metrics, assessments
-    //    - Follows DQV (Data Quality Vocabulary) standard
+    println("\n" + "─".repeat(70))
+    println("\n📤 REQUEST: Create Quality Report Artifact")
+    println("  Purpose: Create quality report describing HOW GOOD the data is")
+    println("  Standard: DQV (Data Quality Vocabulary)")
+    println("  Parameters:")
+    println("    - ID: quality-1")
+    println("    - Quality Score: 0.95 (95%)")
+    println("    - Metrics:")
+    val qualityMetrics = mapOf(
+        "completeness" to 0.98,      // 98% complete
+        "accuracy" to 0.92,           // 92% accurate
+        "temporalConsistency" to 0.96, // 96% temporally consistent
+        "spatialAccuracy" to 0.94,    // 94% spatially accurate
+        "cloudCoverage" to 0.05       // 5% cloud coverage
+    )
+    qualityMetrics.forEach { (key, value) ->
+        println("      - $key: $value")
+    }
+    
     val (qualityArtifact, qualityDigest) = TestDataBuilders.createQualityReportArtifact(
         id = "quality-1",
         qualityScore = 0.95,  // 95% quality score
-        metrics = mapOf(
-            "completeness" to 0.98,      // 98% complete
-            "accuracy" to 0.92,           // 92% accurate
-            "temporalConsistency" to 0.96 // 96% temporally consistent
-        )
+        metrics = qualityMetrics
     )
-    // qualityDigest is a hash of the quality information
     
-    println("✓ Created artifacts:")
-    println("  - Metadata: $metadataDigest")
-    println("  - Provenance: $provenanceDigest")
-    println("  - Quality Report: $qualityDigest")
-    println("  Each artifact has a unique digest (fingerprint) that proves its integrity\n")
+    println("\n📥 RESPONSE: Quality Report Artifact Created")
+    println("  ✓ Artifact ID: ${qualityArtifact["id"]?.jsonPrimitive?.content}")
+    println("  ✓ Artifact Type: ${qualityArtifact["type"]?.jsonPrimitive?.content}")
+    println("  ✓ Digest (Multibase): $qualityDigest")
+    println("  ✓ Media Type: ${qualityArtifact["mediaType"]?.jsonPrimitive?.content ?: "application/json"}")
+    println("\n  Full Artifact Document:")
+    println(artifactJson.encodeToString(JsonObject.serializer(), qualityArtifact))
     
-    // ============================================================
+    println("\n" + "─".repeat(70))
+    println("✓ All artifacts created successfully")
+    println("  Summary:")
+    println("    - Metadata Artifact: $metadataDigest")
+    println("    - Provenance Artifact: $provenanceDigest")
+    println("    - Quality Report Artifact: $qualityDigest")
+    println("  Each artifact has a unique digest (fingerprint) that proves its integrity")
+    println("─".repeat(70))
+    println()
+    
     // Step 4: Create Linkset
-    // ============================================================
     println("Step 4: Creating Linkset...")
+    println("\n📤 REQUEST: Create Linkset")
+    println("  Purpose: Create a Linkset that connects all artifacts together")
+    println("  Standard: JSON-LD Linkset (W3C)")
+    println("  Linkset ID: linkset-eo-sentinel2-l2a-xyz")
+    println("  Links to create:")
+    println("    1. metadata-1 (Digest: $metadataDigest)")
+    println("    2. provenance-1 (Digest: $provenanceDigest)")
+    println("    3. quality-1 (Digest: $qualityDigest)")
     
     // A Linkset is like a table of contents that links all artifacts together.
     // It contains references (links) to each artifact along with its digest.
     // This allows us to verify that all artifacts are present and untampered.
     
     // Create links to each artifact
-    // Each link contains:
-    // - href: Reference to the artifact (like a filename or URL)
-    // - digestMultibase: The digest (fingerprint) of the artifact
-    // - type: What kind of artifact it is
     val links = listOf(
         TestDataBuilders.buildLink(
             href = "metadata-1",
-            digestMultibase = metadataDigest,  // Reference to metadata digest from Step 3
+            digestMultibase = metadataDigest,
             type = "Metadata"
         ),
         TestDataBuilders.buildLink(
             href = "provenance-1",
-            digestMultibase = provenanceDigest,  // Reference to provenance digest
+            digestMultibase = provenanceDigest,
             type = "Provenance"
         ),
         TestDataBuilders.buildLink(
             href = "quality-1",
-            digestMultibase = qualityDigest,  // Reference to quality digest
+            digestMultibase = qualityDigest,
             type = "QualityReport"
         )
     )
     
     // IMPORTANT: We compute the Linkset digest BEFORE adding it to the Linkset
     // This avoids a circular dependency (digest depends on Linkset, but Linkset contains digest)
-    // We build the Linkset without the digest field, compute the digest, then add it
+    // CRITICAL: The digest must be computed from the same structure that will be verified
+    // The verifier removes only "digestMultibase", so we must include "id" and "@context" and "links"
+    val linksetId = "linkset-eo-sentinel2-l2a-xyz"
     val linksetWithoutDigest = buildJsonObject {
-        put("@context", "https://www.w3.org/ns/json-ld#")  // JSON-LD context
+        put("id", linksetId)  // Must include id field - verifier will include it when recomputing
+        put("@context", "https://www.w3.org/ns/json-ld#")
         put("links", Json.encodeToJsonElement(links))
     }
     
@@ -175,18 +285,36 @@ fun main() = runBlocking {
     // Now build the complete Linkset WITH the digest
     val linksetWithDigest = TestDataBuilders.buildLinkset(
         digestMultibase = linksetDigest,
-        links = links
+        links = links,
+        linksetId = linksetId
     )
     
-    println("✓ Created Linkset:")
-    println("  - Digest: $linksetDigest")
-    println("  - Links: ${links.size}")
-    println("  The Linkset connects all artifacts and has its own digest\n")
+    println("\n📥 RESPONSE: Linkset Created")
+    println("  ✓ Linkset ID: $linksetId")
+    println("  ✓ Digest (Multibase): $linksetDigest")
+    println("  ✓ Number of Links: ${links.size}")
+    println("\n  Full Linkset Document:")
+    println(artifactJson.encodeToString(JsonObject.serializer(), linksetWithDigest))
+    println("\n  Link Details:")
+    links.forEachIndexed { index, link ->
+        println("    ${index + 1}. HREF: ${link.href}")
+        println("       Type: ${link.type}")
+        println("       Digest: ${link.digestMultibase}")
+    }
+    println()
     
-    // ============================================================
-    // Step 5: Create Verifiable Credential
-    // ============================================================
-    println("Step 5: Creating Verifiable Credential...")
+    // Step 5: Issue Verifiable Credential
+    println("Step 5: Issuing Verifiable Credential...")
+    println("\n📤 REQUEST: Issue Verifiable Credential")
+    println("  Purpose: Issue a verifiable credential attesting to the EO dataset")
+    println("  What it attests:")
+    println("    - A specific EO dataset exists")
+    println("    - It has associated metadata, provenance, and quality reports")
+    println("    - These are linked together via the Linkset")
+    println("  Parameters:")
+    println("    - Issuer DID: ${issuerDid.id}")
+    println("    - Issuer Key ID: $issuerKeyId")
+    println("    - Credential Types: EarthObservationCredential, VerifiableCredential")
     
     // A Verifiable Credential (VC) is like a digital certificate that attests to something.
     // In our case, it attests that:
@@ -195,10 +323,12 @@ fun main() = runBlocking {
     // - These are linked together via the Linkset
     
     // The "subject" is what the credential is about - our EO dataset
-    val subject = buildJsonObject {
+    // We include the Linkset digest in the credential subject
+    val credentialSubject = buildJsonObject {
         put("id", "eo-dataset-sentinel2-l2a-xyz")
         put("type", "EarthObservationDataset")
-        put("title", "Sentinel-2 L2A Dataset")
+        put("title", "Sentinel-2 L2A Dataset - Central Europe")
+        put("description", "Atmospherically corrected Sentinel-2 Level 2A product")
         put("spatialCoverage", buildJsonObject {
             put("type", "BoundingBox")
             put("coordinates", buildJsonArray {
@@ -210,77 +340,295 @@ fun main() = runBlocking {
             put("start", "2024-01-15T10:00:00Z")
             put("end", "2024-01-15T10:20:00Z")
         })
+        put("linksetDigest", linksetDigest)  // Reference to the Linkset digest
+        put("datasetProvider", issuerDid.id)  // Reference to the data provider
+    }
+    println("  Credential Subject:")
+    val subjectJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
+    println(subjectJson.encodeToString(JsonObject.serializer(), credentialSubject))
+    
+    // Issue the credential using VeriCore facade
+    val credentialResult = vericore.issueCredential(
+        issuerDid = issuerDid.id,
+        issuerKeyId = issuerKeyId,
+        credentialSubject = credentialSubject,
+        types = listOf("EarthObservationCredential", "VerifiableCredential")
+    )
+    
+    credentialResult.fold(
+        onSuccess = { credential ->
+            println("\n📥 RESPONSE: Credential Issued Successfully")
+            println("  ✓ Credential ID: ${credential.id}")
+            println("  ✓ Issuer: ${credential.issuer}")
+            println("  ✓ Types: ${credential.type.joinToString(", ")}")
+            println("  ✓ Issuance Date: ${credential.issuanceDate}")
+            println("  ✓ Has Proof: ${credential.proof != null}")
+            val proof = credential.proof
+            if (proof != null) {
+                println("  ✓ Proof Type: ${proof.type}")
+                println("  ✓ Proof Purpose: ${proof.proofPurpose}")
+            }
+            println("  ✓ Linkset Digest Reference: $linksetDigest")
+            println("\n  Full Credential Document:")
+            val credentialJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
+            println(credentialJson.encodeToString(VerifiableCredential.serializer(), credential))
+        },
+        onFailure = { error ->
+            println("\n📥 RESPONSE: Credential Issuance Failed")
+            when (error) {
+                is VeriCoreError.InvalidDidFormat -> {
+                    println("  ✗ Error Type: InvalidDidFormat")
+                    println("  ✗ Reason: ${error.reason}")
+                }
+                is VeriCoreError.DidMethodNotRegistered -> {
+                    println("  ✗ Error Type: DidMethodNotRegistered")
+                    println("  ✗ Method: ${error.method}")
+                    println("  ✗ Available methods: ${error.availableMethods.joinToString(", ")}")
+                }
+                is VeriCoreError.CredentialInvalid -> {
+                    println("  ✗ Error Type: CredentialInvalid")
+                    println("  ✗ Reason: ${error.reason}")
+                    println("  ✗ Field: ${error.field}")
+                }
+                else -> {
+                    println("  ✗ Error: ${error.message}")
+                    println("  ✗ Error Type: ${error::class.simpleName}")
+                }
+            }
+            return@runBlocking
+        }
+    )
+    val credential = credentialResult.getOrThrow()
+    println()
+    
+    // Step 6: Verify the credential
+    println("Step 6: Verifying credential...")
+    println("\n📤 REQUEST: Verify Verifiable Credential")
+    println("  Purpose: Verify the cryptographic proof and validity of the credential")
+    println("  Credential ID: ${credential.id}")
+    println("  Checks performed:")
+    println("    - Cryptographic proof verification")
+    println("    - Issuer DID resolution and validation")
+    println("    - Expiration check")
+    println("    - Revocation status check")
+    
+    val verificationResult = vericore.verifyCredential(credential)
+    
+    verificationResult.fold(
+        onSuccess = { verification ->
+            println("\n📥 RESPONSE: Credential Verification Result")
+            if (verification.valid) {
+                println("  ✓ Overall Status: VALID")
+                println("  ✓ Proof Valid: ${verification.proofValid}")
+                println("  ✓ Issuer Valid: ${verification.issuerValid}")
+                println("  ✓ Not Expired: ${verification.notExpired}")
+                println("  ✓ Not Revoked: ${verification.notRevoked}")
+                if (verification.warnings.isNotEmpty()) {
+                    println("  ⚠ Warnings:")
+                    verification.warnings.forEach { warning ->
+                        println("    - $warning")
+                    }
+                }
+            } else {
+                println("  ✗ Overall Status: INVALID")
+                println("  ✗ Errors:")
+                verification.errors.forEach { error ->
+                    println("    - $error")
+                }
+                if (verification.warnings.isNotEmpty()) {
+                    println("  ⚠ Warnings:")
+                    verification.warnings.forEach { warning ->
+                        println("    - $warning")
+                    }
+                }
+                return@runBlocking
+            }
+        },
+        onFailure = { error ->
+            println("\n📥 RESPONSE: Verification Failed")
+            when (error) {
+                is VeriCoreError.CredentialInvalid -> {
+                    println("  ✗ Error Type: CredentialInvalid")
+                    println("  ✗ Reason: ${error.reason}")
+                    println("  ✗ Field: ${error.field}")
+                }
+                else -> {
+                    println("  ✗ Error: ${error.message}")
+                    println("  ✗ Error Type: ${error::class.simpleName}")
+                }
+            }
+            return@runBlocking
+        }
+    )
+    println()
+    
+    // Step 7: Anchor VC digest to blockchain
+    println("Step 7: Anchoring VC digest to blockchain...")
+    println("\n📤 REQUEST: Anchor Data to Blockchain")
+    println("  Purpose: Store VC digest immutably on blockchain for timestamping and integrity")
+    println("  Chain ID: $chainId")
+    println("  Mode: In-memory (for testing)")
+    println("  Note: In production, this would write to a real blockchain")
+    
+    // Convert credential to JsonElement for anchoring
+    val anchorJson = Json {
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+    }
+    val credentialJson = anchorJson.encodeToJsonElement(VerifiableCredential.serializer(), credential)
+    
+    // Add linksetDigest at top level for integrity verification
+    // This must be done BEFORE computing the VC digest
+    val credentialWithLinksetRef = buildJsonObject {
+        credentialJson.jsonObject.entries.forEach { (key, value) ->
+            put(key, value)
+        }
+        // Add linkset digest reference at top level for verification
+        put("linksetDigest", linksetDigest)
     }
     
-    // IMPORTANT: We compute the VC digest BEFORE adding it to the VC
-    // Similar to the Linkset, we avoid circular dependency by computing digest first
-    // Use a fixed timestamp for consistent digest computation (in real apps, use actual timestamp)
-    val fixedTimestamp = "2024-01-15T10:30:00Z"
-    val vcWithoutDigest = buildJsonObject {
-        put("id", "vc-eo-sentinel2-l2a-xyz")
-        put("type", buildJsonArray { add("VerifiableCredential") })
-        put("issuer", issuerDid)  // Who issued this credential (the DID from Step 2)
-        put("credentialSubject", subject)  // What it's about (the EO dataset)
-        put("linksetDigest", linksetDigest)  // Reference to the Linkset digest from Step 4
-        put("issued", fixedTimestamp)  // When it was issued
+    // Compute VC digest for anchoring (without metadata fields)
+    val vcWithoutMetadata = buildJsonObject {
+        credentialWithLinksetRef.entries.forEach { (key, value) ->
+            if (key != "digestMultibase" && key != "evidence" && key != "credentialStatus") {
+                put(key, value)
+            }
+        }
     }
+    val vcDigest = DigestUtils.sha256DigestMultibase(vcWithoutMetadata)
     
-    // Compute the digest of the VC (this becomes the VC's fingerprint)
-    val vcDigest = DigestUtils.sha256DigestMultibase(vcWithoutDigest)
-    
-    // Now build the complete VC WITH the digest
-    val vcWithDigest = buildJsonObject {
-        put("id", "vc-eo-sentinel2-l2a-xyz")
-        put("type", buildJsonArray { add("VerifiableCredential") })
-        put("issuer", issuerDid)
-        put("credentialSubject", subject)
-        put("digestMultibase", vcDigest)  // The VC's own digest
-        put("linksetDigest", linksetDigest)  // Reference to Linkset (for verification)
-        put("issued", fixedTimestamp)
+    // Compute VC digest for anchoring
+    // In production, you might want to anchor just the digest to save space
+    val vcDigestPayload = buildJsonObject {
+        put("vcId", credential.id)
+        put("vcDigest", vcDigest)
+        put("digestMultibase", vcDigest) // Also include as digestMultibase for verifier
+        put("issuer", issuerDid.id)
+        put("linksetDigest", linksetDigest)
+        put("timestamp", Instant.now().toString())
     }
+    println("  Payload to anchor:")
+    println(anchorJson.encodeToString(JsonObject.serializer(), vcDigestPayload))
     
-    println("✓ Created Verifiable Credential:")
-    println("  - VC ID: vc-eo-sentinel2-l2a-xyz")
-    println("  - VC Digest: $vcDigest")
-    println("  - Linkset Digest Reference: $linksetDigest")
-    println("  The VC attests to the dataset and references the Linkset\n")
+    val anchorResult = vericore.anchor(
+        data = vcDigestPayload,
+        serializer = JsonElement.serializer(),
+        chainId = chainId
+    )
     
-    // ============================================================
-    // Step 6: Anchor VC Digest to Blockchain
-    // ============================================================
-    println("Step 6: Anchoring VC digest to blockchain...")
+    anchorResult.fold(
+        onSuccess = { anchor ->
+            println("\n📥 RESPONSE: Data Anchored Successfully")
+            println("  ✓ Chain ID: ${anchor.ref.chainId}")
+            println("  ✓ Transaction Hash: ${anchor.ref.txHash}")
+            println("  ✓ Media Type: ${anchor.mediaType}")
+            println("  ✓ Timestamp: ${anchor.timestamp}")
+            println("  ✓ Anchor Reference:")
+            println("    - Chain ID: ${anchor.ref.chainId}")
+            println("    - Transaction Hash: ${anchor.ref.txHash}")
+            anchor.ref.contract?.let {
+                println("    - Contract: $it")
+            }
+        },
+        onFailure = { error ->
+            println("\n📥 RESPONSE: Anchoring Failed")
+            when (error) {
+                is VeriCoreError.ChainNotRegistered -> {
+                    println("  ✗ Error Type: ChainNotRegistered")
+                    println("  ✗ Chain ID: ${error.chainId}")
+                    println("  ✗ Available chains: ${error.availableChains.joinToString(", ")}")
+                }
+                is VeriCoreError.ValidationFailed -> {
+                    println("  ✗ Error Type: ValidationFailed")
+                    println("  ✗ Reason: ${error.reason}")
+                    println("  ✗ Field: ${error.field}")
+                    println("  ✗ Value: ${error.value}")
+                }
+                else -> {
+                    println("  ✗ Error: ${error.message}")
+                    println("  ✗ Error Type: ${error::class.simpleName}")
+                    if (error is VeriCoreError && error.context.isNotEmpty()) {
+                        println("  Context:")
+                        error.context.forEach { (key, value) ->
+                            println("    - $key: $value")
+                        }
+                    }
+                }
+            }
+            return@runBlocking
+        }
+    )
+    val anchor = anchorResult.getOrThrow()
+    println()
     
-    // Blockchain anchoring provides tamper-proof, timestamped proof that the VC existed
-    // at a specific point in time. We anchor the VC digest (not the full VC) to save space
-    // and costs on the blockchain.
+    // Step 8: Read back anchored data
+    println("Step 8: Reading anchored data from blockchain...")
+    println("\n📤 REQUEST: Read Anchored Data from Blockchain")
+    println("  Purpose: Retrieve and verify the anchored data from blockchain")
+    println("  Anchor Reference:")
+    println("    - Chain ID: ${anchor.ref.chainId}")
+    println("    - Transaction Hash: ${anchor.ref.txHash}")
     
-    // Create a payload containing the essential information
-    val digestPayload = buildJsonObject {
-        put("vcId", "vc-eo-sentinel2-l2a-xyz")  // Which VC this is
-        put("vcDigest", vcDigest)  // The fingerprint of the VC (from Step 5)
-        put("issuer", issuerDid)  // Who issued it
-        put("timestamp", fixedTimestamp)  // When it was anchored
-    }
+    val readResult = vericore.readAnchor<JsonElement>(
+        ref = anchor.ref,
+        serializer = JsonElement.serializer()
+    )
     
-    // Write the payload to the blockchain
-    // This creates an immutable record that proves the VC existed at this time
-    val anchorResult = anchorClient.writePayload(digestPayload)
+    readResult.fold(
+        onSuccess = { readJson ->
+            println("\n📥 RESPONSE: Anchored Data Retrieved")
+            println("  ✓ Status: Successfully read from blockchain")
+            println("  ✓ VC ID: ${readJson.jsonObject["vcId"]?.jsonPrimitive?.content}")
+            println("  ✓ VC Digest: ${readJson.jsonObject["vcDigest"]?.jsonPrimitive?.content}")
+            println("  ✓ Issuer: ${readJson.jsonObject["issuer"]?.jsonPrimitive?.content}")
+            println("  ✓ Linkset Digest: ${readJson.jsonObject["linksetDigest"]?.jsonPrimitive?.content}")
+            println("  ✓ Timestamp: ${readJson.jsonObject["timestamp"]?.jsonPrimitive?.content}")
+            println("\n  Full Anchored Payload:")
+            println(anchorJson.encodeToString(JsonObject.serializer(), readJson.jsonObject))
+            
+            // Verify data integrity
+            val readVcDigest = readJson.jsonObject["vcDigest"]?.jsonPrimitive?.content
+            println("\n  Integrity Verification:")
+            println("    Expected VC Digest: $vcDigest")
+            println("    Retrieved VC Digest: $readVcDigest")
+            if (readVcDigest == vcDigest) {
+                println("    ✓ Status: MATCH - Data integrity verified")
+            } else {
+                println("    ✗ Status: MISMATCH - Data integrity check failed")
+                return@runBlocking
+            }
+        },
+        onFailure = { error ->
+            println("\n📥 RESPONSE: Read Anchored Data Failed")
+            when (error) {
+                is VeriCoreError.ChainNotRegistered -> {
+                    println("  ✗ Error Type: ChainNotRegistered")
+                    println("  ✗ Chain ID: ${error.chainId}")
+                    println("  ✗ Available chains: ${error.availableChains.joinToString(", ")}")
+                }
+                else -> {
+                    println("  ✗ Error: ${error.message}")
+                    println("  ✗ Error Type: ${error::class.simpleName}")
+                }
+            }
+            return@runBlocking
+        }
+    )
+    println()
     
-    // The anchor result contains:
-    // - ref: A reference to find this data on the blockchain
-    // - payload: What was stored
-    // - timestamp: When it was stored
-    
-    println("✓ Anchored to blockchain:")
-    println("  - Chain ID: ${anchorResult.ref.chainId}")
-    println("  - Transaction Hash: ${anchorResult.ref.txHash}")
-    println("  - Timestamp: ${anchorResult.timestamp}")
-    println("  The VC digest is now immutably stored on the blockchain\n")
-    
-    // ============================================================
-    // Step 7: Verify Integrity Chain
-    // ============================================================
-    println("Step 7: Verifying integrity chain...")
+    // Step 9: Verify integrity chain
+    println("Step 9: Verifying integrity chain...")
+    println("\n📤 REQUEST: Verify Complete Integrity Chain")
+    println("  Purpose: Verify the complete integrity chain from blockchain → VC → Linkset → Artifacts")
+    println("  Verification Flow:")
+    println("    1. Verify VC digest matches what's stored on the blockchain")
+    println("    2. Verify Linkset digest matches the reference in the VC")
+    println("    3. Verify each artifact's digest matches its link in the Linkset")
+    println("  Inputs:")
+    println("    - VC with digest: ${credential.id}")
+    println("    - Linkset ID: linkset-eo-sentinel2-l2a-xyz")
+    println("    - Artifacts: metadata-1, provenance-1, quality-1")
+    println("    - Anchor Reference: ${anchor.ref.txHash}")
     
     // Verification checks the entire integrity chain from bottom to top:
     // 1. Verify each artifact's digest matches its link in the Linkset
@@ -293,47 +641,153 @@ fun main() = runBlocking {
         "provenance-1" to provenanceArtifact,
         "quality-1" to qualityArtifact
     )
+    println("  Artifacts Map:")
+    artifacts.forEach { (id, artifact) ->
+        val artifactDigest = artifact["digestMultibase"]?.jsonPrimitive?.content ?: "N/A"
+        println("    - $id: $artifactDigest")
+    }
+    
+    // Use the same VC structure that was used for anchoring (with linksetDigest at top level)
+    // Add VC digest to the VC object for verification
+    val vcWithDigest = buildJsonObject {
+        credentialWithLinksetRef.entries.forEach { (key, value) ->
+            put(key, value)
+        }
+        put("digestMultibase", vcDigest)
+    }
+    
+    // Debug: Show what we're verifying
+    println("  Debug Information:")
+    println("    - VC Digest (computed for anchoring): $vcDigest")
+    println("    - Linkset Digest (expected in VC): $linksetDigest")
+    println("    - VC has linksetDigest at top level: ${vcWithDigest["linksetDigest"] != null}")
+    val vcLinksetRef = vcWithDigest["linksetDigest"]?.jsonPrimitive?.content
+    println("    - VC linksetDigest value: $vcLinksetRef")
+    if (vcLinksetRef != linksetDigest) {
+        println("    ⚠ WARNING: VC linksetDigest ($vcLinksetRef) does not match expected ($linksetDigest)")
+    }
+    
+    // CRITICAL: The blockchain registry must use the SAME client instance that was used for anchoring
+    // Since InMemoryBlockchainAnchorClient stores data in memory, each new instance is empty
+    // We stored the client reference at the beginning, so we can reuse it here
+    // In production with real blockchains, this wouldn't be an issue as the blockchain is shared
+    val verificationRegistry = DefaultBlockchainAnchorRegistry().apply {
+        register(chainId, anchorClient)  // Use the SAME client instance
+    }
     
     // Perform the complete integrity verification
-    // This checks:
-    // - Blockchain anchor matches VC digest
-    // - VC references Linkset correctly
-    // - Linkset references artifacts correctly
-    // - Each artifact's content matches its digest
-    val verificationResult = IntegrityVerifier.verifyIntegrityChain(
+    val integrityResult = IntegrityVerifier.verifyIntegrityChain(
         vc = vcWithDigest,
         linkset = linksetWithDigest,
         artifacts = artifacts,
-        anchorRef = anchorResult.ref,
-        registry = blockchainRegistry
+        anchorRef = anchor.ref,
+        registry = verificationRegistry
     )
     
     // Display verification results
-    if (verificationResult.valid) {
-        println("✓ Integrity chain verification PASSED!")
-        println("\nVerification Steps:")
-        verificationResult.steps.forEachIndexed { index, step ->
-            println("  ${index + 1}. ${step.name}: ${if (step.valid) "✓ PASS" else "✗ FAIL"}")
+    println("\n📥 RESPONSE: Integrity Chain Verification Result")
+    if (integrityResult.valid) {
+        println("  ✓ Overall Status: PASSED")
+        println("  ✓ All verification steps completed successfully")
+        println("\n  Detailed Verification Steps:")
+        integrityResult.steps.forEachIndexed { index, step ->
+            println("    Step ${index + 1}: ${step.name}")
+            println("      Status: ${if (step.valid) "✓ PASS" else "✗ FAIL"}")
             if (step.digest != null) {
-                println("     Digest: ${step.digest}")
+                println("      Digest: ${step.digest}")
+            }
+            if (!step.valid && step.error != null) {
+                println("      Error: ${step.error}")
             }
         }
-        println("\nAll checks passed! The data integrity chain is valid.")
+        println("\n  ✓ Conclusion: All checks passed! The data integrity chain is valid.")
     } else {
-        println("✗ Integrity chain verification FAILED!")
-        verificationResult.steps.forEach { step ->
-            if (!step.valid) {
-                println("  ✗ ${step.name}: ${step.error}")
+        println("  ✗ Overall Status: FAILED")
+        println("  ✗ One or more verification steps failed")
+        println("\n  Detailed Verification Steps:")
+        integrityResult.steps.forEachIndexed { index, step ->
+            println("    Step ${index + 1}: ${step.name}")
+            println("      Status: ${if (step.valid) "✓ PASS" else "✗ FAIL"}")
+            if (step.digest != null) {
+                println("      Digest: ${step.digest}")
+            }
+            if (!step.valid && step.error != null) {
+                println("      Error: ${step.error}")
             }
         }
-        println("\nOne or more checks failed. The data may have been tampered with.")
+        println("\n  ✗ Conclusion: One or more checks failed. The data may have been tampered with.")
+        return@runBlocking
     }
+    println()
     
-    println("\n=== Workflow Complete ===")
-    println("Summary:")
-    println("  - Issuer DID: $issuerDid")
-    println("  - VC Digest: $vcDigest")
-    println("  - Blockchain Anchor: ${anchorResult.ref.txHash}")
-    println("  - Integrity Status: ${if (verificationResult.valid) "VERIFIED" else "FAILED"}")
+    // Step 10: Demonstrate error handling scenarios
+    println("Step 10: Demonstrating error handling...")
+    
+    // Test invalid chain ID
+    println("  Testing invalid chain ID...")
+    val invalidChainResult = vericore.anchor(
+        data = buildJsonObject { put("test", "data") },
+        serializer = JsonElement.serializer(),
+        chainId = "invalid:chain:id"
+    )
+    
+    invalidChainResult.fold(
+        onSuccess = { 
+            println("  ⚠ Unexpected success with invalid chain ID")
+        },
+        onFailure = { error ->
+            when (error) {
+                is VeriCoreError.ChainNotRegistered -> {
+                    println("  ✓ Correctly rejected invalid chain ID: ${error.chainId}")
+                    println("    Available chains: ${error.availableChains.joinToString(", ")}")
+                }
+                is VeriCoreError.ValidationFailed -> {
+                    println("  ✓ Correctly rejected invalid chain ID format: ${error.reason}")
+                }
+                else -> {
+                    println("  ✓ Error handling works: ${error.message}")
+                }
+            }
+        }
+    )
+    println()
+    
+    // Summary
+    println("=".repeat(70))
+    println("Scenario Summary")
+    println("=".repeat(70))
+    println("✓ VeriCore instance created with blockchain integration")
+    println("✓ Issuer DID: ${issuerDid.id}")
+    println("✓ Issuer Key ID: $issuerKeyId")
+    println("✓ Artifacts created: 3")
+    println("  - Metadata: $metadataDigest")
+    println("  - Provenance: $provenanceDigest")
+    println("  - Quality Report: $qualityDigest")
+    println("✓ Linkset created: $linksetDigest")
+    println("  - Links: ${links.size}")
+    println("✓ Credential issued: ${credential.id}")
+    println("  - Types: ${credential.type.joinToString(", ")}")
+    println("  - Has proof: ${credential.proof != null}")
+    println("✓ Credential verified: ${verificationResult.getOrNull()?.valid ?: false}")
+    println("  - Proof valid: ${verificationResult.getOrNull()?.proofValid ?: false}")
+    println("  - Issuer valid: ${verificationResult.getOrNull()?.issuerValid ?: false}")
+    println("✓ Credential digest anchored to blockchain: ${anchor.ref.txHash}")
+    println("  - Chain ID: ${anchor.ref.chainId}")
+    println("  - Transaction Hash: ${anchor.ref.txHash}")
+    println("✓ Data integrity verified: VC digest matches anchored data")
+    println("✓ Integrity chain verified: ${integrityResult.valid}")
+    println("  - Verification steps: ${integrityResult.steps.size}")
+    println("  - All steps passed: ${integrityResult.steps.all { it.valid }}")
+    println()
+    println("=".repeat(70))
+    println("✅ Complete Earth Observation Scenario Successful!")
+    println("=".repeat(70))
+    println()
+    println("Next Steps:")
+    println("  - In production, use real blockchain clients (Algorand, Ethereum, etc.)")
+    println("  - Configure proper DID methods for your use case")
+    println("  - Implement artifact storage and retrieval mechanisms")
+    println("  - Add monitoring and logging for production deployments")
+    println("  - Implement proper error handling and retry logic")
+    println("=".repeat(70))
 }
-

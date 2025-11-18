@@ -1,6 +1,12 @@
-# Contributing to VeriCore Docs
+# Contributing to VeriCore
 
-VeriCore’s documentation is authored and maintained by **Geoknoesis LLC**, and community contributions are welcome. Use this guide as your checklist when filing issues or opening pull requests—every section explains the intent so that newcomers can match the house style quickly.
+VeriCore's documentation and code are authored and maintained by **Geoknoesis LLC**, and community contributions are welcome. Use this guide as your checklist when filing issues or opening pull requests—every section explains the intent so that newcomers can match the house style quickly.
+
+## Creating Plugins
+
+If you want to create custom plugins for VeriCore (DID methods, blockchain clients, proof generators, etc.), see the comprehensive guide:
+
+- **[Creating Plugins](creating-plugins.md)** - Complete guide for implementing all plugin interfaces
 
 ## Filing Issues
 
@@ -16,7 +22,7 @@ VeriCore’s documentation is authored and maintained by **Geoknoesis LLC**, and
 - **Formatting** – use Markdown with ATX headings. Prefer code fences with language tags (`kotlin`, `bash`, `json`).
 - **Terminology** – treat “VeriCore” as the product name; refer to modules in inline code (`vericore-trust`).
 - **Snippets** – every code block must be bracketed by prose such as **What this does**, **Result**, or **Design significance**. Keep explanations *outside* the fenced block.
-- **Links** – make sure all relative links resolve from within `docs/`. Manual link sweeps are expected until the automated checker (tracked in `layout/migration-roadmap.md`) lands.
+- **Links** – make sure all relative links resolve from within `docs/`. Manual link sweeps are expected until automated checking is implemented.
 
 ## Structure
 

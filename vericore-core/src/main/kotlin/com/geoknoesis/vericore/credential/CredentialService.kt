@@ -134,7 +134,6 @@ data class CredentialVerificationOptions(
     val checkTrustRegistry: Boolean = false,
     val trustRegistry: Any? = null, // TrustRegistry - using Any to avoid dependency
     val verifyDelegation: Boolean = false,
-    val didResolver: com.geoknoesis.vericore.credential.did.CredentialDidResolver? = null,
     val validateProofPurpose: Boolean = false,
     val additionalOptions: Map<String, Any?> = emptyMap()
 )

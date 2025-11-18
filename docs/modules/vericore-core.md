@@ -17,6 +17,8 @@ been extracted into the new `vericore-spi` and `vericore-trust` modules.
 - **Wallet APIs** – wallet interfaces plus helper DSLs for credential organization.
 - **Schema/Proof Utilities** – schema validation helpers and proof-purpose validator.
 - **Core Exceptions & Constants** – `VeriCoreException`, `VeriCoreConstants`, and related domain errors.
+- **Error Handling** – structured error types (`VeriCoreError`) with context and Result utilities.
+- **Input Validation** – validation utilities for DIDs, credentials, and chain IDs.
 
 Add the module alongside any DID/KMS components you require:
 
@@ -29,14 +31,32 @@ dependencies {
 **Result:** Gradle exposes the credential domain APIs so you can build flows like issuing and storing credentials:
 
 ```kotlin
-val credential = vericore.issueCredential(
+import com.geoknoesis.vericore.core.*
+
+// Issue credential with error handling
+val result = vericore.issueCredential(
     issuerDid = issuerDid,
     issuerKeyId = keyId,
     credentialSubject = subjectJson
-).getOrThrow()
+)
+
+result.fold(
+    onSuccess = { credential -> println("Issued: ${credential.id}") },
+    onFailure = { error ->
+        when (error) {
+            is VeriCoreError.CredentialInvalid -> {
+                println("Credential invalid: ${error.reason}")
+            }
+            else -> println("Error: ${error.message}")
+        }
+    }
+)
+
+// Or use getOrThrow for simple cases
+val credential = result.getOrThrow()
 ```
 
-**Why it matters:** `vericore-core` centralises the issuance and wallet DSLs; pulling it into your project gives direct access to the domain objects and helper functions used across the tutorials.
+**Why it matters:** `vericore-core` centralises the issuance and wallet DSLs; pulling it into your project gives direct access to the domain objects and helper functions used across the tutorials. All operations return `Result<T>` with structured error handling.
 
 ## Dependencies
 

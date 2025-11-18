@@ -43,3 +43,15 @@ etc.) supplied by `vericore-spi`.
 - Future work will introduce a shared `vericore-anchor-integrations` module to
   reduce duplicate registration logic across blockchain clients.
 
+## Creating Custom Plugins
+
+For detailed guidance on implementing custom plugins, see:
+
+- **[Creating Plugins Guide](../contributing/creating-plugins.md)** - Complete guide with examples for all plugin interfaces
+  - DID methods
+  - Blockchain anchor clients
+  - Proof generators
+  - Key management services
+  - Credential services
+  - Wallet factories
+

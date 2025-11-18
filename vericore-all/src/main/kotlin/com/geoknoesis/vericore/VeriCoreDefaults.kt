@@ -18,8 +18,11 @@ object VeriCoreDefaults {
 
     /**
      * Builds an in-memory configuration backed by the testkit components.
+     * 
+     * This is useful for development, testing, and quick starts.
+     * For production, use [VeriCore.create] with custom configuration.
      */
-    fun inMemoryTest(): VeriCoreConfig {
+    fun inMemory(): VeriCoreConfig {
         val kms = InMemoryKeyManagementService()
         val walletFactory = TestkitWalletFactory()
         val didRegistry = DidMethodRegistry()

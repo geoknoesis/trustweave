@@ -19,6 +19,11 @@ This module contains runnable examples demonstrating various use cases for VeriC
 - **Description**: Demonstrates professional credential wallet with education, work experience, and certifications
 - **Run**: `./gradlew :vericore-examples:runProfessionalIdentity`
 
+### Indy Integration
+- **File**: `com.geoknoesis.vericore.examples.indy.IndyIntegrationExample`
+- **Description**: Complete end-to-end scenario using Hyperledger Indy for blockchain anchoring. Demonstrates DID creation, credential issuance, verification, wallet storage, and anchoring to Indy blockchain (BCovrin Testnet)
+- **Run**: `./gradlew :vericore-examples:runIndyIntegration`
+
 ## Running Examples
 
 Each example can be run using Gradle:
@@ -32,6 +37,9 @@ Each example can be run using Gradle:
 
 # Run Professional Identity example
 ./gradlew :vericore-examples:runProfessionalIdentity
+
+# Run Indy Integration example
+./gradlew :vericore-examples:runIndyIntegration
 ```
 
 ## Building Examples
@@ -64,6 +72,7 @@ Each example is organized in its own package:
 - `financial/` - Financial Services KYC examples
 - `iot/` - IoT Device Identity examples
 - `national/` - National Education Credentials examples
+- `indy/` - Indy Integration examples
 
 ## Documentation
 

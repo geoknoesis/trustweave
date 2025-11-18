@@ -83,7 +83,12 @@ data class DidCreationOptions(
         /** For authentication (proving control of DID) */
         AUTHENTICATION("authentication"),
         
-        /** For making assertions (issuing credentials) */
+        /** 
+         * For making assertions (issuing credentials).
+         * 
+         * Note: The enum name is `ASSERTION` but the DID spec purpose name is "assertionMethod".
+         * This is intentional to keep the enum name concise while matching the spec.
+         */
         ASSERTION("assertionMethod"),
         
         /** For key agreement (encryption) */

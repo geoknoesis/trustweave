@@ -88,7 +88,8 @@ Verification resolves the issuer DID document, checks the signature suites, and 
 - **SPI-level options** – drop down to `CredentialServiceRegistry` and supply `CredentialIssuanceOptions` when you need custom proof types, schema hints, or audiences.  
 - **Anchoring** – store the credential digest with a `BlockchainAnchorClient` to prove freshness (see [Blockchain Anchoring](blockchain-anchoring.md)).  
 - **Revocation** – integrate status endpoints by adding `credentialStatus` claims; custom verification policies can enforce them.  
-- **Error handling** – wrap issuance and verification with `Result.fold` / `runCatching` to surface validation errors clearly to API consumers.
+- **Error handling** – all credential operations return `Result<T>` with structured `VeriCoreError` types. Use `result.fold()` or `result.getOrThrow()` for error handling. See [Error Handling](../advanced/error-handling.md).
+- **Input validation** – VeriCore automatically validates credential structure, issuer DID format, and method registration before issuance.
 
 ## See also
 
@@ -349,5 +350,5 @@ Some proof types (like BBS+) support zero-knowledge proofs, allowing you to prov
 
 - Learn about [Wallets](wallets.md) for managing credentials
 - Explore the [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md)
-- Check out the [Credential API Reference](../api-reference/credential-api.md)
+- Check out the [Credential Service API Reference](../api-reference/credential-service-api.md) and [Core API Reference](../api-reference/core-api.md)
 

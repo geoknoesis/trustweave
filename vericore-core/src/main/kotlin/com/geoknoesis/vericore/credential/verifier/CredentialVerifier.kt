@@ -292,9 +292,7 @@ class CredentialVerifier(
     }
 
     private fun buildDidResolver(options: CredentialVerificationOptions): CredentialDidResolver? {
-        options.didResolver?.let { return it }
-        defaultDidResolver?.let { return it }
-        return null
+        return defaultDidResolver
     }
 }
 

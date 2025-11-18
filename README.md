@@ -121,11 +121,20 @@ VeriCore provides multiple APIs for different use cases:
 
 ```kotlin
 val vericore = VeriCore.create()
+
+// Simple usage with error handling
+val didResult = vericore.createDid()
+didResult.fold(
+    onSuccess = { did -> println("Created: ${did.id}") },
+    onFailure = { error -> println("Error: ${error.message}") }
+)
+
+// Or use getOrThrow for simple cases
 val did = vericore.createDid().getOrThrow()
 val credential = vericore.issueCredential(...).getOrThrow()
 ```
 
-**Pros:** Simple, type-safe, sensible defaults  
+**Pros:** Simple, type-safe, sensible defaults, consistent error handling  
 **Cons:** Less configuration flexibility
 
 ### 2. **Wallets & Wallet Factory** (For Credential Storage) 📦
@@ -210,19 +219,60 @@ fun main() {
 
 ```kotlin
 import com.geoknoesis.vericore.VeriCore
+import com.geoknoesis.vericore.core.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     // Create VeriCore instance
     val vericore = VeriCore.create()
     
-    // Create a DID (uses default "key" method)
+    // Create a DID with error handling
+    val didResult = vericore.createDid()
+    didResult.fold(
+        onSuccess = { document ->
+            println("Created DID: ${document.id}")
+            
+            // Resolve the DID
+            val resolveResult = vericore.resolveDid(document.id)
+            resolveResult.fold(
+                onSuccess = { resolution ->
+                    if (resolution.document != null) {
+                        println("Resolved document: ${resolution.document.id}")
+                    } else {
+                        println("DID not found")
+                    }
+                },
+                onFailure = { error ->
+                    when (error) {
+                        is VeriCoreError.DidNotFound -> {
+                            println("DID not found: ${error.did}")
+                        }
+                        is VeriCoreError.InvalidDidFormat -> {
+                            println("Invalid DID format: ${error.reason}")
+                        }
+                        else -> {
+                            println("Error resolving DID: ${error.message}")
+                        }
+                    }
+                }
+            )
+        },
+        onFailure = { error ->
+            when (error) {
+                is VeriCoreError.DidMethodNotRegistered -> {
+                    println("DID method not registered: ${error.method}")
+                    println("Available methods: ${error.availableMethods}")
+                }
+                else -> {
+                    println("Error creating DID: ${error.message}")
+                }
+            }
+        }
+    )
+    
+    // Or use getOrThrow for simple cases
     val document = vericore.createDid().getOrThrow()
     println("Created DID: ${document.id}")
-    
-    // Resolve the DID
-    val result = vericore.resolveDid(document.id).getOrThrow()
-    println("Resolved document: ${result.document?.id}")
 }
 ```
 

@@ -29,18 +29,32 @@ Anchoring complements verifiable credentials: you can notarise VC digests, prese
 | 4. Verify | `readPayload` rehydrates the JSON, or recompute the digest locally and compare to the stored reference. |
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.geoknoesis.vericore.VeriCore
+import com.geoknoesis.vericore.core.*
 import kotlinx.serialization.json.Json
 
-val anchorRegistry = BlockchainAnchorRegistry().apply {
-    register("inmemory:anchor", InMemoryBlockchainAnchorClient("inmemory:anchor"))
-}
-val anchorClient = anchorRegistry.get("inmemory:anchor")
+// Using VeriCore facade (recommended)
+val vericore = VeriCore.create()
+val anchorResult = vericore.anchor(
+    data = credential,
+    serializer = VerifiableCredential.serializer(),
+    chainId = "algorand:testnet"
+).getOrThrow()
+println("Anchored tx: ${anchorResult.ref.txHash}")
 
-val payload = Json.encodeToJsonElement(credential)
-val anchorResult = anchorClient?.writePayload(payload)
-println("Anchored tx: ${anchorResult?.ref?.txHash}")
+// With error handling
+val result = vericore.anchor(data, serializer, chainId)
+result.fold(
+    onSuccess = { anchor -> println("Anchored tx: ${anchor.ref.txHash}") },
+    onFailure = { error ->
+        when (error) {
+            is VeriCoreError.ChainNotRegistered -> {
+                println("Chain not registered: ${error.chainId}")
+            }
+            else -> println("Anchoring error: ${error.message}")
+        }
+    }
+)
 ```
 
 ## Configuring clients
@@ -54,14 +68,36 @@ println("Anchored tx: ${anchorResult?.ref?.txHash}")
 ## Reading and verifying
 
 ```kotlin
-val anchorRef = anchorResult?.ref ?: return
-val stored = anchorClient?.readPayload(anchorRef)
-println("Payload media type: ${stored?.mediaType}")
+import com.geoknoesis.vericore.VeriCore
+import com.geoknoesis.vericore.core.*
+
+// Using VeriCore facade (recommended)
+val vericore = VeriCore.create()
+val data = vericore.readAnchor<VerifiableCredential>(
+    ref = anchorRef,
+    serializer = VerifiableCredential.serializer()
+).getOrThrow()
+println("Read credential: ${data.id}")
+
+// With error handling
+val result = vericore.readAnchor<VerifiableCredential>(ref, serializer)
+result.fold(
+    onSuccess = { data -> println("Read: ${data.id}") },
+    onFailure = { error ->
+        when (error) {
+            is VeriCoreError.ChainNotRegistered -> {
+                println("Chain not registered: ${error.chainId}")
+            }
+            else -> println("Read error: ${error.message}")
+        }
+    }
+)
 ```
 
-- `readPayload` returns the stored `JsonElement`; deserialise it using your serializer of choice.  
+- `readAnchor` returns `Result<T>` with the deserialized data.  
 - For higher assurance, recompute the digest from the canonical payload and compare it to the data stored on chain.  
 - Keep connection credentials (RPC tokens, private keys) in a secret store for production deployments.
+- All anchoring operations return `Result<T>` for consistent error handling.
 
 ## Practical usage tips
 
@@ -69,6 +105,8 @@ println("Payload media type: ${stored?.mediaType}")
 - **Retry-friendly anchoring** – public chains may require exponential back-off; design idempotent submissions.  
 - **Integrate with revocation** – anchor revocation lists or proofs to create audit trails for credential status changes.  
 - **Testing** – use the in-memory client or spin up Ganache/Testnet clients for end-to-end tests.
+- **Error handling** – all anchoring operations return `Result<T>` with structured `VeriCoreError` types. See [Error Handling](../advanced/error-handling.md).
+- **Input validation** – VeriCore automatically validates chain ID format and registration before anchoring.
 
 ## See also
 

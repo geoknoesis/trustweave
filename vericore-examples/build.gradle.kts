@@ -1,3 +1,5 @@
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+
 plugins {
     id("vericore.shared")
     kotlin("jvm")
@@ -21,10 +23,16 @@ dependencies {
     
     // For blockchain examples
     implementation(project(":vericore-ganache"))
+    implementation(project(":vericore-indy"))
     
     // Test dependencies
     testImplementation(Libs.kotlinTest)
     testImplementation(Libs.junitJupiter)
+}
+
+// Configure Java toolchain for all JavaExec tasks
+val javaToolchain = javaToolchains.launcherFor {
+    languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 // Configure main class for running examples
@@ -33,6 +41,7 @@ tasks.register<JavaExec>("runEarthObservation") {
     description = "Run Earth Observation scenario example"
     mainClass.set("com.geoknoesis.vericore.examples.eo.EarthObservationExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
 }
 
 tasks.register<JavaExec>("runAcademicCredentials") {
@@ -40,6 +49,7 @@ tasks.register<JavaExec>("runAcademicCredentials") {
     description = "Run Academic Credentials scenario example"
     mainClass.set("com.geoknoesis.vericore.examples.academic.AcademicCredentialsExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
 }
 
 tasks.register<JavaExec>("runProfessionalIdentity") {
@@ -47,6 +57,7 @@ tasks.register<JavaExec>("runProfessionalIdentity") {
     description = "Run Professional Identity scenario example"
     mainClass.set("com.geoknoesis.vericore.examples.professional.ProfessionalIdentityExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
 }
 
 tasks.register<JavaExec>("runProofOfLocation") {
@@ -54,6 +65,7 @@ tasks.register<JavaExec>("runProofOfLocation") {
     description = "Run Proof of Location scenario example"
     mainClass.set("com.geoknoesis.vericore.examples.location.ProofOfLocationExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
 }
 
 tasks.register<JavaExec>("runSpatialWeb") {
@@ -61,6 +73,7 @@ tasks.register<JavaExec>("runSpatialWeb") {
     description = "Run Spatial Web Authorization scenario example"
     mainClass.set("com.geoknoesis.vericore.examples.spatial.SpatialWebExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
 }
 
 tasks.register<JavaExec>("runDigitalWorkflow") {
@@ -68,6 +81,7 @@ tasks.register<JavaExec>("runDigitalWorkflow") {
     description = "Run Digital Workflow Provenance scenario example"
     mainClass.set("com.geoknoesis.vericore.examples.workflow.DigitalWorkflowExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
 }
 
 tasks.register<JavaExec>("runNewsIndustry") {
@@ -75,6 +89,7 @@ tasks.register<JavaExec>("runNewsIndustry") {
     description = "Run News Industry scenario example"
     mainClass.set("com.geoknoesis.vericore.examples.news.NewsIndustryExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
 }
 
 tasks.register<JavaExec>("runDataCatalog") {
@@ -82,6 +97,7 @@ tasks.register<JavaExec>("runDataCatalog") {
     description = "Run Data Catalog DCAT scenario example"
     mainClass.set("com.geoknoesis.vericore.examples.dcat.DataCatalogExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
 }
 
 tasks.register<JavaExec>("runHealthcare") {
@@ -89,6 +105,7 @@ tasks.register<JavaExec>("runHealthcare") {
     description = "Run Healthcare Medical Records scenario example"
     mainClass.set("com.geoknoesis.vericore.examples.healthcare.HealthcareExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
 }
 
 tasks.register<JavaExec>("runGovernment") {
@@ -96,6 +113,7 @@ tasks.register<JavaExec>("runGovernment") {
     description = "Run Government Digital Identity scenario example"
     mainClass.set("com.geoknoesis.vericore.examples.government.GovernmentIdentityExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
 }
 
 tasks.register<JavaExec>("runSupplyChain") {
@@ -103,6 +121,7 @@ tasks.register<JavaExec>("runSupplyChain") {
     description = "Run Supply Chain Traceability scenario example"
     mainClass.set("com.geoknoesis.vericore.examples.supplychain.SupplyChainExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
 }
 
 tasks.register<JavaExec>("runFinancialServices") {
@@ -110,6 +129,7 @@ tasks.register<JavaExec>("runFinancialServices") {
     description = "Run Financial Services KYC scenario example"
     mainClass.set("com.geoknoesis.vericore.examples.financial.FinancialServicesExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
 }
 
 tasks.register<JavaExec>("runIoT") {
@@ -117,6 +137,7 @@ tasks.register<JavaExec>("runIoT") {
     description = "Run IoT Device Identity scenario example"
     mainClass.set("com.geoknoesis.vericore.examples.iot.IoTDeviceExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
 }
 
 tasks.register<JavaExec>("runNationalEducation") {
@@ -124,6 +145,7 @@ tasks.register<JavaExec>("runNationalEducation") {
     description = "Run National Education Credentials Algeria scenario example"
     mainClass.set("com.geoknoesis.vericore.examples.national.NationalEducationExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
 }
 
 tasks.register<JavaExec>("runQuickStartSample") {
@@ -131,5 +153,13 @@ tasks.register<JavaExec>("runQuickStartSample") {
     description = "Run Quick Start credential issuance sample"
     mainClass.set("com.geoknoesis.vericore.examples.quickstart.QuickStartSampleKt")
     classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
 }
 
+tasks.register<JavaExec>("runIndyIntegration") {
+    group = "examples"
+    description = "Run Indy Integration scenario example"
+    mainClass.set("com.geoknoesis.vericore.examples.indy.IndyIntegrationExampleKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
+}

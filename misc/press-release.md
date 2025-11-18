@@ -24,3 +24,5 @@ The VeriCore open-source repository, documentation, and community resources are 
 Press Contact  
 press@geoknoesis.com
 
+
+

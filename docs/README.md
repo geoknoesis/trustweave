@@ -8,7 +8,7 @@ Welcome to the VeriCore developer documentation!
 
 - [Installation](getting-started/installation.md) - Get started with VeriCore
 - [Quick Start Guide](getting-started/quick-start.md) - Your first VeriCore application
-- [Use Case Scenarios](getting-started/README.md) - Real-world examples
+- [Use Case Scenarios](scenarios/README.md) - Real-world examples
 - [Architecture Overview](introduction/architecture-overview.md) - Visual flow of DID ➜ credential ➜ proof ➜ anchoring
 - [Advanced Topics](advanced/key-rotation.md) - Key rotation, verification policies, and more
 - [FAQ](faq.md) - Quick answers about samples, licensing, and integrations
@@ -44,20 +44,23 @@ This documentation is organized into sections:
 
 Explore real-world use cases:
 
-- 🌍 [Earth Observation](getting-started/earth-observation-scenario.md) - Data integrity verification
-- 🎓 [Academic Credentials](getting-started/academic-credentials-scenario.md) - University credential system
-- 🏛️ [National Education (AlgeroPass)](getting-started/national-education-credentials-algeria-scenario.md) - National credential system
-- 💼 [Professional Identity](getting-started/professional-identity-scenario.md) - Professional credential wallet
-- 📍 [Proof of Location](getting-started/proof-of-location-scenario.md) - Geospatial location proofs
-- 🌐 [Spatial Web Authorization](getting-started/spatial-web-authorization-scenario.md) - DID-based spatial authorization
-- 🔄 [Digital Workflow & Provenance](getting-started/digital-workflow-provenance-scenario.md) - PROV-O workflow tracking
-- 📰 [News Industry](getting-started/news-industry-scenario.md) - Content provenance
-- 📊 [Data Catalog & DCAT](getting-started/data-catalog-dcat-scenario.md) - Verifiable data catalog
-- 💰 [Financial Services & KYC](getting-started/financial-services-kyc-scenario.md) - KYC credential system
-- 🏥 [Healthcare & Medical Records](getting-started/healthcare-medical-records-scenario.md) - Medical credential system
-- 🏭 [IoT Device Identity](getting-started/iot-device-identity-scenario.md) - Device identity management
-- 📦 [Supply Chain & Traceability](getting-started/supply-chain-traceability-scenario.md) - Supply chain tracking
-- 🏛️ [Government Digital Identity](getting-started/government-digital-identity-scenario.md) - Government credential system
+- **[View All Scenarios](scenarios/README.md)** - Complete list of all available scenarios
+
+**Popular Scenarios:**
+- 🌍 [Earth Observation](scenarios/earth-observation-scenario.md) - Data integrity verification
+- 🎓 [Academic Credentials](scenarios/academic-credentials-scenario.md) - University credential system
+- 🏛️ [National Education (AlgeroPass)](scenarios/national-education-credentials-algeria-scenario.md) - National credential system
+- 💼 [Professional Identity](scenarios/professional-identity-scenario.md) - Professional credential wallet
+- 📍 [Proof of Location](scenarios/proof-of-location-scenario.md) - Geospatial location proofs
+- 🌐 [Spatial Web Authorization](scenarios/spatial-web-authorization-scenario.md) - DID-based spatial authorization
+- 🔄 [Digital Workflow & Provenance](scenarios/digital-workflow-provenance-scenario.md) - PROV-O workflow tracking
+- 📰 [News Industry](scenarios/news-industry-scenario.md) - Content provenance
+- 📊 [Data Catalog & DCAT](scenarios/data-catalog-dcat-scenario.md) - Verifiable data catalog
+- 💰 [Financial Services & KYC](scenarios/financial-services-kyc-scenario.md) - KYC credential system
+- 🏥 [Healthcare & Medical Records](scenarios/healthcare-medical-records-scenario.md) - Medical credential system
+- 🏭 [IoT Device Identity](scenarios/iot-device-identity-scenario.md) - Device identity management
+- 📦 [Supply Chain & Traceability](scenarios/supply-chain-traceability-scenario.md) - Supply chain tracking
+- 🏛️ [Government Digital Identity](scenarios/government-digital-identity-scenario.md) - Government credential system
 
 ## Contributing
 

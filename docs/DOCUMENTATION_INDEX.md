@@ -28,17 +28,69 @@
   - Creating presentations
   - Lifecycle management
 
+- **[Common Patterns](getting-started/common-patterns.md)**: Common usage patterns and best practices
+  - Issuer → Holder → Verifier workflow
+  - Batch operations
+  - Error recovery with fallbacks
+  - Credential lifecycle management
+  - Multi-chain anchoring
+  - Wallet organization patterns
+
 ## Use Case Scenarios
 
-- **[Earth Observation Scenario](getting-started/earth-observation-scenario.md)**: Complete EO data integrity workflow
-- **[Academic Credentials Scenario](getting-started/academic-credentials-scenario.md)**: University credential issuance and verification
-- **[National Education Credentials Algeria Scenario](getting-started/national-education-credentials-algeria-scenario.md)**: AlgeroPass national-level education credential system
-- **[Professional Identity Scenario](getting-started/professional-identity-scenario.md)**: Professional credential wallet management
-- **[Proof of Location Scenario](getting-started/proof-of-location-scenario.md)**: Geospatial location proofs and verification
-- **[Spatial Web Authorization Scenario](getting-started/spatial-web-authorization-scenario.md)**: DID-based authorization for spatial entities (agents, activities, things, features)
-- **[Digital Workflow & Provenance Scenario](getting-started/digital-workflow-provenance-scenario.md)**: PROV-O workflow provenance tracking for digital information
-- **[News Industry Scenario](getting-started/news-industry-scenario.md)**: Content provenance and authenticity verification for news media
-- **[Data Catalog & DCAT Scenario](getting-started/data-catalog-dcat-scenario.md)**: Verifiable data catalog system using DCAT for government and enterprise
+See **[Scenarios Overview](scenarios/README.md)** for all available scenarios organized by category.
+
+**🔐 Cybersecurity & Access Control:**
+- **[Zero Trust Continuous Authentication](scenarios/zero-trust-authentication-scenario.md)**: Continuous authentication without traditional sessions
+- **[Security Clearance & Access Control](scenarios/security-clearance-access-control-scenario.md)**: Privacy-preserving security clearance verification for classified systems
+- **[Biometric Verification](scenarios/biometric-verification-scenario.md)**: Multi-modal biometric verification with liveness detection
+- **[Security Training & Certification Verification](scenarios/security-training-certification-scenario.md)**: Instant verification of security certifications and training
+- **[Software Supply Chain Security](scenarios/software-supply-chain-security-scenario.md)**: Software provenance, build attestation, and SBOM verification
+
+**🆔 Identity & Verification:**
+- **[Government Digital Identity](scenarios/government-digital-identity-scenario.md)**: Government-issued digital identity workflows
+- **[Professional Identity](scenarios/professional-identity-scenario.md)**: Professional credential wallet management
+- **[Age Verification](scenarios/age-verification-scenario.md)**: Privacy-preserving age verification for age-restricted services
+- **[Financial Services (KYC)](scenarios/financial-services-kyc-scenario.md)**: KYC/AML compliance and credential reuse
+
+**🎓 Education & Credentials:**
+- **[Academic Credentials](scenarios/academic-credentials-scenario.md)**: University credential issuance and verification
+- **[National Education Credentials Algeria](scenarios/national-education-credentials-algeria-scenario.md)**: AlgeroPass national-level education credential system
+
+**💼 Employment & Professional:**
+- **[Employee Onboarding and Background Verification](scenarios/employee-onboarding-scenario.md)**: Complete employee onboarding with credential verification
+
+**🏥 Healthcare:**
+- **[Healthcare Medical Records](scenarios/healthcare-medical-records-scenario.md)**: Patient credential workflows and privacy-preserving data sharing
+- **[Vaccination and Health Passports](scenarios/vaccination-health-passport-scenario.md)**: Privacy-preserving health credentials for travel and access
+
+**📦 Supply Chain & Provenance:**
+- **[Supply Chain Traceability](scenarios/supply-chain-traceability-scenario.md)**: Complete supply chain provenance tracking
+- **[Digital Workflow & Provenance](scenarios/digital-workflow-provenance-scenario.md)**: PROV-O workflow provenance tracking
+
+**📍 Geospatial & Location:**
+- **[Proof of Location](scenarios/proof-of-location-scenario.md)**: Geospatial location proofs and verification
+- **[Earth Observation](scenarios/earth-observation-scenario.md)**: Complete EO data integrity workflow
+- **[Spatial Web Authorization](scenarios/spatial-web-authorization-scenario.md)**: DID-based authorization for spatial entities
+
+**📰 Media & Content:**
+- **[News Industry](scenarios/news-industry-scenario.md)**: Content provenance and authenticity verification
+- **[Event Ticketing and Access Control](scenarios/event-ticketing-scenario.md)**: Verifiable tickets with transfer control and fraud prevention
+
+**💾 Data Management:**
+- **[Data Catalog & DCAT](scenarios/data-catalog-dcat-scenario.md)**: Verifiable data catalog system using DCAT
+
+**🔌 IoT & Devices:**
+- **[IoT Device Identity](scenarios/iot-device-identity-scenario.md)**: Connected device onboarding and identity management
+- **[IoT Sensor Data Provenance & Integrity](scenarios/iot-sensor-data-provenance-scenario.md)**: Verify sensor data authenticity and integrity
+- **[IoT Firmware Update Verification](scenarios/iot-firmware-update-verification-scenario.md)**: Verify firmware authenticity and update authorization
+- **[IoT Device Ownership Transfer](scenarios/iot-device-ownership-transfer-scenario.md)**: Secure device ownership transfer with audit trail
+
+**🤝 Trust & Reputation:**
+- **[Web of Trust](scenarios/web-of-trust-scenario.md)**: Trust networks and reputation systems
+
+**🛡️ Insurance & Claims:**
+- **[Insurance Claims and Verification](scenarios/insurance-claims-scenario.md)**: Complete insurance claims verification with fraud prevention
 
 ## API Reference
 
@@ -53,7 +105,18 @@
 
 - **[Key Rotation](advanced/key-rotation.md)**: Step-by-step issuer rotation guidance with KMS and DID updates
 - **[Verification Policies](advanced/verification-policies.md)**: Enforce expiration, revocation, audience, and anchoring checks
+- **[Error Handling](advanced/error-handling.md)**: Structured error handling with VeriCoreError types and Result utilities
+- **[Plugin Lifecycle](advanced/plugin-lifecycle.md)**: Initialize, start, stop, and cleanup plugins
 - Testability tips are included throughout using `vericore-testkit`
+
+## Contributing
+
+- **[Creating Plugins](contributing/creating-plugins.md)**: Complete guide for implementing custom plugins
+  - DID methods, blockchain clients, proof generators
+  - Key management services, credential services, wallet factories
+  - Registration methods (manual and SPI)
+  - Plugin lifecycle management
+  - Testing and best practices
 
 ## Module Documentation
 

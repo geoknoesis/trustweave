@@ -1,8 +1,47 @@
 # VeriCore Changelog
 
-## [Unreleased] - Codebase Optimization Release
+## [Unreleased] - API Improvements Release
 
 ### Added
+
+#### Structured Error Handling
+- **VeriCoreError Hierarchy**: Sealed hierarchy of error types with structured context
+  - `DidNotFound`, `DidMethodNotRegistered`, `InvalidDidFormat` - DID-related errors
+  - `CredentialInvalid`, `CredentialIssuanceFailed` - Credential-related errors
+  - `ChainNotRegistered` - Blockchain-related errors
+  - `WalletCreationFailed` - Wallet-related errors
+  - `PluginNotFound`, `PluginInitializationFailed` - Plugin-related errors
+  - `ValidationFailed` - Validation errors
+  - All errors include code, message, context map, and cause
+- **Error Conversion**: `Throwable.toVeriCoreError()` extension for automatic error conversion
+- **Result Utilities**: Extension functions for working with `Result<T>`
+  - `mapError()` - Transform errors in Results
+  - `combine()` - Combine multiple Results
+  - `mapAsync()` - Batch operations with async mapping
+
+#### Input Validation
+- **DidValidator**: DID format and method validation
+  - `validateFormat()` - Validate DID format
+  - `validateMethod()` - Validate DID method is supported
+  - `extractMethod()` - Extract method name from DID
+  - `extractMethodSpecificId()` - Extract method-specific identifier
+- **CredentialValidator**: Credential structure validation
+  - `validateStructure()` - Validate basic credential structure
+  - `validateProof()` - Validate credential has proof
+- **ChainIdValidator**: Chain ID format and registration validation
+  - `validateFormat()` - Validate CAIP-2 format
+  - `validateRegistered()` - Validate chain is registered
+
+#### Consistent Result Returns
+- **All Operations Return Result<T>**: `anchor()` and `readAnchor()` now return `Result<T>` for consistency
+- **Validation Before Operations**: All operations validate inputs before execution
+- **Enhanced Error Messages**: Error messages include context and available alternatives
+
+#### Plugin Lifecycle Management
+- **Lifecycle Methods**: `initialize()`, `start()`, `stop()`, `cleanup()` in VeriCore
+- **Automatic Plugin Discovery**: `getAllPlugins()` in VeriCoreContext discovers plugins from all registries
+- **Error Handling**: Lifecycle methods return `Result<Unit>` for error handling
+- **Plugin Configuration**: Support for plugin-specific configuration during initialization
 
 #### Type Safety
 - **Type-Safe Options**: Sealed class hierarchy (`BlockchainAnchorClientOptions`) for compile-time configuration validation
@@ -71,6 +110,16 @@
 
 ### Changed
 
+#### API Improvements
+- **Consistent Result Returns**: All operations now return `Result<T>` for consistent error handling
+  - `anchor()` and `readAnchor()` now return `Result<T>` (previously threw exceptions)
+  - All operations validate inputs before execution
+  - Enhanced error messages with context
+- **Enhanced Error Types**: Structured error types with context
+  - All errors extend `VeriCoreException` for backward compatibility
+  - Errors include code, message, context map, and cause
+  - Automatic error conversion via `toVeriCoreError()` extension
+
 #### Breaking Changes
 - **Options API**: Type-safe options classes added alongside existing map-based API
   - Map-based API still supported (backward compatible)
@@ -79,6 +128,10 @@
 - **Exception Types**: More specific exception types replace generic `VeriCoreException`
   - Catch specific exception types for better error handling
   - Backward compatible: all exceptions extend `VeriCoreException`
+  
+- **Result-Based API**: `anchor()` and `readAnchor()` now return `Result<T>`
+  - Migration: Use `result.getOrThrow()` or `result.fold()` for error handling
+  - Previous behavior: Methods threw exceptions directly
 
 #### Non-Breaking Changes
 - **Error Messages**: Enhanced with contextual information (chain ID, operation, txHash, etc.)

@@ -48,7 +48,18 @@ result.fold(
         }
     },
     onFailure = { error ->
-        println("Verification failed before policy evaluation: ${error.message}")
+        when (error) {
+            is VeriCoreError.CredentialInvalid -> {
+                println("Credential validation failed: ${error.reason}")
+                println("Field: ${error.field}")
+            }
+            else -> {
+                println("Verification failed before policy evaluation: ${error.message}")
+                error.context.forEach { (key, value) ->
+                    println("  $key: $value")
+                }
+            }
+        }
     }
 )
 ```

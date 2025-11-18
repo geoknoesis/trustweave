@@ -2,11 +2,11 @@
 
 <div align="center">
 
-![VeriCore Logo](https://via.placeholder.com/200x200/1976d2/ffffff?text=VC)
+![VeriCore Logo](assets/images/Vericore_logo.png)
 
-### Beautiful, Type-Safe Trust and Identity for Kotlin
+### The Foundation for Decentralized Trust and Identity
 
-**A neutral, reusable trust and identity core** library designed to be domain-agnostic, chain-agnostic, DID-method-agnostic, and KMS-agnostic.
+**A neutral, reusable trust and identity core** library designed to be domain-agnostic, chain-agnostic, Decentralized Identifier (DID)-method-agnostic, and Key Management Service (KMS)-agnostic.
 
 [![Version](https://img.shields.io/badge/version-1.0.0--SNAPSHOT-blue.svg)](https://github.com/geoknoesis/vericore)
 [![License](https://img.shields.io/badge/license-Dual-green.svg)](LICENSE)
@@ -20,14 +20,14 @@
 
 ## 🚀 What is VeriCore?
 
-VeriCore is a **production-ready Kotlin library** for building decentralized identity and trust systems. Built by [Geoknoesis LLC](https://www.geoknoesis.com), VeriCore provides the building blocks you need to implement W3C-compliant verifiable credentials, decentralized identifiers (DIDs), and blockchain anchoring—all with a beautiful, type-safe API.
+VeriCore is a **production-ready Kotlin library** for building decentralized identity and trust systems. Built by [Geoknoesis LLC](https://www.geoknoesis.com), VeriCore provides the building blocks you need to implement World Wide Web Consortium (W3C)-compliant verifiable credentials, Decentralized Identifiers (DIDs), and blockchain anchoring—all with a type-safe Application Programming Interface (API).
 
 ### ✨ Why VeriCore?
 
-- 🎯 **Domain-Agnostic** - Works for any use case (education, healthcare, IoT, supply chain, etc.)
+- 🎯 **Domain-Agnostic** - Works for any use case (education, healthcare, Internet of Things (IoT), supply chain, etc.)
 - 🔗 **Chain-Agnostic** - Supports any blockchain via pluggable adapters
-- 🆔 **DID-Method-Agnostic** - Works with any DID method (did:key, did:web, did:ion, etc.)
-- 🔐 **KMS-Agnostic** - Supports any key management system
+- 🆔 **DID-Method-Agnostic** - Works with any Decentralized Identifier (DID) method (did:key, did:web, did:ion, etc.)
+- 🔐 **KMS-Agnostic** - Supports any Key Management Service (KMS)
 - 🛡️ **Type-Safe** - Leverages Kotlin's type system for compile-time safety
 - ⚡ **Coroutine-Based** - Built for modern async/await patterns
 - 🧪 **Testable** - Comprehensive test utilities and in-memory implementations
@@ -48,7 +48,7 @@ fun main() = runBlocking {
     // Create VeriCore instance
     val vericore = VeriCore.create()
     
-    // Create a DID
+    // Create a Decentralized Identifier (DID)
     val did = vericore.createDid().getOrThrow()
     println("Created DID: ${did.id}")
     
@@ -91,11 +91,11 @@ dependencies {
 
 - 🛡️ W3C Compliant
 
-Full support for W3C Verifiable Credentials 1.1 and DID Core 1.0 specifications
+Full support for World Wide Web Consortium (W3C) Verifiable Credentials 1.1 and Decentralized Identifier (DID) Core 1.0 specifications
 
 - 🔑 Decentralized Identifiers
 
-Create, resolve, and manage DIDs with any DID method via pluggable interfaces
+Create, resolve, and manage Decentralized Identifiers (DIDs) with any DID method via pluggable interfaces
 
 - 📜 Verifiable Credentials
 
@@ -141,7 +141,7 @@ VeriCore powers trust and identity systems across multiple domains. Explore **25
 - **[Healthcare Medical Records](scenarios/healthcare-medical-records-scenario.md)** - Privacy-preserving medical data sharing
 - **[Vaccination Health Passports](scenarios/vaccination-health-passport-scenario.md)** - Health credentials for travel and access
 
-### 🔌 IoT & Devices
+### 🔌 Internet of Things (IoT) & Devices
 
 - **[IoT Device Identity](scenarios/iot-device-identity-scenario.md)** - Device onboarding and identity management
 - **[IoT Sensor Data Provenance](scenarios/iot-sensor-data-provenance-scenario.md)** - Verify sensor data authenticity and integrity
@@ -169,8 +169,8 @@ VeriCore is built on a modular, pluggable architecture:
 └───────┬──────┘  └───────┬──────┘  └───────┬──────┘
         │                 │                 │
 ┌───────▼─────────────────▼─────────────────▼───────┐
-│         Pluggable Adapters (SPI)                  │
-│  • DID Methods  • KMS  • Blockchains  • Services  │
+│         Pluggable Adapters (Service Provider Interface)                  │
+│  • DID Methods  • Key Management Service (KMS)  • Blockchains  • Services  │
 └───────────────────────────────────────────────────┘
 ```
 
@@ -197,7 +197,7 @@ DIDs, Verifiable Credentials, Wallets, and Blockchain Anchoring
 
 ### 🔧 [API Reference](api-reference/core-api.md)
 
-Complete API documentation with examples
+Complete Application Programming Interface (API) documentation with examples
 
 ### 🎓 [Use Case Scenarios](scenarios/README.md)
 
@@ -250,7 +250,7 @@ val ageCredential = vericore.issueCredential(
     }
 ).getOrThrow()
 
-// IoT Sensor Data Provenance
+// Internet of Things (IoT) Sensor Data Provenance
 val sensorData = vericore.issueCredential(
     issuerDid = sensorDid,
     credentialSubject = buildJsonObject {

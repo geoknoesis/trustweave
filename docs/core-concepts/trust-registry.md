@@ -2,7 +2,7 @@
 
 ## Overview
 
-A **Trust Registry** is a system for managing trust anchors and discovering trust paths between DIDs. It enables verifiers to determine whether an issuer is trusted, either directly or through a chain of trust relationships.
+A **Trust Registry** is a system for managing trust anchors and discovering trust paths between Decentralized Identifiers (DIDs). It enables verifiers to determine whether an issuer is trusted, either directly or through a chain of trust relationships.
 
 The Trust Registry implements a **Web of Trust** model where trust is established through relationships between DIDs, rather than relying on a single central authority.
 
@@ -17,7 +17,7 @@ The trust registry sits on top of the rest of the issuance/verification stack. B
 
 ### Key management
 **Why it matters:** Issuers, holders, and verifiers need signing keys to produce and check proofs along the trust path.  
-**What to wire:** Supply a `KeyManagementService` for every participant. For production, back the service with an HSM or remote KMS instead of `InMemoryKeyManagementService`.  
+**What to wire:** Supply a `KeyManagementService` for every participant. For production, back the service with a Hardware Security Module (HSM) or remote Key Management Service (KMS) instead of `InMemoryKeyManagementService`.  
 **Related docs:** [Key Management](key-management.md), [Quick Start – Step 4](../getting-started/quick-start.md#step-4-issue-a-credential-and-store-it).
 
 ### Proof generators

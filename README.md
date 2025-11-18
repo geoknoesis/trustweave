@@ -1,8 +1,8 @@
 # VeriCore
 
-> Beautiful, type-safe trust and identity for Kotlin
+> The Foundation for Decentralized Trust and Identity
 
-A **neutral, reusable trust and identity core** library for Kotlin, designed to be domain-agnostic, chain-agnostic, DID-method-agnostic, and KMS-agnostic.
+A **neutral, reusable trust and identity core** library for Kotlin, designed to be domain-agnostic, chain-agnostic, Decentralized Identifier (DID)-method-agnostic, and Key Management Service (KMS)-agnostic.
 
 ## Quick Start (30 Seconds) ⚡
 
@@ -52,10 +52,10 @@ fun main() = runBlocking {
 
 ## Developer Experience Highlights ✨
 
-- **Typed configuration builders everywhere.** Create DIDs, wallets, and service adapters with compile-time safe options (`didCreationOptions { … }`, `WalletCreationOptionsBuilder`, `credentialServiceCreationOptions { … }`).
+- **Typed configuration builders everywhere.** Create Decentralized Identifiers (DIDs), wallets, and service adapters with compile-time safe options (`didCreationOptions { … }`, `WalletCreationOptionsBuilder`, `credentialServiceCreationOptions { … }`).
 - **Predictable error handling.** All facade operations return `Result<T>` so you decide whether to `getOrThrow()`, fold, or map errors.
 - **Composable DSLs.** Configure the Trust Layer once and reuse it for workflows: credential issuance, verification, wallets, delegation.
-- **SPI-ready from day one.** Drop in your own `WalletFactory` or `CredentialServiceProvider` without reflection or map juggling.
+- **Service Provider Interface (SPI)-ready from day one.** Drop in your own `WalletFactory` or `CredentialServiceProvider` without reflection or map juggling.
 
 ```kotlin
 import com.geoknoesis.vericore.spi.services.credentialServiceCreationOptions
@@ -86,7 +86,7 @@ VeriCore provides a modular architecture for building trust and identity systems
 
 - **Earth Observation (EO) catalogues**
 - **Spatial Web Nodes**
-- **Agentic / LLM-based platforms**
+- **Agentic / Large Language Model (LLM)-based platforms**
 - **Any application requiring decentralized identity and trust**
 
 ## Architecture
@@ -97,8 +97,8 @@ VeriCore is organized into six modules:
 
 - **`vericore-core`**: Shared types, exceptions, and common utilities
 - **`vericore-json`**: JSON canonicalization and digest computation utilities
-- **`vericore-kms`**: Key management service abstraction
-- **`vericore-did`**: DID and DID Document management with pluggable DID methods
+- **`vericore-kms`**: Key Management Service (KMS) abstraction
+- **`vericore-did`**: Decentralized Identifier (DID) and DID Document management with pluggable DID methods
 - **`vericore-anchor`**: Blockchain anchoring abstraction with chain-agnostic interfaces
 - **`vericore-testkit`**: In-memory test implementations for all interfaces
 
@@ -106,8 +106,8 @@ VeriCore is organized into six modules:
 
 - **Domain-agnostic**: No application-specific logic in core modules
 - **Chain-agnostic**: Pluggable blockchain adapters via interfaces
-- **DID-method-agnostic**: Pluggable DID methods via interfaces
-- **KMS-agnostic**: Pluggable key management backends
+- **Decentralized Identifier (DID)-method-agnostic**: Pluggable DID methods via interfaces
+- **Key Management Service (KMS)-agnostic**: Pluggable key management backends
 - **Coroutine-based**: All I/O operations use Kotlin coroutines (`suspend` functions)
 - **Type-safe**: Uses Kotlinx Serialization for type-safe JSON handling
 

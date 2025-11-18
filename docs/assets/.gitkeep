@@ -1,0 +1,24 @@
+# Assets Directory
+
+This directory contains assets used in the VeriCore documentation, such as images, diagrams, and other media files.
+
+## Directory Structure
+
+- `images/` - Images, diagrams, screenshots, and other visual assets
+  - Use descriptive filenames (e.g., `architecture-diagram.png`, `workflow-sequence.svg`)
+  - Prefer SVG for diagrams when possible for scalability
+  - Optimize images for web when possible
+
+## Usage in Documentation
+
+Reference assets in markdown files using relative paths:
+
+```markdown
+![Alt text](assets/images/example.png)
+```
+
+For images in the docs root, use:
+```markdown
+![Alt text](../assets/images/example.png)
+```
+

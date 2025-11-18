@@ -4,7 +4,7 @@
 
 ## What is key management?
 
-Key management covers the generation, storage, rotation, and usage of cryptographic keys. In VeriCore, every DID method, credential issuance, and presentation flow relies on a `KeyManagementService` (KMS) abstraction.
+Key management covers the generation, storage, rotation, and usage of cryptographic keys. In VeriCore, every Decentralized Identifier (DID) method, credential issuance, and presentation flow relies on a `KeyManagementService` (Key Management Service, KMS) abstraction.
 
 ```kotlin
 dependencies {
@@ -13,12 +13,12 @@ dependencies {
 }
 ```
 
-**Result:** Gives you the KMS interfaces and helpers referenced in the examples below.
+**Result:** Gives you the Key Management Service (KMS) interfaces and helpers referenced in the examples below.
 
 ## Why key management matters
 
 - **Proof integrity** – signing credentials and presentations requires private keys to stay secure.  
-- **Interoperability** – different environments (cloud HSM, Vault, in-memory test KMS) provide the same interface.  
+- **Interoperability** – different environments (cloud Hardware Security Module (HSM), Vault, in-memory test Key Management Service (KMS)) provide the same interface.  
 - **Lifecycle** – keys can be rotated or deactivated while preserving credential history via key identifiers (`keyId`).
 
 ## How VeriCore models key management
@@ -30,7 +30,7 @@ dependencies {
 | `KeyManagementServiceProvider` | SPI entry point for auto-discoverable providers. |
 | `wallet.withKeyManagement { … }` | Wallet DSL hook for higher-level workflows. |
 
-Built-in providers include the in-memory test KMS and the walt.id-backed implementation. You can add your own via SPI.
+Built-in providers include the in-memory test Key Management Service (KMS) and the walt.id-backed implementation. You can add your own via Service Provider Interface (SPI).
 
 ### Example: generating and using keys
 
@@ -68,9 +68,9 @@ println("Holder key created: ${keyHandle.id}")
 
 ## Practical usage tips
 
-- **Production** – back keys with HSMs or cloud KMS (AWS KMS, HashiCorp Vault, etc.) via custom providers.  
+- **Production** – back keys with Hardware Security Modules (HSMs) or cloud Key Management Service (KMS) (AWS KMS, HashiCorp Vault, etc.) via custom providers.  
 - **Rotation** – maintain previous keys so verifiers can validate historic credentials; rotate key IDs in VC proofs.  
-- **Access control** – enforce authorisation at the KMS boundary; VeriCore assumes the provider handles policy.  
+- **Access control** – enforce authorisation at the Key Management Service (KMS) boundary; VeriCore assumes the provider handles policy.  
 - **Testing** – rely on `InMemoryKeyManagementService` from `vericore-testkit` for determinism.
 
 ## See also
@@ -82,7 +82,7 @@ println("Holder key created: ${keyHandle.id}")
 - [Architecture Overview](../introduction/architecture-overview.md)
 # Key Management
 
-Key management underpins every trust workflow in VeriCore. Keys sign credentials and presentations, decrypt payloads, and authenticate wallets. The platform treats KMS as a first-class SPI so you can swap implementations without rewriting your business logic.
+Key management underpins every trust workflow in VeriCore. Keys sign credentials and presentations, decrypt payloads, and authenticate wallets. The platform treats Key Management Service (KMS) as a first-class Service Provider Interface (SPI) so you can swap implementations without rewriting your business logic.
 
 ## Responsibilities
 
@@ -143,9 +143,9 @@ Presentation workflows follow the same pattern when creating verifiable presenta
 
 ## Security Guidance
 
-- **Production** – back your `KeyManagementService` with an HSM, cloud KMS, or equivalent secure enclave. Never store production keys in process memory.
+- **Production** – back your `KeyManagementService` with a Hardware Security Module (HSM), cloud Key Management Service (KMS), or equivalent secure enclave. Never store production keys in process memory.
 - **Rotation** – implement periodic key rotation and maintain historic keys (with `keyId` suffixes) so verifiers can still check older proofs.
-- **Access control** – centralize authorization for key usage; VeriCore assumes the KMS enforces policy.
+- **Access control** – centralize authorization for key usage; VeriCore assumes the Key Management Service (KMS) enforces policy.
 
 ## Extending the SPI
 

@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![VeriCore Logo](assets/images/Vericore_logo.png)
+![](assets/images/Vericore_logo.png)
 
 ### The Foundation for Decentralized Trust and Identity
 

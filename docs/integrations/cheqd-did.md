@@ -4,7 +4,7 @@
 
 ## Overview
 
-The `vericore-did-cheqd` module provides an implementation of VeriCore's `DidMethod` interface using the Cheqd network. This integration enables you to:
+The `did/plugins/cheqd` module provides an implementation of VeriCore's `DidMethod` interface using the Cheqd network. This integration enables you to:
 
 - Create and resolve DIDs on Cheqd blockchain
 - Store DID documents via blockchain anchoring
@@ -17,9 +17,9 @@ Add the did:cheqd module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-did-cheqd:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.did:cheqd:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did-base:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.did:base:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
     

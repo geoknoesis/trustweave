@@ -4,7 +4,7 @@
 
 ## Overview
 
-The `vericore-did-sol` module provides an implementation of VeriCore's `DidMethod` interface using the Solana blockchain. This integration enables you to:
+The `did/plugins/sol` module provides an implementation of VeriCore's `DidMethod` interface using the Solana blockchain. This integration enables you to:
 
 - Create and resolve DIDs on Solana blockchain
 - Store DID documents in Solana program accounts
@@ -18,9 +18,9 @@ Add the did:sol module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-did-sol:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.did:sol:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did-base:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.did:base:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
     

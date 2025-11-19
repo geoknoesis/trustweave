@@ -2,7 +2,7 @@
 
 ## Overview
 
-This plan outlines the implementation of a HashiCorp Vault Key Management Service (KMS) plugin for VeriCore. The plugin will be implemented as the `vericore-hashicorp-kms` module and will integrate with Vault's Transit secrets engine to provide cryptographic key operations for DID and Verifiable Credential workflows.
+This plan outlines the implementation of a HashiCorp Vault Key Management Service (KMS) plugin for VeriCore. The plugin will be implemented as the `kms/plugins/hashicorp` module and will integrate with Vault's Transit secrets engine to provide cryptographic key operations for DID and Verifiable Credential workflows.
 
 ## Background
 
@@ -30,10 +30,10 @@ The Transit engine supports the following key types:
 
 ### 1. Module Structure and Dependencies
 
-**Task**: Create `vericore-hashicorp-kms` module with build configuration
+**Task**: Create `kms/plugins/hashicorp` module with build configuration
 
 **Files**:
-- `vericore-hashicorp-kms/build.gradle.kts`
+- `kms/plugins/hashicorp/build.gradle.kts`
 
 **Dependencies**:
 - `vericore-core`
@@ -54,7 +54,7 @@ The Transit engine supports the following key types:
 **Task**: Implement `VaultKmsConfig` data class with builder pattern
 
 **Files**:
-- `vericore-hashicorp-kms/src/main/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKmsConfig.kt`
+- `kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKmsConfig.kt`
 
 **Features**:
 - Vault server address (required)
@@ -95,7 +95,7 @@ VaultKmsConfig.builder()
 **Task**: Implement `AlgorithmMapping` utilities for VeriCore ↔ Vault Transit mapping
 
 **Files**:
-- `vericore-hashicorp-kms/src/main/kotlin/com/geoknoesis/vericore/hashicorpkms/AlgorithmMapping.kt`
+- `kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/vericore/hashicorpkms/AlgorithmMapping.kt`
 
 **Mappings**:
 - `Algorithm.Ed25519` → `"ed25519"`
@@ -124,7 +124,7 @@ VaultKmsConfig.builder()
 **Task**: Implement `VaultKmsClientFactory` for creating Vault HTTP clients
 
 **Files**:
-- `vericore-hashicorp-kms/src/main/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKmsClientFactory.kt`
+- `kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKmsClientFactory.kt`
 
 **Features**:
 - HTTP client creation with proper authentication
@@ -152,7 +152,7 @@ VaultKmsConfig.builder()
 **Task**: Implement `VaultKeyManagementService` implementing `KeyManagementService` interface
 
 **Files**:
-- `vericore-hashicorp-kms/src/main/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKeyManagementService.kt`
+- `kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKeyManagementService.kt`
 
 **Supported Algorithms**:
 - Ed25519
@@ -216,7 +216,7 @@ VaultKmsConfig.builder()
 **Task**: Implement `VaultKeyManagementServiceProvider` for SPI registration
 
 **Files**:
-- `vericore-hashicorp-kms/src/main/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKeyManagementServiceProvider.kt`
+- `kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKeyManagementServiceProvider.kt`
 
 **Features**:
 - Provider name: `"vault"` or `"hashicorp-vault"`
@@ -236,7 +236,7 @@ VaultKmsConfig.builder()
 **Task**: Create SPI registration file
 
 **Files**:
-- `vericore-hashicorp-kms/src/main/resources/META-INF/services/com.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider`
+- `kms/plugins/hashicorp/src/main/resources/META-INF/services/com.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider`
 
 **Content**:
 ```
@@ -253,10 +253,10 @@ com.geoknoesis.vericore.hashicorpkms.VaultKeyManagementServiceProvider
 **Task**: Create comprehensive unit tests
 
 **Files**:
-- `vericore-hashicorp-kms/src/test/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKmsConfigTest.kt`
-- `vericore-hashicorp-kms/src/test/kotlin/com/geoknoesis/vericore/hashicorpkms/AlgorithmMappingTest.kt`
-- `vericore-hashicorp-kms/src/test/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKeyManagementServiceTest.kt`
-- `vericore-hashicorp-kms/src/test/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKeyManagementServiceProviderTest.kt`
+- `kms/plugins/hashicorp/src/test/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKmsConfigTest.kt`
+- `kms/plugins/hashicorp/src/test/kotlin/com/geoknoesis/vericore/hashicorpkms/AlgorithmMappingTest.kt`
+- `kms/plugins/hashicorp/src/test/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKeyManagementServiceTest.kt`
+- `kms/plugins/hashicorp/src/test/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKeyManagementServiceProviderTest.kt`
 
 **Test Coverage**:
 - Configuration creation and validation
@@ -286,7 +286,7 @@ com.geoknoesis.vericore.hashicorpkms.VaultKeyManagementServiceProvider
 - `settings.gradle.kts`
 
 **Changes**:
-- Add `"vericore-hashicorp-kms"` to `include()` list
+- Add `"kms/plugins/hashicorp"` to `include()` list
 
 **Acceptance Criteria**:
 - Module included in build

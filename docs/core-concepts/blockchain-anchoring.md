@@ -23,7 +23,7 @@ Anchoring complements verifiable credentials: you can notarise VC digests, prese
 
 | Step | Implementation |
 |------|----------------|
-| 1. Choose a chain | Register a `BlockchainAnchorClient` (in-memory, Algorand, Polygon, Indy, or your own adapter). Chains use CAIP-2 IDs such as `algorand:testnet`. |
+| 1. Choose a chain | Register a `BlockchainAnchorClient` (in-memory, [Algorand](../integrations/algorand.md), [Polygon](../integrations/README.md#blockchain-anchor-integrations), [Ethereum](../integrations/ethereum-anchor.md), [Base](../integrations/base-anchor.md), [Arbitrum](../integrations/arbitrum-anchor.md), Indy, or your own adapter). Chains use CAIP-2 IDs such as `algorand:testnet`. |
 | 2. Canonicalise payload | Kotlinx Serialization + JSON Canonicalization Scheme ensure deterministic bytes. |
 | 3. Submit | `writePayload` stores the digest on chain and returns `AnchorResult` with an `AnchorRef`. |
 | 4. Verify | `readPayload` rehydrates the JSON, or recompute the digest locally and compare to the stored reference. |
@@ -110,10 +110,14 @@ result.fold(
 
 ## See also
 
+- [Blockchain Anchor Integration Guides](../integrations/README.md#blockchain-anchor-integrations) – Implementation guides for Algorand, Ethereum, Base, Arbitrum, Polygon, and Ganache
 - [Quick Start – Step 5](../getting-started/quick-start.md#step-5-verify-and-optionally-anchor) for an end-to-end example.  
 - [Wallet API Reference – Anchoring helpers](../api-reference/wallet-api.md#anchors) for wallet-integrated flows.  
 - [Architecture Overview](../introduction/architecture-overview.md) for the DID ➜ credential ➜ anchor flow.  
 - [Verifiable Credentials](verifiable-credentials.md) to understand what you may want to anchor.
+
+---
+
 # Blockchain Anchoring
 
 Anchoring creates an immutable audit trail for important events or payloads by writing a compact reference to a blockchain. VeriCore standardizes the experience so you can take advantage of tamper evidence without having to become a chain expert.
@@ -128,7 +132,7 @@ Anchoring is complementary to verifiable credentials: you can anchor raw JSON, c
 
 ## How VeriCore Anchoring Works
 
-1. **Choose a chain** – VeriCore ships with in-memory clients for testing and adapters for Algorand, Polygon, Indy, and community providers. Chains are identified using CAIP-2 strings (for example `algorand:testnet`).
+1. **Choose a chain** – VeriCore ships with in-memory clients for testing and adapters for [Algorand](../integrations/algorand.md), [Polygon](../integrations/README.md#blockchain-anchor-integrations), [Ethereum](../integrations/ethereum-anchor.md), [Base](../integrations/base-anchor.md), [Arbitrum](../integrations/arbitrum-anchor.md), Indy, and community providers. Chains are identified using CAIP-2 strings (for example `algorand:testnet`).
 2. **Serialize the payload** – the SDK serializes your Kotlin data using Kotlinx Serialization before hashing.
 3. **Submit** – the registered `BlockchainAnchorClient` stores the digest on-chain and returns an `AnchorResult` containing the `AnchorRef` (transaction hash, contract/app ID, chain).
 4. **Verify** – later you can `readPayload` or independently recompute the digest to confirm the payload matches the anchor reference.
@@ -142,8 +146,8 @@ println("Anchored tx: ${result?.ref?.txHash}")
 ## Configuring Clients
 
 - **In-memory** – great for tests. Register with `BlockchainAnchorRegistry().register("inmemory:anchor", InMemoryBlockchainAnchorClient("inmemory:anchor"))`.
-- **Algorand** – configure `AlgorandBlockchainAnchorClientOptions` (`algodUrl`, `algodToken`, optional private key for signing).
-- **Polygon / Ganache** – supply RPC URLs, contract addresses, and private keys via typed options.
+- **Algorand** – configure `AlgorandBlockchainAnchorClientOptions` (`algodUrl`, `algodToken`, optional private key for signing). See [Algorand Integration Guide](../integrations/algorand.md).  
+- **Polygon / Ganache** – supply RPC URLs, contract addresses, and private keys via typed options. See [Integration Modules](../integrations/README.md#blockchain-anchor-integrations).
 - **Indy** – connect to Hyperledger Indy pools using pool endpoints, wallet names, and DIDs.
 
 All clients share a common template (`AbstractBlockchainAnchorClient`) for fallbacks, metadata, and error handling. You can implement your own by extending the base class or providing an SPI adapter discovered via `META-INF/services`.

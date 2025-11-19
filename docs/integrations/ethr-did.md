@@ -4,7 +4,7 @@
 
 ## Overview
 
-The `vericore-did-ethr` module provides an implementation of VeriCore's `DidMethod` interface using the Ethereum DID method. This integration enables you to:
+The `did/plugins/ethr` module provides an implementation of VeriCore's `DidMethod` interface using the Ethereum DID method. This integration enables you to:
 
 - Create and resolve DIDs on Ethereum blockchain
 - Store DID documents via blockchain anchoring
@@ -18,9 +18,9 @@ Add the did:ethr module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-did-ethr:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.did:ethr:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did-base:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.did:base:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
     
@@ -28,7 +28,7 @@ dependencies {
     implementation("org.web3j:core:4.10.0")
     
     // Optional: Polygon client for EVM-compatible chains
-    implementation("com.geoknoesis.vericore:vericore-polygon:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.chains:polygon:1.0.0-SNAPSHOT")
 }
 ```
 

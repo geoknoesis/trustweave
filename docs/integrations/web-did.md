@@ -4,7 +4,7 @@
 
 ## Overview
 
-The `vericore-did-web` module provides a complete implementation of VeriCore's `DidMethod` interface using the W3C did:web specification. This integration enables you to:
+The `did/plugins/web` module provides a complete implementation of VeriCore's `DidMethod` interface using the W3C did:web specification. This integration enables you to:
 
 - Create and resolve DIDs from HTTPS endpoints
 - Host DID documents at standard web locations (/.well-known/did.json)
@@ -17,9 +17,9 @@ Add the did:web module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-did-web:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.did:web:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did-base:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.did:base:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
 }
 ```
@@ -299,5 +299,5 @@ This implementation follows the [W3C did:web specification](https://w3c-ccg.gith
 
 - [W3C did:web Specification](https://w3c-ccg.github.io/did-method-web/)
 - [DID Core Specification](https://www.w3.org/TR/did-core/)
-- [VeriCore DID API](../api-reference/did-api.md)
+- [VeriCore Core API](../api-reference/core-api.md)
 

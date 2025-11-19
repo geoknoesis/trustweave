@@ -56,7 +56,6 @@
   * [walt.id Integration](integrations/waltid.md)
   * [GoDiddy Integration](integrations/godiddy.md)
   * [Algorand Integration](integrations/algorand.md)
-  * [Polygon Integration](integrations/polygon.md)
 
 * [API Reference](api-reference/README.md)
   * [Core API](api-reference/core-api.md)
@@ -78,17 +77,12 @@
   * [Testing Strategies](advanced/testing-strategies.md)
   * [Performance Considerations](advanced/performance.md)
 
-* [Best Practices](best-practices/README.md)
-  * [Design Principles](best-practices/design-principles.md)
-  * [Security Guidelines](best-practices/security.md)
-  * [Code Organization](best-practices/code-organization.md)
-  * [Migration Guide](best-practices/migration.md)
-
 * [Contributing](contributing/README.md)
   * [Development Setup](contributing/development-setup.md)
   * [Code Style](contributing/code-style.md)
   * [Testing Guidelines](contributing/testing-guidelines.md)
   * [Pull Request Process](contributing/pull-request-process.md)
+  * [Creating Plugins](contributing/creating-plugins.md)
 
 * [FAQ](faq.md)
 

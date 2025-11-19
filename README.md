@@ -91,16 +91,29 @@ VeriCore provides a modular architecture for building trust and identity systems
 
 ## Architecture
 
-VeriCore is organized into six modules:
+VeriCore is organized into a domain-centric structure with core modules and plugin implementations:
 
-### Core Modules
+### Core Modules (in `core/` directory)
 
-- **`vericore-core`**: Shared types, exceptions, and common utilities
+- **`vericore-core`**: Base types, exceptions, credential APIs
+- **`vericore-spi`**: Service Provider Interface definitions
 - **`vericore-json`**: JSON canonicalization and digest computation utilities
+- **`vericore-trust`**: Trust registry and trust layer
 - **`vericore-kms`**: Key Management Service (KMS) abstraction
 - **`vericore-did`**: Decentralized Identifier (DID) and DID Document management with pluggable DID methods
 - **`vericore-anchor`**: Blockchain anchoring abstraction with chain-agnostic interfaces
 - **`vericore-testkit`**: In-memory test implementations for all interfaces
+
+### Plugin Modules
+
+- **DID Plugins** (`did/plugins/`): DID method implementations (key, web, ion, ethr, etc.)
+- **KMS Plugins** (`kms/plugins/`): KMS implementations (aws, azure, google, hashicorp, waltid)
+- **Chain Plugins** (`chains/plugins/`): Blockchain adapters (algorand, polygon, ethereum, base, etc.)
+
+All plugins use hierarchical Maven group IDs:
+- DID plugins: `com.geoknoesis.vericore.did:*`
+- KMS plugins: `com.geoknoesis.vericore.kms:*`
+- Chain plugins: `com.geoknoesis.vericore.chains:*`
 
 ## Key Features
 
@@ -220,11 +233,15 @@ fun main() {
 ```kotlin
 import com.geoknoesis.vericore.VeriCore
 import com.geoknoesis.vericore.core.*
+import com.geoknoesis.vericore.did.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     // Create VeriCore instance
     val vericore = VeriCore.create()
+    
+    // Use native did:key plugin (most widely-used)
+    // Add dependency: implementation("com.geoknoesis.vericore.did:key:1.0.0-SNAPSHOT")
     
     // Create a DID with error handling
     val didResult = vericore.createDid()
@@ -271,7 +288,10 @@ fun main() = runBlocking {
     )
     
     // Or use getOrThrow for simple cases
-    val document = vericore.createDid().getOrThrow()
+    // Use native did:key (most widely-used)
+    val document = vericore.createDid("key") {
+        algorithm = KeyAlgorithm.ED25519
+    }.getOrThrow()
     println("Created DID: ${document.id}")
 }
 ```
@@ -379,7 +399,38 @@ fun main() = runBlocking {
 }
 ```
 
-### Example: Anchoring Data to a Blockchain
+### Example: Anchoring Data to Multiple Blockchains (Ethereum, Base, Arbitrum)
+
+You can anchor data to multiple EVM-compatible chains using VeriCore's chain-agnostic interface:
+
+```kotlin
+import com.geoknoesis.vericore.VeriCore
+import com.geoknoesis.vericore.ethereum.*
+import com.geoknoesis.vericore.base.*
+import com.geoknoesis.vericore.arbitrum.*
+import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import kotlinx.serialization.json.*
+
+val vericore = VeriCore.create {
+    blockchain {
+        // Register multiple blockchain adapters
+        register(EthereumBlockchainAnchorClient.MAINNET, InMemoryBlockchainAnchorClient(EthereumBlockchainAnchorClient.MAINNET))
+        register(BaseBlockchainAnchorClient.MAINNET, InMemoryBlockchainAnchorClient(BaseBlockchainAnchorClient.MAINNET))
+        register(ArbitrumBlockchainAnchorClient.MAINNET, InMemoryBlockchainAnchorClient(ArbitrumBlockchainAnchorClient.MAINNET))
+    }
+}
+
+// Anchor to Ethereum (highest security, higher fees)
+val ethereumResult = vericore.anchor(EthereumBlockchainAnchorClient.MAINNET, payload).getOrThrow()
+
+// Anchor to Base (Coinbase L2, lower fees, fast)
+val baseResult = vericore.anchor(BaseBlockchainAnchorClient.MAINNET, payload).getOrThrow()
+
+// Anchor to Arbitrum (largest L2 by TVL, lower fees)
+val arbitrumResult = vericore.anchor(ArbitrumBlockchainAnchorClient.MAINNET, payload).getOrThrow()
+```
+
+### Example: Anchoring Data to a Blockchain (Original)
 
 ```kotlin
 import com.geoknoesis.vericore.anchor.*
@@ -605,6 +656,9 @@ try {
 **Available Options Types**:
 - `AlgorandOptions`: Algorand SDK configuration
 - `PolygonOptions`: Polygon/Ethereum Web3j configuration (implements `Closeable`)
+- `EthereumOptions`: Ethereum mainnet Web3j configuration (implements `Closeable`)
+- `BaseOptions`: Base blockchain Web3j configuration (implements `Closeable`)
+- `ArbitrumOptions`: Arbitrum blockchain Web3j configuration (implements `Closeable`)
 - `GanacheOptions`: Ganache local node configuration (implements `Closeable`)
 - `IndyOptions`: Hyperledger Indy configuration
 
@@ -689,7 +743,7 @@ The project includes code quality tools:
 - **Java 21+**: Required for compilation and runtime
 - **Kotlin 2.2.0+**: Included via Gradle plugin
 - **Gradle 8.5+**: Automatically downloaded via Gradle Wrapper (no manual installation needed)
-- **Docker** (optional): Required for `vericore-ganache` tests using TestContainers
+- **Docker** (optional): Required for `com.geoknoesis.vericore.chains:ganache` tests using TestContainers
 
 ## Design Principles
 
@@ -702,13 +756,46 @@ The project includes code quality tools:
 7. **Performance**: Optimized JSON operations and configurable digest caching
 8. **Resource Management**: Proper cleanup for network clients (Closeable interface)
 
-## Future Extensions
+## Available Plugins
 
-Future adapter modules (outside this core library) can provide:
+VeriCore ships with comprehensive plugin support:
 
-- **Blockchain Adapters**: Algorand, Ethereum, Polygon, etc.
-- **DID Method Implementations**: did:web, did:key, did:ion, etc.
-- **KMS Backends**: AWS KMS, HashiCorp Vault, Hardware Security Modules, etc.
+### DID Method Plugins
+
+**High Priority:**
+- **`com.geoknoesis.vericore.did:key`** - Native did:key implementation (most widely-used DID method). See [Key DID Integration Guide](docs/integrations/key-did.md).
+- **`com.geoknoesis.vericore.did:web`** - Web DID method for HTTP/HTTPS-based resolution. See [Web DID Integration Guide](docs/integrations/web-did.md).
+- **`com.geoknoesis.vericore.did:ethr`** - Ethereum DID method with blockchain anchoring. See [Ethereum DID Integration Guide](docs/integrations/ethr-did.md).
+- **`com.geoknoesis.vericore.did:ion`** - Microsoft ION DID method using Sidetree protocol. See [ION DID Integration Guide](docs/integrations/ion-did.md).
+
+**Medium Priority:**
+- **`com.geoknoesis.vericore.did:polygon`** - Polygon DID method (lower fees than Ethereum). See [Polygon DID Integration Guide](docs/integrations/polygon-did.md).
+- **`com.geoknoesis.vericore.did:sol`** - Solana DID method with program integration. See [Solana DID Integration Guide](docs/integrations/sol-did.md).
+- **`com.geoknoesis.vericore.did:peer`** - Peer-to-peer DID method (no external registry). See [Peer DID Integration Guide](docs/integrations/peer-did.md).
+
+**Lower Priority:**
+- **`com.geoknoesis.vericore.did:jwk`** - W3C-standard did:jwk using JSON Web Keys directly. See [JWK DID Integration Guide](docs/integrations/jwk-did.md).
+- **`com.geoknoesis.vericore.did:ens`** - Ethereum Name Service (ENS) resolver integration. See [ENS DID Integration Guide](docs/integrations/ens-did.md).
+- **`com.geoknoesis.vericore.did:plc`** - Personal Linked Container (PLC) for AT Protocol. See [PLC DID Integration Guide](docs/integrations/plc-did.md).
+- **`com.geoknoesis.vericore.did:cheqd`** - Cheqd network DID method with payment features. See [Cheqd DID Integration Guide](docs/integrations/cheqd-did.md).
+
+### Blockchain Anchor Plugins
+
+- **`com.geoknoesis.vericore.chains:ethereum`** - Ethereum mainnet anchoring with Sepolia testnet support. See [Ethereum Anchor Integration Guide](docs/integrations/ethereum-anchor.md).
+- **`com.geoknoesis.vericore.chains:base`** - Base (Coinbase L2) anchoring with fast confirmations and lower fees. See [Base Anchor Integration Guide](docs/integrations/base-anchor.md).
+- **`com.geoknoesis.vericore.chains:arbitrum`** - Arbitrum One (largest L2 by TVL) anchoring. See [Arbitrum Anchor Integration Guide](docs/integrations/arbitrum-anchor.md).
+- **`com.geoknoesis.vericore.chains:algorand`** - Algorand blockchain anchoring. See [Algorand Integration Guide](docs/integrations/algorand.md).
+- **`com.geoknoesis.vericore.chains:polygon`** - Polygon blockchain anchoring. See [Integration Modules](docs/integrations/README.md#blockchain-anchor-integrations).
+- **`com.geoknoesis.vericore.chains:ganache`** - Local developer anchoring using Ganache. See [Integration Modules](docs/integrations/README.md#blockchain-anchor-integrations).
+
+### Key Management Service Plugins
+
+- **`com.geoknoesis.vericore.kms:aws`** - AWS Key Management Service integration. See [AWS KMS Integration Guide](docs/integrations/aws-kms.md).
+- **`com.geoknoesis.vericore.kms:azure`** - Azure Key Vault integration. See [Azure KMS Integration Guide](docs/integrations/azure-kms.md).
+- **`com.geoknoesis.vericore.kms:google`** - Google Cloud KMS integration. See [Google KMS Integration Guide](docs/integrations/google-kms.md).
+- **`com.geoknoesis.vericore.kms:hashicorp`** - HashiCorp Vault Transit engine integration. See [HashiCorp Vault KMS Integration Guide](docs/integrations/hashicorp-vault-kms.md).
+
+See [Integration Modules](docs/integrations/README.md) for detailed documentation on all plugins.
 
 ## walt.id Integration
 

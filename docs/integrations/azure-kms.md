@@ -4,7 +4,7 @@
 
 ## Overview
 
-The `vericore-azure-kms` module provides a complete implementation of VeriCore's `KeyManagementService` interface using Azure Key Vault. This integration enables you to:
+The `kms/plugins/azure` module provides a complete implementation of VeriCore's `KeyManagementService` interface using Azure Key Vault. This integration enables you to:
 
 - Use Azure Key Vault for secure key generation and storage
 - Leverage Azure Key Vault's key versioning and soft-delete capabilities
@@ -18,7 +18,7 @@ Add the Azure Key Vault module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-azure-kms:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.kms:azure:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
 }
@@ -364,7 +364,7 @@ See the [Algorithm Compatibility Table](../core-concepts/algorithm-compatibility
 The module includes unit tests that can be run without Azure credentials:
 
 ```bash
-./gradlew :vericore-azure-kms:test
+./gradlew :kms/plugins/azure:test
 ```
 
 ### Integration Tests

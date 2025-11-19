@@ -11,7 +11,7 @@
   Contains credential issuance, verification, wallet DSLs, and models only.
 
 ### B. Group Integrations
-- Consolidate blockchain adapters (`vericore-algorand`, `vericore-polygon`, `vericore-ganache`) into a `vericore-anchor-integrations` composite module using Gradle source sets, or at minimum introduce a shared `anchor-integrations` package to hold common helper code.  
+- Consolidate blockchain adapters (`chains/plugins/algorand`, `chains/plugins/polygon`, `chains/plugins/ganache`) into a `vericore-anchor-integrations` composite module using Gradle source sets, or at minimum introduce a shared `anchor-integrations` package to hold common helper code.  
 - Apply a similar pattern for DID/KMS provider modules (e.g., `godiddy`, `waltid`) to reduce boilerplate and surface a clear extension point.
 
 ## 2. Package-Level Realignment

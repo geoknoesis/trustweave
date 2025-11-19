@@ -6,7 +6,6 @@
 
 - **[README.md](../README.md)**: Main project documentation with quick start guide
 - **[CHANGELOG.md](../CHANGELOG.md)**: Detailed changelog of all optimizations and improvements
-- **[OPTIMIZATION_COMPLETE.md](../OPTIMIZATION_COMPLETE.md)**: Summary of completed optimization phases
 - **Runnable quick start**: `./gradlew :vericore-examples:runQuickStartSample`
 
 ## Core Concepts Documentation
@@ -128,8 +127,8 @@ See **[Scenarios Overview](scenarios/README.md)** for all available scenarios or
   - Architecture benefits
 
 ### Adapter Modules
-- **[vericore-ganache/README.md](../vericore-ganache/README.md)**: Ganache adapter with TestContainers
-- **[vericore-indy/README.md](../vericore-indy/README.md)**: Hyperledger Indy adapter
+- **[chains/plugins/ganache/README.md](../chains/plugins/ganache/README.md)**: Ganache adapter with TestContainers
+- **[chains/plugins/indy/README.md](../chains/plugins/indy/README.md)**: Hyperledger Indy adapter
 
 ### Test Utilities
 - **[vericore-testkit/eo/README.md](../vericore-testkit/src/main/kotlin/com/geoknoesis/vericore/testkit/eo/README.md)**: EO test integration utilities

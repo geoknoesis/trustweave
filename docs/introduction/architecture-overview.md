@@ -35,20 +35,44 @@ Use this flow as a mental checklist: if you know which step you are implementing
 
 ## Module Structure
 
-VeriCore is organized into several modules:
+VeriCore is organized into a domain-centric structure with core modules and plugin implementations:
 
 ```
 vericore/
-├── vericore-core          # Shared types and exceptions
-├── vericore-json          # JSON canonicalization and digests
-├── vericore-kms           # Key management abstraction
-├── vericore-did           # DID and DID Document management
-├── vericore-anchor        # Blockchain anchoring abstraction
-├── vericore-testkit       # Test implementations
-├── vericore-waltid        # walt.id integration (optional)
-├── vericore-godiddy       # GoDiddy integration (optional)
-├── vericore-algorand      # Algorand adapter (optional)
-└── vericore-polygon       # Polygon adapter (optional)
+├── core/                          # Core framework modules
+│   ├── vericore-core/             # Base types, exceptions, credential APIs
+│   ├── vericore-spi/              # Service Provider Interface definitions
+│   ├── vericore-json/             # JSON canonicalization utilities
+│   ├── vericore-trust/            # Trust registry and trust layer
+│   └── vericore-testkit/          # Test utilities and mocks
+│
+├── did/                           # DID domain
+│   ├── vericore-did/              # Core DID abstraction
+│   └── plugins/                   # DID method implementations
+│       ├── key/                   # did:key implementation
+│       ├── web/                   # did:web implementation
+│       ├── ion/                   # did:ion implementation
+│       └── ...                    # Other DID methods
+│
+├── kms/                           # KMS domain
+│   ├── vericore-kms/              # Core KMS abstraction
+│   └── plugins/                   # KMS implementations
+│       ├── aws/                   # AWS KMS
+│       ├── azure/                 # Azure Key Vault
+│       ├── google/                # Google Cloud KMS
+│       └── ...                    # Other KMS providers
+│
+├── chains/                        # Blockchain/Chain domain
+│   ├── vericore-anchor/           # Core anchor abstraction
+│   └── plugins/                   # Chain implementations
+│       ├── algorand/              # Algorand adapter
+│       ├── polygon/               # Polygon adapter
+│       └── ...                    # Other blockchain adapters
+│
+└── distribution/                  # Distribution modules
+    ├── vericore-all/              # All-in-one module
+    ├── vericore-bom/              # Bill of Materials
+    └── vericore-examples/         # Example applications
 ```
 
 ## Core Modules
@@ -85,24 +109,30 @@ vericore/
 
 ## Integration Modules
 
-### vericore-waltid
-- walt.id-based KMS and DID methods
-- SPI-based discovery
-- Supports did:key and did:web
+### KMS Plugins
 
-### vericore-godiddy
-- HTTP integration with GoDiddy services
-- Universal Resolver, Registrar, Issuer, Verifier
-- Supports 20+ DID methods
+- **walt.id** (`com.geoknoesis.vericore.kms:waltid`) – walt.id-based KMS and DID methods. See [walt.id Integration Guide](../integrations/waltid.md).
+- **AWS KMS** (`com.geoknoesis.vericore.kms:aws`) – AWS Key Management Service. See [AWS KMS Integration Guide](../integrations/aws-kms.md).
+- **Azure Key Vault** (`com.geoknoesis.vericore.kms:azure`) – Azure Key Vault integration. See [Azure KMS Integration Guide](../integrations/azure-kms.md).
+- **Google Cloud KMS** (`com.geoknoesis.vericore.kms:google`) – Google Cloud KMS integration. See [Google KMS Integration Guide](../integrations/google-kms.md).
+- **HashiCorp Vault** (`com.geoknoesis.vericore.kms:hashicorp`) – HashiCorp Vault Transit engine. See [HashiCorp Vault KMS Integration Guide](../integrations/hashicorp-vault-kms.md).
 
-### vericore-algorand
-- Algorand blockchain adapter
-- Mainnet and testnet support
-- Implements `BlockchainAnchorClient`
+### DID Method Plugins
 
-### vericore-polygon
-- Polygon blockchain adapter
-- Implements `BlockchainAnchorClient`
+- **GoDiddy** (`com.geoknoesis.vericore.did:godiddy`) – HTTP integration with GoDiddy services. Universal Resolver, Registrar, Issuer, Verifier. Supports 20+ DID methods. See [GoDiddy Integration Guide](../integrations/godiddy.md).
+- **did:key** (`com.geoknoesis.vericore.did:key`) – Native did:key implementation. See [Key DID Integration Guide](../integrations/key-did.md).
+- **did:web** (`com.geoknoesis.vericore.did:web`) – Web DID method. See [Web DID Integration Guide](../integrations/web-did.md).
+- **did:ion** (`com.geoknoesis.vericore.did:ion`) – Microsoft ION DID method. See [ION DID Integration Guide](../integrations/ion-did.md).
+- See [Integration Modules](../integrations/README.md) for all DID method implementations.
+
+### Blockchain Anchor Plugins
+
+- **Algorand** (`com.geoknoesis.vericore.chains:algorand`) – Algorand blockchain adapter. Mainnet and testnet support. See [Algorand Integration Guide](../integrations/algorand.md).
+- **Polygon** (`com.geoknoesis.vericore.chains:polygon`) – Polygon blockchain adapter. See [Integration Modules](../integrations/README.md#blockchain-anchor-integrations).
+- **Ethereum** (`com.geoknoesis.vericore.chains:ethereum`) – Ethereum blockchain adapter. See [Ethereum Anchor Integration Guide](../integrations/ethereum-anchor.md).
+- **Base** (`com.geoknoesis.vericore.chains:base`) – Base (Coinbase L2) adapter. See [Base Anchor Integration Guide](../integrations/base-anchor.md).
+- **Arbitrum** (`com.geoknoesis.vericore.chains:arbitrum`) – Arbitrum adapter. See [Arbitrum Anchor Integration Guide](../integrations/arbitrum-anchor.md).
+- See [Integration Modules](../integrations/README.md) for all blockchain adapters.
 
 ## Design Patterns
 
@@ -216,26 +246,22 @@ vericore-testkit
 ### Integration Module Dependencies
 
 ```
-vericore-waltid
+KMS Plugins (com.geoknoesis.vericore.kms:*)
     → vericore-core
     → vericore-kms
-    → vericore-did
+    See: [KMS Integration Guides](../integrations/README.md#other-did--kms-integrations)
 
-vericore-godiddy
+DID Plugins (com.geoknoesis.vericore.did:*)
     → vericore-core
     → vericore-did
     → vericore-kms
-    → vericore-json
+    See: [DID Integration Guides](../integrations/README.md#did-method-integrations)
 
-vericore-algorand
+Chain Plugins (com.geoknoesis.vericore.chains:*)
     → vericore-core
     → vericore-anchor
     → vericore-json
-
-vericore-polygon
-    → vericore-core
-    → vericore-anchor
-    → vericore-json
+    See: [Blockchain Integration Guides](../integrations/README.md#blockchain-anchor-integrations)
 ```
 
 ## Extensibility

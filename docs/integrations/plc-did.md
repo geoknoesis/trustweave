@@ -4,7 +4,7 @@
 
 ## Overview
 
-The `vericore-did-plc` module provides an implementation of VeriCore's `DidMethod` interface using the Personal Linked Container (PLC) DID method for AT Protocol. This integration enables you to:
+The `did/plugins/plc` module provides an implementation of VeriCore's `DidMethod` interface using the Personal Linked Container (PLC) DID method for AT Protocol. This integration enables you to:
 
 - Create and resolve DIDs for AT Protocol applications
 - Store DID documents in PLC registry
@@ -17,9 +17,9 @@ Add the did:plc module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-did-plc:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.did:plc:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did-base:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.did:base:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
     
     // HTTP client for AT Protocol integration

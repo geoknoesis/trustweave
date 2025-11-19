@@ -4,7 +4,7 @@
 
 ## Overview
 
-The `vericore-aws-kms` module provides a complete implementation of VeriCore's `KeyManagementService` interface using AWS Key Management Service. This integration enables you to:
+The `kms/plugins/aws` module provides a complete implementation of VeriCore's `KeyManagementService` interface using AWS Key Management Service. This integration enables you to:
 
 - Use AWS KMS for secure key generation and storage with **FIPS 140-3 Level 3 validated HSMs**
 - Leverage AWS KMS's automatic key rotation capabilities
@@ -18,7 +18,7 @@ Add the AWS KMS module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-aws-kms:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.kms:aws:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
 }
@@ -388,7 +388,7 @@ See the [Algorithm Compatibility Table](../core-concepts/algorithm-compatibility
 The module includes unit tests that can be run without AWS credentials:
 
 ```bash
-./gradlew :vericore-aws-kms:test
+./gradlew :kms/plugins/aws:test
 ```
 
 ### Integration Tests with LocalStack

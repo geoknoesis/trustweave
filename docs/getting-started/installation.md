@@ -18,11 +18,11 @@ dependencies {
     // Test kit (for testing)
     testImplementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
     
-    // Optional: Integration modules
-    implementation("com.geoknoesis.vericore:vericore-waltid:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-godiddy:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-algorand:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-polygon:1.0.0-SNAPSHOT")
+    // Optional: Integration modules (using hierarchical group IDs)
+    implementation("com.geoknoesis.vericore.kms:waltid:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.did:godiddy:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.chains:polygon:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization (required)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -50,11 +50,11 @@ dependencies {
     // Test kit (for testing)
     testImplementation 'com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT'
     
-    // Optional: Integration modules
-    implementation 'com.geoknoesis.vericore:vericore-waltid:1.0.0-SNAPSHOT'
-    implementation 'com.geoknoesis.vericore:vericore-godiddy:1.0.0-SNAPSHOT'
-    implementation 'com.geoknoesis.vericore:vericore-algorand:1.0.0-SNAPSHOT'
-    implementation 'com.geoknoesis.vericore:vericore-polygon:1.0.0-SNAPSHOT'
+    // Optional: Integration modules (using hierarchical group IDs)
+    implementation 'com.geoknoesis.vericore.kms:waltid:1.0.0-SNAPSHOT'
+    implementation 'com.geoknoesis.vericore.did:godiddy:1.0.0-SNAPSHOT'
+    implementation 'com.geoknoesis.vericore.chains:algorand:1.0.0-SNAPSHOT'
+    implementation 'com.geoknoesis.vericore.chains:polygon:1.0.0-SNAPSHOT'
 }
 ```
 

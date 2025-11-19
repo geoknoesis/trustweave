@@ -35,23 +35,28 @@ allprojects {
 
 // Apply Kover to all subprojects that have tests
 subprojects {
-    // Configure all module builds to go under a unified build directory
-    if (project.name != "buildSrc") {
-        layout.buildDirectory.set(rootProject.layout.buildDirectory.dir("modules/${project.name}"))
+    // Only configure projects that have build.gradle.kts files (skip intermediate directories)
+    val buildFile = project.projectDir.resolve("build.gradle.kts")
+    if (buildFile.exists() && project.name != "buildSrc") {
+        // Use project path instead of name to avoid conflicts (e.g., did:plugins:base vs chains:plugins:base)
+        val buildDirName = project.path.replace(":", "-").replaceFirst("^-", "")
+        layout.buildDirectory.set(rootProject.layout.buildDirectory.dir("modules/$buildDirName"))
         apply(plugin = "org.jetbrains.kotlinx.kover")
     }
 }
 
 // Configure Maven publishing for all subprojects (except buildSrc and vericore-bom which has its own config)
 subprojects {
-    if (project.name != "buildSrc" && project.name != "vericore-bom") {
+    val buildFile = project.projectDir.resolve("build.gradle.kts")
+    if (buildFile.exists() && project.name != "buildSrc" && project.name != "vericore-bom") {
         apply(plugin = "maven-publish")
     }
 }
 
 // Configure publishing extension after plugin is applied
 subprojects {
-    if (project.name != "buildSrc" && project.name != "vericore-bom") {
+    val buildFile = project.projectDir.resolve("build.gradle.kts")
+    if (buildFile.exists() && project.name != "buildSrc" && project.name != "vericore-bom") {
         afterEvaluate {
             // Only configure if publishing plugin is applied and no publication exists yet
             if (pluginManager.hasPlugin("maven-publish")) {
@@ -60,8 +65,18 @@ subprojects {
                         // Only create if it doesn't exist
                         if (findByName("maven") == null) {
                             create<org.gradle.api.publish.maven.MavenPublication>("maven") {
-                                groupId = "com.geoknoesis.vericore"
-                                artifactId = project.name
+                                // Use project.group if set, otherwise default to com.geoknoesis.vericore
+                                groupId = project.group.toString()
+                                // Use explicit artifactId for plugins, otherwise use project.name
+                                artifactId = when {
+                                    project.path.startsWith(":did:plugins:") -> 
+                                        project.path.substringAfter(":did:plugins:")
+                                    project.path.startsWith(":kms:plugins:") -> 
+                                        project.path.substringAfter(":kms:plugins:")
+                                    project.path.startsWith(":chains:plugins:") -> 
+                                        project.path.substringAfter(":chains:plugins:")
+                                    else -> project.name
+                                }
                                 version = project.version.toString()
                                 
                                 from(components["java"])

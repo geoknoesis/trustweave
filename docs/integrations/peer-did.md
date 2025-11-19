@@ -4,7 +4,7 @@
 
 ## Overview
 
-The `vericore-did-peer` module provides an implementation of VeriCore's `DidMethod` interface using the peer DID method. This integration enables you to:
+The `did/plugins/peer` module provides an implementation of VeriCore's `DidMethod` interface using the peer DID method. This integration enables you to:
 
 - Create and resolve peer DIDs for P2P communication
 - Store DID documents locally (no external registry)
@@ -18,9 +18,9 @@ Add the did:peer module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-did-peer:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.did:peer:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did-base:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.did:base:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
 }
 ```
@@ -264,5 +264,5 @@ val result = method.resolveDid(document.id)
 
 - [Peer DID Method Specification](https://identity.foundation/peer-did-method-spec/)
 - [DID Core Specification](https://www.w3.org/TR/did-core/)
-- [VeriCore DID API](../api-reference/did-api.md)
+- [VeriCore Core API](../api-reference/core-api.md)
 

@@ -41,5 +41,4 @@ dependencies {
 
 - Explore individual module documentation linked above for detailed APIs and usage snippets.
 - Check out [Integration Modules](../integrations/README.md) when you connect to external providers.
-- See [Examples](../examples/README.md) to understand how the modules compose in real projects.
 

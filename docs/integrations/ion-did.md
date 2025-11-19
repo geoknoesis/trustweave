@@ -4,7 +4,7 @@
 
 ## Overview
 
-The `vericore-did-ion` module provides an implementation of VeriCore's `DidMethod` interface using Microsoft ION and the Sidetree protocol. This integration enables you to:
+The `did/plugins/ion` module provides an implementation of VeriCore's `DidMethod` interface using Microsoft ION and the Sidetree protocol. This integration enables you to:
 
 - Create and resolve DIDs using ION network
 - Store DID operations anchored to Bitcoin blockchain
@@ -17,9 +17,9 @@ Add the did:ion module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-did-ion:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.did:ion:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did-base:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.did:base:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
 }
 ```

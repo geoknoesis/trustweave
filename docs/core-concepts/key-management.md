@@ -100,7 +100,7 @@ println("Holder key created: ${keyHandle.id}")
 
 ## Practical usage tips
 
-- **Production** – back keys with Hardware Security Modules (HSMs) or cloud Key Management Service (KMS) (AWS KMS, HashiCorp Vault, etc.) via custom providers.  
+- **Production** – back keys with Hardware Security Modules (HSMs) or cloud Key Management Service (KMS) ([AWS KMS](../integrations/aws-kms.md), [Azure Key Vault](../integrations/azure-kms.md), [Google Cloud KMS](../integrations/google-kms.md), [HashiCorp Vault](../integrations/hashicorp-vault-kms.md), etc.) via custom providers.  
 - **Rotation** – maintain previous keys so verifiers can validate historic credentials; rotate key IDs in VC proofs.  
 - **Access control** – enforce authorisation at the Key Management Service (KMS) boundary; VeriCore assumes the provider handles policy.  
 - **Testing** – rely on `InMemoryKeyManagementService` from `vericore-testkit` for determinism.
@@ -108,10 +108,14 @@ println("Holder key created: ${keyHandle.id}")
 ## See also
 
 - [Wallet API Reference – KeyManagement](../api-reference/wallet-api.md#keymanagement)  
+- [KMS Integration Guides](../integrations/README.md#other-did--kms-integrations) – Implementation guides for AWS KMS, Azure Key Vault, Google Cloud KMS, HashiCorp Vault, and walt.id
 - [DIDs](dids.md) for how keys feed DID documents.  
 - [Credential Service API](../api-reference/credential-service-api.md) to see where keys sign credentials.  
 - [Advanced – Key Rotation](../advanced/key-rotation.md) *(to be added in a later step of this plan).*  
 - [Architecture Overview](../introduction/architecture-overview.md)
+
+---
+
 # Key Management
 
 Key management underpins every trust workflow in VeriCore. Keys sign credentials and presentations, decrypt payloads, and authenticate wallets. The platform treats Key Management Service (KMS) as a first-class Service Provider Interface (SPI) so you can swap implementations without rewriting your business logic.
@@ -151,7 +155,7 @@ interface KeyManagementService {
 | Module | Provider | Supported Algorithms | Notes |
 |--------|----------|----------------------|-------|
 | `vericore-testkit` | `InMemoryKeyManagementService` | Ed25519, secp256k1 | Ideal for unit tests; stores keys in-memory. |
-| `vericore-waltid` | `WaltIdKeyManagementService` | Ed25519, secp256k1, P-256, P-384, P-521 | Uses walt.id crypto to generate and sign keys. |
+| `kms/plugins/waltid` | `WaltIdKeyManagementService` | Ed25519, secp256k1, P-256, P-384, P-521 | Uses walt.id crypto to generate and sign keys. |
 | Community | SPI implementations | Varies by provider | Register via `META-INF/services/com.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider`. |
 
 To use a custom provider, include it on the classpath and VeriCore will discover it automatically when building the facade (`VeriCore.create { keys { provider("custom") } }`).

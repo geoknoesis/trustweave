@@ -7,7 +7,7 @@ Set up your development environment for working with VeriCore.
 - **Java 21+**: Download from [Adoptium](https://adoptium.net/) or [Oracle](https://www.oracle.com/java/technologies/downloads/)
 - **Kotlin 2.2.0+**: Included with Gradle or download from [Kotlin releases](https://github.com/JetBrains/kotlin/releases)
 - **Gradle 8.5+**: Download from [Gradle releases](https://gradle.org/releases/)
-- **Node.js** (optional): Automatically downloaded by Gradle for `vericore-ganache` module tests. If you want to use a system installation, install from [nodejs.org](https://nodejs.org/)
+- **Node.js** (optional): Automatically downloaded by Gradle for `chains/plugins/ganache` module tests. If you want to use a system installation, install from [nodejs.org](https://nodejs.org/)
 
 ## IDE Setup
 
@@ -89,16 +89,34 @@ vericore/
 ├── build.gradle.kts          # Root build file
 ├── settings.gradle.kts       # Project settings
 ├── buildSrc/                 # Build configuration
-├── vericore-core/            # Core module
-├── vericore-json/            # JSON utilities
-├── vericore-kms/             # Key management
-├── vericore-did/             # DID management
-├── vericore-anchor/          # Blockchain anchoring
-├── vericore-testkit/         # Test utilities
-├── vericore-waltid/          # walt.id integration
-├── vericore-godiddy/         # GoDiddy integration
-├── vericore-algorand/        # Algorand adapter
-└── vericore-polygon/         # Polygon adapter
+├── core/                     # Core framework modules
+│   ├── vericore-core/        # Base types, exceptions, credential APIs
+│   ├── vericore-spi/         # Service Provider Interface
+│   ├── vericore-json/        # JSON utilities
+│   ├── vericore-trust/       # Trust registry
+│   └── vericore-testkit/     # Test utilities
+├── did/                      # DID domain
+│   ├── vericore-did/         # Core DID abstraction
+│   └── plugins/              # DID method implementations
+│       ├── key/              # did:key
+│       ├── web/              # did:web
+│       └── ...               # Other DID methods
+├── kms/                      # KMS domain
+│   ├── vericore-kms/         # Core KMS abstraction
+│   └── plugins/              # KMS implementations
+│       ├── aws/              # AWS KMS
+│       ├── azure/            # Azure Key Vault
+│       └── ...               # Other KMS providers
+├── chains/                   # Blockchain domain
+│   ├── vericore-anchor/      # Core anchor abstraction
+│   └── plugins/              # Chain implementations
+│       ├── algorand/         # Algorand adapter
+│       ├── polygon/          # Polygon adapter
+│       └── ...               # Other blockchain adapters
+└── distribution/             # Distribution modules
+    ├── vericore-all/         # All-in-one module
+    ├── vericore-bom/         # Bill of Materials
+    └── vericore-examples/    # Example applications
 ```
 
 ## Development Workflow
@@ -112,10 +130,10 @@ Gradle tasks let you execute tests for the whole workspace or specific modules/c
 ./gradlew test
 
 # Run tests for specific module
-./gradlew :vericore-core:test
+./gradlew :core:vericore-core:test
 
 # Run specific test class
-./gradlew :vericore-core:test --tests "VeriCoreExceptionTest"
+./gradlew :core:vericore-core:test --tests "VeriCoreExceptionTest"
 ```
 
 **Result:** Successful runs keep CI parity with local development; failures point you at the module or class that needs attention.

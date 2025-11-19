@@ -14,7 +14,7 @@
 | `vericore-testkit` | Test doubles (wallets, DID methods), fixture DSLs | Mixes reusable test utilities with demo implementations |
 | `vericore-examples` | Scenario-driven sample apps/tests | Currently focused on academic credential workflow |
 | `vericore-all` | Aggregated facade combining core + supporting modules | Exposes library entry point (`VeriCore`) |
-| `vericore-godiddy`, `vericore-waltid`, etc. | Vendor-specific DID/KMS integrations | Each repeats similar adapter plumbing |
+| `did/plugins/godiddy`, `kms/plugins/waltid`, etc. | Vendor-specific DID/KMS integrations | Each repeats similar adapter plumbing |
 | Blockchain adapters (`algorand`, `polygon`, `ganache`) | Provide `BlockchainAnchorClient` implementations | Flat module list; no shared integration base module |
 
 ## 2. Key Packages inside `vericore-core`

@@ -4,7 +4,7 @@
 
 ## Overview
 
-The `vericore-hashicorp-kms` module provides a complete implementation of VeriCore's `KeyManagementService` interface using HashiCorp Vault's Transit secrets engine. This integration enables you to:
+The `kms/plugins/hashicorp` module provides a complete implementation of VeriCore's `KeyManagementService` interface using HashiCorp Vault's Transit secrets engine. This integration enables you to:
 
 - Use HashiCorp Vault for secure key generation and storage
 - Leverage Vault's centralized key management and policy-based access control
@@ -18,7 +18,7 @@ Add the HashiCorp Vault KMS module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-hashicorp-kms:1.0.0-SNAPSHOT")
+    implementation("com.geoknoesis.vericore.kms:hashicorp:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
     implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
 }
@@ -368,7 +368,7 @@ try {
 The module includes unit tests that can be run without a Vault instance:
 
 ```bash
-./gradlew :vericore-hashicorp-kms:test
+./gradlew :kms/plugins/hashicorp:test
 ```
 
 ### Integration Tests with Local Vault

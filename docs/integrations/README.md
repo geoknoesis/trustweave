@@ -29,6 +29,9 @@ These modules will be consolidated over time into a single
 
 - `vericore-godiddy` – HTTP bridge to DID/VC services exposed by the GoDiddy stack.
 - `vericore-waltid` – DID and KMS providers from the walt.id ecosystem.
+- `vericore-aws-kms` – AWS Key Management Service integration with full algorithm support (Ed25519, secp256k1, P-256/P-384/P-521, RSA). See [AWS KMS Integration Guide](aws-kms.md).
+- `vericore-azure-kms` – Azure Key Vault integration with algorithm support (secp256k1, P-256/P-384/P-521, RSA). Supports Managed Identity and Service Principal authentication.
+- `vericore-google-kms` – Google Cloud Key Management Service integration with algorithm support (secp256k1, P-256/P-384, RSA). Supports Application Default Credentials and service account authentication. See [Google Cloud KMS Integration Guide](google-kms.md).
 - `vericore-indy` – Hyperledger Indy DID/KMS integration (permissioned networks).
 
 Each module implements the SPI interfaces (`DidMethodService`, `KmsService`,

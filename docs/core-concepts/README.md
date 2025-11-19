@@ -17,7 +17,8 @@ Welcome to VeriCore's core concepts! This section introduces the fundamental bui
 3. [Wallets](wallets.md) - Understanding credential and identity wallets
 4. [Blockchain Anchoring](blockchain-anchoring.md) - Understanding data anchoring
 5. [Key Management](key-management.md) - Understanding key management systems
-6. [JSON Canonicalization](json-canonicalization.md) - Understanding data integrity
+6. [Algorithm Compatibility Table](algorithm-compatibility-table.md) - Algorithm support in DIDs, VCs, AWS KMS, and Azure Key Vault
+7. [JSON Canonicalization](json-canonicalization.md) - Understanding data integrity
 
 ## Quick Overview
 
@@ -66,6 +67,8 @@ A **Wallet** is a secure container for managing your credentials and identities.
 - **Signing**: Creating proofs for credentials
 - **Verification**: Verifying proofs from others
 - **Encryption**: Protecting sensitive data
+
+See the [Algorithm Compatibility Table](algorithm-compatibility-table.md) for a comprehensive comparison of algorithm support across DIDs, VCs, AWS KMS, and Azure Key Vault.
 
 ## Next Steps
 

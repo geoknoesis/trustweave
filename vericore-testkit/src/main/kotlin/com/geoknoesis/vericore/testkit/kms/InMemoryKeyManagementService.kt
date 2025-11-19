@@ -12,30 +12,46 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class InMemoryKeyManagementService : KeyManagementService {
 
+    companion object {
+        /**
+         * Algorithms supported by InMemoryKeyManagementService.
+         */
+        val SUPPORTED_ALGORITHMS = setOf(Algorithm.Ed25519, Algorithm.Secp256k1)
+    }
+
     private val keys = ConcurrentHashMap<String, KeyPair>()
     private val keyMetadata = ConcurrentHashMap<String, KeyHandle>()
 
+    override suspend fun getSupportedAlgorithms(): Set<Algorithm> = SUPPORTED_ALGORITHMS
+
     override suspend fun generateKey(
-        algorithm: String,
+        algorithm: Algorithm,
         options: Map<String, Any?>
     ): KeyHandle {
-        val keyPair = when (algorithm.uppercase()) {
-            "ED25519" -> generateEd25519KeyPair()
-            "SECP256K1" -> generateSecp256k1KeyPair()
-            else -> throw IllegalArgumentException("Unsupported algorithm: $algorithm")
+        if (!supportsAlgorithm(algorithm)) {
+            throw UnsupportedAlgorithmException(
+                "Algorithm '${algorithm.name}' is not supported. " +
+                "Supported: ${SUPPORTED_ALGORITHMS.joinToString(", ") { it.name }}"
+            )
+        }
+        
+        val keyPair = when (algorithm) {
+            is Algorithm.Ed25519 -> generateEd25519KeyPair()
+            is Algorithm.Secp256k1 -> generateSecp256k1KeyPair()
+            else -> throw UnsupportedAlgorithmException("Algorithm ${algorithm.name} not implemented")
         }
 
         val keyId = options["keyId"] as? String ?: "key_${UUID.randomUUID()}"
         
         keys[keyId] = keyPair
         
-        val publicKeyJwk = when (algorithm.uppercase()) {
-            "ED25519" -> mapOf(
+        val publicKeyJwk = when (algorithm) {
+            is Algorithm.Ed25519 -> mapOf(
                 "kty" to "OKP",
                 "crv" to "Ed25519",
                 "x" to Base64.getUrlEncoder().withoutPadding().encodeToString(keyPair.public.encoded)
             )
-            "SECP256K1" -> mapOf(
+            is Algorithm.Secp256k1 -> mapOf(
                 "kty" to "EC",
                 "crv" to "secp256k1",
                 "x" to Base64.getUrlEncoder().withoutPadding().encodeToString(keyPair.public.encoded.take(32).toByteArray()),
@@ -46,7 +62,7 @@ class InMemoryKeyManagementService : KeyManagementService {
 
         val handle = KeyHandle(
             id = keyId,
-            algorithm = algorithm,
+            algorithm = algorithm.name,
             publicKeyJwk = publicKeyJwk
         )
         
@@ -62,12 +78,18 @@ class InMemoryKeyManagementService : KeyManagementService {
     override suspend fun sign(
         keyId: String,
         data: ByteArray,
-        algorithm: String?
+        algorithm: Algorithm?
     ): ByteArray {
         val keyPair = keys[keyId]
             ?: throw KeyNotFoundException("Key not found: $keyId")
 
-        val signAlgorithm = algorithm ?: when (keyMetadata[keyId]?.algorithm?.uppercase()) {
+        val signAlgorithm = algorithm?.let { alg ->
+            when (alg) {
+                is Algorithm.Ed25519 -> "Ed25519"
+                is Algorithm.Secp256k1 -> "SHA256withECDSA"
+                else -> throw IllegalArgumentException("Unknown algorithm: ${alg.name}")
+            }
+        } ?: when (keyMetadata[keyId]?.algorithm?.uppercase()) {
             "ED25519" -> "Ed25519"
             "SECP256K1" -> "SHA256withECDSA"
             else -> throw IllegalArgumentException("Unknown algorithm for key: $keyId")

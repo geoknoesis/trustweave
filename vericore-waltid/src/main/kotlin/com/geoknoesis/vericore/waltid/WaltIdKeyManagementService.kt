@@ -1,9 +1,11 @@
 package com.geoknoesis.vericore.waltid
 
 import com.geoknoesis.vericore.core.VeriCoreException
+import com.geoknoesis.vericore.kms.Algorithm
 import com.geoknoesis.vericore.kms.KeyHandle
 import com.geoknoesis.vericore.kms.KeyManagementService
 import com.geoknoesis.vericore.kms.KeyNotFoundException
+import com.geoknoesis.vericore.kms.UnsupportedAlgorithmException
 import com.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -17,20 +19,44 @@ class WaltIdKeyManagementService(
     private val keyStore: MutableMap<String, KeyHandle> = ConcurrentHashMap()
 ) : KeyManagementService {
 
+    companion object {
+        /**
+         * Algorithms supported by WaltIdKeyManagementService.
+         */
+        val SUPPORTED_ALGORITHMS = setOf(
+            Algorithm.Ed25519,
+            Algorithm.Secp256k1,
+            Algorithm.P256,
+            Algorithm.P384,
+            Algorithm.P521
+        )
+    }
+
+    override suspend fun getSupportedAlgorithms(): Set<Algorithm> = SUPPORTED_ALGORITHMS
+
     override suspend fun generateKey(
-        algorithm: String,
+        algorithm: Algorithm,
         options: Map<String, Any?>
     ): KeyHandle = withContext(Dispatchers.IO) {
+        if (!supportsAlgorithm(algorithm)) {
+            throw UnsupportedAlgorithmException(
+                "Algorithm '${algorithm.name}' is not supported. " +
+                "Supported: ${SUPPORTED_ALGORITHMS.joinToString(", ") { it.name }}"
+            )
+        }
         try {
             // Use walt.id's key generation API
             // Note: This is a placeholder - actual implementation will use walt.id APIs
             val keyId = options["keyId"] as? String ?: "key_${System.currentTimeMillis()}"
             
-            // Map algorithm names
-            val waltIdAlgorithm = when (algorithm.uppercase()) {
-                "ED25519" -> "Ed25519"
-                "SECP256K1" -> "secp256k1"
-                else -> algorithm
+            // Map algorithm to walt.id format
+            val waltIdAlgorithm = when (algorithm) {
+                is Algorithm.Ed25519 -> "Ed25519"
+                is Algorithm.Secp256k1 -> "secp256k1"
+                is Algorithm.P256 -> "P-256"
+                is Algorithm.P384 -> "P-384"
+                is Algorithm.P521 -> "P-521"
+                else -> algorithm.name
             }
 
             // Generate key using walt.id (placeholder - replace with actual API call)
@@ -39,9 +65,8 @@ class WaltIdKeyManagementService(
             // For now, create a placeholder key handle
             // In real implementation, extract JWK from walt.id key
             val publicKeyJwk = mapOf(
-                "kty" to when (waltIdAlgorithm.uppercase()) {
-                    "ED25519" -> "OKP"
-                    "SECP256K1" -> "EC"
+                "kty" to when (algorithm) {
+                    is Algorithm.Ed25519 -> "OKP"
                     else -> "EC"
                 },
                 "crv" to waltIdAlgorithm,
@@ -50,7 +75,7 @@ class WaltIdKeyManagementService(
 
             val handle = KeyHandle(
                 id = keyId,
-                algorithm = algorithm,
+                algorithm = algorithm.name,
                 publicKeyJwk = publicKeyJwk
             )
 
@@ -68,13 +93,13 @@ class WaltIdKeyManagementService(
     override suspend fun sign(
         keyId: String,
         data: ByteArray,
-        algorithm: String?
+        algorithm: Algorithm?
     ): ByteArray = withContext(Dispatchers.IO) {
         val handle = keyStore[keyId] ?: throw KeyNotFoundException("Key not found: $keyId")
         
         try {
             // Use walt.id's signing API
-            // val signature = WaltIdCrypto.sign(keyId, data, algorithm ?: handle.algorithm)
+            // val signature = WaltIdCrypto.sign(keyId, data, algorithm?.name ?: handle.algorithm)
             // For now, return placeholder
             // In real implementation, use walt.id signing
             ByteArray(64) // Placeholder signature
@@ -93,6 +118,8 @@ class WaltIdKeyManagementService(
  */
 class WaltIdKeyManagementServiceProvider : KeyManagementServiceProvider {
     override val name: String = "waltid"
+    
+    override val supportedAlgorithms: Set<Algorithm> = WaltIdKeyManagementService.SUPPORTED_ALGORITHMS
 
     override fun create(options: Map<String, Any?>): KeyManagementService {
         return WaltIdKeyManagementService()

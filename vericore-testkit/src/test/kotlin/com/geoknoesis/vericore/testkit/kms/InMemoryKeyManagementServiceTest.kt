@@ -1,6 +1,8 @@
 package com.geoknoesis.vericore.testkit.kms
 
+import com.geoknoesis.vericore.kms.Algorithm
 import com.geoknoesis.vericore.kms.KeyNotFoundException
+import com.geoknoesis.vericore.kms.UnsupportedAlgorithmException
 import kotlinx.coroutines.runBlocking
 import kotlin.test.*
 
@@ -60,8 +62,49 @@ class InMemoryKeyManagementServiceTest {
 
     @Test
     fun `test generate key with unsupported algorithm throws exception`() = runBlocking {
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<UnsupportedAlgorithmException> {
             kms.generateKey("RSA", emptyMap())
+        }
+    }
+    
+    @Test
+    fun `test get supported algorithms`() = runBlocking {
+        val supported = kms.getSupportedAlgorithms()
+        
+        assertTrue(supported.contains(Algorithm.Ed25519))
+        assertTrue(supported.contains(Algorithm.Secp256k1))
+        assertEquals(2, supported.size)
+    }
+    
+    @Test
+    fun `test supports algorithm`() = runBlocking {
+        assertTrue(kms.supportsAlgorithm(Algorithm.Ed25519))
+        assertTrue(kms.supportsAlgorithm(Algorithm.Secp256k1))
+        assertFalse(kms.supportsAlgorithm(Algorithm.P256))
+        assertFalse(kms.supportsAlgorithm(Algorithm.RSA.RSA_2048))
+    }
+    
+    @Test
+    fun `test supports algorithm by name`() = runBlocking {
+        assertTrue(kms.supportsAlgorithm("Ed25519"))
+        assertTrue(kms.supportsAlgorithm("ed25519")) // case insensitive
+        assertTrue(kms.supportsAlgorithm("secp256k1"))
+        assertFalse(kms.supportsAlgorithm("P-256"))
+        assertFalse(kms.supportsAlgorithm("invalid"))
+    }
+    
+    @Test
+    fun `test generate key with Algorithm type`() = runBlocking {
+        val handle = kms.generateKey(Algorithm.Ed25519, emptyMap())
+        
+        assertNotNull(handle)
+        assertEquals("Ed25519", handle.algorithm)
+    }
+    
+    @Test
+    fun `test generate key with unsupported Algorithm type throws exception`() = runBlocking {
+        assertFailsWith<UnsupportedAlgorithmException> {
+            kms.generateKey(Algorithm.P256, emptyMap())
         }
     }
 
@@ -99,7 +142,7 @@ class InMemoryKeyManagementServiceTest {
         val handle = kms.generateKey("Ed25519", mapOf("keyId" to "signing-key"))
         val data = "test data".toByteArray()
 
-        val signature = kms.sign("signing-key", data, "Ed25519")
+        val signature = kms.sign("signing-key", data, Algorithm.Ed25519)
 
         assertNotNull(signature)
         assertTrue(signature.isNotEmpty())

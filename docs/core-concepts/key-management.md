@@ -32,24 +32,56 @@ dependencies {
 
 Built-in providers include the in-memory test Key Management Service (KMS) and the walt.id-backed implementation. You can add your own via Service Provider Interface (SPI).
 
+### Example: checking algorithm support
+
+```kotlin
+import com.geoknoesis.vericore.kms.*
+
+suspend fun checkKmsCapabilities(kms: KeyManagementService) {
+    // Get all supported algorithms
+    val supported = kms.getSupportedAlgorithms()
+    println("Supported algorithms: ${supported.joinToString { it.name }}")
+    
+    // Check specific algorithm
+    if (kms.supportsAlgorithm(Algorithm.Ed25519)) {
+        println("Ed25519 is supported")
+    }
+    
+    // Check by name (case-insensitive)
+    if (kms.supportsAlgorithm("secp256k1")) {
+        println("secp256k1 is supported")
+    }
+}
+```
+
 ### Example: generating and using keys
 
 ```kotlin
-import com.geoknoesis.vericore.kms.KeyManagementService
+import com.geoknoesis.vericore.kms.*
 
 suspend fun issueSignerKey(kms: KeyManagementService): String {
+    // Type-safe algorithm usage (recommended)
     val handle = kms.generateKey(
-        algorithm = "Ed25519",
+        algorithm = Algorithm.Ed25519,
         options = mapOf("label" to "issuer-root", "exportable" to false)
     )
     println("Generated key ${handle.id} (${handle.algorithm})")
     return handle.id
 }
 
+// Or use string-based API (convenience)
+suspend fun issueSignerKeyString(kms: KeyManagementService): String {
+    val handle = kms.generateKey(
+        algorithmName = "Ed25519",
+        options = mapOf("label" to "issuer-root", "exportable" to false)
+    )
+    return handle.id
+}
+
 suspend fun signDigest(kms: KeyManagementService, keyId: String, digest: ByteArray): ByteArray =
     kms.sign(keyId, digest)
 
-**Outcome:** Demonstrates creating a labelled key and using it to sign digests via the KMS abstraction—no direct coupling to backing implementations.
+**Outcome:** Demonstrates algorithm discovery and creating keys via the KMS abstraction—no direct coupling to backing implementations.
 ```
 
 ### Example: wallet-level key generation
@@ -93,26 +125,60 @@ A `KeyManagementService` is responsible for:
 - **Signing** – produce digital signatures for arbitrary byte arrays.
 - **Deletion / rotation** – remove or rotate keys if the provider supports it.
 
-The default interface is deliberately small:
+The interface includes algorithm advertisement and type-safe algorithm support:
 
 ```kotlin
 interface KeyManagementService {
-    suspend fun generateKey(algorithm: String, options: Map<String, Any?> = emptyMap()): KeyHandle
+    // Algorithm advertisement (required)
+    suspend fun getSupportedAlgorithms(): Set<Algorithm>
+    suspend fun supportsAlgorithm(algorithm: Algorithm): Boolean
+    suspend fun supportsAlgorithm(algorithmName: String): Boolean
+    
+    // Key operations
+    suspend fun generateKey(algorithm: Algorithm, options: Map<String, Any?> = emptyMap()): KeyHandle
+    suspend fun generateKey(algorithmName: String, options: Map<String, Any?> = emptyMap()): KeyHandle
     suspend fun getPublicKey(keyId: String): KeyHandle
-    suspend fun sign(keyId: String, data: ByteArray, algorithm: String? = null): ByteArray
+    suspend fun sign(keyId: String, data: ByteArray, algorithm: Algorithm? = null): ByteArray
+    suspend fun sign(keyId: String, data: ByteArray, algorithmName: String?): ByteArray
     suspend fun deleteKey(keyId: String): Boolean
 }
 ```
 
+**All KMS implementations MUST advertise their supported algorithms** via `getSupportedAlgorithms()`.
+
 ## Built-in Providers
 
-| Module | Provider | Notes |
-|--------|----------|-------|
-| `vericore-testkit` | `InMemoryKeyManagementService` | Ideal for unit tests; stores keys in-memory. |
-| `vericore-waltid` | `WaltIdKeyManagementService` | Uses walt.id crypto to generate and sign keys. |
-| Community | SPI implementations | Register via `META-INF/services/com.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider`. |
+| Module | Provider | Supported Algorithms | Notes |
+|--------|----------|----------------------|-------|
+| `vericore-testkit` | `InMemoryKeyManagementService` | Ed25519, secp256k1 | Ideal for unit tests; stores keys in-memory. |
+| `vericore-waltid` | `WaltIdKeyManagementService` | Ed25519, secp256k1, P-256, P-384, P-521 | Uses walt.id crypto to generate and sign keys. |
+| Community | SPI implementations | Varies by provider | Register via `META-INF/services/com.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider`. |
 
 To use a custom provider, include it on the classpath and VeriCore will discover it automatically when building the facade (`VeriCore.create { keys { provider("custom") } }`).
+
+### Algorithm Discovery
+
+You can discover which providers support specific algorithms:
+
+```kotlin
+import com.geoknoesis.vericore.kms.*
+
+// Discover all providers and their algorithms
+val providers = AlgorithmDiscovery.discoverProviders()
+providers.forEach { (name, algorithms) ->
+    println("$name supports: ${algorithms.joinToString { it.name }}")
+}
+
+// Find providers that support Ed25519
+val ed25519Providers = AlgorithmDiscovery.findProvidersFor(Algorithm.Ed25519)
+println("Providers supporting Ed25519: $ed25519Providers")
+
+// Find and create best provider for an algorithm
+val kms = AlgorithmDiscovery.createProviderFor(
+    algorithm = Algorithm.Ed25519,
+    preferredProvider = "waltid"
+)
+```
 
 ## Options and Builders
 
@@ -152,13 +218,52 @@ Presentation workflows follow the same pattern when creating verifiable presenta
 Create a module that implements `KeyManagementServiceProvider`:
 
 ```kotlin
+import com.geoknoesis.vericore.kms.*
+
 class VaultKmsProvider : KeyManagementServiceProvider {
     override val name = "vault"
+    
+    // MUST advertise supported algorithms
+    override val supportedAlgorithms: Set<Algorithm> = setOf(
+        Algorithm.Ed25519,
+        Algorithm.Secp256k1,
+        Algorithm.P256,
+        Algorithm.P384,
+        Algorithm.P521
+    )
+    
     override fun create(options: Map<String, Any?>): KeyManagementService = VaultKms(options)
+}
+
+class VaultKms(private val options: Map<String, Any?>) : KeyManagementService {
+    companion object {
+        val SUPPORTED_ALGORITHMS = setOf(
+            Algorithm.Ed25519,
+            Algorithm.Secp256k1,
+            Algorithm.P256,
+            Algorithm.P384,
+            Algorithm.P521
+        )
+    }
+    
+    // MUST implement algorithm advertisement
+    override suspend fun getSupportedAlgorithms(): Set<Algorithm> = SUPPORTED_ALGORITHMS
+    
+    override suspend fun generateKey(
+        algorithm: Algorithm,
+        options: Map<String, Any?>
+    ): KeyHandle {
+        // Implementation using Vault API
+        // ...
+    }
+    
+    // ... implement other methods
 }
 ```
 
-Add `META-INF/services/com.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider` containing the provider’s fully qualified class name. After that, `VeriCoreDefaults` can pick it up automatically.
+Add `META-INF/services/com.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider` containing the provider's fully qualified class name. After that, `VeriCoreDefaults` can pick it up automatically.
+
+**Important:** All providers MUST implement `supportedAlgorithms` and all KMS instances MUST implement `getSupportedAlgorithms()`.
 
 ## Related Reading
 

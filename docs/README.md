@@ -155,24 +155,8 @@ VeriCore powers trust and identity systems across multiple domains. Explore **25
 
 VeriCore is built on a modular, pluggable architecture:
 
-```
-┌──────────────────────────────────────────────────┐
-│                    VeriCore Facade               │
-│              (Unified API Entry Point)           │
-└──────────────────────────────────────────────────┘
-                          │
-        ┌─────────────────┼─────────────────┐
-        │                 │                 │
-┌───────▼──────┐  ┌───────▼──────┐  ┌───────▼──────┐
-│  DID Layer   │  │ Credential   │  │   Wallet     │
-│              │  │   Service    │  │   Service    │
-└───────┬──────┘  └───────┬──────┘  └───────┬──────┘
-        │                 │                 │
-┌───────▼─────────────────▼─────────────────▼───────┐
-│         Pluggable Adapters (Service Provider Interface)                  │
-│  • DID Methods  • Key Management Service (KMS)  • Blockchains  • Services  │
-└───────────────────────────────────────────────────┘
-```
+![VeriCore Architecture](assets/images/vericore-architecture.png)
+
 
 **Key Design Principles:**
 

@@ -4,7 +4,6 @@ import com.geoknoesis.vericore.kms.Algorithm
 import com.geoknoesis.vericore.kms.KeyNotFoundException
 import com.geoknoesis.vericore.kms.UnsupportedAlgorithmException
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -32,7 +31,7 @@ class AwsKeyManagementServiceTest {
     }
 
     @Test
-    fun `test get supported algorithms`() = runTest {
+    fun `test get supported algorithms`() = runBlocking {
         // Create service with mock (would need actual mock setup)
         val supported = AwsKeyManagementService.SUPPORTED_ALGORITHMS
         

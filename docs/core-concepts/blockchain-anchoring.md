@@ -115,6 +115,7 @@ result.fold(
 - [Wallet API Reference – Anchoring helpers](../api-reference/wallet-api.md#anchors) for wallet-integrated flows.  
 - [Architecture Overview](../introduction/architecture-overview.md) for the DID ➜ credential ➜ anchor flow.  
 - [Verifiable Credentials](verifiable-credentials.md) to understand what you may want to anchor.
+- [Blockchain-Anchored Revocation](blockchain-anchored-revocation.md) for anchoring credential revocation status lists.
 
 ---
 

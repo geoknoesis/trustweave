@@ -1,0 +1,52 @@
+package com.geoknoesis.vericore
+
+import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
+import com.geoknoesis.vericore.credential.CredentialServiceRegistry
+import com.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
+import com.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
+import com.geoknoesis.vericore.did.DidMethodRegistry
+import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
+import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
+import com.geoknoesis.vericore.testkit.services.TestkitWalletFactory
+
+/**
+ * Convenience factory for creating opinionated VeriCore configurations that depend on the
+ * in-memory testkit implementations. This is useful for samples, quick starts, and tests
+ * but should not be used for production deployments.
+ */
+object VeriCoreDefaults {
+
+    /**
+     * Builds an in-memory configuration backed by the testkit components.
+     * 
+     * This is useful for development, testing, and quick starts.
+     * For production, use [VeriCore.create] with custom configuration.
+     */
+    fun inMemory(): VeriCoreConfig {
+        val kms = InMemoryKeyManagementService()
+        val walletFactory = TestkitWalletFactory()
+        val didRegistry = DidMethodRegistry()
+        val didMethod = DidKeyMockMethod(kms)
+        didRegistry.register(didMethod)
+        val proofRegistry = ProofGeneratorRegistry().apply {
+            register(
+                Ed25519ProofGenerator(
+                    signer = { data, keyId ->
+                        kms.sign(keyId, data)
+                    }
+                )
+            )
+        }
+
+        return VeriCoreConfig(
+            kms = kms,
+            walletFactory = walletFactory,
+            didRegistry = didRegistry,
+            blockchainRegistry = BlockchainAnchorRegistry(),
+            credentialRegistry = CredentialServiceRegistry.create(),
+            proofRegistry = proofRegistry
+        )
+    }
+}
+
+

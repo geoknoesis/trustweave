@@ -2,7 +2,7 @@ package com.geoknoesis.vericore.azurekms
 
 import com.geoknoesis.vericore.kms.Algorithm
 import com.geoknoesis.vericore.kms.UnsupportedAlgorithmException
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -20,7 +20,7 @@ class AzureKeyManagementServiceTest {
     }
 
     @Test
-    fun `test get supported algorithms`() = runTest {
+    fun `test get supported algorithms`() = runBlocking {
         val supported = AzureKeyManagementService.SUPPORTED_ALGORITHMS
         
         assertFalse(supported.contains(Algorithm.Ed25519)) // Not supported by Azure
@@ -35,7 +35,7 @@ class AzureKeyManagementServiceTest {
     }
 
     @Test
-    fun `test unsupported algorithm Ed25519`() = runTest {
+    fun `test unsupported algorithm Ed25519`() = runBlocking {
         // Note: This test would require a real Azure Key Vault or mock
         // For now, we just test that Ed25519 is not in supported algorithms
         val supported = AzureKeyManagementService.SUPPORTED_ALGORITHMS

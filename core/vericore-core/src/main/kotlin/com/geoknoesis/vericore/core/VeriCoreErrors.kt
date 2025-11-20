@@ -70,6 +70,19 @@ sealed class VeriCoreError(
         ).filterValues { it != null }
     )
     
+    // Key Management errors
+    data class UnsupportedAlgorithm(
+        val algorithm: String,
+        val supportedAlgorithms: List<String>
+    ) : VeriCoreError(
+        code = "UNSUPPORTED_ALGORITHM",
+        message = "Algorithm '$algorithm' is not supported. Supported algorithms: ${supportedAlgorithms.joinToString(", ")}",
+        context = mapOf(
+            "algorithm" to algorithm,
+            "supportedAlgorithms" to supportedAlgorithms
+        )
+    )
+    
     data class CredentialIssuanceFailed(
         val reason: String,
         val issuerDid: String? = null

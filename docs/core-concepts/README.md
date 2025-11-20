@@ -16,9 +16,10 @@ Welcome to VeriCore's core concepts! This section introduces the fundamental bui
 2. [Verifiable Credentials](verifiable-credentials.md) - Understanding VCs and their lifecycle
 3. [Wallets](wallets.md) - Understanding credential and identity wallets
 4. [Blockchain Anchoring](blockchain-anchoring.md) - Understanding data anchoring
-5. [Key Management](key-management.md) - Understanding key management systems
-6. [Algorithm Compatibility Table](algorithm-compatibility-table.md) - Algorithm support in DIDs, VCs, AWS KMS, and Azure Key Vault
-7. [JSON Canonicalization](json-canonicalization.md) - Understanding data integrity
+5. [Blockchain-Anchored Revocation](blockchain-anchored-revocation.md) - Understanding revocation with blockchain anchoring
+6. [Key Management](key-management.md) - Understanding key management systems
+7. [Algorithm Compatibility Table](algorithm-compatibility-table.md) - Algorithm support in DIDs, VCs, AWS KMS, and Azure Key Vault
+8. [JSON Canonicalization](json-canonicalization.md) - Understanding data integrity
 
 ## Quick Overview
 

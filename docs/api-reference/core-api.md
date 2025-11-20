@@ -360,6 +360,200 @@ result.fold(
 **Errors:**
 - `VeriCoreError.CredentialInvalid` - Credential validation failed
 
+### Revocation and Status List Management
+
+VeriCore provides comprehensive revocation management with blockchain anchoring support. See [Blockchain-Anchored Revocation](../core-concepts/blockchain-anchored-revocation.md) for detailed documentation.
+
+#### createStatusList
+
+Creates a new status list for managing credential revocation or suspension.
+
+```kotlin
+suspend fun createStatusList(
+    issuerDid: String,
+    purpose: StatusPurpose,
+    size: Int = 131072,
+    customId: String? = null
+): Result<StatusListCredential>
+```
+
+**Parameters:**
+- `issuerDid`: The DID of the issuer who owns this status list
+- `purpose`: `StatusPurpose.REVOCATION` or `StatusPurpose.SUSPENSION`
+- `size`: Initial size of the status list in entries (default: 131072 = 16KB)
+- `customId`: Optional custom ID for the status list (auto-generated if null)
+
+**Returns:** `Result<StatusListCredential>` containing the created status list
+
+**Example:**
+```kotlin
+val statusList = vericore.createStatusList(
+    issuerDid = "did:key:issuer",
+    purpose = StatusPurpose.REVOCATION
+).getOrThrow()
+
+println("Status List ID: ${statusList.id}")
+```
+
+#### revokeCredential
+
+Revokes a credential by adding it to a status list.
+
+```kotlin
+suspend fun revokeCredential(
+    credentialId: String,
+    statusListId: String
+): Result<Boolean>
+```
+
+**Parameters:**
+- `credentialId`: The ID of the credential to revoke
+- `statusListId`: The ID of the status list to add the credential to
+
+**Returns:** `Result<Boolean>` - true if revocation succeeded
+
+**Example:**
+```kotlin
+val revoked = vericore.revokeCredential(
+    credentialId = "cred-123",
+    statusListId = statusList.id
+).getOrThrow()
+
+if (revoked) {
+    println("Credential revoked successfully")
+}
+```
+
+#### suspendCredential
+
+Suspends a credential (temporarily disables it).
+
+```kotlin
+suspend fun suspendCredential(
+    credentialId: String,
+    statusListId: String
+): Result<Boolean>
+```
+
+**Parameters:**
+- `credentialId`: The ID of the credential to suspend
+- `statusListId`: The ID of the suspension status list
+
+**Returns:** `Result<Boolean>` - true if suspension succeeded
+
+**Example:**
+```kotlin
+val suspended = vericore.suspendCredential(
+    credentialId = "cred-123",
+    statusListId = suspensionList.id
+).getOrThrow()
+```
+
+#### checkRevocationStatus
+
+Checks if a credential is revoked or suspended.
+
+```kotlin
+suspend fun checkRevocationStatus(
+    credential: VerifiableCredential
+): Result<RevocationStatus>
+```
+
+**Parameters:**
+- `credential`: The credential to check
+
+**Returns:** `Result<RevocationStatus>` containing:
+- `revoked`: Whether the credential is revoked
+- `suspended`: Whether the credential is suspended
+- `statusListId`: The status list ID if applicable
+- `reason`: Optional revocation reason
+
+**Example:**
+```kotlin
+val status = vericore.checkRevocationStatus(credential).getOrThrow()
+
+if (status.revoked) {
+    println("Credential is revoked")
+    println("Status List: ${status.statusListId}")
+} else if (status.suspended) {
+    println("Credential is suspended")
+} else {
+    println("Credential is valid")
+}
+```
+
+#### Using BlockchainRevocationRegistry
+
+For blockchain-anchored revocation, use `BlockchainRevocationRegistry` with an anchoring strategy:
+
+```kotlin
+import com.geoknoesis.vericore.credential.revocation.*
+import java.time.Duration
+
+// Create status list manager
+val statusListManager = InMemoryStatusListManager()
+
+// Create blockchain anchor client
+val anchorClient = /* your blockchain anchor client */
+
+// Create registry with periodic anchoring strategy
+val registry = BlockchainRevocationRegistry(
+    anchorClient = anchorClient,
+    statusListManager = statusListManager,
+    anchorStrategy = PeriodicAnchorStrategy(
+        interval = Duration.ofHours(1),
+        maxUpdates = 100
+    ),
+    chainId = "algorand:testnet"
+)
+
+// Create status list
+val statusList = registry.createStatusList(
+    issuerDid = "did:key:issuer",
+    purpose = StatusPurpose.REVOCATION
+)
+
+// Revoke credential (automatic anchoring if threshold reached)
+registry.revokeCredential("cred-123", statusList.id)
+
+// Check pending anchors
+val pending = registry.getPendingAnchor(statusList.id)
+if (pending != null) {
+    println("Pending updates: ${pending.updateCount}")
+}
+
+// Manual anchoring
+val anchorRef = registry.anchorRevocationList(statusList, "algorand:testnet")
+```
+
+**Anchoring Strategies:**
+
+1. **PeriodicAnchorStrategy** - Anchor on schedule or after N updates
+   ```kotlin
+   PeriodicAnchorStrategy(
+       interval = Duration.ofHours(1),
+       maxUpdates = 100
+   )
+   ```
+
+2. **LazyAnchorStrategy** - Anchor only when verification is requested
+   ```kotlin
+   LazyAnchorStrategy(
+       maxStaleness = Duration.ofDays(1)
+   )
+   ```
+
+3. **HybridAnchorStrategy** - Combine periodic and lazy approaches
+   ```kotlin
+   HybridAnchorStrategy(
+       periodicInterval = Duration.ofHours(1),
+       maxUpdates = 100,
+       forceAnchorOnVerify = true
+   )
+   ```
+
+See [Blockchain-Anchored Revocation](../core-concepts/blockchain-anchored-revocation.md) for complete documentation and examples.
+
 ### Wallet Operations
 
 #### createWallet

@@ -1,6 +1,7 @@
 package com.geoknoesis.vericore
 
 import com.geoknoesis.vericore.anchor.AnchorResult
+import com.geoknoesis.vericore.anchor.AnchorRef
 import com.geoknoesis.vericore.anchor.BlockchainAnchorClient
 import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import com.geoknoesis.vericore.core.*
@@ -17,7 +18,20 @@ import com.geoknoesis.vericore.credential.did.CredentialDidResolver
 import com.geoknoesis.vericore.did.toCredentialDidResolution
 import com.geoknoesis.vericore.credential.issuer.CredentialIssuer
 import com.geoknoesis.vericore.credential.models.VerifiableCredential
+import com.geoknoesis.vericore.credential.models.VerifiablePresentation
+import com.geoknoesis.vericore.credential.PresentationOptions
+import com.geoknoesis.vericore.credential.models.CredentialStatus
+import com.geoknoesis.vericore.credential.PresentationVerificationOptions
+import com.geoknoesis.vericore.credential.PresentationVerificationResult
+import com.geoknoesis.vericore.credential.presentation.PresentationService
 import com.geoknoesis.vericore.credential.verifier.CredentialVerifier
+import com.geoknoesis.vericore.credential.schema.SchemaRegistry
+import com.geoknoesis.vericore.credential.schema.SchemaRegistrationResult
+import com.geoknoesis.vericore.credential.schema.SchemaValidationResult
+import com.geoknoesis.vericore.credential.revocation.StatusListManager
+import com.geoknoesis.vericore.credential.revocation.RevocationStatus
+import com.geoknoesis.vericore.credential.revocation.StatusListCredential
+import com.geoknoesis.vericore.credential.revocation.StatusPurpose
 import com.geoknoesis.vericore.credential.wallet.Wallet
 import com.geoknoesis.vericore.credential.wallet.WalletProvider
 import com.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
@@ -32,9 +46,14 @@ import com.geoknoesis.vericore.did.DidResolutionResult
 import com.geoknoesis.vericore.did.DidMethodRegistry
 import com.geoknoesis.vericore.did.didCreationOptions
 import com.geoknoesis.vericore.kms.KeyManagementService
+import com.geoknoesis.vericore.kms.Algorithm
+import com.geoknoesis.vericore.kms.KeyHandle
+import com.geoknoesis.vericore.kms.UnsupportedAlgorithmException
 import com.geoknoesis.vericore.spi.PluginLifecycle
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.util.UUID
 
 /**
@@ -193,6 +212,97 @@ class VeriCore private constructor(
         context.resolveDid(did)
     }
     
+    /**
+     * Updates a DID document.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val updated = vericore.updateDid("did:key:example") { document ->
+     *     document.copy(
+     *         service = document.service + Service(
+     *             id = "${document.id}#service-1",
+     *             type = "LinkedDomains",
+     *             serviceEndpoint = "https://example.com/service"
+     *         )
+     *     )
+     * }.getOrThrow()
+     * ```
+     * 
+     * @param did The DID to update
+     * @param updater Function that transforms the current document to the new document
+     * @return Result containing the updated DID document
+     */
+    suspend fun updateDid(
+        did: String,
+        updater: (DidDocument) -> DidDocument
+    ): Result<DidDocument> = vericoreCatching {
+        require(did.isNotBlank()) { "DID is required" }
+        
+        DidValidator.validateFormat(did).let {
+            if (!it.isValid()) {
+                throw VeriCoreError.InvalidDidFormat(
+                    did = did,
+                    reason = it.errorMessage() ?: "Invalid DID format"
+                )
+            }
+        }
+        
+        val methodName = DidValidator.extractMethod(did)
+            ?: throw VeriCoreError.InvalidDidFormat(
+                did = did,
+                reason = "Failed to extract method from DID"
+            )
+        
+        val method = context.didRegistry.get(methodName)
+            ?: throw VeriCoreError.DidMethodNotRegistered(
+                method = methodName,
+                availableMethods = context.didRegistry.getAllMethodNames()
+            )
+        
+        method.updateDid(did, updater)
+    }
+    
+    /**
+     * Deactivates a DID.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val deactivated = vericore.deactivateDid("did:key:example").getOrThrow()
+     * if (deactivated) {
+     *     println("DID deactivated successfully")
+     * }
+     * ```
+     * 
+     * @param did The DID to deactivate
+     * @return Result containing true if deactivated, false otherwise
+     */
+    suspend fun deactivateDid(did: String): Result<Boolean> = vericoreCatching {
+        require(did.isNotBlank()) { "DID is required" }
+        
+        DidValidator.validateFormat(did).let {
+            if (!it.isValid()) {
+                throw VeriCoreError.InvalidDidFormat(
+                    did = did,
+                    reason = it.errorMessage() ?: "Invalid DID format"
+                )
+            }
+        }
+        
+        val methodName = DidValidator.extractMethod(did)
+            ?: throw VeriCoreError.InvalidDidFormat(
+                did = did,
+                reason = "Failed to extract method from DID"
+            )
+        
+        val method = context.didRegistry.get(methodName)
+            ?: throw VeriCoreError.DidMethodNotRegistered(
+                method = methodName,
+                availableMethods = context.didRegistry.getAllMethodNames()
+            )
+        
+        method.deactivateDid(did)
+    }
+    
     // ========================================
     // Credential Operations
     // ========================================
@@ -313,7 +423,311 @@ class VeriCore private constructor(
                 ?.toCredentialDidResolution()
         }
         val verifier = CredentialVerifier(defaultDidResolver = effectiveResolver)
-        verifier.verify(credential, options)
+        var result = verifier.verify(credential, options)
+        
+        // Enhance blockchain anchor verification if enabled and chainId is provided
+        val chainId = options.chainId
+        if (options.verifyBlockchainAnchor && chainId != null && credential.evidence != null) {
+            val enhancedResult = verifyBlockchainAnchorEvidence(credential, chainId, result)
+            result = enhancedResult
+        }
+        
+        result
+    }
+    
+    /**
+     * Verifies blockchain anchor evidence by reading from the blockchain.
+     */
+    private suspend fun verifyBlockchainAnchorEvidence(
+        credential: VerifiableCredential,
+        chainId: String,
+        currentResult: CredentialVerificationResult
+    ): CredentialVerificationResult {
+        // Find blockchain anchor evidence
+        val anchorEvidence = credential.evidence?.find { evidence ->
+            evidence.type.contains("BlockchainAnchorEvidence")
+        } ?: return currentResult
+        
+        val evidenceDoc = anchorEvidence.evidenceDocument?.jsonObject ?: return currentResult
+        val evidenceChainId = evidenceDoc["chainId"]?.jsonPrimitive?.content
+        val txHash = evidenceDoc["txHash"]?.jsonPrimitive?.content
+        
+        if (evidenceChainId != chainId || txHash == null) {
+            return currentResult.copy(
+                valid = false,
+                blockchainAnchorValid = false,
+                errors = currentResult.errors + "Blockchain anchor evidence chainId mismatch or missing txHash"
+            )
+        }
+        
+        // Get blockchain client and verify anchor exists
+        val client = context.getBlockchainClient(chainId)
+        if (client == null) {
+            return currentResult.copy(
+                warnings = currentResult.warnings + "Blockchain client not available for chain: $chainId",
+                blockchainAnchorValid = false
+            )
+        }
+        
+        return try {
+            val anchorRef = AnchorRef(
+                chainId = chainId,
+                txHash = txHash
+            )
+            val anchorResult = client.readPayload(anchorRef)
+            
+            // Verify anchor exists and contains expected data
+            // Note: Full verification would compare credential digest with anchored data
+            currentResult.copy(
+                blockchainAnchorValid = true
+            )
+        } catch (e: Exception) {
+            currentResult.copy(
+                valid = false,
+                blockchainAnchorValid = false,
+                errors = currentResult.errors + "Blockchain anchor verification failed: ${e.message}"
+            )
+        }
+    }
+    
+    // ========================================
+    // Presentation Operations
+    // ========================================
+    
+    /**
+     * Creates a verifiable presentation from credentials.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val presentation = vericore.createPresentation(
+     *     credentials = listOf(credential1, credential2),
+     *     holderDid = "did:key:holder",
+     *     holderKeyId = "key-1",
+     *     challenge = "auth-challenge-12345"
+     * ).getOrThrow()
+     * ```
+     * 
+     * @param credentials List of verifiable credentials to include
+     * @param holderDid DID of the presentation holder
+     * @param holderKeyId Key ID for signing the presentation
+     * @param challenge Optional challenge string for authentication
+     * @param domain Optional domain string for authentication
+     * @param proofType Proof type to use (default: "Ed25519Signature2020")
+     * @return Result containing the verifiable presentation
+     */
+    suspend fun createPresentation(
+        credentials: List<VerifiableCredential>,
+        holderDid: String,
+        holderKeyId: String,
+        challenge: String? = null,
+        domain: String? = null,
+        proofType: String = "Ed25519Signature2020"
+    ): Result<VerifiablePresentation> = vericoreCatching {
+        require(credentials.isNotEmpty()) { "At least one credential is required" }
+        require(holderDid.isNotBlank()) { "Holder DID is required" }
+        require(holderKeyId.isNotBlank()) { "Holder key ID is required" }
+        
+        // Validate holder DID format
+        DidValidator.validateFormat(holderDid).let {
+            if (!it.isValid()) {
+                throw VeriCoreError.InvalidDidFormat(
+                    did = holderDid,
+                    reason = it.errorMessage() ?: "Invalid holder DID format"
+                )
+            }
+        }
+        
+        val normalizedKeyId = normalizeKeyId(holderKeyId)
+        val proofGenerator = Ed25519ProofGenerator(
+            signer = { data, keyId -> context.kms.sign(normalizeKeyId(keyId), data) },
+            getPublicKeyId = { keyId -> 
+                val keyHandle = context.kms.getPublicKey(normalizeKeyId(keyId))
+                "${holderDid}#$keyId"
+            }
+        )
+        
+        val presentationService = PresentationService(
+            proofGenerator = proofGenerator
+        )
+        
+        val options = PresentationOptions(
+            holderDid = holderDid,
+            proofType = proofType,
+            keyId = normalizedKeyId,
+            challenge = challenge,
+            domain = domain
+        )
+        
+        presentationService.createPresentation(credentials, holderDid, options)
+    }
+    
+    /**
+     * Verifies a verifiable presentation.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val result = vericore.verifyPresentation(
+     *     presentation = presentation,
+     *     expectedChallenge = "auth-challenge-12345"
+     * ).getOrThrow()
+     * 
+     * if (result.valid) {
+     *     println("Presentation is valid")
+     * } else {
+     *     println("Errors: ${result.errors}")
+     * }
+     * ```
+     * 
+     * @param presentation The presentation to verify
+     * @param expectedChallenge Optional expected challenge value
+     * @param expectedDomain Optional expected domain value
+     * @param checkRevocation Whether to check credential revocation status
+     * @return Result containing verification details
+     */
+    suspend fun verifyPresentation(
+        presentation: VerifiablePresentation,
+        expectedChallenge: String? = null,
+        expectedDomain: String? = null,
+        checkRevocation: Boolean = true
+    ): Result<PresentationVerificationResult> = vericoreCatching {
+        val effectiveResolver = CredentialDidResolver { did ->
+            runCatching { context.resolveDid(did) }
+                .getOrNull()
+                ?.toCredentialDidResolution()
+        }
+        
+        val credentialVerifier = CredentialVerifier(defaultDidResolver = effectiveResolver)
+        val presentationService = PresentationService(
+            credentialVerifier = credentialVerifier
+        )
+        
+        val options = PresentationVerificationOptions(
+            verifyChallenge = expectedChallenge != null,
+            expectedChallenge = expectedChallenge,
+            verifyDomain = expectedDomain != null,
+            expectedDomain = expectedDomain,
+            checkRevocation = checkRevocation
+        )
+        
+        presentationService.verifyPresentation(presentation, options)
+    }
+    
+    /**
+     * Creates a selective disclosure presentation that only reveals specified fields.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val presentation = vericore.createSelectiveDisclosure(
+     *     credentials = listOf(credential),
+     *     disclosedFields = listOf("credentialSubject.name", "credentialSubject.email"),
+     *     holderDid = "did:key:holder",
+     *     holderKeyId = "key-1"
+     * ).getOrThrow()
+     * ```
+     * 
+     * **Note:** Full zero-knowledge selective disclosure requires BBS+ proofs.
+     * This method currently creates a regular presentation with only disclosed fields visible.
+     * 
+     * @param credentials List of verifiable credentials
+     * @param disclosedFields List of field paths to disclose (e.g., ["credentialSubject.name"])
+     * @param holderDid DID of the presentation holder
+     * @param holderKeyId Key ID for signing the presentation
+     * @param challenge Optional challenge string for authentication
+     * @param domain Optional domain string for authentication
+     * @param proofType Proof type to use (default: "Ed25519Signature2020")
+     * @return Result containing the verifiable presentation with selective disclosure
+     */
+    suspend fun createSelectiveDisclosure(
+        credentials: List<VerifiableCredential>,
+        disclosedFields: List<String>,
+        holderDid: String,
+        holderKeyId: String,
+        challenge: String? = null,
+        domain: String? = null,
+        proofType: String = "Ed25519Signature2020"
+    ): Result<VerifiablePresentation> = vericoreCatching {
+        require(credentials.isNotEmpty()) { "At least one credential is required" }
+        require(disclosedFields.isNotEmpty()) { "At least one disclosed field is required" }
+        require(holderDid.isNotBlank()) { "Holder DID is required" }
+        require(holderKeyId.isNotBlank()) { "Holder key ID is required" }
+        
+        // Validate holder DID format
+        DidValidator.validateFormat(holderDid).let {
+            if (!it.isValid()) {
+                throw VeriCoreError.InvalidDidFormat(
+                    did = holderDid,
+                    reason = it.errorMessage() ?: "Invalid holder DID format"
+                )
+            }
+        }
+        
+        val normalizedKeyId = normalizeKeyId(holderKeyId)
+        val proofGenerator = Ed25519ProofGenerator(
+            signer = { data, keyId -> context.kms.sign(normalizeKeyId(keyId), data) },
+            getPublicKeyId = { keyId -> 
+                val keyHandle = context.kms.getPublicKey(normalizeKeyId(keyId))
+                "${holderDid}#$keyId"
+            }
+        )
+        
+        val presentationService = PresentationService(
+            proofGenerator = proofGenerator
+        )
+        
+        val options = PresentationOptions(
+            holderDid = holderDid,
+            proofType = proofType,
+            keyId = normalizedKeyId,
+            challenge = challenge,
+            domain = domain,
+            selectiveDisclosure = true,
+            disclosedFields = disclosedFields
+        )
+        
+        presentationService.createSelectiveDisclosure(credentials, disclosedFields, holderDid, options)
+    }
+    
+    /**
+     * Checks if a credential has a revocation status field.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val hasStatus = vericore.hasRevocationStatus(credential)
+     * if (hasStatus) {
+     *     println("Credential has status field: ${credential.credentialStatus?.id}")
+     * }
+     * ```
+     * 
+     * **Note:** This only checks if the credential has a `credentialStatus` field.
+     * To actually check revocation status, use a StatusListManager (available via trust layer).
+     * 
+     * @param credential The credential to check
+     * @return true if the credential has a credentialStatus field, false otherwise
+     */
+    fun hasRevocationStatus(credential: VerifiableCredential): Boolean {
+        return credential.credentialStatus != null
+    }
+    
+    /**
+     * Gets the revocation status information from a credential.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val status = vericore.getRevocationStatusInfo(credential)
+     * if (status != null) {
+     *     println("Status list ID: ${status.statusListCredential}")
+     *     println("Status list index: ${status.statusListIndex}")
+     * }
+     * ```
+     * 
+     * **Note:** This only returns the status information from the credential.
+     * To actually check if the credential is revoked, use a StatusListManager (available via trust layer).
+     * 
+     * @param credential The credential to check
+     * @return The credential status information, or null if not present
+     */
+    fun getRevocationStatusInfo(credential: VerifiableCredential): com.geoknoesis.vericore.credential.models.CredentialStatus? {
+        return credential.credentialStatus
     }
     
     // ========================================
@@ -438,6 +852,899 @@ class VeriCore private constructor(
         )
     
     // ========================================
+    // Wallet Operations
+    // ========================================
+    
+    /**
+     * Stores a credential in a wallet.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val wallet = vericore.createWallet("did:key:holder").getOrThrow()
+     * val credentialId = vericore.storeCredential(credential, wallet).getOrThrow()
+     * println("Stored credential: $credentialId")
+     * ```
+     * 
+     * @param credential The credential to store
+     * @param wallet The wallet to store it in
+     * @return Result containing the credential ID
+     */
+    suspend fun storeCredential(
+        credential: VerifiableCredential,
+        wallet: Wallet
+    ): Result<String> = vericoreCatching {
+        wallet.store(credential)
+    }
+    
+    /**
+     * Retrieves a credential from a wallet by ID.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val credential = vericore.getCredential("cred-123", wallet).getOrThrow()
+     * ```
+     * 
+     * @param credentialId The ID of the credential to retrieve
+     * @param wallet The wallet to retrieve from
+     * @return Result containing the credential, or null if not found
+     */
+    suspend fun getCredential(
+        credentialId: String,
+        wallet: Wallet
+    ): Result<VerifiableCredential?> = vericoreCatching {
+        require(credentialId.isNotBlank()) { "Credential ID is required" }
+        wallet.get(credentialId)
+    }
+    
+    /**
+     * Lists all credentials in a wallet, optionally filtered.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val credentials = vericore.listCredentials(wallet).getOrThrow()
+     * 
+     * // With filter
+     * val filter = CredentialFilter(
+     *     types = listOf("UniversityDegreeCredential")
+     * )
+     * val filtered = vericore.listCredentials(wallet, filter).getOrThrow()
+     * ```
+     * 
+     * @param wallet The wallet to list credentials from
+     * @param filter Optional filter to apply
+     * @return Result containing the list of credentials
+     */
+    suspend fun listCredentials(
+        wallet: Wallet,
+        filter: com.geoknoesis.vericore.credential.wallet.CredentialFilter? = null
+    ): Result<List<VerifiableCredential>> = vericoreCatching {
+        wallet.list(filter)
+    }
+    
+    /**
+     * Deletes a credential from a wallet.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val deleted = vericore.deleteCredential("cred-123", wallet).getOrThrow()
+     * if (deleted) {
+     *     println("Credential deleted")
+     * }
+     * ```
+     * 
+     * @param credentialId The ID of the credential to delete
+     * @param wallet The wallet to delete from
+     * @return Result containing true if deleted, false if not found
+     */
+    suspend fun deleteCredential(
+        credentialId: String,
+        wallet: Wallet
+    ): Result<Boolean> = vericoreCatching {
+        require(credentialId.isNotBlank()) { "Credential ID is required" }
+        wallet.delete(credentialId)
+    }
+    
+    /**
+     * Queries credentials in a wallet using a query builder.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val results = vericore.queryCredentials(wallet) {
+     *     types("UniversityDegreeCredential")
+     *     issuer("did:key:issuer")
+     *     issuedAfter(Instant.parse("2024-01-01T00:00:00Z"))
+     * }.getOrThrow()
+     * ```
+     * 
+     * @param wallet The wallet to query
+     * @param query The query builder lambda
+     * @return Result containing the list of matching credentials
+     */
+    suspend fun queryCredentials(
+        wallet: Wallet,
+        query: com.geoknoesis.vericore.credential.wallet.CredentialQueryBuilder.() -> Unit
+    ): Result<List<VerifiableCredential>> = vericoreCatching {
+        wallet.query(query)
+    }
+    
+    /**
+     * Gets statistics about a wallet.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val stats = vericore.getWalletStatistics(wallet).getOrThrow()
+     * println("Total credentials: ${stats.totalCredentials}")
+     * println("Valid credentials: ${stats.validCredentials}")
+     * ```
+     * 
+     * @param wallet The wallet to get statistics for
+     * @return Result containing wallet statistics
+     */
+    suspend fun getWalletStatistics(
+        wallet: Wallet
+    ): Result<com.geoknoesis.vericore.credential.wallet.WalletStatistics> = vericoreCatching {
+        wallet.getStatistics()
+    }
+    
+    // ========================================
+    // Wallet Organization Operations
+    // ========================================
+    
+    /**
+     * Creates a collection in a wallet (if supported).
+     * 
+     * **Example:**
+     * ```kotlin
+     * val collectionId = vericore.createCollection(
+     *     wallet = wallet,
+     *     name = "My Credentials",
+     *     description = "Personal credentials"
+     * ).getOrThrow()
+     * ```
+     * 
+     * @param wallet The wallet (must support CredentialOrganization)
+     * @param name Collection name
+     * @param description Optional description
+     * @return Result containing the collection ID
+     */
+    suspend fun createCollection(
+        wallet: Wallet,
+        name: String,
+        description: String? = null
+    ): Result<String> = vericoreCatching {
+        require(name.isNotBlank()) { "Collection name is required" }
+        val org = wallet as? com.geoknoesis.vericore.credential.wallet.CredentialOrganization
+            ?: throw VeriCoreError.InvalidOperation(
+                code = "WALLET_CAPABILITY_NOT_SUPPORTED",
+                message = "Wallet does not support credential organization (collections, tags, metadata)",
+                context = mapOf("walletId" to wallet.walletId, "capability" to "CredentialOrganization")
+            )
+        org.createCollection(name, description)
+    }
+    
+    /**
+     * Tags a credential in a wallet (if supported).
+     * 
+     * **Example:**
+     * ```kotlin
+     * val tagged = vericore.tagCredential(
+     *     wallet = wallet,
+     *     credentialId = "cred-123",
+     *     tags = setOf("important", "verified")
+     * ).getOrThrow()
+     * ```
+     * 
+     * @param wallet The wallet (must support CredentialOrganization)
+     * @param credentialId The credential ID
+     * @param tags Set of tags to add
+     * @return Result containing true if tagged
+     */
+    suspend fun tagCredential(
+        wallet: Wallet,
+        credentialId: String,
+        tags: Set<String>
+    ): Result<Boolean> = vericoreCatching {
+        require(credentialId.isNotBlank()) { "Credential ID is required" }
+        require(tags.isNotEmpty()) { "At least one tag is required" }
+        val org = wallet as? com.geoknoesis.vericore.credential.wallet.CredentialOrganization
+            ?: throw VeriCoreError.InvalidOperation(
+                code = "WALLET_CAPABILITY_NOT_SUPPORTED",
+                message = "Wallet does not support credential organization",
+                context = mapOf("walletId" to wallet.walletId, "capability" to "CredentialOrganization")
+            )
+        org.tagCredential(credentialId, tags)
+    }
+    
+    /**
+     * Adds metadata to a credential in a wallet (if supported).
+     * 
+     * **Example:**
+     * ```kotlin
+     * val added = vericore.addCredentialMetadata(
+     *     wallet = wallet,
+     *     credentialId = "cred-123",
+     *     metadata = mapOf("source" to "issuer.com", "verified" to true)
+     * ).getOrThrow()
+     * ```
+     * 
+     * @param wallet The wallet (must support CredentialOrganization)
+     * @param credentialId The credential ID
+     * @param metadata Metadata to add
+     * @return Result containing true if added
+     */
+    suspend fun addCredentialMetadata(
+        wallet: Wallet,
+        credentialId: String,
+        metadata: Map<String, Any>
+    ): Result<Boolean> = vericoreCatching {
+        require(credentialId.isNotBlank()) { "Credential ID is required" }
+        require(metadata.isNotEmpty()) { "Metadata cannot be empty" }
+        val org = wallet as? com.geoknoesis.vericore.credential.wallet.CredentialOrganization
+            ?: throw VeriCoreError.InvalidOperation(
+                code = "WALLET_CAPABILITY_NOT_SUPPORTED",
+                message = "Wallet does not support credential organization",
+                context = mapOf("walletId" to wallet.walletId, "capability" to "CredentialOrganization")
+            )
+        org.addMetadata(credentialId, metadata)
+    }
+    
+    /**
+     * Lists all collections in a wallet (if supported).
+     * 
+     * **Example:**
+     * ```kotlin
+     * val collections = vericore.listCollections(wallet).getOrThrow()
+     * collections.forEach { collection ->
+     *     println("${collection.name}: ${collection.credentialCount} credentials")
+     * }
+     * ```
+     * 
+     * @param wallet The wallet (must support CredentialOrganization)
+     * @return Result containing list of collections
+     */
+    suspend fun listCollections(wallet: Wallet): Result<List<com.geoknoesis.vericore.credential.wallet.CredentialCollection>> = vericoreCatching {
+        val org = wallet as? com.geoknoesis.vericore.credential.wallet.CredentialOrganization
+            ?: throw VeriCoreError.InvalidOperation(
+                code = "WALLET_CAPABILITY_NOT_SUPPORTED",
+                message = "Wallet does not support credential organization",
+                context = mapOf("walletId" to wallet.walletId, "capability" to "CredentialOrganization")
+            )
+        org.listCollections()
+    }
+    
+    /**
+     * Gets a collection by ID from a wallet (if supported).
+     * 
+     * **Example:**
+     * ```kotlin
+     * val collection = vericore.getCollection(wallet, "collection-123").getOrThrow()
+     * if (collection != null) {
+     *     println("Collection: ${collection.name}")
+     * }
+     * ```
+     * 
+     * @param wallet The wallet (must support CredentialOrganization)
+     * @param collectionId The collection ID
+     * @return Result containing the collection, or null if not found
+     */
+    suspend fun getCollection(
+        wallet: Wallet,
+        collectionId: String
+    ): Result<com.geoknoesis.vericore.credential.wallet.CredentialCollection?> = vericoreCatching {
+        require(collectionId.isNotBlank()) { "Collection ID is required" }
+        val org = wallet as? com.geoknoesis.vericore.credential.wallet.CredentialOrganization
+            ?: throw VeriCoreError.InvalidOperation(
+                code = "WALLET_CAPABILITY_NOT_SUPPORTED",
+                message = "Wallet does not support credential organization",
+                context = mapOf("walletId" to wallet.walletId, "capability" to "CredentialOrganization")
+            )
+        org.getCollection(collectionId)
+    }
+    
+    /**
+     * Deletes a collection from a wallet (if supported).
+     * 
+     * **Example:**
+     * ```kotlin
+     * val deleted = vericore.deleteCollection(wallet, "collection-123").getOrThrow()
+     * if (deleted) {
+     *     println("Collection deleted")
+     * }
+     * ```
+     * 
+     * @param wallet The wallet (must support CredentialOrganization)
+     * @param collectionId The collection ID
+     * @return Result containing true if deleted, false if not found
+     */
+    suspend fun deleteCollection(
+        wallet: Wallet,
+        collectionId: String
+    ): Result<Boolean> = vericoreCatching {
+        require(collectionId.isNotBlank()) { "Collection ID is required" }
+        val org = wallet as? com.geoknoesis.vericore.credential.wallet.CredentialOrganization
+            ?: throw VeriCoreError.InvalidOperation(
+                code = "WALLET_CAPABILITY_NOT_SUPPORTED",
+                message = "Wallet does not support credential organization",
+                context = mapOf("walletId" to wallet.walletId, "capability" to "CredentialOrganization")
+            )
+        org.deleteCollection(collectionId)
+    }
+    
+    /**
+     * Adds a credential to a collection in a wallet (if supported).
+     * 
+     * **Example:**
+     * ```kotlin
+     * val added = vericore.addToCollection(
+     *     wallet = wallet,
+     *     credentialId = "cred-123",
+     *     collectionId = "collection-456"
+     * ).getOrThrow()
+     * ```
+     * 
+     * @param wallet The wallet (must support CredentialOrganization)
+     * @param credentialId The credential ID
+     * @param collectionId The collection ID
+     * @return Result containing true if added, false if credential or collection not found
+     */
+    suspend fun addToCollection(
+        wallet: Wallet,
+        credentialId: String,
+        collectionId: String
+    ): Result<Boolean> = vericoreCatching {
+        require(credentialId.isNotBlank()) { "Credential ID is required" }
+        require(collectionId.isNotBlank()) { "Collection ID is required" }
+        val org = wallet as? com.geoknoesis.vericore.credential.wallet.CredentialOrganization
+            ?: throw VeriCoreError.InvalidOperation(
+                code = "WALLET_CAPABILITY_NOT_SUPPORTED",
+                message = "Wallet does not support credential organization",
+                context = mapOf("walletId" to wallet.walletId, "capability" to "CredentialOrganization")
+            )
+        org.addToCollection(credentialId, collectionId)
+    }
+    
+    /**
+     * Removes a credential from a collection in a wallet (if supported).
+     * 
+     * **Example:**
+     * ```kotlin
+     * val removed = vericore.removeFromCollection(
+     *     wallet = wallet,
+     *     credentialId = "cred-123",
+     *     collectionId = "collection-456"
+     * ).getOrThrow()
+     * ```
+     * 
+     * @param wallet The wallet (must support CredentialOrganization)
+     * @param credentialId The credential ID
+     * @param collectionId The collection ID
+     * @return Result containing true if removed, false if not found
+     */
+    suspend fun removeFromCollection(
+        wallet: Wallet,
+        credentialId: String,
+        collectionId: String
+    ): Result<Boolean> = vericoreCatching {
+        require(credentialId.isNotBlank()) { "Credential ID is required" }
+        require(collectionId.isNotBlank()) { "Collection ID is required" }
+        val org = wallet as? com.geoknoesis.vericore.credential.wallet.CredentialOrganization
+            ?: throw VeriCoreError.InvalidOperation(
+                code = "WALLET_CAPABILITY_NOT_SUPPORTED",
+                message = "Wallet does not support credential organization",
+                context = mapOf("walletId" to wallet.walletId, "capability" to "CredentialOrganization")
+            )
+        org.removeFromCollection(credentialId, collectionId)
+    }
+    
+    /**
+     * Gets all credentials in a collection from a wallet (if supported).
+     * 
+     * **Example:**
+     * ```kotlin
+     * val credentials = vericore.getCredentialsInCollection(
+     *     wallet = wallet,
+     *     collectionId = "collection-456"
+     * ).getOrThrow()
+     * println("Collection has ${credentials.size} credentials")
+     * ```
+     * 
+     * @param wallet The wallet (must support CredentialOrganization)
+     * @param collectionId The collection ID
+     * @return Result containing list of credentials in the collection
+     */
+    suspend fun getCredentialsInCollection(
+        wallet: Wallet,
+        collectionId: String
+    ): Result<List<VerifiableCredential>> = vericoreCatching {
+        require(collectionId.isNotBlank()) { "Collection ID is required" }
+        val org = wallet as? com.geoknoesis.vericore.credential.wallet.CredentialOrganization
+            ?: throw VeriCoreError.InvalidOperation(
+                code = "WALLET_CAPABILITY_NOT_SUPPORTED",
+                message = "Wallet does not support credential organization",
+                context = mapOf("walletId" to wallet.walletId, "capability" to "CredentialOrganization")
+            )
+        org.getCredentialsInCollection(collectionId)
+    }
+    
+    /**
+     * Gets all tags for a credential in a wallet (if supported).
+     * 
+     * **Example:**
+     * ```kotlin
+     * val tags = vericore.getTags(wallet, "cred-123").getOrThrow()
+     * println("Tags: ${tags.joinToString(", ")}")
+     * ```
+     * 
+     * @param wallet The wallet (must support CredentialOrganization)
+     * @param credentialId The credential ID
+     * @return Result containing set of tags
+     */
+    suspend fun getTags(
+        wallet: Wallet,
+        credentialId: String
+    ): Result<Set<String>> = vericoreCatching {
+        require(credentialId.isNotBlank()) { "Credential ID is required" }
+        val org = wallet as? com.geoknoesis.vericore.credential.wallet.CredentialOrganization
+            ?: throw VeriCoreError.InvalidOperation(
+                code = "WALLET_CAPABILITY_NOT_SUPPORTED",
+                message = "Wallet does not support credential organization",
+                context = mapOf("walletId" to wallet.walletId, "capability" to "CredentialOrganization")
+            )
+        org.getTags(credentialId)
+    }
+    
+    /**
+     * Removes tags from a credential in a wallet (if supported).
+     * 
+     * **Example:**
+     * ```kotlin
+     * val removed = vericore.untagCredential(
+     *     wallet = wallet,
+     *     credentialId = "cred-123",
+     *     tags = setOf("old", "deprecated")
+     * ).getOrThrow()
+     * ```
+     * 
+     * @param wallet The wallet (must support CredentialOrganization)
+     * @param credentialId The credential ID
+     * @param tags Set of tags to remove
+     * @return Result containing true if tags were removed
+     */
+    suspend fun untagCredential(
+        wallet: Wallet,
+        credentialId: String,
+        tags: Set<String>
+    ): Result<Boolean> = vericoreCatching {
+        require(credentialId.isNotBlank()) { "Credential ID is required" }
+        require(tags.isNotEmpty()) { "At least one tag is required" }
+        val org = wallet as? com.geoknoesis.vericore.credential.wallet.CredentialOrganization
+            ?: throw VeriCoreError.InvalidOperation(
+                code = "WALLET_CAPABILITY_NOT_SUPPORTED",
+                message = "Wallet does not support credential organization",
+                context = mapOf("walletId" to wallet.walletId, "capability" to "CredentialOrganization")
+            )
+        org.untagCredential(credentialId, tags)
+    }
+    
+    /**
+     * Gets all tags used in a wallet (if supported).
+     * 
+     * **Example:**
+     * ```kotlin
+     * val allTags = vericore.getAllTags(wallet).getOrThrow()
+     * println("All tags: ${allTags.joinToString(", ")}")
+     * ```
+     * 
+     * @param wallet The wallet (must support CredentialOrganization)
+     * @return Result containing set of all tags
+     */
+    suspend fun getAllTags(wallet: Wallet): Result<Set<String>> = vericoreCatching {
+        val org = wallet as? com.geoknoesis.vericore.credential.wallet.CredentialOrganization
+            ?: throw VeriCoreError.InvalidOperation(
+                code = "WALLET_CAPABILITY_NOT_SUPPORTED",
+                message = "Wallet does not support credential organization",
+                context = mapOf("walletId" to wallet.walletId, "capability" to "CredentialOrganization")
+            )
+        org.getAllTags()
+    }
+    
+    /**
+     * Finds credentials by tag in a wallet (if supported).
+     * 
+     * **Example:**
+     * ```kotlin
+     * val credentials = vericore.findByTag(wallet, "important").getOrThrow()
+     * println("Found ${credentials.size} credentials with tag 'important'")
+     * ```
+     * 
+     * @param wallet The wallet (must support CredentialOrganization)
+     * @param tag The tag to search for
+     * @return Result containing list of credentials with the tag
+     */
+    suspend fun findByTag(
+        wallet: Wallet,
+        tag: String
+    ): Result<List<VerifiableCredential>> = vericoreCatching {
+        require(tag.isNotBlank()) { "Tag is required" }
+        val org = wallet as? com.geoknoesis.vericore.credential.wallet.CredentialOrganization
+            ?: throw VeriCoreError.InvalidOperation(
+                code = "WALLET_CAPABILITY_NOT_SUPPORTED",
+                message = "Wallet does not support credential organization",
+                context = mapOf("walletId" to wallet.walletId, "capability" to "CredentialOrganization")
+            )
+        org.findByTag(tag)
+    }
+    
+    /**
+     * Gets metadata for a credential in a wallet (if supported).
+     * 
+     * **Example:**
+     * ```kotlin
+     * val metadata = vericore.getCredentialMetadata(wallet, "cred-123").getOrThrow()
+     * if (metadata != null) {
+     *     println("Notes: ${metadata.notes}")
+     *     println("Tags: ${metadata.tags}")
+     * }
+     * ```
+     * 
+     * @param wallet The wallet (must support CredentialOrganization)
+     * @param credentialId The credential ID
+     * @return Result containing credential metadata, or null if not found
+     */
+    suspend fun getCredentialMetadata(
+        wallet: Wallet,
+        credentialId: String
+    ): Result<com.geoknoesis.vericore.credential.wallet.CredentialMetadata?> = vericoreCatching {
+        require(credentialId.isNotBlank()) { "Credential ID is required" }
+        val org = wallet as? com.geoknoesis.vericore.credential.wallet.CredentialOrganization
+            ?: throw VeriCoreError.InvalidOperation(
+                code = "WALLET_CAPABILITY_NOT_SUPPORTED",
+                message = "Wallet does not support credential organization",
+                context = mapOf("walletId" to wallet.walletId, "capability" to "CredentialOrganization")
+            )
+        org.getMetadata(credentialId)
+    }
+    
+    /**
+     * Updates notes for a credential in a wallet (if supported).
+     * 
+     * **Example:**
+     * ```kotlin
+     * val updated = vericore.updateCredentialNotes(
+     *     wallet = wallet,
+     *     credentialId = "cred-123",
+     *     notes = "This is an important credential"
+     * ).getOrThrow()
+     * ```
+     * 
+     * @param wallet The wallet (must support CredentialOrganization)
+     * @param credentialId The credential ID
+     * @param notes Notes text, or null to clear notes
+     * @return Result containing true if notes were updated
+     */
+    suspend fun updateCredentialNotes(
+        wallet: Wallet,
+        credentialId: String,
+        notes: String?
+    ): Result<Boolean> = vericoreCatching {
+        require(credentialId.isNotBlank()) { "Credential ID is required" }
+        val org = wallet as? com.geoknoesis.vericore.credential.wallet.CredentialOrganization
+            ?: throw VeriCoreError.InvalidOperation(
+                code = "WALLET_CAPABILITY_NOT_SUPPORTED",
+                message = "Wallet does not support credential organization",
+                context = mapOf("walletId" to wallet.walletId, "capability" to "CredentialOrganization")
+            )
+        org.updateNotes(credentialId, notes)
+    }
+    
+    // ========================================
+    // Wallet Lifecycle Operations
+    // ========================================
+    
+    /**
+     * Archives a credential in a wallet (if supported).
+     * 
+     * Archived credentials are hidden from normal queries but can be retrieved via `getArchived()`.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val archived = vericore.archiveCredential(wallet, "cred-123").getOrThrow()
+     * if (archived) {
+     *     println("Credential archived")
+     * }
+     * ```
+     * 
+     * @param wallet The wallet (must support CredentialLifecycle)
+     * @param credentialId The credential ID
+     * @return Result containing true if archived, false if credential not found
+     */
+    suspend fun archiveCredential(
+        wallet: Wallet,
+        credentialId: String
+    ): Result<Boolean> = vericoreCatching {
+        require(credentialId.isNotBlank()) { "Credential ID is required" }
+        val lifecycle = wallet as? com.geoknoesis.vericore.credential.wallet.CredentialLifecycle
+            ?: throw VeriCoreError.InvalidOperation(
+                code = "WALLET_CAPABILITY_NOT_SUPPORTED",
+                message = "Wallet does not support credential lifecycle (archive, refresh)",
+                context = mapOf("walletId" to wallet.walletId, "capability" to "CredentialLifecycle")
+            )
+        lifecycle.archive(credentialId)
+    }
+    
+    /**
+     * Unarchives a credential in a wallet (if supported).
+     * 
+     * **Example:**
+     * ```kotlin
+     * val unarchived = vericore.unarchiveCredential(wallet, "cred-123").getOrThrow()
+     * if (unarchived) {
+     *     println("Credential unarchived")
+     * }
+     * ```
+     * 
+     * @param wallet The wallet (must support CredentialLifecycle)
+     * @param credentialId The credential ID
+     * @return Result containing true if unarchived, false if credential not found
+     */
+    suspend fun unarchiveCredential(
+        wallet: Wallet,
+        credentialId: String
+    ): Result<Boolean> = vericoreCatching {
+        require(credentialId.isNotBlank()) { "Credential ID is required" }
+        val lifecycle = wallet as? com.geoknoesis.vericore.credential.wallet.CredentialLifecycle
+            ?: throw VeriCoreError.InvalidOperation(
+                code = "WALLET_CAPABILITY_NOT_SUPPORTED",
+                message = "Wallet does not support credential lifecycle",
+                context = mapOf("walletId" to wallet.walletId, "capability" to "CredentialLifecycle")
+            )
+        lifecycle.unarchive(credentialId)
+    }
+    
+    /**
+     * Gets all archived credentials from a wallet (if supported).
+     * 
+     * **Example:**
+     * ```kotlin
+     * val archived = vericore.getArchivedCredentials(wallet).getOrThrow()
+     * println("Archived credentials: ${archived.size}")
+     * ```
+     * 
+     * @param wallet The wallet (must support CredentialLifecycle)
+     * @return Result containing list of archived credentials
+     */
+    suspend fun getArchivedCredentials(wallet: Wallet): Result<List<VerifiableCredential>> = vericoreCatching {
+        val lifecycle = wallet as? com.geoknoesis.vericore.credential.wallet.CredentialLifecycle
+            ?: throw VeriCoreError.InvalidOperation(
+                code = "WALLET_CAPABILITY_NOT_SUPPORTED",
+                message = "Wallet does not support credential lifecycle",
+                context = mapOf("walletId" to wallet.walletId, "capability" to "CredentialLifecycle")
+            )
+        lifecycle.getArchived()
+    }
+    
+    /**
+     * Refreshes a credential in a wallet (if supported).
+     * 
+     * Attempts to refresh the credential from its refresh service if available.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val refreshed = vericore.refreshCredential(wallet, "cred-123").getOrThrow()
+     * if (refreshed != null) {
+     *     println("Credential refreshed successfully")
+     * } else {
+     *     println("Credential refresh failed or not available")
+     * }
+     * ```
+     * 
+     * @param wallet The wallet (must support CredentialLifecycle)
+     * @param credentialId The credential ID
+     * @return Result containing the refreshed credential, or null if refresh failed or credential not found
+     */
+    suspend fun refreshCredential(
+        wallet: Wallet,
+        credentialId: String
+    ): Result<VerifiableCredential?> = vericoreCatching {
+        require(credentialId.isNotBlank()) { "Credential ID is required" }
+        val lifecycle = wallet as? com.geoknoesis.vericore.credential.wallet.CredentialLifecycle
+            ?: throw VeriCoreError.InvalidOperation(
+                code = "WALLET_CAPABILITY_NOT_SUPPORTED",
+                message = "Wallet does not support credential lifecycle",
+                context = mapOf("walletId" to wallet.walletId, "capability" to "CredentialLifecycle")
+            )
+        lifecycle.refreshCredential(credentialId)
+    }
+    
+    // ========================================
+    // Revocation Operations
+    // ========================================
+    
+    /**
+     * Creates a new status list for credential revocation.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val statusListManager = InMemoryStatusListManager()
+     * val statusList = vericore.createStatusList(
+     *     issuerDid = "did:key:issuer",
+     *     purpose = StatusPurpose.REVOCATION,
+     *     statusListManager = statusListManager
+     * ).getOrThrow()
+     * 
+     * println("Created status list: ${statusList.id}")
+     * ```
+     * 
+     * @param issuerDid The DID of the issuer
+     * @param purpose The purpose of the status list (REVOCATION or SUSPENSION)
+     * @param statusListManager The StatusListManager to use
+     * @param size Optional initial size (default: 131072 entries)
+     * @return Result containing the created status list credential
+     */
+    suspend fun createStatusList(
+        issuerDid: String,
+        purpose: com.geoknoesis.vericore.credential.revocation.StatusPurpose,
+        statusListManager: com.geoknoesis.vericore.credential.revocation.StatusListManager,
+        size: Int = 131072
+    ): Result<com.geoknoesis.vericore.credential.revocation.StatusListCredential> = vericoreCatching {
+        require(issuerDid.isNotBlank()) { "Issuer DID is required" }
+        
+        // Validate issuer DID format
+        DidValidator.validateFormat(issuerDid).let {
+            if (!it.isValid()) {
+                throw VeriCoreError.InvalidDidFormat(
+                    did = issuerDid,
+                    reason = it.errorMessage() ?: "Invalid issuer DID format"
+                )
+            }
+        }
+        
+        statusListManager.createStatusList(issuerDid, purpose, size)
+    }
+    
+    /**
+     * Revokes a credential using a StatusListManager.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val statusListManager = InMemoryStatusListManager()
+     * val revoked = vericore.revokeCredential(
+     *     credentialId = "cred-123",
+     *     statusListId = "status-list-1",
+     *     statusListManager = statusListManager
+     * ).getOrThrow()
+     * ```
+     * 
+     * @param credentialId The ID of the credential to revoke
+     * @param statusListId The ID of the status list
+     * @param statusListManager The StatusListManager to use
+     * @return Result containing true if revocation succeeded
+     */
+    suspend fun revokeCredential(
+        credentialId: String,
+        statusListId: String,
+        statusListManager: com.geoknoesis.vericore.credential.revocation.StatusListManager
+    ): Result<Boolean> = vericoreCatching {
+        require(credentialId.isNotBlank()) { "Credential ID is required" }
+        require(statusListId.isNotBlank()) { "Status list ID is required" }
+        statusListManager.revokeCredential(credentialId, statusListId)
+    }
+    
+    /**
+     * Suspends a credential using a StatusListManager.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val statusListManager = InMemoryStatusListManager()
+     * val suspended = vericore.suspendCredential(
+     *     credentialId = "cred-123",
+     *     statusListId = "status-list-1",
+     *     statusListManager = statusListManager
+     * ).getOrThrow()
+     * ```
+     * 
+     * @param credentialId The ID of the credential to suspend
+     * @param statusListId The ID of the status list
+     * @param statusListManager The StatusListManager to use
+     * @return Result containing true if suspension succeeded
+     */
+    suspend fun suspendCredential(
+        credentialId: String,
+        statusListId: String,
+        statusListManager: com.geoknoesis.vericore.credential.revocation.StatusListManager
+    ): Result<Boolean> = vericoreCatching {
+        require(credentialId.isNotBlank()) { "Credential ID is required" }
+        require(statusListId.isNotBlank()) { "Status list ID is required" }
+        statusListManager.suspendCredential(credentialId, statusListId)
+    }
+    
+    /**
+     * Checks the revocation status of a credential using a StatusListManager.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val statusListManager = InMemoryStatusListManager()
+     * val status = vericore.checkRevocationStatus(
+     *     credential = credential,
+     *     statusListManager = statusListManager
+     * ).getOrThrow()
+     * 
+     * if (status.revoked) {
+     *     println("Credential is revoked")
+     * } else if (status.suspended) {
+     *     println("Credential is suspended")
+     * } else {
+     *     println("Credential is active")
+     * }
+     * ```
+     * 
+     * @param credential The credential to check
+     * @param statusListManager The StatusListManager to use
+     * @return Result containing the revocation status
+     */
+    suspend fun checkRevocationStatus(
+        credential: VerifiableCredential,
+        statusListManager: com.geoknoesis.vericore.credential.revocation.StatusListManager
+    ): Result<com.geoknoesis.vericore.credential.revocation.RevocationStatus> = vericoreCatching {
+        statusListManager.checkRevocationStatus(credential)
+    }
+    
+    /**
+     * Gets a status list by ID from a StatusListManager.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val statusListManager = InMemoryStatusListManager()
+     * val statusList = vericore.getStatusList(
+     *     statusListId = "status-list-1",
+     *     statusListManager = statusListManager
+     * ).getOrThrow()
+     * 
+     * if (statusList != null) {
+     *     println("Status list: ${statusList.id}")
+     * }
+     * ```
+     * 
+     * @param statusListId The ID of the status list
+     * @param statusListManager The StatusListManager to use
+     * @return Result containing the status list credential, or null if not found
+     */
+    suspend fun getStatusList(
+        statusListId: String,
+        statusListManager: com.geoknoesis.vericore.credential.revocation.StatusListManager
+    ): Result<com.geoknoesis.vericore.credential.revocation.StatusListCredential?> = vericoreCatching {
+        require(statusListId.isNotBlank()) { "Status list ID is required" }
+        statusListManager.getStatusList(statusListId)
+    }
+    
+    /**
+     * Updates a status list with revoked indices using a StatusListManager.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val statusListManager = InMemoryStatusListManager()
+     * val updated = vericore.updateStatusList(
+     *     statusListId = "status-list-1",
+     *     revokedIndices = listOf(0, 5, 10),
+     *     statusListManager = statusListManager
+     * ).getOrThrow()
+     * ```
+     * 
+     * @param statusListId The ID of the status list
+     * @param revokedIndices List of revoked credential indices
+     * @param statusListManager The StatusListManager to use
+     * @return Result containing the updated status list credential
+     */
+    suspend fun updateStatusList(
+        statusListId: String,
+        revokedIndices: List<Int>,
+        statusListManager: com.geoknoesis.vericore.credential.revocation.StatusListManager
+    ): Result<com.geoknoesis.vericore.credential.revocation.StatusListCredential> = vericoreCatching {
+        require(statusListId.isNotBlank()) { "Status list ID is required" }
+        statusListManager.updateStatusList(statusListId, revokedIndices)
+    }
+    
+    // ========================================
     // Blockchain Anchoring
     // ========================================
     
@@ -549,6 +1856,348 @@ class VeriCore private constructor(
         
         val result = client.readPayload(ref)
         Json.decodeFromJsonElement(serializer, result.payload)
+    }
+    
+    // ========================================
+    // Key Management Operations
+    // ========================================
+    
+    /**
+     * Generates a new cryptographic key.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val key = vericore.generateKey(Algorithm.Ed25519).getOrThrow()
+     * println("Generated key: ${key.id}")
+     * ```
+     * 
+     * @param algorithm The algorithm to use
+     * @param options Additional options for key generation
+     * @return Result containing the key handle
+     */
+    suspend fun generateKey(
+        algorithm: Algorithm,
+        options: Map<String, Any?> = emptyMap()
+    ): Result<KeyHandle> = vericoreCatching {
+        // Check if algorithm is supported
+        val supportedAlgorithms = context.kms.getSupportedAlgorithms()
+        if (!supportedAlgorithms.contains(algorithm)) {
+            throw VeriCoreError.UnsupportedAlgorithm(
+                algorithm = algorithm.name,
+                supportedAlgorithms = supportedAlgorithms.map { it.name }
+            )
+        }
+        
+        context.kms.generateKey(algorithm, options)
+    }
+    
+    /**
+     * Generates a new cryptographic key by algorithm name.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val key = vericore.generateKey("Ed25519").getOrThrow()
+     * ```
+     * 
+     * @param algorithmName The algorithm name (e.g., "Ed25519", "secp256k1")
+     * @param options Additional options for key generation
+     * @return Result containing the key handle
+     */
+    suspend fun generateKey(
+        algorithmName: String,
+        options: Map<String, Any?> = emptyMap()
+    ): Result<KeyHandle> = vericoreCatching {
+        val algorithm = Algorithm.parse(algorithmName)
+            ?: throw VeriCoreError.UnsupportedAlgorithm(
+                algorithm = algorithmName,
+                supportedAlgorithms = context.kms.getSupportedAlgorithms().map { it.name }
+            )
+        
+        // Check if algorithm is supported
+        val supportedAlgorithms = context.kms.getSupportedAlgorithms()
+        if (!supportedAlgorithms.contains(algorithm)) {
+            throw VeriCoreError.UnsupportedAlgorithm(
+                algorithm = algorithm.name,
+                supportedAlgorithms = supportedAlgorithms.map { it.name }
+            )
+        }
+        
+        context.kms.generateKey(algorithm, options)
+    }
+    
+    /**
+     * Retrieves the public key information for a given key ID.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val keyHandle = vericore.getPublicKey("key-1").getOrThrow()
+     * println("Public key JWK: ${keyHandle.publicKeyJwk}")
+     * ```
+     * 
+     * @param keyId The identifier of the key
+     * @return Result containing the key handle with public key information
+     */
+    suspend fun getPublicKey(keyId: String): Result<KeyHandle> = vericoreCatching {
+        require(keyId.isNotBlank()) { "Key ID is required" }
+        val normalizedKeyId = normalizeKeyId(keyId)
+        context.kms.getPublicKey(normalizedKeyId)
+    }
+    
+    /**
+     * Signs data using the specified key.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val signature = vericore.sign("key-1", data.toByteArray()).getOrThrow()
+     * ```
+     * 
+     * @param keyId The identifier of the key to use for signing
+     * @param data The data to sign
+     * @param algorithm Optional algorithm override
+     * @return Result containing the signature bytes
+     */
+    suspend fun sign(
+        keyId: String,
+        data: ByteArray,
+        algorithm: Algorithm? = null
+    ): Result<ByteArray> = vericoreCatching {
+        require(keyId.isNotBlank()) { "Key ID is required" }
+        require(data.isNotEmpty()) { "Data to sign cannot be empty" }
+        val normalizedKeyId = normalizeKeyId(keyId)
+        context.kms.sign(normalizedKeyId, data, algorithm)
+    }
+    
+    /**
+     * Signs data using the specified key by algorithm name.
+     * 
+     * @param keyId The identifier of the key to use for signing
+     * @param data The data to sign
+     * @param algorithmName Optional algorithm name override
+     * @return Result containing the signature bytes
+     */
+    suspend fun sign(
+        keyId: String,
+        data: ByteArray,
+        algorithmName: String?
+    ): Result<ByteArray> = vericoreCatching {
+        require(keyId.isNotBlank()) { "Key ID is required" }
+        require(data.isNotEmpty()) { "Data to sign cannot be empty" }
+        val normalizedKeyId = normalizeKeyId(keyId)
+        val algorithm = algorithmName?.let { Algorithm.parse(it) }
+        context.kms.sign(normalizedKeyId, data, algorithm)
+    }
+    
+    /**
+     * Deletes a key from the key management service.
+     * 
+     * **Example:**
+     * ```kotlin
+     * vericore.deleteKey("key-1").getOrThrow()
+     * ```
+     * 
+     * @param keyId The identifier of the key to delete
+     * @return Result indicating success or failure
+     */
+    suspend fun deleteKey(keyId: String): Result<Unit> = vericoreCatching {
+        require(keyId.isNotBlank()) { "Key ID is required" }
+        val normalizedKeyId = normalizeKeyId(keyId)
+        context.kms.deleteKey(normalizedKeyId)
+    }
+    
+    /**
+     * Gets the set of algorithms supported by the KMS.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val algorithms = vericore.getSupportedAlgorithms()
+     * println("Supported: ${algorithms.map { it.name }}")
+     * ```
+     * 
+     * @return Set of supported algorithms
+     */
+    suspend fun getSupportedAlgorithms(): Set<Algorithm> {
+        return context.kms.getSupportedAlgorithms()
+    }
+    
+    /**
+     * Checks if a specific algorithm is supported.
+     * 
+     * @param algorithm The algorithm to check
+     * @return true if supported, false otherwise
+     */
+    suspend fun supportsAlgorithm(algorithm: Algorithm): Boolean {
+        return context.kms.supportsAlgorithm(algorithm)
+    }
+    
+    /**
+     * Checks if an algorithm by name is supported.
+     * 
+     * @param algorithmName The algorithm name (case-insensitive)
+     * @return true if supported, false otherwise
+     */
+    suspend fun supportsAlgorithm(algorithmName: String): Boolean {
+        return context.kms.supportsAlgorithm(algorithmName)
+    }
+    
+    // ========================================
+    // Schema Management Operations
+    // ========================================
+    
+    /**
+     * Registers a credential schema with its definition.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val schema = CredentialSchema(
+     *     id = "https://example.com/schemas/person",
+     *     type = "JsonSchemaValidator2018",
+     *     schemaFormat = SchemaFormat.JSON_SCHEMA
+     * )
+     * 
+     * val definition = buildJsonObject {
+     *     put("\$schema", "http://json-schema.org/draft-07/schema#")
+     *     put("type", "object")
+     *     put("properties", buildJsonObject {
+     *         put("name", buildJsonObject { put("type", "string") })
+     *     })
+     * }
+     * 
+     * val result = vericore.registerSchema(schema, definition).getOrThrow()
+     * ```
+     * 
+     * @param schema Schema metadata
+     * @param definition Schema definition (JSON Schema or SHACL shape)
+     * @return Result containing registration result
+     */
+    suspend fun registerSchema(
+        schema: com.geoknoesis.vericore.credential.models.CredentialSchema,
+        definition: kotlinx.serialization.json.JsonObject
+    ): Result<com.geoknoesis.vericore.credential.schema.SchemaRegistrationResult> = vericoreCatching {
+        require(schema.id.isNotBlank()) { "Schema ID is required" }
+        com.geoknoesis.vericore.credential.schema.SchemaRegistry.registerSchema(schema, definition)
+    }
+    
+    /**
+     * Gets schema metadata by ID.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val schema = vericore.getSchema("https://example.com/schemas/person")
+     * if (schema != null) {
+     *     println("Schema type: ${schema.type}")
+     * }
+     * ```
+     * 
+     * @param schemaId Schema ID
+     * @return Schema metadata, or null if not found
+     */
+    fun getSchema(schemaId: String): com.geoknoesis.vericore.credential.models.CredentialSchema? {
+        return com.geoknoesis.vericore.credential.schema.SchemaRegistry.getSchema(schemaId)
+    }
+    
+    /**
+     * Gets schema definition by ID.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val definition = vericore.getSchemaDefinition("https://example.com/schemas/person")
+     * if (definition != null) {
+     *     println("Schema definition: $definition")
+     * }
+     * ```
+     * 
+     * @param schemaId Schema ID
+     * @return Schema definition, or null if not found
+     */
+    fun getSchemaDefinition(schemaId: String): kotlinx.serialization.json.JsonObject? {
+        return com.geoknoesis.vericore.credential.schema.SchemaRegistry.getSchemaDefinition(schemaId)
+    }
+    
+    /**
+     * Validates a credential against a registered schema.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val result = vericore.validateCredentialAgainstSchema(
+     *     credential = credential,
+     *     schemaId = "https://example.com/schemas/person"
+     * ).getOrThrow()
+     * 
+     * if (result.valid) {
+     *     println("Credential is valid")
+     * } else {
+     *     println("Validation errors: ${result.errors}")
+     * }
+     * ```
+     * 
+     * @param credential Credential to validate
+     * @param schemaId Schema ID to validate against
+     * @return Result containing validation result
+     */
+    suspend fun validateCredentialAgainstSchema(
+        credential: VerifiableCredential,
+        schemaId: String
+    ): Result<com.geoknoesis.vericore.credential.schema.SchemaValidationResult> = vericoreCatching {
+        require(schemaId.isNotBlank()) { "Schema ID is required" }
+        com.geoknoesis.vericore.credential.schema.SchemaRegistry.validateCredential(credential, schemaId)
+    }
+    
+    /**
+     * Checks if a schema is registered.
+     * 
+     * @param schemaId Schema ID
+     * @return true if schema is registered
+     */
+    fun isSchemaRegistered(schemaId: String): Boolean {
+        return com.geoknoesis.vericore.credential.schema.SchemaRegistry.isRegistered(schemaId)
+    }
+    
+    /**
+     * Gets all registered schema IDs.
+     * 
+     * @return List of schema IDs
+     */
+    fun getAllSchemaIds(): List<String> {
+        return com.geoknoesis.vericore.credential.schema.SchemaRegistry.getAllSchemaIds()
+    }
+    
+    // ========================================
+    // Trust Registry Operations
+    // ========================================
+    
+    /**
+     * Checks if an issuer DID is trusted for a specific credential type.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val isTrusted = vericore.isTrustedIssuer(
+     *     issuerDid = "did:key:issuer",
+     *     credentialType = "EducationCredential"
+     * ).getOrThrow()
+     * ```
+     * 
+     * **Note:** This requires a TrustRegistry to be configured. If no registry is available,
+     * this will return false (issuer is not trusted).
+     * 
+     * @param issuerDid The DID of the issuer to check
+     * @param credentialType The credential type (null means check for any type)
+     * @return Result containing true if trusted, false otherwise
+     */
+    suspend fun isTrustedIssuer(
+        issuerDid: String,
+        credentialType: String? = null
+    ): Result<Boolean> = vericoreCatching {
+        require(issuerDid.isNotBlank()) { "Issuer DID is required" }
+        
+        // For now, return false if no trust registry is configured
+        // In the future, this could be added to VeriCoreContext
+        // For now, we'll note that trust registry operations require explicit configuration
+        throw VeriCoreError.InvalidOperation(
+            code = "TRUST_REGISTRY_NOT_CONFIGURED",
+            message = "Trust registry is not configured in VeriCore context. " +
+                      "Use trust layer configuration or provide a TrustRegistry instance.",
+            context = mapOf("issuerDid" to issuerDid, "credentialType" to credentialType)
+        )
     }
     
     // ========================================

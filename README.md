@@ -795,7 +795,7 @@ VeriCore ships with comprehensive plugin support:
 - **`com.geoknoesis.vericore.kms:google`** - Google Cloud KMS integration. See [Google KMS Integration Guide](docs/integrations/google-kms.md).
 - **`com.geoknoesis.vericore.kms:hashicorp`** - HashiCorp Vault Transit engine integration. See [HashiCorp Vault KMS Integration Guide](docs/integrations/hashicorp-vault-kms.md).
 
-See [Integration Modules](docs/integrations/README.md) for detailed documentation on all plugins.
+See [Supported Plugins](docs/plugins.md) for a comprehensive table view of all plugins, or [Integration Modules](docs/integrations/README.md) for detailed integration guides.
 
 ## walt.id Integration
 

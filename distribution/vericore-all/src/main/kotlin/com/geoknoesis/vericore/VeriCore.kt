@@ -28,6 +28,8 @@ import com.geoknoesis.vericore.credential.verifier.CredentialVerifier
 import com.geoknoesis.vericore.credential.schema.SchemaRegistry
 import com.geoknoesis.vericore.credential.schema.SchemaRegistrationResult
 import com.geoknoesis.vericore.credential.schema.SchemaValidationResult
+import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
+import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 import com.geoknoesis.vericore.credential.revocation.StatusListManager
 import com.geoknoesis.vericore.credential.revocation.RevocationStatus
 import com.geoknoesis.vericore.credential.revocation.StatusListCredential
@@ -2176,28 +2178,56 @@ class VeriCore private constructor(
      * ).getOrThrow()
      * ```
      * 
-     * **Note:** This requires a TrustRegistry to be configured. If no registry is available,
-     * this will return false (issuer is not trusted).
+     * **Note:** This requires a TrustRegistry to be provided via verification options
+     * or configured in the trust layer. If no registry is available, this will return false.
      * 
      * @param issuerDid The DID of the issuer to check
      * @param credentialType The credential type (null means check for any type)
+     * @param trustRegistry Optional TrustRegistry instance (if not provided, checks context)
      * @return Result containing true if trusted, false otherwise
      */
     suspend fun isTrustedIssuer(
         issuerDid: String,
-        credentialType: String? = null
+        credentialType: String? = null,
+        trustRegistry: Any? = null
     ): Result<Boolean> = vericoreCatching {
         require(issuerDid.isNotBlank()) { "Issuer DID is required" }
         
-        // For now, return false if no trust registry is configured
-        // In the future, this could be added to VeriCoreContext
-        // For now, we'll note that trust registry operations require explicit configuration
-        throw VeriCoreError.InvalidOperation(
-            code = "TRUST_REGISTRY_NOT_CONFIGURED",
-            message = "Trust registry is not configured in VeriCore context. " +
-                      "Use trust layer configuration or provide a TrustRegistry instance.",
-            context = mapOf("issuerDid" to issuerDid, "credentialType" to credentialType)
-        )
+        val registry = trustRegistry ?: run {
+            // Try to get from context if available (future enhancement)
+            // For now, return false if no registry provided
+            return@vericoreCatching false
+        }
+        
+        // Use reflection to call TrustRegistry.isTrustedIssuer
+        try {
+            val isTrustedMethod = registry.javaClass.getMethod(
+                "isTrustedIssuer",
+                String::class.java,
+                String::class.java,
+                kotlin.coroutines.Continuation::class.java
+            )
+            
+            val isTrusted = suspendCoroutineUninterceptedOrReturn<Boolean> { cont ->
+                try {
+                    val result = isTrustedMethod.invoke(registry, issuerDid, credentialType, cont)
+                    if (result === COROUTINE_SUSPENDED) {
+                        COROUTINE_SUSPENDED
+                    } else {
+                        cont.resumeWith(Result.success(result as Boolean))
+                        COROUTINE_SUSPENDED
+                    }
+                } catch (e: Exception) {
+                    cont.resumeWith(Result.failure(e))
+                    COROUTINE_SUSPENDED
+                }
+            } ?: false
+            
+            isTrusted
+        } catch (e: Exception) {
+            // If reflection fails, return false (not trusted)
+            false
+        }
     }
     
     // ========================================

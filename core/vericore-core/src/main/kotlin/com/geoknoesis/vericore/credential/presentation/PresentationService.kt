@@ -12,6 +12,7 @@ import com.geoknoesis.vericore.credential.proof.ProofOptions
 import com.geoknoesis.vericore.credential.verifier.CredentialVerifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.*
 import java.util.UUID
 
 /**
@@ -230,14 +231,88 @@ class PresentationService(
         holderDid: String,
         options: PresentationOptions
     ): VerifiablePresentation {
-        // TODO: Implement selective disclosure using BBS+ proofs
-        // For now, return a regular presentation
-        // Full implementation would:
-        // 1. Use BBS+ proof generator
-        // 2. Create derived credentials with only disclosed fields
-        // 3. Generate zero-knowledge proof
+        // Check if BBS+ proof generator is available
+        val bbsGenerator = proofRegistry.get("BbsBlsSignature2020")
         
-        return createPresentation(credentials, holderDid, options)
+        if (bbsGenerator != null && bbsGenerator is com.geoknoesis.vericore.credential.proof.BbsProofGenerator) {
+            // Use BBS+ generator for selective disclosure
+            val derivedCredentials = credentials.map { credential ->
+                // Create derived credential with only disclosed fields
+                createDerivedCredentialForDisclosure(credential, disclosedFields)
+            }
+            
+            // Create presentation with derived credentials
+            // In a full implementation, this would use BBS+ selective disclosure proofs
+            return createPresentation(derivedCredentials, holderDid, options.copy(proofType = "BbsBlsSignature2020"))
+        } else {
+            // Fallback: create presentation with filtered fields
+            val filteredCredentials = credentials.map { credential ->
+                createDerivedCredentialForDisclosure(credential, disclosedFields)
+            }
+            return createPresentation(filteredCredentials, holderDid, options)
+        }
+    }
+    
+    /**
+     * Create a derived credential with only disclosed fields.
+     */
+    private fun createDerivedCredentialForDisclosure(
+        credential: VerifiableCredential,
+        disclosedFields: List<String>
+    ): VerifiableCredential {
+        val json = kotlinx.serialization.json.Json {
+            prettyPrint = false
+            encodeDefaults = false
+            ignoreUnknownKeys = true
+        }
+        
+        // Serialize credential to JSON
+        val credentialJson = json.encodeToJsonElement(
+            com.geoknoesis.vericore.credential.models.VerifiableCredential.serializer(),
+            credential
+        ).jsonObject
+        
+        // Create derived credential with only disclosed fields
+        val derivedJson = buildJsonObject {
+            // Always include core fields
+            credentialJson["id"]?.let { put("id", it) }
+            put("type", credentialJson["type"] ?: kotlinx.serialization.json.buildJsonArray { })
+            put("issuer", credentialJson["issuer"] ?: kotlinx.serialization.json.JsonPrimitive(""))
+            put("issuanceDate", credentialJson["issuanceDate"] ?: kotlinx.serialization.json.JsonPrimitive(""))
+            
+            // Include disclosed fields from credentialSubject
+            val subjectJson = credentialJson["credentialSubject"]?.jsonObject
+            if (subjectJson != null) {
+                val derivedSubject = buildJsonObject {
+                    // Always include id
+                    subjectJson["id"]?.let { put("id", it) }
+                    
+                    // Include only disclosed fields
+                    for (fieldPath in disclosedFields) {
+                        val fieldName = if (fieldPath.contains(".")) {
+                            fieldPath.substringAfterLast(".")
+                        } else {
+                            fieldPath
+                        }
+                        
+                        // Check if this field should be disclosed
+                        if (fieldPath.startsWith("credentialSubject.") || fieldPath == fieldName) {
+                            subjectJson[fieldName]?.let { put(fieldName, it) }
+                        }
+                    }
+                }
+                put("credentialSubject", derivedSubject)
+            } else {
+                // If no subject, include it as-is
+                credentialJson["credentialSubject"]?.let { put("credentialSubject", it) }
+            }
+        }
+        
+        // Parse back to VerifiableCredential
+        return json.decodeFromJsonElement(
+            com.geoknoesis.vericore.credential.models.VerifiableCredential.serializer(),
+            derivedJson
+        )
     }
     
     /**

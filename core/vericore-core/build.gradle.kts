@@ -10,6 +10,7 @@ version = "1.0.0-SNAPSHOT"
 dependencies {
     implementation(kotlin("reflect"))
     implementation(project(":core:vericore-spi"))
+    implementation(project(":core:vericore-json"))
     implementation(project(":did:vericore-did"))
     // Test dependencies
     testImplementation(project(":core:vericore-testkit"))

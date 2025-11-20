@@ -7,6 +7,7 @@ import com.geoknoesis.vericore.credential.did.asCredentialDidResolution
 import com.geoknoesis.vericore.credential.models.VerifiableCredential
 import com.geoknoesis.vericore.credential.schema.SchemaRegistry
 import com.geoknoesis.vericore.credential.proof.ProofValidator
+import com.geoknoesis.vericore.credential.verifier.SignatureVerifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.jsonObject
@@ -141,10 +142,46 @@ class CredentialVerifier(
         
         // 4. Check revocation status
         if (options.checkRevocation && credential.credentialStatus != null) {
-            // TODO: Implement revocation checking
-            // For now, assume not revoked if credentialStatus is present
-            // Full implementation would check status list
-            warnings.add("Revocation checking not yet implemented")
+            if (options.statusListManager != null) {
+                try {
+                    // Use reflection to call StatusListManager.checkRevocationStatus
+                    val checkMethod = options.statusListManager.javaClass.getMethod(
+                        "checkRevocationStatus",
+                        VerifiableCredential::class.java,
+                        kotlin.coroutines.Continuation::class.java
+                    )
+                    
+                    val revocationStatus = suspendCoroutineUninterceptedOrReturn<com.geoknoesis.vericore.credential.revocation.RevocationStatus> { cont ->
+                        try {
+                            val result = checkMethod.invoke(options.statusListManager, credential, cont)
+                            if (result === COROUTINE_SUSPENDED) {
+                                COROUTINE_SUSPENDED
+                            } else {
+                                cont.resumeWith(Result.success(result as com.geoknoesis.vericore.credential.revocation.RevocationStatus))
+                                COROUTINE_SUSPENDED
+                            }
+                        } catch (e: Exception) {
+                            cont.resumeWith(Result.failure(e))
+                            COROUTINE_SUSPENDED
+                        }
+                    }
+                    
+                    if (revocationStatus != null) {
+                        notRevoked = !revocationStatus.revoked && !revocationStatus.suspended
+                        if (revocationStatus.revoked) {
+                            errors.add("Credential is revoked${revocationStatus.reason?.let { ": $it" } ?: ""}")
+                        } else if (revocationStatus.suspended) {
+                            errors.add("Credential is suspended${revocationStatus.reason?.let { ": $it" } ?: ""}")
+                        }
+                    } else {
+                        warnings.add("Revocation status check returned null")
+                    }
+                } catch (e: Exception) {
+                    warnings.add("Revocation checking failed: ${e.message}")
+                }
+            } else {
+                warnings.add("Revocation checking requested but no StatusListManager provided")
+            }
         }
         
         // 5. Validate schema if provided
@@ -303,8 +340,7 @@ class CredentialVerifier(
     /**
      * Verify proof signature.
      * 
-     * TODO: Implement actual signature verification based on proof type.
-     * This is a placeholder that checks proof structure.
+     * Implements actual signature verification based on proof type.
      */
     private suspend fun verifyProof(
         credential: VerifiableCredential,
@@ -323,13 +359,15 @@ class CredentialVerifier(
             return false
         }
         
-        // TODO: Implement actual signature verification
-        // 1. Resolve verification method from DID document
-        // 2. Extract public key
-        // 3. Verify signature against proof document
+        // Use SignatureVerifier for actual verification
+        val didResolver = buildDidResolver(CredentialVerificationOptions())
+        if (didResolver == null) {
+            // If no resolver available, can't verify signature
+            return false
+        }
         
-        // For now, return true if structure is valid
-        return true
+        val signatureVerifier = SignatureVerifier(didResolver)
+        return signatureVerifier.verify(credential, proof)
     }
 
     private fun buildDidResolver(options: CredentialVerificationOptions): CredentialDidResolver? {

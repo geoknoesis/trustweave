@@ -87,11 +87,17 @@ class JsonSchemaValidator : SchemaValidator {
         // 3. Check required fields
         // 4. Validate types and constraints
         
-        // Placeholder: Basic validation
+        // Enhanced validation with required fields and type checking
         val schemaProperties = schema["properties"]?.jsonObject
         val requiredFields = schema["required"]?.let {
-            // Extract required fields from schema
-            emptyList<String>() // TODO: Parse required array
+            when (it) {
+                is kotlinx.serialization.json.JsonArray -> {
+                    it.mapNotNull { element ->
+                        element.jsonPrimitive.contentOrNull
+                    }
+                }
+                else -> emptyList()
+            }
         } ?: emptyList()
         
         if (schemaProperties != null && subject is kotlinx.serialization.json.JsonObject) {
@@ -105,12 +111,155 @@ class JsonSchemaValidator : SchemaValidator {
                     ))
                 }
             }
+            
+            // Validate each property in credentialSubject against schema
+            for ((fieldName, fieldValue) in subject.entries) {
+                val fieldSchema = schemaProperties[fieldName]?.jsonObject
+                if (fieldSchema != null) {
+                    val fieldErrors = validateField(fieldValue, fieldSchema, "/credentialSubject/$fieldName")
+                    errors.addAll(fieldErrors)
+                }
+            }
         }
         
         return SchemaValidationResult(
             valid = errors.isEmpty(),
             errors = errors
         )
+    }
+    
+    /**
+     * Validate a single field against its schema.
+     */
+    private fun validateField(
+        value: kotlinx.serialization.json.JsonElement,
+        fieldSchema: kotlinx.serialization.json.JsonObject,
+        path: String
+    ): List<SchemaValidationError> {
+        val errors = mutableListOf<SchemaValidationError>()
+        
+        // Check type
+        val expectedType = fieldSchema["type"]?.jsonPrimitive?.contentOrNull
+        if (expectedType != null) {
+            val actualType = when (value) {
+                is kotlinx.serialization.json.JsonObject -> "object"
+                is kotlinx.serialization.json.JsonArray -> "array"
+                is kotlinx.serialization.json.JsonPrimitive -> {
+                    when {
+                        value.isString -> "string"
+                        value.booleanOrNull != null -> "boolean"
+                        value.longOrNull != null || value.doubleOrNull != null -> "number"
+                        else -> "string"
+                    }
+                }
+                else -> "unknown"
+            }
+            
+            if (actualType != expectedType && !isTypeCompatible(actualType, expectedType)) {
+                errors.add(SchemaValidationError(
+                    path = path,
+                    message = "Field type mismatch: expected '$expectedType', got '$actualType'",
+                    code = "type_mismatch"
+                ))
+            }
+        }
+        
+        // Check enum values
+        val enumValues = fieldSchema["enum"]?.jsonArray
+        if (enumValues != null && !enumValues.contains(value)) {
+            errors.add(SchemaValidationError(
+                path = path,
+                message = "Field value is not in allowed enum values",
+                code = "enum_mismatch"
+            ))
+        }
+        
+        // Check string format constraints
+        if (expectedType == "string") {
+            val format = fieldSchema["format"]?.jsonPrimitive?.contentOrNull
+            val stringValue = value.jsonPrimitive.contentOrNull
+            
+            if (format != null && stringValue != null) {
+                when (format) {
+                    "email" -> {
+                        if (!stringValue.contains("@") || !stringValue.contains(".")) {
+                            errors.add(SchemaValidationError(
+                                path = path,
+                                message = "Field must be a valid email address",
+                                code = "format_invalid"
+                            ))
+                        }
+                    }
+                    "uri" -> {
+                        if (!stringValue.startsWith("http://") && !stringValue.startsWith("https://") && !stringValue.startsWith("did:")) {
+                            errors.add(SchemaValidationError(
+                                path = path,
+                                message = "Field must be a valid URI",
+                                code = "format_invalid"
+                            ))
+                        }
+                    }
+                }
+            }
+            
+            // Check string length constraints
+            val minLength = fieldSchema["minLength"]?.jsonPrimitive?.intOrNull
+            val maxLength = fieldSchema["maxLength"]?.jsonPrimitive?.intOrNull
+            
+            if (stringValue != null) {
+                if (minLength != null && stringValue.length < minLength) {
+                    errors.add(SchemaValidationError(
+                        path = path,
+                        message = "Field length must be at least $minLength characters",
+                        code = "min_length_violation"
+                    ))
+                }
+                if (maxLength != null && stringValue.length > maxLength) {
+                    errors.add(SchemaValidationError(
+                        path = path,
+                        message = "Field length must be at most $maxLength characters",
+                        code = "max_length_violation"
+                    ))
+                }
+            }
+        }
+        
+        // Check number constraints
+        if (expectedType == "number" || expectedType == "integer") {
+            val numValue = value.jsonPrimitive.doubleOrNull
+            if (numValue != null) {
+                val minimum = fieldSchema["minimum"]?.jsonPrimitive?.doubleOrNull
+                val maximum = fieldSchema["maximum"]?.jsonPrimitive?.doubleOrNull
+                
+                if (minimum != null && numValue < minimum) {
+                    errors.add(SchemaValidationError(
+                        path = path,
+                        message = "Field value must be at least $minimum",
+                        code = "minimum_violation"
+                    ))
+                }
+                if (maximum != null && numValue > maximum) {
+                    errors.add(SchemaValidationError(
+                        path = path,
+                        message = "Field value must be at most $maximum",
+                        code = "maximum_violation"
+                    ))
+                }
+            }
+        }
+        
+        return errors
+    }
+    
+    /**
+     * Check if types are compatible (e.g., integer is compatible with number).
+     */
+    private fun isTypeCompatible(actualType: String, expectedType: String): Boolean {
+        return when {
+            actualType == expectedType -> true
+            actualType == "integer" && expectedType == "number" -> true
+            else -> false
+        }
     }
 }
 

@@ -133,6 +133,7 @@ data class CredentialVerificationOptions(
     val chainId: String? = null,
     val checkTrustRegistry: Boolean = false,
     val trustRegistry: Any? = null, // TrustRegistry - using Any to avoid dependency
+    val statusListManager: Any? = null, // StatusListManager - using Any to avoid dependency
     val verifyDelegation: Boolean = false,
     val validateProofPurpose: Boolean = false,
     val additionalOptions: Map<String, Any?> = emptyMap()

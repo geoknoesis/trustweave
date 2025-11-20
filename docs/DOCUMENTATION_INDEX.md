@@ -8,6 +8,14 @@
 - **[CHANGELOG.md](../CHANGELOG.md)**: Detailed changelog of all optimizations and improvements
 - **Runnable quick start**: `./gradlew :vericore-examples:runQuickStartSample`
 
+## Introduction
+
+- **[Executive Overview](introduction/executive-overview.md)**: High-level overview of VeriCore's value proposition, benefits, market position, and real-world applications
+- **[What is VeriCore?](introduction/what-is-vericore.md)**: Library's purpose, design philosophy, and core principles
+- **[Key Features](introduction/key-features.md)**: Comprehensive overview of VeriCore's capabilities
+- **[Use Cases](introduction/use-cases.md)**: Common applications and use case scenarios
+- **[Architecture Overview](introduction/architecture-overview.md)**: Modular design, module structure, and extensibility patterns
+
 ## Core Concepts Documentation
 
 - **[Core Concepts](core-concepts/README.md)**: Introduction to fundamental concepts

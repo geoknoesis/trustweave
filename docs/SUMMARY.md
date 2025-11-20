@@ -1,6 +1,7 @@
 # Summary
 
 * [Introduction](introduction/README.md)
+  * [Executive Overview](introduction/executive-overview.md)
   * [What is VeriCore?](introduction/what-is-vericore.md)
   * [Key Features](introduction/key-features.md)
   * [Use Cases](introduction/use-cases.md)

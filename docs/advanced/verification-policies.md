@@ -109,6 +109,6 @@ By leaning on the same DSL-driven options you use in production, your tests doub
 
 - [Verifiable Credentials](../core-concepts/verifiable-credentials.md) for credential structure.  
 - [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) to understand how anchors feed policy checks.  
-- [Quick Start sample](../../vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/quickstart/QuickStartSample.kt) demonstrates baseline verification.  
+- [Quick Start sample](../../distribution/vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/quickstart/QuickStartSample.kt) demonstrates baseline verification.  
 - [Key Rotation](key-rotation.md) for maintaining trusted key sets.
 

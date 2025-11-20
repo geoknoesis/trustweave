@@ -100,6 +100,16 @@ See **[Scenarios Overview](scenarios/README.md)** for all available scenarios or
   - Usage examples
 - **[Credential Service API](api-reference/credential-service-api.md)**: SPI and typed options for issuers/verifiers
 
+## Supported Plugins
+
+- **[Supported Plugins](plugins.md)**: Comprehensive listing of all supported plugins organized by category
+  - DID Method Plugins (did:key, did:web, did:ethr, did:ion, and more)
+  - Blockchain Anchor Plugins (Ethereum, Base, Arbitrum, Algorand, Polygon)
+  - Key Management Service (KMS) Plugins (AWS, Azure, Google Cloud, HashiCorp Vault)
+  - Other Integrations (GoDiddy, walt.id)
+  - Links to detailed integration guides for each plugin
+- **[Integration Modules](integrations/README.md)**: Detailed integration guides with setup instructions
+
 ## Advanced Topics
 
 - **[Key Rotation](advanced/key-rotation.md)**: Step-by-step issuer rotation guidance with KMS and DID updates
@@ -120,7 +130,7 @@ See **[Scenarios Overview](scenarios/README.md)** for all available scenarios or
 ## Module Documentation
 
 ### Core Modules
-- **[vericore-anchor/README.md](../vericore-anchor/src/main/kotlin/com/geoknoesis/vericore/anchor/README.md)**: Comprehensive anchor package documentation
+- **[vericore-anchor/README.md](../chains/vericore-anchor/src/main/kotlin/com/geoknoesis/vericore/anchor/README.md)**: Comprehensive anchor package documentation
   - Type-safe options and chain IDs
   - Exception hierarchy
   - Usage examples
@@ -131,7 +141,7 @@ See **[Scenarios Overview](scenarios/README.md)** for all available scenarios or
 - **[chains/plugins/indy/README.md](../chains/plugins/indy/README.md)**: Hyperledger Indy adapter
 
 ### Test Utilities
-- **[vericore-testkit/eo/README.md](../vericore-testkit/src/main/kotlin/com/geoknoesis/vericore/testkit/eo/README.md)**: EO test integration utilities
+- **[vericore-testkit/eo/README.md](../core/vericore-testkit/src/main/kotlin/com/geoknoesis/vericore/testkit/eo/README.md)**: EO test integration utilities
 
 ## Key Features Documented
 

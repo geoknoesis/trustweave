@@ -34,9 +34,9 @@ All blockchain clients adopt the shared SPI abstractions. These modules enable a
 | **Base** | `com.geoknoesis.vericore.chains:base` | Mainnet, Sepolia | [Base Anchor Guide](base-anchor.md) | Base (Coinbase L2) anchoring with fast confirmations and lower fees |
 | **Arbitrum** | `com.geoknoesis.vericore.chains:arbitrum` | Mainnet, Sepolia | [Arbitrum Anchor Guide](arbitrum-anchor.md) | Arbitrum One (largest L2 by TVL) anchoring with EVM compatibility |
 | **Polygon** | `com.geoknoesis.vericore.chains:polygon` | Mainnet, Mumbai | [Polygon DID Guide](polygon-did.md) | Polygon PoS anchoring with the shared SPI plumbing |
-| **Optimism** | `com.geoknoesis.vericore.chains:optimism` | Mainnet, Sepolia | [Optimism Guide](optimism.md) | Optimism L2 anchoring with Web3j integration |
-| **zkSync Era** | `com.geoknoesis.vericore.chains:zksync` | Mainnet, Sepolia | [zkSync Guide](zksync.md) | zkSync Era L2 anchoring with Web3j integration |
-| **Bitcoin** | `com.geoknoesis.vericore.chains:bitcoin` | Mainnet, Testnet | [Bitcoin Guide](bitcoin.md) | Bitcoin blockchain anchoring with OP_RETURN support via RPC |
+| **Optimism** | `com.geoknoesis.vericore.chains:optimism` | Mainnet, Sepolia | Documentation coming soon | Optimism L2 anchoring with Web3j integration |
+| **zkSync Era** | `com.geoknoesis.vericore.chains:zksync` | Mainnet, Sepolia | Documentation coming soon | zkSync Era L2 anchoring with Web3j integration |
+| **Bitcoin** | `com.geoknoesis.vericore.chains:bitcoin` | Mainnet, Testnet | Documentation coming soon | Bitcoin blockchain anchoring with OP_RETURN support via RPC |
 | **Ganache** | `com.geoknoesis.vericore.chains:ganache` | Local | [Integration Modules](#blockchain-anchor-integrations) | Local developer anchoring using Ganache/Testcontainers for testing |
 
 These modules will be consolidated over time into a single
@@ -82,10 +82,10 @@ KMS integrations enable VeriCore to use various key management services for secu
 | **Azure Key Vault** | `com.geoknoesis.vericore.kms:azure` | [Azure KMS Guide](azure-kms.md) | Algorithm support (secp256k1, P-256/P-384/P-521, RSA). Managed Identity and Service Principal authentication |
 | **Google Cloud KMS** | `com.geoknoesis.vericore.kms:google` | [Google KMS Guide](google-kms.md) | Algorithm support (secp256k1, P-256/P-384, RSA). Application Default Credentials and service account authentication |
 | **HashiCorp Vault** | `com.geoknoesis.vericore.kms:hashicorp` | [HashiCorp Vault Guide](hashicorp-vault-kms.md) | Transit engine integration with algorithm support (Ed25519, secp256k1, P-256/P-384/P-521, RSA). Token and AppRole authentication |
-| **IBM Key Protect** | `com.geoknoesis.vericore.kms:ibm` | [IBM Key Protect Guide](ibm-kms.md) | IBM Cloud Key Protect integration with full REST API support |
-| **Thales CipherTrust** | `com.geoknoesis.vericore.kms:thales` | [Thales Guide](thales-kms.md) | Thales CipherTrust Manager integration with OAuth2 authentication |
-| **CyberArk Conjur** | `com.geoknoesis.vericore.kms:cyberark` | [CyberArk Guide](cyberark-kms.md) | CyberArk Conjur integration with secrets management |
-| **Fortanix DSM** | `com.geoknoesis.vericore.kms:fortanix` | [Fortanix Guide](fortanix-kms.md) | Fortanix DSM multi-cloud key management integration |
+| **IBM Key Protect** | `com.geoknoesis.vericore.kms:ibm` | Documentation coming soon | IBM Cloud Key Protect integration with full REST API support |
+| **Thales CipherTrust** | `com.geoknoesis.vericore.kms:thales` | Documentation coming soon | Thales CipherTrust Manager integration with OAuth2 authentication |
+| **CyberArk Conjur** | `com.geoknoesis.vericore.kms:cyberark` | Documentation coming soon | CyberArk Conjur integration with secrets management |
+| **Fortanix DSM** | `com.geoknoesis.vericore.kms:fortanix` | Documentation coming soon | Fortanix DSM multi-cloud key management integration |
 
 ## Proof Generator Integrations
 
@@ -93,9 +93,9 @@ VeriCore provides multiple proof generation methods for creating cryptographic p
 
 | Plugin | Module ID | Documentation | Description |
 |--------|-----------|---------------|-------------|
-| **JWT Proof Generator** | `com.geoknoesis.vericore.core:jwt-proof` | [JWT Proof Guide](jwt-proof.md) | JWT-based proofs using nimbus-jose-jwt. Supports Ed25519, ECDSA, and RSA algorithms |
-| **BBS+ Proof Generator** | `com.geoknoesis.vericore.core:bbs-proof` | [BBS+ Proof Guide](bbs-proof.md) | BBS+ signature proofs for selective disclosure. Uses JSON-LD canonicalization |
-| **LD-Proof Generator** | `com.geoknoesis.vericore.core:ld-proof` | [LD-Proof Guide](ld-proof.md) | Linked Data Proofs using JSON-LD signatures. Supports multiple signature suites |
+| **JWT Proof Generator** | `com.geoknoesis.vericore.core:jwt-proof` | Documentation coming soon | JWT-based proofs using nimbus-jose-jwt. Supports Ed25519, ECDSA, and RSA algorithms |
+| **BBS+ Proof Generator** | `com.geoknoesis.vericore.core:bbs-proof` | Documentation coming soon | BBS+ signature proofs for selective disclosure. Uses JSON-LD canonicalization |
+| **LD-Proof Generator** | `com.geoknoesis.vericore.core:ld-proof` | Documentation coming soon | Linked Data Proofs using JSON-LD signatures. Supports multiple signature suites |
 
 ## Wallet Factory Integrations
 
@@ -103,9 +103,9 @@ Wallet factories enable creation of different wallet storage backends for creden
 
 | Plugin | Module ID | Documentation | Description |
 |--------|-----------|---------------|-------------|
-| **Database Wallet** | `com.geoknoesis.vericore.core:database-wallet` | [Database Wallet Guide](database-wallet.md) | Database-backed wallet with full CredentialStorage implementation. Supports PostgreSQL, MySQL, H2, and other JDBC-compatible databases |
-| **File Wallet** | `com.geoknoesis.vericore.core:file-wallet` | [File Wallet Guide](file-wallet.md) | File-based wallet with local filesystem storage. Optional AES encryption support |
-| **Cloud Wallet** | `com.geoknoesis.vericore.core:cloud-wallet` | [Cloud Wallet Guide](cloud-wallet.md) | Abstract base for cloud storage wallets. Supports AWS S3, Azure Blob Storage, and Google Cloud Storage |
+| **Database Wallet** | `com.geoknoesis.vericore.core:database-wallet` | Documentation coming soon | Database-backed wallet with full CredentialStorage implementation. Supports PostgreSQL, MySQL, H2, and other JDBC-compatible databases |
+| **File Wallet** | `com.geoknoesis.vericore.core:file-wallet` | Documentation coming soon | File-based wallet with local filesystem storage. Optional AES encryption support |
+| **Cloud Wallet** | `com.geoknoesis.vericore.core:cloud-wallet` | Documentation coming soon | Abstract base for cloud storage wallets. Supports AWS S3, Azure Blob Storage, and Google Cloud Storage |
 
 ## Other Integrations
 

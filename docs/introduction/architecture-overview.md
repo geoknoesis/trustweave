@@ -286,8 +286,7 @@ Chain Plugins (com.geoknoesis.vericore.chains:*)
 
 ## Next Steps
 
-- Learn about [Core Modules](modules/core-modules.md)
-- Explore [Integration Modules](integrations/README.md)
-- See [Examples](examples/README.md) for practical usage
+- Learn about [Core Modules](../modules/core-modules.md)
+- Explore [Integration Modules](../integrations/README.md)
 - Review the [Trust Layer Setup Checklist](../core-concepts/trust-registry.md#trust-layer-setup-checklist) before wiring issuance or verification flows
 

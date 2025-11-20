@@ -162,6 +162,6 @@ The module provides structured exception handling:
 
 - Review [Blockchain Anchoring Concepts](../core-concepts/blockchain-anchoring.md) for understanding anchoring
 - Explore [Blockchain Anchor Integration Guides](../integrations/README.md) for specific adapter setups
-- See [Anchor Package README](../../vericore-anchor/src/main/kotlin/com/geoknoesis/vericore/anchor/README.md) for detailed package documentation
+- See [Anchor Package README](../../chains/vericore-anchor/src/main/kotlin/com/geoknoesis/vericore/anchor/README.md) for detailed package documentation
 - Check [Creating Plugins](../contributing/creating-plugins.md) to implement custom blockchain adapters
 

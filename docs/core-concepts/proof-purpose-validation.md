@@ -270,6 +270,6 @@ if (!result.proofPurposeValid) {
 
 - [DID Documentation](dids.md)
 - [Delegation Documentation](delegation.md)
-- [Web of Trust Scenario](../../scenarios/web-of-trust-scenario.md)
+- [Web of Trust Scenario](../scenarios/web-of-trust-scenario.md)
 - [W3C DID Core Specification](https://www.w3.org/TR/did-core/)
 

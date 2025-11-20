@@ -119,5 +119,5 @@ Keep issuing with the old key until the updated DID is published and cached by v
 - [Key Management](../core-concepts/key-management.md) for the underlying abstractions.  
 - [DIDs](../core-concepts/dids.md) for publication guidance.  
 - [Verification Policies](verification-policies.md) to enforce that proofs are signed with an expected key set.  
-- [Quick Start sample](../../vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/quickstart/QuickStartSample.kt) for runnable issuance code.
+- [Quick Start sample](../../distribution/vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/quickstart/QuickStartSample.kt) for runnable issuance code.
 

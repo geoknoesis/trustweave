@@ -323,5 +323,5 @@ Common delegation verification errors:
 
 - [Trust Registry Documentation](trust-registry.md)
 - [DID Documentation](dids.md)
-- [Delegation Chain Example](../../vericore-examples/src/main/kotlin/io/geoknoesis/vericore/examples/delegation/DelegationChainExample.kt)
-- [Web of Trust Scenario](../../scenarios/web-of-trust-scenario.md)
+- [Delegation Chain Example](../../distribution/vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/delegation/DelegationChainExample.kt)
+- [Web of Trust Scenario](../scenarios/web-of-trust-scenario.md)

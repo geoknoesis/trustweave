@@ -122,6 +122,6 @@ No APIs have been deprecated. All new features are additive and backward compati
 ## Examples
 
 See the following examples for migration patterns:
-- [Web of Trust Example](../../vericore-examples/src/main/kotlin/io/geoknoesis/vericore/examples/trust/WebOfTrustExample.kt)
-- [Delegation Chain Example](../../vericore-examples/src/main/kotlin/io/geoknoesis/vericore/examples/delegation/DelegationChainExample.kt)
+- [Web of Trust Example](../../distribution/vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/trust/WebOfTrustExample.kt)
+- [Delegation Chain Example](../../distribution/vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/delegation/DelegationChainExample.kt)
 

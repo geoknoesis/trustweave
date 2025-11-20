@@ -571,9 +571,7 @@ val customQuality = buildJsonObject {
 ## Next Steps
 
 - Explore [Core Concepts](../core-concepts/README.md) for deeper understanding
-- Check out [Examples](../examples/earth-observation-scenario.md) for more scenarios
 - Learn about [Integration Modules](../integrations/README.md) for production use
-- Read [Best Practices](../best-practices/README.md) for security guidelines
 
 ## Common Questions
 

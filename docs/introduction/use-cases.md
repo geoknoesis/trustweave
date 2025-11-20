@@ -103,6 +103,5 @@ VeriCore is designed to be domain-agnostic, making it suitable for a wide range 
 ## Next Steps
 
 - Understand the [Architecture Overview](architecture-overview.md)
-- Get started with [Installation](getting-started/installation.md)
-- Explore [Examples](examples/README.md) for code samples
+- Get started with [Installation](../getting-started/installation.md)
 

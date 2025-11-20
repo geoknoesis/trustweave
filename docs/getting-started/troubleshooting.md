@@ -284,7 +284,7 @@ fun main() = runBlocking {
 If you're still experiencing issues:
 
 1. **Check the FAQ**: [FAQ](../faq.md)
-2. **Review Examples**: [Examples](../../vericore-examples)
+2. **Review Examples**: See the [Quick Start Guide](quick-start.md) for runnable examples
 3. **Check Error Handling**: [Error Handling](../advanced/error-handling.md)
 4. **File an Issue**: Include:
    - VeriCore version

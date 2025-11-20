@@ -156,7 +156,6 @@ import com.geoknoesis.vericore.VeriCore
 import com.geoknoesis.vericore.core.*
 import com.geoknoesis.vericore.credential.PresentationOptions
 import com.geoknoesis.vericore.credential.wallet.Wallet
-import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -210,12 +209,11 @@ fun main() = runBlocking {
     
     // Step 4: Create student wallet and store credential
     val studentWallet = vericore.createWallet(
-        holderDid = studentDid,
-        options = WalletCreationOptionsBuilder().apply {
-            enableOrganization = true
-            enablePresentation = true
-        }.build()
-    ).getOrThrow()
+        holderDid = studentDid
+    ) {
+        enableOrganization = true
+        enablePresentation = true
+    }.getOrThrow()
     
     val credentialId = studentWallet.store(credential)
     println("✅ Credential stored in wallet: $credentialId")
@@ -272,9 +270,11 @@ fun main() = runBlocking {
     println("✅ Academic Credentials Scenario Complete!")
     println("=".repeat(70))
 }
+```
 
 **Expected Output:**
-```
+
+```text
 ======================================================================
 Academic Credentials Scenario - Complete End-to-End Example
 ======================================================================
@@ -323,102 +323,105 @@ Academic Credentials Scenario - Complete End-to-End Example
 
 ## Step-by-Step Breakdown
 
-### Step 1: Setup Services
+This section breaks down the complete example above into individual steps with explanations.
 
-Initialize a clean registry and create the key management service + DID method used by the university:
+### Step 1: Initialize VeriCore
+
+Create a VeriCore instance that provides access to all functionality:
 
 ```kotlin
-val didRegistry = DidMethodRegistry()
-val universityKms = InMemoryKeyManagementService()
-val didMethod = DidKeyMockMethod(universityKms)
-didRegistry.register(didMethod)
+val vericore = VeriCore.create()
 ```
+
+**What this does:** Initializes VeriCore with default configuration, including in-memory KMS, DID methods, and wallet factories. For production, configure with specific providers.
 
 ### Step 2: Create DIDs
 
-Each party needs their own DID:
+Each party (university issuer and student holder) needs their own DID:
 
 ```kotlin
-val universityDid = didMethod.createDid()
-val studentDid = didMethod.createDid()
+// Create university DID (issuer)
+val universityDidDoc = vericore.createDid().getOrThrow()
+val universityDid = universityDidDoc.id
+val universityKeyId = universityDidDoc.verificationMethod.firstOrNull()?.id
+    ?: error("No verification method found")
+
+// Create student DID (holder)
+val studentDidDoc = vericore.createDid().getOrThrow()
+val studentDid = studentDidDoc.id
 ```
 
-### Step 3: Create Student Wallet
+**What this does:** Creates self-sovereign identifiers for both parties. The university DID will be used as the credential issuer, and the student DID will be the credential subject.
 
-Students need a wallet to store their credentials:
-
-```kotlin
-val studentWallet = InMemoryWallet(
-    walletDid = studentDid.id,
-    holderDid = studentDid.id
-)
-```
-
-### Step 4: Issue Credential
+### Step 3: Issue Credential
 
 The university creates and issues a verifiable credential:
 
 ```kotlin
-val credential = VerifiableCredential(
-    type = listOf("VerifiableCredential", "DegreeCredential"),
-    issuer = universityDid.id,
+val credential = vericore.issueCredential(
+    issuerDid = universityDid,
+    issuerKeyId = universityKeyId,
     credentialSubject = buildJsonObject {
-        put("id", studentDid.id)
+        put("id", studentDid)
         put("degree", buildJsonObject {
-            put("name", "Bachelor of Science")
-            // ... more fields
+            put("type", "BachelorDegree")
+            put("name", "Bachelor of Science in Computer Science")
+            put("university", "Example University")
+            put("graduationDate", "2023-05-15")
+            put("gpa", "3.8")
+            put("major", "Computer Science")
+            put("honors", "Summa Cum Laude")
         })
     },
-    issuanceDate = Instant.now().toString()
-)
-
-val didResolver = CredentialDidResolver { did ->
-    didRegistry.resolve(did).toCredentialDidResolution()
-}
-
-val proofGenerator = Ed25519ProofGenerator(
-    signer = { payload, keyId -> universityKms.sign(keyId, payload) },
-    getPublicKeyId = { keyId -> "${universityDid.id}#$keyId" }
-)
-val credentialIssuer = CredentialIssuer(
-    proofGenerator = proofGenerator,
-    resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
-)
-
-val issuerKey = universityKms.generateKey("Ed25519")
-
-val issuedCredential = credentialIssuer.issue(
-    credential = credential,
-    issuerDid = universityDid.id,
-    keyId = issuerKey.id,
-    options = CredentialIssuanceOptions(
-        proofType = proofGenerator.proofType,
-        challenge = "job-application-12345"
-    )
-)
+    types = listOf("VerifiableCredential", "DegreeCredential", "BachelorDegreeCredential"),
+    expirationDate = Instant.now().plus(10, ChronoUnit.YEARS).toString()
+).getOrThrow()
 ```
 
-### Step 5: Store in Wallet
+**What this does:** Issues a cryptographically signed credential with the university's DID. The credential includes degree information and is valid for 10 years.
 
-The student stores the credential:
+### Step 4: Create Student Wallet
+
+Students need a wallet to store their credentials:
 
 ```kotlin
-val credentialId = studentWallet.store(issuedCredential)
+val studentWallet = vericore.createWallet(
+    holderDid = studentDid
+) {
+    enableOrganization = true  // Enable collections and tags
+    enablePresentation = true  // Enable presentation creation
+}.getOrThrow()
 ```
+
+**What this does:** Creates an in-memory wallet for the student with organization and presentation capabilities enabled.
+
+### Step 5: Store Credential
+
+The student stores the credential in their wallet:
+
+```kotlin
+val credentialId = studentWallet.store(credential)
+```
+
+**What this does:** Stores the credential in the wallet and returns a unique credential ID for later retrieval.
 
 ### Step 6: Organize Credentials
 
-Use collections and tags to organize:
+Use collections and tags to organize credentials:
 
 ```kotlin
-val educationCollection = studentWallet.createCollection("Education Credentials")
-studentWallet.addToCollection(credentialId, educationCollection)
-studentWallet.tagCredential(credentialId, setOf("degree", "bachelor"))
+studentWallet.withOrganization { org ->
+    val collectionId = org.createCollection("Education", "Academic credentials")
+    org.addToCollection(credentialId, collectionId)
+    org.tagCredential(credentialId, setOf("degree", "computer-science", "bachelor", "verified"))
+}
 ```
+
+**What this does:** Organizes the credential into an "Education" collection and adds tags for easy searching and filtering.
 
 ### Step 7: Query Credentials
 
-Find credentials easily:
+Find credentials easily using the query API:
 
 ```kotlin
 val degrees = studentWallet.query {
@@ -427,55 +430,67 @@ val degrees = studentWallet.query {
 }
 ```
 
+**What this does:** Queries the wallet for all valid degree credentials.
+
 ### Step 8: Create Presentation
 
-Create a presentation for sharing:
+Create a verifiable presentation for sharing with employers:
 
 ```kotlin
-val presentation = studentWallet.createPresentation(
-    credentialIds = listOf(credentialId),
-    holderDid = studentDid.id,
-    options = PresentationOptions(
-        holderDid = studentDid.id,
-        challenge = "job-application-12345"
+val presentation = studentWallet.withPresentation { pres ->
+    pres.createPresentation(
+        credentialIds = listOf(credentialId),
+        holderDid = studentDid,
+        options = PresentationOptions(
+            holderDid = studentDid,
+            challenge = "job-application-12345"
+        )
     )
-)
+} ?: error("Presentation capability not available")
 ```
+
+**What this does:** Creates a verifiable presentation containing the credential, signed by the student. The challenge prevents replay attacks.
 
 ### Step 9: Verify Credential
 
-Employers run structural verification (revocation and cryptographic proof verification are stubs in the current SDK):
+Employers verify the credential cryptographically:
 
 ```kotlin
-val verifier = CredentialVerifier(didResolver)
-val result = verifier.verify(
-    credential = issuedCredential,
-    options = CredentialVerificationOptions(
-        checkRevocation = false,
-        checkExpiration = true,
-        didResolver = didResolver
-    )
-)
+val verification = vericore.verifyCredential(credential).getOrThrow()
+
+if (verification.valid) {
+    println("Credential is valid!")
+    println("Proof valid: ${verification.proofValid}")
+    println("Issuer valid: ${verification.issuerValid}")
+    println("Not revoked: ${verification.notRevoked}")
+} else {
+    println("Credential verification failed: ${verification.errors}")
+}
 ```
+
+**What this does:** Verifies the credential's cryptographic proof, checks issuer DID resolution, validates expiration, and checks revocation status.
 
 ## Advanced Features
 
 ### Selective Disclosure
 
-Share only specific fields:
+Share only specific fields from credentials. Note: Full selective disclosure requires BBS+ proofs. For basic use cases, you can create presentations with only the credentials you want to share:
 
 ```kotlin
-val selectivePresentation = studentWallet.createSelectiveDisclosure(
-    credentialIds = listOf(credentialId),
-    disclosedFields = listOf(
-        "degree.name",
-        "degree.university",
-        "degree.graduationDate"
-        // GPA is NOT disclosed
-    ),
-    holderDid = studentDid.id,
-    options = PresentationOptions(...)
-)
+// Create presentation with only specific credentials
+val selectivePresentation = studentWallet.withPresentation { pres ->
+    pres.createPresentation(
+        credentialIds = listOf(credentialId),  // Only include this credential
+        holderDid = studentDid,
+        options = PresentationOptions(
+            holderDid = studentDid,
+            challenge = "job-application-12345"
+        )
+    )
+}
+
+// For true selective disclosure (field-level), use BBS+ proof generator
+// This requires credentials issued with BBS+ proofs
 ```
 
 ### Multiple Credentials
@@ -488,36 +503,32 @@ val bachelorId = studentWallet.store(bachelorDegree)
 val masterId = studentWallet.store(masterDegree)
 val certificateId = studentWallet.store(certificate)
 
-// Create collection
-val allEducation = studentWallet.createCollection("All Education")
-studentWallet.addToCollection(bachelorId, allEducation)
-studentWallet.addToCollection(masterId, allEducation)
-studentWallet.addToCollection(certificateId, allEducation)
+// Organize into collection
+studentWallet.withOrganization { org ->
+    val allEducation = org.createCollection("All Education", "Complete education history")
+    org.addToCollection(bachelorId, allEducation)
+    org.addToCollection(masterId, allEducation)
+    org.addToCollection(certificateId, allEducation)
+}
 ```
 
 ### Credential Verification Workflow
 
-Complete verification flow:
+Complete verification flow using VeriCore facade:
 
 ```kotlin
 suspend fun verifyAcademicCredential(
     credential: VerifiableCredential,
     expectedIssuer: String,
-    verifier: CredentialVerifier,
-    didResolver: CredentialDidResolver
+    vericore: VeriCore
 ): Boolean {
-    val result = verifier.verify(
-        credential = credential,
-        options = CredentialVerificationOptions(
-            checkRevocation = false, // Revocation checks require a status list implementation
-            checkExpiration = true,
-            didResolver = didResolver
-        )
-    )
+    val result = vericore.verifyCredential(credential).getOrThrow()
 
     if (!result.valid) return false
     if (credential.issuer != expectedIssuer) return false
-    return credential.type.contains("DegreeCredential")
+    if (!credential.type.contains("DegreeCredential")) return false
+    
+    return true
 }
 ```
 
@@ -525,11 +536,11 @@ suspend fun verifyAcademicCredential(
 
 ### Trust & Failure Modes
 
-- **Proof verification**: `CredentialVerifier` currently checks proof structure only. Integrate a dedicated proof validator or external service before relying on the result for high-assurance decisions.
-- **Schema validation**: Register schema definitions with `SchemaRegistry.registerSchema` prior to enabling `validateSchema`, otherwise verification will throw an exception.
-- **Revocation**: The verifier short-circuits revocation checks. When you add a `credentialStatus`, ensure you also provide a status list resolver and set `checkRevocation = true`.
-- **Key custody**: Replace `InMemoryKeyManagementService` with an HSM or cloud KMS. Never persist private keys from the examples in production systems.
-- **Registry hygiene**: Create fresh instances of `DidMethodRegistry` and `BlockchainAnchorRegistry` per test to avoid cross-test pollution—no global state required.
+- **Proof verification**: VeriCore's `verifyCredential` performs full cryptographic proof verification. For high-assurance decisions, ensure you're using production-grade KMS providers.
+- **Schema validation**: Register schema definitions before enabling schema validation in verification options.
+- **Revocation**: When you add a `credentialStatus` to credentials, ensure you configure a status list resolver. Set `checkRevocation = true` in verification options.
+- **Key custody**: Replace the default in-memory KMS with an HSM or cloud KMS (AWS KMS, Azure Key Vault, etc.) for production. Never persist private keys in plaintext.
+- **DID resolution**: Ensure DID methods are properly registered and resolvable. For production, use real DID methods (did:key, did:web, did:ethr, etc.) instead of test implementations.
 
 ### Revocation
 

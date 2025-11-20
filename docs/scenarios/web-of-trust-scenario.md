@@ -497,6 +497,6 @@ try {
 - [Delegation Documentation](../core-concepts/delegation.md)
 - [Proof Purpose Validation Documentation](../core-concepts/proof-purpose-validation.md)
 - [DID Documentation](../core-concepts/dids.md)
-- [Web of Trust Example](../../vericore-examples/src/main/kotlin/io/geoknoesis/vericore/examples/trust/WebOfTrustExample.kt)
-- [Delegation Chain Example](../../vericore-examples/src/main/kotlin/io/geoknoesis/vericore/examples/delegation/DelegationChainExample.kt)
+- [Web of Trust Example](../../distribution/vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/trust/WebOfTrustExample.kt)
+- [Delegation Chain Example](../../distribution/vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/delegation/DelegationChainExample.kt)
 

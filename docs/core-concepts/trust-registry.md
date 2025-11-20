@@ -310,5 +310,4 @@ Future implementations may include:
 
 - [Delegation Documentation](delegation.md)
 - [DID Documentation](dids.md)
-- [Web of Trust Scenario](../../scenarios/web-of-trust-scenario.md)
-- [Trust Registry API Reference](../../api-reference/trust-registry-api.md)
+- [Web of Trust Scenario](../scenarios/web-of-trust-scenario.md)

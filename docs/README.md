@@ -179,9 +179,17 @@ Installation, quick start guide, and common patterns
 
 DIDs, Verifiable Credentials, Wallets, and Blockchain Anchoring
 
+### 🔌 [Supported Plugins](plugins.md)
+
+Complete listing of all supported plugins with documentation links organized by category
+
 ### 🔧 [API Reference](api-reference/core-api.md)
 
 Complete Application Programming Interface (API) documentation with examples
+
+### 🔌 [Supported Plugins](plugins.md)
+
+Comprehensive listing of all supported plugins organized by category (DID methods, blockchain anchors, KMS providers)
 
 ### 🎓 [Use Case Scenarios](scenarios/README.md)
 

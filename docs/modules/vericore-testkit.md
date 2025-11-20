@@ -187,7 +187,7 @@ val fixture = VeriCoreTestFixture.builder()
 ## Next Steps
 
 - Review [Testing Strategies](../advanced/testing-strategies.md) for advanced testing patterns
-- Explore [EO Test Integration README](../../vericore-testkit/src/main/kotlin/com/geoknoesis/vericore/testkit/eo/README.md) for detailed EO test utilities
-- See [Test Fixtures](../../vericore-testkit/src/main/kotlin/com/geoknoesis/vericore/testkit/VeriCoreTestFixture.kt) for fixture builder documentation
+- Explore [EO Test Integration README](../../core/vericore-testkit/src/main/kotlin/com/geoknoesis/vericore/testkit/eo/README.md) for detailed EO test utilities
+- See [Test Fixtures](../../core/vericore-testkit/src/main/kotlin/com/geoknoesis/vericore/testkit/VeriCoreTestFixture.kt) for fixture builder documentation
 - Check [Creating Plugins](../contributing/creating-plugins.md) to understand SPI interfaces being mocked
 

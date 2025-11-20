@@ -143,6 +143,6 @@ val credential = registry.issue(
 
 ## Related samples
 
-- [`QuickStartSample`](../../vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/quickstart/QuickStartSample.kt) demonstrates issuance, verification, and anchoring using the default in-memory provider chain.
+- [`QuickStartSample`](../../distribution/vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/quickstart/QuickStartSample.kt) demonstrates issuance, verification, and anchoring using the default in-memory provider chain.
 - Scenario examples in `vericore-examples` showcase custom providers (HTTP issuers, GoDiddy integrations).
 

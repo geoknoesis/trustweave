@@ -166,7 +166,6 @@ val retrieved = blockchainRegistry.readTyped<VerifiableCredentialDigest>(...)
 
 ## Next Steps
 
-- Explore [Core Concepts](core-concepts/README.md) for deeper understanding
-- Check out [Examples](examples/README.md) for more scenarios
-- Learn about [Integration Modules](integrations/README.md) for production use
+- Explore [Core Concepts](../core-concepts/README.md) for deeper understanding
+- Learn about [Integration Modules](../integrations/README.md) for production use
 

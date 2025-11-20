@@ -34,7 +34,7 @@ Scenarios are organized by domain and use case. Each scenario includes a complet
   Instant verification of security certifications (CISSP, CEH, Security+, etc.) and training credentials. Privacy-preserving verification for HR and compliance.
 
 - **[SOC2 Compliance](soc2-compliance-scenario.md)** ⭐  
-  SOC2 Type II compliance with immutable audit trails, access control, key management, and automated reporting. See also [Compliance & Security](#-compliance--security) section.
+  SOC2 Type II compliance with immutable audit trails, access control, key management, and automated reporting. See also [Compliance & Security](#compliance--security) section.
 
 **Software Security:**
 - **[Software Supply Chain Security](software-supply-chain-security-scenario.md)** ⭐  
@@ -85,7 +85,7 @@ Scenarios are organized by domain and use case. Each scenario includes a complet
   Follow goods from origin to shelf with verifiable checkpoints. Complete supply chain provenance tracking.
 
 - **[Supply Chain & EUDR Compliance](supply-chain-eudr-compliance-scenario.md)** ⭐  
-  EU Deforestation Regulation (EUDR) compliance with EO data. Digital Product Passports (DPP) using verifiable credentials. Automated compliance verification for 2025 EUDR requirements. See also [Earth Observation & Climate Applications](#-earth-observation--climate-applications) section.
+  EU Deforestation Regulation (EUDR) compliance with EO data. Digital Product Passports (DPP) using verifiable credentials. Automated compliance verification for 2025 EUDR requirements. See also [Earth Observation & Climate Applications](#earth-observation--climate-applications) section.
 
 **Digital Provenance:**
 - **[Digital Workflow & Provenance](digital-workflow-provenance-scenario.md)** ⭐  
@@ -161,7 +161,7 @@ Scenarios are organized by domain and use case. Each scenario includes a complet
   Build parametric travel insurance system similar to Chubb Travel Pro using VeriCore. Automatic payouts for flight delays, weather guarantees, baggage delays, and medical emergencies. Accept data from multiple providers (airlines, IATA, weather services) without custom integrations. Prevents fraud and enables quick payouts.
 
 - **[Parametric Insurance with Earth Observation](parametric-insurance-eo-scenario.md)** ⭐  
-  Parametric insurance using EO data credentials. Standardized data oracle system accepting data from multiple providers (ESA, Planet, NASA). Prevents replay attacks and data corruption. See also [Earth Observation & Climate Applications](#-earth-observation--climate-applications) section.
+  Parametric insurance using EO data credentials. Standardized data oracle system accepting data from multiple providers (ESA, Planet, NASA). Prevents replay attacks and data corruption. See also [Earth Observation & Climate Applications](#earth-observation--climate-applications) section.
 
 ### 🔒 Compliance & Security
 

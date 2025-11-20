@@ -102,6 +102,106 @@ Comprehensive test support:
 - Test utilities for common scenarios
 - Integration test helpers
 
+## Advanced Features & Plugins
+
+### 11. Audit Logging
+- **Immutable Audit Logs**: Track all operations with immutable audit log entries
+- **Event Types**: DID operations, credential operations, wallet operations, key operations
+- **Queryable**: Filter by time range, type, actor, resource
+- **Compliance Ready**: Ready for database or blockchain-backed implementations
+- See [Features Documentation](../features/README.md) for details
+
+### 12. Metrics & Telemetry
+- **Performance Tracking**: Counter, duration, and value metrics
+- **Statistics**: Min, max, average, percentiles (p50, p95, p99)
+- **Usage Analytics**: Track credentials issued, verified, wallet operations
+- **Metrics Snapshots**: Export metrics for monitoring systems
+- See [Features Documentation](../features/README.md) for details
+
+### 13. QR Code Generation
+- **Credential Sharing**: Generate QR codes for credentials and presentations
+- **Multiple Formats**: JSON, JWT, and URL formats
+- **Deep Links**: Generate deep links for credential verification
+- **Easy Integration**: Simple API for QR code generation
+- See [Features Documentation](../features/README.md) for details
+
+### 14. Notification System
+- **Push Notifications**: Send push notifications for credential events
+- **Webhooks**: Support for webhook-based notifications
+- **Event-Driven**: Notify on credential issuance, verification, expiration
+- **Flexible Delivery**: Support for multiple notification channels
+- See [Features Documentation](../features/README.md) for details
+
+### 15. Credential Versioning
+- **Version Tracking**: Track credential versions and history
+- **Rollback Support**: Rollback to previous versions if needed
+- **Change Tracking**: Track reasons for credential changes
+- **Version Lineage**: Maintain complete version history
+- See [Features Documentation](../features/README.md) for details
+
+### 16. Backup & Recovery
+- **Export Credentials**: Export credentials from wallets
+- **Import Credentials**: Import credentials to wallets
+- **JSON Format**: Standard JSON serialization/deserialization
+- **Backup Validation**: Validate backup data before import
+- See [Features Documentation](../features/README.md) for details
+
+### 17. Expiration Management
+- **Expiration Monitoring**: Monitor expiring and expired credentials
+- **Renewal Workflows**: Support for credential renewal processes
+- **Batch Operations**: Handle multiple credentials at once
+- **Automatic Alerts**: Notify when credentials are about to expire
+- See [Features Documentation](../features/README.md) for details
+
+### 18. Analytics & Reporting
+- **Usage Analytics**: Track issuance, verification, and trust metrics
+- **Trend Analysis**: Analyze trends over time (hourly, daily, weekly, monthly, yearly)
+- **Top Issuers**: Identify top issuers and credential types
+- **Error Tracking**: Monitor error rates and types
+- See [Features Documentation](../features/README.md) for details
+
+### 19. OIDC4VCI Support
+- **OpenID Connect**: OpenID Connect for Verifiable Credential Issuance
+- **Issuer Metadata**: Discover issuer capabilities
+- **Credential Offers**: Create and manage credential offers
+- **Standards Compliant**: Full OIDC4VCI protocol support
+- See [Features Documentation](../features/README.md) for details
+
+### 20. DIDComm v2 Support
+- **Credential Exchange**: DIDComm v2 credential exchange protocol
+- **Message Types**: Support for credential offers, requests, and issues
+- **Secure Messaging**: Encrypted and authenticated messaging
+- **Protocol Compliant**: Full DIDComm v2 specification support
+- See [Features Documentation](../features/README.md) for details
+
+### 21. CHAPI Support
+- **Credential Handler API**: Support for Credential Handler API
+- **Credential Requests**: Handle credential requests from web applications
+- **Credential Storage**: Store credentials via CHAPI
+- **Browser Integration**: Seamless browser integration
+- See [Features Documentation](../features/README.md) for details
+
+### 22. Multi-Party Issuance
+- **Collaborative Issuance**: Support for multi-party credential issuance
+- **Consensus Types**: ALL, MAJORITY, QUORUM, ANY consensus modes
+- **Signature Collection**: Collect signatures from multiple parties
+- **Approval Workflows**: Support for approval/rejection workflows
+- See [Features Documentation](../features/README.md) for details
+
+### 23. Health Checks
+- **System Diagnostics**: Monitor system health and component status
+- **Health Status**: HEALTHY, DEGRADED, UNHEALTHY status reporting
+- **Component Checks**: Check individual component health
+- **Diagnostics**: Detailed diagnostics for troubleshooting
+- See [Features Documentation](../features/README.md) for details
+
+### 24. Credential Rendering
+- **HTML Rendering**: Render credentials as HTML
+- **PDF Rendering**: Render credentials as PDF
+- **Multiple Formats**: Support for JSON, HTML, PDF, and text formats
+- **Presentation Rendering**: Render verifiable presentations
+- See [Features Documentation](../features/README.md) for details
+
 ## Integration Modules
 
 ### walt.id Integration

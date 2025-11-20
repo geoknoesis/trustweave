@@ -16,7 +16,7 @@
 
 ## Issuer → Holder → Verifier Workflow
 
-Complete workflow showing all three parties in a credential ecosystem.
+Complete workflow showing all three parties in a credential ecosystem. This example uses production-ready error handling patterns with `fold()`.
 
 ```kotlin
 package com.example.patterns.workflow
@@ -33,7 +33,22 @@ fun main() = runBlocking {
     // ============================================
     // 1. ISSUER: Create DID and issue credential
     // ============================================
-    val issuerDidDoc = vericore.createDid().getOrThrow()
+    val issuerDidDoc = vericore.createDid().fold(
+        onSuccess = { it },
+        onFailure = { error ->
+            when (error) {
+                is VeriCoreError.DidMethodNotRegistered -> {
+                    println("❌ DID method not registered: ${error.method}")
+                    println("   Available methods: ${error.availableMethods}")
+                }
+                else -> {
+                    println("❌ Failed to create issuer DID: ${error.message}")
+                }
+            }
+            return@runBlocking
+        }
+    )
+    
     val issuerDid = issuerDidDoc.id
     val issuerKeyId = issuerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
@@ -47,33 +62,90 @@ fun main() = runBlocking {
             put("degree", "Bachelor of Science")
         },
         types = listOf("VerifiableCredential", "DegreeCredential")
-    ).getOrThrow()
+    ).fold(
+        onSuccess = { it },
+        onFailure = { error ->
+            when (error) {
+                is VeriCoreError.CredentialIssuanceFailed -> {
+                    println("❌ Credential issuance failed: ${error.reason}")
+                    println("   Issuer DID: ${error.issuerDid}")
+                }
+                is VeriCoreError.InvalidDidFormat -> {
+                    println("❌ Invalid issuer DID format: ${error.reason}")
+                }
+                else -> {
+                    println("❌ Failed to issue credential: ${error.message}")
+                }
+            }
+            return@runBlocking
+        }
+    )
     
     println("✅ Issuer created credential: ${credential.id}")
     
     // ============================================
     // 2. HOLDER: Store credential in wallet
     // ============================================
-    val holderDidDoc = vericore.createDid().getOrThrow()
+    val holderDidDoc = vericore.createDid().fold(
+        onSuccess = { it },
+        onFailure = { error ->
+            println("❌ Failed to create holder DID: ${error.message}")
+            return@runBlocking
+        }
+    )
+    
     val holderDid = holderDidDoc.id
     
-    val wallet = vericore.createWallet(holderDid).getOrThrow()
-    val credentialId = wallet.store(credential)
+    val wallet = vericore.createWallet(holderDid).fold(
+        onSuccess = { it },
+        onFailure = { error ->
+            when (error) {
+                is VeriCoreError.WalletCreationFailed -> {
+                    println("❌ Wallet creation failed: ${error.reason}")
+                    println("   Provider: ${error.provider}")
+                }
+                else -> {
+                    println("❌ Failed to create wallet: ${error.message}")
+                }
+            }
+            return@runBlocking
+        }
+    )
     
+    val credentialId = wallet.store(credential)
     println("✅ Holder stored credential: $credentialId")
     
     // ============================================
     // 3. VERIFIER: Verify credential
     // ============================================
-    val verification = vericore.verifyCredential(credential).getOrThrow()
+    val verification = vericore.verifyCredential(credential).fold(
+        onSuccess = { it },
+        onFailure = { error ->
+            when (error) {
+                is VeriCoreError.CredentialInvalid -> {
+                    println("❌ Credential validation failed: ${error.reason}")
+                    println("   Field: ${error.field}")
+                }
+                else -> {
+                    println("❌ Verification failed: ${error.message}")
+                }
+            }
+            return@runBlocking
+        }
+    )
     
     if (verification.valid) {
         println("✅ Verifier confirmed credential is valid")
         println("   Proof valid: ${verification.proofValid}")
         println("   Issuer valid: ${verification.issuerValid}")
+        println("   Not revoked: ${verification.notRevoked}")
+        
+        if (verification.warnings.isNotEmpty()) {
+            println("   Warnings: ${verification.warnings.joinToString()}")
+        }
     } else {
         println("❌ Verifier rejected credential")
-        println("   Errors: ${verification.errors}")
+        println("   Errors: ${verification.errors.joinToString()}")
     }
 }
 ```
@@ -83,6 +155,51 @@ fun main() = runBlocking {
 - Issuer signs the credential with their key
 - Holder stores the credential in their wallet
 - Verifier checks the credential without contacting issuer
+
+### Workflow Diagram
+
+```mermaid
+sequenceDiagram
+    participant I as Issuer
+    participant VC as VeriCore
+    participant H as Holder
+    participant V as Verifier
+    
+    Note over I: 1. Issuer Setup
+    I->>VC: createDid()
+    VC-->>I: DidDocument
+    
+    Note over I: 2. Credential Issuance
+    I->>VC: issueCredential(issuerDid, claims)
+    VC->>VC: Resolve issuer DID
+    VC->>VC: Sign credential with issuer key
+    VC-->>I: VerifiableCredential (with proof)
+    
+    Note over I,H: 3. Credential Transfer
+    I->>H: Send VerifiableCredential
+    
+    Note over H: 4. Holder Storage
+    H->>VC: createWallet(holderDid)
+    VC-->>H: Wallet
+    H->>VC: wallet.store(credential)
+    VC-->>H: credentialId
+    
+    Note over H,V: 5. Credential Presentation
+    H->>V: Present VerifiableCredential
+    
+    Note over V: 6. Verification
+    V->>VC: verifyCredential(credential)
+    VC->>VC: Resolve issuer DID
+    VC->>VC: Verify proof signature
+    VC->>VC: Check expiration/revocation
+    VC-->>V: CredentialVerificationResult
+    
+    alt Credential Valid
+        V->>V: Accept credential
+    else Credential Invalid
+        V->>V: Reject credential
+    end
+```
 
 ---
 
@@ -124,19 +241,38 @@ fun main() = runBlocking {
     
     // Batch credential creation
     val credentials = (1..10).mapAsync { index ->
-        val issuerDid = vericore.createDid().getOrThrow()
-        vericore.issueCredential(
-            issuerDid = issuerDid.id,
-            issuerKeyId = issuerDid.verificationMethod.first().id,
-            credentialSubject = buildJsonObject {
-                put("id", "did:key:holder-$index")
-                put("index", index)
+        vericore.createDid().fold(
+            onSuccess = { issuerDid ->
+                vericore.issueCredential(
+                    issuerDid = issuerDid.id,
+                    issuerKeyId = issuerDid.verificationMethod.first().id,
+                    credentialSubject = buildJsonObject {
+                        put("id", "did:key:holder-$index")
+                        put("index", index)
+                    }
+                )
+            },
+            onFailure = { error ->
+                Result.failure(error)
             }
         )
     }
     
     val successful = credentials.filter { it.isSuccess }
+    val failed = credentials.filter { it.isFailure }
+    
     println("Created ${successful.size} credentials out of ${credentials.size}")
+    if (failed.isNotEmpty()) {
+        println("Failed: ${failed.size} credentials")
+        failed.forEach { result ->
+            result.fold(
+                onSuccess = { },
+                onFailure = { error ->
+                    println("  Error: ${error.message}")
+                }
+            )
+        }
+    }
 }
 ```
 
@@ -243,8 +379,21 @@ fun main() = runBlocking {
     val vericore = VeriCore.create()
     
     // Create issuer and holder
-    val issuerDid = vericore.createDid().getOrThrow()
-    val holderDid = vericore.createDid().getOrThrow()
+    val issuerDid = vericore.createDid().fold(
+        onSuccess = { it },
+        onFailure = { error ->
+            println("❌ Failed to create issuer DID: ${error.message}")
+            return@runBlocking
+        }
+    )
+    
+    val holderDid = vericore.createDid().fold(
+        onSuccess = { it },
+        onFailure = { error ->
+            println("❌ Failed to create holder DID: ${error.message}")
+            return@runBlocking
+        }
+    )
     
     // Issue credential with expiration
     val expirationDate = Instant.now().plus(1, ChronoUnit.YEARS).toString()
@@ -256,7 +405,13 @@ fun main() = runBlocking {
             put("name", "Alice")
         },
         expirationDate = expirationDate
-    ).getOrThrow()
+    ).fold(
+        onSuccess = { it },
+        onFailure = { error ->
+            println("❌ Failed to issue credential: ${error.message}")
+            return@runBlocking
+        }
+    )
     
     // Store in wallet with lifecycle support
     val wallet = vericore.createWallet(
@@ -265,7 +420,13 @@ fun main() = runBlocking {
             enableOrganization = true
             enablePresentation = true
         }.build()
-    ).getOrThrow()
+    ).fold(
+        onSuccess = { it },
+        onFailure = { error ->
+            println("❌ Failed to create wallet: ${error.message}")
+            return@runBlocking
+        }
+    )
     
     val credentialId = wallet.store(credential)
     
@@ -289,9 +450,16 @@ fun main() = runBlocking {
     }
     
     // Verify before using
-    val verification = vericore.verifyCredential(credential).getOrThrow()
+    val verification = vericore.verifyCredential(credential).fold(
+        onSuccess = { it },
+        onFailure = { error ->
+            println("❌ Verification failed: ${error.message}")
+            return@runBlocking
+        }
+    )
+    
     if (!verification.valid) {
-        println("⚠️ Credential invalid: ${verification.errors}")
+        println("⚠️ Credential invalid: ${verification.errors.joinToString()}")
         return@runBlocking
     }
     
@@ -345,7 +513,14 @@ fun main() = runBlocking {
     }
     
     // Issue credential
-    val issuerDid = vericore.createDid().getOrThrow()
+    val issuerDid = vericore.createDid().fold(
+        onSuccess = { it },
+        onFailure = { error ->
+            println("❌ Failed to create issuer DID: ${error.message}")
+            return@runBlocking
+        }
+    )
+    
     val credential = vericore.issueCredential(
         issuerDid = issuerDid.id,
         issuerKeyId = issuerDid.verificationMethod.first().id,
@@ -353,7 +528,13 @@ fun main() = runBlocking {
             put("id", "did:key:holder")
             put("data", "important-data")
         }
-    ).getOrThrow()
+    ).fold(
+        onSuccess = { it },
+        onFailure = { error ->
+            println("❌ Failed to issue credential: ${error.message}")
+            return@runBlocking
+        }
+    )
     
     // Anchor to multiple chains
     val chains = listOf("algorand:testnet", "polygon:testnet")
@@ -407,23 +588,43 @@ import kotlinx.serialization.json.put
 fun main() = runBlocking {
     val vericore = VeriCore.create()
     
-    val holderDid = vericore.createDid().getOrThrow().id
+    val holderDid = vericore.createDid().fold(
+        onSuccess = { it.id },
+        onFailure = { error ->
+            println("❌ Failed to create holder DID: ${error.message}")
+            return@runBlocking
+        }
+    )
+    
     val wallet = vericore.createWallet(
         holderDid = holderDid,
         options = WalletCreationOptionsBuilder().apply {
             enableOrganization = true
         }.build()
-    ).getOrThrow()
+    ).fold(
+        onSuccess = { it },
+        onFailure = { error ->
+            println("❌ Failed to create wallet: ${error.message}")
+            return@runBlocking
+        }
+    )
     
     // Issue multiple credentials
-    val issuerDid = vericore.createDid().getOrThrow()
+    val issuerDid = vericore.createDid().fold(
+        onSuccess = { it },
+        onFailure = { error ->
+            println("❌ Failed to create issuer DID: ${error.message}")
+            return@runBlocking
+        }
+    )
+    
     val credentials = listOf(
         "Bachelor of Science" to "education",
         "Professional License" to "professional",
         "Membership Card" to "membership"
     )
     
-    val credentialIds = credentials.map { (name, category) ->
+    val credentialIds = credentials.mapNotNull { (name, category) ->
         val credential = vericore.issueCredential(
             issuerDid = issuerDid.id,
             issuerKeyId = issuerDid.verificationMethod.first().id,
@@ -432,7 +633,13 @@ fun main() = runBlocking {
                 put("credentialName", name)
             },
             types = listOf("VerifiableCredential", "${category}Credential")
-        ).getOrThrow()
+        ).fold(
+            onSuccess = { it },
+            onFailure = { error ->
+                println("❌ Failed to issue credential '$name': ${error.message}")
+                return@mapNotNull null
+            }
+        )
         
         val credentialId = wallet.store(credential)
         

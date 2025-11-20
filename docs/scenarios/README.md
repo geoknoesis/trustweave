@@ -33,6 +33,9 @@ Scenarios are organized by domain and use case. Each scenario includes a complet
 - **[Security Training & Certification Verification](security-training-certification-scenario.md)** ⭐  
   Instant verification of security certifications (CISSP, CEH, Security+, etc.) and training credentials. Privacy-preserving verification for HR and compliance.
 
+- **[SOC2 Compliance](soc2-compliance-scenario.md)** ⭐  
+  SOC2 Type II compliance with immutable audit trails, access control, key management, and automated reporting. See also [Compliance & Security](#-compliance--security) section.
+
 **Software Security:**
 - **[Software Supply Chain Security](software-supply-chain-security-scenario.md)** ⭐  
   Software provenance, build attestation, and SBOM verification. Prevent supply chain attacks with cryptographic proof of software authenticity and dependency verification.
@@ -81,6 +84,9 @@ Scenarios are organized by domain and use case. Each scenario includes a complet
 - **[Supply Chain Traceability](supply-chain-traceability-scenario.md)** ⭐  
   Follow goods from origin to shelf with verifiable checkpoints. Complete supply chain provenance tracking.
 
+- **[Supply Chain & EUDR Compliance](supply-chain-eudr-compliance-scenario.md)** ⭐  
+  EU Deforestation Regulation (EUDR) compliance with EO data. Digital Product Passports (DPP) using verifiable credentials. Automated compliance verification for 2025 EUDR requirements. See also [Earth Observation & Climate Applications](#-earth-observation--climate-applications) section.
+
 **Digital Provenance:**
 - **[Digital Workflow & Provenance](digital-workflow-provenance-scenario.md)** ⭐  
   PROV-O workflow provenance tracking for digital information. Track information flow through complex workflows.
@@ -95,6 +101,20 @@ Scenarios are organized by domain and use case. Each scenario includes a complet
 
 - **[Spatial Web Authorization](spatial-web-authorization-scenario.md)** ⭐  
   Grant AR/VR permissions using verifiable policies. DID-based authorization for spatial entities.
+
+### 🌍 Earth Observation & Climate Applications
+
+**Parametric Insurance:**
+- **[Parametric Insurance with Earth Observation](parametric-insurance-eo-scenario.md)** ⭐  
+  Build parametric insurance systems using EO data credentials. Solve the "Oracle Problem" by enabling standardized, multi-provider data ecosystems. Accept data from any certified provider (ESA, Planet, NASA) without custom integrations. Prevents replay attacks and data corruption for $50M+ payouts.
+
+**Carbon Markets:**
+- **[Carbon Markets & Digital MRV (dMRV)](carbon-markets-dmrv-scenario.md)** ⭐  
+  Digital Measurement, Reporting, and Verification for carbon markets using EO data. Prevent double counting with blockchain-anchored credentials. Track carbon credit lifecycle from issuance to retirement. Supports nested climate accounting (Nation → City → Company) and Token Taxonomy Framework (TTF) integration.
+
+**Regulatory Compliance:**
+- **[Supply Chain & EUDR Compliance](supply-chain-eudr-compliance-scenario.md)** ⭐  
+  EU Deforestation Regulation (EUDR) compliance using EO data for geospatial non-deforestation proof. Build Digital Product Passports (DPP) with verifiable credentials. Automated compliance verification with Climate TRACE integration. Meet 2025 EUDR requirements with cryptographic proof.
 
 ### 📰 Media & Content
 
@@ -136,6 +156,17 @@ Scenarios are organized by domain and use case. Each scenario includes a complet
 
 - **[Insurance Claims and Verification](insurance-claims-scenario.md)** ⭐  
   Complete insurance claims verification system. Demonstrates claim credentials, damage assessment, repair verification, and fraud prevention.
+
+- **[Parametric Insurance for Travel Disruptions](parametric-insurance-travel-scenario.md)** ⭐  
+  Build parametric travel insurance system similar to Chubb Travel Pro using VeriCore. Automatic payouts for flight delays, weather guarantees, baggage delays, and medical emergencies. Accept data from multiple providers (airlines, IATA, weather services) without custom integrations. Prevents fraud and enables quick payouts.
+
+- **[Parametric Insurance with Earth Observation](parametric-insurance-eo-scenario.md)** ⭐  
+  Parametric insurance using EO data credentials. Standardized data oracle system accepting data from multiple providers (ESA, Planet, NASA). Prevents replay attacks and data corruption. See also [Earth Observation & Climate Applications](#-earth-observation--climate-applications) section.
+
+### 🔒 Compliance & Security
+
+- **[SOC2 Compliance](soc2-compliance-scenario.md)** ⭐  
+  Build SOC2 Type II compliant systems using VeriCore. Immutable audit trails with blockchain anchoring, access control with verifiable credentials, key rotation with history preservation, change management, and automated compliance reporting. Demonstrates how to achieve SOC2 certification with verifiable proof.
 
 ## How to Use These Scenarios
 

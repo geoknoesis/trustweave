@@ -2,6 +2,40 @@
 
 Add VeriCore to your Kotlin project using Gradle or Maven.
 
+## Prerequisites
+
+Before installing VeriCore, ensure you have:
+
+- **Kotlin 2.2.0+** (included via Gradle plugin, no manual installation needed)
+- **Java 21+** (required for compilation and runtime)
+- **Gradle 8.5+** (automatically downloaded via Gradle Wrapper, no manual installation needed)
+- **Basic Kotlin knowledge** (coroutines, data classes, sealed classes)
+- **Familiarity with W3C standards** (helpful but not required):
+  - [Verifiable Credentials Data Model v1.1](https://www.w3.org/TR/vc-data-model/)
+  - [Decentralized Identifiers (DIDs) v1.0](https://www.w3.org/TR/did-core/)
+
+### Optional Prerequisites
+
+- **Docker** (optional): Required for `com.geoknoesis.vericore.chains:ganache` tests using TestContainers
+- **IDE**: IntelliJ IDEA or VS Code with Kotlin support (recommended for better developer experience)
+
+### Verify Your Setup
+
+After installation, verify your setup by running a simple test:
+
+```kotlin
+import com.geoknoesis.vericore.VeriCore
+import kotlinx.coroutines.runBlocking
+
+fun main() = runBlocking {
+    val vericore = VeriCore.create()
+    val did = vericore.createDid().getOrThrow()
+    println("✅ VeriCore is working! Created DID: ${did.id}")
+}
+```
+
+If this runs without errors, your installation is successful!
+
 ## Gradle (Kotlin DSL)
 
 Add VeriCore dependencies to your `build.gradle.kts`. This brings in the core runtime, optional adapters, and the test kit you will use in the tutorials.

@@ -762,18 +762,13 @@ VeriCore ships with comprehensive plugin support:
 
 ### DID Method Plugins
 
-**High Priority:**
 - **`com.geoknoesis.vericore.did:key`** - Native did:key implementation (most widely-used DID method). See [Key DID Integration Guide](docs/integrations/key-did.md).
 - **`com.geoknoesis.vericore.did:web`** - Web DID method for HTTP/HTTPS-based resolution. See [Web DID Integration Guide](docs/integrations/web-did.md).
 - **`com.geoknoesis.vericore.did:ethr`** - Ethereum DID method with blockchain anchoring. See [Ethereum DID Integration Guide](docs/integrations/ethr-did.md).
 - **`com.geoknoesis.vericore.did:ion`** - Microsoft ION DID method using Sidetree protocol. See [ION DID Integration Guide](docs/integrations/ion-did.md).
-
-**Medium Priority:**
 - **`com.geoknoesis.vericore.did:polygon`** - Polygon DID method (lower fees than Ethereum). See [Polygon DID Integration Guide](docs/integrations/polygon-did.md).
 - **`com.geoknoesis.vericore.did:sol`** - Solana DID method with program integration. See [Solana DID Integration Guide](docs/integrations/sol-did.md).
 - **`com.geoknoesis.vericore.did:peer`** - Peer-to-peer DID method (no external registry). See [Peer DID Integration Guide](docs/integrations/peer-did.md).
-
-**Lower Priority:**
 - **`com.geoknoesis.vericore.did:jwk`** - W3C-standard did:jwk using JSON Web Keys directly. See [JWK DID Integration Guide](docs/integrations/jwk-did.md).
 - **`com.geoknoesis.vericore.did:ens`** - Ethereum Name Service (ENS) resolver integration. See [ENS DID Integration Guide](docs/integrations/ens-did.md).
 - **`com.geoknoesis.vericore.did:plc`** - Personal Linked Container (PLC) for AT Protocol. See [PLC DID Integration Guide](docs/integrations/plc-did.md).

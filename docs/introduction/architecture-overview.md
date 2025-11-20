@@ -2,6 +2,146 @@
 
 VeriCore follows a modular, pluggable architecture that enables flexibility and extensibility. This page ties the high-level mental model—DIDs, credentials, proofs, anchoring—into the modules you will touch as you build a trust layer.
 
+## VeriCore Mental Model
+
+VeriCore operates on three abstraction layers that provide different levels of control and simplicity:
+
+### 1. Facade Layer (`VeriCore.create()`) - Simplest API
+
+The facade provides a unified, high-level API with sensible defaults. Use this when you want the simplest integration:
+
+```kotlin
+val vericore = VeriCore.create()
+val did = vericore.createDid().getOrThrow()
+val credential = vericore.issueCredential(...).getOrThrow()
+```
+
+**When to use:**
+- Quick prototypes and demos
+- Simple applications with standard requirements
+- When you want VeriCore to handle configuration automatically
+
+### 2. Service Layer (Direct Interfaces) - Fine-Grained Control
+
+Access individual services directly for maximum control:
+
+```kotlin
+val kms = InMemoryKeyManagementService()
+val didMethod = DidKeyMockMethod(kms)
+val didRegistry = DidMethodRegistry().apply { register(didMethod) }
+val document = didMethod.createDid(options)
+```
+
+**When to use:**
+- Custom configurations
+- Advanced use cases
+- When you need to compose services manually
+
+### 3. DSL Layer (`trustLayer { }`) - Declarative Configuration
+
+Use the DSL for declarative, readable configuration:
+
+```kotlin
+val trustLayer = trustLayer {
+    keys { provider("inMemory") }
+    did { method("key") }
+    blockchain {
+        "algorand:testnet" to algorandClient
+    }
+}
+```
+
+**When to use:**
+- Complex trust layer configurations
+- When you prefer declarative style
+- Building reusable trust configurations
+
+### Component Interaction Flow
+
+Understanding how components interact helps you debug and extend VeriCore:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    User Application Code                     │
+└───────────────────────────┬─────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    VeriCore Facade                           │
+│              (VeriCore.create())                             │
+└───────────────┬───────────────────────────────┬───────────────┘
+                │                               │
+                ▼                               ▼
+┌───────────────────────────┐    ┌───────────────────────────┐
+│   Service Interfaces      │    │   Service Registries      │
+│  - DidMethod              │    │  - DidMethodRegistry      │
+│  - KeyManagementService   │    │  - BlockchainAnchorRegistry│
+│  - BlockchainAnchorClient │    │  - CredentialServiceRegistry│
+└───────────────┬───────────┘    └───────────────┬───────────┘
+                │                               │
+                ▼                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│              Plugin Implementations                          │
+│  - DidKeyMethod, DidWebMethod, etc.                          │
+│  - InMemoryKMS, AWSKMS, AzureKMS, etc.                      │
+│  - AlgorandClient, PolygonClient, etc.                       │
+└───────────────┬───────────────────────────────────────────────┘
+                │
+                ▼
+┌─────────────────────────────────────────────────────────────┐
+│              External Systems                                 │
+│  - Blockchains (Algorand, Ethereum, Polygon, etc.)          │
+│  - KMS Providers (AWS, Azure, Google Cloud, etc.)          │
+│  - DID Resolvers (Universal Resolver, etc.)                 │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Plugin Architecture
+
+VeriCore uses the Service Provider Interface (SPI) pattern for automatic plugin discovery:
+
+1. **Plugin Registration**: Plugins implement provider interfaces (e.g., `DidMethodProvider`)
+2. **Automatic Discovery**: Java ServiceLoader discovers plugins on the classpath
+3. **Manual Registration**: You can also register plugins manually via registries
+
+```kotlin
+// Automatic discovery (via SPI)
+val result = WaltIdIntegration.discoverAndRegister(registry)
+
+// Manual registration
+val didRegistry = DidMethodRegistry().apply {
+    register(DidKeyMethod(kms))
+    register(DidWebMethod(kms))
+}
+```
+
+### Trust Layer Concept
+
+The **Trust Layer** is VeriCore's configuration DSL that lets you declaratively configure all services:
+
+```kotlin
+val trustLayer = trustLayer {
+    keys { 
+        provider("inMemory")  // KMS configuration
+    }
+    did { 
+        method("key")          // DID method configuration
+    }
+    blockchain {
+        "algorand:testnet" to algorandClient  // Blockchain configuration
+    }
+    wallet {
+        enableOrganization()
+        enablePresentation()
+    }
+}
+```
+
+**When to use the Trust Layer:**
+- Complex multi-service configurations
+- Reusable trust configurations across applications
+- When you want a single source of truth for configuration
+
 ## End-to-End Identity Flow
 
 ```mermaid
@@ -111,11 +251,27 @@ vericore/
 
 ### KMS Plugins
 
-- **walt.id** (`com.geoknoesis.vericore.kms:waltid`) – walt.id-based KMS and DID methods. See [walt.id Integration Guide](../integrations/waltid.md).
+#### Cloud KMS Providers
+
 - **AWS KMS** (`com.geoknoesis.vericore.kms:aws`) – AWS Key Management Service. See [AWS KMS Integration Guide](../integrations/aws-kms.md).
+- **AWS CloudHSM** (`com.geoknoesis.vericore.kms:cloudhsm`) – AWS CloudHSM for dedicated hardware security modules. Documentation coming soon.
 - **Azure Key Vault** (`com.geoknoesis.vericore.kms:azure`) – Azure Key Vault integration. See [Azure KMS Integration Guide](../integrations/azure-kms.md).
 - **Google Cloud KMS** (`com.geoknoesis.vericore.kms:google`) – Google Cloud KMS integration. See [Google KMS Integration Guide](../integrations/google-kms.md).
+- **IBM Key Protect** (`com.geoknoesis.vericore.kms:ibm`) – IBM Cloud Key Protect integration. Documentation coming soon.
+
+#### Self-Hosted KMS Providers
+
 - **HashiCorp Vault** (`com.geoknoesis.vericore.kms:hashicorp`) – HashiCorp Vault Transit engine. See [HashiCorp Vault KMS Integration Guide](../integrations/hashicorp-vault-kms.md).
+- **Thales CipherTrust** (`com.geoknoesis.vericore.kms:thales`) – Thales CipherTrust Manager integration. Documentation coming soon.
+- **Thales Luna** (`com.geoknoesis.vericore.kms:thales-luna`) – Thales Luna HSM integration. Documentation coming soon.
+- **CyberArk Conjur** (`com.geoknoesis.vericore.kms:cyberark`) – CyberArk Conjur secrets management integration. Documentation coming soon.
+- **Fortanix DSM** (`com.geoknoesis.vericore.kms:fortanix`) – Fortanix Data Security Manager multi-cloud key management. Documentation coming soon.
+- **Entrust** (`com.geoknoesis.vericore.kms:entrust`) – Entrust key management integration. Documentation coming soon.
+- **Utimaco** (`com.geoknoesis.vericore.kms:utimaco`) – Utimaco HSM integration. Documentation coming soon.
+
+#### Other KMS Integrations
+
+- **walt.id** (`com.geoknoesis.vericore.kms:waltid`) – walt.id-based KMS and DID methods. See [walt.id Integration Guide](../integrations/waltid.md).
 
 ### DID Method Plugins
 

@@ -14,7 +14,7 @@
 - **[What is VeriCore?](introduction/what-is-vericore.md)**: Library's purpose, design philosophy, and core principles
 - **[Key Features](introduction/key-features.md)**: Comprehensive overview of VeriCore's capabilities
 - **[Use Cases](introduction/use-cases.md)**: Common applications and use case scenarios
-- **[Architecture Overview](introduction/architecture-overview.md)**: Modular design, module structure, and extensibility patterns
+- **[Architecture Overview](introduction/architecture-overview.md)**: Modular design, module structure, mental model, and extensibility patterns
 
 ## Core Concepts Documentation
 
@@ -28,12 +28,29 @@
 
 ## Tutorials
 
+- **[Beginner Tutorial Series](tutorials/beginner-tutorial-series.md)**: Structured learning path for new developers
+  - Tutorial 1: Your First DID
+  - Tutorial 2: Issuing Your First Credential
+  - Tutorial 3: Managing Credentials with Wallets
+  - Tutorial 4: Building a Complete Workflow
+  - Tutorial 5: Adding Blockchain Anchoring
+
+- **[DID Operations Tutorial](tutorials/did-operations-tutorial.md)**: Comprehensive guide to DID operations
+  - Creating, resolving, updating, and deactivating DIDs
+  - Working with multiple DID methods
+  - Advanced DID operations
+
 - **[Wallet API Tutorial](tutorials/wallet-api-tutorial.md)**: Complete guide to using wallets
   - Creating wallets
   - Storing and organizing credentials
   - Querying credentials
   - Creating presentations
   - Lifecycle management
+
+- **[Credential Issuance Tutorial](tutorials/credential-issuance-tutorial.md)**: Deep dive into credential issuance
+  - Issuance workflows
+  - Credential types and structures
+  - Proof generation
 
 - **[Common Patterns](getting-started/common-patterns.md)**: Common usage patterns and best practices
   - Issuer → Holder → Verifier workflow
@@ -73,12 +90,18 @@ See **[Scenarios Overview](scenarios/README.md)** for all available scenarios or
 
 **📦 Supply Chain & Provenance:**
 - **[Supply Chain Traceability](scenarios/supply-chain-traceability-scenario.md)**: Complete supply chain provenance tracking
+- **[Supply Chain & EUDR Compliance](scenarios/supply-chain-eudr-compliance-scenario.md)**: EU Deforestation Regulation compliance with EO data and Digital Product Passports
 - **[Digital Workflow & Provenance](scenarios/digital-workflow-provenance-scenario.md)**: PROV-O workflow provenance tracking
 
 **📍 Geospatial & Location:**
 - **[Proof of Location](scenarios/proof-of-location-scenario.md)**: Geospatial location proofs and verification
 - **[Earth Observation](scenarios/earth-observation-scenario.md)**: Complete EO data integrity workflow
 - **[Spatial Web Authorization](scenarios/spatial-web-authorization-scenario.md)**: DID-based authorization for spatial entities
+
+**🌍 Earth Observation & Climate:**
+- **[Parametric Insurance with Earth Observation](scenarios/parametric-insurance-eo-scenario.md)**: Parametric insurance using EO data credentials. Solve the "Oracle Problem" with standardized, multi-provider data ecosystems
+- **[Carbon Markets & Digital MRV (dMRV)](scenarios/carbon-markets-dmrv-scenario.md)**: Digital Measurement, Reporting, and Verification for carbon markets. Prevent double counting with blockchain-anchored credentials
+- **[Supply Chain & EUDR Compliance](scenarios/supply-chain-eudr-compliance-scenario.md)**: EU Deforestation Regulation compliance with EO data evidence and Digital Product Passports
 
 **📰 Media & Content:**
 - **[News Industry](scenarios/news-industry-scenario.md)**: Content provenance and authenticity verification
@@ -98,6 +121,10 @@ See **[Scenarios Overview](scenarios/README.md)** for all available scenarios or
 
 **🛡️ Insurance & Claims:**
 - **[Insurance Claims and Verification](scenarios/insurance-claims-scenario.md)**: Complete insurance claims verification with fraud prevention
+- **[Parametric Insurance with Earth Observation](scenarios/parametric-insurance-eo-scenario.md)**: Parametric insurance using EO data credentials for automated payouts
+
+**🔒 Compliance & Security:**
+- **[SOC2 Compliance](scenarios/soc2-compliance-scenario.md)**: SOC2 Type II compliance with immutable audit trails, access control, key management, and automated reporting
 
 ## API Reference
 
@@ -118,13 +145,27 @@ See **[Scenarios Overview](scenarios/README.md)** for all available scenarios or
   - Links to detailed integration guides for each plugin
 - **[Integration Modules](integrations/README.md)**: Detailed integration guides with setup instructions
 
+## Configuration
+
+- **[Configuration Reference](configuration/README.md)**: Complete configuration options and customization guide
+- **[Default Configuration](configuration/defaults.md)**: What defaults are used by `VeriCore.create()` and how to customize them
+
 ## Advanced Topics
 
 - **[Key Rotation](advanced/key-rotation.md)**: Step-by-step issuer rotation guidance with KMS and DID updates
 - **[Verification Policies](advanced/verification-policies.md)**: Enforce expiration, revocation, audience, and anchoring checks
-- **[Error Handling](advanced/error-handling.md)**: Structured error handling with VeriCoreError types and Result utilities
+- **[Error Handling](advanced/error-handling.md)**: Structured error handling with VeriCoreError types, error code quick reference, common pitfalls, and Result utilities
 - **[Plugin Lifecycle](advanced/plugin-lifecycle.md)**: Initialize, start, stop, and cleanup plugins
 - Testability tips are included throughout using `vericore-testkit`
+
+## Migration Guides
+
+- **[Migration Guides](migration/README.md)**: Version compatibility matrix, deprecation policy, and migration instructions
+- **[Migrating to 1.0.0](migration/migrating-to-1.0.0.md)**: Detailed migration guide covering type-safe options, Result-based APIs, error handling, and plugin lifecycle
+
+## Security
+
+- **[Security Best Practices](security/README.md)**: Comprehensive security guide covering key management, credential storage, DID management, network security, and compliance
 
 ## Contributing
 
@@ -150,6 +191,12 @@ See **[Scenarios Overview](scenarios/README.md)** for all available scenarios or
 
 ### Test Utilities
 - **[vericore-testkit/eo/README.md](../core/vericore-testkit/src/main/kotlin/com/geoknoesis/vericore/testkit/eo/README.md)**: EO test integration utilities
+
+## Features & Plugins
+
+- **[Features Documentation](features/README.md)**: Overview of all VeriCore features
+- **[Feature Details](features/IMPLEMENTED_FEATURES.md)**: Complete list of all features
+- **[Usage Guide](features/USAGE_GUIDE.md)**: How to use features (Audit Logging, Metrics, QR Codes, etc.)
 
 ## Key Features Documented
 

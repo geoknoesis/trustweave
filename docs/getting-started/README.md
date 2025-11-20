@@ -14,6 +14,7 @@ Each guide below introduces a checkpoint in the onboarding journey. Follow them 
 
 ### Orientation
 - [Installation](installation.md) – Add VeriCore to your project and confirm the build.
+- [IDE Setup](ide-setup.md) – Configure your IDE (IntelliJ IDEA or VS Code) for VeriCore development.
 - [Project Setup](project-setup.md) – Configure IDE, Gradle tasks, and environment variables.
 - [Your First Application](your-first-application.md) – Assemble a minimal issuance + verification flow.
 

@@ -8,7 +8,9 @@ Get started with VeriCore in 5 minutes! This guide will walk you through creatin
 
 ## Complete Runnable Example
 
-Here's a complete, copy-paste ready example that demonstrates the full VeriCore workflow:
+Here's a complete, copy-paste ready example that demonstrates the full VeriCore workflow. This example uses `getOrThrow()` for simplicity in quick-start scenarios. For production code, see the [Production Pattern](#production-pattern-with-error-handling) section below.
+
+> **Note:** This example uses `getOrThrow()` which is acceptable for quick starts, tests, and prototypes. For production code, always use `fold()` for explicit error handling. See [Error Handling Patterns](#error-handling-patterns) below.
 
 ```kotlin
 package com.example.vericore.quickstart
@@ -38,6 +40,8 @@ fun main() = runBlocking {
     println("Canonical credential-subject digest: $digest")
 
     // Step 3: Create an issuer DID
+    // Note: getOrThrow() is used here for quick-start simplicity
+    // In production, use fold() for error handling (see below)
     val issuerDocument = vericore.createDid().getOrThrow()
     val issuerDid = issuerDocument.id
     val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.id
@@ -54,6 +58,7 @@ fun main() = runBlocking {
     println("Issued credential id: ${credential.id}")
 
     // Step 5: Verify the credential
+    // This example uses fold() to demonstrate proper error handling
     vericore.verifyCredential(credential).fold(
         onSuccess = { verification ->
             if (verification.valid) {
@@ -91,6 +96,62 @@ fun main() = runBlocking {
 }
 ```
 
+### Production Pattern with Error Handling
+
+For production code, always use `fold()` for explicit error handling:
+
+```kotlin
+fun main() = runBlocking {
+    val vericore = VeriCore.create()
+
+    // Production pattern: Use fold() for all operations
+    val issuerDocument = vericore.createDid().fold(
+        onSuccess = { it },
+        onFailure = { error ->
+            when (error) {
+                is VeriCoreError.DidMethodNotRegistered -> {
+                    println("❌ DID method not registered: ${error.method}")
+                    println("   Available methods: ${error.availableMethods}")
+                }
+                else -> {
+                    println("❌ Failed to create DID: ${error.message}")
+                }
+            }
+            return@runBlocking
+        }
+    )
+    
+    val issuerDid = issuerDocument.id
+    val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.id
+        ?: error("No verification method found")
+    
+    val credential = vericore.issueCredential(
+        issuerDid = issuerDid,
+        issuerKeyId = issuerKeyId,
+        credentialSubject = buildJsonObject {
+            put("id", "did:key:holder")
+            put("name", "Alice")
+        },
+        types = listOf("VerifiableCredential", "QuickStartCredential")
+    ).fold(
+        onSuccess = { it },
+        onFailure = { error ->
+            when (error) {
+                is VeriCoreError.CredentialIssuanceFailed -> {
+                    println("❌ Credential issuance failed: ${error.reason}")
+                }
+                else -> {
+                    println("❌ Failed to issue credential: ${error.message}")
+                }
+            }
+            return@runBlocking
+        }
+    )
+    
+    println("✅ Credential issued: ${credential.id}")
+}
+```
+
 **Expected Output:**
 ```
 Canonical credential-subject digest: u5v...
@@ -116,6 +177,8 @@ The sections below explain each step in detail.
 **Why:** `vericore-all` bundles every public module (core APIs, DID support, KMS, anchoring, DSLs) so you can get going with one line.  
 **How it works:** It's a convenience metapackage that re-exports the same artifacts you would otherwise add one-by-one.  
 **How simple:** Drop one dependency and you're done.
+
+> **Note:** For production deployments, consider using individual modules instead of `vericore-all` to minimize bundle size. See [Installation Guide](installation.md) for details.
 
 ```kotlin
 dependencies {
@@ -165,6 +228,8 @@ fun main() = runBlocking {
 - Instantiates VeriCore with sensible defaults (in-memory registries) suitable for playground and unit tests.  
 - Builds a credential payload using Kotlinx Serialization builders so the structure is type-safe.  
 - Canonicalises and hashes the payload, returning a multibase-encoded digest you can anchor or sign.
+
+> **Important:** The defaults use in-memory components (KMS, wallets, DID methods) suitable for testing only. For production, configure your own KMS, DID methods, and storage backends. See [Default Configuration](../configuration/defaults.md) and [Production Deployment](../deployment/production-checklist.md) for details.
 
 **Result**  
 `DigestUtils.sha256DigestMultibase` prints a deterministic digest (for example `u5v...`) that becomes the integrity reference for later steps.
@@ -274,6 +339,8 @@ vericore.verifyCredential(credential).fold(
 )
 
 // Simple usage (throws on error)
+// Note: getOrThrow() is fine for quick starts and tests
+// In production code, prefer fold() for explicit error handling
 val verification = vericore.verifyCredential(credential).getOrThrow()
 if (verification.valid) {
     println("Credential is valid")
@@ -334,30 +401,36 @@ Anchoring is abstracted behind the same interface regardless of provider. The sa
 
 VeriCore provides structured error handling with `Result<T>` and `VeriCoreError` types. Understanding when to use different patterns is important for production code.
 
-### When to Use `getOrThrow()`
+> **Best Practice:** Always use `fold()` for production code. Use `getOrThrow()` only for quick starts, tests, and prototypes.
 
-Use `getOrThrow()` for:
+### When to Use `getOrThrow()` (Testing/Prototyping Only)
+
+Use `getOrThrow()` **only** for:
 - ✅ Quick start examples and prototypes
 - ✅ Simple scripts where you can let errors bubble up
 - ✅ Test code where exceptions are acceptable
-- ✅ When you want exceptions for errors
+- ✅ Learning and experimentation
 
 ```kotlin
-// Simple usage (throws on error)
+// ⚠️ Simple usage (throws on error) - Testing/Prototyping Only
+// For production, always use fold() instead
 val did = vericore.createDid().getOrThrow()
 val credential = vericore.issueCredential(...).getOrThrow()
 ```
 
-### When to Use `fold()`
+**Why not in production?** `getOrThrow()` throws exceptions that can crash your application. Production code should handle errors gracefully.
 
-Use `fold()` for:
+### When to Use `fold()` (Production Pattern)
+
+Use `fold()` **always** for:
 - ✅ Production code
 - ✅ When you need to handle specific error types
 - ✅ When you want to provide user-friendly error messages
 - ✅ When you need to log errors before handling
+- ✅ When you need to recover from errors
 
 ```kotlin
-// Production pattern with specific error handling
+// ✅ Production pattern with specific error handling
 val result = vericore.createDid()
 result.fold(
     onSuccess = { did -> 
@@ -369,7 +442,12 @@ result.fold(
         when (error) {
             is VeriCoreError.DidMethodNotRegistered -> {
                 logger.warn("DID method not registered: ${error.method}")
+                logger.info("Available methods: ${error.availableMethods}")
                 // Register method and retry, or use fallback
+            }
+            is VeriCoreError.InvalidDidFormat -> {
+                logger.error("Invalid DID format: ${error.reason}")
+                // Show format requirements to user
             }
             else -> {
                 logger.error("Unexpected error: ${error.message}", error)
@@ -379,6 +457,8 @@ result.fold(
     }
 )
 ```
+
+**Why use `fold()`?** It forces explicit error handling, prevents crashes, and provides structured error information for recovery.
 
 ## Handling errors and verification failures
 
@@ -475,12 +555,60 @@ If you encounter issues:
 - Check [Error Handling](../advanced/error-handling.md) for error handling patterns
 - Review [FAQ](../faq.md) for frequently asked questions
 
+## Learning Path
+
+Follow this structured path to master VeriCore:
+
+### 1. Get Started (You are here!)
+- ✅ Complete this Quick Start guide
+- ✅ Run the example code
+- ✅ Understand basic concepts
+
+### 2. Learn the Fundamentals
+- **[Beginner Tutorial Series](../tutorials/beginner-tutorial-series.md)** - Structured 5-tutorial series (2+ hours)
+  - Tutorial 1: Your First DID (15-20 min)
+  - Tutorial 2: Issuing Your First Credential (20-25 min)
+  - Tutorial 3: Managing Credentials with Wallets (25-30 min)
+  - Tutorial 4: Building a Complete Workflow (30-35 min)
+  - Tutorial 5: Adding Blockchain Anchoring (25-30 min)
+
+### 3. Build Real Applications
+- **[Your First Application](your-first-application.md)** - Build a complete example
+- **[Common Patterns](common-patterns.md)** - Production-ready patterns
+- **[Scenarios](../scenarios/README.md)** - Real-world use cases
+
+### 4. Deepen Your Knowledge
+- **[Core Concepts](../core-concepts/README.md)** - Deep dives into fundamentals
+- **[API Reference](../api-reference/core-api.md)** - Complete API documentation
+- **[Advanced Topics](../advanced/README.md)** - Key rotation, verification policies, etc.
+
+### 5. Production Deployment
+- **[Error Handling Guide](../advanced/error-handling.md)** - Production error handling
+- **[Troubleshooting](troubleshooting.md)** - Debugging and solutions
+- **[Security Best Practices](../security/README.md)** - Security guidelines
+
 ## What's Next?
 
-- [Your First Application](your-first-application.md) - Build a more complete example
-- [Common Patterns](common-patterns.md) - Learn common usage patterns
+**New to VeriCore?**
+1. Start with [Beginner Tutorial Series](../tutorials/beginner-tutorial-series.md) - Tutorial 1
+2. Complete all 5 tutorials in order
+3. Move to [Common Patterns](common-patterns.md) for production patterns
+
+**Already familiar with DIDs/VCs?**
+1. Review [Common Patterns](common-patterns.md) for VeriCore-specific patterns
+2. Explore [Scenarios](../scenarios/README.md) for your use case
+3. Reference [API Reference](../api-reference/core-api.md) as needed
+
+**Building a specific application?**
+1. Check [Scenarios](../scenarios/README.md) for similar use cases
+2. Review [Common Patterns](common-patterns.md) for reusable patterns
+3. Consult [API Reference](../api-reference/core-api.md) for details
+
+## Additional Resources
+
 - [Core Concepts](../core-concepts/README.md) - Learn the fundamentals
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 - [Troubleshooting](troubleshooting.md) - Common issues and solutions
 - [Error Handling Guide](../advanced/error-handling.md) - Detailed error handling patterns
+- [FAQ](../faq.md) - Frequently asked questions
 

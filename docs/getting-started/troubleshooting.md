@@ -141,9 +141,11 @@ vericore.initialize(config).fold(
 )
 ```
 
-## Debugging Tips
+## Debugging Workflows
 
-### Enable Logging
+### Step 1: Enable Comprehensive Logging
+
+Enable detailed logging to see what's happening:
 
 ```kotlin
 // Add logging dependency
@@ -151,47 +153,298 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.4.14")
 }
 
-// Configure logback.xml
+// Configure logback.xml for detailed debugging
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
-    <root level="DEBUG">
+    
+    <!-- VeriCore specific loggers -->
+    <logger name="com.geoknoesis.vericore" level="DEBUG"/>
+    <logger name="com.geoknoesis.vericore.core" level="TRACE"/>
+    <logger name="com.geoknoesis.vericore.plugins" level="DEBUG"/>
+    
+    <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>
 </configuration>
 ```
 
-### Check Registry State
+### Step 2: Verify System State
+
+Check all registries and available services:
 
 ```kotlin
-// Check registered DID methods
-val methods = vericore.getAvailableDidMethods()
-println("Available DID methods: $methods")
-
-// Check registered blockchain chains
-val chains = vericore.getAvailableChains()
-println("Available chains: $chains")
-
-// Check wallet capabilities
-val wallet = vericore.createWallet("did:key:holder").getOrThrow()
-println("Wallet capabilities: ${wallet.capabilities}")
+fun debugSystemState(vericore: VeriCore) {
+    println("=== VeriCore System State ===")
+    
+    // Check registered DID methods
+    val methods = vericore.getAvailableDidMethods()
+    println("Available DID methods: $methods")
+    if (methods.isEmpty()) {
+        println("⚠️  WARNING: No DID methods registered!")
+    }
+    
+    // Check registered blockchain chains
+    val chains = vericore.getAvailableChains()
+    println("Available chains: $chains")
+    
+    // Check plugin status
+    println("\n=== Plugin Status ===")
+    // Add plugin status checks if available
+    
+    // Test basic operations
+    println("\n=== Basic Operation Tests ===")
+    val testDid = vericore.createDid().getOrNull()
+    if (testDid != null) {
+        println("✅ DID creation works: ${testDid.id}")
+    } else {
+        println("❌ DID creation failed")
+    }
+}
 ```
 
-### Validate Inputs
+### Step 3: Validate Inputs Before Operations
+
+Always validate inputs to catch errors early:
 
 ```kotlin
 import com.geoknoesis.vericore.core.DidValidator
+import com.geoknoesis.vericore.core.CredentialValidator
 
-// Validate DID format before use
-val validation = DidValidator.validateFormat("did:key:z6Mk...")
-if (!validation.isValid()) {
-    val error = validation as ValidationResult.Invalid
-    println("Invalid DID: ${error.message}")
+fun validateBeforeOperation(did: String, credential: VerifiableCredential? = null) {
+    // Validate DID format
+    val didValidation = DidValidator.validateFormat(did)
+    if (!didValidation.isValid()) {
+        val error = didValidation as ValidationResult.Invalid
+        println("❌ Invalid DID format: ${error.message}")
+        println("   Field: ${error.field}")
+        println("   Value: ${error.value}")
+        return
+    }
+    
+    // Validate DID method is available
+    val method = did.substringAfter("did:").substringBefore(":")
+    val availableMethods = vericore.getAvailableDidMethods()
+    if (method !in availableMethods) {
+        println("❌ DID method '$method' not available")
+        println("   Available methods: $availableMethods")
+        return
+    }
+    
+    // Validate credential if provided
+    credential?.let {
+        val credValidation = CredentialValidator.validateStructure(it)
+        if (!credValidation.isValid()) {
+            val error = credValidation as ValidationResult.Invalid
+            println("❌ Invalid credential structure: ${error.message}")
+            println("   Field: ${error.field}")
+            return
+        }
+    }
+    
+    println("✅ All validations passed")
 }
 ```
+
+### Step 4: Trace Operation Flow
+
+Add detailed tracing to understand operation flow:
+
+```kotlin
+suspend fun traceDidResolution(did: String) {
+    println("=== Tracing DID Resolution ===")
+    println("Input DID: $did")
+    
+    // Step 1: Format validation
+    println("\n[Step 1] Validating DID format...")
+    val formatValidation = DidValidator.validateFormat(did)
+    if (!formatValidation.isValid()) {
+        println("❌ Format validation failed")
+        return
+    }
+    println("✅ Format valid")
+    
+    // Step 2: Method extraction
+    println("\n[Step 2] Extracting method...")
+    val method = did.substringAfter("did:").substringBefore(":")
+    println("Method: $method")
+    
+    // Step 3: Method availability
+    println("\n[Step 3] Checking method availability...")
+    val availableMethods = vericore.getAvailableDidMethods()
+    println("Available methods: $availableMethods")
+    if (method !in availableMethods) {
+        println("❌ Method not available")
+        return
+    }
+    println("✅ Method available")
+    
+    // Step 4: Resolution attempt
+    println("\n[Step 4] Attempting resolution...")
+    val startTime = System.currentTimeMillis()
+    val result = vericore.resolveDid(did)
+    val duration = System.currentTimeMillis() - startTime
+    
+    result.fold(
+        onSuccess = { resolution ->
+            println("✅ Resolution successful (${duration}ms)")
+            println("   Document ID: ${resolution.document?.id}")
+            println("   Methods: ${resolution.document?.verificationMethod?.size ?: 0}")
+        },
+        onFailure = { error ->
+            println("❌ Resolution failed (${duration}ms)")
+            println("   Error: ${error.message}")
+            println("   Code: ${error.code}")
+            error.context.forEach { (key, value) ->
+                println("   $key: $value")
+            }
+        }
+    )
+}
+```
+
+### Step 5: Isolate the Problem
+
+Create a minimal reproducible example:
+
+```kotlin
+suspend fun minimalReproducibleExample() {
+    println("=== Minimal Reproducible Example ===")
+    
+    // Step 1: Create VeriCore instance
+    println("\n[1] Creating VeriCore instance...")
+    val vericore = VeriCore.create()
+    println("✅ VeriCore created")
+    
+    // Step 2: Create a DID
+    println("\n[2] Creating DID...")
+    val didResult = vericore.createDid()
+    didResult.fold(
+        onSuccess = { did ->
+            println("✅ DID created: ${did.id}")
+            
+            // Step 3: Resolve the DID
+            println("\n[3] Resolving DID...")
+            val resolveResult = vericore.resolveDid(did.id)
+            resolveResult.fold(
+                onSuccess = { resolution ->
+                    println("✅ DID resolved")
+                    println("   Document: ${resolution.document?.id}")
+                },
+                onFailure = { error ->
+                    println("❌ Resolution failed")
+                    println("   Error: ${error.message}")
+                }
+            )
+        },
+        onFailure = { error ->
+            println("❌ DID creation failed")
+            println("   Error: ${error.message}")
+            println("   Code: ${error.code}")
+        }
+    )
+}
+```
+
+### Step 6: Check Error Context
+
+Always examine error context for debugging clues:
+
+```kotlin
+fun analyzeError(error: VeriCoreError) {
+    println("=== Error Analysis ===")
+    println("Code: ${error.code}")
+    println("Message: ${error.message}")
+    println("\nContext:")
+    error.context.forEach { (key, value) ->
+        println("  $key: $value")
+    }
+    
+    // Check for specific error types
+    when (error) {
+        is VeriCoreError.DidMethodNotRegistered -> {
+            println("\n💡 Suggestions:")
+            println("  - Register the method: vericore.registerDidMethod(...)")
+            println("  - Use an available method: ${error.availableMethods}")
+        }
+        is VeriCoreError.ChainNotRegistered -> {
+            println("\n💡 Suggestions:")
+            println("  - Register the chain: vericore.registerBlockchainClient(...)")
+            println("  - Use an available chain: ${error.availableChains}")
+        }
+        is VeriCoreError.InvalidDidFormat -> {
+            println("\n💡 Suggestions:")
+            println("  - Check DID format: did:<method>:<identifier>")
+            println("  - Validate before use: DidValidator.validateFormat(...)")
+        }
+        else -> {
+            println("\n💡 General suggestions:")
+            println("  - Check error context above")
+            println("  - Verify inputs are valid")
+            println("  - Check system state: debugSystemState(vericore)")
+        }
+    }
+    
+    error.cause?.let { cause ->
+        println("\nUnderlying exception:")
+        println("  ${cause::class.simpleName}: ${cause.message}")
+        cause.printStackTrace()
+    }
+}
+```
+
+### Step 7: Network and Connectivity Checks
+
+For operations requiring network access:
+
+```kotlin
+suspend fun checkNetworkConnectivity() {
+    println("=== Network Connectivity Check ===")
+    
+    // Test DID resolution (requires network for did:web)
+    val testDid = "did:web:example.com"
+    println("Testing resolution of: $testDid")
+    
+    val startTime = System.currentTimeMillis()
+    val result = vericore.resolveDid(testDid)
+    val duration = System.currentTimeMillis() - startTime
+    
+    result.fold(
+        onSuccess = {
+            println("✅ Network connectivity OK (${duration}ms)")
+        },
+        onFailure = { error ->
+            when (error) {
+                is VeriCoreError.DidNotFound -> {
+                    println("⚠️  Network accessible but DID not found")
+                }
+                else -> {
+                    println("❌ Network issue or timeout")
+                    println("   Error: ${error.message}")
+                    println("   Duration: ${duration}ms")
+                }
+            }
+        }
+    )
+}
+```
+
+## Debugging Tips
+
+### Enable Logging
+
+See [Step 1: Enable Comprehensive Logging](#step-1-enable-comprehensive-logging) above.
+
+### Check Registry State
+
+See [Step 2: Verify System State](#step-2-verify-system-state) above.
+
+### Validate Inputs
+
+See [Step 3: Validate Inputs Before Operations](#step-3-validate-inputs-before-operations) above.
 
 ## Performance Issues
 

@@ -46,27 +46,15 @@ These modules will be consolidated over time into a single
 
 VeriCore provides comprehensive DID method implementations following the W3C DID specification. All DID method plugins implement the `DidMethodService` interface.
 
-### High Priority Methods
-
 | Plugin | Module ID | Documentation | Description |
 |--------|-----------|---------------|-------------|
 | **did:key** | `com.geoknoesis.vericore.did:key` | [Key DID Guide](key-did.md) | Native did:key implementation, the most widely-used DID method. Zero external dependencies, portable public key-based DIDs |
 | **did:web** | `com.geoknoesis.vericore.did:web` | [Web DID Guide](web-did.md) | Web DID method for HTTP/HTTPS-based resolution. Full W3C spec compliance with domain and path-based identifiers |
 | **did:ethr** | `com.geoknoesis.vericore.did:ethr` | [Ethereum DID Guide](ethr-did.md) | Ethereum DID method with blockchain anchoring support. Integrates with Ethereum mainnet and testnets (Sepolia) |
 | **did:ion** | `com.geoknoesis.vericore.did:ion` | [ION DID Guide](ion-did.md) | Microsoft ION DID method using Sidetree protocol. Bitcoin-anchored DIDs with ION node integration |
-
-### Medium Priority Methods
-
-| Plugin | Module ID | Documentation | Description |
-|--------|-----------|---------------|-------------|
 | **did:polygon** | `com.geoknoesis.vericore.did:polygon` | [Polygon DID Guide](polygon-did.md) | Polygon DID method reusing Ethereum registry pattern. Lower transaction costs than Ethereum mainnet |
 | **did:sol** | `com.geoknoesis.vericore.did:sol` | [Solana DID Guide](sol-did.md) | Solana DID method with program integration. Account-based storage on Solana blockchain |
 | **did:peer** | `com.geoknoesis.vericore.did:peer` | [Peer DID Guide](peer-did.md) | Peer-to-peer DID method. No external registry required, supports numalgo 0, 1, and 2 |
-
-### Lower Priority Methods
-
-| Plugin | Module ID | Documentation | Description |
-|--------|-----------|---------------|-------------|
 | **did:jwk** | `com.geoknoesis.vericore.did:jwk` | [JWK DID Guide](jwk-did.md) | W3C-standard did:jwk method using JSON Web Keys directly. Standardized approach with JWK format |
 | **did:ens** | `com.geoknoesis.vericore.did:ens` | [ENS DID Guide](ens-did.md) | Ethereum Name Service (ENS) resolver integration. Human-readable DID identifiers mapped to Ethereum addresses |
 | **did:plc** | `com.geoknoesis.vericore.did:plc` | [PLC DID Guide](plc-did.md) | Personal Linked Container (PLC) DID method for AT Protocol. Distributed registry with HTTP-based resolution |

@@ -172,25 +172,25 @@ fun main() = runBlocking {
     println("\n✅ VeriCore initialized")
     
     // Step 2: Create DIDs for training providers, professionals, and employers
-    val isc2DidDoc = vericore.createDid().getOrThrow()
+    val isc2DidDoc = vericore.dids.create()
     val isc2Did = isc2DidDoc.id
     val isc2KeyId = isc2DidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val ecCouncilDidDoc = vericore.createDid().getOrThrow()
+    val ecCouncilDidDoc = vericore.dids.create()
     val ecCouncilDid = ecCouncilDidDoc.id
     val ecCouncilKeyId = ecCouncilDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val comptiaDidDoc = vericore.createDid().getOrThrow()
+    val comptiaDidDoc = vericore.dids.create()
     val comptiaDid = comptiaDidDoc.id
     val comptiaKeyId = comptiaDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val professionalDidDoc = vericore.createDid().getOrThrow()
+    val professionalDidDoc = vericore.dids.create()
     val professionalDid = professionalDidDoc.id
     
-    val employerDidDoc = vericore.createDid().getOrThrow()
+    val employerDidDoc = vericore.dids.create()
     val employerDid = employerDidDoc.id
     
     println("✅ (ISC)² DID: $isc2Did")

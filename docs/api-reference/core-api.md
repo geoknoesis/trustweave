@@ -26,17 +26,17 @@ The VeriCore facade provides a unified, elegant API for decentralized identity a
 
 | Operation | Method | Returns |
 |-----------|--------|---------|
-| Create DID | `createDid()` | `Result<DidDocument>` |
-| Resolve DID | `resolveDid(did)` | `Result<DidResolutionResult>` |
-| Issue Credential | `issueCredential(...)` | `Result<VerifiableCredential>` |
-| Verify Credential | `verifyCredential(credential)` | `Result<CredentialVerificationResult>` |
-| Create Wallet | `createWallet(holderDid)` | `Result<Wallet>` |
-| Anchor Data | `anchor(data, serializer, chainId)` | `Result<AnchorResult>` |
-| Read Anchor | `readAnchor(ref, serializer)` | `Result<T>` |
-| Get Available DID Methods | `getAvailableDidMethods()` | `List<String>` |
-| Get Available Chains | `getAvailableChains()` | `List<String>` |
-| Register DID Method | `registerDidMethod(method)` | `Unit` |
-| Register Blockchain Client | `registerBlockchainClient(chainId, client)` | `Unit` |
+| Create DID | `dids.create()` | `DidDocument` |
+| Resolve DID | `dids.resolve(did)` | `DidResolutionResult` |
+| Issue Credential | `credentials.issue(...)` | `VerifiableCredential` |
+| Verify Credential | `credentials.verify(credential)` | `CredentialVerificationResult` |
+| Create Wallet | `wallets.create(holderDid)` | `Wallet` |
+| Anchor Data | `blockchains.anchor(data, serializer, chainId)` | `AnchorResult` |
+| Read Anchor | `blockchains.read(ref, serializer)` | `T` |
+| Get Available DID Methods | `dids.availableMethods()` | `List<String>` |
+| Get Available Chains | `blockchains.availableChains()` | `List<String>` |
+| Register DID Methods | `didMethods { + DidKeyMethod() }` | `Unit` |
+| Register Blockchain Clients | `blockchains { "chainId" to client }` | `Unit` |
 
 ## VeriCore Class
 
@@ -56,7 +56,7 @@ val vericore = VeriCore.create {
         + DidWebMethod()
     }
     
-    blockchain {
+    blockchains {
         "ethereum:mainnet" to ethereumClient
         "algorand:testnet" to algorandClient
     }
@@ -103,7 +103,7 @@ val methods = vericore.getAvailableDidMethods()
 println("Available DID methods: $methods")
 
 // Use in error handling
-val result = vericore.createDid("web")
+val result = vericore.dids.create("web")
 result.fold(
     onSuccess = { did -> println("Created: ${did.id}") },
     onFailure = { error ->
@@ -121,7 +121,7 @@ result.fold(
 // Validate before use
 val desiredMethod = "web"
 if (desiredMethod in vericore.getAvailableDidMethods()) {
-    val did = vericore.createDid(desiredMethod).getOrThrow()
+    val did = vericore.dids.create(desiredMethod)
 } else {
     println("Method '$desiredMethod' not available")
     println("Available: ${vericore.getAvailableDidMethods()}")
@@ -162,7 +162,11 @@ val chains = vericore.getAvailableChains()
 println("Available chains: $chains")
 
 // Use in error handling
-val result = vericore.anchor(data, serializer, "algorand:testnet")
+val result = vericore.blockchains.anchor(
+    data = data,
+    serializer = serializer,
+    chainId = "algorand:testnet"
+)
 result.fold(
     onSuccess = { anchor -> println("Anchored: ${anchor.ref.txHash}") },
     onFailure = { error ->
@@ -180,7 +184,11 @@ result.fold(
 // Validate before use
 val desiredChain = "algorand:testnet"
 if (desiredChain in vericore.getAvailableChains()) {
-    val anchor = vericore.anchor(data, serializer, desiredChain).getOrThrow()
+    val anchor = vericore.blockchains.anchor(
+        data = data,
+        serializer = serializer,
+        chainId = desiredChain
+    )
 } else {
     println("Chain '$desiredChain' not available")
     println("Available: ${vericore.getAvailableChains()}")
@@ -236,13 +244,17 @@ val methods = vericore.getAvailableDidMethods()
 println("Registered methods: $methods") // Should include "web"
 
 // Now can use the method
-val did = vericore.createDid("web").getOrThrow()
+val did = vericore.dids.create("web")
 println("Created web DID: ${did.id}")
 
-// Register multiple methods
-vericore.registerDidMethod(DidKeyMethod(vericore.kms))
-vericore.registerDidMethod(DidIonMethod(vericore.kms))
-vericore.registerDidMethod(DidWebMethod(vericore.kms) { domain = "example.com" })
+// Register multiple methods during initialization
+val vericore = VeriCore.create {
+    didMethods {
+        + DidKeyMethod(kms)
+        + DidIonMethod(kms)
+        + DidWebMethod(kms) { domain = "example.com" }
+    }
+}
 
 // Check all registered methods
 println("All methods: ${vericore.getAvailableDidMethods()}")
@@ -256,12 +268,17 @@ println("All methods: ${vericore.getAvailableDidMethods()}")
 
 **Note:** Prefer registering methods during `VeriCore.create { }` configuration when possible for better organization and thread safety.
 
-#### registerBlockchainClient
+#### Registering Blockchain Clients
 
-Registers a blockchain anchor client for a specific chain ID. The client becomes available for anchoring operations.
+Register blockchain clients using the DSL during VeriCore initialization. The `registerBlockchainClient()` method has been removed in favor of the DSL pattern.
 
+**Recommended Pattern:**
 ```kotlin
-fun registerBlockchainClient(chainId: String, client: BlockchainAnchorClient)
+val vericore = VeriCore.create {
+    blockchains {
+        "chainId" to client
+    }
+}
 ```
 
 **Parameters:**
@@ -304,26 +321,27 @@ val algorandClient = AlgorandBlockchainAnchorClient(
         privateKey = "your-private-key"
     )
 )
-vericore.registerBlockchainClient("algorand:testnet", algorandClient)
+val vericore = VeriCore.create {
+    blockchains {
+        "algorand:testnet" to algorandClient
+        "algorand:mainnet" to algorandMainnetClient
+        "polygon:testnet" to polygonTestnetClient
+    }
+}
 
 // Verify registration
-val chains = vericore.getAvailableChains()
+val chains = vericore.blockchains.availableChains()
 println("Registered chains: $chains") // Should include "algorand:testnet"
 
 // Now can use for anchoring
-val anchor = vericore.anchor(
+val anchor = vericore.blockchains.anchor(
     data = myData,
     serializer = MyData.serializer(),
     chainId = "algorand:testnet"
-).getOrThrow()
-
-// Register multiple chains
-vericore.registerBlockchainClient("algorand:testnet", algorandTestnetClient)
-vericore.registerBlockchainClient("algorand:mainnet", algorandMainnetClient)
-vericore.registerBlockchainClient("polygon:testnet", polygonTestnetClient)
+)
 
 // Check all registered chains
-println("All chains: ${vericore.getAvailableChains()}")
+println("All chains: ${vericore.blockchains.availableChains()}")
 ```
 
 **Best Practices:**
@@ -337,21 +355,23 @@ println("All chains: ${vericore.getAvailableChains()}")
 
 ### DID Operations
 
-#### createDid
+#### create
 
 Creates a new DID using the default or specified method.
 
 ```kotlin
-suspend fun createDid(
+suspend fun create(
     method: String = "key",
     options: DidCreationOptions = DidCreationOptions()
-): Result<DidDocument>
+): DidDocument
 
-suspend fun createDid(
+suspend fun create(
     method: String = "key",
     configure: DidCreationOptionsBuilder.() -> Unit
-): Result<DidDocument>
+): DidDocument
 ```
+
+**Access via:** `vericore.dids.create()`
 
 **Parameters:**
 
@@ -377,14 +397,14 @@ suspend fun createDid(
   - **Type**: DSL builder function
   - **Example**: `{ algorithm = KeyAlgorithm.ED25519; purpose(KeyPurpose.AUTHENTICATION) }`
 
-**Returns:** `Result<DidDocument>`
-- **Success**: W3C-compliant DID document containing:
-  - `id`: The DID string (e.g., `"did:key:z6Mk..."`)
-  - `verificationMethod`: Array of verification methods with public keys
-  - `authentication`: Authentication key references
-  - `assertionMethod`: Assertion key references (for signing)
-  - `service`: Optional service endpoints
-- **Failure**: `VeriCoreError` with specific error type
+**Returns:** `DidDocument` - W3C-compliant DID document containing:
+- `id`: The DID string (e.g., `"did:key:z6Mk..."`)
+- `verificationMethod`: Array of verification methods with public keys
+- `authentication`: Authentication key references
+- `assertionMethod`: Assertion key references (for signing)
+- `service`: Optional service endpoints
+
+**Note:** This method throws `VeriCoreError` exceptions on failure. For error handling, wrap in try-catch or use extension functions.
 
 **Default Behavior:**
 - Uses `did:key` method if not specified
@@ -406,19 +426,19 @@ suspend fun createDid(
 **Example:**
 ```kotlin
 // Simple usage (uses defaults: did:key, ED25519)
-val did = vericore.createDid().getOrThrow()
+val did = vericore.dids.create()
 
 // With custom method
-val webDid = vericore.createDid(method = "web").getOrThrow()
+val webDid = vericore.dids.create(method = "web")
 
 // With builder
-val did = vericore.createDid("key") {
+val did = vericore.dids.create("key") {
     algorithm = DidCreationOptions.KeyAlgorithm.ED25519
     purpose(DidCreationOptions.KeyPurpose.AUTHENTICATION)
-}.getOrThrow()
+}
 
 // With error handling
-val result = vericore.createDid()
+val result = vericore.dids.create()
 result.fold(
     onSuccess = { did -> println("Created: ${did.id}") },
     onFailure = { error -> 
@@ -443,13 +463,15 @@ result.fold(
 - `VeriCoreError.ValidationFailed` - Configuration validation failed
 - `VeriCoreError.InvalidOperation` - KMS operation failed
 
-#### resolveDid
+#### resolve
 
 Resolves a DID to its document.
 
 ```kotlin
-suspend fun resolveDid(did: String): Result<DidResolutionResult>
+suspend fun resolve(did: String): DidResolutionResult
 ```
+
+**Access via:** `vericore.dids.resolve(did)`
 
 **Parameters:**
 
@@ -459,9 +481,9 @@ suspend fun resolveDid(did: String): Result<DidResolutionResult>
   - **Validation**: Automatically validated before resolution
   - **Requirements**: Method must be registered in VeriCore instance
 
-**Returns:** `Result<DidResolutionResult>`
+**Returns:** `DidResolutionResult` directly (not wrapped in Result)
 
-**Success Case - `DidResolutionResult`:**
+**DidResolutionResult Structure:**
 ```kotlin
 data class DidResolutionResult(
     val document: DidDocument?,  // null if DID not found
@@ -484,7 +506,8 @@ data class DidResolutionMetadata(
 - `metadata.error`: Error message if resolution failed (document will be null)
 
 **Failure Case:**
-- Returns `VeriCoreError` with specific error type
+- Throws `VeriCoreError` exception with specific error type
+- For error handling, wrap in try-catch or use extension functions
 
 **Edge Cases:**
 - If DID format invalid → `VeriCoreError.InvalidDidFormat` with reason
@@ -500,7 +523,7 @@ data class DidResolutionMetadata(
 **Example:**
 ```kotlin
 // Simple usage
-val result = vericore.resolveDid("did:key:z6Mk...").getOrThrow()
+val result = vericore.dids.resolve("did:key:z6Mk...")
 if (result.document != null) {
     println("DID resolved: ${result.document.id}")
     println("Method: ${result.metadata.method}")
@@ -510,7 +533,7 @@ if (result.document != null) {
 }
 
 // With error handling
-val result = vericore.resolveDid("did:key:z6Mk...")
+val result = vericore.dids.resolve("did:key:z6Mk...")
 result.fold(
     onSuccess = { resolution ->
         if (resolution.document != null) {
@@ -664,33 +687,36 @@ suspend fun issueCredential(
 **Example:**
 ```kotlin
 // Simple usage
-val credential = vericore.issueCredential(
-    issuerDid = "did:key:issuer",
-    issuerKeyId = "key-1",
-    credentialSubject = buildJsonObject {
+val credential = vericore.credentials.issue(
+    issuer = "did:key:issuer",
+    subject = buildJsonObject {
         put("id", "did:key:subject")
         put("name", "Alice")
     },
+    config = IssuanceConfig(
+        proofType = ProofType.Ed25519Signature2020,
+        keyId = "key-1",
+        issuerDid = "did:key:issuer"
+    ),
     types = listOf("PersonCredential")
-).getOrThrow()
-
-// With error handling
-val result = vericore.issueCredential(...)
-result.fold(
-    onSuccess = { credential -> println("Issued: ${credential.id}") },
-    onFailure = { error ->
-        when (error) {
-            is VeriCoreError.InvalidDidFormat -> {
-                println("Invalid issuer DID: ${error.reason}")
-            }
-            is VeriCoreError.CredentialInvalid -> {
-                println("Credential invalid: ${error.reason}")
-                println("Field: ${error.field}")
-            }
-            else -> println("Error: ${error.message}")
-        }
-    }
 )
+
+// With error handling (wrap in try-catch)
+try {
+    val credential = vericore.credentials.issue(...)
+    println("Issued: ${credential.id}")
+} catch (error: VeriCoreError) {
+    when (error) {
+        is VeriCoreError.InvalidDidFormat -> {
+            println("Invalid issuer DID: ${error.reason}")
+        }
+        is VeriCoreError.CredentialInvalid -> {
+            println("Credential invalid: ${error.reason}")
+            println("Field: ${error.field}")
+        }
+        else -> println("Error: ${error.message}")
+    }
+}
 ```
 
 **Errors:**
@@ -698,16 +724,18 @@ result.fold(
 - `VeriCoreError.DidMethodNotRegistered` - Issuer DID method not registered
 - `VeriCoreError.CredentialInvalid` - Credential validation failed
 
-#### verifyCredential
+#### verify
 
 Verifies a verifiable credential by checking proof, issuer DID resolution, expiration, and revocation status.
 
 ```kotlin
-suspend fun verifyCredential(
+suspend fun verify(
     credential: VerifiableCredential,
-    options: CredentialVerificationOptions = CredentialVerificationOptions()
-): Result<CredentialVerificationResult>
+    config: VerificationConfig = VerificationConfig()
+): CredentialVerificationResult
 ```
+
+**Access via:** `vericore.credentials.verify(credential, config)`
 
 **Parameters:**
 - `credential`: The verifiable credential to verify (required, must be valid JSON-LD structure)
@@ -805,7 +833,7 @@ val options = CredentialVerificationOptions(
     expectedAudience = setOf("did:key:verifier-123")
 )
 
-val result = vericore.verifyCredential(credential, options)
+val result = vericore.credentials.verify(credential, VerificationConfig.from(options))
 ```
 
 **Errors:**
@@ -1301,7 +1329,7 @@ suspend fun <T : Any> anchor(
 ```kotlin
 // Simple usage
 val myData = MyData(id = "123", value = "test")
-val result = vericore.anchor(
+val result = vericore.blockchains.anchor(
     data = myData,
     serializer = MyData.serializer(),
     chainId = "algorand:testnet"
@@ -1335,7 +1363,11 @@ val result = vericore.anchor(
 import kotlinx.coroutines.withTimeout
 
 val result = withTimeout(30000) { // 30 second timeout
-    vericore.anchor(data, serializer, chainId)
+    vericore.blockchains.anchor(
+        data = data,
+        serializer = serializer,
+        chainId = chainId
+    )
 }
 ```
 
@@ -1511,7 +1543,7 @@ VeriCore provides extension functions for working with `Result<T>`:
 Transform errors in a Result:
 
 ```kotlin
-val result = vericore.createDid()
+val result = vericore.dids.create()
     .mapError { it.toVeriCoreError() }
 ```
 
@@ -1521,9 +1553,9 @@ Combine multiple Results:
 
 ```kotlin
 val results = listOf(
-    vericore.createDid(),
-    vericore.createDid(),
-    vericore.createDid()
+    vericore.dids.create(),
+    vericore.dids.create(),
+    vericore.dids.create()
 )
 
 val combined = results.combine { dids ->
@@ -1538,7 +1570,7 @@ Batch operations with async mapping:
 ```kotlin
 val dids = listOf("did:key:1", "did:key:2", "did:key:3")
 val results = dids.mapAsync { did ->
-    vericore.resolveDid(did)
+    vericore.dids.resolve(did)
 }
 ```
 

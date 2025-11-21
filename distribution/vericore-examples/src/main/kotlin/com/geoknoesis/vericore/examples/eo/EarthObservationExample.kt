@@ -52,7 +52,9 @@ fun main() = runBlocking {
     // IMPORTANT: Store the client reference so we can reuse it for verification
     val anchorClient = InMemoryBlockchainAnchorClient(chainId)
     val vericore = VeriCore.create {
-        registerBlockchainClient(chainId, anchorClient)
+        blockchains {
+            chainId to anchorClient
+        }
     }
     println("✓ VeriCore instance created")
     println("✓ Blockchain client registered: $chainId")
@@ -67,8 +69,9 @@ fun main() = runBlocking {
     println("  Method: key (default)")
     println("  Parameters: Using default DID creation options")
     
-    val issuerResult = vericore.createDid()
+    val issuerDid = vericore.dids.create()
     
+    val issuerResult = Result.success(issuerDid)
     issuerResult.fold(
         onSuccess = { did ->
             println("\n📥 RESPONSE: DID Created Successfully")
@@ -103,7 +106,6 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    val issuerDid = issuerResult.getOrThrow()
     val issuerKeyId = issuerDid.verificationMethod.first().id
     println("\n  ✓ Selected Issuer Key ID: $issuerKeyId")
     
@@ -112,7 +114,7 @@ fun main() = runBlocking {
     println("  Purpose: Verify DID is accessible and can be resolved")
     println("  DID: ${issuerDid.id}")
     
-    val issuerResolution = vericore.resolveDid(issuerDid.id)
+    val issuerResolution = Result.success(vericore.dids.resolve(issuerDid.id))
     issuerResolution.fold(
         onSuccess = { resolution ->
             println("\n📥 RESPONSE: DID Resolution")
@@ -348,57 +350,33 @@ fun main() = runBlocking {
     println(subjectJson.encodeToString(JsonObject.serializer(), credentialSubject))
     
     // Issue the credential using VeriCore facade
-    val credentialResult = vericore.issueCredential(
-        issuerDid = issuerDid.id,
-        issuerKeyId = issuerKeyId,
-        credentialSubject = credentialSubject,
+    val credential = vericore.credentials.issue(
+        issuer = issuerDid.id,
+        subject = credentialSubject,
+        config = com.geoknoesis.vericore.services.IssuanceConfig(
+            proofType = com.geoknoesis.vericore.core.types.ProofType.Ed25519Signature2020,
+            keyId = issuerKeyId,
+            issuerDid = issuerDid.id
+        ),
         types = listOf("EarthObservationCredential", "VerifiableCredential")
     )
     
-    credentialResult.fold(
-        onSuccess = { credential ->
-            println("\n📥 RESPONSE: Credential Issued Successfully")
-            println("  ✓ Credential ID: ${credential.id}")
-            println("  ✓ Issuer: ${credential.issuer}")
-            println("  ✓ Types: ${credential.type.joinToString(", ")}")
-            println("  ✓ Issuance Date: ${credential.issuanceDate}")
-            println("  ✓ Has Proof: ${credential.proof != null}")
-            val proof = credential.proof
-            if (proof != null) {
-                println("  ✓ Proof Type: ${proof.type}")
-                println("  ✓ Proof Purpose: ${proof.proofPurpose}")
-            }
-            println("  ✓ Linkset Digest Reference: $linksetDigest")
-            println("\n  Full Credential Document:")
-            val credentialJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
-            println(credentialJson.encodeToString(VerifiableCredential.serializer(), credential))
-        },
-        onFailure = { error ->
-            println("\n📥 RESPONSE: Credential Issuance Failed")
-            when (error) {
-                is VeriCoreError.InvalidDidFormat -> {
-                    println("  ✗ Error Type: InvalidDidFormat")
-                    println("  ✗ Reason: ${error.reason}")
-                }
-                is VeriCoreError.DidMethodNotRegistered -> {
-                    println("  ✗ Error Type: DidMethodNotRegistered")
-                    println("  ✗ Method: ${error.method}")
-                    println("  ✗ Available methods: ${error.availableMethods.joinToString(", ")}")
-                }
-                is VeriCoreError.CredentialInvalid -> {
-                    println("  ✗ Error Type: CredentialInvalid")
-                    println("  ✗ Reason: ${error.reason}")
-                    println("  ✗ Field: ${error.field}")
-                }
-                else -> {
-                    println("  ✗ Error: ${error.message}")
-                    println("  ✗ Error Type: ${error::class.simpleName}")
-                }
-            }
-            return@runBlocking
-        }
-    )
-    val credential = credentialResult.getOrThrow()
+    println("\n📥 RESPONSE: Credential Issued Successfully")
+    println("  ✓ Credential ID: ${credential.id}")
+    println("  ✓ Issuer: ${credential.issuer}")
+    println("  ✓ Types: ${credential.type.joinToString(", ")}")
+    println("  ✓ Issuance Date: ${credential.issuanceDate}")
+    println("  ✓ Has Proof: ${credential.proof != null}")
+    val proof = credential.proof
+    if (proof != null) {
+        println("  ✓ Proof Type: ${proof.type}")
+        println("  ✓ Proof Purpose: ${proof.proofPurpose}")
+    }
+    println("  ✓ Linkset Digest Reference: $linksetDigest")
+    println("\n  Full Credential Document:")
+    val credentialJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
+    println(credentialJson.encodeToString(VerifiableCredential.serializer(), credential))
+    
     println()
     
     // Step 6: Verify the credential
@@ -412,54 +390,34 @@ fun main() = runBlocking {
     println("    - Expiration check")
     println("    - Revocation status check")
     
-    val verificationResult = vericore.verifyCredential(credential)
+    val verification = vericore.credentials.verify(credential)
     
-    verificationResult.fold(
-        onSuccess = { verification ->
-            println("\n📥 RESPONSE: Credential Verification Result")
-            if (verification.valid) {
-                println("  ✓ Overall Status: VALID")
-                println("  ✓ Proof Valid: ${verification.proofValid}")
-                println("  ✓ Issuer Valid: ${verification.issuerValid}")
-                println("  ✓ Not Expired: ${verification.notExpired}")
-                println("  ✓ Not Revoked: ${verification.notRevoked}")
-                if (verification.warnings.isNotEmpty()) {
-                    println("  ⚠ Warnings:")
-                    verification.warnings.forEach { warning ->
-                        println("    - $warning")
-                    }
-                }
-            } else {
-                println("  ✗ Overall Status: INVALID")
-                println("  ✗ Errors:")
-                verification.errors.forEach { error ->
-                    println("    - $error")
-                }
-                if (verification.warnings.isNotEmpty()) {
-                    println("  ⚠ Warnings:")
-                    verification.warnings.forEach { warning ->
-                        println("    - $warning")
-                    }
-                }
-                return@runBlocking
+    println("\n📥 RESPONSE: Credential Verification Result")
+    if (verification.valid) {
+        println("  ✓ Overall Status: VALID")
+        println("  ✓ Proof Valid: ${verification.proofValid}")
+        println("  ✓ Issuer Valid: ${verification.issuerValid}")
+        println("  ✓ Not Expired: ${verification.notExpired}")
+        println("  ✓ Not Revoked: ${verification.notRevoked}")
+        if (verification.warnings.isNotEmpty()) {
+            println("  ⚠ Warnings:")
+            verification.warnings.forEach { warning ->
+                println("    - $warning")
             }
-        },
-        onFailure = { error ->
-            println("\n📥 RESPONSE: Verification Failed")
-            when (error) {
-                is VeriCoreError.CredentialInvalid -> {
-                    println("  ✗ Error Type: CredentialInvalid")
-                    println("  ✗ Reason: ${error.reason}")
-                    println("  ✗ Field: ${error.field}")
-                }
-                else -> {
-                    println("  ✗ Error: ${error.message}")
-                    println("  ✗ Error Type: ${error::class.simpleName}")
-                }
-            }
-            return@runBlocking
         }
-    )
+    } else {
+        println("  ✗ Overall Status: INVALID")
+        println("  ✗ Errors:")
+        verification.errors.forEach { error ->
+            println("    - $error")
+        }
+        if (verification.warnings.isNotEmpty()) {
+            println("  ⚠ Warnings:")
+            verification.warnings.forEach { warning ->
+                println("    - $warning")
+            }
+        }
+    }
     println()
     
     // Step 7: Anchor VC digest to blockchain

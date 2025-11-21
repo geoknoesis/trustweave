@@ -161,7 +161,7 @@ suspend fun createFloodInsuranceContract(
     insurerDid: String,
     insuredDid: String
 ) {
-    val contract = vericore.contracts.createDraft(
+    val contract = vericore.contracts.draft(
         request = ContractDraftRequest(
             contractType = ContractType.Insurance,
             executionModel = ExecutionModel.Parametric(
@@ -287,7 +287,7 @@ VeriCore automatically validates:
 
 ```kotlin
 // Validation happens automatically in createDraft()
-val result = vericore.contracts.createDraft(request)
+val result = vericore.contracts.draft(request)
 result.fold(
     onSuccess = { contract -> println("Contract created: ${contract.id}") },
     onFailure = { error ->

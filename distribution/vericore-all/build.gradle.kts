@@ -15,6 +15,7 @@ dependencies {
     api(project(":chains:vericore-anchor"))
     api(project(":core:vericore-spi"))
     api(project(":core:vericore-trust"))
+    api(project(":core:vericore-contract"))
     
     // Include testkit for development/testing convenience
     api(project(":core:vericore-testkit"))

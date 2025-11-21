@@ -58,7 +58,8 @@ fun main() = runBlocking {
     val vericore = VeriCore.create()
     
     // Create issuer DID
-    val issuerDidResult = vericore.createDid()
+    val issuerDid = vericore.dids.create()
+    val issuerDidResult = Result.success(issuerDid)
     val issuerDid = issuerDidResult.getOrThrow()
     
     // Create credential subject
@@ -104,7 +105,7 @@ import java.time.temporal.ChronoUnit
 
 fun main() = runBlocking {
     val vericore = VeriCore.create()
-    val issuerDid = vericore.createDid().getOrThrow()
+    val issuerDid = vericore.dids.create()
     
     // Create credential subject
     val credentialSubject = buildJsonObject {
@@ -219,7 +220,7 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val vericore = VeriCore.create()
-    val issuerDid = vericore.createDid().getOrThrow()
+    val issuerDid = vericore.dids.create()
     
     // Issue credential
     val credential = vericore.issueCredential(
@@ -270,7 +271,7 @@ import kotlinx.serialization.json.*
 
 fun main() = runBlocking {
     val vericore = VeriCore.create()
-    val issuerDid = vericore.createDid().getOrThrow()
+    val issuerDid = vericore.dids.create()
     val issuerKeyId = issuerDid.document.verificationMethod.first().id
     
     // Create multiple credential subjects
@@ -309,7 +310,7 @@ fun main() = runBlocking {
     val vericore = VeriCore.create()
     
     val credentials = /* list of credentials */
-    val holderDid = vericore.createDid().getOrThrow()
+    val holderDid = vericore.dids.create()
     
     // Create presentation
     val presentationResult = vericore.createPresentation(
@@ -347,7 +348,7 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val vericore = VeriCore.create()
-    val issuerDid = vericore.createDid().getOrThrow()
+    val issuerDid = vericore.dids.create()
     
     val result = vericore.issueCredential(
         issuerDid = issuerDid.id,

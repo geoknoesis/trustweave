@@ -63,7 +63,8 @@ fun main() = runBlocking {
     val vericore = VeriCore.create()
     
     // Create DID using did:key method
-    val didResult = vericore.createDid()
+    val did = vericore.dids.create()
+    val didResult = Result.success(did)
     
     didResult.fold(
         onSuccess = { did ->
@@ -90,25 +91,18 @@ fun main() = runBlocking {
     val vericore = VeriCore.create()
     
     // Create DID with did:key method
-    val keyDidResult = vericore.createDid("key") {
+    val keyDid = vericore.dids.create("key") {
         algorithm = KeyAlgorithm.Ed25519
     }
     
     // Create DID with did:web method
-    val webDidResult = vericore.createDid("web") {
+    val webDid = vericore.dids.create("web") {
         domain = "example.com"
         path = "/did/user/alice"
     }
     
-    keyDidResult.fold(
-        onSuccess = { did -> println("Key DID: ${did.id}") },
-        onFailure = { error -> println("Error: ${error.message}") }
-    )
-    
-    webDidResult.fold(
-        onSuccess = { did -> println("Web DID: ${did.id}") },
-        onFailure = { error -> println("Error: ${error.message}") }
-    )
+    println("Key DID: ${keyDid.id}")
+    println("Web DID: ${webDid.id}")
 }
 ```
 
@@ -159,7 +153,8 @@ fun main() = runBlocking {
     val vericore = VeriCore.create()
     
     val did = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
-    val resolutionResult = vericore.resolveDid(did)
+    val resolution = vericore.dids.resolve(did)
+    val resolutionResult = Result.success(resolution)
     
     resolutionResult.fold(
         onSuccess = { result ->
@@ -325,7 +320,8 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val vericore = VeriCore.create()
-    val didResult = vericore.createDid()
+    val did = vericore.dids.create()
+    val didResult = Result.success(did)
     
     didResult.fold(
         onSuccess = { did ->
@@ -362,7 +358,8 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     val vericore = VeriCore.create()
     
-    val result = vericore.createDid()
+    val did = vericore.dids.create()
+    val result = Result.success(did)
     result.fold(
         onSuccess = { did -> println("Created: ${did.id}") },
         onFailure = { error ->

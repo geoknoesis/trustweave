@@ -38,11 +38,11 @@ VeriCore's Evaluation Engine framework solves these problems by:
                        │
                        ▼
 ┌─────────────────────────────────────────────────────────┐
-│         EvaluationEngineRegistry                        │
+│              EvaluationEngines                          │
 │  ┌───────────────────────────────────────────────────┐  │
 │  │  - Thread-safe engine storage                    │  │
 │  │  - Hash verification                             │  │
-│  │  - Engine lookup                                 │  │
+│  │  - Engine lookup (operator overloads)           │  │
 │  └───────────────────┬───────────────────────────────┘  │
 └──────────────────────┼──────────────────────────────────┘
                        │
@@ -229,22 +229,49 @@ Base class that provides automatic hash calculation:
 abstract class BaseEvaluationEngine : ContractEvaluationEngine {
     // implementationHash is computed automatically from class file bytecode
     final override val implementationHash: String by lazy {
-        EngineHashCalculator.computeFromClassFile(this::class.java)
+        computeImplementationHash()
     }
 }
 ```
 
-### EvaluationEngineRegistry
+### EvaluationEngines
 
-Thread-safe registry for managing evaluation engines:
+Thread-safe collection for managing evaluation engines with operator overloads:
 
 ```kotlin
-interface EvaluationEngineRegistry {
-    fun register(engine: ContractEvaluationEngine)
-    fun get(engineId: String): ContractEvaluationEngine?
-    fun verifyEngineIntegrity(engineId: String, expectedHash: String): Boolean
-    fun getRegisteredEngineIds(): List<String>
+interface EvaluationEngines {
+    operator fun plusAssign(engine: ContractEvaluationEngine)  // engines += engine
+    operator fun minusAssign(engineId: String)                 // engines -= "engine-id"
+    operator fun get(engineId: String): ContractEvaluationEngine?  // engines["engine-id"]
+    operator fun contains(engineId: String): Boolean           // "engine-id" in engines
+    fun verify(engineId: String, expectedHash: String): Boolean
+    val keys: Set<String>
+    val size: Int
+    fun clear()
 }
+
+// Factory function
+fun EvaluationEngines(): EvaluationEngines
+```
+
+**Example Usage:**
+
+```kotlin
+val engines = EvaluationEngines()
+
+// Register using += operator
+engines += ParametricInsuranceEngine()
+
+// Get using [] operator
+val engine = engines["parametric-insurance"]
+
+// Check if registered using 'in' operator
+if ("parametric-insurance" in engines) {
+    // Engine is registered
+}
+
+// Verify integrity
+engines.verify("parametric-insurance", expectedHash)
 ```
 
 ## Creating a Custom Engine
@@ -300,9 +327,11 @@ class MyCustomEngine : BaseEvaluationEngine() {
 ### Step 2: Register the Engine
 
 ```kotlin
-val registry = DefaultEvaluationEngineRegistry()
+val engines = EvaluationEngines()
 val engine = MyCustomEngine()
-registry.register(engine)
+
+// Register using += operator
+engines += engine
 
 // Engine hash is computed automatically
 println("Engine hash: ${engine.implementationHash}")
@@ -311,7 +340,7 @@ println("Engine hash: ${engine.implementationHash}")
 ### Step 3: Use in Contracts
 
 ```kotlin
-val contract = vericore.contracts.createDraft(
+val contract = vericore.contracts.draft(
     request = ContractDraftRequest(
         executionModel = ExecutionModel.Parametric(
             triggerType = TriggerType.EarthObservation,
@@ -340,8 +369,9 @@ The engine hash is computed from the compiled class file bytecode using SHA-256:
 
 ```kotlin
 // Hash is computed automatically by BaseEvaluationEngine
-val hash = EngineHashCalculator.computeFromClassFile(engineClass)
+// The hash is computed from class file bytecode using SHA-256
 // Returns: "uABC123..." (multibase-encoded)
+val hash = engine.implementationHash
 ```
 
 ### Hash Verification Flow
@@ -351,20 +381,14 @@ val hash = EngineHashCalculator.computeFromClassFile(engineClass)
 3. **If Mismatch**: `SecurityException` is thrown - engine may have been tampered with
 
 ```kotlin
-// During contract binding
-val engine = registry.get("my-engine")
-val contractWithHash = contract.copy(
-    executionModel = executionModel.copy(
-        engineHash = engine.implementationHash,
-        engineVersion = engine.version
-    )
-)
+// During contract binding (automatic via extension function)
+val executionModelWithHash = contract.executionModel.withEngineHash(engines)
 
-// During contract execution
-val expectedHash = contract.executionModel.engineHash
-val isValid = registry.verifyEngineIntegrity("my-engine", expectedHash)
-if (!isValid) {
-    throw SecurityException("Engine integrity check failed")
+// During contract execution (automatic in DefaultSmartContractService)
+val engineRef = contract.executionModel.toEngineReference()
+val engine = engines.require(engineRef.engineId!!)
+engineRef.expectedHash?.let { expectedHash ->
+    engines.verifyOrThrow(engineRef.engineId, expectedHash)
 }
 ```
 
@@ -399,11 +423,12 @@ Before evaluating conditions, the system:
 The `ParametricInsuranceEngine` is included as an example implementation:
 
 ```kotlin
+val engines = EvaluationEngines()
 val engine = ParametricInsuranceEngine()
-registry.register(engine)
+engines += engine
 
 // Create parametric insurance contract
-val contract = vericore.contracts.createDraft(
+val contract = vericore.contracts.draft(
     request = ContractDraftRequest(
         executionModel = ExecutionModel.Parametric(
             triggerType = TriggerType.EarthObservation,
@@ -549,7 +574,7 @@ Evaluation engines integrate seamlessly with VeriCore's contract system:
 ### Contract Creation
 
 ```kotlin
-val contract = vericore.contracts.createDraft(
+val contract = vericore.contracts.draft(
     request = ContractDraftRequest(
         executionModel = ExecutionModel.Parametric(
             triggerType = TriggerType.EarthObservation,
@@ -606,8 +631,8 @@ Evaluation engine 'my-engine' is not registered
 **Solution**: Register the engine before creating contracts:
 
 ```kotlin
-val registry = DefaultEvaluationEngineRegistry()
-registry.register(MyEngine())
+val engines = EvaluationEngines()
+engines += MyEngine()
 ```
 
 ### Integrity Check Failed

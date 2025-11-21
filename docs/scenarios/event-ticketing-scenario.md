@@ -173,18 +173,18 @@ fun main() = runBlocking {
     println("\n✅ VeriCore initialized")
     
     // Step 2: Create DIDs for event organizer, attendee, and venue
-    val organizerDidDoc = vericore.createDid().getOrThrow()
+    val organizerDidDoc = vericore.dids.create()
     val organizerDid = organizerDidDoc.id
     val organizerKeyId = organizerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val attendeeDidDoc = vericore.createDid().getOrThrow()
+    val attendeeDidDoc = vericore.dids.create()
     val attendeeDid = attendeeDidDoc.id
     
-    val newAttendeeDidDoc = vericore.createDid().getOrThrow()
+    val newAttendeeDidDoc = vericore.dids.create()
     val newAttendeeDid = newAttendeeDidDoc.id
     
-    val venueDidDoc = vericore.createDid().getOrThrow()
+    val venueDidDoc = vericore.dids.create()
     val venueDid = venueDidDoc.id
     
     println("✅ Event Organizer DID: $organizerDid")

@@ -176,22 +176,22 @@ fun main() = runBlocking {
     println("\n✅ VeriCore initialized")
     
     // Step 2: Create DIDs for sensor manufacturer, sensors, and data consumer
-    val manufacturerDidDoc = vericore.createDid().getOrThrow()
+    val manufacturerDidDoc = vericore.dids.create()
     val manufacturerDid = manufacturerDidDoc.id
     val manufacturerKeyId = manufacturerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val temperatureSensorDidDoc = vericore.createDid().getOrThrow()
+    val temperatureSensorDidDoc = vericore.dids.create()
     val temperatureSensorDid = temperatureSensorDidDoc.id
     val temperatureSensorKeyId = temperatureSensorDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val humiditySensorDidDoc = vericore.createDid().getOrThrow()
+    val humiditySensorDidDoc = vericore.dids.create()
     val humiditySensorDid = humiditySensorDidDoc.id
     val humiditySensorKeyId = humiditySensorDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val dataConsumerDidDoc = vericore.createDid().getOrThrow()
+    val dataConsumerDidDoc = vericore.dids.create()
     val dataConsumerDid = dataConsumerDidDoc.id
     
     println("✅ Sensor Manufacturer DID: $manufacturerDid")

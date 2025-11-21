@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap
 class DefaultSmartContractService(
     private val credentialService: CredentialServiceInterface? = null,
     private val blockchainRegistry: BlockchainAnchorRegistry? = null,
-    private val evaluationEngineRegistry: EvaluationEngineRegistry = DefaultEvaluationEngineRegistry()
+    private val engines: EvaluationEngines = EvaluationEngines()
 ) : SmartContractService {
     
     private val contracts = ConcurrentHashMap<String, SmartContract>()
@@ -81,37 +81,7 @@ class DefaultSmartContractService(
         }
         
         // Extract and capture engine hash if engine is registered
-        val executionModelWithHash = when (val model = contract.executionModel) {
-            is ExecutionModel.Parametric -> {
-                val engine = evaluationEngineRegistry.get(model.evaluationEngine)
-                model.copy(
-                    engineVersion = engine?.version,
-                    engineHash = engine?.implementationHash
-                )
-            }
-            is ExecutionModel.Conditional -> {
-                val engine = evaluationEngineRegistry.get(model.evaluationEngine)
-                model.copy(
-                    engineVersion = engine?.version,
-                    engineHash = engine?.implementationHash
-                )
-            }
-            is ExecutionModel.Scheduled -> {
-                val engine = evaluationEngineRegistry.get(model.evaluationEngine)
-                model.copy(
-                    engineVersion = engine?.version,
-                    engineHash = engine?.implementationHash
-                )
-            }
-            is ExecutionModel.EventDriven -> {
-                val engine = evaluationEngineRegistry.get(model.evaluationEngine)
-                model.copy(
-                    engineVersion = engine?.version,
-                    engineHash = engine?.implementationHash
-                )
-            }
-            is ExecutionModel.Manual -> model
-        }
+        val executionModelWithHash = contract.executionModel.withEngineHash(engines)
         
         val credentialSubject = buildJsonObject {
             put("id", contract.id)
@@ -309,81 +279,57 @@ class DefaultSmartContractService(
         contract: SmartContract,
         inputData: JsonElement
     ): Result<ConditionEvaluation> = vericoreCatching {
-        // 1. Extract evaluation engine from execution model
-        val (engineId, expectedHash, expectedVersion) = when (val model = contract.executionModel) {
-            is ExecutionModel.Parametric -> Triple(model.evaluationEngine, model.engineHash, model.engineVersion)
-            is ExecutionModel.Conditional -> Triple(model.evaluationEngine, model.engineHash, model.engineVersion)
-            is ExecutionModel.Scheduled -> Triple(model.evaluationEngine, model.engineHash, model.engineVersion)
-            is ExecutionModel.EventDriven -> Triple(model.evaluationEngine, model.engineHash, model.engineVersion)
-            is ExecutionModel.Manual -> throw IllegalStateException(
+        // 1. Extract engine reference from execution model
+        val engineRef = contract.executionModel.toEngineReference()
+        
+        // 2. Handle manual execution
+        if (engineRef is EngineReference.Manual) {
+            throw IllegalStateException(
                 "Manual execution does not require condition evaluation"
             )
         }
         
-        // 2. Get engine from registry
-        val engine = evaluationEngineRegistry.get(engineId)
-            ?: throw IllegalStateException(
-                "Evaluation engine '$engineId' is not registered. " +
-                "Available engines: ${evaluationEngineRegistry.getRegisteredEngineIds()}"
-            )
+        // 3. Get engine (throws if not registered)
+        val engine = engines.require(engineRef.engineId!!)
         
-        // 3. Verify engine integrity (tamper detection)
-        if (expectedHash != null) {
-            val integrityValid = evaluationEngineRegistry.verifyEngineIntegrity(engineId, expectedHash)
-            if (!integrityValid) {
-                throw SecurityException(
-                    "Evaluation engine '$engineId' integrity check failed. " +
-                    "Engine may have been tampered with. " +
-                    "Expected hash: $expectedHash, " +
-                    "Actual hash: ${engine.implementationHash}"
+        // 4. Verify engine integrity (tamper detection)
+        engineRef.expectedHash?.let { expectedHash ->
+            engines.verifyOrThrow(engineRef.engineId, expectedHash)
+        }
+        
+        // 5. Verify engine version compatibility (if specified)
+        engineRef.expectedVersion?.let { expectedVersion ->
+            require(expectedVersion.isNotBlank()) { "Expected version cannot be blank" }
+            if (engine.version != expectedVersion) {
+                throw IllegalStateException(
+                    "Evaluation engine version mismatch. " +
+                    "Expected: $expectedVersion, " +
+                    "Actual: ${engine.version}"
                 )
             }
         }
         
-        // 4. Verify engine version compatibility (if specified)
-        if (expectedVersion != null && engine.version != expectedVersion) {
-            throw IllegalStateException(
-                "Evaluation engine version mismatch. " +
-                "Expected: $expectedVersion, " +
-                "Actual: ${engine.version}"
-            )
-        }
-        
-        // 5. Verify condition types are supported
+        // 6. Verify condition types are supported
         val unsupportedConditions = contract.terms.conditions.filter { condition ->
             condition.conditionType !in engine.supportedConditionTypes
         }
         if (unsupportedConditions.isNotEmpty()) {
             throw IllegalStateException(
-                "Engine '$engineId' does not support condition types: " +
+                "Engine '${engineRef.engineId}' does not support condition types: " +
                 unsupportedConditions.map { it.conditionType.name }.joinToString()
             )
         }
         
-        // 6. Create evaluation context
+        // 7. Create evaluation context
         val context = EvaluationContext(
             contractId = contract.id,
             executionModel = contract.executionModel,
             contractData = contract.contractData
         )
         
-        // 7. Evaluate conditions using the engine
+        // 8. Evaluate conditions using the engine
         val conditionResults = contract.terms.conditions.map { condition ->
-            try {
-                val satisfied = engine.evaluateCondition(condition, inputData, context)
-                ConditionResult(
-                    conditionId = condition.id,
-                    satisfied = satisfied,
-                    evaluatedValue = inputData
-                )
-            } catch (e: Exception) {
-                ConditionResult(
-                    conditionId = condition.id,
-                    satisfied = false,
-                    evaluatedValue = inputData,
-                    error = "Evaluation error: ${e.message}"
-                )
-            }
+            condition.evaluateWith(engine, inputData, context)
         }
         
         val overallResult = conditionResults.all { it.satisfied && it.error == null }

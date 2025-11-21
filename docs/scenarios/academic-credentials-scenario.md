@@ -172,12 +172,12 @@ fun main() = runBlocking {
     println("\n✅ VeriCore initialized")
     
     // Step 2: Create DIDs for university (issuer) and student (holder)
-    val universityDidDoc = vericore.createDid().getOrThrow()
+    val universityDidDoc = vericore.dids.create()
     val universityDid = universityDidDoc.id
     val universityKeyId = universityDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val studentDidDoc = vericore.createDid().getOrThrow()
+    val studentDidDoc = vericore.dids.create()
     val studentDid = studentDidDoc.id
     
     println("✅ University DID: $universityDid")
@@ -341,13 +341,13 @@ Each party (university issuer and student holder) needs their own DID:
 
 ```kotlin
 // Create university DID (issuer)
-val universityDidDoc = vericore.createDid().getOrThrow()
+val universityDidDoc = vericore.dids.create()
 val universityDid = universityDidDoc.id
 val universityKeyId = universityDidDoc.verificationMethod.firstOrNull()?.id
     ?: error("No verification method found")
 
 // Create student DID (holder)
-val studentDidDoc = vericore.createDid().getOrThrow()
+val studentDidDoc = vericore.dids.create()
 val studentDid = studentDidDoc.id
 ```
 

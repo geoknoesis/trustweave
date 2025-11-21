@@ -187,10 +187,6 @@ Complete listing of all supported plugins with documentation links organized by 
 
 Complete Application Programming Interface (API) documentation with examples
 
-### 🔌 [Supported Plugins](plugins.md)
-
-Comprehensive listing of all supported plugins organized by category (DID methods, blockchain anchors, KMS providers)
-
 ### 🎓 [Use Case Scenarios](scenarios/README.md)
 
 25+ complete, runnable examples for real-world use cases

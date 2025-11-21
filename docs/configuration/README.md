@@ -83,7 +83,7 @@ val vericore = VeriCore.create {
 **Configuration:**
 ```kotlin
 val vericore = VeriCore.create {
-    blockchain {
+    blockchains {
         "algorand:testnet" to AlgorandBlockchainAnchorClient(
             chainId = "algorand:testnet",
             options = AlgorandOptions(...)
@@ -223,7 +223,7 @@ val testVericore = VeriCore.create {
     didMethods {
         + DidKeyMockMethod(kms)
     }
-    blockchain {
+    blockchains {
         "inmemory:test" to InMemoryBlockchainAnchorClient("inmemory:test")
     }
 }
@@ -243,7 +243,7 @@ val prodVericore = VeriCore.create {
         + DidIonMethod(kms)
     }
     
-    blockchain {
+    blockchains {
         "algorand:mainnet" to AlgorandBlockchainAnchorClient(
             chainId = "algorand:mainnet",
             options = AlgorandOptions(

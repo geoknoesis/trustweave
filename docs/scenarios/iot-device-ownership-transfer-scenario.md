@@ -174,22 +174,22 @@ fun main() = runBlocking {
     println("\n✅ VeriCore initialized")
     
     // Step 2: Create DIDs for manufacturer, current owner, and new owner
-    val manufacturerDidDoc = vericore.createDid().getOrThrow()
+    val manufacturerDidDoc = vericore.dids.create()
     val manufacturerDid = manufacturerDidDoc.id
     val manufacturerKeyId = manufacturerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val currentOwnerDidDoc = vericore.createDid().getOrThrow()
+    val currentOwnerDidDoc = vericore.dids.create()
     val currentOwnerDid = currentOwnerDidDoc.id
     val currentOwnerKeyId = currentOwnerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val newOwnerDidDoc = vericore.createDid().getOrThrow()
+    val newOwnerDidDoc = vericore.dids.create()
     val newOwnerDid = newOwnerDidDoc.id
     val newOwnerKeyId = newOwnerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val deviceDidDoc = vericore.createDid().getOrThrow()
+    val deviceDidDoc = vericore.dids.create()
     val deviceDid = deviceDidDoc.id
     
     println("✅ Manufacturer DID: $manufacturerDid")

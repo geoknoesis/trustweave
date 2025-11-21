@@ -51,12 +51,12 @@ val vericore = VeriCore.create()  // Uses defaults below
 1. **Blockchain Clients**
    - No blockchain clients registered
    - Must be added manually for anchoring
-   - Example: `vericore.registerBlockchainClient("algorand:testnet", client)`
+   - Example: `VeriCore.create { blockchains { "algorand:testnet" to client } }`
 
 2. **Additional DID Methods**
    - Only `did:key` is registered
    - Other methods must be added manually
-   - Example: `vericore.registerDidMethod(DidWebMethod())`
+   - Example: `VeriCore.create { didMethods { + DidWebMethod() } }`
 
 3. **Production KMS**
    - In-memory KMS is for testing only
@@ -69,16 +69,16 @@ val vericore = VeriCore.create()  // Uses defaults below
 
 ```kotlin
 // Default behavior
-val did = vericore.createDid().getOrThrow()
+val did = vericore.dids.create()
 
 // Equivalent to:
-val did = vericore.createDid(
+val did = vericore.dids.create(
     method = "key",  // Default method
     options = DidCreationOptions(
         algorithm = KeyAlgorithm.ED25519,  // Default algorithm
         purposes = emptyList()  // Default purposes
     )
-).getOrThrow()
+)
 ```
 
 **Defaults:**
@@ -144,7 +144,7 @@ val vericore = VeriCore.create {
     }
     
     // Add blockchain clients
-    blockchain {
+    blockchains {
         "algorand:testnet" to algorandClient
         "ethereum:mainnet" to ethereumClient
     }

@@ -45,7 +45,7 @@ Use the DSL for declarative, readable configuration:
 val trustLayer = trustLayer {
     keys { provider("inMemory") }
     did { method("key") }
-    blockchain {
+    blockchains {
         "algorand:testnet" to algorandClient
     }
 }
@@ -127,7 +127,7 @@ val trustLayer = trustLayer {
     did { 
         method("key")          // DID method configuration
     }
-    blockchain {
+    blockchains {
         "algorand:testnet" to algorandClient  // Blockchain configuration
     }
     wallet {

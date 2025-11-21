@@ -27,7 +27,7 @@ fun rotateIssuerDid() = runBlocking {
     val config = VeriCoreDefaults.inMemory()
     val vericore = VeriCore.create(config)
 
-    val issuerDocument = vericore.createDid().getOrThrow()
+    val issuerDocument = vericore.dids.create()
     val issuerDid = issuerDocument.id
 
     val newKey = config.kms.generateKey(

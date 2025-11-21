@@ -175,18 +175,18 @@ fun main() = runBlocking {
     println("\n✅ VeriCore initialized")
     
     // Step 2: Create DIDs for identity provider, individual, and service providers
-    val identityProviderDidDoc = vericore.createDid().getOrThrow()
+    val identityProviderDidDoc = vericore.dids.create()
     val identityProviderDid = identityProviderDidDoc.id
     val identityProviderKeyId = identityProviderDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val individualDidDoc = vericore.createDid().getOrThrow()
+    val individualDidDoc = vericore.dids.create()
     val individualDid = individualDidDoc.id
     
-    val bankDidDoc = vericore.createDid().getOrThrow()
+    val bankDidDoc = vericore.dids.create()
     val bankDid = bankDidDoc.id
     
-    val buildingAccessDidDoc = vericore.createDid().getOrThrow()
+    val buildingAccessDidDoc = vericore.dids.create()
     val buildingAccessDid = buildingAccessDidDoc.id
     
     println("✅ Identity Provider DID: $identityProviderDid")

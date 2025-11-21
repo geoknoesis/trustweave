@@ -34,7 +34,7 @@ abstract class BaseEvaluationEngine : ContractEvaluationEngine {
      * Override this if you need a different hash calculation method.
      */
     protected open fun computeImplementationHash(): String {
-        return EngineHashCalculator.computeFromClassFile(this::class.java)
+        return EngineHash.fromClassFile(this::class.java)
     }
     
     /**

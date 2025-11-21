@@ -163,6 +163,9 @@ Scenarios are organized by domain and use case. Each scenario includes a complet
 - **[Parametric Insurance with Earth Observation](parametric-insurance-eo-scenario.md)** ⭐  
   Parametric insurance using EO data credentials. Standardized data oracle system accepting data from multiple providers (ESA, Planet, NASA). Prevents replay attacks and data corruption. See also [Earth Observation & Climate Applications](#earth-observation--climate-applications) section.
 
+- **[Smart Contract: Parametric Insurance](smart-contract-parametric-insurance-scenario.md)** ⭐  
+  Parametric insurance using VeriCore Smart Contracts abstraction. Demonstrates contract lifecycle, automatic execution based on EO data triggers, verifiable credentials, and blockchain anchoring. Complete workflow from contract creation to automatic payout.
+
 ### 🔒 Compliance & Security
 
 - **[SOC2 Compliance](soc2-compliance-scenario.md)** ⭐  
@@ -190,8 +193,8 @@ fun main() = runBlocking {
     val vericore = VeriCore.create()
     
     // 2. Create DIDs
-    val issuerDid = vericore.createDid().getOrThrow()
-    val holderDid = vericore.createDid().getOrThrow()
+    val issuerDid = vericore.dids.create()
+    val holderDid = vericore.dids.create()
     
     // 3. Issue Credential
     val credential = vericore.issueCredential(...).getOrThrow()

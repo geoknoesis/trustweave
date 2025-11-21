@@ -169,15 +169,15 @@ fun main() = runBlocking {
     println("\n✅ VeriCore initialized")
     
     // Step 2: Create DIDs for healthcare provider and individual
-    val healthcareProviderDidDoc = vericore.createDid().getOrThrow()
+    val healthcareProviderDidDoc = vericore.dids.create()
     val healthcareProviderDid = healthcareProviderDidDoc.id
     val healthcareProviderKeyId = healthcareProviderDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val individualDidDoc = vericore.createDid().getOrThrow()
+    val individualDidDoc = vericore.dids.create()
     val individualDid = individualDidDoc.id
     
-    val airlineDidDoc = vericore.createDid().getOrThrow()
+    val airlineDidDoc = vericore.dids.create()
     val airlineDid = airlineDidDoc.id
     
     println("✅ Healthcare Provider DID: $healthcareProviderDid")

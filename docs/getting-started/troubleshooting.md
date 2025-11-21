@@ -45,7 +45,7 @@ Register the blockchain client before anchoring:
 
 ```kotlin
 val vericore = VeriCore.create {
-    blockchain {
+    blockchains {
         "algorand:testnet" to algorandClient
         "polygon:mainnet" to polygonClient
     }
@@ -69,14 +69,14 @@ CredentialVerificationResult(valid=false, errors=[Proof verification failed])
 1. **Issuer DID not resolvable**
    ```kotlin
    // Ensure issuer DID is registered and resolvable
-   val issuerDid = vericore.createDid().getOrThrow()
+   val issuerDid = vericore.dids.create()
    // Use this DID for issuance
    ```
 
 2. **Key ID mismatch**
    ```kotlin
    // Get the correct key ID from the DID document
-   val issuerDocument = vericore.createDid().getOrThrow()
+   val issuerDocument = vericore.dids.create()
    val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.id
        ?: error("No verification method found")
    ```
@@ -197,7 +197,7 @@ fun debugSystemState(vericore: VeriCore) {
     
     // Test basic operations
     println("\n=== Basic Operation Tests ===")
-    val testDid = vericore.createDid().getOrNull()
+    val testDid = try { vericore.dids.create() } catch (e: Exception) { null }
     if (testDid != null) {
         println("✅ DID creation works: ${testDid.id}")
     } else {
@@ -285,7 +285,8 @@ suspend fun traceDidResolution(did: String) {
     // Step 4: Resolution attempt
     println("\n[Step 4] Attempting resolution...")
     val startTime = System.currentTimeMillis()
-    val result = vericore.resolveDid(did)
+    val resolution = vericore.dids.resolve(did)
+    val result = Result.success(resolution)
     val duration = System.currentTimeMillis() - startTime
     
     result.fold(
@@ -321,14 +322,16 @@ suspend fun minimalReproducibleExample() {
     
     // Step 2: Create a DID
     println("\n[2] Creating DID...")
-    val didResult = vericore.createDid()
+    val did = vericore.dids.create()
+    val didResult = Result.success(did)
     didResult.fold(
         onSuccess = { did ->
             println("✅ DID created: ${did.id}")
             
             // Step 3: Resolve the DID
             println("\n[3] Resolving DID...")
-            val resolveResult = vericore.resolveDid(did.id)
+            val resolution = vericore.dids.resolve(did.id)
+            val resolveResult = Result.success(resolution)
             resolveResult.fold(
                 onSuccess = { resolution ->
                     println("✅ DID resolved")
@@ -409,7 +412,8 @@ suspend fun checkNetworkConnectivity() {
     println("Testing resolution of: $testDid")
     
     val startTime = System.currentTimeMillis()
-    val result = vericore.resolveDid(testDid)
+    val resolution = vericore.dids.resolve(testDid)
+    val result = Result.success(resolution)
     val duration = System.currentTimeMillis() - startTime
     
     result.fold(
@@ -463,7 +467,7 @@ val didCache = mutableMapOf<String, DidDocument>()
 
 suspend fun resolveDidCached(did: String): DidDocument? {
     return didCache.getOrPut(did) {
-        vericore.resolveDid(did).getOrThrow().document
+        vericore.dids.resolve(did).document
     }
 }
 ```

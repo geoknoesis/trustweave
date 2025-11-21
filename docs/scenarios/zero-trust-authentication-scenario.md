@@ -172,18 +172,18 @@ fun main() = runBlocking {
     println("\n✅ VeriCore initialized")
     
     // Step 2: Create DIDs for authentication authority, users, and systems
-    val authAuthorityDidDoc = vericore.createDid().getOrThrow()
+    val authAuthorityDidDoc = vericore.dids.create()
     val authAuthorityDid = authAuthorityDidDoc.id
     val authAuthorityKeyId = authAuthorityDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val userDidDoc = vericore.createDid().getOrThrow()
+    val userDidDoc = vericore.dids.create()
     val userDid = userDidDoc.id
     
-    val deviceDidDoc = vericore.createDid().getOrThrow()
+    val deviceDidDoc = vericore.dids.create()
     val deviceDid = deviceDidDoc.id
     
-    val systemDidDoc = vericore.createDid().getOrThrow()
+    val systemDidDoc = vericore.dids.create()
     val systemDid = systemDidDoc.id
     
     println("✅ Authentication Authority DID: $authAuthorityDid")

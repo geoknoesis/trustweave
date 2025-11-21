@@ -200,11 +200,11 @@ val vericore = VeriCore.create {
 }
 
 // Use did:peer
-val did = vericore.createDid("peer") {
+val did = vericore.dids.create("peer") {
     algorithm = KeyAlgorithm.ED25519
-}.getOrThrow()
+}
 
-val resolved = vericore.resolveDid(did.id).getOrThrow()
+val resolved = vericore.dids.resolve(did.id)
 ```
 
 ## Error Handling

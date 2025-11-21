@@ -68,7 +68,8 @@ fun main() = runBlocking {
     val vericore = VeriCore.create()
     
     // Create a DID using the default method (did:key)
-    val result = vericore.createDid()
+    val did = vericore.dids.create()
+    val result = Result.success(did)
     
     result.fold(
         onSuccess = { didDocument ->
@@ -93,7 +94,8 @@ fun main() = runBlocking {
     val vericore = VeriCore.create()
     
     // Create a DID
-    val createResult = vericore.createDid()
+    val did = vericore.dids.create()
+    val createResult = Result.success(did)
     
     createResult.fold(
         onSuccess = { didDocument ->
@@ -101,7 +103,8 @@ fun main() = runBlocking {
             println("Created DID: $did")
             
             // Resolve the DID we just created
-            val resolveResult = vericore.resolveDid(did)
+            val resolution = vericore.dids.resolve(did)
+            val resolveResult = Result.success(resolution)
             
             resolveResult.fold(
                 onSuccess = { resolution ->
@@ -129,7 +132,8 @@ fun main() = runBlocking {
     val vericore = VeriCore.create()
     
     // Try to resolve a non-existent DID
-    val result = vericore.resolveDid("did:key:invalid")
+    val resolution = vericore.dids.resolve("did:key:invalid")
+    val result = Result.success(resolution)
     
     result.fold(
         onSuccess = { resolution ->
@@ -189,11 +193,11 @@ fun main() = runBlocking {
     val vericore = VeriCore.create()
     
     // Create issuer DID (the organization issuing credentials)
-    val issuerDid = vericore.createDid().getOrThrow()
+    val issuerDid = vericore.dids.create()
     println("Issuer DID: ${issuerDid.id}")
     
     // Create holder DID (the person receiving the credential)
-    val holderDid = vericore.createDid().getOrThrow()
+    val holderDid = vericore.dids.create()
     println("Holder DID: ${holderDid.id}")
 }
 ```
@@ -209,8 +213,8 @@ fun main() = runBlocking {
     val vericore = VeriCore.create()
     
     // Create DIDs
-    val issuerDid = vericore.createDid().getOrThrow()
-    val holderDid = vericore.createDid().getOrThrow()
+    val issuerDid = vericore.dids.create()
+    val holderDid = vericore.dids.create()
     
     // Get the first verification method from issuer's DID document
     val issuerKeyId = issuerDid.verificationMethod.firstOrNull()?.id
@@ -355,7 +359,7 @@ fun main() = runBlocking {
     val vericore = VeriCore.create()
     
     // Create holder DID
-    val holderDid = vericore.createDid().getOrThrow()
+    val holderDid = vericore.dids.create()
     
     // Create wallet for the holder
     val walletResult = vericore.createWallet(
@@ -384,8 +388,8 @@ fun main() = runBlocking {
     val vericore = VeriCore.create()
     
     // Create DIDs and issue credential (from Tutorial 2)
-    val issuerDid = vericore.createDid().getOrThrow()
-    val holderDid = vericore.createDid().getOrThrow()
+    val issuerDid = vericore.dids.create()
+    val holderDid = vericore.dids.create()
     val credential = /* ... issue credential ... */
     
     // Create wallet
@@ -510,15 +514,15 @@ fun main() = runBlocking {
     val vericore = VeriCore.create()
     
     // Issuer: University issuing degrees
-    val issuerDid = vericore.createDid().getOrThrow()
+    val issuerDid = vericore.dids.create()
     val issuerKeyId = issuerDid.verificationMethod.first().id
     
     // Holder: Student receiving degree
-    val holderDid = vericore.createDid().getOrThrow()
+    val holderDid = vericore.dids.create()
     val holderWallet = vericore.createWallet(holderDid.id).getOrThrow()
     
     // Verifier: Employer verifying degree
-    val verifierDid = vericore.createDid().getOrThrow()
+    val verifierDid = vericore.dids.create()
     
     println("✅ All parties set up")
     println("   Issuer: ${issuerDid.id}")
@@ -706,7 +710,7 @@ import com.geoknoesis.vericore.anchor.options.*
 
 fun main() = runBlocking {
     val vericore = VeriCore.create {
-        blockchain {
+        blockchains {
             // Register Algorand testnet client
             "algorand:testnet" to AlgorandBlockchainAnchorClient(
                 chainId = "algorand:testnet",
@@ -751,7 +755,7 @@ fun main() = runBlocking {
     )
     
     // Anchor to blockchain
-    val anchorResult = vericore.anchor(
+    val anchorResult = vericore.blockchains.anchor(
         data = data,
         serializer = ImportantData.serializer(),
         chainId = "algorand:testnet"
@@ -819,7 +823,7 @@ fun main() = runBlocking {
     
     // Anchor status list to blockchain
     // This makes revocation status tamper-evident
-    val anchorResult = vericore.anchor(
+    val anchorResult = vericore.blockchains.anchor(
         data = statusList,
         serializer = StatusListCredential.serializer(),
         chainId = "algorand:testnet"

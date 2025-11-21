@@ -29,23 +29,25 @@ fun main() = runBlocking {
     val vericore = VeriCore.create {
         this.kms = kms
         
-        registerDidMethod(KeyDidMethod(kms) as DidMethod)
+        didMethods {
+            + (KeyDidMethod(kms) as DidMethod)
+        }
     }
     
     // Step 2: Create did:key with Ed25519
     println("\nStep 2: Creating did:key with Ed25519...")
-    val ed25519Did = vericore.createDid("key") {
+    val ed25519Did = vericore.dids.create("key") {
         algorithm = KeyAlgorithm.ED25519
         purpose(KeyPurpose.AUTHENTICATION)
         purpose(KeyPurpose.ASSERTION)
-    }.getOrThrow()
+    }
     
     println("Created Ed25519 DID: ${ed25519Did.id}")
     println("Verification methods: ${ed25519Did.verificationMethod.size}")
     
     // Step 3: Resolve did:key
     println("\nStep 3: Resolving did:key...")
-    val resolved = vericore.resolveDid(ed25519Did.id).getOrThrow()
+    val resolved = vericore.dids.resolve(ed25519Did.id)
     println("Resolved DID: ${resolved.document?.id}")
     println("Document has ${resolved.document?.verificationMethod?.size} verification methods")
     
@@ -53,15 +55,15 @@ fun main() = runBlocking {
     println("\nStep 4: Creating did:key with different algorithms...")
     
     // secp256k1 (Ethereum-compatible)
-    val secp256k1Did = vericore.createDid("key") {
+    val secp256k1Did = vericore.dids.create("key") {
         algorithm = KeyAlgorithm.SECP256K1
-    }.getOrThrow()
+    }
     println("Created secp256k1 DID: ${secp256k1Did.id}")
     
     // P-256 (NIST)
-    val p256Did = vericore.createDid("key") {
+    val p256Did = vericore.dids.create("key") {
         algorithm = KeyAlgorithm.P256
-    }.getOrThrow()
+    }
     println("Created P-256 DID: ${p256Did.id}")
     
     println("\n" + "=".repeat(70))

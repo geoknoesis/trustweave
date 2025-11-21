@@ -130,7 +130,7 @@ runBlocking {
     
     // Use VeriCore facade with walt.id providers
     val vericore = VeriCore.create()
-    val didResult = vericore.createDid()
+    val did = vericore.dids.create()
     
     didResult.fold(
         onSuccess = { did -> println("Created: ${did.id}") },

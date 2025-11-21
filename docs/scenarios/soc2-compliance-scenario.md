@@ -174,7 +174,8 @@ fun main() = runBlocking {
     println("\n✅ VeriCore initialized")
     
     // Step 2: Create DIDs for organization, employees, and auditors
-    val organizationDid = vericore.createDid().fold(
+    val organizationDid = vericore.dids.create()
+    val result = Result.success(organizationDid).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Failed to create organization DID: ${error.message}")
@@ -182,7 +183,8 @@ fun main() = runBlocking {
         }
     )
     
-    val adminDid = vericore.createDid().fold(
+    val adminDid = vericore.dids.create()
+    Result.success(adminDid).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Failed to create admin DID: ${error.message}")
@@ -190,7 +192,8 @@ fun main() = runBlocking {
         }
     )
     
-    val employeeDid = vericore.createDid().fold(
+    val employeeDid = vericore.dids.create()
+    Result.success(employeeDid).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Failed to create employee DID: ${error.message}")
@@ -198,7 +201,8 @@ fun main() = runBlocking {
         }
     )
     
-    val auditorDid = vericore.createDid().fold(
+    val auditorDid = vericore.dids.create()
+    Result.success(auditorDid).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Failed to create auditor DID: ${error.message}")
@@ -289,7 +293,7 @@ fun main() = runBlocking {
     }
     
     // Anchor audit log to blockchain for immutability
-    val auditAnchorResult = vericore.anchor(
+    val auditAnchorResult = vericore.blockchains.anchor(
         data = auditLogEntry,
         serializer = JsonObject.serializer(),
         chainId = "algorand:testnet"
@@ -326,7 +330,8 @@ fun main() = runBlocking {
     println("   Issuer valid: ${adminVerification.issuerValid}")
     
     // Step 6: Key rotation with history preservation (CC7.3)
-    val newAdminDid = vericore.createDid().fold(
+    val newAdminDid = vericore.dids.create()
+    Result.success(newAdminDid).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Failed to create new admin DID: ${error.message}")
@@ -360,7 +365,7 @@ fun main() = runBlocking {
     println("✅ Key rotation credential issued: ${keyRotationCredential.id}")
     
     // Anchor key rotation to blockchain
-    val keyRotationAnchor = vericore.anchor(
+    val keyRotationAnchor = vericore.blockchains.anchor(
         data = keyRotationCredential,
         serializer = VerifiableCredential.serializer(),
         chainId = "algorand:testnet"
@@ -469,7 +474,7 @@ fun main() = runBlocking {
     }
     
     // Anchor compliance report
-    val reportAnchor = vericore.anchor(
+    val reportAnchor = vericore.blockchains.anchor(
         data = complianceReport,
         serializer = JsonObject.serializer(),
         chainId = "algorand:testnet"
@@ -598,7 +603,7 @@ suspend fun logAuditEvent(
     saveAuditLogToDatabase(auditEntry)
     
     // Anchor to blockchain for immutability
-    val anchorResult = vericore.anchor(
+    val anchorResult = vericore.blockchains.anchor(
         data = auditEntry,
         serializer = JsonObject.serializer(),
         chainId = "algorand:testnet"
@@ -630,7 +635,7 @@ suspend fun rotateKeyWithHistory(
     oldKeyId: String
 ): String {
     // Create new key
-    val newDid = vericore.createDid().getOrThrow()
+    val newDid = vericore.dids.create()
     val newKeyId = newDid.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
@@ -649,7 +654,7 @@ suspend fun rotateKeyWithHistory(
     ).getOrThrow()
     
     // Anchor rotation to blockchain
-    vericore.anchor(
+    vericore.blockchains.anchor(
         data = rotationCredential,
         serializer = VerifiableCredential.serializer(),
         chainId = "algorand:testnet"
@@ -717,7 +722,7 @@ suspend fun generateComplianceReport(
     }
     
     // Anchor report to blockchain
-    vericore.anchor(
+    vericore.blockchains.anchor(
         data = report,
         serializer = JsonObject.serializer(),
         chainId = "algorand:testnet"
@@ -766,13 +771,13 @@ suspend fun generateComplianceReport(
 - Explore [Security Clearance Scenario](security-clearance-access-control-scenario.md) for access control patterns
 - Learn about [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) for audit trails
 - Review [Key Management](../core-concepts/key-management.md) for key rotation
-- See [SOC2 Compliance Blueprint](../.internal/compliance/soc2-compliance-blueprint.md) for detailed architecture
+- See [Security Best Practices](../security/README.md) for comprehensive security guidance
 
 ## Related Documentation
 
 - [Security Clearance Scenario](security-clearance-access-control-scenario.md) - Access control patterns
 - [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
 - [Key Management](../core-concepts/key-management.md) - Key management guide
-- [SOC2 Compliance Blueprint](../.internal/compliance/soc2-compliance-blueprint.md) - Detailed architecture
+- [Security Best Practices](../security/README.md) - Comprehensive security guidance
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 

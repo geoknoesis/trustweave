@@ -23,9 +23,9 @@ import kotlinx.coroutines.*
 // Use coroutines for concurrent operations
 suspend fun processMultiple() = coroutineScope {
     val results = listOf(
-        async { vericore.createDid() },
-        async { vericore.createDid() },
-        async { vericore.createDid() }
+        async { vericore.dids.create() },
+        async { vericore.dids.create() },
+        async { vericore.dids.create() }
     )
     
     results.awaitAll()
@@ -80,7 +80,7 @@ val didCache = ConcurrentHashMap<String, DidDocument>()
 
 suspend fun resolveWithCache(did: String): DidDocument {
     return didCache.getOrPut(did) {
-        vericore.resolveDid(did).getOrThrow().didDocument!!
+        vericore.dids.resolve(did).document!!
     }
 }
 ```
@@ -235,7 +235,7 @@ Collect performance metrics:
 ```kotlin
 // Measure operation time
 val start = System.currentTimeMillis()
-val result = vericore.createDid().getOrThrow()
+val did = vericore.dids.create()
 val duration = System.currentTimeMillis() - start
 
 println("DID creation took ${duration}ms")
@@ -291,7 +291,7 @@ fun benchmarkDidCreation() = runBlocking {
     val start = System.currentTimeMillis()
     
     repeat(iterations) {
-        vericore.createDid().getOrThrow()
+        vericore.dids.create()
     }
     
     val duration = System.currentTimeMillis() - start

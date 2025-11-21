@@ -8,6 +8,7 @@ Welcome to VeriCore's core concepts! This section introduces the fundamental bui
 - **Verifiable Credentials (VCs)** - How to issue, store, and verify credentials
 - **Wallets** - How to manage credentials and identities
 - **Blockchain Anchoring** - How to anchor data to blockchains
+- **Smart Contracts** - How to create and execute executable agreements
 - **Key Management** - How to manage cryptographic keys securely
 
 ## Table of Contents
@@ -16,10 +17,11 @@ Welcome to VeriCore's core concepts! This section introduces the fundamental bui
 2. [Verifiable Credentials](verifiable-credentials.md) - Understanding VCs and their lifecycle
 3. [Wallets](wallets.md) - Understanding credential and identity wallets
 4. [Blockchain Anchoring](blockchain-anchoring.md) - Understanding data anchoring
-5. [Blockchain-Anchored Revocation](blockchain-anchored-revocation.md) - Understanding revocation with blockchain anchoring
-6. [Key Management](key-management.md) - Understanding key management systems
-7. [Algorithm Compatibility Table](algorithm-compatibility-table.md) - Algorithm support in DIDs, VCs, AWS KMS, and Azure Key Vault
-8. [JSON Canonicalization](json-canonicalization.md) - Understanding data integrity
+5. [Smart Contracts](smart-contracts.md) - Understanding executable agreements with verifiable credentials
+6. [Blockchain-Anchored Revocation](blockchain-anchored-revocation.md) - Understanding revocation with blockchain anchoring
+7. [Key Management](key-management.md) - Understanding key management systems
+8. [Algorithm Compatibility Table](algorithm-compatibility-table.md) - Algorithm support in DIDs, VCs, AWS KMS, and Azure Key Vault
+9. [JSON Canonicalization](json-canonicalization.md) - Understanding data integrity
 
 ## Quick Overview
 
@@ -60,6 +62,17 @@ A **Wallet** is a secure container for managing your credentials and identities.
 - **Provenance**: Prove when data was created
 - **Integrity**: Detect if data has been tampered with
 - **Immutability**: Create permanent records
+
+### Smart Contracts
+
+**Smart Contracts** are executable agreements between parties that combine:
+
+- **Verifiable Identity**: Parties identified by DIDs
+- **Cryptographic Proof**: Contract terms wrapped in Verifiable Credentials
+- **Immutable Audit Trail**: Blockchain anchoring for tamper-proof records
+- **Pluggable Execution**: Parametric, conditional, scheduled, event-driven, or manual execution
+
+Example: Parametric insurance contracts that automatically pay out based on EO data triggers.
 
 ### Key Management
 

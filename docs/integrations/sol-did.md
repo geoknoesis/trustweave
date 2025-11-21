@@ -213,7 +213,7 @@ val anchorClient = InMemoryBlockchainAnchorClient("solana:devnet")
 val vericore = VeriCore.create {
     kms = InMemoryKeyManagementService()
     
-    blockchain {
+    blockchains {
         register("solana:devnet", anchorClient)
     }
     

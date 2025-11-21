@@ -33,6 +33,14 @@ Complete API reference for VeriCore.
   - Provider registration
   - Type-safe options
 
+- **[Smart Contract API](smart-contract-api.md)**: Smart Contract operations
+  - Contract creation and lifecycle
+  - Binding with verifiable credentials
+  - Blockchain anchoring
+  - Contract execution
+  - Condition evaluation
+  - State management
+
 ## Error Handling
 
 All VeriCore API operations return `Result<T>` for consistent error handling:

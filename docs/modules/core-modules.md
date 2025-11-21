@@ -11,6 +11,7 @@ VeriCore is organised into small, composable modules. The list below explains wh
 - **[vericore-kms](vericore-kms.md)** – Key management abstractions and helpers. Required whenever you integrate HSMs or cloud KMS backends.
 - **[vericore-did](vericore-did.md)** – DID and DID document management with pluggable DID methods. Enables DID creation/resolution across modules.
 - **[vericore-anchor](vericore-anchor.md)** – Blockchain anchoring abstraction with chain-agnostic interfaces. Use it to notarise digests on Algorand, Polygon, etc.
+- **[vericore-contract](vericore-contract.md)** – Smart Contract abstraction for executable agreements with verifiable credentials and blockchain anchoring.
 - **[vericore-testkit](vericore-testkit.md)** – In-memory mocks for every SPI. Import this in unit tests or quick-start prototypes.
 
 ## Module Dependencies
@@ -23,6 +24,7 @@ vericore-json → vericore-core
 vericore-kms → vericore-core
 vericore-did → vericore-core, vericore-spi, vericore-kms
 vericore-anchor → vericore-core, vericore-spi, vericore-json
+vericore-contract → vericore-core, vericore-spi, vericore-json, vericore-anchor, vericore-did
 vericore-testkit → vericore-core, vericore-spi, vericore-trust, vericore-did, vericore-kms, vericore-anchor
 ```
 

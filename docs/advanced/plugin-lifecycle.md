@@ -63,7 +63,7 @@ class DatabaseWalletFactory : WalletFactory, PluginLifecycle {
 // In-memory implementations don't need lifecycle
 val vericore = VeriCore.create() // Uses InMemoryKeyManagementService
 // No need to call initialize() or start()
-val did = vericore.createDid().getOrThrow() // Works immediately
+val did = vericore.dids.create() // Works immediately
 ```
 
 ## Plugin Lifecycle Interface
@@ -184,7 +184,7 @@ suspend fun main() {
         println("Plugins started")
         
         // Use VeriCore
-        val did = vericore.createDid().getOrThrow()
+        val did = vericore.dids.create()
         println("Created DID: ${did.id}")
         
         // ... use VeriCore ...

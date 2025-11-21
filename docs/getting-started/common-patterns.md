@@ -33,7 +33,9 @@ fun main() = runBlocking {
     // ============================================
     // 1. ISSUER: Create DID and issue credential
     // ============================================
-    val issuerDidDoc = vericore.createDid().fold(
+    val issuerDidDoc = vericore.dids.create()
+    val result = Result.success(issuerDidDoc)
+    result.fold(
         onSuccess = { it },
         onFailure = { error ->
             when (error) {
@@ -86,7 +88,9 @@ fun main() = runBlocking {
     // ============================================
     // 2. HOLDER: Store credential in wallet
     // ============================================
-    val holderDidDoc = vericore.createDid().fold(
+    val holderDidDoc = vericore.dids.create()
+    val result = Result.success(holderDidDoc)
+    result.fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Failed to create holder DID: ${error.message}")
@@ -225,7 +229,7 @@ fun main() = runBlocking {
     )
     
     val results = dids.mapAsync { did ->
-        vericore.resolveDid(did)
+        Result.success(vericore.dids.resolve(did))
     }
     
     results.forEachIndexed { index, result ->
@@ -241,7 +245,8 @@ fun main() = runBlocking {
     
     // Batch credential creation
     val credentials = (1..10).mapAsync { index ->
-        vericore.createDid().fold(
+        val did = vericore.dids.create()
+        Result.success(did).fold(
             onSuccess = { issuerDid ->
                 vericore.issueCredential(
                     issuerDid = issuerDid.id,
@@ -300,7 +305,8 @@ fun main() = runBlocking {
     // Pattern: Try multiple DID methods with fallback
     fun createDidWithFallback(methods: List<String>): DidDocument? {
         for (method in methods) {
-            val result = vericore.createDid(method)
+            val did = vericore.dids.create(method)
+            val result = Result.success(did)
             result.fold(
                 onSuccess = { return it },
                 onFailure = { error ->
@@ -330,7 +336,8 @@ fun main() = runBlocking {
         var lastError: Throwable? = null
         
         for (attempt in 1..maxRetries) {
-            val result = vericore.resolveDid(did)
+            val resolution = vericore.dids.resolve(did)
+            val result = Result.success(resolution)
             result.fold(
                 onSuccess = { return it },
                 onFailure = { error ->
@@ -379,7 +386,8 @@ fun main() = runBlocking {
     val vericore = VeriCore.create()
     
     // Create issuer and holder
-    val issuerDid = vericore.createDid().fold(
+    val issuerDid = vericore.dids.create()
+    Result.success(issuerDid).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Failed to create issuer DID: ${error.message}")
@@ -387,7 +395,8 @@ fun main() = runBlocking {
         }
     )
     
-    val holderDid = vericore.createDid().fold(
+    val holderDid = vericore.dids.create()
+    Result.success(holderDid).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Failed to create holder DID: ${error.message}")
@@ -506,14 +515,15 @@ import kotlinx.serialization.json.encodeToJsonElement
 
 fun main() = runBlocking {
     val vericore = VeriCore.create {
-        blockchain {
+        blockchains {
             "algorand:testnet" to InMemoryBlockchainAnchorClient("algorand:testnet")
             "polygon:testnet" to InMemoryBlockchainAnchorClient("polygon:testnet")
         }
     }
     
     // Issue credential
-    val issuerDid = vericore.createDid().fold(
+    val issuerDid = vericore.dids.create()
+    Result.success(issuerDid).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Failed to create issuer DID: ${error.message}")
@@ -539,7 +549,7 @@ fun main() = runBlocking {
     // Anchor to multiple chains
     val chains = listOf("algorand:testnet", "polygon:testnet")
     val anchorResults = chains.mapNotNull { chainId ->
-        vericore.anchor(
+        vericore.blockchains.anchor(
             data = credential,
             serializer = VerifiableCredential.serializer(),
             chainId = chainId
@@ -588,7 +598,8 @@ import kotlinx.serialization.json.put
 fun main() = runBlocking {
     val vericore = VeriCore.create()
     
-    val holderDid = vericore.createDid().fold(
+    val holderDid = vericore.dids.create()
+    Result.success(holderDid).fold(
         onSuccess = { it.id },
         onFailure = { error ->
             println("❌ Failed to create holder DID: ${error.message}")
@@ -610,7 +621,8 @@ fun main() = runBlocking {
     )
     
     // Issue multiple credentials
-    val issuerDid = vericore.createDid().fold(
+    val issuerDid = vericore.dids.create()
+    Result.success(issuerDid).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Failed to create issuer DID: ${error.message}")

@@ -176,17 +176,17 @@ fun main() = runBlocking {
     println("\n✅ VeriCore initialized")
     
     // Step 2: Create DIDs for manufacturer, update server, and IoT device
-    val manufacturerDidDoc = vericore.createDid().getOrThrow()
+    val manufacturerDidDoc = vericore.dids.create()
     val manufacturerDid = manufacturerDidDoc.id
     val manufacturerKeyId = manufacturerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val updateServerDidDoc = vericore.createDid().getOrThrow()
+    val updateServerDidDoc = vericore.dids.create()
     val updateServerDid = updateServerDidDoc.id
     val updateServerKeyId = updateServerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val deviceDidDoc = vericore.createDid().getOrThrow()
+    val deviceDidDoc = vericore.dids.create()
     val deviceDid = deviceDidDoc.id
     
     println("✅ Manufacturer DID: $manufacturerDid")

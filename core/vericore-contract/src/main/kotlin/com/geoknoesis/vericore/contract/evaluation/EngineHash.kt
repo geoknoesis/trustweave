@@ -7,14 +7,17 @@ import java.io.InputStream
 import java.security.MessageDigest
 
 /**
- * Utility for computing evaluation engine implementation hashes.
+ * Internal utility for computing evaluation engine implementation hashes.
  * 
  * Provides multiple methods for computing hashes to detect engine tampering:
  * - Class file bytecode hash (most reliable)
  * - Engine descriptor hash (metadata-based)
  * - Combined hash (bytecode + descriptor)
+ * 
+ * This is an internal implementation detail and should not be used directly.
+ * Use [BaseEvaluationEngine] which provides automatic hash calculation.
  */
-object EngineHashCalculator {
+internal object EngineHash {
     
     /**
      * Computes hash from class file bytecode.
@@ -26,22 +29,20 @@ object EngineHashCalculator {
      * @return Multibase-encoded hash (e.g., "uABC123...")
      * @throws IllegalStateException if class file cannot be accessed
      */
-    fun computeFromClassFile(engineClass: Class<out ContractEvaluationEngine>): String {
+    fun fromClassFile(engineClass: Class<out ContractEvaluationEngine>): String {
         val className = engineClass.name.replace('.', '/') + ".class"
         val classLoader = engineClass.classLoader
             ?: throw IllegalStateException("Cannot get classloader for ${engineClass.name}")
         
-        val inputStream: InputStream? = classLoader.getResourceAsStream(className)
+        val inputStream: InputStream = classLoader.getResourceAsStream(className)
             ?: throw IllegalStateException("Cannot find class file for ${engineClass.name}")
         
-        try {
-            val bytecode = inputStream.readBytes()
+        return inputStream.use { stream ->
+            val bytecode = stream.readBytes()
             val digest = MessageDigest.getInstance("SHA-256").digest(bytecode)
             
             // Use multibase encoding (base58btc) consistent with VeriCore
-            return encodeMultibase(digest)
-        } finally {
-            inputStream.close()
+            encodeMultibase(digest)
         }
     }
     
@@ -57,7 +58,7 @@ object EngineHashCalculator {
      * @param implementationSignature Optional signature of critical methods
      * @return Multibase-encoded hash
      */
-    fun computeFromDescriptor(
+    fun fromDescriptor(
         engineId: String,
         version: String,
         supportedConditionTypes: Set<ConditionType>,
@@ -88,17 +89,17 @@ object EngineHashCalculator {
      * @param supportedConditionTypes Supported condition types
      * @return Multibase-encoded hash
      */
-    fun computeCombined(
+    fun combined(
         engineClass: Class<out ContractEvaluationEngine>,
         engineId: String,
         version: String,
         supportedConditionTypes: Set<ConditionType>
     ): String {
         // Hash bytecode
-        val bytecodeHash = computeFromClassFile(engineClass)
+        val bytecodeHash = fromClassFile(engineClass)
         
         // Hash descriptor
-        val descriptorHash = computeFromDescriptor(
+        val descriptorHash = fromDescriptor(
             engineId, version, supportedConditionTypes
         )
         

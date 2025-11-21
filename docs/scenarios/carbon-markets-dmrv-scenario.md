@@ -144,7 +144,8 @@ fun main() = runBlocking {
     println("\n✅ VeriCore initialized")
     
     // Step 2: Create DIDs for carbon credit issuer, verifier, and buyer
-    val issuerDid = vericore.createDid().fold(
+    val issuerDid = vericore.dids.create()
+    Result.success(issuerDid).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Failed to create issuer DID: ${error.message}")
@@ -152,7 +153,8 @@ fun main() = runBlocking {
         }
     )
     
-    val verifierDid = vericore.createDid().fold(
+    val verifierDid = vericore.dids.create()
+    Result.success(verifierDid).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Failed to create verifier DID: ${error.message}")
@@ -160,7 +162,8 @@ fun main() = runBlocking {
         }
     )
     
-    val buyerDid = vericore.createDid().fold(
+    val buyerDid = vericore.dids.create()
+    Result.success(buyerDid).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Failed to create buyer DID: ${error.message}")
@@ -261,7 +264,7 @@ fun main() = runBlocking {
     println("   Status: issued")
     
     // Step 6: Anchor credit to blockchain (prevent double counting)
-    val anchorResult = vericore.anchor(
+    val anchorResult = vericore.blockchains.anchor(
         data = carbonCredit,
         serializer = VerifiableCredential.serializer(),
         chainId = "algorand:testnet"

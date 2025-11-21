@@ -144,7 +144,8 @@ fun main() = runBlocking {
     println("\n✅ VeriCore initialized")
     
     // Step 2: Create DIDs for insurance company and EO data provider
-    val insuranceDid = vericore.createDid().fold(
+    val insuranceDid = vericore.dids.create()
+    Result.success(insuranceDid).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Failed to create insurance DID: ${error.message}")
@@ -152,7 +153,8 @@ fun main() = runBlocking {
         }
     )
     
-    val eoProviderDid = vericore.createDid().fold(
+    val eoProviderDid = vericore.dids.create()
+    Result.success(eoProviderDid).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Failed to create EO provider DID: ${error.message}")
@@ -193,7 +195,7 @@ fun main() = runBlocking {
     val dataDigest = DigestUtils.sha256DigestMultibase(rainfallData)
     
     // Issue verifiable credential for EO data
-    val eoDataCredential = vericore.issueCredential(
+    val eoDataCredential = vericore.credentials.issue(
         issuerDid = eoProviderDid.id,
         issuerKeyId = eoProviderKeyId,
         credentialSubject = buildJsonObject {
@@ -217,7 +219,8 @@ fun main() = runBlocking {
     println("   Data digest: $dataDigest")
     
     // Step 4: Verify EO data credential (insurance company verifies before using)
-    val verification = vericore.verifyCredential(eoDataCredential).fold(
+    val verification = vericore.credentials.verify(eoDataCredential)
+    if (verification.valid) {
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Verification failed: ${error.message}")
@@ -257,7 +260,7 @@ fun main() = runBlocking {
         val insuranceKeyId = insuranceDid.verificationMethod.firstOrNull()?.id
             ?: error("No verification method found")
         
-        val payoutCredential = vericore.issueCredential(
+        val payoutCredential = vericore.credentials.issue(
             issuerDid = insuranceDid.id,
             issuerKeyId = insuranceKeyId,
             credentialSubject = buildJsonObject {
@@ -355,7 +358,7 @@ suspend fun acceptEODataFromAnyProvider(
     dataCredential: VerifiableCredential
 ): Boolean {
     // Verify credential
-    val verification = vericore.verifyCredential(dataCredential).getOrThrow()
+    val verification = vericore.credentials.verify(dataCredential)
     if (!verification.valid) return false
     
     // Check if provider is certified
@@ -397,7 +400,7 @@ val spectralData = buildJsonObject {
 
 val spectralDigest = DigestUtils.sha256DigestMultibase(spectralData)
 
-val spectralCredential = vericore.issueCredential(
+val spectralCredential = vericore.credentials.issue(
     issuerDid = eoProviderDid.id,
     issuerKeyId = eoProviderKeyId,
     credentialSubject = buildJsonObject {
@@ -427,7 +430,7 @@ Anchor credentials to blockchain for immutable audit trail:
 
 ```kotlin
 // Anchor EO data credential
-val anchorResult = vericore.anchor(
+val anchorResult = vericore.blockchains.anchor(
     data = eoDataCredential,
     serializer = VerifiableCredential.serializer(),
     chainId = "algorand:testnet"

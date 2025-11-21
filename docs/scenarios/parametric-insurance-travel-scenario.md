@@ -146,10 +146,10 @@ fun main() = runBlocking {
     println("\n✅ VeriCore initialized")
     
     // Step 2: Create DIDs for insurance company, airline, weather service, and baggage system
-    val insuranceDid = vericore.createDid().getOrThrow()
-    val airlineDid = vericore.createDid().getOrThrow()
-    val weatherServiceDid = vericore.createDid().getOrThrow()
-    val baggageSystemDid = vericore.createDid().getOrThrow()
+    val insuranceDid = vericore.dids.create()
+    val airlineDid = vericore.dids.create()
+    val weatherServiceDid = vericore.dids.create()
+    val baggageSystemDid = vericore.dids.create()
     
     println("✅ Insurance Company DID: ${insuranceDid.id}")
     println("✅ Airline DID: ${airlineDid.id}")
@@ -709,7 +709,7 @@ Anchor travel credentials to blockchain for immutable audit trail:
 
 ```kotlin
 // Anchor flight delay credential
-val anchorResult = vericore.anchor(
+val anchorResult = vericore.blockchains.anchor(
     data = flightDelayCredential,
     serializer = VerifiableCredential.serializer(),
     chainId = "algorand:testnet"

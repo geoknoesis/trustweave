@@ -143,7 +143,8 @@ fun main() = runBlocking {
     println("\n✅ VeriCore initialized")
     
     // Step 2: Create DIDs for exporter, importer, and verifier
-    val exporterDid = vericore.createDid().fold(
+    val exporterDid = vericore.dids.create()
+    Result.success(exporterDid).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Failed to create exporter DID: ${error.message}")
@@ -151,7 +152,8 @@ fun main() = runBlocking {
         }
     )
     
-    val importerDid = vericore.createDid().fold(
+    val importerDid = vericore.dids.create()
+    Result.success(importerDid).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Failed to create importer DID: ${error.message}")
@@ -159,7 +161,8 @@ fun main() = runBlocking {
         }
     )
     
-    val verifierDid = vericore.createDid().fold(
+    val verifierDid = vericore.dids.create()
+    Result.success(verifierDid).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Failed to create verifier DID: ${error.message}")
@@ -172,7 +175,8 @@ fun main() = runBlocking {
     println("✅ Verifier DID: ${verifierDid.id}")
     
     // Step 3: Create farm/production site DID
-    val farmDid = vericore.createDid().fold(
+    val farmDid = vericore.dids.create()
+    Result.success(farmDid).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Failed to create farm DID: ${error.message}")
@@ -351,7 +355,7 @@ fun main() = runBlocking {
     }
     
     // Step 11: Anchor to blockchain for audit trail
-    val anchorResult = vericore.anchor(
+    val anchorResult = vericore.blockchains.anchor(
         data = dppCredential,
         serializer = VerifiableCredential.serializer(),
         chainId = "algorand:testnet"

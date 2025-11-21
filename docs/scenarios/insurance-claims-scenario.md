@@ -175,20 +175,20 @@ fun main() = runBlocking {
     println("\n✅ VeriCore initialized")
     
     // Step 2: Create DIDs for all parties
-    val insuranceCompanyDidDoc = vericore.createDid().getOrThrow()
+    val insuranceCompanyDidDoc = vericore.dids.create()
     val insuranceCompanyDid = insuranceCompanyDidDoc.id
     val insuranceCompanyKeyId = insuranceCompanyDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val policyholderDidDoc = vericore.createDid().getOrThrow()
+    val policyholderDidDoc = vericore.dids.create()
     val policyholderDid = policyholderDidDoc.id
     
-    val assessorDidDoc = vericore.createDid().getOrThrow()
+    val assessorDidDoc = vericore.dids.create()
     val assessorDid = assessorDidDoc.id
     val assessorKeyId = assessorDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val repairShopDidDoc = vericore.createDid().getOrThrow()
+    val repairShopDidDoc = vericore.dids.create()
     val repairShopDid = repairShopDidDoc.id
     val repairShopKeyId = repairShopDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")

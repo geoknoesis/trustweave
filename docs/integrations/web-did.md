@@ -221,11 +221,11 @@ val vericore = VeriCore.create {
 }
 
 // Use did:web
-val did = vericore.createDid("web") {
+val did = vericore.dids.create("web") {
     property("domain", "example.com")
-}.getOrThrow()
+}
 
-val resolved = vericore.resolveDid(did.id).getOrThrow()
+val resolved = vericore.dids.resolve(did.id)
 ```
 
 ## Error Handling

@@ -244,13 +244,14 @@ fun main() = runBlocking {
     // Add dependency: implementation("com.geoknoesis.vericore.did:key:1.0.0-SNAPSHOT")
     
     // Create a DID with error handling
-    val didResult = vericore.createDid()
-    didResult.fold(
-        onSuccess = { document ->
-            println("Created DID: ${document.id}")
-            
-            // Resolve the DID
-            val resolveResult = vericore.resolveDid(document.id)
+    val document = vericore.dids.create()
+    println("Created DID: ${document.id}")
+    
+    // Resolve the DID
+    val resolution = vericore.dids.resolve(document.id)
+    val resolveResult = Result.success(resolution)
+    resolveResult.fold(
+        onSuccess = { resolution ->
             resolveResult.fold(
                 onSuccess = { resolution ->
                     if (resolution.document != null) {
@@ -287,11 +288,11 @@ fun main() = runBlocking {
         }
     )
     
-    // Or use getOrThrow for simple cases
+    // Or use simple API for straightforward cases
     // Use native did:key (most widely-used)
-    val document = vericore.createDid("key") {
+    val document2 = vericore.dids.create("key") {
         algorithm = KeyAlgorithm.ED25519
-    }.getOrThrow()
+    }
     println("Created DID: ${document.id}")
 }
 ```

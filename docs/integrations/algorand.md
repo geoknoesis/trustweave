@@ -167,11 +167,20 @@ runBlocking {
     
     // Register with VeriCore
     val vericore = VeriCore.create()
-    vericore.registerBlockchainClient("algorand:testnet", client)
+    // Register during VeriCore.create { }
+    val vericore = VeriCore.create {
+        blockchains {
+            "algorand:testnet" to client
+        }
+    }
     
     // Anchor credential
     val credential = /* your credential */
-    val anchorResult = vericore.anchor(credential, "algorand:testnet")
+    val anchorResult = vericore.blockchains.anchor(
+        data = credential,
+        serializer = VerifiableCredential.serializer(),
+        chainId = "algorand:testnet"
+    )
     
     anchorResult.fold(
         onSuccess = { result ->

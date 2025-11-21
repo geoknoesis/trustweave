@@ -177,30 +177,30 @@ fun main() = runBlocking {
     println("\n✅ VeriCore initialized")
     
     // Step 2: Create DIDs for all parties
-    val universityDidDoc = vericore.createDid().getOrThrow()
+    val universityDidDoc = vericore.dids.create()
     val universityDid = universityDidDoc.id
     val universityKeyId = universityDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val previousEmployerDidDoc = vericore.createDid().getOrThrow()
+    val previousEmployerDidDoc = vericore.dids.create()
     val previousEmployerDid = previousEmployerDidDoc.id
     val previousEmployerKeyId = previousEmployerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val certificationBodyDidDoc = vericore.createDid().getOrThrow()
+    val certificationBodyDidDoc = vericore.dids.create()
     val certificationBodyDid = certificationBodyDidDoc.id
     val certificationBodyKeyId = certificationBodyDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val backgroundCheckProviderDidDoc = vericore.createDid().getOrThrow()
+    val backgroundCheckProviderDidDoc = vericore.dids.create()
     val backgroundCheckProviderDid = backgroundCheckProviderDidDoc.id
     val backgroundCheckProviderKeyId = backgroundCheckProviderDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val candidateDidDoc = vericore.createDid().getOrThrow()
+    val candidateDidDoc = vericore.dids.create()
     val candidateDid = candidateDidDoc.id
     
-    val employerDidDoc = vericore.createDid().getOrThrow()
+    val employerDidDoc = vericore.dids.create()
     val employerDid = employerDidDoc.id
     
     println("✅ University DID: $universityDid")

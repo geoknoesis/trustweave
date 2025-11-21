@@ -46,7 +46,9 @@ fun main() = runBlocking {
             chainId = chainId,
             options = emptyMap() // In-memory fallback mode for testing
         )
-        registerBlockchainClient(chainId, indyClient)
+        blockchains {
+            chainId to indyClient
+        }
     }
     println("✓ VeriCore instance created")
     println("✓ Indy blockchain client registered: $chainId")

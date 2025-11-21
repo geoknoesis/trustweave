@@ -22,8 +22,8 @@ import kotlinx.serialization.json.*
  * 
  * **Example Usage:**
  * ```kotlin
- * val engine = ParametricInsuranceEngine()
- * registry.register(engine)
+ * val engines = EvaluationEngines()
+ * engines += ParametricInsuranceEngine()
  * 
  * val contract = createContract(
  *     executionModel = ExecutionModel.Parametric(
@@ -71,6 +71,9 @@ class ParametricInsuranceEngine : BaseEvaluationEngine() {
         inputData: JsonElement
     ): Boolean {
         val expression = condition.expression.trim()
+        require(expression.isNotBlank()) {
+            "Condition expression cannot be blank"
+        }
         
         // Parse expression: $.path >= value
         val operators = listOf(">=", "<=", "==", ">", "<", "!=")
@@ -85,27 +88,42 @@ class ParametricInsuranceEngine : BaseEvaluationEngine() {
             throw IllegalArgumentException("Invalid threshold expression: $expression")
         }
         
-        val path = parts[0].trim().removePrefix("$.").trim()
+        val leftPart = parts[0].trim()
+        require(leftPart.startsWith("$.")) {
+            "Invalid threshold expression: $expression. Path must start with \$."
+        }
+        val path = leftPart.removePrefix("$.").trim()
+        require(path.isNotBlank()) {
+            "Invalid threshold expression: $expression. Path cannot be empty"
+        }
+        
         val thresholdStr = parts[1].trim()
+        require(thresholdStr.isNotBlank()) {
+            "Invalid threshold expression: $expression. Threshold value cannot be empty"
+        }
         
         // Extract value from input data
         val inputObj = inputData as? JsonObject
             ?: throw IllegalArgumentException("Input data must be a JSON object")
         
-        val value = inputObj[path]?.jsonPrimitive?.content?.toDoubleOrNull()
-            ?: throw IllegalArgumentException("Cannot extract numeric value from path: $path")
+        val pathValue = inputObj[path]
+        val value = pathValue?.jsonPrimitive?.content?.toDoubleOrNull()
+            ?: throw IllegalArgumentException(
+                "Cannot extract numeric value from path: $path. " +
+                "Found: ${pathValue?.let { it.toString() } ?: "null"}"
+            )
         
         val threshold = thresholdStr.toDoubleOrNull()
             ?: throw IllegalArgumentException("Invalid threshold value: $thresholdStr")
         
-        // Evaluate comparison
+        // Evaluate comparison with epsilon for equality
         return when (operator) {
             ">=" -> value >= threshold
             "<=" -> value <= threshold
-            "==" -> value == threshold
+            "==" -> kotlin.math.abs(value - threshold) < 1e-9
             ">" -> value > threshold
             "<" -> value < threshold
-            "!=" -> value != threshold
+            "!=" -> kotlin.math.abs(value - threshold) >= 1e-9
             else -> false
         }
     }
@@ -121,6 +139,9 @@ class ParametricInsuranceEngine : BaseEvaluationEngine() {
         inputData: JsonElement
     ): Boolean {
         val expression = condition.expression.trim()
+        require(expression.isNotBlank()) {
+            "Condition expression cannot be blank"
+        }
         
         // Parse: $.path >= min && $.path <= max
         if (!expression.contains("&&")) {
@@ -137,6 +158,9 @@ class ParametricInsuranceEngine : BaseEvaluationEngine() {
         
         val minCondition = parts[0].trim()
         val maxCondition = parts[1].trim()
+        require(minCondition.isNotBlank() && maxCondition.isNotBlank()) {
+            "Invalid range expression: $expression. Both min and max conditions must be present"
+        }
         
         // Evaluate both conditions
         val minSatisfied = evaluateThreshold(
@@ -162,6 +186,9 @@ class ParametricInsuranceEngine : BaseEvaluationEngine() {
         inputData: JsonElement
     ): Boolean {
         val expression = condition.expression.trim()
+        require(expression.isNotBlank()) {
+            "Condition expression cannot be blank"
+        }
         
         val operators = listOf(">=", "<=", "==", ">", "<", "!=")
         val operator = operators.find { expression.contains(it) }
@@ -175,26 +202,51 @@ class ParametricInsuranceEngine : BaseEvaluationEngine() {
             throw IllegalArgumentException("Invalid comparison expression: $expression")
         }
         
-        val path1 = parts[0].trim().removePrefix("$.").trim()
-        val path2 = parts[1].trim().removePrefix("$.").trim()
+        val leftPart = parts[0].trim()
+        val rightPart = parts[1].trim()
+        
+        require(leftPart.startsWith("$.")) {
+            "Invalid comparison expression: $expression. Left path must start with \$."
+        }
+        require(rightPart.startsWith("$.")) {
+            "Invalid comparison expression: $expression. Right path must start with \$."
+        }
+        
+        val path1 = leftPart.removePrefix("$.").trim()
+        val path2 = rightPart.removePrefix("$.").trim()
+        
+        require(path1.isNotBlank()) {
+            "Invalid comparison expression: $expression. Left path cannot be empty"
+        }
+        require(path2.isNotBlank()) {
+            "Invalid comparison expression: $expression. Right path cannot be empty"
+        }
         
         val inputObj = inputData as? JsonObject
             ?: throw IllegalArgumentException("Input data must be a JSON object")
         
-        val value1 = inputObj[path1]?.jsonPrimitive?.content?.toDoubleOrNull()
-            ?: throw IllegalArgumentException("Cannot extract numeric value from path: $path1")
+        val path1Value = inputObj[path1]
+        val value1 = path1Value?.jsonPrimitive?.content?.toDoubleOrNull()
+            ?: throw IllegalArgumentException(
+                "Cannot extract numeric value from path: $path1. " +
+                "Found: ${path1Value?.let { it.toString() } ?: "null"}"
+            )
         
-        val value2 = inputObj[path2]?.jsonPrimitive?.content?.toDoubleOrNull()
-            ?: throw IllegalArgumentException("Cannot extract numeric value from path: $path2")
+        val path2Value = inputObj[path2]
+        val value2 = path2Value?.jsonPrimitive?.content?.toDoubleOrNull()
+            ?: throw IllegalArgumentException(
+                "Cannot extract numeric value from path: $path2. " +
+                "Found: ${path2Value?.let { it.toString() } ?: "null"}"
+            )
         
-        // Evaluate comparison
+        // Evaluate comparison with epsilon for equality
         return when (operator) {
             ">=" -> value1 >= value2
             "<=" -> value1 <= value2
-            "==" -> value1 == value2
+            "==" -> kotlin.math.abs(value1 - value2) < 1e-9
             ">" -> value1 > value2
             "<" -> value1 < value2
-            "!=" -> value1 != value2
+            "!=" -> kotlin.math.abs(value1 - value2) >= 1e-9
             else -> false
         }
     }

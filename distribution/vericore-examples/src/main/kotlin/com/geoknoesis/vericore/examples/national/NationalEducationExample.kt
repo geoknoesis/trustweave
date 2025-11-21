@@ -45,7 +45,9 @@ fun main() = runBlocking {
     // IMPORTANT: Store the client reference so we can reuse it for verification
     val anchorClient = InMemoryBlockchainAnchorClient(chainId)
     val vericore = VeriCore.create {
-        registerBlockchainClient(chainId, anchorClient)
+        blockchains {
+            chainId to anchorClient
+        }
     }
     println("✓ VeriCore instance created")
     println("✓ Blockchain client registered: $chainId")
@@ -60,32 +62,12 @@ fun main() = runBlocking {
     println("  Role: Trusted issuer of national-level education credentials")
     println("  Method: key (default)")
     
-    val authorityResult = vericore.createDid()
+    val authorityDid = vericore.dids.create()
     
-    authorityResult.fold(
-        onSuccess = { did ->
-            println("\n📥 RESPONSE: Authority DID Created Successfully")
-            println("  ✓ DID: ${did.id}")
-            println("  ✓ Verification Methods: ${did.verificationMethod.size}")
-            println("  ✓ Role: National Education Authority (Ministry of Higher Education)")
-        },
-        onFailure = { error ->
-            println("\n📥 RESPONSE: Authority DID Creation Failed")
-            when (error) {
-                is VeriCoreError.DidMethodNotRegistered -> {
-                    println("  ✗ Error Type: DidMethodNotRegistered")
-                    println("  ✗ Method: ${error.method}")
-                    println("  ✗ Available methods: ${error.availableMethods.joinToString(", ")}")
-                }
-                else -> {
-                    println("  ✗ Error: ${error.message}")
-                    println("  ✗ Error Type: ${error::class.simpleName}")
-                }
-            }
-            return@runBlocking
-        }
-    )
-    val authorityDid = authorityResult.getOrThrow()
+    println("\n📥 RESPONSE: Authority DID Created Successfully")
+    println("  ✓ DID: ${authorityDid.id}")
+    println("  ✓ Verification Methods: ${authorityDid.verificationMethod.size}")
+    println("  ✓ Role: National Education Authority (Ministry of Higher Education)")
     val authorityKeyId = authorityDid.verificationMethod.first().id
     println("  ✓ Authority Key ID: $authorityKeyId")
     println()
@@ -97,23 +79,13 @@ fun main() = runBlocking {
     println("  Role: Recognized educational institution")
     println("  Institution: University of Algiers (UA-001)")
     
-    val institutionResult = vericore.createDid()
+    val institutionDid = vericore.dids.create()
     
-    institutionResult.fold(
-        onSuccess = { did ->
-            println("\n📥 RESPONSE: Institution DID Created Successfully")
-            println("  ✓ DID: ${did.id}")
-            println("  ✓ Verification Methods: ${did.verificationMethod.size}")
-            println("  ✓ Institution: University of Algiers")
-            println("  ✓ Institution Code: UA-001")
-        },
-        onFailure = { error ->
-            println("\n📥 RESPONSE: Institution DID Creation Failed")
-            println("  ✗ Error: ${error.message}")
-            return@runBlocking
-        }
-    )
-    val institutionDid = institutionResult.getOrThrow()
+    println("\n📥 RESPONSE: Institution DID Created Successfully")
+    println("  ✓ DID: ${institutionDid.id}")
+    println("  ✓ Verification Methods: ${institutionDid.verificationMethod.size}")
+    println("  ✓ Institution: University of Algiers")
+    println("  ✓ Institution Code: UA-001")
     val institutionKeyId = institutionDid.verificationMethod.first().id
     println("  ✓ Institution Key ID: $institutionKeyId")
     println()
@@ -126,23 +98,13 @@ fun main() = runBlocking {
     println("  Student ID: STU-2024-001234")
     println("  National ID: 1234567890123")
     
-    val studentResult = vericore.createDid()
+    val studentDid = vericore.dids.create()
     
-    studentResult.fold(
-        onSuccess = { did ->
-            println("\n📥 RESPONSE: Student DID Created Successfully")
-            println("  ✓ DID: ${did.id}")
-            println("  ✓ Verification Methods: ${did.verificationMethod.size}")
-            println("  ✓ Student ID: STU-2024-001234")
-            println("  ✓ National ID: 1234567890123")
-        },
-        onFailure = { error ->
-            println("\n📥 RESPONSE: Student DID Creation Failed")
-            println("  ✗ Error: ${error.message}")
-            return@runBlocking
-        }
-    )
-    val studentDid = studentResult.getOrThrow()
+    println("\n📥 RESPONSE: Student DID Created Successfully")
+    println("  ✓ DID: ${studentDid.id}")
+    println("  ✓ Verification Methods: ${studentDid.verificationMethod.size}")
+    println("  ✓ Student ID: STU-2024-001234")
+    println("  ✓ National ID: 1234567890123")
     println()
     
     // Step 5: Issue AlgeroPass Enrollment Credential
@@ -186,55 +148,35 @@ fun main() = runBlocking {
     val subjectJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
     println(subjectJson.encodeToString(JsonObject.serializer(), enrollmentSubject))
     
-    val enrollmentCredentialResult = vericore.issueCredential(
-        issuerDid = authorityDid.id,
-        issuerKeyId = authorityKeyId,
-        credentialSubject = enrollmentSubject,
+    val enrollmentCredential = vericore.credentials.issue(
+        issuer = authorityDid.id,
+        subject = enrollmentSubject,
+        config = com.geoknoesis.vericore.services.IssuanceConfig(
+            proofType = com.geoknoesis.vericore.core.types.ProofType.Ed25519Signature2020,
+            keyId = authorityKeyId,
+            issuerDid = authorityDid.id
+        ),
         types = listOf("VerifiableCredential", "AlgeroPassCredential", "EnrollmentCredential", "EducationCredential")
     )
     
-    enrollmentCredentialResult.fold(
-        onSuccess = { credential ->
-            println("\n📥 RESPONSE: Enrollment Credential Issued Successfully")
-            println("  ✓ Credential ID: ${credential.id}")
-            println("  ✓ Issuer: ${credential.issuer}")
-            println("  ✓ Types: ${credential.type.joinToString(", ")}")
-            println("  ✓ Issuance Date: ${credential.issuanceDate}")
-            println("  ✓ Has Proof: ${credential.proof != null}")
-            val proof = credential.proof
-            if (proof != null) {
-                println("  ✓ Proof Type: ${proof.type}")
-                println("  ✓ Proof Purpose: ${proof.proofPurpose}")
-            }
-            println("  ✓ Student ID: STU-2024-001234")
-            println("  ✓ Institution: University of Algiers")
-            println("  ✓ Program: Computer Science (Bachelor)")
-            println("  ✓ Status: active")
-            println("\n  Full Credential Document:")
-            val credentialJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
-            println(credentialJson.encodeToString(VerifiableCredential.serializer(), credential))
-        },
-        onFailure = { error ->
-            println("\n📥 RESPONSE: Enrollment Credential Issuance Failed")
-            when (error) {
-                is VeriCoreError.InvalidDidFormat -> {
-                    println("  ✗ Error Type: InvalidDidFormat")
-                    println("  ✗ Reason: ${error.reason}")
-                }
-                is VeriCoreError.CredentialInvalid -> {
-                    println("  ✗ Error Type: CredentialInvalid")
-                    println("  ✗ Reason: ${error.reason}")
-                    println("  ✗ Field: ${error.field}")
-                }
-                else -> {
-                    println("  ✗ Error: ${error.message}")
-                    println("  ✗ Error Type: ${error::class.simpleName}")
-                }
-            }
-            return@runBlocking
-        }
-    )
-    val enrollmentCredential = enrollmentCredentialResult.getOrThrow()
+    println("\n📥 RESPONSE: Enrollment Credential Issued Successfully")
+    println("  ✓ Credential ID: ${enrollmentCredential.id}")
+    println("  ✓ Issuer: ${enrollmentCredential.issuer}")
+    println("  ✓ Types: ${enrollmentCredential.type.joinToString(", ")}")
+    println("  ✓ Issuance Date: ${enrollmentCredential.issuanceDate}")
+    println("  ✓ Has Proof: ${enrollmentCredential.proof != null}")
+    val proof = enrollmentCredential.proof
+    if (proof != null) {
+        println("  ✓ Proof Type: ${proof.type}")
+        println("  ✓ Proof Purpose: ${proof.proofPurpose}")
+    }
+    println("  ✓ Student ID: STU-2024-001234")
+    println("  ✓ Institution: University of Algiers")
+    println("  ✓ Program: Computer Science (Bachelor)")
+    println("  ✓ Status: active")
+    println("\n  Full Credential Document:")
+    val credentialJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
+    println(credentialJson.encodeToString(VerifiableCredential.serializer(), enrollmentCredential))
     println()
     
     // Step 6: Verify Enrollment Credential
@@ -248,38 +190,28 @@ fun main() = runBlocking {
     println("    - Expiration check")
     println("    - Revocation status check")
     
-    val enrollmentVerificationResult = vericore.verifyCredential(enrollmentCredential)
+    val enrollmentVerification = vericore.credentials.verify(enrollmentCredential)
     
-    enrollmentVerificationResult.fold(
-        onSuccess = { verification ->
-            println("\n📥 RESPONSE: Enrollment Credential Verification Result")
-            if (verification.valid) {
-                println("  ✓ Overall Status: VALID")
-                println("  ✓ Proof Valid: ${verification.proofValid}")
-                println("  ✓ Issuer Valid: ${verification.issuerValid}")
-                println("  ✓ Not Expired: ${verification.notExpired}")
-                println("  ✓ Not Revoked: ${verification.notRevoked}")
-                if (verification.warnings.isNotEmpty()) {
-                    println("  ⚠ Warnings:")
-                    verification.warnings.forEach { warning ->
-                        println("    - $warning")
-                    }
-                }
-            } else {
-                println("  ✗ Overall Status: INVALID")
-                println("  ✗ Errors:")
-                verification.errors.forEach { error ->
-                    println("    - $error")
-                }
-                return@runBlocking
+    println("\n📥 RESPONSE: Enrollment Credential Verification Result")
+    if (enrollmentVerification.valid) {
+        println("  ✓ Overall Status: VALID")
+        println("  ✓ Proof Valid: ${enrollmentVerification.proofValid}")
+        println("  ✓ Issuer Valid: ${enrollmentVerification.issuerValid}")
+        println("  ✓ Not Expired: ${enrollmentVerification.notExpired}")
+        println("  ✓ Not Revoked: ${enrollmentVerification.notRevoked}")
+        if (enrollmentVerification.warnings.isNotEmpty()) {
+            println("  ⚠ Warnings:")
+            enrollmentVerification.warnings.forEach { warning ->
+                println("    - $warning")
             }
-        },
-        onFailure = { error ->
-            println("\n📥 RESPONSE: Verification Failed")
-            println("  ✗ Error: ${error.message}")
-            return@runBlocking
         }
-    )
+    } else {
+        println("  ✗ Overall Status: INVALID")
+        println("  ✗ Errors:")
+        enrollmentVerification.errors.forEach { error ->
+            println("    - $error")
+        }
+    }
     println()
     
     // Step 7: Issue Achievement Credential (Grades/Transcript)
@@ -340,37 +272,31 @@ fun main() = runBlocking {
     println("  Credential Subject:")
     println(subjectJson.encodeToString(JsonObject.serializer(), achievementSubject))
     
-    val achievementCredentialResult = vericore.issueCredential(
-        issuerDid = authorityDid.id,
-        issuerKeyId = authorityKeyId,
-        credentialSubject = achievementSubject,
+    val achievementCredential = vericore.credentials.issue(
+        issuer = authorityDid.id,
+        subject = achievementSubject,
+        config = com.geoknoesis.vericore.services.IssuanceConfig(
+            proofType = com.geoknoesis.vericore.core.types.ProofType.Ed25519Signature2020,
+            keyId = authorityKeyId,
+            issuerDid = authorityDid.id
+        ),
         types = listOf("VerifiableCredential", "AlgeroPassCredential", "AchievementCredential", "EducationCredential")
     )
     
-    achievementCredentialResult.fold(
-        onSuccess = { credential ->
-            println("\n📥 RESPONSE: Achievement Credential Issued Successfully")
-            println("  ✓ Credential ID: ${credential.id}")
-            println("  ✓ Issuer: ${credential.issuer}")
-            println("  ✓ Types: ${credential.type.joinToString(", ")}")
-            println("  ✓ Issuance Date: ${credential.issuanceDate}")
-            println("  ✓ Has Proof: ${credential.proof != null}")
-            println("  ✓ Academic Year: 2024-2025")
-            println("  ✓ Semester: Fall 2024")
-            println("  ✓ Total Credits: 10")
-            println("  ✓ GPA: 3.73")
-            println("  ✓ Number of Courses: 3")
-            println("\n  Full Credential Document:")
-            val achievementCredentialJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
-            println(achievementCredentialJson.encodeToString(VerifiableCredential.serializer(), credential))
-        },
-        onFailure = { error ->
-            println("\n📥 RESPONSE: Achievement Credential Issuance Failed")
-            println("  ✗ Error: ${error.message}")
-            return@runBlocking
-        }
-    )
-    val achievementCredential = achievementCredentialResult.getOrThrow()
+    println("\n📥 RESPONSE: Achievement Credential Issued Successfully")
+    println("  ✓ Credential ID: ${achievementCredential.id}")
+    println("  ✓ Issuer: ${achievementCredential.issuer}")
+    println("  ✓ Types: ${achievementCredential.type.joinToString(", ")}")
+    println("  ✓ Issuance Date: ${achievementCredential.issuanceDate}")
+    println("  ✓ Has Proof: ${achievementCredential.proof != null}")
+    println("  ✓ Academic Year: 2024-2025")
+    println("  ✓ Semester: Fall 2024")
+    println("  ✓ Total Credits: 10")
+    println("  ✓ GPA: 3.73")
+    println("  ✓ Number of Courses: 3")
+    println("\n  Full Credential Document:")
+    val achievementCredentialJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
+    println(achievementCredentialJson.encodeToString(VerifiableCredential.serializer(), achievementCredential))
     println()
     
     // Step 8: Anchor Credentials to Blockchain
@@ -410,27 +336,17 @@ fun main() = runBlocking {
     println("  Enrollment Record:")
     println(anchorJson.encodeToString(JsonObject.serializer(), enrollmentRecord))
     
-    val enrollmentAnchorResult = vericore.anchor(
+    val enrollmentAnchor = vericore.blockchains.anchor(
         data = enrollmentRecord,
         serializer = JsonElement.serializer(),
         chainId = chainId
     )
     
-    enrollmentAnchorResult.fold(
-        onSuccess = { anchor ->
-            println("\n📥 RESPONSE: Enrollment Credential Anchored Successfully")
-            println("  ✓ Chain ID: ${anchor.ref.chainId}")
-            println("  ✓ Transaction Hash: ${anchor.ref.txHash}")
-            println("  ✓ Timestamp: ${anchor.timestamp}")
-            println("  ✓ Credential Digest: $enrollmentDigest")
-        },
-        onFailure = { error ->
-            println("\n📥 RESPONSE: Enrollment Anchoring Failed")
-            println("  ✗ Error: ${error.message}")
-            return@runBlocking
-        }
-    )
-    val enrollmentAnchor = enrollmentAnchorResult.getOrThrow()
+    println("\n📥 RESPONSE: Enrollment Credential Anchored Successfully")
+    println("  ✓ Chain ID: ${enrollmentAnchor.ref.chainId}")
+    println("  ✓ Transaction Hash: ${enrollmentAnchor.ref.txHash}")
+    println("  ✓ Timestamp: ${enrollmentAnchor.timestamp}")
+    println("  ✓ Credential Digest: $enrollmentDigest")
     println()
     
     // Anchor achievement credential
@@ -449,27 +365,17 @@ fun main() = runBlocking {
     println("  Achievement Record:")
     println(anchorJson.encodeToString(JsonObject.serializer(), achievementRecord))
     
-    val achievementAnchorResult = vericore.anchor(
+    val achievementAnchor = vericore.blockchains.anchor(
         data = achievementRecord,
         serializer = JsonElement.serializer(),
         chainId = chainId
     )
     
-    achievementAnchorResult.fold(
-        onSuccess = { anchor ->
-            println("\n📥 RESPONSE: Achievement Credential Anchored Successfully")
-            println("  ✓ Chain ID: ${anchor.ref.chainId}")
-            println("  ✓ Transaction Hash: ${anchor.ref.txHash}")
-            println("  ✓ Timestamp: ${anchor.timestamp}")
-            println("  ✓ Credential Digest: $achievementDigest")
-        },
-        onFailure = { error ->
-            println("\n📥 RESPONSE: Achievement Anchoring Failed")
-            println("  ✗ Error: ${error.message}")
-            return@runBlocking
-        }
-    )
-    val achievementAnchor = achievementAnchorResult.getOrThrow()
+    println("\n📥 RESPONSE: Achievement Credential Anchored Successfully")
+    println("  ✓ Chain ID: ${achievementAnchor.ref.chainId}")
+    println("  ✓ Transaction Hash: ${achievementAnchor.ref.txHash}")
+    println("  ✓ Timestamp: ${achievementAnchor.timestamp}")
+    println("  ✓ Credential Digest: $achievementDigest")
     println()
     
     // Step 9: Read Back Anchored Data
@@ -480,37 +386,29 @@ fun main() = runBlocking {
     println("    - Chain ID: ${enrollmentAnchor.ref.chainId}")
     println("    - Transaction Hash: ${enrollmentAnchor.ref.txHash}")
     
-    val readEnrollmentResult = vericore.readAnchor<JsonElement>(
+    val readEnrollment = vericore.blockchains.read<JsonElement>(
         ref = enrollmentAnchor.ref,
         serializer = JsonElement.serializer()
     )
     
-    readEnrollmentResult.fold(
-        onSuccess = { readJson ->
-            println("\n📥 RESPONSE: Enrollment Record Retrieved")
-            println("  ✓ Status: Successfully read from blockchain")
-            println("  ✓ Student DID: ${readJson.jsonObject["studentDid"]?.jsonPrimitive?.content}")
-            println("  ✓ Student ID: ${readJson.jsonObject["studentId"]?.jsonPrimitive?.content}")
-            println("  ✓ Credential Type: ${readJson.jsonObject["credentialType"]?.jsonPrimitive?.content}")
-            println("  ✓ Credential Digest: ${readJson.jsonObject["credentialDigest"]?.jsonPrimitive?.content}")
-            println("  ✓ Timestamp: ${readJson.jsonObject["timestamp"]?.jsonPrimitive?.content}")
-            
-            // Verify integrity
-            val readDigest = readJson.jsonObject["credentialDigest"]?.jsonPrimitive?.content
-            println("\n  Integrity Verification:")
-            println("    Expected Digest: $enrollmentDigest")
-            println("    Retrieved Digest: $readDigest")
-            if (readDigest == enrollmentDigest) {
-                println("    ✓ Status: MATCH - Data integrity verified")
-            } else {
-                println("    ✗ Status: MISMATCH - Data integrity check failed")
-            }
-        },
-        onFailure = { error ->
-            println("\n📥 RESPONSE: Read Enrollment Record Failed")
-            println("  ✗ Error: ${error.message}")
-        }
-    )
+    println("\n📥 RESPONSE: Enrollment Record Retrieved")
+    println("  ✓ Status: Successfully read from blockchain")
+    println("  ✓ Student DID: ${readEnrollment.jsonObject["studentDid"]?.jsonPrimitive?.content}")
+    println("  ✓ Student ID: ${readEnrollment.jsonObject["studentId"]?.jsonPrimitive?.content}")
+    println("  ✓ Credential Type: ${readEnrollment.jsonObject["credentialType"]?.jsonPrimitive?.content}")
+    println("  ✓ Credential Digest: ${readEnrollment.jsonObject["credentialDigest"]?.jsonPrimitive?.content}")
+    println("  ✓ Timestamp: ${readEnrollment.jsonObject["timestamp"]?.jsonPrimitive?.content}")
+    
+    // Verify integrity
+    val readDigest = readEnrollment.jsonObject["credentialDigest"]?.jsonPrimitive?.content
+    println("\n  Integrity Verification:")
+    println("    Expected Digest: $enrollmentDigest")
+    println("    Retrieved Digest: $readDigest")
+    if (readDigest == enrollmentDigest) {
+        println("    ✓ Status: MATCH - Data integrity verified")
+    } else {
+        println("    ✗ Status: MISMATCH - Data integrity check failed")
+    }
     println()
     
     // Summary

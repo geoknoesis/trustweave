@@ -175,14 +175,14 @@ fun main() = runBlocking {
     
     // Step 1: Create VeriCore instance with blockchain anchoring
     val vericore = VeriCore.create {
-        blockchain {
+        blockchains {
             "inmemory:anchor" to InMemoryBlockchainAnchorClient("inmemory:anchor")
         }
     }
     println("\n✅ VeriCore initialized with blockchain anchoring")
     
     // Step 2: Create DID for data provider
-    val providerDidDoc = vericore.createDid().getOrThrow()
+    val providerDidDoc = vericore.dids.create()
     val providerDid = providerDidDoc.id
     val providerKeyId = providerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
@@ -259,7 +259,7 @@ fun main() = runBlocking {
     println("✅ Linkset created: $linksetDigest")
     
     // Step 5: Issue Verifiable Credential referencing the Linkset
-    val credential = vericore.issueCredential(
+    val credential = vericore.credentials.issue(
         issuerDid = providerDid,
         issuerKeyId = providerKeyId,
         credentialSubject = buildJsonObject {
@@ -298,7 +298,7 @@ fun main() = runBlocking {
     println("   Transaction Hash: ${anchorResult.ref.txHash}")
     
     // Step 7: Verify the credential
-    val verification = vericore.verifyCredential(credential).getOrThrow()
+    val verification = vericore.credentials.verify(credential)
     
     if (verification.valid) {
         println("\n✅ Credential Verification SUCCESS")

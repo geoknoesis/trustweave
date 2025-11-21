@@ -35,15 +35,16 @@ import kotlinx.serialization.json.Json
 
 // Using VeriCore facade (recommended)
 val vericore = VeriCore.create()
-val anchorResult = vericore.anchor(
+val anchorResult = vericore.blockchains.anchor(
     data = credential,
     serializer = VerifiableCredential.serializer(),
     chainId = "algorand:testnet"
-).getOrThrow()
+)
 println("Anchored tx: ${anchorResult.ref.txHash}")
 
-// With error handling
-val result = vericore.anchor(data, serializer, chainId)
+// With error handling (wrap in try-catch)
+try {
+    val anchor = vericore.blockchains.anchor(data, serializer, chainId)
 result.fold(
     onSuccess = { anchor -> println("Anchored tx: ${anchor.ref.txHash}") },
     onFailure = { error ->
@@ -73,14 +74,15 @@ import com.geoknoesis.vericore.core.*
 
 // Using VeriCore facade (recommended)
 val vericore = VeriCore.create()
-val data = vericore.readAnchor<VerifiableCredential>(
+val data = vericore.blockchains.read<VerifiableCredential>(
     ref = anchorRef,
     serializer = VerifiableCredential.serializer()
-).getOrThrow()
+)
 println("Read credential: ${data.id}")
 
-// With error handling
-val result = vericore.readAnchor<VerifiableCredential>(ref, serializer)
+// With error handling (wrap in try-catch)
+try {
+    val data = vericore.blockchains.read<VerifiableCredential>(ref, serializer)
 result.fold(
     onSuccess = { data -> println("Read: ${data.id}") },
     onFailure = { error ->

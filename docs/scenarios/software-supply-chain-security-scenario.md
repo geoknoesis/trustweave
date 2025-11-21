@@ -176,17 +176,17 @@ fun main() = runBlocking {
     println("\n✅ VeriCore initialized")
     
     // Step 2: Create DIDs for software publisher, build system, and consumer
-    val publisherDidDoc = vericore.createDid().getOrThrow()
+    val publisherDidDoc = vericore.dids.create()
     val publisherDid = publisherDidDoc.id
     val publisherKeyId = publisherDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val buildSystemDidDoc = vericore.createDid().getOrThrow()
+    val buildSystemDidDoc = vericore.dids.create()
     val buildSystemDid = buildSystemDidDoc.id
     val buildSystemKeyId = buildSystemDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val consumerDidDoc = vericore.createDid().getOrThrow()
+    val consumerDidDoc = vericore.dids.create()
     val consumerDid = consumerDidDoc.id
     
     println("✅ Software Publisher DID: $publisherDid")

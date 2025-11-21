@@ -106,7 +106,7 @@ class CredentialWorkflowTest {
                 val vericore = VeriCore.create()
                 
                 // Create issuer DID
-                val issuerDid = vericore.createDid().getOrThrow()
+                val issuerDid = vericore.dids.create()
                 
                 // Issue credential
                 val credential = vericore.issueCredential(

@@ -42,40 +42,38 @@ fun main() = runBlocking {
     // Step 3: Create an issuer DID
     // Note: getOrThrow() is used here for quick-start simplicity
     // In production, use fold() for error handling (see below)
-    val issuerDocument = vericore.createDid().getOrThrow()
+    val issuerDocument = vericore.dids.create()
     val issuerDid = issuerDocument.id
     val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.id
         ?: error("No verification method generated for $issuerDid")
     println("Issuer DID: $issuerDid (keyId=$issuerKeyId)")
 
     // Step 4: Issue a verifiable credential
-    val credential = vericore.issueCredential(
-        issuerDid = issuerDid,
-        issuerKeyId = issuerKeyId,
-        credentialSubject = credentialSubject,
+    val credential = vericore.credentials.issue(
+        issuer = issuerDid,
+        subject = credentialSubject,
+        config = IssuanceConfig(
+            proofType = ProofType.Ed25519Signature2020,
+            keyId = issuerKeyId,
+            issuerDid = issuerDid
+        ),
         types = listOf("VerifiableCredential", "QuickStartCredential")
-    ).getOrThrow()
+    )
     println("Issued credential id: ${credential.id}")
 
     // Step 5: Verify the credential
-    // This example uses fold() to demonstrate proper error handling
-    vericore.verifyCredential(credential).fold(
-        onSuccess = { verification ->
-            if (verification.valid) {
-                println(
-                    "Verification succeeded (proof=${verification.proofValid}, " +
-                    "issuer=${verification.issuerValid}, revocation=${verification.notRevoked})"
-                )
-                if (verification.warnings.isNotEmpty()) {
-                    println("Warnings: ${verification.warnings}")
-                }
-            } else {
-                println("Verification returned errors: ${verification.errors}")
-            }
-        },
-        onFailure = { error ->
-            println("Verification failed: ${error.message}")
+    val verification = vericore.credentials.verify(credential)
+    if (verification.valid) {
+        println(
+            "Verification succeeded (proof=${verification.proofValid}, " +
+            "issuer=${verification.issuerValid}, revocation=${verification.notRevoked})"
+        )
+        if (verification.warnings.isNotEmpty()) {
+            println("Warnings: ${verification.warnings}")
         }
+    } else {
+        println("Verification returned errors: ${verification.errors}")
+    }
     )
 
     // Step 6: Anchor credential to blockchain (optional)
@@ -105,7 +103,7 @@ fun main() = runBlocking {
     val vericore = VeriCore.create()
 
     // Production pattern: Use fold() for all operations
-    val issuerDocument = vericore.createDid().fold(
+    val issuerDocument = Result.success(vericore.dids.create()).fold(
         onSuccess = { it },
         onFailure = { error ->
             when (error) {
@@ -125,7 +123,7 @@ fun main() = runBlocking {
     val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val credential = vericore.issueCredential(
+    val credential = vericore.credentials.issue(
         issuerDid = issuerDid,
         issuerKeyId = issuerKeyId,
         credentialSubject = buildJsonObject {
@@ -240,22 +238,22 @@ Everything in VeriCore assumes deterministic canonicalization, so the very first
 ## Step 3: Create a DID with typed options
 
 **Why:** You need an issuer DID before issuing credentials.  
-**How it works:** `VeriCore.createDid` uses the bundled DID method registry and typed `DidCreationOptions`.  
+**How it works:** `vericore.dids.create()` uses the bundled DID method registry and typed `DidCreationOptions`.  
 **How simple:** Configure only what you need using a fluent builder—defaults cover the rest.
 
 ```kotlin
 // Simple: use defaults (did:key method, ED25519 algorithm)
-val issuerDocument = vericore.createDid().getOrThrow()
+val issuerDocument = vericore.dids.create()
 val issuerDid = issuerDocument.id
 val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.id
     ?: error("No verification method generated")
 println("Issuer DID: $issuerDid (keyId=$issuerKeyId)")
 
 // Advanced: customize with builder
-val customDid = vericore.createDid("key") {
+val customDid = vericore.dids.create("key") {
     algorithm = com.geoknoesis.vericore.did.DidCreationOptions.KeyAlgorithm.ED25519
     purpose(com.geoknoesis.vericore.did.DidCreationOptions.KeyPurpose.AUTHENTICATION)
-}.getOrThrow()
+}
 ```
 
 **What this does**  
@@ -280,16 +278,20 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 // Issue credential using the issuer DID and key ID from Step 3
-val credential = vericore.issueCredential(
-    issuerDid = issuerDid,
-    issuerKeyId = issuerKeyId,  // From issuerDocument.verificationMethod
-    credentialSubject = buildJsonObject {
+val credential = vericore.credentials.issue(
+    issuer = issuerDid,
+    subject = buildJsonObject {
         put("id", "did:key:holder-placeholder")
         put("name", "Alice Example")
         put("role", "Site Reliability Engineer")
     },
+    config = IssuanceConfig(
+        proofType = ProofType.Ed25519Signature2020,
+        keyId = issuerKeyId,  // From issuerDocument.verificationMethod
+        issuerDid = issuerDid
+    ),
     types = listOf("VerifiableCredential", "QuickStartCredential")
-).getOrThrow()
+)
 
 println("Issued credential id: ${credential.id}")
 ```
@@ -318,32 +320,18 @@ Facades embrace VeriCore’s “everything returns `Result<T>`” philosophy. By
 ```kotlin
 import com.geoknoesis.vericore.core.*
 
-// Verify credential with full error handling
-vericore.verifyCredential(credential).fold(
-    onSuccess = { verification ->
-        if (verification.valid) {
-            println(
-                "Verification succeeded (proof=${verification.proofValid}, " +
-                "issuer=${verification.issuerValid}, revocation=${verification.notRevoked})"
-            )
-            if (verification.warnings.isNotEmpty()) {
-                println("Warnings: ${verification.warnings}")
-            }
-        } else {
-            println("Verification returned errors: ${verification.errors}")
-        }
-    },
-    onFailure = { error ->
-        println("Verification failed: ${error.message}")
-    }
-)
-
-// Simple usage (throws on error)
-// Note: getOrThrow() is fine for quick starts and tests
-// In production code, prefer fold() for explicit error handling
-val verification = vericore.verifyCredential(credential).getOrThrow()
+// Verify credential
+val verification = vericore.credentials.verify(credential)
 if (verification.valid) {
-    println("Credential is valid")
+    println(
+        "Verification succeeded (proof=${verification.proofValid}, " +
+        "issuer=${verification.issuerValid}, revocation=${verification.notRevoked})"
+    )
+    if (verification.warnings.isNotEmpty()) {
+        println("Warnings: ${verification.warnings}")
+    }
+} else {
+    println("Verification returned errors: ${verification.errors}")
 }
 ```
 
@@ -414,8 +402,8 @@ Use `getOrThrow()` **only** for:
 ```kotlin
 // ⚠️ Simple usage (throws on error) - Testing/Prototyping Only
 // For production, always use fold() instead
-val did = vericore.createDid().getOrThrow()
-val credential = vericore.issueCredential(...).getOrThrow()
+val did = vericore.dids.create()
+val credential = vericore.credentials.issue(...)
 ```
 
 **Why not in production?** `getOrThrow()` throws exceptions that can crash your application. Production code should handle errors gracefully.
@@ -431,12 +419,14 @@ Use `fold()` **always** for:
 
 ```kotlin
 // ✅ Production pattern with specific error handling
-val result = vericore.createDid()
-result.fold(
-    onSuccess = { did -> 
-        // Handle success
-        processDid(did)
-    },
+val did = vericore.dids.create()
+// Note: dids.create() returns DidDocument directly (not Result)
+// For error handling, wrap in try-catch or use extension functions
+try {
+    processDid(did)
+} catch (e: VeriCoreError.DidMethodNotRegistered) {
+    // Handle error
+}
     onFailure = { error ->
         // Handle specific errors
         when (error) {
@@ -468,62 +458,50 @@ VeriCore provides structured error handling with `Result<T>` and `VeriCoreError`
 import com.geoknoesis.vericore.core.*
 
 // Verify credential with error handling
-vericore.verifyCredential(credential).fold(
-    onSuccess = { result ->
-        if (result.valid) {
-            println("Credential is valid")
-        } else {
-            println("Credential invalid: ${result.errors.joinToString()}")
-            result.warnings.forEach { println("Warning: $it") }
-        }
-    },
-    onFailure = { error ->
-        when (error) {
-            is VeriCoreError.CredentialInvalid -> {
-                println("Credential validation failed: ${error.reason}")
-                println("Field: ${error.field}")
-            }
-            else -> {
-                println("Verification error: ${error.message}")
-                error.context.forEach { (key, value) ->
-                    println("  $key: $value")
-                }
-            }
-        }
-    }
-)
+val verification = vericore.credentials.verify(credential)
+if (verification.valid) {
+    println("Credential is valid")
+} else {
+    println("Credential invalid: ${verification.errors.joinToString()}")
+    verification.warnings.forEach { println("Warning: $it") }
+}
 
 // Anchoring with error handling
-val anchorResult = vericore.anchor(data, serializer, "algorand:testnet")
-anchorResult.fold(
-    onSuccess = { anchor ->
-        println("Anchored at: ${anchor.ref.txHash}")
-    },
-    onFailure = { error ->
-        when (error) {
-            is VeriCoreError.ChainNotRegistered -> {
-                println("Chain not registered: ${error.chainId}")
-                println("Available chains: ${error.availableChains}")
-            }
-            else -> {
-                println("Anchoring error: ${error.message}")
-            }
+try {
+    val anchor = vericore.blockchains.anchor(
+        data = data,
+        serializer = serializer,
+        chainId = "algorand:testnet"
+    )
+    println("Anchored at: ${anchor.ref.txHash}")
+} catch (error: VeriCoreError) {
+    when (error) {
+        is VeriCoreError.ChainNotRegistered -> {
+            println("Chain not registered: ${error.chainId}")
+            println("Available chains: ${error.availableChains}")
+        }
+        else -> {
+            println("Anchoring error: ${error.message}")
         }
     }
-)
+}
 ```
 
 For simple cases, you can use `getOrThrow()`:
 
 ```kotlin
-// Simple usage (throws on error)
-val result = vericore.verifyCredential(credential).getOrThrow()
-if (result.valid) {
+// Simple usage
+val verification = vericore.credentials.verify(credential)
+if (verification.valid) {
     println("Credential is valid")
 }
 
 // Or use getOrThrowError for VeriCoreError
-val anchor = vericore.anchor(data, serializer, chainId).getOrThrowError()
+val anchor = vericore.blockchains.anchor(
+    data = data,
+    serializer = serializer,
+    chainId = chainId
+)
 ```
 
 **Best Practice:** In production code, prefer `fold()` for explicit error handling. Use `getOrThrow()` for quick prototypes and tests.

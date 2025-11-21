@@ -172,24 +172,24 @@ fun main() = runBlocking {
     println("\n✅ VeriCore initialized")
     
     // Step 2: Create DIDs for security authority, personnel, and classified systems
-    val securityAuthorityDidDoc = vericore.createDid().getOrThrow()
+    val securityAuthorityDidDoc = vericore.dids.create()
     val securityAuthorityDid = securityAuthorityDidDoc.id
     val securityAuthorityKeyId = securityAuthorityDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val personnel1DidDoc = vericore.createDid().getOrThrow()
+    val personnel1DidDoc = vericore.dids.create()
     val personnel1Did = personnel1DidDoc.id
     
-    val personnel2DidDoc = vericore.createDid().getOrThrow()
+    val personnel2DidDoc = vericore.dids.create()
     val personnel2Did = personnel2DidDoc.id
     
-    val topSecretSystemDidDoc = vericore.createDid().getOrThrow()
+    val topSecretSystemDidDoc = vericore.dids.create()
     val topSecretSystemDid = topSecretSystemDidDoc.id
     
-    val secretSystemDidDoc = vericore.createDid().getOrThrow()
+    val secretSystemDidDoc = vericore.dids.create()
     val secretSystemDid = secretSystemDidDoc.id
     
-    val confidentialSystemDidDoc = vericore.createDid().getOrThrow()
+    val confidentialSystemDidDoc = vericore.dids.create()
     val confidentialSystemDid = confidentialSystemDidDoc.id
     
     println("✅ Security Authority DID: $securityAuthorityDid")

@@ -29,8 +29,8 @@ dependencies {
 | Component | Purpose |
 |-----------|---------|
 | `CredentialServiceRegistry` | Discovers issuer/verifier services (in-memory or SPI). |
-| `VeriCore.issueCredential` | High-level facade performing canonicalisation, signing, and proof attachment. |
-| `VeriCore.verifyCredential` | Rebuilds canonical form, resolves DIDs, validates proofs, and returns `CredentialVerificationResult`. |
+| `VeriCore.credentials.issue()` | High-level facade performing canonicalisation, signing, and proof attachment. |
+| `VeriCore.credentials.verify()` | Rebuilds canonical form, resolves DIDs, validates proofs, and returns `CredentialVerificationResult`. |
 | `CredentialIssuanceOptions` | Lower-level SPI options (validity window, schema hints) when using `CredentialServiceRegistry`. |
 
 Detailed API signatures live in the [Credential Service API reference](../api-reference/credential-service-api.md).
@@ -43,16 +43,20 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 suspend fun issueEmployeeBadge(vericore: VeriCore, issuerDid: String, issuerKeyId: String) =
-    vericore.issueCredential(
-        issuerDid = issuerDid,
-        issuerKeyId = issuerKeyId,
-        credentialSubject = buildJsonObject {
+    vericore.credentials.issue(
+        issuer = issuerDid,
+        subject = buildJsonObject {
             put("id", "did:key:holder-123")
             put("role", "Site Reliability Engineer")
             put("level", "L5")
         },
+        config = IssuanceConfig(
+            proofType = ProofType.Ed25519Signature2020,
+            keyId = issuerKeyId,
+            issuerDid = issuerDid
+        ),
         types = listOf("VerifiableCredential", "EmploymentCredential")
-    ).getOrThrow()
+    )
 
 **Outcome:** Issues a signed credential using typed issuance options, returning a `VerifiableCredential` that downstream wallets or verifiers can consume.
 
@@ -68,16 +72,16 @@ VeriCore automatically:
 ```kotlin
 import com.geoknoesis.vericore.credential.verifyCredential
 
-suspend fun verifyBadge(vericore: VeriCore, credential: com.geoknoesis.vericore.credential.models.VerifiableCredential) =
-    vericore.verifyCredential(credential).fold(
-        onSuccess = { result ->
-            require(result.valid) { "Proofs failed: ${result.errors}" }
-            println("Credential verified with checks: ${result.checks}")
-        },
-        onFailure = { error ->
-            println("Verification failed: ${error.message}")
-        }
-    )
+suspend fun verifyBadge(vericore: VeriCore, credential: com.geoknoesis.vericore.credential.models.VerifiableCredential) {
+    val result = vericore.credentials.verify(credential)
+    // Note: verify() returns CredentialVerificationResult directly, not Result
+    if (result.valid) {
+        require(result.valid) { "Proofs failed: ${result.errors}" }
+        println("Credential verified with checks: proof=${result.proofValid}, issuer=${result.issuerValid}")
+    } else {
+        println("Verification failed: ${result.errors}")
+    }
+}
 
 **Outcome:** Surfaces verification success or failure reasons, letting you guard business logic with `result.valid` and log granular errors.
 

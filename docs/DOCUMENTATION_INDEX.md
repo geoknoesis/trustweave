@@ -23,6 +23,7 @@
   - **[Verifiable Credentials](core-concepts/verifiable-credentials.md)**: Issuance/verification flow with code snippets
   - **[Wallets](core-concepts/wallets.md)**: Capability-based composition and DSL usage
   - **[Blockchain Anchoring](core-concepts/blockchain-anchoring.md)**: Anchoring workflow and client configuration
+  - **[Smart Contracts](core-concepts/smart-contracts.md)**: Executable agreements with verifiable credentials
   - **[Key Management](core-concepts/key-management.md)**: KMS abstractions and rotation tips
   - **[JSON Canonicalization](core-concepts/json-canonicalization.md)**: Deterministic hashing and signing
 
@@ -179,6 +180,12 @@ See **[Scenarios Overview](scenarios/README.md)** for all available scenarios or
 ## Module Documentation
 
 ### Core Modules
+- **[vericore-contract](modules/vericore-contract.md)**: Smart Contract abstraction for executable agreements
+  - Contract lifecycle management
+  - Execution models (parametric, conditional, scheduled, etc.)
+  - Verifiable credentials integration
+  - Blockchain anchoring support
+
 - **[vericore-anchor/README.md](../chains/vericore-anchor/src/main/kotlin/com/geoknoesis/vericore/anchor/README.md)**: Comprehensive anchor package documentation
   - Type-safe options and chain IDs
   - Exception hierarchy

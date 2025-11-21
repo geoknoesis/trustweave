@@ -171,13 +171,15 @@ Quick lookup table for common error codes and their solutions:
 ❌ **Bad:**
 ```kotlin
 // Throws exception, crashes application
-val did = vericore.createDid().getOrThrow()
+val did = vericore.dids.create()
 ```
 
 ✅ **Good:**
 ```kotlin
 // Handle errors gracefully
-val result = vericore.createDid()
+val did = vericore.dids.create()
+// Note: dids.create() returns DidDocument directly, not Result
+// For error handling, wrap in try-catch
 result.fold(
     onSuccess = { did -> 
         // Process DID
@@ -273,7 +275,7 @@ if (verification.valid) {
 ❌ **Bad:**
 ```kotlin
 // No validation, may fail with cryptic error
-val result = vericore.resolveDid(userInputDid)
+val resolution = vericore.dids.resolve(userInputDid)
 ```
 
 ✅ **Good:**
@@ -291,7 +293,7 @@ if (!validation.isValid()) {
 }
 
 // Now safe to proceed
-val result = vericore.resolveDid(userInputDid)
+val resolution = vericore.dids.resolve(userInputDid)
 ```
 
 **Why:** Early validation provides better error messages and prevents unnecessary operations.
@@ -352,7 +354,9 @@ import com.geoknoesis.vericore.core.*
 val vericore = VeriCore.create()
 
 // Handle errors with fold
-val result = vericore.createDid()
+val did = vericore.dids.create()
+// Note: dids.create() returns DidDocument directly, not Result
+// For error handling, wrap in try-catch
 result.fold(
     onSuccess = { did -> 
         println("Created DID: ${did.id}")
@@ -378,10 +382,10 @@ result.fold(
 
 ```kotlin
 // For simple cases where you want to throw on error
-val did = vericore.createDid().getOrThrow()
+val did = vericore.dids.create()
 
 // For better error messages, use getOrThrowError
-val did = vericore.createDid().getOrThrowError() // Throws VeriCoreError
+val did = vericore.dids.create() // Throws VeriCoreError on failure
 ```
 
 ### Error Context
@@ -431,7 +435,9 @@ VeriCore provides extension functions for working with `Result<T>`:
 Transform errors in a Result:
 
 ```kotlin
-val result = vericore.createDid()
+val did = vericore.dids.create()
+// Note: dids.create() returns DidDocument directly, not Result
+// For error handling, wrap in try-catch
     .mapError { it.toVeriCoreError() }
 ```
 
@@ -441,9 +447,9 @@ Combine multiple Results:
 
 ```kotlin
 val results = listOf(
-    vericore.createDid(),
-    vericore.createDid(),
-    vericore.createDid()
+    async { vericore.dids.create() },
+    async { vericore.dids.create() },
+    async { vericore.dids.create() }
 )
 
 val combined = results.combine { dids ->
@@ -463,7 +469,7 @@ Batch operations with async mapping:
 ```kotlin
 val dids = listOf("did:key:1", "did:key:2", "did:key:3")
 val results = dids.mapAsync { did ->
-    vericore.resolveDid(did)
+    vericore.dids.resolve(did)
 }
 
 results.fold(
@@ -545,10 +551,12 @@ if (!registeredValidation.isValid()) {
 
 ```kotlin
 // ❌ Bad: Ignoring errors
-val did = vericore.createDid().getOrThrow()
+val did = vericore.dids.create()
 
 // ✅ Good: Handling errors explicitly
-val result = vericore.createDid()
+val did = vericore.dids.create()
+// Note: dids.create() returns DidDocument directly, not Result
+// For error handling, wrap in try-catch
 result.fold(
     onSuccess = { did -> /* handle success */ },
     onFailure = { error -> /* handle error */ }
@@ -574,7 +582,7 @@ result.fold(
 
 ```kotlin
 // ✅ Good: Handle specific error types
-val result = vericore.createDid(method = "web")
+val did = vericore.dids.create(method = "web")
 result.fold(
     onSuccess = { /* success */ },
     onFailure = { error ->
@@ -606,7 +614,7 @@ if (!validation.isValid()) {
     return Result.failure(VeriCoreError.InvalidDidFormat(did, validation.errorMessage() ?: ""))
 }
 
-val result = vericore.resolveDid(did)
+val resolution = vericore.dids.resolve(did)
 ```
 
 ### 5. Use Result Utilities
@@ -614,7 +622,7 @@ val result = vericore.resolveDid(did)
 ```kotlin
 // ✅ Good: Use combine for batch operations
 val dids = listOf("did:key:1", "did:key:2", "did:key:3")
-val results = dids.map { vericore.resolveDid(it) }
+    val results = dids.map { vericore.dids.resolve(it) }
 
 val combined = results.combine { resolutions ->
     resolutions.mapNotNull { it.document?.id }
@@ -673,7 +681,7 @@ If you're migrating from exception-based error handling to Result-based:
 
 ```kotlin
 try {
-    val did = vericore.createDid()
+    val did = vericore.dids.create()
     val credential = vericore.issueCredential(...)
 } catch (e: IllegalArgumentException) {
     println("Invalid argument: ${e.message}")
@@ -685,7 +693,7 @@ try {
 ### After (Result-based)
 
 ```kotlin
-val didResult = vericore.createDid()
+val did = vericore.dids.create()
 didResult.fold(
     onSuccess = { did ->
         val credentialResult = vericore.issueCredential(...)
@@ -763,7 +771,7 @@ suspend fun <T> retryWithBackoff(
 
 // Usage
 val result = retryWithBackoff {
-    vericore.resolveDid("did:web:example.com")
+    vericore.dids.resolve("did:web:example.com")
 }
 ```
 
@@ -780,7 +788,7 @@ suspend fun resolveDidWithFallback(
     
     // Try preferred method first
     if (method in preferredMethods) {
-        val result = vericore.resolveDid(did)
+        val resolution = vericore.dids.resolve(did)
         if (result.isSuccess) return result
     }
     
@@ -789,7 +797,7 @@ suspend fun resolveDidWithFallback(
         if (fallbackMethod == method) continue
         
         val fallbackDid = did.replace("did:$method:", "did:$fallbackMethod:")
-        val result = vericore.resolveDid(fallbackDid)
+        val resolution = vericore.dids.resolve(fallbackDid)
         if (result.isSuccess) {
             return result
         }
@@ -811,7 +819,7 @@ suspend fun createDidWithAutoRegistration(
     method: String,
     options: DidCreationOptions? = null
 ): Result<DidDocument> {
-    val result = vericore.createDid(method, options)
+    val did = vericore.dids.create(method, options)
     
     return result.fold(
         onSuccess = { did -> Result.success(did) },
@@ -823,7 +831,7 @@ suspend fun createDidWithAutoRegistration(
                     if (methodClass != null) {
                         vericore.registerDidMethod(methodClass)
                         // Retry after registration
-                        vericore.createDid(method, options)
+                        vericore.dids.create(method, options)
                     } else {
                         Result.failure(error)
                     }
@@ -917,7 +925,7 @@ class CircuitBreaker(
 val circuitBreaker = CircuitBreaker()
 
 val result = circuitBreaker.execute {
-    vericore.resolveDid("did:web:example.com")
+    vericore.dids.resolve("did:web:example.com")
 }
 ```
 
@@ -972,7 +980,7 @@ suspend fun batchResolveDids(
     val errors = mutableListOf<VeriCoreError>()
     
     dids.forEach { did ->
-        val result = vericore.resolveDid(did)
+        val resolution = vericore.dids.resolve(did)
         result.fold(
             onSuccess = { resolution -> results[did] = resolution },
             onFailure = { error -> errors.add(error) }
@@ -1020,7 +1028,7 @@ suspend fun <T> withTimeoutOrError(
 
 // Usage
 val result = withTimeoutOrError(5000) {
-    vericore.resolveDid("did:web:example.com")
+    vericore.dids.resolve("did:web:example.com")
 }
 ```
 

@@ -302,7 +302,7 @@ class MyBlockchainClient(
 
 ```kotlin
 val vericore = VeriCore.create {
-    blockchain {
+    blockchains {
         "example:mainnet" to ExampleBlockchainAnchorClient("example:mainnet")
     }
 }
@@ -766,7 +766,7 @@ val vericore = VeriCore.create {
         + MyDidMethod(kms!!)
     }
     
-    blockchain {
+    blockchains {
         "myChain:mainnet" to MyBlockchainClient("myChain:mainnet")
     }
     

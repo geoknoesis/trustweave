@@ -26,38 +26,36 @@ fun main(): Unit = runBlocking {
     val digest = DigestUtils.sha256DigestMultibase(credentialSubject)
     println("Canonical credential-subject digest: $digest")
 
-    val issuerDocument = vericore.createDid().getOrThrow()
+    val issuerDocument = vericore.dids.create()
     val issuerDid = issuerDocument.id
     val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.id
         ?: error("No verification method generated for $issuerDid")
     println("Issuer DID: $issuerDid (keyId=$issuerKeyId)")
 
-    val credential = vericore.issueCredential(
-        issuerDid = issuerDid,
-        issuerKeyId = issuerKeyId,
-        credentialSubject = credentialSubject,
+    val credential = vericore.credentials.issue(
+        issuer = issuerDid,
+        subject = credentialSubject,
+        config = com.geoknoesis.vericore.services.IssuanceConfig(
+            proofType = com.geoknoesis.vericore.core.types.ProofType.Ed25519Signature2020,
+            keyId = issuerKeyId,
+            issuerDid = issuerDid
+        ),
         types = listOf("VerifiableCredential", "QuickStartCredential")
-    ).getOrThrow()
+    )
     println("Issued credential id: ${credential.id}")
 
-    vericore.verifyCredential(credential).fold(
-        onSuccess = { verification ->
-            if (verification.valid) {
-                println(
-                    "Verification succeeded (proof=${verification.proofValid}, issuer=${verification.issuerValid}, " +
-                        "revocation=${verification.notRevoked})"
-                )
-                if (verification.warnings.isNotEmpty()) {
-                    println("Warnings: ${verification.warnings}")
-                }
-            } else {
-                println("Verification returned errors: ${verification.errors}")
-            }
-        },
-        onFailure = { error ->
-            println("Verification failed: ${error.message}")
+    val verification = vericore.credentials.verify(credential)
+    if (verification.valid) {
+        println(
+            "Verification succeeded (proof=${verification.proofValid}, issuer=${verification.issuerValid}, " +
+                "revocation=${verification.notRevoked})"
+        )
+        if (verification.warnings.isNotEmpty()) {
+            println("Warnings: ${verification.warnings}")
         }
-    )
+    } else {
+        println("Verification returned errors: ${verification.errors}")
+    }
 
     val anchorRegistry = BlockchainAnchorRegistry().apply {
         register("inmemory:anchor", InMemoryBlockchainAnchorClient("inmemory:anchor"))

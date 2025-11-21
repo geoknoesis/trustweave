@@ -42,6 +42,9 @@ subprojects {
         val buildDirName = project.path.replace(":", "-").replaceFirst("^-", "")
         layout.buildDirectory.set(rootProject.layout.buildDirectory.dir("modules/$buildDirName"))
         apply(plugin = "org.jetbrains.kotlinx.kover")
+        
+        // Kover configuration can be customized per-project if needed
+        // Default thresholds are defined in TestCoverageConfig
     }
 }
 
@@ -111,6 +114,11 @@ subprojects {
             }
         }
     }
+}
+
+// Register convenient test tasks
+afterEvaluate {
+    TestTasks.register(project)
 }
 
 tasks.wrapper {

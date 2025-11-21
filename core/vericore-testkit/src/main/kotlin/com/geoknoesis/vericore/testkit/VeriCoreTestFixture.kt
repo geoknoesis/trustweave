@@ -12,6 +12,9 @@ import com.geoknoesis.vericore.did.didCreationOptions
 import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
 import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 /**
  * Comprehensive test fixture builder for VeriCore tests.
@@ -100,6 +103,32 @@ class VeriCoreTestFixture private constructor(
     }
     
     /**
+     * Creates a test credential subject with default values.
+     * 
+     * @param id Optional subject ID (defaults to a test DID)
+     * @param additionalClaims Additional claims to add
+     * @return JSON object representing the credential subject
+     */
+    suspend fun createTestCredentialSubject(
+        id: String? = null,
+        additionalClaims: Map<String, Any> = emptyMap()
+    ): JsonObject {
+        val subjectId = id ?: createIssuerDid().id
+        return buildJsonObject {
+            put("id", subjectId)
+            put("name", "Test Subject")
+            additionalClaims.forEach { (key, value) ->
+                when (value) {
+                    is String -> put(key, value)
+                    is Number -> put(key, value)
+                    is Boolean -> put(key, value)
+                    else -> put(key, value.toString())
+                }
+            }
+        }
+    }
+    
+    /**
      * Cleans up all registries (for testing).
      */
     override fun close() {
@@ -171,6 +200,151 @@ class VeriCoreTestFixture private constructor(
         fun withInMemoryBlockchainClient(chainId: String, contract: String? = null): Builder {
             blockchainClients[chainId] = InMemoryBlockchainAnchorClient(chainId, contract)
             return this
+        }
+        
+        /**
+         * Sets a DID method plugin by name.
+         * Attempts to load the plugin via SPI if available, otherwise uses mock.
+         * 
+         * @param methodName The DID method name (e.g., "key", "web", "ion")
+         * @param config Optional configuration map for the plugin
+         * @return This builder
+         */
+        fun withDidMethodPlugin(methodName: String, config: Map<String, Any> = emptyMap()): Builder {
+            val kmsInstance = kms ?: InMemoryKeyManagementService()
+            
+            // Try to load via SPI first
+            val didMethod = try {
+                loadDidMethodViaSpi(methodName, kmsInstance, config)
+            } catch (e: Exception) {
+                // Fall back to mock if SPI fails
+                null
+            }
+            
+            this.didMethod = didMethod ?: when (methodName) {
+                "key" -> DidKeyMockMethod(kmsInstance)
+                else -> throw IllegalArgumentException(
+                    "DID method '$methodName' not available. " +
+                    "Add the plugin dependency or use 'key' for testing."
+                )
+            }
+            return this
+        }
+        
+        /**
+         * Sets a KMS plugin by provider name.
+         * Attempts to load the plugin via SPI if available, otherwise uses in-memory.
+         * 
+         * @param providerName The KMS provider name (e.g., "aws", "azure", "google")
+         * @param config Configuration map for the KMS plugin
+         * @return This builder
+         */
+        fun withKmsPlugin(providerName: String, config: Map<String, Any>): Builder {
+            val kmsInstance = try {
+                loadKmsViaSpi(providerName, config)
+            } catch (e: Exception) {
+                // Fall back to in-memory if SPI fails
+                InMemoryKeyManagementService()
+            }
+            
+            this.kms = kmsInstance
+            return this
+        }
+        
+        /**
+         * Sets a chain plugin by chain ID.
+         * Attempts to load the plugin via SPI if available, otherwise uses in-memory.
+         * 
+         * @param chainId The chain ID (e.g., "eip155:1", "algorand:testnet")
+         * @param config Configuration map for the chain plugin
+         * @return This builder
+         */
+        fun withChainPlugin(chainId: String, config: Map<String, Any> = emptyMap()): Builder {
+            val client = try {
+                loadChainClientViaSpi(chainId, config) ?: InMemoryBlockchainAnchorClient(chainId)
+            } catch (e: Exception) {
+                // Fall back to in-memory if SPI fails
+                InMemoryBlockchainAnchorClient(chainId)
+            }
+            
+            blockchainClients[chainId] = client
+            return this
+        }
+        
+        /**
+         * Helper to load DID method via SPI.
+         */
+        private fun loadDidMethodViaSpi(
+            methodName: String,
+            kms: com.geoknoesis.vericore.kms.KeyManagementService,
+            config: Map<String, Any>
+        ): DidMethod? {
+            return try {
+                val providerClass = Class.forName("com.geoknoesis.vericore.did.spi.DidMethodProvider")
+                val serviceLoader = java.util.ServiceLoader.load(providerClass)
+                
+                for (provider in serviceLoader) {
+                    val createMethod = providerClass.getMethod("create", String::class.java, 
+                        com.geoknoesis.vericore.did.DidCreationOptions::class.java)
+                    val options = com.geoknoesis.vericore.did.DidCreationOptions()
+                    val method = createMethod.invoke(provider, methodName, options) as? DidMethod
+                    if (method != null) {
+                        return method
+                    }
+                }
+                null
+            } catch (e: Exception) {
+                null
+            }
+        }
+        
+        /**
+         * Helper to load KMS via SPI.
+         */
+        private fun loadKmsViaSpi(
+            providerName: String,
+            config: Map<String, Any>
+        ): com.geoknoesis.vericore.kms.KeyManagementService? {
+            return try {
+                val providerClass = Class.forName("com.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider")
+                val serviceLoader = java.util.ServiceLoader.load(providerClass)
+                
+                for (provider in serviceLoader) {
+                    val nameMethod = providerClass.getMethod("getName")
+                    val providerNameValue = nameMethod.invoke(provider) as? String
+                    if (providerNameValue == providerName) {
+                        val createMethod = providerClass.getMethod("create", Map::class.java)
+                        return createMethod.invoke(provider, config) as? com.geoknoesis.vericore.kms.KeyManagementService
+                    }
+                }
+                null
+            } catch (e: Exception) {
+                null
+            }
+        }
+        
+        /**
+         * Helper to load chain client via SPI.
+         */
+        private fun loadChainClientViaSpi(
+            chainId: String,
+            config: Map<String, Any>
+        ): BlockchainAnchorClient? {
+            return try {
+                val providerClass = Class.forName("com.geoknoesis.vericore.anchor.spi.BlockchainAnchorClientProvider")
+                val serviceLoader = java.util.ServiceLoader.load(providerClass)
+                
+                for (provider in serviceLoader) {
+                    val createMethod = providerClass.getMethod("create", String::class.java, Map::class.java)
+                    val client = createMethod.invoke(provider, chainId, config) as? BlockchainAnchorClient
+                    if (client != null) {
+                        return client
+                    }
+                }
+                null
+            } catch (e: Exception) {
+                null
+            }
         }
         
         /**

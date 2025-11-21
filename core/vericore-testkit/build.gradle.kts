@@ -16,6 +16,12 @@ dependencies {
     implementation(project(":kms:vericore-kms"))
     implementation(project(":core:vericore-trust"))
     
+    // JUnit for test base classes
+    api(Libs.junitJupiter)
+    
+    // Kotlin test framework
+    api(Libs.kotlinTest)
+    
     // TestContainers for EO integration tests
     api(Libs.testcontainers)
     api(Libs.testcontainersJunit)

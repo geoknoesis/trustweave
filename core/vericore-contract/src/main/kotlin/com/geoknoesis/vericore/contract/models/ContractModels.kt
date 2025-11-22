@@ -303,7 +303,7 @@ data class SmartContract(
     
     // VeriCore integration
     val credentialId: String? = null, // Verifiable Credential ID
-    val anchorRef: AnchorRefData? = null // Blockchain anchor reference
+    val anchorRef: AnchorRefData? = null, // Blockchain anchor reference
     
     // Contract-specific data (domain-specific)
     val contractData: JsonElement

@@ -9,6 +9,7 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.kms.KmsClient
 import software.amazon.awssdk.services.kms.KmsClientBuilder
 import java.io.Closeable
+import java.net.URI
 
 /**
  * Factory for creating AWS KMS clients.
@@ -32,7 +33,7 @@ object AwsKmsClientFactory {
         
         // Configure endpoint override (for LocalStack testing)
         config.endpointOverride?.let { endpoint ->
-            builder.endpointOverride(java.net.URI.create(endpoint))
+            builder.endpointOverride(URI.create(endpoint))
         }
         
         return builder.build()

@@ -1,13 +1,19 @@
 package com.geoknoesis.vericore
 
 import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
+import com.geoknoesis.vericore.anchor.BlockchainAnchorClient
 import com.geoknoesis.vericore.core.*
 import com.geoknoesis.vericore.credential.CredentialServiceRegistry
 import com.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
+import com.geoknoesis.vericore.credential.proof.ProofGenerator
 import com.geoknoesis.vericore.did.DidMethodRegistry
+import com.geoknoesis.vericore.did.DidMethod
+import com.geoknoesis.vericore.did.DidResolutionResult
 import com.geoknoesis.vericore.kms.KeyManagementService
 import com.geoknoesis.vericore.services.*
 import com.geoknoesis.vericore.spi.services.WalletFactory
+import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.geoknoesis.vericore.spi.services.WalletCreationOptions
 import com.geoknoesis.vericore.spi.PluginLifecycle
 
 /**
@@ -96,10 +102,10 @@ class VeriCore private constructor(
      * This method should be called before using any plugins to ensure
      * they are properly initialized.
      */
-    suspend fun initialize() {
+    suspend fun initialize(config: Map<String, Any?> = emptyMap()) {
         context.getAllPlugins().forEach { plugin ->
             if (plugin is PluginLifecycle) {
-                plugin.initialize()
+                plugin.initialize(config)
             }
         }
     }
@@ -219,13 +225,13 @@ class VeriCore private constructor(
  * This class encapsulates all dependencies and configuration,
  * making it thread-safe and testable without global state.
  */
-internal class VeriCoreContext private constructor(
-    internal val kms: KeyManagementService,
-    internal val walletFactory: WalletFactory,
-    internal val didRegistry: DidMethodRegistry,
-    internal val blockchainRegistry: BlockchainAnchorRegistry,
-    internal val credentialRegistry: CredentialServiceRegistry,
-    internal val proofRegistry: ProofGeneratorRegistry
+class VeriCoreContext private constructor(
+    val kms: KeyManagementService,
+    val walletFactory: WalletFactory,
+    val didRegistry: DidMethodRegistry,
+    val blockchainRegistry: BlockchainAnchorRegistry,
+    val credentialRegistry: CredentialServiceRegistry,
+    val proofRegistry: ProofGeneratorRegistry
 ) {
     /**
      * Gets all plugins that implement PluginLifecycle from all registries.
@@ -280,6 +286,45 @@ internal class VeriCoreContext private constructor(
         }
         
         return plugins
+    }
+    
+    /**
+     * Gets available blockchain chain IDs.
+     */
+    fun getAvailableChains(): List<String> = blockchainRegistry.getAllChainIds()
+    
+    /**
+     * Gets blockchain client for a chain ID.
+     */
+    fun getBlockchainClient(chainId: String): BlockchainAnchorClient? = blockchainRegistry.get(chainId)
+    
+    /**
+     * Gets available DID method names.
+     */
+    fun getAvailableDidMethods(): List<String> = didRegistry.getAllMethodNames()
+    
+    /**
+     * Gets DID method by name.
+     */
+    fun getDidMethod(method: String): DidMethod? = didRegistry.get(method)
+    
+    /**
+     * Resolves a DID.
+     */
+    suspend fun resolveDid(did: String): DidResolutionResult {
+        // Extract method name from DID (format: did:method:identifier)
+        // e.g., "did:key:z6Mk..." -> "key"
+        val methodName = if (did.startsWith("did:")) {
+            did.substringAfter("did:").substringBefore(":")
+        } else {
+            did.substringBefore(":")
+        }
+        val method = didRegistry.get(methodName)
+            ?: throw VeriCoreError.DidMethodNotRegistered(
+                method = methodName,
+                availableMethods = didRegistry.getAllMethodNames()
+            )
+        return method.resolveDid(did)
     }
     
     companion object {
@@ -419,7 +464,7 @@ data class VeriCoreConfig(
         inner class CredentialServicesBuilder(
             private val registry: CredentialServiceRegistry
         ) {
-            operator fun CredentialService.unaryPlus() {
+            operator fun com.geoknoesis.vericore.credential.CredentialService.unaryPlus() {
                 registry.register(this)
             }
         }
@@ -504,9 +549,10 @@ data class VeriCoreConfig(
 /**
  * Builder for constructing wallet creation options in a type-safe manner.
  * 
- * @internal This class is internal. Use the [walletOptions] DSL function instead.
+ * Builder for wallet creation options.
+ * Use the [walletOptions] DSL function instead of constructing directly.
  */
-internal class WalletOptionsBuilder {
+class WalletOptionsBuilder {
     private val delegate = WalletCreationOptionsBuilder()
 
     var label: String?

@@ -52,9 +52,9 @@ class CredentialTransformer {
             setIssuerMethod.invoke(builder, credential.issuer)
             
             // Set issued at
-            val issuedAt = credential.issuedDate?.let { 
+            val issuedAt = credential.issuanceDate.let { 
                 java.time.Instant.parse(it).epochSecond 
-            } ?: System.currentTimeMillis() / 1000
+            }
             val setIssuedAtMethod = builderClass.getMethod("issueTime", java.util.Date::class.java)
             setIssuedAtMethod.invoke(builder, java.util.Date.from(java.time.Instant.ofEpochSecond(issuedAt)))
             

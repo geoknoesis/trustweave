@@ -149,6 +149,10 @@ class IssuanceBuilder(
         val config = context.getConfig()
         val proofTypeToUse = proofType ?: config.credentialConfig.defaultProofType
         
+        // Construct verification method ID that matches the DID document format
+        // This ensures the proof verification can find the verification method
+        val verificationMethodId = "$issuer#$key"
+        
         val options = CredentialIssuanceOptions(
             proofType = proofTypeToUse,
             keyId = key,
@@ -156,7 +160,8 @@ class IssuanceBuilder(
             challenge = challenge,
             domain = domain,
             anchorToBlockchain = autoAnchor || config.credentialConfig.autoAnchor,
-            chainId = anchorChain ?: config.credentialConfig.defaultChain
+            chainId = anchorChain ?: config.credentialConfig.defaultChain,
+            additionalOptions = mapOf("verificationMethod" to verificationMethodId)
         )
         
         // Issue credential

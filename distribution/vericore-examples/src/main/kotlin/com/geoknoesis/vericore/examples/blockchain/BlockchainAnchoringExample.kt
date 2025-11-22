@@ -46,7 +46,7 @@ fun main() = runBlocking {
     
     println("Step 1: Setting up VeriCore with blockchain anchoring...")
     val vericore = VeriCore.create {
-        blockchain {
+        blockchains {
             // Ethereum mainnet
             put(
                 EthereumBlockchainAnchorClient.MAINNET,
@@ -75,11 +75,11 @@ fun main() = runBlocking {
         put("timestamp", System.currentTimeMillis())
     }
     
-    val ethereumResult = vericore.anchor(
+    val ethereumResult = vericore.blockchains.anchor(
         data = ethereumPayload,
         serializer = JsonObject.serializer(),
         chainId = EthereumBlockchainAnchorClient.MAINNET
-    ).getOrThrow()
+    )
     println("Anchored to Ethereum: ${ethereumResult.ref.txHash}")
     println("Chain ID: ${ethereumResult.ref.chainId}")
     
@@ -91,11 +91,11 @@ fun main() = runBlocking {
         put("timestamp", System.currentTimeMillis())
     }
     
-    val baseResult = vericore.anchor(
+    val baseResult = vericore.blockchains.anchor(
         data = basePayload,
         serializer = JsonObject.serializer(),
         chainId = BaseBlockchainAnchorClient.MAINNET
-    ).getOrThrow()
+    )
     println("Anchored to Base: ${baseResult.ref.txHash}")
     println("Chain ID: ${baseResult.ref.chainId}")
     
@@ -107,33 +107,33 @@ fun main() = runBlocking {
         put("timestamp", System.currentTimeMillis())
     }
     
-    val arbitrumResult = vericore.anchor(
+    val arbitrumResult = vericore.blockchains.anchor(
         data = arbitrumPayload,
         serializer = JsonObject.serializer(),
         chainId = ArbitrumBlockchainAnchorClient.MAINNET
-    ).getOrThrow()
+    )
     println("Anchored to Arbitrum: ${arbitrumResult.ref.txHash}")
     println("Chain ID: ${arbitrumResult.ref.chainId}")
     
     // Step 5: Read back anchored data
     println("\nStep 5: Reading back anchored data...")
     
-    val ethereumRead = vericore.readAnchor(
+    val ethereumRead = vericore.blockchains.read(
         ref = ethereumResult.ref,
         serializer = JsonObject.serializer()
-    ).getOrThrow()
+    )
     println("Ethereum read: ${ethereumRead}")
 
-    val baseRead = vericore.readAnchor(
+    val baseRead = vericore.blockchains.read(
         ref = baseResult.ref,
         serializer = JsonObject.serializer()
-    ).getOrThrow()
+    )
     println("Base read: ${baseRead}")
 
-    val arbitrumRead = vericore.readAnchor(
+    val arbitrumRead = vericore.blockchains.read(
         ref = arbitrumResult.ref,
         serializer = JsonObject.serializer()
-    ).getOrThrow()
+    )
     println("Arbitrum read: ${arbitrumRead}")
     
     println("\n" + "=".repeat(70))

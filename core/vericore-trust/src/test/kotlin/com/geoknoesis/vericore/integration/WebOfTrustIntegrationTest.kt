@@ -47,10 +47,19 @@ class WebOfTrustIntegrationTest {
             }
         }
         
-        // Generate key for issuer
-        val issuerKey = kms.generateKey("Ed25519")
+        // Extract key ID from the DID document created during createDid()
+        // This ensures the signing key matches what's in the DID document
+        val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid)?.document
+            ?: throw IllegalStateException("Failed to resolve issuer DID")
         
-        // Issue credential
+        val verificationMethod = issuerDidDoc.verificationMethod.firstOrNull()
+            ?: throw IllegalStateException("No verification method found in issuer DID document")
+        
+        // Extract key ID from verification method ID (e.g., "did:key:xxx#key-1" -> "key-1")
+        val keyId = verificationMethod.id.substringAfter("#")
+        
+        // Issue credential using the key ID from the DID document
+        // The IssuanceDsl will construct verificationMethodId as "$issuerDid#$keyId" which matches the DID document
         val credential = trustLayer.issue {
             credential {
                 id("https://example.com/credential-1")
@@ -62,7 +71,7 @@ class WebOfTrustIntegrationTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDid, keyId = issuerKey.id)
+            by(issuerDid = issuerDid, keyId = keyId)
         }
         
         // Verify with trust registry
@@ -71,8 +80,8 @@ class WebOfTrustIntegrationTest {
             checkTrustRegistry()
         }
         
-        assertTrue(result.valid)
-        assertTrue(result.trustRegistryValid)
+        assertTrue(result.valid, "Credential should be valid. Errors: ${result.errors}, Warnings: ${result.warnings}")
+        assertTrue(result.trustRegistryValid, "Issuer should be trusted in trust registry")
     }
     
     @Test

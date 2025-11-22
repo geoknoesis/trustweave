@@ -247,13 +247,35 @@ class KeyManagementServiceEdgeCasesTest {
             private val keys = mutableMapOf<String, KeyHandle>()
             
             override suspend fun getSupportedAlgorithms(): Set<Algorithm> {
-                return setOf(Algorithm.Ed25519, Algorithm.Secp256k1, Algorithm.P256)
+                return setOf(
+                    Algorithm.Ed25519, 
+                    Algorithm.Secp256k1, 
+                    Algorithm.P256,
+                    Algorithm.P384,
+                    Algorithm.P521,
+                    Algorithm.RSA.RSA_2048,
+                    Algorithm.RSA.RSA_3072,
+                    Algorithm.RSA.RSA_4096,
+                    Algorithm.Custom("RSA") // Support "RSA" as a custom algorithm
+                )
             }
             
             override suspend fun generateKey(algorithm: Algorithm, options: Map<String, Any?>): KeyHandle {
+                // Support string algorithm names for backward compatibility
+                val algorithmName = when (algorithm) {
+                    is Algorithm.Ed25519 -> "Ed25519"
+                    is Algorithm.Secp256k1 -> "secp256k1"
+                    is Algorithm.P256 -> "P-256"
+                    is Algorithm.P384 -> "P-384"
+                    is Algorithm.P521 -> "P-521"
+                    is Algorithm.RSA -> "RSA" // Just "RSA" for the test expectation
+                    is Algorithm.Custom -> algorithm.name // For "RSA" as Custom, return "RSA"
+                    else -> algorithm.name
+                }
+                
                 val handle = KeyHandle(
                     id = options["keyId"] as? String ?: "key-${keys.size + 1}",
-                    algorithm = algorithm.name
+                    algorithm = algorithmName
                 )
                 keys[handle.id] = handle
                 return handle

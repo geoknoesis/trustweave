@@ -3,6 +3,7 @@ package com.geoknoesis.vericore.chapi
 import com.geoknoesis.vericore.credential.models.VerifiableCredential
 import com.geoknoesis.vericore.credential.models.VerifiablePresentation
 import com.geoknoesis.vericore.credential.wallet.Wallet
+import com.geoknoesis.vericore.credential.wallet.DidManagement
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +35,7 @@ data class ChapiCredentialRequest(
 data class ChapiQuery(
     val type: List<String>? = null,
     val issuer: String? = null,
-    val credential: Map<String, Any>? = null
+    val credential: JsonObject? = null
 )
 
 /**
@@ -152,10 +153,11 @@ class SimpleChapiService(
         }
         
         // Create presentation from credentials
+        val holderDid = if (wallet is DidManagement) wallet.holderDid else wallet.walletId
         val presentation = VerifiablePresentation(
             id = null,
             type = listOf("VerifiablePresentation"),
-            holder = wallet.holderDid ?: "",
+            holder = holderDid,
             verifiableCredential = credentials,
             proof = null
         )

@@ -1,9 +1,10 @@
 package com.geoknoesis.vericore.services
 
+import com.geoknoesis.vericore.VeriCoreContext
 import com.geoknoesis.vericore.contract.*
 import com.geoknoesis.vericore.contract.models.*
-import com.geoknoesis.vericore.core.Result
 import com.geoknoesis.vericore.credential.CredentialService
+import kotlin.Result
 import com.geoknoesis.vericore.anchor.BlockchainAnchorClient
 import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import com.geoknoesis.vericore.anchor.AnchorRef
@@ -33,10 +34,9 @@ import kotlinx.serialization.json.JsonElement
 class ContractService(
     private val context: VeriCoreContext
 ) : SmartContractService {
-    private val delegate: SmartContractService = run {
-        // Get credential service from context
+    private val delegate: SmartContractService by lazy {
+        // Get credential service from context (optional - null is allowed)
         val credentialService = context.credentialRegistry.get()
-            ?: throw IllegalStateException("No credential service available")
         
         // Pass blockchain registry for chain-specific client resolution
         DefaultSmartContractService(

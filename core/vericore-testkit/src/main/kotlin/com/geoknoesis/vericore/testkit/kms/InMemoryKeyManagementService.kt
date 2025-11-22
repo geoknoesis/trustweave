@@ -46,11 +46,31 @@ class InMemoryKeyManagementService : KeyManagementService {
         keys[keyId] = keyPair
         
         val publicKeyJwk = when (algorithm) {
-            is Algorithm.Ed25519 -> mapOf(
-                "kty" to "OKP",
-                "crv" to "Ed25519",
-                "x" to Base64.getUrlEncoder().withoutPadding().encodeToString(keyPair.public.encoded)
-            )
+            is Algorithm.Ed25519 -> {
+                // Extract raw 32 bytes from DER-encoded public key
+                // Ed25519 public key in DER format: 30 2A 30 05 06 03 2B 65 70 03 21 00 [32 bytes]
+                // The raw key is at bytes 12-44 (12 byte header + 32 byte key)
+                val encoded = keyPair.public.encoded
+                val rawKey = if (encoded.size >= 44 && encoded[0] == 0x30.toByte()) {
+                    // Standard DER format: extract bytes 12-44 (32 bytes)
+                    encoded.sliceArray(12 until 44)
+                } else if (encoded.size >= 32) {
+                    // Fallback: extract last 32 bytes
+                    encoded.sliceArray((encoded.size - 32) until encoded.size)
+                } else {
+                    throw IllegalStateException("Invalid Ed25519 public key encoding: expected at least 32 bytes, got ${encoded.size}")
+                }
+                
+                require(rawKey.size == 32) { 
+                    "Expected 32-byte Ed25519 public key, but got ${rawKey.size} bytes from encoded key of size ${encoded.size}" 
+                }
+                
+                mapOf(
+                    "kty" to "OKP",
+                    "crv" to "Ed25519",
+                    "x" to Base64.getUrlEncoder().withoutPadding().encodeToString(rawKey)
+                )
+            }
             is Algorithm.Secp256k1 -> mapOf(
                 "kty" to "EC",
                 "crv" to "secp256k1",

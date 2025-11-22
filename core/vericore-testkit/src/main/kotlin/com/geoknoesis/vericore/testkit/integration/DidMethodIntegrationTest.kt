@@ -1,6 +1,9 @@
 package com.geoknoesis.vericore.testkit.integration
 
+import com.geoknoesis.vericore.did.DidCreationOptions
 import com.geoknoesis.vericore.did.DidMethod
+import com.geoknoesis.vericore.did.VerificationMethodRef
+import com.geoknoesis.vericore.did.didCreationOptions
 import com.geoknoesis.vericore.testkit.BaseIntegrationTest
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -54,8 +57,8 @@ abstract class DidMethodIntegrationTest : BaseIntegrationTest() {
         registry.register(method)
         
         val document = method.createDid(
-            com.geoknoesis.vericore.did.didCreationOptions {
-                algorithm = com.geoknoesis.vericore.did.DidCreationOptions.KeyAlgorithm.ED25519
+            didCreationOptions {
+                algorithm = DidCreationOptions.KeyAlgorithm.ED25519
             }
         )
         
@@ -63,8 +66,9 @@ abstract class DidMethodIntegrationTest : BaseIntegrationTest() {
         kotlin.test.assertTrue(document.id.startsWith("did:${getMethodName()}:"))
         
         val resolution = method.resolveDid(document.id)
-        kotlin.test.assertNotNull(resolution.document)
-        kotlin.test.assertEquals(document.id, resolution.document?.id)
+        val resolvedDocument = resolution.document
+        kotlin.test.assertNotNull(resolvedDocument)
+        kotlin.test.assertEquals(document.id, resolvedDocument.id)
     }
     
     /**
@@ -73,14 +77,14 @@ abstract class DidMethodIntegrationTest : BaseIntegrationTest() {
     protected suspend fun testUpdateDid() {
         val method = getDidMethod()
         val document = method.createDid(
-            com.geoknoesis.vericore.did.didCreationOptions {
-                algorithm = com.geoknoesis.vericore.did.DidCreationOptions.KeyAlgorithm.ED25519
+            didCreationOptions {
+                algorithm = DidCreationOptions.KeyAlgorithm.ED25519
             }
         )
         
         val updated = method.updateDid(document.id) { doc ->
             doc.copy(
-                verificationMethod = doc.verificationMethod + com.geoknoesis.vericore.did.VerificationMethodRef(
+                verificationMethod = doc.verificationMethod + VerificationMethodRef(
                     id = "${doc.id}#key-2",
                     type = "Ed25519VerificationKey2020",
                     controller = doc.id,
@@ -98,9 +102,12 @@ abstract class DidMethodIntegrationTest : BaseIntegrationTest() {
      */
     protected suspend fun testDeactivateDid() {
         val method = getDidMethod()
+        val registry = fixture.getDidRegistry()
+        registry.register(method)
+        
         val document = method.createDid(
-            com.geoknoesis.vericore.did.didCreationOptions {
-                algorithm = com.geoknoesis.vericore.did.DidCreationOptions.KeyAlgorithm.ED25519
+            didCreationOptions {
+                algorithm = DidCreationOptions.KeyAlgorithm.ED25519
             }
         )
         
@@ -109,8 +116,25 @@ abstract class DidMethodIntegrationTest : BaseIntegrationTest() {
         
         // After deactivation, resolution should indicate deactivated status
         val resolution = method.resolveDid(document.id)
-        // Some methods may return null, others may return metadata indicating deactivation
-        // This is method-specific behavior
+        
+        // Verify deactivation status - methods may handle this differently:
+        // 1. Some return null document with deactivated metadata
+        // 2. Some return document with deactivated flag in metadata
+        // 3. Some return error resolution result
+        kotlin.test.assertNotNull(resolution, "Resolution result should not be null after deactivation")
+        
+        // Check if deactivation is indicated in metadata or by null document
+        // W3C DID Core spec allows methods to indicate deactivation via:
+        // - null document with deactivated=true in metadata
+        // - document with deactivated flag
+        val isDeactivated = resolution.resolutionMetadata["deactivated"] == true ||
+                           resolution.resolutionMetadata["deactivated"] == "true" ||
+                           resolution.document == null
+        
+        kotlin.test.assertTrue(
+            isDeactivated,
+            "Resolution should indicate deactivated status. Metadata: ${resolution.resolutionMetadata}, Document: ${resolution.document}"
+        )
     }
     
     /**

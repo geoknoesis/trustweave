@@ -151,16 +151,17 @@ object AlgorithmMapping {
      * 
      * @param keyId Key identifier (name, name/version, or full URL)
      * @return Normalized key identifier
+     * - For URLs: returns "keyname" or "keyname/version" if version is present in URL
+     * - For non-URLs: returns just the key name (without version)
      */
     fun resolveKeyId(keyId: String): String {
         // Azure Key Vault accepts:
         // - Key name: "mykey"
         // - Key name with version: "mykey/abc123def456"
         // - Full URL: "https://myvault.vault.azure.net/keys/mykey" or "https://myvault.vault.azure.net/keys/mykey/abc123def456"
-        // We'll normalize to just the key name (and version if present)
         return keyId.trim().let { id ->
             if (id.startsWith("https://")) {
-                // Extract key name from URL
+                // Extract key name and version from URL
                 val parts = id.split("/")
                 val keyIndex = parts.indexOf("keys")
                 if (keyIndex >= 0 && keyIndex < parts.size - 1) {
@@ -168,10 +169,12 @@ object AlgorithmMapping {
                     val version = if (keyIndex + 2 < parts.size) parts[keyIndex + 2] else null
                     if (version != null) "$keyName/$version" else keyName
                 } else {
-                    id
+                    // If URL format is unexpected, try to extract from path
+                    id.substringAfterLast("/")
                 }
             } else {
-                id
+                // For non-URL format, return just the key name (before first slash if present)
+                id.substringBefore("/")
             }
         }
     }
@@ -182,11 +185,15 @@ object AlgorithmMapping {
      * @param keyType Azure Key Vault KeyType
      * @param curveName Optional curve name for EC keys
      * @param keySize Optional key size for RSA keys
-     * @return VeriCore Algorithm, or null if not recognized
+     * @return VeriCore Algorithm, or null if not recognized or if parameters are incompatible
      */
     fun parseAlgorithmFromKeyType(keyType: KeyType, curveName: KeyCurveName?, keySize: Int?): Algorithm? {
         return when (keyType) {
             KeyType.EC -> {
+                // For EC keys, keySize should be null
+                if (keySize != null) {
+                    return null // Invalid: EC keys don't have keySize parameter
+                }
                 when (curveName) {
                     KeyCurveName.P_256K -> Algorithm.Secp256k1
                     KeyCurveName.P_256 -> Algorithm.P256
@@ -196,6 +203,10 @@ object AlgorithmMapping {
                 }
             }
             KeyType.RSA -> {
+                // For RSA keys, curveName should be null
+                if (curveName != null) {
+                    return null // Invalid: RSA keys don't have curveName parameter
+                }
                 when (keySize) {
                     2048 -> Algorithm.RSA.RSA_2048
                     3072 -> Algorithm.RSA.RSA_3072

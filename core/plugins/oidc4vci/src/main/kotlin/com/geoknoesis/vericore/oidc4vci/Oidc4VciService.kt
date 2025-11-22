@@ -155,7 +155,7 @@ class SimpleOidc4VciService(
             })
         }
         
-        val body = json.encodeToString(credentialRequest).toRequestBody("application/json".toMediaType())
+        val body = json.encodeToString(JsonObject.serializer(), credentialRequest).toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
             .url(url)
             .post(body)

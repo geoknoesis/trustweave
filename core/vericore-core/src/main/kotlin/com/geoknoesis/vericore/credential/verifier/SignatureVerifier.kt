@@ -122,16 +122,27 @@ class SignatureVerifier(
      * Resolve verification method from DID document.
      */
     private suspend fun resolveVerificationMethod(verificationMethodId: String): VerificationMethodRef? {
+        System.err.println("[DEBUG resolveVerificationMethod] Resolving verification method: $verificationMethodId")
         // Extract DID from verification method ID
         val did = if (verificationMethodId.contains("#")) {
             verificationMethodId.substringBefore("#")
         } else {
             verificationMethodId
         }
+        System.err.println("[DEBUG resolveVerificationMethod] Extracted DID: $did")
         
         // Resolve DID document
-        val resolutionResult = didResolver.resolve(did) ?: return null
-        val documentObj = resolutionResult.document ?: return null
+        val resolutionResult = didResolver.resolve(did)
+        if (resolutionResult == null) {
+            System.err.println("[DEBUG resolveVerificationMethod] Failed to resolve DID")
+            return null
+        }
+        val documentObj = resolutionResult.document
+        if (documentObj == null) {
+            System.err.println("[DEBUG resolveVerificationMethod] DID resolution result has no document")
+            return null
+        }
+        System.err.println("[DEBUG resolveVerificationMethod] Document object type: ${documentObj.javaClass.name}")
         
         // Convert to DidDocument
         val document = when (documentObj) {
@@ -155,12 +166,19 @@ class SignatureVerifier(
         } else {
             verificationMethodId
         }
+        System.err.println("[DEBUG resolveVerificationMethod] Looking for method ID: $methodId")
+        System.err.println("[DEBUG resolveVerificationMethod] Available verification methods: ${document.verificationMethod.map { it.id }}")
         
         // Check direct verification methods
         val directMethod = document.verificationMethod.find { vm ->
             vm.id == verificationMethodId || vm.id.endsWith("#$methodId")
         }
         if (directMethod != null) {
+            val jwk = directMethod.publicKeyJwk
+            System.err.println("[DEBUG resolveVerificationMethod] Found direct verification method: id=${directMethod.id}, type=${directMethod.type}, hasJwk=${jwk != null}, hasMultibase=${directMethod.publicKeyMultibase != null}")
+            if (jwk != null) {
+                System.err.println("[DEBUG resolveVerificationMethod] JWK keys: ${jwk.keys}")
+            }
             return directMethod
         }
         
@@ -198,7 +216,7 @@ class SignatureVerifier(
                     id = (vm["id"] as? String) ?: return@mapNotNull null,
                     type = (vm["type"] as? String) ?: return@mapNotNull null,
                     controller = (vm["controller"] as? String) ?: did,
-                    publicKeyJwk = (vm["publicKeyJwk"] as? Map<*, *>)?.mapValues { it.value },
+                    publicKeyJwk = (vm["publicKeyJwk"] as? Map<*, *>)?.mapValues { it.value } as? Map<String, Any?>,
                     publicKeyMultibase = vm["publicKeyMultibase"] as? String
                 )
             } ?: emptyList()
@@ -228,16 +246,21 @@ class SignatureVerifier(
     private fun extractPublicKeyFromVerificationMethod(
         verificationMethod: VerificationMethodRef
     ): PublicKey? {
+        System.err.println("[DEBUG extractPublicKeyFromVerificationMethod] verificationMethod: id=${verificationMethod.id}, type=${verificationMethod.type}, hasJwk=${verificationMethod.publicKeyJwk != null}, hasMultibase=${verificationMethod.publicKeyMultibase != null}")
+        
         // Try JWK first
         verificationMethod.publicKeyJwk?.let { jwkMap ->
+            System.err.println("[DEBUG extractPublicKeyFromVerificationMethod] Attempting JWK extraction, JWK keys: ${jwkMap.keys}")
             return extractPublicKeyFromJwk(jwkMap)
         }
         
         // Try multibase
         verificationMethod.publicKeyMultibase?.let { multibase ->
+            System.err.println("[DEBUG extractPublicKeyFromVerificationMethod] Attempting multibase extraction: ${multibase.take(50)}")
             return extractPublicKeyFromMultibase(multibase, verificationMethod.type)
         }
         
+        System.err.println("[DEBUG extractPublicKeyFromVerificationMethod] No public key found in verification method")
         return null
     }
     
@@ -246,16 +269,21 @@ class SignatureVerifier(
      */
     private fun extractPublicKeyFromJwk(jwkMap: Map<String, Any?>): PublicKey? {
         try {
+            System.err.println("[DEBUG extractPublicKeyFromJwk] Attempting nimbus-jose-jwt extraction")
             // Use reflection to avoid direct dependency on nimbus-jose-jwt
             val jwkClass = Class.forName("com.nimbusds.jose.jwk.JWK")
             val parseMethod = jwkClass.getMethod("parse", String::class.java)
-            val jwk = parseMethod.invoke(null, jwkMap.toJsonString())
+            val jwkJson = jwkMap.toJsonString()
+            System.err.println("[DEBUG extractPublicKeyFromJwk] JWK JSON: $jwkJson")
+            val jwk = parseMethod.invoke(null, jwkJson)
             
             val jwkType = jwk.javaClass.simpleName
+            System.err.println("[DEBUG extractPublicKeyFromJwk] JWK type: $jwkType")
             
             return when {
                 jwkType == "OctetKeyPair" -> {
                     // Ed25519
+                    System.err.println("[DEBUG extractPublicKeyFromJwk] Extracting OctetKeyPair (Ed25519)")
                     val toPublicKeyMethod = jwk.javaClass.getMethod("toPublicKey")
                     val publicKey = toPublicKeyMethod.invoke(jwk) as PublicKey
                     val keyFactory = KeyFactory.getInstance("Ed25519")
@@ -272,9 +300,14 @@ class SignatureVerifier(
                     val toRSAPublicKeyMethod = jwk.javaClass.getMethod("toRSAPublicKey")
                     toRSAPublicKeyMethod.invoke(jwk) as PublicKey
                 }
-                else -> null
+                else -> {
+                    System.err.println("[DEBUG extractPublicKeyFromJwk] Unknown JWK type: $jwkType")
+                    null
+                }
             }
         } catch (e: Exception) {
+            System.err.println("[DEBUG extractPublicKeyFromJwk] nimbus-jose-jwt extraction failed: ${e.message}")
+            e.printStackTrace(System.err)
             // If nimbus-jose-jwt is not available, try manual JWK parsing
             return extractPublicKeyFromJwkManual(jwkMap)
         }
@@ -285,21 +318,84 @@ class SignatureVerifier(
      */
     private fun extractPublicKeyFromJwkManual(jwkMap: Map<String, Any?>): PublicKey? {
         try {
-            val kty = jwkMap["kty"] as? String ?: return null
+            System.err.println("[DEBUG extractPublicKeyFromJwkManual] Starting manual JWK extraction")
+            System.err.println("[DEBUG extractPublicKeyFromJwkManual] JWK map keys: ${jwkMap.keys}")
+            val kty = jwkMap["kty"] as? String
+            if (kty == null) {
+                System.err.println("[DEBUG extractPublicKeyFromJwkManual] Missing 'kty' field")
+                return null
+            }
+            System.err.println("[DEBUG extractPublicKeyFromJwkManual] kty: $kty")
             
             return when (kty) {
                 "OKP" -> {
+                    System.err.println("[DEBUG extractPublicKeyFromJwkManual] Processing OKP (Octet Key Pair)")
                     // Ed25519
-                    val x = jwkMap["x"] as? String ?: return null
+                    val crv = jwkMap["crv"] as? String
+                    System.err.println("[DEBUG extractPublicKeyFromJwkManual] crv: $crv")
+                    if (crv != "Ed25519") {
+                        System.err.println("[DEBUG extractPublicKeyFromJwkManual] crv is not Ed25519")
+                        return null
+                    }
+                    
+                    val x = jwkMap["x"] as? String
+                    if (x == null) {
+                        System.err.println("[DEBUG extractPublicKeyFromJwkManual] Missing 'x' field")
+                        return null
+                    }
+                    System.err.println("[DEBUG extractPublicKeyFromJwkManual] x (first 20 chars): ${x.take(20)}")
                     val xBytes = Base64.getUrlDecoder().decode(x)
+                    System.err.println("[DEBUG extractPublicKeyFromJwkManual] xBytes length: ${xBytes.size}")
                     
-                    // Ed25519 public key is 32 bytes
-                    if (xBytes.size != 32) return null
+                    // Ed25519 public key must be exactly 32 bytes (raw format per JWK spec)
+                    if (xBytes.size != 32) {
+                        System.err.println("[DEBUG extractPublicKeyFromJwkManual] xBytes size is invalid: expected 32 bytes, got ${xBytes.size}")
+                        return null
+                    }
                     
-                    // Create Ed25519 public key
-                    val keyFactory = KeyFactory.getInstance("Ed25519")
-                    val keySpec = X509EncodedKeySpec(xBytes)
-                    keyFactory.generatePublic(keySpec)
+                    val rawKey = xBytes
+                    
+                    // Create Ed25519 public key using EdECPublicKeySpec (Java 15+)
+                    try {
+                        System.err.println("[DEBUG extractPublicKeyFromJwkManual] Attempting EdECPublicKeySpec extraction")
+                        val keyFactory = KeyFactory.getInstance("Ed25519")
+                        // Use NamedParameterSpec.ED25519 for Java 15+
+                        val paramsClass = Class.forName("java.security.spec.NamedParameterSpec")
+                        val ed25519Field = paramsClass.getField("ED25519")
+                        val params = ed25519Field.get(null)
+                        
+                        val keySpecClass = Class.forName("java.security.spec.EdECPublicKeySpec")
+                        val keySpecConstructor = keySpecClass.getConstructor(paramsClass, ByteArray::class.java)
+                        val keySpec = keySpecConstructor.newInstance(params, rawKey)
+                        
+                        val publicKey = keyFactory.generatePublic(keySpec as java.security.spec.KeySpec)
+                        System.err.println("[DEBUG extractPublicKeyFromJwkManual] Successfully extracted Ed25519 public key using EdECPublicKeySpec")
+                        return publicKey
+                    } catch (e: Exception) {
+                        System.err.println("[DEBUG extractPublicKeyFromJwkManual] EdECPublicKeySpec extraction failed: ${e.message}")
+                        // Fallback: try to create using X509EncodedKeySpec with DER encoding
+                        // Ed25519 public key in DER format: 30 2A 30 05 06 03 2B 65 70 03 21 00 [32 bytes]
+                        try {
+                            System.err.println("[DEBUG extractPublicKeyFromJwkManual] Attempting X509EncodedKeySpec extraction with DER encoding")
+                            val derBytes = byteArrayOf(
+                                0x30, 0x2A,  // SEQUENCE
+                                0x30, 0x05,  // SEQUENCE (AlgorithmIdentifier)
+                                0x06, 0x03, 0x2B, 0x65, 0x70,  // OID: 1.3.101.112 (Ed25519)
+                                0x03, 0x21,  // BIT STRING
+                                0x00  // number of unused bits
+                            ) + rawKey
+                            
+                            val keyFactory = KeyFactory.getInstance("Ed25519")
+                            val keySpec = X509EncodedKeySpec(derBytes)
+                            val publicKey = keyFactory.generatePublic(keySpec)
+                            System.err.println("[DEBUG extractPublicKeyFromJwkManual] Successfully extracted Ed25519 public key using X509EncodedKeySpec")
+                            return publicKey
+                        } catch (e2: Exception) {
+                            System.err.println("[DEBUG extractPublicKeyFromJwkManual] X509EncodedKeySpec extraction failed: ${e2.message}")
+                            e2.printStackTrace(System.err)
+                            return null
+                        }
+                    }
                 }
                 "EC" -> {
                     // ECDSA - simplified approach using standard curves
@@ -435,14 +531,25 @@ class SignatureVerifier(
         verificationMethod: VerificationMethodRef
     ): Boolean {
         try {
-            val publicKey = extractPublicKeyFromVerificationMethod(verificationMethod) ?: return false
+            System.err.println("[DEBUG verifyEd25519Signature] Attempting to extract public key...")
+            val publicKey = extractPublicKeyFromVerificationMethod(verificationMethod)
+            if (publicKey == null) {
+                System.err.println("[DEBUG verifyEd25519Signature] Failed to extract public key")
+                return false
+            }
+            System.err.println("[DEBUG verifyEd25519Signature] Public key extracted: algorithm=${publicKey.algorithm}, format=${publicKey.format}")
             
             // Try Ed25519 signature verification
+            System.err.println("[DEBUG verifyEd25519Signature] Creating Signature instance...")
             val signatureInstance = Signature.getInstance("Ed25519")
             signatureInstance.initVerify(publicKey)
             signatureInstance.update(data)
-            return signatureInstance.verify(signature)
+            val result = signatureInstance.verify(signature)
+            System.err.println("[DEBUG verifyEd25519Signature] Signature verification result: $result")
+            return result
         } catch (e: Exception) {
+            System.err.println("[DEBUG verifyEd25519Signature] Exception: ${e.message}")
+            e.printStackTrace(System.err)
             // If Ed25519 is not available, try using BouncyCastle or manual verification
             return false
         }
@@ -587,8 +694,20 @@ class SignatureVerifier(
                     is Number -> put(key, value)
                     is Boolean -> put(key, value)
                     is List<*> -> put(key, json.encodeToJsonElement(value))
-                    is Map<*, *> -> put(key, json.encodeToJsonElement(value))
-                    else -> put(key, value?.toString() ?: JsonNull)
+                    is Map<*, *> -> {
+                        val stringMap = (value as? Map<*, *>)?.mapKeys { it.key.toString() }?.mapValues { it.value } as? Map<String, Any?>
+                        if (stringMap != null) {
+                            val jsonElement: JsonElement = json.encodeToJsonElement(stringMap)
+                            put(key, jsonElement)
+                        } else {
+                            val jsonElement: JsonElement = value?.toString()?.let { JsonPrimitive(it) } ?: kotlinx.serialization.json.JsonNull
+                            put(key, jsonElement)
+                        }
+                    }
+                    else -> {
+                        val jsonElement: JsonElement = value?.toString()?.let { JsonPrimitive(it) } ?: kotlinx.serialization.json.JsonNull
+                        put(key, jsonElement)
+                    }
                 }
             }
         }

@@ -1,6 +1,8 @@
 package com.geoknoesis.vericore.services
 
+import com.geoknoesis.vericore.VeriCoreContext
 import com.geoknoesis.vericore.core.*
+import com.geoknoesis.vericore.core.normalizeKeyId
 import com.geoknoesis.vericore.core.types.ProofType
 import com.geoknoesis.vericore.credential.*
 import com.geoknoesis.vericore.credential.models.VerifiableCredential
@@ -13,6 +15,9 @@ import com.geoknoesis.vericore.credential.presentation.PresentationService
 import com.geoknoesis.vericore.did.toCredentialDidResolution
 import com.geoknoesis.vericore.kms.KeyManagementService
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.util.UUID
@@ -90,6 +95,19 @@ class CredentialService(
         }
         
         val normalizedKeyId = normalizeKeyId(config.keyId)
+        
+        // Build verification method ID - use the original keyId if it's a full URL, otherwise construct from issuer DID
+        val verificationMethodId = if (config.keyId.contains("#")) {
+            // Key ID is already a full verification method URL (e.g., "did:key:z6Mk...#key-1")
+            config.keyId
+        } else if (config.keyId.startsWith("did:")) {
+            // Key ID is a full DID URL (unlikely but handle it)
+            config.keyId
+        } else {
+            // Key ID is just a fragment (e.g., "key-1"), construct full URL from issuer DID
+            "$issuer#${normalizedKeyId}"
+        }
+        
         val credentialId = "urn:uuid:${UUID.randomUUID()}"
         val credential = VerifiableCredential(
             id = credentialId,
@@ -116,7 +134,20 @@ class CredentialService(
         )
         
         val issuerService = CredentialIssuer(proofGenerator)
-        return issuerService.issue(credential, issuer, normalizedKeyId)
+        
+        // Create issuance options with verification method ID
+        val issuanceOptions = CredentialIssuanceOptions(
+            proofType = config.proofType.identifier,
+            keyId = normalizedKeyId,
+            issuerDid = issuer,
+            challenge = config.challenge,
+            domain = config.domain,
+            anchorToBlockchain = config.anchorToBlockchain,
+            chainId = config.chainId,
+            additionalOptions = config.additionalOptions + mapOf("verificationMethod" to verificationMethodId)
+        )
+        
+        return issuerService.issue(credential, issuer, normalizedKeyId, issuanceOptions)
     }
     
     /**

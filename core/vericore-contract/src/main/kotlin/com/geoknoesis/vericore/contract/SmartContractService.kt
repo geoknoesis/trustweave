@@ -2,8 +2,8 @@ package com.geoknoesis.vericore.contract
 
 import com.geoknoesis.vericore.anchor.AnchorRef
 import com.geoknoesis.vericore.contract.models.*
-import com.geoknoesis.vericore.core.Result
 import com.geoknoesis.vericore.credential.models.VerifiableCredential
+import kotlin.Result
 import kotlinx.serialization.json.JsonElement
 
 /**

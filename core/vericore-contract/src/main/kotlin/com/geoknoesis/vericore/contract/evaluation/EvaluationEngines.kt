@@ -136,7 +136,7 @@ internal class InMemoryEvaluationEngines : EvaluationEngines {
         require(engine.engineId.isNotBlank()) {
             "Evaluation engine ID cannot be blank"
         }
-        if (engine.engineId in engines) {
+        if (engines.containsKey(engine.engineId)) {
             throw IllegalArgumentException(
                 "Evaluation engine '${engine.engineId}' is already registered"
             )
@@ -154,6 +154,15 @@ internal class InMemoryEvaluationEngines : EvaluationEngines {
     
     override operator fun contains(engineId: String): Boolean = engines.containsKey(engineId)
     
+    override fun remove(engineId: String): Boolean {
+        val wasPresent = engines.containsKey(engineId)
+        if (wasPresent) {
+            engines.remove(engineId)
+            engineHashes.remove(engineId)
+        }
+        return wasPresent
+    }
+    
     override fun verify(engineId: String, expectedHash: String): Boolean {
         require(expectedHash.isNotBlank()) { "Expected hash cannot be blank" }
         val actualHash = engineHashes[engineId] ?: return false
@@ -169,12 +178,6 @@ internal class InMemoryEvaluationEngines : EvaluationEngines {
     override val isEmpty: Boolean get() = engines.isEmpty()
     
     override fun iterator(): Iterator<ContractEvaluationEngine> = engines.values.iterator()
-    
-    override fun remove(engineId: String): Boolean {
-        val wasPresent = engineId in engines
-        this -= engineId
-        return wasPresent
-    }
     
     override fun clear() {
         engines.clear()

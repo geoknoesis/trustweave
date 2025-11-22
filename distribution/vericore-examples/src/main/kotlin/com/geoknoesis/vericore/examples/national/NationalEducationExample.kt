@@ -295,8 +295,8 @@ fun main() = runBlocking {
     println("  ✓ GPA: 3.73")
     println("  ✓ Number of Courses: 3")
     println("\n  Full Credential Document:")
-    val achievementCredentialJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
-    println(achievementCredentialJson.encodeToString(VerifiableCredential.serializer(), achievementCredential))
+    val achievementCredentialJsonFormatter = Json { prettyPrint = true; ignoreUnknownKeys = true }
+    println(achievementCredentialJsonFormatter.encodeToString(VerifiableCredential.serializer(), achievementCredential))
     println()
     
     // Step 8: Anchor Credentials to Blockchain

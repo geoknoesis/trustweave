@@ -1,10 +1,13 @@
 package com.geoknoesis.vericore.services
 
+import com.geoknoesis.vericore.VeriCoreContext
 import com.geoknoesis.vericore.anchor.AnchorResult
 import com.geoknoesis.vericore.anchor.AnchorRef
+import com.geoknoesis.vericore.anchor.anchorTyped
 import com.geoknoesis.vericore.core.*
 import com.geoknoesis.vericore.anchor.BlockchainAnchorClient
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
 
 /**
  * Focused service for blockchain anchoring operations.
@@ -75,7 +78,8 @@ class BlockchainService(
                 availableChains = availableChains
             )
         
-        return client.anchor(data, serializer)
+        val json = Json.encodeToJsonElement(serializer, data)
+        return client.writePayload(json)
     }
     
     /**
@@ -118,7 +122,8 @@ class BlockchainService(
                 availableChains = availableChains
             )
         
-        return client.readPayload(ref, serializer)
+        val result = client.readPayload(ref)
+        return Json.decodeFromJsonElement(serializer, result.payload)
     }
     
     /**

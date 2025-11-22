@@ -53,11 +53,11 @@ class GoogleCloudKeyManagementService(
          * Note: Ed25519 and P521 support may vary by Google Cloud KMS version.
          */
         val SUPPORTED_ALGORITHMS = setOf(
-            // Ed25519 may not be available in all versions
+            Algorithm.Ed25519, // Note: may not be available in all Google Cloud KMS versions
             Algorithm.Secp256k1,
             Algorithm.P256,
             Algorithm.P384,
-            // P521 may not be available in all versions
+            Algorithm.P521, // Note: may not be available in all Google Cloud KMS versions
             Algorithm.RSA.RSA_2048,
             Algorithm.RSA.RSA_3072,
             Algorithm.RSA.RSA_4096

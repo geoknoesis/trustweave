@@ -5,8 +5,8 @@ import com.geoknoesis.vericore.anchor.BlockchainAnchorClient
 import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
 import com.geoknoesis.vericore.contract.evaluation.*
 import com.geoknoesis.vericore.contract.models.*
-import com.geoknoesis.vericore.core.Result
 import com.geoknoesis.vericore.core.vericoreCatching
+import kotlin.Result
 import com.geoknoesis.vericore.core.ValidationResult
 import com.geoknoesis.vericore.credential.CredentialService as CredentialServiceInterface
 import com.geoknoesis.vericore.credential.models.VerifiableCredential
@@ -290,11 +290,12 @@ class DefaultSmartContractService(
         }
         
         // 3. Get engine (throws if not registered)
-        val engine = engines.require(engineRef.engineId!!)
+        val engineId = (engineRef as EngineReference.WithEngine).engineId
+        val engine = engines.require(engineId)
         
         // 4. Verify engine integrity (tamper detection)
         engineRef.expectedHash?.let { expectedHash ->
-            engines.verifyOrThrow(engineRef.engineId, expectedHash)
+            engines.verifyOrThrow(engineId, expectedHash)
         }
         
         // 5. Verify engine version compatibility (if specified)
@@ -315,7 +316,7 @@ class DefaultSmartContractService(
         }
         if (unsupportedConditions.isNotEmpty()) {
             throw IllegalStateException(
-                "Engine '${engineRef.engineId}' does not support condition types: " +
+                "Engine '$engineId' does not support condition types: " +
                 unsupportedConditions.map { it.conditionType.name }.joinToString()
             )
         }

@@ -15,6 +15,9 @@ import com.azure.security.keyvault.keys.cryptography.CryptographyClient
 import com.azure.security.keyvault.keys.cryptography.CryptographyClientBuilder
 import com.azure.core.exception.ResourceNotFoundException
 import com.azure.core.exception.HttpResponseException
+import java.math.BigInteger
+import java.security.KeyFactory
+import java.security.spec.RSAPublicKeySpec
 import java.util.UUID
 
 /**
@@ -323,10 +326,10 @@ class AzureKeyManagementService(
                 }
                 // Reconstruct RSA public key
                 // This is simplified - in production, use proper RSA key factory
-                val keyFactory = java.security.KeyFactory.getInstance("RSA")
-                val publicKeySpec = java.security.spec.RSAPublicKeySpec(
-                    java.math.BigInteger(1, n),
-                    java.math.BigInteger(1, e)
+                val keyFactory = KeyFactory.getInstance("RSA")
+                val publicKeySpec = RSAPublicKeySpec(
+                    BigInteger(1, n),
+                    BigInteger(1, e)
                 )
                 val publicKey = keyFactory.generatePublic(publicKeySpec)
                 publicKey.encoded

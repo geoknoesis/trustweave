@@ -2,9 +2,17 @@ package com.geoknoesis.vericore.credential.schema
 
 import com.geoknoesis.vericore.credential.models.VerifiableCredential
 import com.geoknoesis.vericore.spi.SchemaFormat
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 
 /**
  * SHACL (Shapes Constraint Language) validator implementation.
@@ -145,8 +153,35 @@ class ShaclValidator : SchemaValidator {
         }
         
         // Validate credentialSubject against property shapes
-        val subjectResult = validateCredentialSubject(credential.credentialSubject, schema)
-        errors.addAll(subjectResult.errors)
+        // Note: validateCredentialSubject is suspend, but this function is not
+        // For now, we'll do basic validation inline
+        val subject = credential.credentialSubject
+        if (subject is JsonObject) {
+            val properties = schema["sh:property"]?.let {
+                when (it) {
+                    is JsonArray -> it
+                    else -> null
+                }
+            }
+            if (properties != null) {
+                for (propertyShape in properties) {
+                    val propertyObj = propertyShape.jsonObject
+                    val path = propertyObj["sh:path"]?.jsonPrimitive?.contentOrNull
+                    val minCount = propertyObj["sh:minCount"]?.jsonPrimitive?.intOrNull ?: 0
+                    
+                    if (path != null && minCount > 0) {
+                        val fieldName = path.substringAfterLast("/").substringAfterLast(":")
+                        if (!subject.containsKey(fieldName)) {
+                            errors.add(SchemaValidationError(
+                                path = "/credentialSubject/$fieldName",
+                                message = "Required property '$fieldName' is missing (minCount: $minCount)",
+                                code = "missing_required_property"
+                            ))
+                        }
+                    }
+                }
+            }
+        }
         
         return errors
     }

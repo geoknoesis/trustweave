@@ -1,5 +1,6 @@
 package com.geoknoesis.vericore.services
 
+import com.geoknoesis.vericore.VeriCoreContext
 import com.geoknoesis.vericore.core.*
 import com.geoknoesis.vericore.core.types.ProofType
 import com.geoknoesis.vericore.did.DidCreationOptions

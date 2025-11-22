@@ -136,6 +136,7 @@ class VerificationBuilder(
             chainId = chainIdToUse,
             checkTrustRegistry = checkTrustRegistry,
             trustRegistry = context.getTrustRegistry(),
+            statusListManager = context.getStatusListManager(),
             verifyDelegation = verifyDelegation,
             validateProofPurpose = validateProofPurpose
         )

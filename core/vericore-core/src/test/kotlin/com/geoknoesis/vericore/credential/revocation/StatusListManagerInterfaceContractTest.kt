@@ -196,7 +196,8 @@ class StatusListManagerInterfaceContractTest {
             override suspend fun createStatusList(
                 issuerDid: String,
                 purpose: StatusPurpose,
-                size: Int
+                size: Int,
+                customId: String?
             ): StatusListCredential {
                 val id = "status-list-${java.util.UUID.randomUUID()}"
                 val encodedList = "0".repeat(size / 8) // Simplified encoding
@@ -265,6 +266,123 @@ class StatusListManagerInterfaceContractTest {
             
             override suspend fun getStatusList(statusListId: String): StatusListCredential? {
                 return statusLists[statusListId]
+            }
+            
+            override suspend fun listStatusLists(issuerDid: String?): List<StatusListCredential> {
+                return if (issuerDid != null) {
+                    statusLists.values.filter { it.issuer == issuerDid }
+                } else {
+                    statusLists.values.toList()
+                }
+            }
+            
+            override suspend fun deleteStatusList(statusListId: String): Boolean {
+                val removed = statusLists.remove(statusListId) != null
+                if (removed) {
+                    revokedIndices.remove(statusListId)
+                    suspendedIndices.remove(statusListId)
+                }
+                return removed
+            }
+            
+            override suspend fun getStatusListStatistics(statusListId: String): StatusListStatistics? {
+                val statusList = statusLists[statusListId] ?: return null
+                val revoked = revokedIndices[statusListId]?.size ?: 0
+                val suspended = suspendedIndices[statusListId]?.size ?: 0
+                val used = revoked + suspended
+                val totalCapacity = statusList.credentialSubject.encodedList.length * 8
+                return StatusListStatistics(
+                    statusListId = statusListId,
+                    totalCapacity = totalCapacity,
+                    usedIndices = used,
+                    revokedCount = revoked,
+                    suspendedCount = suspended,
+                    availableIndices = totalCapacity - used,
+                    lastUpdated = java.time.Instant.now()
+                )
+            }
+            
+            override suspend fun unrevokeCredential(credentialId: String, statusListId: String): Boolean {
+                val index = getCredentialIndex(credentialId, statusListId) ?: return false
+                return revokedIndices[statusListId]?.remove(index) ?: false
+            }
+            
+            override suspend fun unsuspendCredential(credentialId: String, statusListId: String): Boolean {
+                val index = getCredentialIndex(credentialId, statusListId) ?: return false
+                return suspendedIndices[statusListId]?.remove(index) ?: false
+            }
+            
+            override suspend fun checkStatusByIndex(statusListId: String, index: Int): RevocationStatus {
+                val revoked = revokedIndices[statusListId]?.contains(index) ?: false
+                val suspended = suspendedIndices[statusListId]?.contains(index) ?: false
+                return RevocationStatus(
+                    revoked = revoked,
+                    suspended = suspended,
+                    statusListId = statusListId
+                )
+            }
+            
+            override suspend fun checkStatusByCredentialId(credentialId: String, statusListId: String): RevocationStatus {
+                val index = getCredentialIndex(credentialId, statusListId) ?: return RevocationStatus(revoked = false)
+                return checkStatusByIndex(statusListId, index)
+            }
+            
+            private val credentialIndexMap = mutableMapOf<Pair<String, String>, Int>()
+            
+            override suspend fun getCredentialIndex(credentialId: String, statusListId: String): Int? {
+                return credentialIndexMap[Pair(credentialId, statusListId)]
+            }
+            
+            override suspend fun assignCredentialIndex(credentialId: String, statusListId: String, index: Int?): Int {
+                val assignedIndex = index ?: nextIndex++
+                credentialIndexMap[Pair(credentialId, statusListId)] = assignedIndex
+                return assignedIndex
+            }
+            
+            override suspend fun revokeCredentials(credentialIds: List<String>, statusListId: String): Map<String, Boolean> {
+                return credentialIds.associateWith { credentialId ->
+                    revokeCredential(credentialId, statusListId)
+                }
+            }
+            
+            override suspend fun updateStatusListBatch(statusListId: String, updates: List<StatusUpdate>): StatusListCredential {
+                val statusList = statusLists[statusListId]
+                    ?: throw IllegalArgumentException("Status list not found: $statusListId")
+                
+                updates.forEach { update ->
+                    update.revoked?.let { revoked ->
+                        if (revoked) {
+                            revokedIndices.getOrPut(statusListId) { mutableSetOf() }.add(update.index)
+                        } else {
+                            revokedIndices[statusListId]?.remove(update.index)
+                        }
+                    }
+                    update.suspended?.let { suspended ->
+                        if (suspended) {
+                            suspendedIndices.getOrPut(statusListId) { mutableSetOf() }.add(update.index)
+                        } else {
+                            suspendedIndices[statusListId]?.remove(update.index)
+                        }
+                    }
+                }
+                
+                return statusList
+            }
+            
+            override suspend fun expandStatusList(statusListId: String, additionalSize: Int): StatusListCredential {
+                val statusList = statusLists[statusListId]
+                    ?: throw IllegalArgumentException("Status list not found: $statusListId")
+                
+                val currentEncoded = statusList.credentialSubject.encodedList
+                val expandedEncoded = currentEncoded + "0".repeat(additionalSize / 8)
+                
+                val updated = statusList.copy(
+                    credentialSubject = statusList.credentialSubject.copy(
+                        encodedList = expandedEncoded
+                    )
+                )
+                statusLists[statusListId] = updated
+                return updated
             }
         }
     }

@@ -69,43 +69,36 @@ fun main() = runBlocking {
     println("  Method: key (default)")
     println("  Parameters: Using default DID creation options")
     
-    val issuerDid = vericore.dids.create()
+    val issuerDid = try {
+        vericore.dids.create()
+    } catch (error: VeriCoreError.DidMethodNotRegistered) {
+        println("\n📥 RESPONSE: DID Creation Failed")
+        println("  ✗ Error Type: DidMethodNotRegistered")
+        println("  ✗ Method: ${error.method}")
+        println("  ✗ Available methods: ${error.availableMethods.joinToString(", ")}")
+        return@runBlocking
+    } catch (error: Throwable) {
+        println("\n📥 RESPONSE: DID Creation Failed")
+        println("  ✗ Error: ${error.message}")
+        println("  ✗ Error Type: ${error::class.simpleName}")
+        return@runBlocking
+    }
     
-    val issuerResult = Result.success(issuerDid)
-    issuerResult.fold(
-        onSuccess = { did ->
-            println("\n📥 RESPONSE: DID Created Successfully")
-            println("  ✓ DID Document ID: ${did.id}")
-            println("  ✓ Verification Methods Count: ${did.verificationMethod.size}")
-            println("\n  DID Document Details:")
-            println("    - ID: ${did.id}")
-            println("    - Context: ${did.context.joinToString(", ")}")
-            println("    - Verification Methods: ${did.verificationMethod.size}")
-            println("    - Authentication: ${did.authentication.size}")
-            println("    - Services: ${did.service.size}")
-            println("\n  Verification Methods:")
-            did.verificationMethod.forEachIndexed { index, vm ->
-                println("    ${index + 1}. ID: ${vm.id}")
-                println("       Type: ${vm.type}")
-                println("       Controller: ${vm.controller}")
-            }
-        },
-        onFailure = { error ->
-            println("\n📥 RESPONSE: DID Creation Failed")
-            when (error) {
-                is VeriCoreError.DidMethodNotRegistered -> {
-                    println("  ✗ Error Type: DidMethodNotRegistered")
-                    println("  ✗ Method: ${error.method}")
-                    println("  ✗ Available methods: ${error.availableMethods.joinToString(", ")}")
-                }
-                else -> {
-                    println("  ✗ Error: ${error.message}")
-                    println("  ✗ Error Type: ${error::class.simpleName}")
-                }
-            }
-            return@runBlocking
-        }
-    )
+    println("\n📥 RESPONSE: DID Created Successfully")
+    println("  ✓ DID Document ID: ${issuerDid.id}")
+    println("  ✓ Verification Methods Count: ${issuerDid.verificationMethod.size}")
+    println("\n  DID Document Details:")
+    println("    - ID: ${issuerDid.id}")
+    println("    - Context: ${issuerDid.context.joinToString(", ")}")
+    println("    - Verification Methods: ${issuerDid.verificationMethod.size}")
+    println("    - Authentication: ${issuerDid.authentication.size}")
+    println("    - Services: ${issuerDid.service.size}")
+    println("\n  Verification Methods:")
+    issuerDid.verificationMethod.forEachIndexed { index, vm ->
+        println("    ${index + 1}. ID: ${vm.id}")
+        println("       Type: ${vm.type}")
+        println("       Controller: ${vm.controller}")
+    }
     val issuerKeyId = issuerDid.verificationMethod.first().id
     println("\n  ✓ Selected Issuer Key ID: $issuerKeyId")
     
@@ -114,24 +107,21 @@ fun main() = runBlocking {
     println("  Purpose: Verify DID is accessible and can be resolved")
     println("  DID: ${issuerDid.id}")
     
-    val issuerResolution = Result.success(vericore.dids.resolve(issuerDid.id))
-    issuerResolution.fold(
-        onSuccess = { resolution ->
-            println("\n📥 RESPONSE: DID Resolution")
-            val document = resolution.document
-            if (document != null) {
-                println("  ✓ Status: Resolved successfully")
-                println("  ✓ DID Document ID: ${document.id}")
-                println("  ✓ Verification Methods: ${document.verificationMethod.size}")
-            } else {
-                println("  ⚠ Status: No document found (may be in-memory)")
-            }
-        },
-        onFailure = { error ->
-            println("\n📥 RESPONSE: DID Resolution Failed")
-            println("  ✗ Error: ${error.message}")
+    try {
+        val resolution = vericore.dids.resolve(issuerDid.id)
+        println("\n📥 RESPONSE: DID Resolution")
+        val document = resolution.document
+        if (document != null) {
+            println("  ✓ Status: Resolved successfully")
+            println("  ✓ DID Document ID: ${document.id}")
+            println("  ✓ Verification Methods: ${document.verificationMethod.size}")
+        } else {
+            println("  ⚠ Status: No document found (may be in-memory)")
         }
-    )
+    } catch (error: Throwable) {
+        println("\n📥 RESPONSE: DID Resolution Failed")
+        println("  ✗ Error: ${error.message}")
+    }
     println()
     
     // Step 3: Create Artifacts (Metadata, Provenance, Quality)
@@ -374,8 +364,8 @@ fun main() = runBlocking {
     }
     println("  ✓ Linkset Digest Reference: $linksetDigest")
     println("\n  Full Credential Document:")
-    val credentialJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
-    println(credentialJson.encodeToString(VerifiableCredential.serializer(), credential))
+    val credentialJsonFormatter = Json { prettyPrint = true; ignoreUnknownKeys = true }
+    println(credentialJsonFormatter.encodeToString(VerifiableCredential.serializer(), credential))
     
     println()
     
@@ -468,55 +458,47 @@ fun main() = runBlocking {
     println("  Payload to anchor:")
     println(anchorJson.encodeToString(JsonObject.serializer(), vcDigestPayload))
     
-    val anchorResult = vericore.anchor(
-        data = vcDigestPayload,
-        serializer = JsonElement.serializer(),
-        chainId = chainId
-    )
-    
-    anchorResult.fold(
-        onSuccess = { anchor ->
-            println("\n📥 RESPONSE: Data Anchored Successfully")
-            println("  ✓ Chain ID: ${anchor.ref.chainId}")
-            println("  ✓ Transaction Hash: ${anchor.ref.txHash}")
-            println("  ✓ Media Type: ${anchor.mediaType}")
-            println("  ✓ Timestamp: ${anchor.timestamp}")
-            println("  ✓ Anchor Reference:")
-            println("    - Chain ID: ${anchor.ref.chainId}")
-            println("    - Transaction Hash: ${anchor.ref.txHash}")
-            anchor.ref.contract?.let {
-                println("    - Contract: $it")
+    val anchor = try {
+        vericore.blockchains.anchor(
+            data = vcDigestPayload,
+            serializer = JsonElement.serializer(),
+            chainId = chainId
+        )
+    } catch (error: VeriCoreError.ChainNotRegistered) {
+        println("\n📥 RESPONSE: Anchoring Failed")
+        println("  ✗ Error Type: ChainNotRegistered")
+        println("  ✗ Chain ID: ${error.chainId}")
+        println("  ✗ Available chains: ${error.availableChains.joinToString(", ")}")
+        return@runBlocking
+    } catch (error: VeriCoreError.ValidationFailed) {
+        println("\n📥 RESPONSE: Anchoring Failed")
+        println("  ✗ Error Type: ValidationFailed")
+        println("  ✗ Reason: ${error.reason}")
+        println("  ✗ Field: ${error.field}")
+        println("  ✗ Value: ${error.value}")
+        return@runBlocking
+    } catch (error: Throwable) {
+        println("\n📥 RESPONSE: Anchoring Failed")
+        println("  ✗ Error: ${error.message}")
+        println("  ✗ Error Type: ${error::class.simpleName}")
+        if (error is VeriCoreError && error.context.isNotEmpty()) {
+            println("  Context:")
+            error.context.forEach { (key, value) ->
+                println("    - $key: $value")
             }
-        },
-        onFailure = { error ->
-            println("\n📥 RESPONSE: Anchoring Failed")
-            when (error) {
-                is VeriCoreError.ChainNotRegistered -> {
-                    println("  ✗ Error Type: ChainNotRegistered")
-                    println("  ✗ Chain ID: ${error.chainId}")
-                    println("  ✗ Available chains: ${error.availableChains.joinToString(", ")}")
-                }
-                is VeriCoreError.ValidationFailed -> {
-                    println("  ✗ Error Type: ValidationFailed")
-                    println("  ✗ Reason: ${error.reason}")
-                    println("  ✗ Field: ${error.field}")
-                    println("  ✗ Value: ${error.value}")
-                }
-                else -> {
-                    println("  ✗ Error: ${error.message}")
-                    println("  ✗ Error Type: ${error::class.simpleName}")
-                    if (error is VeriCoreError && error.context.isNotEmpty()) {
-                        println("  Context:")
-                        error.context.forEach { (key, value) ->
-                            println("    - $key: $value")
-                        }
-                    }
-                }
-            }
-            return@runBlocking
         }
-    )
-    val anchor = anchorResult.getOrThrow()
+        return@runBlocking
+    }
+    
+    println("\n📥 RESPONSE: Data Anchored Successfully")
+    println("  ✓ Chain ID: ${anchor.ref.chainId}")
+    println("  ✓ Transaction Hash: ${anchor.ref.txHash}")
+    println("  ✓ Anchor Reference:")
+    println("    - Chain ID: ${anchor.ref.chainId}")
+    println("    - Transaction Hash: ${anchor.ref.txHash}")
+    anchor.ref.contract?.let {
+        println("    - Contract: $it")
+    }
     println()
     
     // Step 8: Read back anchored data
@@ -527,51 +509,38 @@ fun main() = runBlocking {
     println("    - Chain ID: ${anchor.ref.chainId}")
     println("    - Transaction Hash: ${anchor.ref.txHash}")
     
-    val readResult = vericore.readAnchor<JsonElement>(
-        ref = anchor.ref,
-        serializer = JsonElement.serializer()
-    )
+    val readJson = try {
+        vericore.blockchains.read<JsonElement>(
+            ref = anchor.ref,
+            serializer = JsonElement.serializer()
+        )
+    } catch (error: Throwable) {
+        println("\n📥 RESPONSE: Reading Anchored Data Failed")
+        println("  ✗ Error: ${error.message}")
+        return@runBlocking
+    }
     
-    readResult.fold(
-        onSuccess = { readJson ->
-            println("\n📥 RESPONSE: Anchored Data Retrieved")
-            println("  ✓ Status: Successfully read from blockchain")
-            println("  ✓ VC ID: ${readJson.jsonObject["vcId"]?.jsonPrimitive?.content}")
-            println("  ✓ VC Digest: ${readJson.jsonObject["vcDigest"]?.jsonPrimitive?.content}")
-            println("  ✓ Issuer: ${readJson.jsonObject["issuer"]?.jsonPrimitive?.content}")
-            println("  ✓ Linkset Digest: ${readJson.jsonObject["linksetDigest"]?.jsonPrimitive?.content}")
-            println("  ✓ Timestamp: ${readJson.jsonObject["timestamp"]?.jsonPrimitive?.content}")
-            println("\n  Full Anchored Payload:")
-            println(anchorJson.encodeToString(JsonObject.serializer(), readJson.jsonObject))
-            
-            // Verify data integrity
-            val readVcDigest = readJson.jsonObject["vcDigest"]?.jsonPrimitive?.content
-            println("\n  Integrity Verification:")
-            println("    Expected VC Digest: $vcDigest")
-            println("    Retrieved VC Digest: $readVcDigest")
-            if (readVcDigest == vcDigest) {
-                println("    ✓ Status: MATCH - Data integrity verified")
-            } else {
-                println("    ✗ Status: MISMATCH - Data integrity check failed")
-                return@runBlocking
-            }
-        },
-        onFailure = { error ->
-            println("\n📥 RESPONSE: Read Anchored Data Failed")
-            when (error) {
-                is VeriCoreError.ChainNotRegistered -> {
-                    println("  ✗ Error Type: ChainNotRegistered")
-                    println("  ✗ Chain ID: ${error.chainId}")
-                    println("  ✗ Available chains: ${error.availableChains.joinToString(", ")}")
-                }
-                else -> {
-                    println("  ✗ Error: ${error.message}")
-                    println("  ✗ Error Type: ${error::class.simpleName}")
-                }
-            }
-            return@runBlocking
-        }
-    )
+    println("\n📥 RESPONSE: Anchored Data Retrieved")
+    println("  ✓ Status: Successfully read from blockchain")
+    println("  ✓ VC ID: ${readJson.jsonObject["vcId"]?.jsonPrimitive?.content}")
+    println("  ✓ VC Digest: ${readJson.jsonObject["vcDigest"]?.jsonPrimitive?.content}")
+    println("  ✓ Issuer: ${readJson.jsonObject["issuer"]?.jsonPrimitive?.content}")
+    println("  ✓ Linkset Digest: ${readJson.jsonObject["linksetDigest"]?.jsonPrimitive?.content}")
+    println("  ✓ Timestamp: ${readJson.jsonObject["timestamp"]?.jsonPrimitive?.content}")
+    println("\n  Full Anchored Payload:")
+    println(anchorJson.encodeToString(JsonObject.serializer(), readJson.jsonObject))
+    
+    // Verify data integrity
+    val readVcDigest = readJson.jsonObject["vcDigest"]?.jsonPrimitive?.content
+    println("\n  Integrity Verification:")
+    println("    Expected VC Digest: $vcDigest")
+    println("    Retrieved VC Digest: $readVcDigest")
+    if (readVcDigest == vcDigest) {
+        println("    ✓ Status: MATCH - Data integrity verified")
+    } else {
+        println("    ✗ Status: MISMATCH - Data integrity check failed")
+        return@runBlocking
+    }
     println()
     
     // Step 9: Verify integrity chain
@@ -683,31 +652,21 @@ fun main() = runBlocking {
     
     // Test invalid chain ID
     println("  Testing invalid chain ID...")
-    val invalidChainResult = vericore.anchor(
-        data = buildJsonObject { put("test", "data") },
-        serializer = JsonElement.serializer(),
-        chainId = "invalid:chain:id"
-    )
-    
-    invalidChainResult.fold(
-        onSuccess = { 
-            println("  ⚠ Unexpected success with invalid chain ID")
-        },
-        onFailure = { error ->
-            when (error) {
-                is VeriCoreError.ChainNotRegistered -> {
-                    println("  ✓ Correctly rejected invalid chain ID: ${error.chainId}")
-                    println("    Available chains: ${error.availableChains.joinToString(", ")}")
-                }
-                is VeriCoreError.ValidationFailed -> {
-                    println("  ✓ Correctly rejected invalid chain ID format: ${error.reason}")
-                }
-                else -> {
-                    println("  ✓ Error handling works: ${error.message}")
-                }
-            }
-        }
-    )
+    try {
+        vericore.blockchains.anchor(
+            data = buildJsonObject { put("test", "data") },
+            serializer = JsonElement.serializer(),
+            chainId = "invalid:chain:id"
+        )
+        println("  ⚠ Unexpected success with invalid chain ID")
+    } catch (error: VeriCoreError.ChainNotRegistered) {
+        println("  ✓ Correctly rejected invalid chain ID: ${error.chainId}")
+        println("    Available chains: ${error.availableChains.joinToString(", ")}")
+    } catch (error: VeriCoreError.ValidationFailed) {
+        println("  ✓ Correctly rejected invalid chain ID format: ${error.reason}")
+    } catch (error: Throwable) {
+        println("  ✓ Error handling works: ${error.message}")
+    }
     println()
     
     // Summary
@@ -726,9 +685,9 @@ fun main() = runBlocking {
     println("✓ Credential issued: ${credential.id}")
     println("  - Types: ${credential.type.joinToString(", ")}")
     println("  - Has proof: ${credential.proof != null}")
-    println("✓ Credential verified: ${verificationResult.getOrNull()?.valid ?: false}")
-    println("  - Proof valid: ${verificationResult.getOrNull()?.proofValid ?: false}")
-    println("  - Issuer valid: ${verificationResult.getOrNull()?.issuerValid ?: false}")
+    println("✓ Credential verified: ${verification.valid}")
+    println("  - Proof valid: ${verification.proofValid}")
+    println("  - Issuer valid: ${verification.issuerValid}")
     println("✓ Credential digest anchored to blockchain: ${anchor.ref.txHash}")
     println("  - Chain ID: ${anchor.ref.chainId}")
     println("  - Transaction Hash: ${anchor.ref.txHash}")

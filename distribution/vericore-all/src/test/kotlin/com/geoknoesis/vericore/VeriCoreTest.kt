@@ -1,5 +1,7 @@
 package com.geoknoesis.vericore
 
+import com.geoknoesis.vericore.core.types.ProofType
+import com.geoknoesis.vericore.services.IssuanceConfig
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -21,7 +23,7 @@ class VeriCoreTest {
     @Test
     fun `test createDid with default options`() = runBlocking {
         val vericore = VeriCore.create()
-        val didDoc = vericore.createDid().getOrThrow()
+        val didDoc = vericore.dids.create()
         
         assertNotNull(didDoc)
         assertNotNull(didDoc.id)
@@ -31,9 +33,9 @@ class VeriCoreTest {
     @Test
     fun `test resolveDid`() = runBlocking {
         val vericore = VeriCore.create()
-        val didDoc = vericore.createDid().getOrThrow()
+        val didDoc = vericore.dids.create()
         
-        val result = vericore.resolveDid(didDoc.id).getOrThrow()
+        val result = vericore.dids.resolve(didDoc.id)
         
         assertNotNull(result)
         assertNotNull(result.document)
@@ -43,18 +45,22 @@ class VeriCoreTest {
     @Test
     fun `test issueCredential`() = runBlocking {
         val vericore = VeriCore.create()
-        val did = vericore.createDid().getOrThrow()
+        val did = vericore.dids.create()
         val issuerKeyId = did.verificationMethod.first().id
         
-        val credential = vericore.issueCredential(
-            issuerDid = did.id,
-            issuerKeyId = issuerKeyId,
-            credentialSubject = buildJsonObject {
+        val credential = vericore.credentials.issue(
+            issuer = did.id,
+            subject = buildJsonObject {
                 put("id", "did:key:subject")
                 put("name", "Test Subject")
             },
+            config = IssuanceConfig(
+                proofType = ProofType.Ed25519Signature2020,
+                keyId = issuerKeyId,
+                issuerDid = did.id
+            ),
             types = listOf("TestCredential")
-        ).getOrThrow()
+        )
         
         assertNotNull(credential)
         assertEquals(did.id, credential.issuer)
@@ -64,20 +70,44 @@ class VeriCoreTest {
     @Test
     fun `test verifyCredential`() = runBlocking {
         val vericore = VeriCore.create()
-        val did = vericore.createDid().getOrThrow()
+        val did = vericore.dids.create()
         val issuerKeyId = did.verificationMethod.first().id
         
-        val credential = vericore.issueCredential(
-            issuerDid = did.id,
-            issuerKeyId = issuerKeyId,
-            credentialSubject = buildJsonObject {
+        println("[DEBUG] Created DID: ${did.id}")
+        println("[DEBUG] Verification Method ID: $issuerKeyId")
+        
+        val credential = vericore.credentials.issue(
+            issuer = did.id,
+            subject = buildJsonObject {
                 put("id", "did:key:subject")
                 put("name", "Test Subject")
             },
+            config = IssuanceConfig(
+                proofType = ProofType.Ed25519Signature2020,
+                keyId = issuerKeyId,
+                issuerDid = did.id
+            ),
             types = listOf("TestCredential")
-        ).getOrThrow()
+        )
         
-        val result = vericore.verifyCredential(credential).getOrThrow()
+        println("[DEBUG] Issued credential with proof: ${credential.proof}")
+        println("[DEBUG] Proof verificationMethod: ${credential.proof?.verificationMethod}")
+        
+        val result = vericore.credentials.verify(credential)
+        
+        println("[DEBUG] Verification result:")
+        println("[DEBUG]   valid: ${result.valid}")
+        println("[DEBUG]   proofValid: ${result.proofValid}")
+        println("[DEBUG]   issuerValid: ${result.issuerValid}")
+        println("[DEBUG]   notExpired: ${result.notExpired}")
+        println("[DEBUG]   notRevoked: ${result.notRevoked}")
+        println("[DEBUG]   schemaValid: ${result.schemaValid}")
+        println("[DEBUG]   blockchainAnchorValid: ${result.blockchainAnchorValid}")
+        println("[DEBUG]   trustRegistryValid: ${result.trustRegistryValid}")
+        println("[DEBUG]   delegationValid: ${result.delegationValid}")
+        println("[DEBUG]   proofPurposeValid: ${result.proofPurposeValid}")
+        println("[DEBUG]   errors: ${result.errors}")
+        println("[DEBUG]   warnings: ${result.warnings}")
         
         assertNotNull(result)
         assertTrue(result.valid)
@@ -86,9 +116,9 @@ class VeriCoreTest {
     @Test
     fun `test createWallet`() = runBlocking {
         val vericore = VeriCore.create()
-        val did = vericore.createDid().getOrThrow()
+        val did = vericore.dids.create()
         
-        val wallet = vericore.createWallet(holderDid = did.id).getOrThrow()
+        val wallet = vericore.wallets.create(holderDid = did.id)
         
         assertNotNull(wallet)
         assertNotNull(wallet.walletId)
@@ -97,12 +127,12 @@ class VeriCoreTest {
     @Test
     fun `test createWallet with custom ID`() = runBlocking {
         val vericore = VeriCore.create()
-        val did = vericore.createDid().getOrThrow()
+        val did = vericore.dids.create()
         
-        val wallet = vericore.createWallet(
+        val wallet = vericore.wallets.create(
             holderDid = did.id,
             walletId = "my-custom-wallet"
-        ).getOrThrow()
+        )
         
         assertNotNull(wallet)
         assertEquals("my-custom-wallet", wallet.walletId)
@@ -114,28 +144,32 @@ class VeriCoreTest {
         val vericore = VeriCore.create()
         
         // Create DIDs for issuer and holder
-        val issuerDid = vericore.createDid().getOrThrow()
+        val issuerDid = vericore.dids.create()
         val issuerKeyId = issuerDid.verificationMethod.first().id
-        val holderDid = vericore.createDid().getOrThrow()
+        val holderDid = vericore.dids.create()
         
         // Issue a credential
-        val credential = vericore.issueCredential(
-            issuerDid = issuerDid.id,
-            issuerKeyId = issuerKeyId,
-            credentialSubject = buildJsonObject {
+        val credential = vericore.credentials.issue(
+            issuer = issuerDid.id,
+            subject = buildJsonObject {
                 put("id", holderDid.id)
                 put("name", "Alice")
                 put("degree", "Bachelor of Science")
             },
+            config = IssuanceConfig(
+                proofType = ProofType.Ed25519Signature2020,
+                keyId = issuerKeyId,
+                issuerDid = issuerDid.id
+            ),
             types = listOf("UniversityDegreeCredential")
-        ).getOrThrow()
+        )
         
         // Verify the credential
-        val verificationResult = vericore.verifyCredential(credential).getOrThrow()
+        val verificationResult = vericore.credentials.verify(credential)
         assertTrue(verificationResult.valid)
         
         // Create wallet and store credential
-        val wallet = vericore.createWallet(holderDid = holderDid.id).getOrThrow()
+        val wallet = vericore.wallets.create(holderDid = holderDid.id)
         val credentialId = requireNotNull(credential.id) { "Issued credential should contain an id" }
         wallet.store(credential)
         

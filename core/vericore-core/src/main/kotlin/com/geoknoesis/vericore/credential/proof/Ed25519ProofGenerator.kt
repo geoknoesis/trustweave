@@ -2,6 +2,7 @@ package com.geoknoesis.vericore.credential.proof
 
 import com.geoknoesis.vericore.credential.models.Proof
 import com.geoknoesis.vericore.credential.models.VerifiableCredential
+import com.geoknoesis.vericore.json.DigestUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -38,24 +39,32 @@ class Ed25519ProofGenerator(
         keyId: String,
         options: ProofOptions
     ): Proof = withContext(Dispatchers.IO) {
-        // Build proof document (credential without proof)
-        val proofDocument = buildProofDocument(credential)
-        
-        // Sign the proof document
-        val signature = signer(proofDocument.toByteArray(Charsets.UTF_8), keyId)
-        
-        // Encode signature as multibase
-        val proofValue = encodeMultibase(signature)
-        
-        // Build verification method URL
+        // Build verification method URL first (needed for proof document)
         val publicKeyId = getPublicKeyId(keyId)
         val verificationMethod = options.verificationMethod 
             ?: (publicKeyId?.let { "did:key:$it#$keyId" } ?: "did:key:$keyId")
         
+        val created = Instant.now().toString()
+        
+        // Build proof document (credential + proof metadata without proofValue)
+        // This matches what the verifier expects per Ed25519Signature2020 spec
+        val proofDocument = buildProofDocument(credential, proofType, created, verificationMethod, options)
+        println("[DEBUG Ed25519ProofGenerator] Proof document (first 200 chars): ${proofDocument.take(200)}")
+        
+        // Sign the proof document
+        val documentBytes = proofDocument.toByteArray(Charsets.UTF_8)
+        println("[DEBUG Ed25519ProofGenerator] Document bytes length: ${documentBytes.size}")
+        val signature = signer(documentBytes, keyId)
+        println("[DEBUG Ed25519ProofGenerator] Signature bytes length: ${signature.size}")
+        
+        // Encode signature as multibase
+        val proofValue = encodeMultibase(signature)
+        println("[DEBUG Ed25519ProofGenerator] Proof value (first 50 chars): ${proofValue.take(50)}")
+        
         // Create proof
         Proof(
             type = proofType,
-            created = Instant.now().toString(),
+            created = created,
             verificationMethod = verificationMethod,
             proofPurpose = options.proofPurpose,
             proofValue = proofValue,
@@ -65,99 +74,52 @@ class Ed25519ProofGenerator(
     }
     
     /**
-     * Build proof document (credential without proof field).
-     * This is what gets signed.
+     * Build proof document (credential + proof metadata without proofValue).
+     * This is what gets signed per Ed25519Signature2020 spec.
+     * The verifier expects the same format.
      */
-    private fun buildProofDocument(credential: VerifiableCredential): String {
+    private fun buildProofDocument(
+        credential: VerifiableCredential,
+        proofType: String,
+        created: String,
+        verificationMethod: String,
+        options: ProofOptions
+    ): String {
         val json = Json {
             prettyPrint = false
             encodeDefaults = false
             ignoreUnknownKeys = true
         }
         
-        // Build credential JSON without proof
-        val credentialJson = buildJsonObject {
-            credential.id?.let { put("id", it) }
-            put("type", buildJsonArray { credential.type.forEach { add(it) } })
-            put("issuer", credential.issuer)
-            put("credentialSubject", credential.credentialSubject)
-            put("issuanceDate", credential.issuanceDate)
-            credential.expirationDate?.let { put("expirationDate", it) }
-            credential.credentialStatus?.let { 
-                put("credentialStatus", buildJsonObject {
-                    put("id", it.id)
-                    put("type", it.type)
-                    it.statusPurpose?.let { put("statusPurpose", it) }
-                    it.statusListIndex?.let { put("statusListIndex", it) }
-                    it.statusListCredential?.let { put("statusListCredential", it) }
-                })
-            }
-            credential.credentialSchema?.let {
-                put("credentialSchema", buildJsonObject {
-                    put("id", it.id)
-                    put("type", it.type)
-                })
-            }
-            credential.evidence?.let { 
-                put("evidence", buildJsonArray { 
-                    it.forEach { evidence ->
-                        // Evidence is already JsonElement-compatible, add directly
-                        add(evidence.evidenceDocument ?: buildJsonObject {
-                            evidence.id?.let { put("id", it) }
-                            put("type", buildJsonArray { evidence.type.forEach { add(it) } })
-                            evidence.verifier?.let { put("verifier", it) }
-                            evidence.evidenceDate?.let { put("evidenceDate", it) }
-                        })
-                    }
-                }) 
-            }
-            credential.termsOfUse?.let { put("termsOfUse", it.termsOfUse) }
-            credential.refreshService?.let {
-                put("refreshService", buildJsonObject {
-                    put("id", it.id)
-                    put("type", it.type)
-                    put("serviceEndpoint", it.serviceEndpoint)
-                })
-            }
+        // Serialize credential without proof - use same approach as verifier
+        // This ensures identical JSON structure between issuance and verification
+        val credentialJson = json.encodeToJsonElement(credential.copy(proof = null))
+        
+        // Add proof options (without proofValue) - matches verifier exactly
+        val proofOptions = buildJsonObject {
+            put("type", proofType)
+            put("created", created)
+            put("verificationMethod", verificationMethod)
+            put("proofPurpose", options.proofPurpose)
+            options.challenge?.let { put("challenge", it) }
+            options.domain?.let { put("domain", it) }
         }
         
-        // Canonicalize JSON (sort keys)
-        return canonicalizeJson(json.encodeToJsonElement(credentialJson))
-    }
-    
-    /**
-     * Canonicalize JSON by sorting keys lexicographically.
-     */
-    private fun canonicalizeJson(element: JsonElement): String {
-        val sorted = sortKeys(element)
-        val json = Json {
-            prettyPrint = false
-            encodeDefaults = false
-        }
-        return json.encodeToString(JsonElement.serializer(), sorted)
-    }
-    
-    /**
-     * Recursively sort keys in JSON object.
-     */
-    private fun sortKeys(element: JsonElement): JsonElement {
-        return when (element) {
-            is JsonObject -> {
-                val sortedEntries = element.entries.sortedBy { it.key }
-                    .map { it.key to sortKeys(it.value) }
-                buildJsonObject {
-                    sortedEntries.forEach { (key, value) ->
-                        put(key, value)
-                    }
-                }
+        // Build proof document - matches verifier structure exactly
+        val proofDocument = buildJsonObject {
+            // Add all credential fields from serialized credential
+            credentialJson.jsonObject.entries.forEach { (key, value) ->
+                put(key, value)
             }
-            is JsonArray -> {
-                buildJsonArray {
-                    element.forEach { add(sortKeys(it)) }
-                }
-            }
-            else -> element
+            // Add proof metadata (without proofValue)
+            put("proof", proofOptions)
         }
+        
+        // Encode to JSON string (same as verifier)
+        val jsonString = json.encodeToString(JsonObject.serializer(), proofDocument)
+        
+        // Canonicalize using DigestUtils (same as verifier)
+        return DigestUtils.canonicalizeJson(jsonString)
     }
     
     /**

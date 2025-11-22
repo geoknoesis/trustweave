@@ -44,8 +44,10 @@ import kotlinx.serialization.json.put
  * }
  * ```
  */
+import com.geoknoesis.vericore.kms.KeyManagementService
+
 class VeriCoreTestFixture private constructor(
-    private val kms: com.geoknoesis.vericore.kms.KeyManagementService,
+    private val kms: KeyManagementService,
     private val didMethod: DidMethod,
     private val didRegistry: DidMethodRegistry,
     private val blockchainRegistry: BlockchainAnchorRegistry,
@@ -56,7 +58,7 @@ class VeriCoreTestFixture private constructor(
     /**
      * Gets the Key Management Service.
      */
-    fun getKms(): com.geoknoesis.vericore.kms.KeyManagementService = kms
+    fun getKms(): KeyManagementService = kms
     
     /**
      * Gets the DID Method.
@@ -141,7 +143,7 @@ class VeriCoreTestFixture private constructor(
      * Builder for creating test fixtures.
      */
     class Builder {
-        private var kms: com.geoknoesis.vericore.kms.KeyManagementService? = null
+        private var kms: KeyManagementService? = null
         private var didMethod: DidMethod? = null
         private val blockchainClients = mutableMapOf<String, BlockchainAnchorClient>()
         private var didRegistry: DidMethodRegistry? = null
@@ -152,7 +154,7 @@ class VeriCoreTestFixture private constructor(
          * Sets the Key Management Service.
          * If not set, defaults to InMemoryKeyManagementService.
          */
-        fun withKms(kms: com.geoknoesis.vericore.kms.KeyManagementService): Builder {
+        fun withKms(kms: KeyManagementService): Builder {
             this.kms = kms
             return this
         }
@@ -276,7 +278,7 @@ class VeriCoreTestFixture private constructor(
          */
         private fun loadDidMethodViaSpi(
             methodName: String,
-            kms: com.geoknoesis.vericore.kms.KeyManagementService,
+            kms: KeyManagementService,
             config: Map<String, Any>
         ): DidMethod? {
             return try {
@@ -285,8 +287,8 @@ class VeriCoreTestFixture private constructor(
                 
                 for (provider in serviceLoader) {
                     val createMethod = providerClass.getMethod("create", String::class.java, 
-                        com.geoknoesis.vericore.did.DidCreationOptions::class.java)
-                    val options = com.geoknoesis.vericore.did.DidCreationOptions()
+                        DidCreationOptions::class.java)
+                    val options = DidCreationOptions()
                     val method = createMethod.invoke(provider, methodName, options) as? DidMethod
                     if (method != null) {
                         return method
@@ -304,7 +306,7 @@ class VeriCoreTestFixture private constructor(
         private fun loadKmsViaSpi(
             providerName: String,
             config: Map<String, Any>
-        ): com.geoknoesis.vericore.kms.KeyManagementService? {
+        ): KeyManagementService? {
             return try {
                 val providerClass = Class.forName("com.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider")
                 val serviceLoader = java.util.ServiceLoader.load(providerClass)
@@ -314,7 +316,7 @@ class VeriCoreTestFixture private constructor(
                     val providerNameValue = nameMethod.invoke(provider) as? String
                     if (providerNameValue == providerName) {
                         val createMethod = providerClass.getMethod("create", Map::class.java)
-                        return createMethod.invoke(provider, config) as? com.geoknoesis.vericore.kms.KeyManagementService
+                        return createMethod.invoke(provider, config) as? KeyManagementService
                     }
                 }
                 null

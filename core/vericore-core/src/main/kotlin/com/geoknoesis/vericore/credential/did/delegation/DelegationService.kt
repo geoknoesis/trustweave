@@ -246,7 +246,7 @@ class DelegationService(
         docAccess: DidDocumentAccess
     ): Boolean {
         return try {
-            val services = docAccess.getServices(doc)
+            val services = docAccess.getService(doc)
             services.any { service ->
                 val serviceType = try {
                     val typeField = service.javaClass.getDeclaredField("type")
@@ -281,7 +281,7 @@ class DelegationService(
         docAccess: DidDocumentAccess
     ): Boolean = withContext(Dispatchers.IO) {
         try {
-            val services = docAccess.getServices(delegatorDoc)
+            val services = docAccess.getService(delegatorDoc)
             val delegationServices = services.filter { service ->
                 val serviceType = try {
                     val typeField = service.javaClass.getDeclaredField("type")
@@ -316,9 +316,18 @@ class DelegationService(
                 
                 // If service endpoint is a VerifiableCredential, verify it
                 if (serviceEndpoint != null) {
+                    // Get delegator DID using reflection since DidDocumentAccess doesn't have getId
+                    val delegatorDid = try {
+                        val idField = delegatorDoc.javaClass.getDeclaredField("id")
+                        idField.isAccessible = true
+                        idField.get(delegatorDoc) as? String
+                    } catch (e: Exception) {
+                        null
+                    } ?: return@withContext false
+                    
                     val credentialValid = verifyDelegationCredentialContent(
                         credential = serviceEndpoint,
-                        delegatorDid = docAccess.getId(delegatorDoc),
+                        delegatorDid = delegatorDid,
                         delegateDid = delegateDid
                     )
                     
@@ -367,7 +376,8 @@ class DelegationService(
                 subject.toString()
             }
             
-            if (subjectId != delegateDid && !subjectId.startsWith("$delegateDid#")) {
+            val subjectIdStr = subjectId?.toString() ?: return@withContext false
+            if (subjectIdStr != delegateDid && !subjectIdStr.startsWith("$delegateDid#")) {
                 return@withContext false
             }
             

@@ -14,12 +14,24 @@ class BlockchainRevocationRegistryTest {
     @Test
     fun `test anchorRevocationList`() = runBlocking {
         val statusListManager = object : StatusListManager {
-            override suspend fun createStatusList(issuerDid: String, purpose: StatusPurpose, size: Int) = TODO()
+            override suspend fun createStatusList(issuerDid: String, purpose: StatusPurpose, size: Int, customId: String?) = TODO()
             override suspend fun revokeCredential(credentialId: String, statusListId: String) = TODO()
             override suspend fun suspendCredential(credentialId: String, statusListId: String) = TODO()
             override suspend fun checkRevocationStatus(credential: VerifiableCredential) = TODO()
             override suspend fun updateStatusList(statusListId: String, revokedIndices: List<Int>) = TODO()
             override suspend fun getStatusList(statusListId: String) = null
+            override suspend fun listStatusLists(issuerDid: String?) = emptyList<StatusListCredential>()
+            override suspend fun deleteStatusList(statusListId: String) = false
+            override suspend fun getStatusListStatistics(statusListId: String) = null
+            override suspend fun unrevokeCredential(credentialId: String, statusListId: String) = false
+            override suspend fun unsuspendCredential(credentialId: String, statusListId: String) = false
+            override suspend fun checkStatusByIndex(statusListId: String, index: Int) = RevocationStatus(revoked = false)
+            override suspend fun checkStatusByCredentialId(credentialId: String, statusListId: String) = RevocationStatus(revoked = false)
+            override suspend fun getCredentialIndex(credentialId: String, statusListId: String) = null
+            override suspend fun assignCredentialIndex(credentialId: String, statusListId: String, index: Int?) = 0
+            override suspend fun revokeCredentials(credentialIds: List<String>, statusListId: String) = emptyMap<String, Boolean>()
+            override suspend fun updateStatusListBatch(statusListId: String, updates: List<StatusUpdate>) = TODO()
+            override suspend fun expandStatusList(statusListId: String, additionalSize: Int) = TODO()
         }
         
         val registry = BlockchainRevocationRegistry(
@@ -56,12 +68,24 @@ class BlockchainRevocationRegistryTest {
         val expectedStatus = RevocationStatus(revoked = false)
         
         val statusListManager = object : StatusListManager {
-            override suspend fun createStatusList(issuerDid: String, purpose: StatusPurpose, size: Int) = TODO()
+            override suspend fun createStatusList(issuerDid: String, purpose: StatusPurpose, size: Int, customId: String?) = TODO()
             override suspend fun revokeCredential(credentialId: String, statusListId: String) = TODO()
             override suspend fun suspendCredential(credentialId: String, statusListId: String) = TODO()
             override suspend fun checkRevocationStatus(credential: VerifiableCredential) = expectedStatus
             override suspend fun updateStatusList(statusListId: String, revokedIndices: List<Int>) = TODO()
             override suspend fun getStatusList(statusListId: String) = null
+            override suspend fun listStatusLists(issuerDid: String?) = emptyList<StatusListCredential>()
+            override suspend fun deleteStatusList(statusListId: String) = false
+            override suspend fun getStatusListStatistics(statusListId: String) = null
+            override suspend fun unrevokeCredential(credentialId: String, statusListId: String) = false
+            override suspend fun unsuspendCredential(credentialId: String, statusListId: String) = false
+            override suspend fun checkStatusByIndex(statusListId: String, index: Int) = RevocationStatus(revoked = false)
+            override suspend fun checkStatusByCredentialId(credentialId: String, statusListId: String) = RevocationStatus(revoked = false)
+            override suspend fun getCredentialIndex(credentialId: String, statusListId: String) = null
+            override suspend fun assignCredentialIndex(credentialId: String, statusListId: String, index: Int?) = 0
+            override suspend fun revokeCredentials(credentialIds: List<String>, statusListId: String) = emptyMap<String, Boolean>()
+            override suspend fun updateStatusListBatch(statusListId: String, updates: List<StatusUpdate>) = TODO()
+            override suspend fun expandStatusList(statusListId: String, additionalSize: Int) = TODO()
         }
         
         val registry = BlockchainRevocationRegistry(

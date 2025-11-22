@@ -38,7 +38,8 @@ class BbsProofGeneratorTest {
         assertNotNull(proof)
         assertEquals("BbsBlsSignature2020", proof.type)
         assertNotNull(proof.proofValue)
-        assertEquals("PLACEHOLDER_BBS_SIGNATURE", proof.proofValue)
+        // proofValue is encoded as multibase (base58btc with 'z' prefix)
+        assertTrue(proof.proofValue!!.startsWith("z"), "proofValue should start with 'z' (multibase base58btc prefix)")
     }
 
     @Test

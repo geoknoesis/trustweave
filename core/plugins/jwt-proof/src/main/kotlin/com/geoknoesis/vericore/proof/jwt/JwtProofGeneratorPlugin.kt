@@ -198,6 +198,7 @@ class JwtProofGeneratorPlugin(
                     else -> JWSAlgorithm.RS512
                 }
             }
+            else -> JWSAlgorithm.EdDSA // Default fallback
         }
     }
 }

@@ -105,9 +105,13 @@ class CredentialVerifier(
         
         // 2. Verify proof signature
         if (credential.proof != null) {
-            proofValid = verifyProof(credential, credential.proof)
+            println("[DEBUG CredentialVerifier] Verifying proof: type=${credential.proof.type}, verificationMethod=${credential.proof.verificationMethod}")
+            proofValid = verifyProof(credential, credential.proof, didResolver)
             if (!proofValid) {
                 errors.add("Proof signature verification failed")
+                println("[DEBUG CredentialVerifier] Proof signature verification FAILED")
+            } else {
+                println("[DEBUG CredentialVerifier] Proof signature verification SUCCEEDED")
             }
         } else {
             errors.add("Credential has no proof")
@@ -115,11 +119,20 @@ class CredentialVerifier(
         
         // 2. Verify issuer DID resolution
         issuerValid = if (didResolver == null) {
+            println("[DEBUG CredentialVerifier] No DID resolver provided, skipping issuer validation")
             true
         } else {
             try {
-                didResolver.resolve(credential.issuer)?.isResolvable == true
+                println("[DEBUG CredentialVerifier] Resolving issuer DID: ${credential.issuer}")
+                val resolution = didResolver.resolve(credential.issuer)
+                issuerValid = resolution?.isResolvable == true
+                println("[DEBUG CredentialVerifier] Issuer DID resolution result: isResolvable=${resolution?.isResolvable}, document=${resolution?.document != null}")
+                if (!issuerValid) {
+                    errors.add("Failed to resolve issuer DID: ${credential.issuer}")
+                }
+                issuerValid
             } catch (e: Exception) {
+                println("[DEBUG CredentialVerifier] Exception resolving issuer DID: ${e.message}")
                 errors.add("Failed to resolve issuer DID: ${e.message}")
                 false
             }
@@ -344,7 +357,8 @@ class CredentialVerifier(
      */
     private suspend fun verifyProof(
         credential: VerifiableCredential,
-        proof: com.geoknoesis.vericore.credential.models.Proof
+        proof: com.geoknoesis.vericore.credential.models.Proof,
+        didResolver: CredentialDidResolver?
     ): Boolean {
         // Basic structure validation
         if (proof.type.isBlank()) {
@@ -360,7 +374,6 @@ class CredentialVerifier(
         }
         
         // Use SignatureVerifier for actual verification
-        val didResolver = buildDidResolver(CredentialVerificationOptions())
         if (didResolver == null) {
             // If no resolver available, can't verify signature
             return false

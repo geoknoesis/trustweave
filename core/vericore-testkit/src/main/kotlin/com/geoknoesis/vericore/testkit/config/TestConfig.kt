@@ -37,6 +37,7 @@ object TestConfig {
         const val MAX_RETRIES = "VERICORE_TEST_MAX_RETRIES"
         const val SKIP_INTEGRATION_TESTS = "VERICORE_SKIP_INTEGRATION_TESTS"
         const val TEST_LOG_LEVEL = "VERICORE_TEST_LOG_LEVEL"
+        const val SKIP_IF_NO_CREDENTIALS = "VERICORE_TEST_SKIP_IF_NO_CREDENTIALS"
     }
     
     /**
@@ -95,5 +96,13 @@ object TestConfig {
      * Default test key algorithm.
      */
     const val DEFAULT_TEST_ALGORITHM = "Ed25519"
+    
+    /**
+     * Whether to skip tests that require credentials when credentials are not available.
+     * Defaults to true. Set VERICORE_TEST_SKIP_IF_NO_CREDENTIALS=false to fail instead of skip.
+     */
+    fun skipIfNoCredentials(): Boolean {
+        return System.getenv(EnvVars.SKIP_IF_NO_CREDENTIALS)?.toBoolean() ?: true
+    }
 }
 

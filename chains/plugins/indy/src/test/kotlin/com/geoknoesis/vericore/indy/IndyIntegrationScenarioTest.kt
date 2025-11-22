@@ -3,9 +3,11 @@ package com.geoknoesis.vericore.indy
 import com.geoknoesis.vericore.VeriCore
 import com.geoknoesis.vericore.anchor.AnchorRef
 import com.geoknoesis.vericore.core.*
+import com.geoknoesis.vericore.core.types.ProofType
 import com.geoknoesis.vericore.credential.models.VerifiableCredential
 import com.geoknoesis.vericore.credential.wallet.Wallet
 import com.geoknoesis.vericore.did.DidDocument
+import com.geoknoesis.vericore.services.IssuanceConfig
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
@@ -45,7 +47,9 @@ class IndyIntegrationScenarioTest {
         )
         
         vericore = VeriCore.create {
-            registerBlockchainClient(chainId, indyClient)
+            blockchains {
+                put(chainId, indyClient)
+            }
         }
     }
 
@@ -56,14 +60,10 @@ class IndyIntegrationScenarioTest {
 
         // Step 1: Create DIDs for issuer and holder
         println("Step 1: Creating DIDs...")
-        val issuerResult = vericore.createDid()
-        assertTrue(issuerResult.isSuccess, "Should create issuer DID successfully")
-        val issuerDid = issuerResult.getOrThrow()
+        val issuerDid = vericore.dids.create()
         println("  ✓ Issuer DID: ${issuerDid.id}")
 
-        val holderResult = vericore.createDid()
-        assertTrue(holderResult.isSuccess, "Should create holder DID successfully")
-        val holderDid = holderResult.getOrThrow()
+        val holderDid = vericore.dids.create()
         println("  ✓ Holder DID: ${holderDid.id}")
 
         // Step 2: Get issuer key ID
@@ -72,21 +72,22 @@ class IndyIntegrationScenarioTest {
 
         // Step 3: Issue a verifiable credential
         println("\nStep 2: Issuing credential...")
-        val credentialResult = vericore.issueCredential(
-            issuerDid = issuerDid.id,
-            issuerKeyId = issuerKeyId,
-            credentialSubject = buildJsonObject {
+        val credential = vericore.credentials.issue(
+            issuer = issuerDid.id,
+            subject = buildJsonObject {
                 put("id", holderDid.id)
                 put("name", "Alice")
                 put("degree", "Bachelor of Science")
                 put("university", "Test University")
                 put("graduationDate", "2024-05-15")
             },
+            config = IssuanceConfig(
+                proofType = ProofType.Ed25519Signature2020,
+                keyId = issuerKeyId,
+                issuerDid = issuerDid.id
+            ),
             types = listOf("UniversityDegreeCredential", "VerifiableCredential")
         )
-        
-        assertTrue(credentialResult.isSuccess, "Should issue credential successfully")
-        val credential = credentialResult.getOrThrow()
         println("  ✓ Credential ID: ${credential.id}")
         println("  ✓ Credential Issuer: ${credential.issuer}")
         println("  ✓ Credential Types: ${credential.type}")
@@ -95,10 +96,7 @@ class IndyIntegrationScenarioTest {
 
         // Step 4: Verify the credential
         println("\nStep 3: Verifying credential...")
-        val verificationResult = vericore.verifyCredential(credential)
-        
-        assertTrue(verificationResult.isSuccess, "Should verify credential successfully")
-        val verification = verificationResult.getOrThrow()
+        val verification = vericore.credentials.verify(credential)
         println("  ✓ Verification Valid: ${verification.valid}")
         println("  ✓ Proof Valid: ${verification.proofValid}")
         println("  ✓ Issuer Valid: ${verification.issuerValid}")
@@ -108,10 +106,7 @@ class IndyIntegrationScenarioTest {
 
         // Step 5: Create wallet and store credential
         println("\nStep 4: Creating wallet and storing credential...")
-        val walletResult = vericore.createWallet(holderDid = holderDid.id)
-        
-        assertTrue(walletResult.isSuccess, "Should create wallet successfully")
-        val wallet = walletResult.getOrThrow()
+        val wallet = vericore.wallets.create(holderDid = holderDid.id)
         println("  ✓ Wallet ID: ${wallet.walletId}")
 
         val credentialId = requireNotNull(credential.id) { "Credential should have an ID" }
@@ -131,21 +126,11 @@ class IndyIntegrationScenarioTest {
             encodeDefaults = true
         }
         val credentialJson = json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
-        val anchorResult = vericore.anchor(
+        val anchor = vericore.blockchains.anchor(
             data = credentialJson,
             serializer = JsonElement.serializer(),
             chainId = chainId
         )
-        
-        if (anchorResult.isFailure) {
-            val error = anchorResult.exceptionOrNull()
-            println("  ✗ Anchoring failed: ${error?.message}")
-            error?.printStackTrace()
-            fail("Should anchor credential successfully: ${error?.message}")
-        }
-        
-        assertTrue(anchorResult.isSuccess, "Should anchor credential successfully")
-        val anchor = anchorResult.getOrThrow()
         println("  ✓ Chain ID: ${anchor.ref.chainId}")
         println("  ✓ Transaction Hash: ${anchor.ref.txHash}")
         println("  ✓ Network: ${anchor.ref.extra["network"]}")
@@ -157,13 +142,10 @@ class IndyIntegrationScenarioTest {
 
         // Step 8: Read back anchored data
         println("\nStep 6: Reading anchored data...")
-        val readResult = vericore.readAnchor<JsonElement>(
+        val readJson = vericore.blockchains.read<JsonElement>(
             ref = anchor.ref,
             serializer = JsonElement.serializer()
         )
-        
-        assertTrue(readResult.isSuccess, "Should read anchored data successfully")
-        val readJson = readResult.getOrThrow()
         val readCredential = Json.decodeFromJsonElement(VerifiableCredential.serializer(), readJson)
         println("  ✓ Read Credential ID: ${readCredential.id}")
         println("  ✓ Read Credential Issuer: ${readCredential.issuer}")
@@ -172,10 +154,7 @@ class IndyIntegrationScenarioTest {
 
         // Step 9: Verify the read credential
         println("\nStep 7: Verifying read credential...")
-        val readVerificationResult = vericore.verifyCredential(readCredential)
-        
-        assertTrue(readVerificationResult.isSuccess, "Should verify read credential successfully")
-        val readVerification = readVerificationResult.getOrThrow()
+        val readVerification = vericore.credentials.verify(readCredential)
         println("  ✓ Read Verification Valid: ${readVerification.valid}")
         assertTrue(readVerification.valid, "Read credential should be valid")
 
@@ -190,49 +169,33 @@ class IndyIntegrationScenarioTest {
         // Test invalid chain ID
         println("Testing invalid chain ID...")
         val testData = buildJsonObject { put("test", "data") }
-        val invalidChainResult = vericore.anchor(
-            data = testData,
-            serializer = JsonElement.serializer(),
-            chainId = "invalid:chain:id"
-        )
-        
-        assertTrue(invalidChainResult.isFailure, "Should fail with invalid chain ID")
-        invalidChainResult.fold(
-            onSuccess = { fail("Should not succeed with invalid chain ID") },
-            onFailure = { error ->
-                when (error) {
-                    is VeriCoreError.ChainNotRegistered -> {
-                        println("  ✓ Correctly identified invalid chain ID")
-                        assertTrue(error.chainId == "invalid:chain:id")
-                    }
-                    else -> fail("Should return ChainNotRegistered error")
-                }
-            }
-        )
+        try {
+            vericore.blockchains.anchor(
+                data = testData,
+                serializer = JsonElement.serializer(),
+                chainId = "invalid:chain:id"
+            )
+            fail("Should fail with invalid chain ID")
+        } catch (error: VeriCoreError.ChainNotRegistered) {
+            println("  ✓ Correctly identified invalid chain ID")
+            assertTrue(error.chainId == "invalid:chain:id")
+        } catch (e: Throwable) {
+            fail("Should return ChainNotRegistered error, got: ${e::class.simpleName}")
+        }
 
         // Test DID resolution error handling
         println("\nTesting DID resolution error handling...")
-        val resolveResult = vericore.resolveDid("did:unknown:test")
-        
-        resolveResult.fold(
-            onSuccess = { 
-                // May succeed if method is registered
-                println("  ✓ DID resolved (method may be registered)")
-            },
-            onFailure = { error ->
-                when (error) {
-                    is VeriCoreError.DidMethodNotRegistered -> {
-                        println("  ✓ Correctly identified unregistered DID method")
-                    }
-                    is VeriCoreError.InvalidDidFormat -> {
-                        println("  ✓ Correctly identified invalid DID format")
-                    }
-                    else -> {
-                        println("  ✓ Error: ${error.message}")
-                    }
-                }
-            }
-        )
+        try {
+            val result = vericore.dids.resolve("did:unknown:test")
+            // May succeed if method is registered
+            println("  ✓ DID resolved (method may be registered)")
+        } catch (error: VeriCoreError.DidMethodNotRegistered) {
+            println("  ✓ Correctly identified unregistered DID method")
+        } catch (error: VeriCoreError.InvalidDidFormat) {
+            println("  ✓ Correctly identified invalid DID format")
+        } catch (e: Throwable) {
+            println("  ✓ Error: ${e.message}")
+        }
 
         println("\n=== Error handling test completed ===\n")
     }
@@ -262,25 +225,19 @@ class IndyIntegrationScenarioTest {
         // Anchor custom data
         println("Anchoring custom data type...")
         val digestJson = Json.encodeToJsonElement(CredentialDigest.serializer(), digest)
-        val anchorResult = vericore.anchor(
+        val anchor = vericore.blockchains.anchor(
             data = digestJson,
             serializer = JsonElement.serializer(),
             chainId = chainId
         )
-        
-        assertTrue(anchorResult.isSuccess, "Should anchor custom data successfully")
-        val anchor = anchorResult.getOrThrow()
         println("  ✓ Anchored at: ${anchor.ref.txHash}")
 
         // Read back custom data
         println("Reading back custom data...")
-        val readResult = vericore.readAnchor<JsonElement>(
+        val readJson = vericore.blockchains.read<JsonElement>(
             ref = anchor.ref,
             serializer = JsonElement.serializer()
         )
-        
-        assertTrue(readResult.isSuccess, "Should read custom data successfully")
-        val readJson = readResult.getOrThrow()
         val readDigest = Json.decodeFromJsonElement(CredentialDigest.serializer(), readJson)
         println("  ✓ Read VC ID: ${readDigest.vcId}")
         println("  ✓ Read Digest: ${readDigest.digest}")
@@ -298,24 +255,28 @@ class IndyIntegrationScenarioTest {
         println("\n=== Indy Integration with Multiple Credentials ===\n")
 
         // Create issuer and holder
-        val issuerDid = vericore.createDid().getOrThrow()
-        val holderDid = vericore.createDid().getOrThrow()
+        val issuerDid = vericore.dids.create()
+        val holderDid = vericore.dids.create()
         val issuerKeyId = issuerDid.verificationMethod.first().id
 
         // Issue multiple credentials
         val credentials = mutableListOf<VerifiableCredential>()
         
         for (i in 1..3) {
-            val credential = vericore.issueCredential(
-                issuerDid = issuerDid.id,
-                issuerKeyId = issuerKeyId,
-                credentialSubject = buildJsonObject {
+            val credential = vericore.credentials.issue(
+                issuer = issuerDid.id,
+                subject = buildJsonObject {
                     put("id", holderDid.id)
                     put("credentialNumber", i)
                     put("type", "TestCredential$i")
                 },
+                config = IssuanceConfig(
+                    proofType = ProofType.Ed25519Signature2020,
+                    keyId = issuerKeyId,
+                    issuerDid = issuerDid.id
+                ),
                 types = listOf("TestCredential$i")
-            ).getOrThrow()
+            )
             
             credentials.add(credential)
             println("  ✓ Issued credential $i: ${credential.id}")
@@ -324,7 +285,7 @@ class IndyIntegrationScenarioTest {
         // Verify all credentials
         println("\nVerifying all credentials...")
         credentials.forEachIndexed { index, credential ->
-            val verification = vericore.verifyCredential(credential).getOrThrow()
+            val verification = vericore.credentials.verify(credential)
             assertTrue(verification.valid, "Credential ${index + 1} should be valid")
             println("  ✓ Credential ${index + 1} verified")
         }
@@ -333,11 +294,11 @@ class IndyIntegrationScenarioTest {
         println("\nAnchoring all credentials...")
         val anchors = credentials.map { credential ->
             val credentialJson = Json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
-            val anchor = vericore.anchor(
+            val anchor = vericore.blockchains.anchor(
                 data = credentialJson,
                 serializer = JsonElement.serializer(),
                 chainId = chainId
-            ).getOrThrow()
+            )
             println("  ✓ Anchored credential: ${credential.id} at ${anchor.ref.txHash}")
             anchor
         }

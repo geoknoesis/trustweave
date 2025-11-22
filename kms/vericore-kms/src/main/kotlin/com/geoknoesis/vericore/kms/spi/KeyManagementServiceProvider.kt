@@ -59,6 +59,44 @@ interface KeyManagementServiceProvider {
     }
     
     /**
+     * Returns the list of environment variables required for this provider to function.
+     * 
+     * This method allows tests to automatically skip when required credentials are not available.
+     * Each provider implementation should declare what environment variables it needs.
+     * 
+     * **Example:**
+     * ```kotlin
+     * override val requiredEnvironmentVariables: List<String> = listOf(
+     *     "AWS_REGION",
+     *     "AWS_ACCESS_KEY_ID",
+     *     "AWS_SECRET_ACCESS_KEY"
+     * )
+     * ```
+     * 
+     * **Note:** Optional env vars should be prefixed with "?" (e.g., "?AWS_SESSION_TOKEN")
+     * 
+     * @return List of required environment variable names (empty by default for providers that don't need credentials)
+     */
+    val requiredEnvironmentVariables: List<String>
+        get() = emptyList()
+    
+    /**
+     * Checks if all required environment variables are available for this provider.
+     * 
+     * Default implementation checks if all non-optional env vars are set.
+     * Providers can override this to implement custom logic (e.g., checking for IAM roles).
+     * 
+     * @return true if all required env vars are set or provider-specific checks pass, false otherwise
+     */
+    fun hasRequiredEnvironmentVariables(): Boolean {
+        return requiredEnvironmentVariables.all { envVar ->
+            val isOptional = envVar.startsWith("?")
+            val actualVar = if (isOptional) envVar.substring(1) else envVar
+            if (isOptional) true else System.getenv(actualVar) != null
+        }
+    }
+    
+    /**
      * Creates a KeyManagementService instance.
      *
      * @param options Configuration options for the service

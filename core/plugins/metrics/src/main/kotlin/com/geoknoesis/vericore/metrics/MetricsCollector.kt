@@ -139,7 +139,7 @@ class InMemoryMetricsCollector : MetricsCollector {
         name: String,
         tags: Map<String, String>,
         value: Long
-    ) = withContext(Dispatchers.IO) {
+    ): Unit = withContext(Dispatchers.IO) {
         val key = buildKey(name, tags)
         counters.computeIfAbsent(key) { AtomicLong(0) }.addAndGet(value)
     }
@@ -148,7 +148,7 @@ class InMemoryMetricsCollector : MetricsCollector {
         name: String,
         duration: Long,
         tags: Map<String, String>
-    ) = withContext(Dispatchers.IO) {
+    ): Unit = withContext(Dispatchers.IO) {
         val key = buildKey(name, tags)
         synchronized(lock) {
             durations.computeIfAbsent(key) { mutableListOf() }.add(duration)
@@ -161,7 +161,7 @@ class InMemoryMetricsCollector : MetricsCollector {
         name: String,
         value: Double,
         tags: Map<String, String>
-    ) = withContext(Dispatchers.IO) {
+    ): Unit = withContext(Dispatchers.IO) {
         val key = buildKey(name, tags)
         synchronized(lock) {
             values.computeIfAbsent(key) { mutableListOf() }.add(value)

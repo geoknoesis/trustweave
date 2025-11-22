@@ -1,5 +1,6 @@
 package com.geoknoesis.vericore.services
 
+import com.geoknoesis.vericore.VeriCoreContext
 import com.geoknoesis.vericore.core.*
 import com.geoknoesis.vericore.core.types.WalletType
 import com.geoknoesis.vericore.credential.wallet.Wallet
@@ -70,7 +71,7 @@ class WalletService(
             )
             
             wallet as? Wallet ?: throw IllegalStateException(
-                "WalletFactory returned unsupported instance: ${wallet?.let { it::class.qualifiedName }}"
+                "WalletFactory returned unsupported instance: ${wallet?.let { w: Any -> w::class.qualifiedName }}"
             )
         } catch (e: Exception) {
             throw VeriCoreError.WalletCreationFailed(

@@ -49,9 +49,28 @@ class MyIntegrationTest : BaseIntegrationTest() {
 
 Use the provided templates as starting points:
 
+### Plugin Test Templates
+
 - **DID Methods**: `docs/contributing/test-templates/DidMethodTestTemplate.kt`
 - **KMS Plugins**: `docs/contributing/test-templates/KmsPluginTestTemplate.kt`
 - **Chain Plugins**: `docs/contributing/test-templates/ChainPluginTestTemplate.kt`
+
+### Trust Layer Integration Test Templates
+
+Comprehensive in-memory workflow templates for trust layer integration tests:
+
+- **Location**: `core/vericore-trust/src/test/kotlin/com/geoknoesis/vericore/integration/InMemoryTrustLayerIntegrationTest.kt`
+- **Templates Available**:
+  - Complete in-memory workflow
+  - Credential revocation workflow
+  - Wallet storage workflow
+  - Verifiable presentation workflow
+  - DID update workflow
+  - Blockchain anchoring workflow
+  - Smart contract workflow
+  - External services template
+
+See [Trust Layer Test Templates](trust-layer-test-templates.md) for detailed documentation and examples.
 
 ## Test Checklist
 
@@ -128,6 +147,8 @@ class MyTest : BasePluginTest() {
 
 ## Next Steps
 
+- [Trust Layer Test Templates](trust-layer-test-templates.md) - Comprehensive workflow templates
 - [Test Patterns](test-patterns.md) - Common test patterns and examples
 - [Integration Testing](integration-testing.md) - Integration test best practices
+- [Plugin Credential Handling](plugin-credential-handling.md) - Handling external service credentials
 

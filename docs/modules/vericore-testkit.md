@@ -184,9 +184,42 @@ val fixture = VeriCoreTestFixture.builder()
 
 4. **Verify Integrity** – Use `IntegrityVerifier` to verify integrity chains in tests.
 
+## Trust Layer Test Templates
+
+Comprehensive in-memory test templates for trust layer integration tests are available in:
+```
+core/vericore-trust/src/test/kotlin/com/geoknoesis/vericore/integration/InMemoryTrustLayerIntegrationTest.kt
+```
+
+These templates provide complete, working examples of:
+- Basic credential issuance and verification
+- Credential revocation workflows
+- Wallet storage and retrieval
+- Verifiable presentation creation
+- DID update operations
+- Blockchain anchoring
+- Smart contract workflows
+- External services integration
+
+**Key Pattern:** All templates follow the essential pattern of extracting key IDs from DID documents (not generating new keys) to ensure proof verification succeeds.
+
+See [Trust Layer Test Templates](../contributing/testing/trust-layer-test-templates.md) for detailed documentation.
+
+## Plugin Credential Handling
+
+The testkit includes a system for handling tests that require external service credentials:
+
+- **`@RequiresPlugin` annotation** - Marks tests requiring specific plugins
+- **`PluginCredentialExtension`** - JUnit 5 extension that automatically skips tests when required environment variables are not available
+- **Provider-based configuration** - Each plugin advertises its required environment variables
+
+See [Plugin Credential Handling](../contributing/testing/plugin-credential-handling.md) for details.
+
 ## Next Steps
 
 - Review [Testing Strategies](../advanced/testing-strategies.md) for advanced testing patterns
+- See [Trust Layer Test Templates](../contributing/testing/trust-layer-test-templates.md) for comprehensive workflow templates
+- Explore [Plugin Credential Handling](../contributing/testing/plugin-credential-handling.md) for external service testing
 - Explore [EO Test Integration README](../../core/vericore-testkit/src/main/kotlin/com/geoknoesis/vericore/testkit/eo/README.md) for detailed EO test utilities
 - See [Test Fixtures](../../core/vericore-testkit/src/main/kotlin/com/geoknoesis/vericore/testkit/VeriCoreTestFixture.kt) for fixture builder documentation
 - Check [Creating Plugins](../contributing/creating-plugins.md) to understand SPI interfaces being mocked

@@ -14,6 +14,7 @@ Welcome to VeriCore! This section provides an overview of the library, its purpo
 ## Next Steps
 
 - [Executive Overview](executive-overview.md) - High-level overview of VeriCore's value proposition, benefits, and market position
+- [The Web of Trust](web-of-trust.md) - Introduction to the web of trust, open standards, and ecosystem benefits
 - [What is VeriCore?](what-is-vericore.md) - Learn about the library's purpose and design philosophy
 - [Key Features](key-features.md) - Explore the main capabilities
 - [Use Cases](use-cases.md) - See how VeriCore is used in practice

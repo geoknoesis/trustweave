@@ -1,15 +1,15 @@
 # Key Management
 
-> This guide is curated by [Geoknoesis LLC](https://www.geoknoesis.com). It outlines how VeriCore treats key custody across decentralized identity workflows.
+> This guide is curated by [Geoknoesis LLC](https://www.geoknoesis.com). It outlines how TrustWeave treats key custody across decentralized identity workflows.
 
 ## What is key management?
 
-Key management covers the generation, storage, rotation, and usage of cryptographic keys. In VeriCore, every Decentralized Identifier (DID) method, credential issuance, and presentation flow relies on a `KeyManagementService` (Key Management Service, KMS) abstraction.
+Key management covers the generation, storage, rotation, and usage of cryptographic keys. In TrustWeave, every Decentralized Identifier (DID) method, credential issuance, and presentation flow relies on a `KeyManagementService` (Key Management Service, KMS) abstraction.
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -21,7 +21,7 @@ dependencies {
 - **Interoperability** – different environments (cloud Hardware Security Module (HSM), Vault, in-memory test Key Management Service (KMS)) provide the same interface.  
 - **Lifecycle** – keys can be rotated or deactivated while preserving credential history via key identifiers (`keyId`).
 
-## How VeriCore models key management
+## How TrustWeave models key management
 
 | Component | Purpose |
 |-----------|---------|
@@ -35,7 +35,7 @@ Built-in providers include the in-memory test Key Management Service (KMS) and t
 ### Example: checking algorithm support
 
 ```kotlin
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.kms.*
 
 suspend fun checkKmsCapabilities(kms: KeyManagementService) {
     // Get all supported algorithms
@@ -57,7 +57,7 @@ suspend fun checkKmsCapabilities(kms: KeyManagementService) {
 ### Example: generating and using keys
 
 ```kotlin
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.kms.*
 
 suspend fun issueSignerKey(kms: KeyManagementService): String {
     // Type-safe algorithm usage (recommended)
@@ -102,8 +102,8 @@ println("Holder key created: ${keyHandle.id}")
 
 - **Production** – back keys with Hardware Security Modules (HSMs) or cloud Key Management Service (KMS) ([AWS KMS](../integrations/aws-kms.md), [Azure Key Vault](../integrations/azure-kms.md), [Google Cloud KMS](../integrations/google-kms.md), [HashiCorp Vault](../integrations/hashicorp-vault-kms.md), etc.) via custom providers.  
 - **Rotation** – maintain previous keys so verifiers can validate historic credentials; rotate key IDs in VC proofs.  
-- **Access control** – enforce authorisation at the Key Management Service (KMS) boundary; VeriCore assumes the provider handles policy.  
-- **Testing** – rely on `InMemoryKeyManagementService` from `vericore-testkit` for determinism.
+- **Access control** – enforce authorisation at the Key Management Service (KMS) boundary; TrustWeave assumes the provider handles policy.  
+- **Testing** – rely on `InMemoryKeyManagementService` from `TrustWeave-testkit` for determinism.
 
 ## See also
 
@@ -118,7 +118,7 @@ println("Holder key created: ${keyHandle.id}")
 
 # Key Management
 
-Key management underpins every trust workflow in VeriCore. Keys sign credentials and presentations, decrypt payloads, and authenticate wallets. The platform treats Key Management Service (KMS) as a first-class Service Provider Interface (SPI) so you can swap implementations without rewriting your business logic.
+Key management underpins every trust workflow in TrustWeave. Keys sign credentials and presentations, decrypt payloads, and authenticate wallets. The platform treats Key Management Service (KMS) as a first-class Service Provider Interface (SPI) so you can swap implementations without rewriting your business logic.
 
 ## Responsibilities
 
@@ -154,18 +154,18 @@ interface KeyManagementService {
 
 | Module | Provider | Supported Algorithms | Notes |
 |--------|----------|----------------------|-------|
-| `vericore-testkit` | `InMemoryKeyManagementService` | Ed25519, secp256k1 | Ideal for unit tests; stores keys in-memory. |
+| `TrustWeave-testkit` | `InMemoryKeyManagementService` | Ed25519, secp256k1 | Ideal for unit tests; stores keys in-memory. |
 | `kms/plugins/waltid` | `WaltIdKeyManagementService` | Ed25519, secp256k1, P-256, P-384, P-521 | Uses walt.id crypto to generate and sign keys. |
-| Community | SPI implementations | Varies by provider | Register via `META-INF/services/com.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider`. |
+| Community | SPI implementations | Varies by provider | Register via `META-INF/services/com.trustweave.kms.spi.KeyManagementServiceProvider`. |
 
-To use a custom provider, include it on the classpath and VeriCore will discover it automatically when building the facade (`VeriCore.create { keys { provider("custom") } }`).
+To use a custom provider, include it on the classpath and TrustWeave will discover it automatically when building the facade (`TrustWeave.create { keys { provider("custom") } }`).
 
 ### Algorithm Discovery
 
 You can discover which providers support specific algorithms:
 
 ```kotlin
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.kms.*
 
 // Discover all providers and their algorithms
 val providers = AlgorithmDiscovery.discoverProviders()
@@ -215,14 +215,14 @@ Presentation workflows follow the same pattern when creating verifiable presenta
 
 - **Production** – back your `KeyManagementService` with a Hardware Security Module (HSM), cloud Key Management Service (KMS), or equivalent secure enclave. Never store production keys in process memory.
 - **Rotation** – implement periodic key rotation and maintain historic keys (with `keyId` suffixes) so verifiers can still check older proofs.
-- **Access control** – centralize authorization for key usage; VeriCore assumes the Key Management Service (KMS) enforces policy.
+- **Access control** – centralize authorization for key usage; TrustWeave assumes the Key Management Service (KMS) enforces policy.
 
 ## Extending the SPI
 
 Create a module that implements `KeyManagementServiceProvider`:
 
 ```kotlin
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.kms.*
 
 class VaultKmsProvider : KeyManagementServiceProvider {
     override val name = "vault"
@@ -265,13 +265,13 @@ class VaultKms(private val options: Map<String, Any?>) : KeyManagementService {
 }
 ```
 
-Add `META-INF/services/com.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider` containing the provider's fully qualified class name. After that, `VeriCoreDefaults` can pick it up automatically.
+Add `META-INF/services/com.trustweave.kms.spi.KeyManagementServiceProvider` containing the provider's fully qualified class name. After that, `TrustWeaveDefaults` can pick it up automatically.
 
 **Important:** All providers MUST implement `supportedAlgorithms` and all KMS instances MUST implement `getSupportedAlgorithms()`.
 
 ## Related Reading
 
 - [Wallet API Reference](../api-reference/wallet-api.md#keymanagement) for DSL hooks and typed options.
-- [Testkit KMS](../modules/vericore-core.md) documentation for testing helpers.
-- [SPI Guide](../modules/vericore-spi.md) to build custom providers.
+- [Testkit KMS](../modules/trustweave-common.md) documentation for testing helpers.
+- [SPI Guide](../advanced/spi.md) to build custom providers.
 

@@ -1,10 +1,10 @@
 # Ethereum DID (did:ethr) Integration
 
-> This guide covers the did:ethr method integration for VeriCore. The did:ethr plugin provides Ethereum DID resolution with blockchain anchoring support.
+> This guide covers the did:ethr method integration for TrustWeave. The did:ethr plugin provides Ethereum DID resolution with blockchain anchoring support.
 
 ## Overview
 
-The `did/plugins/ethr` module provides an implementation of VeriCore's `DidMethod` interface using the Ethereum DID method. This integration enables you to:
+The `did/plugins/ethr` module provides an implementation of TrustWeave's `DidMethod` interface using the Ethereum DID method. This integration enables you to:
 
 - Create and resolve DIDs on Ethereum blockchain
 - Store DID documents via blockchain anchoring
@@ -18,17 +18,17 @@ Add the did:ethr module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.did:ethr:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore.did:base:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:ethr:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
     
     // Web3j for Ethereum blockchain
     implementation("org.web3j:core:4.10.0")
     
     // Optional: Polygon client for EVM-compatible chains
-    implementation("com.geoknoesis.vericore.chains:polygon:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.chains:polygon:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -37,10 +37,10 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.geoknoesis.vericore.ethrdid.*
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.polygon.PolygonBlockchainAnchorClient
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.ethrdid.*
+import com.trustweave.anchor.*
+import com.trustweave.polygon.PolygonBlockchainAnchorClient
+import com.trustweave.kms.*
 
 // Create configuration
 val config = EthrDidConfig.builder()
@@ -80,8 +80,8 @@ val sepoliaConfig = EthrDidConfig.sepolia(
 When the module is on the classpath, did:ethr is automatically available:
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
-import com.geoknoesis.vericore.anchor.*
+import com.trustweave.did.*
+import com.trustweave.anchor.*
 import java.util.ServiceLoader
 
 // Discover did:ethr provider
@@ -200,18 +200,18 @@ val config = EthrDidConfig.builder()
 | Sepolia Testnet | `eip155:11155111` |
 | Goerli Testnet | `eip155:5` |
 
-## Integration with VeriCore
+## Integration with TrustWeave
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.ethrdid.*
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.polygon.PolygonBlockchainAnchorClient
+import com.trustweave.TrustWeave
+import com.trustweave.ethrdid.*
+import com.trustweave.anchor.*
+import com.trustweave.polygon.PolygonBlockchainAnchorClient
 
 val config = EthrDidConfig.sepolia("https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY")
 val anchorClient = PolygonBlockchainAnchorClient(config.chainId, config.toMap())
 
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     kms = InMemoryKeyManagementService()
     
     blockchain {
@@ -224,11 +224,11 @@ val vericore = VeriCore.create {
 }
 
 // Use did:ethr
-val did = vericore.createDid("ethr") {
+val did = TrustWeave.createDid("ethr") {
     algorithm = KeyAlgorithm.SECP256K1
 }.getOrThrow()
 
-val resolved = vericore.resolveDid(did.id).getOrThrow()
+val resolved = TrustWeave.resolveDid(did.id).getOrThrow()
 ```
 
 ## ERC1056 Compatibility
@@ -257,7 +257,7 @@ Common errors and solutions:
 For testing without actual blockchain:
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 
 val config = EthrDidConfig.sepolia("https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY")
 val anchorClient = InMemoryBlockchainAnchorClient(config.chainId)

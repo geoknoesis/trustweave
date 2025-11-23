@@ -1,6 +1,6 @@
 # Earth Observation Scenario
 
-This guide walks you through building a complete Earth Observation (EO) data integrity verification system using VeriCore. You'll learn how to create DIDs, compute digests, build integrity chains, and anchor data to blockchains.
+This guide walks you through building a complete Earth Observation (EO) data integrity verification system using TrustWeave. You'll learn how to create DIDs, compute digests, build integrity chains, and anchor data to blockchains.
 
 ## What You'll Build
 
@@ -90,7 +90,7 @@ Earth Observation data (like satellite imagery) needs to be trustworthy. When so
 3. **What's its quality?** - Is the data reliable?
 4. **Where did it come from?** - What's the data's provenance?
 
-VeriCore solves this by creating a **verifiable integrity chain** that links all this information together and anchors it to a blockchain for tamper-proof verification.
+TrustWeave solves this by creating a **verifiable integrity chain** that links all this information together and anchors it to a blockchain for tamper-proof verification.
 
 ## How It Works: The Integrity Chain
 
@@ -121,22 +121,22 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`. This pulls in the core runtime plus optional adapters the scenario uses (JSON, DID, anchoring, and the in-memory test kit).
+Add TrustWeave dependencies to your `build.gradle.kts`. This pulls in the core runtime plus optional adapters the scenario uses (JSON, DID, anchoring, and the in-memory test kit).
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
     
     // Test kit for in-memory implementations
-    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
     
     // Optional: Algorand adapter for real blockchain anchoring
-    implementation("com.geoknoesis.vericore.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -150,17 +150,17 @@ dependencies {
 
 ## Step 2: Complete Runnable Example
 
-Here's the full Earth Observation data integrity workflow using the VeriCore facade API. This complete, copy-paste ready example demonstrates the entire workflow from DID creation to blockchain anchoring and verification.
+Here's the full Earth Observation data integrity workflow using the TrustWeave facade API. This complete, copy-paste ready example demonstrates the entire workflow from DID creation to blockchain anchoring and verification.
 
 ```kotlin
 package com.example.earth.observation
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.credential.models.VerifiableCredential
-import com.geoknoesis.vericore.json.DigestUtils
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.TrustWeave
+import com.trustweave.anchor.BlockchainAnchorRegistry
+import com.trustweave.core.*
+import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.json.DigestUtils
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -173,16 +173,16 @@ fun main() = runBlocking {
     println("Earth Observation Data Integrity Scenario - Complete End-to-End Example")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance with blockchain anchoring
-    val vericore = VeriCore.create {
+    // Step 1: Create TrustWeave instance with blockchain anchoring
+    val TrustWeave = TrustWeave.create {
         blockchains {
             "inmemory:anchor" to InMemoryBlockchainAnchorClient("inmemory:anchor")
         }
     }
-    println("\n✅ VeriCore initialized with blockchain anchoring")
+    println("\n✅ TrustWeave initialized with blockchain anchoring")
     
     // Step 2: Create DID for data provider
-    val providerDidDoc = vericore.dids.create()
+    val providerDidDoc = TrustWeave.dids.create()
     val providerDid = providerDidDoc.id
     val providerKeyId = providerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
@@ -259,7 +259,7 @@ fun main() = runBlocking {
     println("✅ Linkset created: $linksetDigest")
     
     // Step 5: Issue Verifiable Credential referencing the Linkset
-    val credential = vericore.credentials.issue(
+    val credential = TrustWeave.credentials.issue(
         issuerDid = providerDid,
         issuerKeyId = providerKeyId,
         credentialSubject = buildJsonObject {
@@ -298,7 +298,7 @@ fun main() = runBlocking {
     println("   Transaction Hash: ${anchorResult.ref.txHash}")
     
     // Step 7: Verify the credential
-    val verification = vericore.credentials.verify(credential)
+    val verification = TrustWeave.credentials.verify(credential)
     
     if (verification.valid) {
         println("\n✅ Credential Verification SUCCESS")
@@ -330,7 +330,7 @@ fun main() = runBlocking {
 Earth Observation Data Integrity Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ VeriCore initialized with blockchain anchoring
+✅ TrustWeave initialized with blockchain anchoring
 ✅ Data Provider DID: did:key:z6Mk...
 ✅ Metadata artifact created: u5v...
 ✅ Provenance artifact created: u5v...
@@ -377,7 +377,7 @@ Earth Observation Data Integrity Scenario - Complete End-to-End Example
 
 ## Step 3: Step-by-Step Breakdown
 
-The sections below explain each step in detail. The complete example above demonstrates the full workflow using the VeriCore facade API.
+The sections below explain each step in detail. The complete example above demonstrates the full workflow using the TrustWeave facade API.
 
 ### Understanding the Integrity Chain
 
@@ -418,7 +418,7 @@ For a complete working example, see the code in Step 2 above.
 Earth Observation Data Integrity Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ VeriCore initialized with blockchain anchoring
+✅ TrustWeave initialized with blockchain anchoring
 ✅ Data Provider DID: did:key:z6Mk...
 ✅ Metadata artifact created: u5v...
 ✅ Provenance artifact created: u5v...
@@ -448,9 +448,9 @@ Earth Observation Data Integrity Scenario - Complete End-to-End Example
 ======================================================================
 ```
 
-**Alternative:** Run the example from the VeriCore examples module:
+**Alternative:** Run the example from the TrustWeave examples module:
 ```bash
-./gradlew :vericore-examples:runEarthObservation
+./gradlew :TrustWeave-examples:runEarthObservation
 ```
 
 ## Step 5: Using Real Blockchain (Algorand)
@@ -469,7 +469,7 @@ So far, we've used an in-memory blockchain client for testing. For production, y
 Replace the in-memory client with Algorand:
 
 ```kotlin
-import com.geoknoesis.vericore.algorand.AlgorandBlockchainAnchorClient
+import com.trustweave.algorand.AlgorandBlockchainAnchorClient
 
 // Replace this:
 // val anchorClient = InMemoryBlockchainAnchorClient(chainId)

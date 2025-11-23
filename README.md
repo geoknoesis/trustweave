@@ -1,4 +1,4 @@
-# VeriCore
+# TrustWeave
 
 > The Foundation for Decentralized Trust and Identity
 
@@ -7,24 +7,24 @@ A **neutral, reusable trust and identity core** library for Kotlin, designed to 
 ## Quick Start (30 Seconds) ⚡
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.did.didCreationOptions
-import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.trustweave.TrustWeave
+import com.trustweave.did.didCreationOptions
+import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = trustweave.create()
 
-    val didDocument = vericore.createDid(
+    val didDocument = trustweave.createDid(
         method = "key",
         options = didCreationOptions {
-            algorithm = com.geoknoesis.vericore.did.DidCreationOptions.KeyAlgorithm.ED25519
+            algorithm = com.trustweave.did.DidCreationOptions.KeyAlgorithm.ED25519
         }
     ).getOrThrow()
 
-    val credential = vericore.issueCredential(
+    val credential = trustweave.issueCredential(
         issuerDid = didDocument.id,
         issuerKeyId = didDocument.id,
         credentialSubject = buildJsonObject {
@@ -34,10 +34,10 @@ fun main() = runBlocking {
         types = listOf("PersonCredential")
     ).getOrThrow()
 
-    val verification = vericore.verifyCredential(credential).getOrThrow()
+    val verification = trustweave.verifyCredential(credential).getOrThrow()
     println("Credential valid: ${verification.valid}")
 
-    val wallet = vericore.createWallet(
+    val wallet = trustweave.createWallet(
         holderDid = "did:key:alice"
     ) {
         label = "Alice Wallet"
@@ -58,7 +58,7 @@ fun main() = runBlocking {
 - **Service Provider Interface (SPI)-ready from day one.** Drop in your own `WalletFactory` or `CredentialServiceProvider` without reflection or map juggling.
 
 ```kotlin
-import com.geoknoesis.vericore.spi.services.credentialServiceCreationOptions
+import com.trustweave.spi.services.credentialServiceCreationOptions
 
 val options = credentialServiceCreationOptions {
     enabled = true
@@ -70,19 +70,19 @@ val options = credentialServiceCreationOptions {
 
 ## Installation
 
-Add VeriCore to your project:
+Add TrustWeave to your project:
 
 ```kotlin
 dependencies {
     // All-in-one dependency (recommended)
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")  // For testing
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")  // For testing
 }
 ```
 
 ## Overview
 
-VeriCore provides a modular architecture for building trust and identity systems that can be used across multiple contexts:
+TrustWeave provides a modular architecture for building trust and identity systems that can be used across multiple contexts:
 
 - **Earth Observation (EO) catalogues**
 - **Spatial Web Nodes**
@@ -91,18 +91,17 @@ VeriCore provides a modular architecture for building trust and identity systems
 
 ## Architecture
 
-VeriCore is organized into a domain-centric structure with core modules and plugin implementations:
+TrustWeave is organized into a domain-centric structure with core modules and plugin implementations:
 
 ### Core Modules (in `core/` directory)
 
-- **`vericore-core`**: Base types, exceptions, credential APIs
-- **`vericore-spi`**: Service Provider Interface definitions
-- **`vericore-json`**: JSON canonicalization and digest computation utilities
-- **`vericore-trust`**: Trust registry and trust layer
-- **`vericore-kms`**: Key Management Service (KMS) abstraction
-- **`vericore-did`**: Decentralized Identifier (DID) and DID Document management with pluggable DID methods
-- **`vericore-anchor`**: Blockchain anchoring abstraction with chain-agnostic interfaces
-- **`vericore-testkit`**: In-memory test implementations for all interfaces
+- **`TrustWeave-common`**: Base types, exceptions, credential APIs (includes SPI interfaces)
+- **`TrustWeave-json`**: JSON canonicalization and digest computation utilities
+- **`TrustWeave-trust`**: Trust registry and trust layer
+- **`TrustWeave-kms`**: Key Management Service (KMS) abstraction
+- **`TrustWeave-did`**: Decentralized Identifier (DID) and DID Document management with pluggable DID methods
+- **`TrustWeave-anchor`**: Blockchain anchoring abstraction with chain-agnostic interfaces
+- **`TrustWeave-testkit`**: In-memory test implementations for all interfaces
 
 ### Plugin Modules
 
@@ -111,9 +110,9 @@ VeriCore is organized into a domain-centric structure with core modules and plug
 - **Chain Plugins** (`chains/plugins/`): Blockchain adapters (algorand, polygon, ethereum, base, etc.)
 
 All plugins use hierarchical Maven group IDs:
-- DID plugins: `com.geoknoesis.vericore.did:*`
-- KMS plugins: `com.geoknoesis.vericore.kms:*`
-- Chain plugins: `com.geoknoesis.vericore.chains:*`
+- DID plugins: `com.trustweave.did:*`
+- KMS plugins: `com.trustweave.kms:*`
+- Chain plugins: `com.trustweave.chains:*`
 
 ## Key Features
 
@@ -126,25 +125,25 @@ All plugins use hierarchical Maven group IDs:
 
 ## Which API Should I Use? 🤔
 
-VeriCore provides multiple APIs for different use cases:
+TrustWeave provides multiple APIs for different use cases:
 
-### 1. **VeriCore Facade** (Recommended for Most Users) ✅
+### 1. **TrustWeave Facade** (Recommended for Most Users) ✅
 
 **Use when:** You want the simplest, most intuitive API
 
 ```kotlin
-val vericore = VeriCore.create()
+val TrustWeave = trustweave.create()
 
 // Simple usage with error handling
-val didResult = vericore.createDid()
+val didResult = trustweave.createDid()
 didResult.fold(
     onSuccess = { did -> println("Created: ${did.id}") },
     onFailure = { error -> println("Error: ${error.message}") }
 )
 
 // Or use getOrThrow for simple cases
-val did = vericore.createDid().getOrThrow()
-val credential = vericore.issueCredential(...).getOrThrow()
+val did = trustweave.createDid().getOrThrow()
+val credential = trustweave.issueCredential(...).getOrThrow()
 ```
 
 **Pros:** Simple, type-safe, sensible defaults, consistent error handling  
@@ -155,7 +154,7 @@ val credential = vericore.issueCredential(...).getOrThrow()
 **Use when:** You need type-safe credential storage with optional capabilities
 
 ```kotlin
-val wallet = vericore.createWallet(
+val wallet = trustweave.createWallet(
     holderDid = "did:key:alice"
 ) {
     label = "Alice Wallet"
@@ -213,7 +212,7 @@ Every builder lives in a public package, so the same typed DSL is available whet
 ### Example: Computing a JSON Digest
 
 ```kotlin
-import com.geoknoesis.vericore.json.DigestUtils
+import com.trustweave.json.DigestUtils
 import kotlinx.serialization.json.*
 
 fun main() {
@@ -231,24 +230,24 @@ fun main() {
 ### Example: Creating a DID (New Simple API)
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.did.*
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.did.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    // Create VeriCore instance
-    val vericore = VeriCore.create()
+    // Create TrustWeave instance
+    val TrustWeave = trustweave.create()
     
     // Use native did:key plugin (most widely-used)
-    // Add dependency: implementation("com.geoknoesis.vericore.did:key:1.0.0-SNAPSHOT")
+    // Add dependency: implementation("com.trustweave.did:key:1.0.0-SNAPSHOT")
     
     // Create a DID with error handling
-    val document = vericore.dids.create()
+    val document = trustweave.dids.create()
     println("Created DID: ${document.id}")
     
     // Resolve the DID
-    val resolution = vericore.dids.resolve(document.id)
+    val resolution = trustweave.dids.resolve(document.id)
     val resolveResult = Result.success(resolution)
     resolveResult.fold(
         onSuccess = { resolution ->
@@ -262,10 +261,10 @@ fun main() = runBlocking {
                 },
                 onFailure = { error ->
                     when (error) {
-                        is VeriCoreError.DidNotFound -> {
+                        is TrustWeaveError.DidNotFound -> {
                             println("DID not found: ${error.did}")
                         }
-                        is VeriCoreError.InvalidDidFormat -> {
+                        is TrustWeaveError.InvalidDidFormat -> {
                             println("Invalid DID format: ${error.reason}")
                         }
                         else -> {
@@ -277,7 +276,7 @@ fun main() = runBlocking {
         },
         onFailure = { error ->
             when (error) {
-                is VeriCoreError.DidMethodNotRegistered -> {
+                is TrustWeaveError.DidMethodNotRegistered -> {
                     println("DID method not registered: ${error.method}")
                     println("Available methods: ${error.availableMethods}")
                 }
@@ -290,7 +289,7 @@ fun main() = runBlocking {
     
     // Or use simple API for straightforward cases
     // Use native did:key (most widely-used)
-    val document2 = vericore.dids.create("key") {
+    val document2 = trustweave.dids.create("key") {
         algorithm = KeyAlgorithm.ED25519
     }
     println("Created DID: ${document.id}")
@@ -301,9 +300,9 @@ fun main() = runBlocking {
 <summary>Advanced: Using Direct APIs</summary>
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
-import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
-import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.did.*
+import com.trustweave.testkit.did.DidKeyMockMethod
+import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -327,11 +326,11 @@ fun main() = runBlocking {
 ### Example: Managing Credentials with Wallets (New Simple API)
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.credential.wallet.WalletProvider
-import com.geoknoesis.vericore.credential.wallet.Wallets
-import com.geoknoesis.vericore.credential.models.VerifiableCredential
-import com.geoknoesis.vericore.credential.wallet.CredentialOrganization
+import com.trustweave.TrustWeave
+import com.trustweave.credential.wallet.WalletProvider
+import com.trustweave.credential.wallet.Wallets
+import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.wallet.CredentialOrganization
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -369,9 +368,9 @@ fun main() = runBlocking {
         valid()
     }
 
-    // Or create a custom wallet via VeriCore with typed options
-    val vericore = VeriCore.create()
-    val customWallet = vericore.createWallet(
+    // Or create a custom wallet via TrustWeave with typed options
+    val TrustWeave = trustweave.create()
+    val customWallet = trustweave.createWallet(
         holderDid = "did:key:holder",
         provider = WalletProvider.custom("postgres")
     ) {
@@ -402,17 +401,17 @@ fun main() = runBlocking {
 
 ### Example: Anchoring Data to Multiple Blockchains (Ethereum, Base, Arbitrum)
 
-You can anchor data to multiple EVM-compatible chains using VeriCore's chain-agnostic interface:
+You can anchor data to multiple EVM-compatible chains using TrustWeave's chain-agnostic interface:
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.ethereum.*
-import com.geoknoesis.vericore.base.*
-import com.geoknoesis.vericore.arbitrum.*
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.TrustWeave
+import com.trustweave.ethereum.*
+import com.trustweave.base.*
+import com.trustweave.arbitrum.*
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.serialization.json.*
 
-val vericore = VeriCore.create {
+val TrustWeave = trustweave.create {
     blockchain {
         // Register multiple blockchain adapters
         register(EthereumBlockchainAnchorClient.MAINNET, InMemoryBlockchainAnchorClient(EthereumBlockchainAnchorClient.MAINNET))
@@ -422,20 +421,20 @@ val vericore = VeriCore.create {
 }
 
 // Anchor to Ethereum (highest security, higher fees)
-val ethereumResult = vericore.anchor(EthereumBlockchainAnchorClient.MAINNET, payload).getOrThrow()
+val ethereumResult = trustweave.anchor(EthereumBlockchainAnchorClient.MAINNET, payload).getOrThrow()
 
 // Anchor to Base (Coinbase L2, lower fees, fast)
-val baseResult = vericore.anchor(BaseBlockchainAnchorClient.MAINNET, payload).getOrThrow()
+val baseResult = trustweave.anchor(BaseBlockchainAnchorClient.MAINNET, payload).getOrThrow()
 
 // Anchor to Arbitrum (largest L2 by TVL, lower fees)
-val arbitrumResult = vericore.anchor(ArbitrumBlockchainAnchorClient.MAINNET, payload).getOrThrow()
+val arbitrumResult = trustweave.anchor(ArbitrumBlockchainAnchorClient.MAINNET, payload).getOrThrow()
 ```
 
 ### Example: Anchoring Data to a Blockchain (Original)
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.anchor.*
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlinx.serialization.Serializable
@@ -481,15 +480,15 @@ val retrieved = blockchainRegistry.readTyped<VerifiableCredentialDigest>(
 ### Example: Complete Workflow
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.AnchorResult
-import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
-import com.geoknoesis.vericore.anchor.anchorTyped
-import com.geoknoesis.vericore.anchor.readTyped
-import com.geoknoesis.vericore.did.DidMethodRegistry
-import com.geoknoesis.vericore.json.DigestUtils
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
-import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.anchor.AnchorResult
+import com.trustweave.anchor.BlockchainAnchorRegistry
+import com.trustweave.anchor.anchorTyped
+import com.trustweave.anchor.readTyped
+import com.trustweave.did.DidMethodRegistry
+import com.trustweave.json.DigestUtils
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.testkit.did.DidKeyMockMethod
+import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlinx.serialization.Serializable
@@ -559,15 +558,15 @@ fun main() = runBlocking {
 
 ## Module Details
 
-### vericore-core
+### TrustWeave-core
 
 Shared types and utilities:
-- `VeriCoreException`: Base exception class
+- `TrustWeaveException`: Base exception class
 - `NotFoundException`: Resource not found exception
 - `InvalidOperationException`: Invalid operation exception
-- `VeriCoreConstants`: Common constants
+- `TrustWeaveConstants`: Common constants
 
-### vericore-json
+### TrustWeave-json
 
 JSON canonicalization and digest utilities with performance optimizations:
 - `DigestUtils.canonicalizeJson()`: Canonicalize JSON with stable key ordering
@@ -580,7 +579,7 @@ JSON canonicalization and digest utilities with performance optimizations:
 
 **Performance Configuration**:
 ```kotlin
-import com.geoknoesis.vericore.json.DigestUtils
+import com.trustweave.json.DigestUtils
 
 // Disable caching for memory-constrained environments
 DigestUtils.enableDigestCache = false
@@ -592,14 +591,14 @@ val cacheSize = DigestUtils.getCacheSize()
 DigestUtils.clearCache()
 ```
 
-### vericore-kms
+### TrustWeave-kms
 
 Key management abstraction:
 - `KeyManagementService`: Interface for key operations
 - `KeyHandle`: Key metadata container
 - Supports Ed25519, secp256k1, and extensible to other algorithms
 
-### vericore-did
+### TrustWeave-did
 
 DID and DID Document management:
 - `Did`: DID identifier model
@@ -607,7 +606,7 @@ DID and DID Document management:
 - `DidMethod`: Interface for DID method implementations
 - `DidMethodRegistry`: Instance-scoped registry for pluggable DID methods
 
-### vericore-anchor
+### TrustWeave-anchor
 
 Blockchain anchoring abstraction with comprehensive type safety and error handling:
 
@@ -623,8 +622,8 @@ Blockchain anchoring abstraction with comprehensive type safety and error handli
 
 **Type-Safe Configuration**:
 ```kotlin
-import com.geoknoesis.vericore.anchor.options.AlgorandOptions
-import com.geoknoesis.vericore.anchor.ChainId
+import com.trustweave.anchor.options.AlgorandOptions
+import com.trustweave.anchor.ChainId
 
 // Type-safe chain ID
 val chainId = ChainId.Algorand.Testnet
@@ -641,7 +640,7 @@ val client = AlgorandBlockchainAnchorClient(chainId.toString(), options)
 
 **Exception Handling**:
 ```kotlin
-import com.geoknoesis.vericore.anchor.exceptions.*
+import com.trustweave.anchor.exceptions.*
 
 try {
     val result = client.writePayload(payload)
@@ -670,13 +669,13 @@ try {
 - `BlockchainConfigurationException`: Configuration errors with config key details
 - `BlockchainUnsupportedOperationException`: Unsupported operations
 
-### vericore-testkit
+### TrustWeave-testkit
 
 In-memory test implementations and test utilities:
 - `InMemoryKeyManagementService`: In-memory KMS for testing
 - `InMemoryBlockchainAnchorClient`: In-memory blockchain client for testing
 - `DidKeyMockMethod`: Mock DID method implementation
-- `VeriCoreTestFixture`: Unified test fixture builder for setting up complete test environments
+- `TrustWeaveTestFixture`: Unified test fixture builder for setting up complete test environments
 - `EoTestIntegration`: Reusable EO test scenarios with TestContainers support
 - `BaseEoIntegrationTest`: Base class for EO integration tests
 - `TestDataBuilders`: Builders for creating VC, Linkset, and artifact structures
@@ -684,9 +683,9 @@ In-memory test implementations and test utilities:
 
 **Test Fixture Example**:
 ```kotlin
-import com.geoknoesis.vericore.testkit.VeriCoreTestFixture
+import com.trustweave.testkit.TrustWeaveTestFixture
 
-VeriCoreTestFixture.builder()
+TrustWeaveTestFixture.builder()
     .withInMemoryBlockchainClient("algorand:testnet")
     .build()
     .use { fixture ->
@@ -722,7 +721,7 @@ The project uses Gradle Wrapper for consistent builds:
 
 **Run specific test:**
 ```bash
-./gradlew :vericore-ganache:test --tests "*GanacheEoIntegrationTest*"
+./gradlew :TrustWeave-ganache:test --tests "*GanacheEoIntegrationTest*"
 ```
 
 ## Code Quality
@@ -744,7 +743,7 @@ The project includes code quality tools:
 - **Java 21+**: Required for compilation and runtime
 - **Kotlin 2.2.0+**: Included via Gradle plugin
 - **Gradle 8.5+**: Automatically downloaded via Gradle Wrapper (no manual installation needed)
-- **Docker** (optional): Required for `com.geoknoesis.vericore.chains:ganache` tests using TestContainers
+- **Docker** (optional): Required for `com.trustweave.chains:ganache` tests using TestContainers
 
 ## Design Principles
 
@@ -759,43 +758,43 @@ The project includes code quality tools:
 
 ## Available Plugins
 
-VeriCore ships with comprehensive plugin support:
+TrustWeave ships with comprehensive plugin support:
 
 ### DID Method Plugins
 
-- **`com.geoknoesis.vericore.did:key`** - Native did:key implementation (most widely-used DID method). See [Key DID Integration Guide](docs/integrations/key-did.md).
-- **`com.geoknoesis.vericore.did:web`** - Web DID method for HTTP/HTTPS-based resolution. See [Web DID Integration Guide](docs/integrations/web-did.md).
-- **`com.geoknoesis.vericore.did:ethr`** - Ethereum DID method with blockchain anchoring. See [Ethereum DID Integration Guide](docs/integrations/ethr-did.md).
-- **`com.geoknoesis.vericore.did:ion`** - Microsoft ION DID method using Sidetree protocol. See [ION DID Integration Guide](docs/integrations/ion-did.md).
-- **`com.geoknoesis.vericore.did:polygon`** - Polygon DID method (lower fees than Ethereum). See [Polygon DID Integration Guide](docs/integrations/polygon-did.md).
-- **`com.geoknoesis.vericore.did:sol`** - Solana DID method with program integration. See [Solana DID Integration Guide](docs/integrations/sol-did.md).
-- **`com.geoknoesis.vericore.did:peer`** - Peer-to-peer DID method (no external registry). See [Peer DID Integration Guide](docs/integrations/peer-did.md).
-- **`com.geoknoesis.vericore.did:jwk`** - W3C-standard did:jwk using JSON Web Keys directly. See [JWK DID Integration Guide](docs/integrations/jwk-did.md).
-- **`com.geoknoesis.vericore.did:ens`** - Ethereum Name Service (ENS) resolver integration. See [ENS DID Integration Guide](docs/integrations/ens-did.md).
-- **`com.geoknoesis.vericore.did:plc`** - Personal Linked Container (PLC) for AT Protocol. See [PLC DID Integration Guide](docs/integrations/plc-did.md).
-- **`com.geoknoesis.vericore.did:cheqd`** - Cheqd network DID method with payment features. See [Cheqd DID Integration Guide](docs/integrations/cheqd-did.md).
+- **`com.trustweave.did:key`** - Native did:key implementation (most widely-used DID method). See [Key DID Integration Guide](docs/integrations/key-did.md).
+- **`com.trustweave.did:web`** - Web DID method for HTTP/HTTPS-based resolution. See [Web DID Integration Guide](docs/integrations/web-did.md).
+- **`com.trustweave.did:ethr`** - Ethereum DID method with blockchain anchoring. See [Ethereum DID Integration Guide](docs/integrations/ethr-did.md).
+- **`com.trustweave.did:ion`** - Microsoft ION DID method using Sidetree protocol. See [ION DID Integration Guide](docs/integrations/ion-did.md).
+- **`com.trustweave.did:polygon`** - Polygon DID method (lower fees than Ethereum). See [Polygon DID Integration Guide](docs/integrations/polygon-did.md).
+- **`com.trustweave.did:sol`** - Solana DID method with program integration. See [Solana DID Integration Guide](docs/integrations/sol-did.md).
+- **`com.trustweave.did:peer`** - Peer-to-peer DID method (no external registry). See [Peer DID Integration Guide](docs/integrations/peer-did.md).
+- **`com.trustweave.did:jwk`** - W3C-standard did:jwk using JSON Web Keys directly. See [JWK DID Integration Guide](docs/integrations/jwk-did.md).
+- **`com.trustweave.did:ens`** - Ethereum Name Service (ENS) resolver integration. See [ENS DID Integration Guide](docs/integrations/ens-did.md).
+- **`com.trustweave.did:plc`** - Personal Linked Container (PLC) for AT Protocol. See [PLC DID Integration Guide](docs/integrations/plc-did.md).
+- **`com.trustweave.did:cheqd`** - Cheqd network DID method with payment features. See [Cheqd DID Integration Guide](docs/integrations/cheqd-did.md).
 
 ### Blockchain Anchor Plugins
 
-- **`com.geoknoesis.vericore.chains:ethereum`** - Ethereum mainnet anchoring with Sepolia testnet support. See [Ethereum Anchor Integration Guide](docs/integrations/ethereum-anchor.md).
-- **`com.geoknoesis.vericore.chains:base`** - Base (Coinbase L2) anchoring with fast confirmations and lower fees. See [Base Anchor Integration Guide](docs/integrations/base-anchor.md).
-- **`com.geoknoesis.vericore.chains:arbitrum`** - Arbitrum One (largest L2 by TVL) anchoring. See [Arbitrum Anchor Integration Guide](docs/integrations/arbitrum-anchor.md).
-- **`com.geoknoesis.vericore.chains:algorand`** - Algorand blockchain anchoring. See [Algorand Integration Guide](docs/integrations/algorand.md).
-- **`com.geoknoesis.vericore.chains:polygon`** - Polygon blockchain anchoring. See [Integration Modules](docs/integrations/README.md#blockchain-anchor-integrations).
-- **`com.geoknoesis.vericore.chains:ganache`** - Local developer anchoring using Ganache. See [Integration Modules](docs/integrations/README.md#blockchain-anchor-integrations).
+- **`com.trustweave.chains:ethereum`** - Ethereum mainnet anchoring with Sepolia testnet support. See [Ethereum Anchor Integration Guide](docs/integrations/ethereum-anchor.md).
+- **`com.trustweave.chains:base`** - Base (Coinbase L2) anchoring with fast confirmations and lower fees. See [Base Anchor Integration Guide](docs/integrations/base-anchor.md).
+- **`com.trustweave.chains:arbitrum`** - Arbitrum One (largest L2 by TVL) anchoring. See [Arbitrum Anchor Integration Guide](docs/integrations/arbitrum-anchor.md).
+- **`com.trustweave.chains:algorand`** - Algorand blockchain anchoring. See [Algorand Integration Guide](docs/integrations/algorand.md).
+- **`com.trustweave.chains:polygon`** - Polygon blockchain anchoring. See [Integration Modules](docs/integrations/README.md#blockchain-anchor-integrations).
+- **`com.trustweave.chains:ganache`** - Local developer anchoring using Ganache. See [Integration Modules](docs/integrations/README.md#blockchain-anchor-integrations).
 
 ### Key Management Service Plugins
 
-- **`com.geoknoesis.vericore.kms:aws`** - AWS Key Management Service integration. See [AWS KMS Integration Guide](docs/integrations/aws-kms.md).
-- **`com.geoknoesis.vericore.kms:azure`** - Azure Key Vault integration. See [Azure KMS Integration Guide](docs/integrations/azure-kms.md).
-- **`com.geoknoesis.vericore.kms:google`** - Google Cloud KMS integration. See [Google KMS Integration Guide](docs/integrations/google-kms.md).
-- **`com.geoknoesis.vericore.kms:hashicorp`** - HashiCorp Vault Transit engine integration. See [HashiCorp Vault KMS Integration Guide](docs/integrations/hashicorp-vault-kms.md).
+- **`com.trustweave.kms:aws`** - AWS Key Management Service integration. See [AWS KMS Integration Guide](docs/integrations/aws-kms.md).
+- **`com.trustweave.kms:azure`** - Azure Key Vault integration. See [Azure KMS Integration Guide](docs/integrations/azure-kms.md).
+- **`com.trustweave.kms:google`** - Google Cloud KMS integration. See [Google KMS Integration Guide](docs/integrations/google-kms.md).
+- **`com.trustweave.kms:hashicorp`** - HashiCorp Vault Transit engine integration. See [HashiCorp Vault KMS Integration Guide](docs/integrations/hashicorp-vault-kms.md).
 
 See [Supported Plugins](docs/plugins.md) for a comprehensive table view of all plugins, or [Integration Modules](docs/integrations/README.md) for detailed integration guides.
 
 ## walt.id Integration
 
-VeriCore includes an optional `vericore-waltid` module that provides walt.id-based implementations of VeriCore interfaces using the SPI (Service Provider Interface) pattern.
+TrustWeave includes an optional `TrustWeave-waltid` module that provides walt.id-based implementations of TrustWeave interfaces using the SPI (Service Provider Interface) pattern.
 
 ### Using walt.id Adapters
 
@@ -803,7 +802,7 @@ Add the walt.id adapter module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-waltid:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-waltid:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -812,8 +811,8 @@ dependencies {
 walt.id adapters are automatically discovered via Java ServiceLoader:
 
 ```kotlin
-import com.geoknoesis.vericore.waltid.WaltIdIntegration
-import com.geoknoesis.vericore.did.DidMethodRegistry
+import com.trustweave.waltid.WaltIdIntegration
+import com.trustweave.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -824,7 +823,7 @@ fun main() = runBlocking {
     println("Registered DID methods: ${result.registeredDidMethods}")
     // Output: Registered DID methods: [key, web]
     
-    // Use VeriCore APIs as normal - walt.id adapters are now registered
+    // Use TrustWeave APIs as normal - walt.id adapters are now registered
     val didDocument = registry.resolve("did:key:...")
 }
 ```
@@ -834,9 +833,9 @@ fun main() = runBlocking {
 You can also manually configure walt.id integration:
 
 ```kotlin
-import com.geoknoesis.vericore.waltid.WaltIdIntegration
-import com.geoknoesis.vericore.waltid.WaltIdKeyManagementService
-import com.geoknoesis.vericore.did.DidMethodRegistry
+import com.trustweave.waltid.WaltIdIntegration
+import com.trustweave.waltid.WaltIdKeyManagementService
+import com.trustweave.did.DidMethodRegistry
 
 fun main() = runBlocking {
     // Create walt.id KMS
@@ -869,7 +868,7 @@ The walt.id adapter module provides:
 
 ### SPI Provider Interfaces
 
-VeriCore defines SPI interfaces for adapter discovery:
+TrustWeave defines SPI interfaces for adapter discovery:
 
 - `KeyManagementServiceProvider`: For KMS implementations
 - `DidMethodProvider`: For DID method implementations
@@ -878,7 +877,7 @@ These interfaces allow any adapter module to be discovered automatically at runt
 
 ## godiddy Integration
 
-VeriCore includes an optional `vericore-godiddy` module that provides HTTP-based integration with godiddy services (Universal Resolver, Universal Registrar, Universal Issuer, Universal Verifier) using the SPI pattern.
+TrustWeave includes an optional `TrustWeave-godiddy` module that provides HTTP-based integration with godiddy services (Universal Resolver, Universal Registrar, Universal Issuer, Universal Verifier) using the SPI pattern.
 
 ### Using godiddy Adapters
 
@@ -886,7 +885,7 @@ Add the godiddy adapter module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-godiddy:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-godiddy:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -895,8 +894,8 @@ dependencies {
 godiddy adapters are automatically discovered via Java ServiceLoader:
 
 ```kotlin
-import com.geoknoesis.vericore.godiddy.GodiddyIntegration
-import com.geoknoesis.vericore.did.DidMethodRegistry
+import com.trustweave.godiddy.GodiddyIntegration
+import com.trustweave.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -907,7 +906,7 @@ fun main() = runBlocking {
     println("Registered DID methods: ${result.registeredDidMethods}")
     // Output: Registered DID methods: [key, web, ion, ethr, ...]
     
-    // Use VeriCore APIs as normal - godiddy adapters are now registered
+    // Use TrustWeave APIs as normal - godiddy adapters are now registered
     val didDocument = registry.resolve("did:key:...")
 }
 ```
@@ -917,8 +916,8 @@ fun main() = runBlocking {
 You can manually configure godiddy integration with a custom base URL:
 
 ```kotlin
-import com.geoknoesis.vericore.godiddy.GodiddyIntegration
-import com.geoknoesis.vericore.did.DidMethodRegistry
+import com.trustweave.godiddy.GodiddyIntegration
+import com.trustweave.did.DidMethodRegistry
 
 fun main() = runBlocking {
     // Setup integration with custom base URL (for self-hosted instances)
@@ -968,8 +967,8 @@ val result = GodiddyIntegration.discoverAndRegister(
 ### Example: Issuing and Verifying Credentials
 
 ```kotlin
-import com.geoknoesis.vericore.godiddy.GodiddyIntegration
-import com.geoknoesis.vericore.did.DidMethodRegistry
+import com.trustweave.godiddy.GodiddyIntegration
+import com.trustweave.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 
@@ -1004,11 +1003,11 @@ fun main() = runBlocking {
 
 ## License
 
-VeriCore is available under a dual-licensing model:
+TrustWeave is available under a dual-licensing model:
 
 ### Community License (AGPL v3.0)
 
-VeriCore is available free of charge under the **GNU Affero General Public License v3.0** (AGPL v3.0) for:
+TrustWeave is available free of charge under the **GNU Affero General Public License v3.0** (AGPL v3.0) for:
 - Open-source projects (OSI-approved licenses)
 - Educational and research purposes
 - Personal projects
@@ -1018,7 +1017,7 @@ See [LICENSE](LICENSE) for the full AGPL v3.0 license text.
 
 ### Commercial License
 
-For proprietary and commercial use, VeriCore is available under a **Commercial License** that includes:
+For proprietary and commercial use, TrustWeave is available under a **Commercial License** that includes:
 - ✅ Use in proprietary/commercial software
 - ✅ Distribution in commercial products
 - ✅ Priority technical support
@@ -1064,6 +1063,7 @@ Comprehensive documentation is available in the [`docs/`](docs/) directory:
 - **[Credential Service API](docs/api-reference/credential-service-api.md)**: Typed SPI for issuers and verifiers
 - **[Getting Started](docs/getting-started/)**: Installation and quick start guides
 - **[Optimization Summary](OPTIMIZATION_COMPLETE.md)**: Summary of codebase optimizations
-- **[Module READMEs](vericore-anchor/src/main/kotlin/io/geoknoesis/vericore/anchor/README.md)**: Detailed module documentation
+- **[Module READMEs](TrustWeave-anchor/src/main/kotlin/io/geoknoesis/TrustWeave/anchor/README.md)**: Detailed module documentation
+
 
 

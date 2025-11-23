@@ -1,15 +1,15 @@
 # Smart Contracts
 
-> VeriCore Smart Contracts provide a domain-agnostic abstraction for executable agreements with verifiable credentials and blockchain anchoring support.
+> TrustWeave Smart Contracts provide a domain-agnostic abstraction for executable agreements with verifiable credentials and blockchain anchoring support.
 
 ## What is a Smart Contract?
 
-A **Smart Contract** in VeriCore is an executable agreement between parties that combines:
+A **Smart Contract** in TrustWeave is an executable agreement between parties that combines:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-contract:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-contract:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -20,7 +20,7 @@ dependencies {
 3. **Immutable Audit Trail** – blockchain anchoring for tamper-proof records
 4. **Pluggable Execution** – parametric, conditional, scheduled, event-driven, or manual execution models
 
-## Why Smart Contracts Matter in VeriCore
+## Why Smart Contracts Matter in TrustWeave
 
 - **Domain-Agnostic**: Works for insurance, legal, financial, SLA, and supply chain contracts
 - **Trust**: Cryptographic proof of contract terms prevents disputes
@@ -49,7 +49,7 @@ DRAFT → PENDING → ACTIVE → EXECUTED/EXPIRED/CANCELLED/TERMINATED
 
 ## Execution Models
 
-VeriCore supports multiple execution models:
+TrustWeave supports multiple execution models:
 
 ### 1. Parametric Execution
 
@@ -138,30 +138,30 @@ ExecutionModel.Manual
 - Complex decisions
 - Dispute resolution
 
-## How VeriCore Manages Smart Contracts
+## How TrustWeave Manages Smart Contracts
 
 | Component | Purpose |
 |-----------|---------|
 | `SmartContractService` | Interface for contract operations |
 | `DefaultSmartContractService` | In-memory implementation (for testing/development) |
 | `ContractValidator` | Validates parties, dates, terms, and state transitions |
-| `VeriCore.contracts` | High-level facade for contract operations |
+| `TrustWeave.contracts` | High-level facade for contract operations |
 
 ## Example: Creating a Contract
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.contract.models.*
+import com.trustweave.TrustWeave
+import com.trustweave.contract.models.*
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
 
 suspend fun createFloodInsuranceContract(
-    vericore: VeriCore,
+    trustweave: TrustWeave,
     insurerDid: String,
     insuredDid: String
 ) {
-    val contract = vericore.contracts.draft(
+    val contract = trustweave.contracts.draft(
         request = ContractDraftRequest(
             contractType = ContractType.Insurance,
             executionModel = ExecutionModel.Parametric(
@@ -218,12 +218,12 @@ Binding issues a verifiable credential and anchors the contract to blockchain:
 
 ```kotlin
 suspend fun bindContract(
-    vericore: VeriCore,
+    trustweave: TrustWeave,
     contractId: String,
     issuerDid: String,
     issuerKeyId: String
 ) {
-    val bound = vericore.contracts.bindContract(
+    val bound = trustweave.contracts.bindContract(
         contractId = contractId,
         issuerDid = issuerDid,
         issuerKeyId = issuerKeyId,
@@ -245,11 +245,11 @@ For parametric contracts, execution happens when trigger data arrives:
 
 ```kotlin
 suspend fun executeFloodContract(
-    vericore: VeriCore,
+    trustweave: TrustWeave,
     contract: SmartContract,
     floodDataCredential: VerifiableCredential
 ) {
-    val result = vericore.contracts.executeContract(
+    val result = trustweave.contracts.executeContract(
         contract = contract,
         executionContext = ExecutionContext(
             triggerData = buildJsonObject {
@@ -277,7 +277,7 @@ suspend fun executeFloodContract(
 
 ## Validation
 
-VeriCore automatically validates:
+TrustWeave automatically validates:
 
 - **DID Format**: All party DIDs must be valid
 - **Date Ranges**: Expiration must be after effective date
@@ -286,19 +286,19 @@ VeriCore automatically validates:
 - **Expiration**: Contracts are automatically checked for expiration
 
 ```kotlin
-// Validation happens automatically in createDraft()
-val result = vericore.contracts.draft(request)
-result.fold(
-    onSuccess = { contract -> println("Contract created: ${contract.id}") },
-    onFailure = { error ->
-        when (error) {
-            is VeriCoreError.InvalidOperationException -> {
-                println("Validation failed: ${error.message}")
-            }
-            else -> println("Error: ${error.message}")
+// Validation happens automatically in draft()
+val trustweave = TrustWeave.create()
+try {
+    val contract = trustweave.contracts.draft(request).getOrThrow()
+    println("Contract created: ${contract.id}")
+} catch (error: TrustWeaveError) {
+    when (error) {
+        is TrustWeaveError.ValidationFailed -> {
+            println("Validation failed: ${error.reason}")
         }
+        else -> println("Error: ${error.message}")
     }
-)
+}
 ```
 
 ## State Transition Rules
@@ -313,15 +313,20 @@ Valid state transitions are enforced:
 
 ```kotlin
 // Invalid transition will throw InvalidOperationException
-vericore.contracts.updateStatus(
-    contractId = contract.id,
-    newStatus = ContractStatus.EXECUTED // Must be ACTIVE first
-)
+val trustweave = TrustWeave.create()
+try {
+    trustweave.contracts.updateStatus(
+        contractId = contract.id,
+        newStatus = ContractStatus.EXECUTED // Must be ACTIVE first
+    ).getOrThrow()
+} catch (error: TrustWeaveError) {
+    println("State transition failed: ${error.message}")
+}
 ```
 
-## Integration with VeriCore
+## Integration with TrustWeave
 
-Smart Contracts integrate seamlessly with VeriCore's trust infrastructure:
+Smart Contracts integrate seamlessly with TrustWeave's trust infrastructure:
 
 ### Verifiable Credentials
 
@@ -329,7 +334,8 @@ Contracts are issued as Verifiable Credentials:
 
 ```kotlin
 // Contract credential is automatically issued during bindContract()
-val bound = vericore.contracts.bindContract(...)
+val trustweave = TrustWeave.create()
+val bound = trustweave.contracts.bindContract(...).getOrThrow()
 // bound.credentialId contains the VC ID
 ```
 
@@ -339,7 +345,8 @@ Contracts are anchored to blockchain for audit trails:
 
 ```kotlin
 // Anchor reference is stored in contract.anchorRef
-val contract = vericore.contracts.getContract(contractId).getOrThrow()
+val trustweave = TrustWeave.create()
+val contract = trustweave.contracts.getContract(contractId).getOrThrow()
 contract.anchorRef?.let { anchor ->
     println("Anchored on: ${anchor.chainId}")
     println("Transaction: ${anchor.txHash}")
@@ -363,10 +370,10 @@ ContractParties(
 
 ## Practical Usage Tips
 
-- **Validation**: Always check `Result<T>` return values using `fold()` or `getOrThrow()`
+- **Validation**: Contract operations return `Result<T>` - use `fold()` or `getOrThrow()` for error handling
 - **State Management**: Use `updateStatus()` for explicit state transitions
 - **Expiration**: Check expiration before executing contracts
-- **Error Handling**: All operations return `Result<T>` with structured `VeriCoreError` types
+- **Error Handling**: All operations return `Result<T>` with structured `TrustWeaveError` types
 - **Storage**: `DefaultSmartContractService` is in-memory; use persistent storage for production
 - **Condition Evaluation**: Condition evaluation is extensible; implement custom evaluators for production
 

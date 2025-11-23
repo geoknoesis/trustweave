@@ -1,6 +1,6 @@
 # IoT & Device Identity Scenario
 
-This guide demonstrates how to build an IoT device identity system using VeriCore that enables device authentication, secure device-to-device communication, device attestation, and network authorization.
+This guide demonstrates how to build an IoT device identity system using TrustWeave that enables device authentication, secure device-to-device communication, device attestation, and network authorization.
 
 ## What You'll Build
 
@@ -163,19 +163,19 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`. These provide DID/credential APIs plus the in-memory services used for the IoT identity walkthrough.
+Add TrustWeave dependencies to your `build.gradle.kts`. These provide DID/credential APIs plus the in-memory services used for the IoT identity walkthrough.
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
     
     // Test kit for in-memory implementations
-    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -199,9 +199,9 @@ dependencies {
 - **Interoperability**: Works across different systems
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
-import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
-import com.geoknoesis.vericore.did.DidMethodRegistry
+import com.trustweave.testkit.did.DidKeyMockMethod
+import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -282,11 +282,11 @@ fun main() = runBlocking {
 - **Security Features**: Security capabilities of the device
 
 ```kotlin
-import com.geoknoesis.vericore.credential.models.VerifiableCredential
-import com.geoknoesis.vericore.credential.CredentialIssuanceOptions
-import com.geoknoesis.vericore.credential.issuer.CredentialIssuer
-import com.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
-import com.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
+import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.CredentialIssuanceOptions
+import com.trustweave.credential.issuer.CredentialIssuer
+import com.trustweave.credential.proof.Ed25519ProofGenerator
+import com.trustweave.credential.proof.ProofGeneratorRegistry
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
@@ -312,10 +312,10 @@ import java.time.Instant
         },
         issuanceDate = Instant.now().toString(),
         expirationDate = null, // Device attestation doesn't expire
-        credentialSchema = com.geoknoesis.vericore.credential.models.CredentialSchema(
+        credentialSchema = com.trustweave.credential.models.CredentialSchema(
             id = "https://example.com/schemas/device-attestation.json",
             type = "JsonSchemaValidator2018",
-            schemaFormat = com.geoknoesis.vericore.spi.SchemaFormat.JSON_SCHEMA
+            schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
         )
     )
     
@@ -553,8 +553,8 @@ import java.time.Instant
 - **Revocation Check**: Ensures credentials haven't been revoked
 
 ```kotlin
-import com.geoknoesis.vericore.credential.verifier.CredentialVerifier
-import com.geoknoesis.vericore.credential.CredentialVerificationOptions
+import com.trustweave.credential.verifier.CredentialVerifier
+import com.trustweave.credential.CredentialVerificationOptions
 
     // Step 9: Verify device before network access
     println("\nStep 9: Verifying device before network access...")
@@ -680,9 +680,9 @@ import com.geoknoesis.vericore.credential.CredentialVerificationOptions
 - **Verification**: Anyone can verify device identity from blockchain
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
-import com.geoknoesis.vericore.anchor.anchorTyped
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.anchor.BlockchainAnchorRegistry
+import com.trustweave.anchor.anchorTyped
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -705,9 +705,9 @@ data class DeviceIdentityRecord(
     
     // Compute digest of device attestation credential
     // This digest uniquely identifies the credential
-    val attestationDigest = com.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
+    val attestationDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
-            com.geoknoesis.vericore.credential.models.VerifiableCredential.serializer(),
+            com.trustweave.credential.models.VerifiableCredential.serializer(),
             issuedAttestation
         )
     )

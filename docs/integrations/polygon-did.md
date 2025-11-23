@@ -1,10 +1,10 @@
 # Polygon DID Integration
 
-> This guide covers the did:polygon method integration for VeriCore. The did:polygon plugin provides Polygon DID resolution with blockchain anchoring support, reusing the Ethereum DID pattern for EVM compatibility.
+> This guide covers the did:polygon method integration for TrustWeave. The did:polygon plugin provides Polygon DID resolution with blockchain anchoring support, reusing the Ethereum DID pattern for EVM compatibility.
 
 ## Overview
 
-The `did/plugins/polygon` module provides an implementation of VeriCore's `DidMethod` interface using the Polygon blockchain. This integration enables you to:
+The `did/plugins/polygon` module provides an implementation of TrustWeave's `DidMethod` interface using the Polygon blockchain. This integration enables you to:
 
 - Create and resolve DIDs on Polygon blockchain
 - Store DID documents via blockchain anchoring
@@ -18,17 +18,17 @@ Add the did:polygon module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.did:polygon:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore.did:base:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:polygon:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
     
     // Web3j for Polygon blockchain
     implementation("org.web3j:core:4.10.0")
     
     // Polygon anchor client
-    implementation("com.geoknoesis.vericore.chains:polygon:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.chains:polygon:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -37,10 +37,10 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.geoknoesis.vericore.polygondid.*
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.polygon.PolygonBlockchainAnchorClient
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.polygondid.*
+import com.trustweave.anchor.*
+import com.trustweave.polygon.PolygonBlockchainAnchorClient
+import com.trustweave.kms.*
 
 // Create configuration
 val config = PolygonDidConfig.builder()
@@ -80,7 +80,7 @@ val mumbaiConfig = PolygonDidConfig.mumbai(
 When the module is on the classpath, did:polygon is automatically available:
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
+import com.trustweave.did.*
 import java.util.ServiceLoader
 
 // Discover did:polygon provider
@@ -203,18 +203,18 @@ val config = PolygonDidConfig.builder()
 | Polygon Mainnet | `eip155:137` |
 | Mumbai Testnet | `eip155:80001` |
 
-## Integration with VeriCore
+## Integration with TrustWeave
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.polygondid.*
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.polygon.PolygonBlockchainAnchorClient
+import com.trustweave.TrustWeave
+import com.trustweave.polygondid.*
+import com.trustweave.anchor.*
+import com.trustweave.polygon.PolygonBlockchainAnchorClient
 
 val config = PolygonDidConfig.mumbai("https://rpc-mumbai.maticvigil.com")
 val anchorClient = PolygonBlockchainAnchorClient(config.chainId, config.toMap())
 
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     kms = InMemoryKeyManagementService()
     
     blockchain {
@@ -227,11 +227,11 @@ val vericore = VeriCore.create {
 }
 
 // Use did:polygon
-val did = vericore.createDid("polygon") {
+val did = TrustWeave.createDid("polygon") {
     algorithm = KeyAlgorithm.SECP256K1
 }.getOrThrow()
 
-val resolved = vericore.resolveDid(did.id).getOrThrow()
+val resolved = TrustWeave.resolveDid(did.id).getOrThrow()
 ```
 
 ## Error Handling
@@ -250,7 +250,7 @@ Common errors and solutions:
 For testing without actual blockchain:
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 
 val config = PolygonDidConfig.mumbai("https://rpc-mumbai.maticvigil.com")
 val anchorClient = InMemoryBlockchainAnchorClient(config.chainId)

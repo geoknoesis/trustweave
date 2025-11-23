@@ -1,10 +1,10 @@
 # Installation
 
-Add VeriCore to your Kotlin project using Gradle or Maven.
+Add TrustWeave to your Kotlin project using Gradle or Maven.
 
 ## Prerequisites
 
-Before installing VeriCore, ensure you have:
+Before installing TrustWeave, ensure you have:
 
 - **Kotlin 2.2.0+** (included via Gradle plugin, no manual installation needed)
 - **Java 21+** (required for compilation and runtime)
@@ -16,7 +16,7 @@ Before installing VeriCore, ensure you have:
 
 ### Optional Prerequisites
 
-- **Docker** (optional): Required for `com.geoknoesis.vericore.chains:ganache` tests using TestContainers
+- **Docker** (optional): Required for `com.trustweave.chains:ganache` tests using TestContainers
 - **IDE**: IntelliJ IDEA or VS Code with Kotlin support (recommended for better developer experience)
 
 ### Verify Your Setup
@@ -24,13 +24,13 @@ Before installing VeriCore, ensure you have:
 After installation, verify your setup by running a simple test:
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
+import com.trustweave.TrustWeave
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
-    val did = vericore.dids.create()
-    println("✅ VeriCore is working! Created DID: ${did.id}")
+    val TrustWeave = TrustWeave.create()
+    val did = TrustWeave.dids.create()
+    println("✅ TrustWeave is working! Created DID: ${did.id}")
 }
 ```
 
@@ -38,25 +38,25 @@ If this runs without errors, your installation is successful!
 
 ## Gradle (Kotlin DSL)
 
-Add VeriCore dependencies to your `build.gradle.kts`. This brings in the core runtime, optional adapters, and the test kit you will use in the tutorials.
+Add TrustWeave dependencies to your `build.gradle.kts`. This brings in the core runtime, optional adapters, and the test kit you will use in the tutorials.
 
 ```kotlin
 dependencies {
     // Core modules (required)
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
     
     // Test kit (for testing)
-    testImplementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    testImplementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
     
     // Optional: Integration modules (using hierarchical group IDs)
-    implementation("com.geoknoesis.vericore.kms:waltid:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore.did:godiddy:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore.chains:algorand:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore.chains:polygon:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.kms:waltid:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:godiddy:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.chains:polygon:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization (required)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -66,29 +66,29 @@ dependencies {
 }
 ```
 
-**Result:** Gradle resolves the full VeriCore BOM plus kotlinx libraries so you can compile the sample code in this guide.
+**Result:** Gradle resolves the full TrustWeave BOM plus kotlinx libraries so you can compile the sample code in this guide.
 
 ## Gradle (Groovy)
 
-Add VeriCore dependencies to your `build.gradle`. Use this variant if your project still uses the Groovy DSL.
+Add TrustWeave dependencies to your `build.gradle`. Use this variant if your project still uses the Groovy DSL.
 
 ```groovy
 dependencies {
     // Core modules (required)
-    implementation 'com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT'
-    implementation 'com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT'
-    implementation 'com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT'
-    implementation 'com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT'
-    implementation 'com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT'
+    implementation 'com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT'
+    implementation 'com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT'
+    implementation 'com.trustweave:TrustWeave-kms:1.0.0-SNAPSHOT'
+    implementation 'com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT'
+    implementation 'com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT'
     
     // Test kit (for testing)
-    testImplementation 'com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT'
+    testImplementation 'com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT'
     
     // Optional: Integration modules (using hierarchical group IDs)
-    implementation 'com.geoknoesis.vericore.kms:waltid:1.0.0-SNAPSHOT'
-    implementation 'com.geoknoesis.vericore.did:godiddy:1.0.0-SNAPSHOT'
-    implementation 'com.geoknoesis.vericore.chains:algorand:1.0.0-SNAPSHOT'
-    implementation 'com.geoknoesis.vericore.chains:polygon:1.0.0-SNAPSHOT'
+    implementation 'com.trustweave.kms:waltid:1.0.0-SNAPSHOT'
+    implementation 'com.trustweave.did:godiddy:1.0.0-SNAPSHOT'
+    implementation 'com.trustweave.chains:algorand:1.0.0-SNAPSHOT'
+    implementation 'com.trustweave.chains:polygon:1.0.0-SNAPSHOT'
 }
 ```
 
@@ -96,41 +96,41 @@ dependencies {
 
 ## Maven
 
-Add VeriCore dependencies to your `pom.xml`. The snippet lists the minimum set needed to follow the scenarios.
+Add TrustWeave dependencies to your `pom.xml`. The snippet lists the minimum set needed to follow the scenarios.
 
 ```xml
 <dependencies>
     <!-- Core modules (required) -->
     <dependency>
-        <groupId>com.geoknoesis.vericore</groupId>
-        <artifactId>vericore-core</artifactId>
+        <groupId>com.trustweave</groupId>
+        <artifactId>TrustWeave-core</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
-        <groupId>com.geoknoesis.vericore</groupId>
-        <artifactId>vericore-json</artifactId>
+        <groupId>com.trustweave</groupId>
+        <artifactId>TrustWeave-json</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
-        <groupId>com.geoknoesis.vericore</groupId>
-        <artifactId>vericore-kms</artifactId>
+        <groupId>com.trustweave</groupId>
+        <artifactId>TrustWeave-kms</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
-        <groupId>com.geoknoesis.vericore</groupId>
-        <artifactId>vericore-did</artifactId>
+        <groupId>com.trustweave</groupId>
+        <artifactId>TrustWeave-did</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
-        <groupId>com.geoknoesis.vericore</groupId>
-        <artifactId>vericore-anchor</artifactId>
+        <groupId>com.trustweave</groupId>
+        <artifactId>TrustWeave-anchor</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </dependency>
     
     <!-- Test kit (for testing) -->
     <dependency>
-        <groupId>com.geoknoesis.vericore</groupId>
-        <artifactId>vericore-testkit</artifactId>
+        <groupId>com.trustweave</groupId>
+        <artifactId>TrustWeave-testkit</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <scope>test</scope>
     </dependency>
@@ -145,15 +145,15 @@ For a minimal demo you can stick to a subset of modules. This keeps the footprin
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
-    testImplementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
+    testImplementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
 }
 ```
 
-**Result:** You get the same APIs as `vericore-all` but can opt into additional modules later.
+**Result:** You get the same APIs as `TrustWeave-all` but can opt into additional modules later.
 
 ## Repository Configuration
 
@@ -180,6 +180,6 @@ repositories {
 
 ## Next Steps
 
-- [Quick Start](quick-start.md) - Create your first VeriCore application
+- [Quick Start](quick-start.md) - Create your first TrustWeave application
 - [Your First Application](your-first-application.md) - Build a complete example
 

@@ -1,6 +1,6 @@
 # Supply Chain & Regulatory Compliance (EUDR) with Earth Observation
 
-This guide demonstrates how to build a supply chain compliance system for the EU Deforestation Regulation (EUDR) using VeriCore and Earth Observation data. You'll learn how to create verifiable credentials that prove geospatial non-deforestation for every shipment.
+This guide demonstrates how to build a supply chain compliance system for the EU Deforestation Regulation (EUDR) using TrustWeave and Earth Observation data. You'll learn how to create verifiable credentials that prove geospatial non-deforestation for every shipment.
 
 ## What You'll Build
 
@@ -102,14 +102,14 @@ EUDR compliance needs:
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
     
     // Test kit for in-memory implementations
-    testImplementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    testImplementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
     
     // Optional: Algorand adapter for real blockchain anchoring
-    implementation("com.geoknoesis.vericore.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -126,9 +126,9 @@ Here's a complete EUDR compliance workflow:
 ```kotlin
 package com.example.eudr.compliance
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.json.DigestUtils
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.json.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import java.time.Instant
@@ -138,12 +138,12 @@ fun main() = runBlocking {
     println("EUDR Compliance with EO Data - Complete Example")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance
-    val vericore = VeriCore.create()
-    println("\n✅ VeriCore initialized")
+    // Step 1: Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
+    println("\n✅ TrustWeave initialized")
     
     // Step 2: Create DIDs for exporter, importer, and verifier
-    val exporterDid = vericore.dids.create()
+    val exporterDid = TrustWeave.dids.create()
     Result.success(exporterDid).fold(
         onSuccess = { it },
         onFailure = { error ->
@@ -152,7 +152,7 @@ fun main() = runBlocking {
         }
     )
     
-    val importerDid = vericore.dids.create()
+    val importerDid = TrustWeave.dids.create()
     Result.success(importerDid).fold(
         onSuccess = { it },
         onFailure = { error ->
@@ -161,7 +161,7 @@ fun main() = runBlocking {
         }
     )
     
-    val verifierDid = vericore.dids.create()
+    val verifierDid = TrustWeave.dids.create()
     Result.success(verifierDid).fold(
         onSuccess = { it },
         onFailure = { error ->
@@ -175,7 +175,7 @@ fun main() = runBlocking {
     println("✅ Verifier DID: ${verifierDid.id}")
     
     // Step 3: Create farm/production site DID
-    val farmDid = vericore.dids.create()
+    val farmDid = TrustWeave.dids.create()
     Result.success(farmDid).fold(
         onSuccess = { it },
         onFailure = { error ->
@@ -223,7 +223,7 @@ fun main() = runBlocking {
     val verifierKeyId = verifierDid.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val complianceCredential = vericore.issueCredential(
+    val complianceCredential = TrustWeave.issueCredential(
         issuerDid = verifierDid.id,
         issuerKeyId = verifierKeyId,
         credentialSubject = buildJsonObject {
@@ -262,7 +262,7 @@ fun main() = runBlocking {
     val exporterKeyId = exporterDid.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val dppCredential = vericore.issueCredential(
+    val dppCredential = TrustWeave.issueCredential(
         issuerDid = exporterDid.id,
         issuerKeyId = exporterKeyId,
         credentialSubject = buildJsonObject {
@@ -293,7 +293,7 @@ fun main() = runBlocking {
     println("   Quantity: 10,000 kg")
     
     // Step 7: Importer verifies compliance before import
-    val dppVerification = vericore.verifyCredential(dppCredential).fold(
+    val dppVerification = TrustWeave.verifyCredential(dppCredential).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ DPP verification failed: ${error.message}")
@@ -309,7 +309,7 @@ fun main() = runBlocking {
     println("✅ DPP verified")
     
     // Step 8: Verify compliance credential
-    val complianceVerification = vericore.verifyCredential(complianceCredential).fold(
+    val complianceVerification = TrustWeave.verifyCredential(complianceCredential).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Compliance verification failed: ${error.message}")
@@ -355,7 +355,7 @@ fun main() = runBlocking {
     }
     
     // Step 11: Anchor to blockchain for audit trail
-    val anchorResult = vericore.blockchains.anchor(
+    val anchorResult = TrustWeave.blockchains.anchor(
         data = dppCredential,
         serializer = VerifiableCredential.serializer(),
         chainId = "algorand:testnet"
@@ -401,7 +401,7 @@ suspend fun verifyAgainstClimateTrace(
 EUDR Compliance with EO Data - Complete Example
 ======================================================================
 
-✅ VeriCore initialized
+✅ TrustWeave initialized
 ✅ Exporter DID: did:key:z6Mk...
 ✅ Importer DID: did:key:z6Mk...
 ✅ Verifier DID: did:key:z6Mk...
@@ -442,7 +442,7 @@ suspend fun automatedEUDRVerification(
     dppCredential: VerifiableCredential
 ): ComplianceResult {
     // Verify DPP credential
-    val dppVerification = vericore.verifyCredential(dppCredential).getOrThrow()
+    val dppVerification = TrustWeave.verifyCredential(dppCredential).getOrThrow()
     if (!dppVerification.valid) {
         return ComplianceResult.NonCompliant("DPP verification failed")
     }
@@ -452,7 +452,7 @@ suspend fun automatedEUDRVerification(
     
     // Verify compliance credential
     val complianceCredential = fetchCredential(complianceCredentialId)
-    val complianceVerification = vericore.verifyCredential(complianceCredential).getOrThrow()
+    val complianceVerification = TrustWeave.verifyCredential(complianceCredential).getOrThrow()
     if (!complianceVerification.valid) {
         return ComplianceResult.NonCompliant("Compliance verification failed")
     }

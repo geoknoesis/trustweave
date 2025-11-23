@@ -1,6 +1,6 @@
 # Parametric Insurance with Earth Observation Data
 
-This guide demonstrates how to build a parametric insurance system using VeriCore and Earth Observation (EO) data. You'll learn how to create verifiable credentials for EO data that trigger insurance payouts, solving the "Oracle Problem" by enabling standardized, multi-provider data ecosystems.
+This guide demonstrates how to build a parametric insurance system using TrustWeave and Earth Observation (EO) data. You'll learn how to create verifiable credentials for EO data that trigger insurance payouts, solving the "Oracle Problem" by enabling standardized, multi-provider data ecosystems.
 
 ## What You'll Build
 
@@ -102,14 +102,14 @@ Parametric insurance needs:
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
     
     // Test kit for in-memory implementations
-    testImplementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    testImplementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
     
     // Optional: Algorand adapter for real blockchain anchoring
-    implementation("com.geoknoesis.vericore.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -126,9 +126,9 @@ Here's a complete parametric insurance workflow using EO data credentials:
 ```kotlin
 package com.example.parametric.insurance
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.json.DigestUtils
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.json.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -139,12 +139,12 @@ fun main() = runBlocking {
     println("Parametric Insurance with EO Data - Complete Example")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance
-    val vericore = VeriCore.create()
-    println("\n✅ VeriCore initialized")
+    // Step 1: Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
+    println("\n✅ TrustWeave initialized")
     
     // Step 2: Create DIDs for insurance company and EO data provider
-    val insuranceDid = vericore.dids.create()
+    val insuranceDid = TrustWeave.dids.create()
     Result.success(insuranceDid).fold(
         onSuccess = { it },
         onFailure = { error ->
@@ -153,7 +153,7 @@ fun main() = runBlocking {
         }
     )
     
-    val eoProviderDid = vericore.dids.create()
+    val eoProviderDid = TrustWeave.dids.create()
     Result.success(eoProviderDid).fold(
         onSuccess = { it },
         onFailure = { error ->
@@ -195,7 +195,7 @@ fun main() = runBlocking {
     val dataDigest = DigestUtils.sha256DigestMultibase(rainfallData)
     
     // Issue verifiable credential for EO data
-    val eoDataCredential = vericore.credentials.issue(
+    val eoDataCredential = TrustWeave.credentials.issue(
         issuerDid = eoProviderDid.id,
         issuerKeyId = eoProviderKeyId,
         credentialSubject = buildJsonObject {
@@ -219,7 +219,7 @@ fun main() = runBlocking {
     println("   Data digest: $dataDigest")
     
     // Step 4: Verify EO data credential (insurance company verifies before using)
-    val verification = vericore.credentials.verify(eoDataCredential)
+    val verification = TrustWeave.credentials.verify(eoDataCredential)
     if (verification.valid) {
         onSuccess = { it },
         onFailure = { error ->
@@ -260,7 +260,7 @@ fun main() = runBlocking {
         val insuranceKeyId = insuranceDid.verificationMethod.firstOrNull()?.id
             ?: error("No verification method found")
         
-        val payoutCredential = vericore.credentials.issue(
+        val payoutCredential = TrustWeave.credentials.issue(
             issuerDid = insuranceDid.id,
             issuerKeyId = insuranceKeyId,
             credentialSubject = buildJsonObject {
@@ -319,7 +319,7 @@ fun main() = runBlocking {
 Parametric Insurance with EO Data - Complete Example
 ======================================================================
 
-✅ VeriCore initialized
+✅ TrustWeave initialized
 ✅ Insurance Company DID: did:key:z6Mk...
 ✅ EO Data Provider DID: did:key:z6Mk...
 ✅ EO Data Credential issued: urn:uuid:...
@@ -358,7 +358,7 @@ suspend fun acceptEODataFromAnyProvider(
     dataCredential: VerifiableCredential
 ): Boolean {
     // Verify credential
-    val verification = vericore.credentials.verify(dataCredential)
+    val verification = TrustWeave.credentials.verify(dataCredential)
     if (!verification.valid) return false
     
     // Check if provider is certified
@@ -400,7 +400,7 @@ val spectralData = buildJsonObject {
 
 val spectralDigest = DigestUtils.sha256DigestMultibase(spectralData)
 
-val spectralCredential = vericore.credentials.issue(
+val spectralCredential = TrustWeave.credentials.issue(
     issuerDid = eoProviderDid.id,
     issuerKeyId = eoProviderKeyId,
     credentialSubject = buildJsonObject {
@@ -430,7 +430,7 @@ Anchor credentials to blockchain for immutable audit trail:
 
 ```kotlin
 // Anchor EO data credential
-val anchorResult = vericore.blockchains.anchor(
+val anchorResult = TrustWeave.blockchains.anchor(
     data = eoDataCredential,
     serializer = VerifiableCredential.serializer(),
     chainId = "algorand:testnet"

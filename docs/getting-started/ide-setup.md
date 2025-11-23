@@ -1,6 +1,6 @@
 # IDE Setup Guide
 
-This guide helps you set up your development environment for working with VeriCore.
+This guide helps you set up your development environment for working with TrustWeave.
 
 ## IntelliJ IDEA
 
@@ -8,7 +8,7 @@ This guide helps you set up your development environment for working with VeriCo
 
 1. **Install IntelliJ IDEA**
    - Download from [JetBrains website](https://www.jetbrains.com/idea/)
-   - Community Edition is sufficient for VeriCore development
+   - Community Edition is sufficient for TrustWeave development
 
 2. **Install Kotlin Plugin**
    - Kotlin plugin is included by default in IntelliJ IDEA
@@ -21,7 +21,7 @@ This guide helps you set up your development environment for working with VeriCo
 
 ### Code Style Configuration
 
-VeriCore uses ktlint for code formatting. Configure IntelliJ to match:
+TrustWeave uses ktlint for code formatting. Configure IntelliJ to match:
 
 1. **Enable ktlint Formatting**
    ```bash
@@ -58,7 +58,7 @@ Create a run configuration for debugging:
 1. Run → Edit Configurations
 2. Click "+" → Kotlin
 3. Configure:
-   - **Name**: VeriCore Debug
+   - **Name**: TrustWeave Debug
    - **Main class**: Your main class
    - **Use classpath of module**: Select your module
 4. Apply and OK
@@ -97,7 +97,7 @@ Create a run configuration for debugging:
        {
          "type": "kotlin",
          "request": "launch",
-         "name": "Debug VeriCore",
+         "name": "Debug TrustWeave",
          "mainClass": "com.example.MainKt",
          "projectRoot": "${workspaceFolder}",
          "modulePaths": ["${workspaceFolder}/build/classes/kotlin/main"]
@@ -112,7 +112,7 @@ Create a run configuration for debugging:
 
 3. **Start Debugging**
    - Press F5 or use Debug panel
-   - Select "Debug VeriCore" configuration
+   - Select "Debug TrustWeave" configuration
 
 ## Common IDE Tasks
 
@@ -169,7 +169,7 @@ Create a run configuration for debugging:
 
 ### Issue: Code Completion Not Working
 
-**Problem**: IDE doesn't show autocomplete for VeriCore APIs
+**Problem**: IDE doesn't show autocomplete for TrustWeave APIs
 
 **Solution**:
 - File → Invalidate Caches / Restart
@@ -186,7 +186,7 @@ Create a run configuration for debugging:
 
 ## Next Steps
 
-- [Quick Start](quick-start.md) - Create your first VeriCore application
+- [Quick Start](quick-start.md) - Create your first TrustWeave application
 - [Your First Application](your-first-application.md) - Build a complete example
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 

@@ -1,6 +1,6 @@
-# VeriCore Plugin Implementation Roadmap
+# TrustWeave Plugin Implementation Roadmap
 
-This document outlines the comprehensive roadmap for implementing all important plugins for VeriCore, organized by priority and category.
+This document outlines the comprehensive roadmap for implementing all important plugins for TrustWeave, organized by priority and category.
 
 ## Implementation Strategy
 
@@ -229,7 +229,7 @@ All plugins should follow these patterns:
 2. **SPI Registration**: Use META-INF/services for auto-discovery
 3. **Algorithm Advertisement**: Implement algorithm advertisement API
 4. **Configuration**: Support environment variables and options map
-5. **Error Handling**: Map provider exceptions to VeriCore exceptions
+5. **Error Handling**: Map provider exceptions to TrustWeave exceptions
 6. **Testing**: Unit tests with mocks, optional integration tests
 7. **Documentation**: Complete integration guide with examples
 

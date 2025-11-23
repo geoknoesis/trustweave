@@ -1,0 +1,20 @@
+plugins {
+    kotlin("jvm")
+    kotlin("plugin.serialization")
+}
+
+group = "com.trustweave.integrations"
+dependencies {
+    implementation(project(":credentials:core"))
+
+    
+    // HTTP client for Venafi API
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    
+    // JSON serialization
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
+
+    // Test dependencies
+    testImplementation(project(":testkit"))
+}
+

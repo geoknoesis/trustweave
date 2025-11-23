@@ -1,127 +1,56 @@
-// Root build file - minimal configuration
-// Shared configuration is in buildSrc
-
 plugins {
-    id("org.jetbrains.kotlinx.kover") version "0.7.6" apply false
+    // Declare Kotlin plugin here so its types (e.g., KotlinCompile) are available in this build script.
+    // We use 'apply false' because we're configuring Kotlin tasks in subprojects, not applying the plugin to the root.
+    // The plugin version is resolved from settings.gradle.kts where it's already declared.
+    kotlin("jvm") apply false
 }
 
+// Configure common settings for all projects (root + all subprojects).
+// This includes repository configuration and project metadata (group/version).
 allprojects {
     repositories {
         mavenCentral()
-        maven("https://maven.waltid.dev/releases")
-        maven("https://maven.waltid.dev/snapshots")
     }
-    
-    // License configuration
+    group = "com.trustweave"
+    version = "1.0.0-SNAPSHOT"
+}
+
+subprojects {
     afterEvaluate {
-        tasks.withType<Jar>().configureEach {
-            manifest {
-                attributes(
-                    mapOf(
-                        "Implementation-Title" to project.name,
-                        "Implementation-Version" to project.version,
-                        "Implementation-Vendor" to "GeoKnoesis",
-                        "Bundle-License" to "https://www.gnu.org/licenses/agpl-3.0.html",
-                        "License" to "AGPL-3.0"
-                    )
-                )
+        // Configure Kotlin compiler options for all subprojects.
+        // Without explicit configuration, Gradle defaults to whatever JVM version Gradle itself is running on,
+        // which can vary across environments and cause inconsistent builds.
+        tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+            compilerOptions {
+                // Explicitly set JVM target to 21 to ensure all modules compile to the same bytecode version.
+                // This prevents issues where different developers/build environments use different JVM targets.
+                jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+                // Enable strict null-safety for Java interop. Without this, Kotlin's null-safety doesn't
+                // properly respect @Nullable/@NonNull annotations from Java libraries.
+                freeCompilerArgs.add("-Xjsr305=strict")
             }
-            // Write jars to a dedicated directory to avoid collisions with any
-            // files that might be held open by tools during iterative builds.
-            destinationDirectory.set(layout.buildDirectory.dir("packaged-libs"))
         }
-    }
-}
-
-// Apply Kover to all subprojects that have tests
-subprojects {
-    // Only configure projects that have build.gradle.kts files (skip intermediate directories)
-    val buildFile = project.projectDir.resolve("build.gradle.kts")
-    if (buildFile.exists() && project.name != "buildSrc") {
-        // Use project path instead of name to avoid conflicts (e.g., did:plugins:base vs chains:plugins:base)
-        val buildDirName = project.path.replace(":", "-").replaceFirst("^-", "")
-        layout.buildDirectory.set(rootProject.layout.buildDirectory.dir("modules/$buildDirName"))
-        apply(plugin = "org.jetbrains.kotlinx.kover")
         
-        // Kover configuration can be customized per-project if needed
-        // Default thresholds are defined in TestCoverageConfig
-    }
-}
-
-// Configure Maven publishing for all subprojects (except buildSrc and vericore-bom which has its own config)
-subprojects {
-    val buildFile = project.projectDir.resolve("build.gradle.kts")
-    if (buildFile.exists() && project.name != "buildSrc" && project.name != "vericore-bom") {
-        apply(plugin = "maven-publish")
-    }
-}
-
-// Configure publishing extension after plugin is applied
-subprojects {
-    val buildFile = project.projectDir.resolve("build.gradle.kts")
-    if (buildFile.exists() && project.name != "buildSrc" && project.name != "vericore-bom") {
-        afterEvaluate {
-            // Only configure if publishing plugin is applied and no publication exists yet
-            if (pluginManager.hasPlugin("maven-publish")) {
-                extensions.configure<org.gradle.api.publish.PublishingExtension>("publishing") {
-                    publications {
-                        // Only create if it doesn't exist
-                        if (findByName("maven") == null) {
-                            create<org.gradle.api.publish.maven.MavenPublication>("maven") {
-                                // Use project.group if set, otherwise default to com.geoknoesis.vericore
-                                groupId = project.group.toString()
-                                // Use explicit artifactId for plugins, otherwise use project.name
-                                artifactId = when {
-                                    project.path.startsWith(":did:plugins:") -> 
-                                        project.path.substringAfter(":did:plugins:")
-                                    project.path.startsWith(":kms:plugins:") -> 
-                                        project.path.substringAfter(":kms:plugins:")
-                                    project.path.startsWith(":chains:plugins:") -> 
-                                        project.path.substringAfter(":chains:plugins:")
-                                    else -> project.name
-                                }
-                                version = project.version.toString()
-                                
-                                from(components["java"])
-                                
-                                pom {
-                                    name.set(project.name)
-                                    description.set(project.description ?: "")
-                                    
-                                    licenses {
-                                        license {
-                                            name.set("AGPL-3.0")
-                                            url.set("https://www.gnu.org/licenses/agpl-3.0.txt")
-                                        }
-                                    }
-                                    
-                                    developers {
-                                        developer {
-                                            id.set("vericore-team")
-                                            name.set("VeriCore Team")
-                                            email.set("info@geoknoesis.com")
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    
-                    repositories {
-                        mavenLocal() // Publishes to ~/.m2/repository
-                    }
-                }
+        // Configure Java toolchain to ensure all subprojects use Java 21.
+        // Without this, Gradle may use whatever Java version is available on the system,
+        // leading to inconsistent build results across different environments.
+        extensions.findByType<org.gradle.api.plugins.JavaPluginExtension>()?.apply {
+            toolchain {
+                languageVersion.set(org.gradle.jvm.toolchain.JavaLanguageVersion.of(21))
             }
+        }
+        
+        // Configure all test tasks to use JUnit Platform (JUnit 5).
+        // Without this, Gradle defaults to JUnit 4, which doesn't match our JUnit Jupiter dependencies.
+        tasks.withType<Test>().configureEach {
+            useJUnitPlatform()
         }
     }
 }
 
-// Register convenient test tasks
-afterEvaluate {
-    TestTasks.register(project)
-}
-
+// Configure Gradle Wrapper to use a specific Gradle version.
+// The wrapper allows developers to build the project without installing Gradle locally.
+// When updating the wrapper, run: ./gradlew wrapper --gradle-version <version>
 tasks.wrapper {
-    gradleVersion = "8.5"
+    gradleVersion = "9.2.0"
 }
-

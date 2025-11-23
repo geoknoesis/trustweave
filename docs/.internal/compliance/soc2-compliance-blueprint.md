@@ -1,6 +1,6 @@
-# SOC2 Compliance Blueprint with VeriCore
+# SOC2 Compliance Blueprint with TrustWeave
 
-This blueprint provides a comprehensive guide for implementing a SOC2 Type II compliant system using VeriCore. It covers architecture, controls, implementation patterns, and verification procedures.
+This blueprint provides a comprehensive guide for implementing a SOC2 Type II compliant system using TrustWeave. It covers architecture, controls, implementation patterns, and verification procedures.
 
 ## Table of Contents
 
@@ -28,9 +28,9 @@ SOC2 (System and Organization Controls 2) is a framework for ensuring that servi
 4. **Confidentiality (C1)** - Information designated as confidential is protected
 5. **Privacy (P1-P9)** - Personal information is collected, used, retained, disclosed, and disposed of in conformity with commitments
 
-### How VeriCore Supports SOC2
+### How TrustWeave Supports SOC2
 
-VeriCore provides cryptographic foundations that support SOC2 compliance:
+TrustWeave provides cryptographic foundations that support SOC2 compliance:
 
 - **Cryptographic Security**: W3C-compliant verifiable credentials with tamper-proof proofs
 - **Immutable Audit Trails**: Blockchain anchoring for permanent, tamper-evident logs
@@ -44,7 +44,7 @@ VeriCore provides cryptographic foundations that support SOC2 compliance:
 
 ### CC6 - Logical and Physical Access Controls
 
-| Control | VeriCore Feature | Implementation |
+| Control | TrustWeave Feature | Implementation |
 |---------|------------------|----------------|
 | CC6.1 - Logical Access | Key Management Service | Enterprise KMS (HSM, AWS KMS, Vault) |
 | CC6.2 - Authentication | DID-based identity | Verifiable credentials for user authentication |
@@ -54,23 +54,23 @@ VeriCore provides cryptographic foundations that support SOC2 compliance:
 
 ### CC7 - System Operations
 
-| Control | VeriCore Feature | Implementation |
+| Control | TrustWeave Feature | Implementation |
 |---------|------------------|----------------|
 | CC7.1 - System Monitoring | Audit Logging | Blockchain-anchored audit logs |
 | CC7.2 - System Monitoring | Verification APIs | Credential validity monitoring |
-| CC7.3 - System Changes | Key Rotation | VeriCore key rotation with history |
+| CC7.3 - System Changes | Key Rotation | TrustWeave key rotation with history |
 | CC7.4 - System Changes | Version Control | DID document versioning |
 
 ### A1 - Availability
 
-| Control | VeriCore Feature | Implementation |
+| Control | TrustWeave Feature | Implementation |
 |---------|------------------|----------------|
 | A1.1 - Availability | Redundancy | Multi-chain anchoring, backup KMS |
 | A1.2 - System Monitoring | Health Checks | DID resolution monitoring, credential verification |
 
 ### PI - Processing Integrity
 
-| Control | VeriCore Feature | Implementation |
+| Control | TrustWeave Feature | Implementation |
 |---------|------------------|----------------|
 | PI1.1 - Processing Integrity | Cryptographic Proofs | Verifiable credential signatures |
 | PI1.2 - Data Validation | Credential Verification | Automated credential validation |
@@ -78,7 +78,7 @@ VeriCore provides cryptographic foundations that support SOC2 compliance:
 
 ### C1 - Confidentiality
 
-| Control | VeriCore Feature | Implementation |
+| Control | TrustWeave Feature | Implementation |
 |---------|------------------|----------------|
 | C1.1 - Confidentiality | Selective Disclosure | Privacy-preserving presentations |
 | C1.2 - Encryption | Key Management | End-to-end encryption support |
@@ -98,9 +98,9 @@ VeriCore provides cryptographic foundations that support SOC2 compliance:
 └─────────┼─────────────────┼─────────────────┼──────────┘
           │                 │                 │
 ┌─────────▼─────────────────▼─────────────────▼──────────┐
-│              SOC2-Compliant VeriCore Service             │
+│              SOC2-Compliant TrustWeave Service             │
 │  ┌──────────────────────────────────────────────────┐  │
-│  │         VeriCore Facade (Core API)              │  │
+│  │         TrustWeave Facade (Core API)              │  │
 │  └──────────────────────┬───────────────────────────┘  │
 │                         │                               │
 │  ┌──────────────────────▼───────────────────────────┐  │
@@ -129,13 +129,13 @@ VeriCore provides cryptographic foundations that support SOC2 compliance:
 - Monitoring and alerting
 - Business logic
 
-**SOC2-Compliant VeriCore Service:**
-- Wraps VeriCore with compliance controls
+**SOC2-Compliant TrustWeave Service:**
+- Wraps TrustWeave with compliance controls
 - Enforces access control
 - Generates audit logs
 - Integrates with monitoring
 
-**VeriCore Core:**
+**TrustWeave Core:**
 - DID management
 - Credential issuance/verification
 - Wallet operations
@@ -155,15 +155,15 @@ VeriCore provides cryptographic foundations that support SOC2 compliance:
 #### Implementation Pattern
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
 import kotlinx.coroutines.flow.Flow
 
 /**
- * SOC2-compliant wrapper around VeriCore that enforces access control
+ * SOC2-compliant wrapper around TrustWeave that enforces access control
  */
 class SOC2CompliantVeriCoreService(
-    private val vericore: VeriCore,
+    private val TrustWeave: TrustWeave,
     private val accessControl: AccessControlService,
     private val auditLogger: AuditLogger,
     private val monitoring: MonitoringService
@@ -196,7 +196,7 @@ class SOC2CompliantVeriCoreService(
             )
             
             // 3. Perform operation
-            val credential = vericore.issueCredential(
+            val credential = TrustWeave.issueCredential(
                 issuerDid = request.issuerDid,
                 issuerKeyId = request.issuerKeyId,
                 credentialSubject = request.credentialSubject,
@@ -270,7 +270,7 @@ class SOC2CompliantVeriCoreService(
             )
             
             // Verify
-            val result = vericore.verifyCredential(credential).getOrThrow()
+            val result = TrustWeave.verifyCredential(credential).getOrThrow()
             
             // Monitor
             monitoring.recordMetric(
@@ -328,9 +328,9 @@ interface AuditLogger {
 #### Enterprise KMS Integration
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.kms.KeyManagementService
-import com.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider
+import com.trustweave.TrustWeave
+import com.trustweave.kms.KeyManagementService
+import com.trustweave.kms.spi.KeyManagementServiceProvider
 
 /**
  * Enterprise KMS provider (e.g., AWS KMS, Azure Key Vault, HashiCorp Vault)
@@ -360,10 +360,10 @@ class EnterpriseKmsProvider : KeyManagementServiceProvider {
 }
 
 /**
- * Create VeriCore with enterprise KMS
+ * Create TrustWeave with enterprise KMS
  */
-fun createSOC2CompliantVeriCore(kmsConfig: Map<String, Any?>): VeriCore {
-    return VeriCore.create {
+fun createSOC2CompliantVeriCore(kmsConfig: Map<String, Any?>): TrustWeave {
+    return TrustWeave.create {
         keyManagement {
             provider("enterprise-kms")
             // KMS-specific configuration
@@ -387,8 +387,8 @@ fun createSOC2CompliantVeriCore(kmsConfig: Map<String, Any?>): VeriCore {
 #### Blockchain-Anchored Audit Logs
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.anchor.anchorTyped
+import com.trustweave.TrustWeave
+import com.trustweave.anchor.anchorTyped
 import kotlinx.serialization.Serializable
 import java.time.Instant
 
@@ -413,7 +413,7 @@ data class AuditLogEntry(
  * Blockchain-anchored audit logger
  */
 class BlockchainAuditLogger(
-    private val vericore: VeriCore,
+    private val TrustWeave: TrustWeave,
     private val database: AuditLogDatabase
 ) : AuditLogger {
     
@@ -440,7 +440,7 @@ class BlockchainAuditLogger(
         
         // 2. Anchor to blockchain (for immutability)
         try {
-            val anchorResult = vericore.anchor(entry).getOrThrow()
+            val anchorResult = TrustWeave.anchor(entry).getOrThrow()
             
             // Update database with anchor reference
             database.updateAnchorReference(
@@ -471,7 +471,7 @@ class BlockchainAuditLogger(
         val anchorRef = database.getAnchorReference(entryId) ?: return false
         
         // Recompute hash and verify against blockchain
-        return vericore.verifyAnchor(entry, anchorRef).getOrElse { false }
+        return TrustWeave.verifyAnchor(entry, anchorRef).getOrElse { false }
     }
 }
 ```
@@ -554,14 +554,14 @@ class PrometheusMonitoringService : MonitoringService {
 #### Key Rotation with History
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
 
 /**
  * Key rotation service that maintains history for credential verification
  */
 class SOC2KeyRotationService(
-    private val vericore: VeriCore,
+    private val TrustWeave: TrustWeave,
     private val auditLogger: AuditLogger
 ) {
     
@@ -575,7 +575,7 @@ class SOC2KeyRotationService(
     ): Result<String> {
         return try {
             // 1. Generate new key
-            val newKey = vericore.createDid(
+            val newKey = TrustWeave.createDid(
                 method = "key",
                 options = DidCreationOptions.KeyOptions(
                     algorithm = DidCreationOptions.KeyAlgorithm.ED25519
@@ -1006,20 +1006,20 @@ data class ComplianceCheck(
 
 ```kotlin
 /**
- * Complete SOC2-compliant VeriCore service implementation
+ * Complete SOC2-compliant TrustWeave service implementation
  */
 class SOC2VeriCoreApplication {
     
-    private val vericore = createSOC2CompliantVeriCore(
+    private val TrustWeave = createSOC2CompliantVeriCore(
         kmsConfig = mapOf(
             "type" to "aws-kms",
             "region" to "us-east-1",
-            "keyAlias" to "vericore-production"
+            "keyAlias" to "TrustWeave-production"
         )
     )
     
     private val auditLogger = BlockchainAuditLogger(
-        vericore = vericore,
+        TrustWeave = TrustWeave,
         database = EncryptedAuditLogDatabase(
             database = PostgresAuditLogDatabase(),
             encryption = AwsKmsEncryptionService()
@@ -1031,7 +1031,7 @@ class SOC2VeriCoreApplication {
     private val monitoring = PrometheusMonitoringService()
     
     private val service = SOC2CompliantVeriCoreService(
-        vericore = vericore,
+        TrustWeave = TrustWeave,
         accessControl = accessControl,
         auditLogger = auditLogger,
         monitoring = monitoring
@@ -1068,7 +1068,7 @@ class SOC2VeriCoreApplication {
 
 ## Summary
 
-This blueprint provides a comprehensive foundation for implementing SOC2 compliance with VeriCore:
+This blueprint provides a comprehensive foundation for implementing SOC2 compliance with TrustWeave:
 
 1. **Architecture**: Layered design with clear separation of concerns
 2. **Controls**: Implementation patterns for all major SOC2 controls
@@ -1087,7 +1087,7 @@ This blueprint provides a comprehensive foundation for implementing SOC2 complia
 6. Engage SOC2 auditor for Type II certification
 
 For questions or support, refer to:
-- [VeriCore Key Management Guide](../../core-concepts/key-management.md)
+- [TrustWeave Key Management Guide](../../core-concepts/key-management.md)
 - [Blockchain Anchoring Guide](../../core-concepts/blockchain-anchoring.md)
 - [Security Clearance Scenario](../../scenarios/security-clearance-access-control-scenario.md)
 

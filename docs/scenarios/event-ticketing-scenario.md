@@ -1,6 +1,6 @@
 # Event Ticketing and Access Control Scenario
 
-This guide demonstrates how to build a complete event ticketing system using VeriCore. You'll learn how event organizers can issue verifiable tickets, how attendees can store them in wallets, and how venues can verify tickets and control access while preventing fraud and scalping.
+This guide demonstrates how to build a complete event ticketing system using TrustWeave. You'll learn how event organizers can issue verifiable tickets, how attendees can store them in wallets, and how venues can verify tickets and control access while preventing fraud and scalping.
 
 ## What You'll Build
 
@@ -97,7 +97,7 @@ Traditional ticketing systems have several problems:
 4. **No privacy**: Ticket data shared with multiple parties
 5. **Not portable**: Tickets tied to specific platforms
 
-VeriCore solves this by enabling:
+TrustWeave solves this by enabling:
 
 - **Tamper-proof**: Tickets are cryptographically signed
 - **Transfer control**: Secure, verifiable ticket transfers
@@ -130,12 +130,12 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add TrustWeave dependencies to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -147,16 +147,16 @@ dependencies {
 
 ## Step 2: Complete Runnable Example
 
-Here's the full event ticketing flow using the VeriCore facade API:
+Here's the full event ticketing flow using the TrustWeave facade API:
 
 ```kotlin
 package com.example.event.ticketing
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.credential.PresentationOptions
-import com.geoknoesis.vericore.credential.wallet.Wallet
-import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.credential.PresentationOptions
+import com.trustweave.credential.wallet.Wallet
+import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -168,23 +168,23 @@ fun main() = runBlocking {
     println("Event Ticketing and Access Control Scenario - Complete End-to-End Example")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance
-    val vericore = VeriCore.create()
-    println("\n✅ VeriCore initialized")
+    // Step 1: Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
+    println("\n✅ TrustWeave initialized")
     
     // Step 2: Create DIDs for event organizer, attendee, and venue
-    val organizerDidDoc = vericore.dids.create()
+    val organizerDidDoc = TrustWeave.dids.create()
     val organizerDid = organizerDidDoc.id
     val organizerKeyId = organizerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val attendeeDidDoc = vericore.dids.create()
+    val attendeeDidDoc = TrustWeave.dids.create()
     val attendeeDid = attendeeDidDoc.id
     
-    val newAttendeeDidDoc = vericore.dids.create()
+    val newAttendeeDidDoc = TrustWeave.dids.create()
     val newAttendeeDid = newAttendeeDidDoc.id
     
-    val venueDidDoc = vericore.dids.create()
+    val venueDidDoc = TrustWeave.dids.create()
     val venueDid = venueDidDoc.id
     
     println("✅ Event Organizer DID: $organizerDid")
@@ -193,7 +193,7 @@ fun main() = runBlocking {
     println("✅ Venue DID: $venueDid")
     
     // Step 3: Issue event ticket credential
-    val ticketCredential = vericore.issueCredential(
+    val ticketCredential = TrustWeave.issueCredential(
         issuerDid = organizerDid,
         issuerKeyId = organizerKeyId,
         credentialSubject = buildJsonObject {
@@ -224,7 +224,7 @@ fun main() = runBlocking {
     println("   Seat: A-42 (VIP)")
     
     // Step 4: Create attendee wallet and store ticket
-    val attendeeWallet = vericore.createWallet(
+    val attendeeWallet = TrustWeave.createWallet(
         holderDid = attendeeDid,
         options = WalletCreationOptionsBuilder().apply {
             enableOrganization = true
@@ -246,7 +246,7 @@ fun main() = runBlocking {
     // Step 6: Verify ticket before venue entry
     println("\n🎫 Pre-Entry Ticket Verification:")
     
-    val ticketVerification = vericore.verifyCredential(ticketCredential).getOrThrow()
+    val ticketVerification = TrustWeave.verifyCredential(ticketCredential).getOrThrow()
     
     if (ticketVerification.valid) {
         println("✅ Ticket Credential: VALID")
@@ -294,7 +294,7 @@ fun main() = runBlocking {
         
         // Issue new ticket credential to new attendee (in real system, this would be signed by original holder)
         // For this example, we'll issue a transfer credential from the organizer
-        val transferredTicketCredential = vericore.issueCredential(
+        val transferredTicketCredential = TrustWeave.issueCredential(
             issuerDid = organizerDid,
             issuerKeyId = organizerKeyId,
             credentialSubject = buildJsonObject {
@@ -327,7 +327,7 @@ fun main() = runBlocking {
         println("   Further transfers: DISABLED")
         
         // Store in new attendee's wallet
-        val newAttendeeWallet = vericore.createWallet(
+        val newAttendeeWallet = TrustWeave.createWallet(
             holderDid = newAttendeeDid,
             options = WalletCreationOptionsBuilder().apply {
                 enableOrganization = true
@@ -347,7 +347,7 @@ fun main() = runBlocking {
         // Step 8: Verify transferred ticket at venue
         println("\n🎫 Transferred Ticket Verification at Venue:")
         
-        val transferredTicketVerification = vericore.verifyCredential(transferredTicketCredential).getOrThrow()
+        val transferredTicketVerification = TrustWeave.verifyCredential(transferredTicketCredential).getOrThrow()
         
         if (transferredTicketVerification.valid) {
             println("✅ Transferred Ticket Credential: VALID")
@@ -409,7 +409,7 @@ fun main() = runBlocking {
 Event Ticketing and Access Control Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ VeriCore initialized
+✅ TrustWeave initialized
 ✅ Event Organizer DID: did:key:z6Mk...
 ✅ Attendee DID: did:key:z6Mk...
 ✅ New Attendee DID (for transfer): did:key:z6Mk...
@@ -485,7 +485,7 @@ Event Ticketing and Access Control Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with VeriCore
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 - [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions

@@ -1,14 +1,14 @@
 # Wallets
 
-> Wallet guidance in VeriCore is authored by [Geoknoesis LLC](https://www.geoknoesis.com). Geoknoesis designs the composable wallet model and offers commercial support for production deployments.
+> Wallet guidance in TrustWeave is authored by [Geoknoesis LLC](https://www.geoknoesis.com). Geoknoesis designs the composable wallet model and offers commercial support for production deployments.
 
 ## What is a Wallet?
 
-A **Wallet** in VeriCore is a secure container for managing your credentials and identities. It provides a unified interface for storing, organizing, and using verifiable credentials and DIDs.
+A **Wallet** in TrustWeave is a secure container for managing your credentials and identities. It provides a unified interface for storing, organizing, and using verifiable credentials and DIDs.
 
 ## Wallet Capabilities
 
-VeriCore wallets support different capabilities through a **composable interface design**:
+TrustWeave wallets support different capabilities through a **composable interface design**:
 
 ### Core Capabilities (Always Available)
 
@@ -31,7 +31,7 @@ VeriCore wallets support different capabilities through a **composable interface
 A **Basic Wallet** provides only core credential storage:
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.credential.BasicWallet
+import com.trustweave.testkit.credential.BasicWallet
 
 val wallet = BasicWallet()
 // Supports: store, get, list, delete, query
@@ -44,7 +44,7 @@ val wallet = BasicWallet()
 A **Full-Featured Wallet** implements all capabilities:
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.credential.InMemoryWallet
+import com.trustweave.testkit.credential.InMemoryWallet
 
 val wallet = InMemoryWallet(
     walletDid = "did:key:wallet",
@@ -57,7 +57,7 @@ val wallet = InMemoryWallet(
 
 ## Type-Safe Capability Checking
 
-VeriCore uses Kotlin's type system for **compile-time** capability checking:
+TrustWeave uses Kotlin's type system for **compile-time** capability checking:
 
 ```kotlin
 val wallet: Wallet = createWallet()
@@ -85,7 +85,7 @@ if (wallet is CredentialPresentation) {
 
 ## Extension Functions
 
-VeriCore provides extension functions for elegant capability access:
+TrustWeave provides extension functions for elegant capability access:
 
 ```kotlin
 // Using extension functions
@@ -139,7 +139,7 @@ if (wallet.capabilities.supports("collections")) {
 Create your own directory when you need to manage multiple wallets:
 
 ```kotlin
-import com.geoknoesis.vericore.credential.wallet.WalletDirectory
+import com.trustweave.credential.wallet.WalletDirectory
 
 val directory = WalletDirectory()
 
@@ -281,11 +281,11 @@ if (wallet is CredentialPresentation) {
 - Explore the [Wallet API Reference](../api-reference/wallet-api.md)
 - Learn about [DIDs](dids.md) and [Verifiable Credentials](verifiable-credentials.md)
 
- In VeriCore a wallet is a secure container for verifiable credentials, keys, and DID helpers. The API follows the Interface Segregation Principle—each capability is expressed as a separate interface and can be mixed in as needed.
+ In TrustWeave a wallet is a secure container for verifiable credentials, keys, and DID helpers. The API follows the Interface Segregation Principle—each capability is expressed as a separate interface and can be mixed in as needed.
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
 }
 ```
 

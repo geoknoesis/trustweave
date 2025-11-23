@@ -1,10 +1,10 @@
 # PLC DID (did:plc) Integration
 
-> This guide covers the did:plc method integration for VeriCore. The did:plc plugin provides Personal Linked Container (PLC) DID resolution for AT Protocol.
+> This guide covers the did:plc method integration for TrustWeave. The did:plc plugin provides Personal Linked Container (PLC) DID resolution for AT Protocol.
 
 ## Overview
 
-The `did/plugins/plc` module provides an implementation of VeriCore's `DidMethod` interface using the Personal Linked Container (PLC) DID method for AT Protocol. This integration enables you to:
+The `did/plugins/plc` module provides an implementation of TrustWeave's `DidMethod` interface using the Personal Linked Container (PLC) DID method for AT Protocol. This integration enables you to:
 
 - Create and resolve DIDs for AT Protocol applications
 - Store DID documents in PLC registry
@@ -17,10 +17,10 @@ Add the did:plc module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.did:plc:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore.did:base:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:plc:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
     
     // HTTP client for AT Protocol integration
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -32,8 +32,8 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.geoknoesis.vericore.plcdid.*
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.plcdid.*
+import com.trustweave.kms.*
 
 // Create configuration
 val config = PlcDidConfig.builder()
@@ -61,7 +61,7 @@ val method = PlcDidMethod(kms, config)
 When the module is on the classpath, did:plc is automatically available:
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
+import com.trustweave.did.*
 import java.util.ServiceLoader
 
 // Discover did:plc provider
@@ -169,15 +169,15 @@ val config = PlcDidConfig.builder()
 - `plcRegistryUrl` (optional): PLC registry URL (defaults to `https://plc.directory`)
 - `timeoutSeconds` (optional): HTTP client timeout in seconds
 
-## Integration with VeriCore
+## Integration with TrustWeave
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.plcdid.*
+import com.trustweave.TrustWeave
+import com.trustweave.plcdid.*
 
 val config = PlcDidConfig.default()
 
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     kms = InMemoryKeyManagementService()
     
     didMethods {
@@ -186,11 +186,11 @@ val vericore = VeriCore.create {
 }
 
 // Use did:plc
-val did = vericore.createDid("plc") {
+val did = TrustWeave.createDid("plc") {
     algorithm = KeyAlgorithm.ED25519
 }.getOrThrow()
 
-val resolved = vericore.resolveDid(did.id).getOrThrow()
+val resolved = TrustWeave.resolveDid(did.id).getOrThrow()
 ```
 
 ## AT Protocol Integration

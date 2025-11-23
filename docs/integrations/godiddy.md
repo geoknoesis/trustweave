@@ -1,6 +1,6 @@
 # GoDiddy Integration
 
-> This guide covers the GoDiddy integration for VeriCore. The GoDiddy plugin provides HTTP integration with GoDiddy services, including Universal Resolver, Registrar, Issuer, and Verifier, supporting 20+ DID methods.
+> This guide covers the GoDiddy integration for TrustWeave. The GoDiddy plugin provides HTTP integration with GoDiddy services, including Universal Resolver, Registrar, Issuer, and Verifier, supporting 20+ DID methods.
 
 ## Overview
 
@@ -18,9 +18,9 @@ Add the GoDiddy module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.did:godiddy:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:godiddy:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
     
     // HTTP client (OkHttp recommended)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -32,8 +32,8 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.geoknoesis.vericore.godiddy.*
-import com.geoknoesis.vericore.did.*
+import com.trustweave.godiddy.*
+import com.trustweave.did.*
 
 // Create configuration
 val config = GodiddyConfig(
@@ -68,7 +68,7 @@ val method = GodiddyDidMethod(client, config)
 When the `did/plugins/godiddy` module is on the classpath, GoDiddy is automatically available:
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
+import com.trustweave.did.*
 import java.util.ServiceLoader
 
 // Discover GoDiddy provider
@@ -89,7 +89,7 @@ val method = godiddyProvider?.create("godiddy", options)
 ### DID Resolution
 
 ```kotlin
-import com.geoknoesis.vericore.godiddy.*
+import com.trustweave.godiddy.*
 
 val client = GodiddyClient(GodiddyConfig.default())
 val resolver = GodiddyResolver(client)
@@ -112,7 +112,7 @@ resolutionResult.fold(
 ### DID Registration
 
 ```kotlin
-import com.geoknoesis.vericore.godiddy.*
+import com.trustweave.godiddy.*
 
 val client = GodiddyClient(GodiddyConfig.default())
 val registrar = GodiddyRegistrar(client)
@@ -138,7 +138,7 @@ registrationResult.fold(
 ### Credential Issuance
 
 ```kotlin
-import com.geoknoesis.vericore.godiddy.*
+import com.trustweave.godiddy.*
 
 val client = GodiddyClient(GodiddyConfig.default())
 val issuer = GodiddyIssuer(client)
@@ -171,7 +171,7 @@ issuanceResult.fold(
 ### Credential Verification
 
 ```kotlin
-import com.geoknoesis.vericore.godiddy.*
+import com.trustweave.godiddy.*
 
 val client = GodiddyClient(GodiddyConfig.default())
 val verifier = GodiddyVerifier(client)
@@ -211,20 +211,20 @@ See the [GoDiddy Documentation](https://godiddy.com/docs) for a complete list of
 
 ## Error Handling
 
-The GoDiddy integration follows VeriCore's error handling patterns:
+The GoDiddy integration follows TrustWeave's error handling patterns:
 
 ```kotlin
-import com.geoknoesis.vericore.core.VeriCoreError
+import com.trustweave.core.TrustWeaveError
 
 val result = resolver.resolveDid(did)
 result.fold(
     onSuccess = { result -> /* handle success */ },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.DidResolutionFailed -> {
+            is TrustWeaveError.DidResolutionFailed -> {
                 println("Resolution failed: ${error.reason}")
             }
-            is VeriCoreError.NetworkError -> {
+            is TrustWeaveError.NetworkError -> {
                 println("Network error: ${error.message}")
             }
             else -> println("Error: ${error.message}")
@@ -264,6 +264,6 @@ result.fold(
 
 - [GoDiddy Documentation](https://godiddy.com/docs)
 - [Universal Resolver](https://dev.uniresolver.io/)
-- [VeriCore DID Module](../modules/vericore-did.md)
-- [VeriCore Core API](../api-reference/core-api.md)
+- [TrustWeave DID Module](../modules/trustweave-did.md)
+- [TrustWeave Core API](../api-reference/core-api.md)
 

@@ -1,6 +1,6 @@
 # The Web of Trust: Foundation for Decentralized Trust
 
-> VeriCore is built and supported by [Geoknoesis LLC](https://www.geoknoesis.com), a standards-focused identity company. This introduction reflects Geoknoesis' vision for building a thriving, interoperable trust ecosystem based on open standards.
+> TrustWeave is built and supported by [Geoknoesis LLC](https://www.geoknoesis.com), a standards-focused identity company. This introduction reflects Geoknoesis' vision for building a thriving, interoperable trust ecosystem based on open standards.
 
 ## What is the Web of Trust?
 
@@ -329,7 +329,7 @@ As we build the web of trust, we must remain committed to open standards, techno
 
 ## Next Steps
 
-- [What is VeriCore?](what-is-vericore.md) - Learn how VeriCore implements the web of trust
+- [What is TrustWeave?](what-is-TrustWeave.md) - Learn how TrustWeave implements the web of trust
 - [Trust Registry](../core-concepts/trust-registry.md) - Understand how trust registries work
 - [Delegation](../core-concepts/delegation.md) - Learn about delegation chains
 - [Web of Trust Scenario](../scenarios/web-of-trust-scenario.md) - See the web of trust in action

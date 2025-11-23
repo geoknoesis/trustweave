@@ -1,25 +1,25 @@
 # Architecture Overview
 
-VeriCore follows a modular, pluggable architecture that enables flexibility and extensibility. This page ties the high-level mental model—DIDs, credentials, proofs, anchoring—into the modules you will touch as you build a trust layer.
+TrustWeave follows a modular, pluggable architecture that enables flexibility and extensibility. This page ties the high-level mental model—DIDs, credentials, proofs, anchoring—into the modules you will touch as you build a trust layer.
 
-## VeriCore Mental Model
+## TrustWeave Mental Model
 
-VeriCore operates on three abstraction layers that provide different levels of control and simplicity:
+TrustWeave operates on three abstraction layers that provide different levels of control and simplicity:
 
-### 1. Facade Layer (`VeriCore.create()`) - Simplest API
+### 1. Facade Layer (`TrustWeave.create()`) - Simplest API
 
 The facade provides a unified, high-level API with sensible defaults. Use this when you want the simplest integration:
 
 ```kotlin
-val vericore = VeriCore.create()
-val did = vericore.createDid().getOrThrow()
-val credential = vericore.issueCredential(...).getOrThrow()
+val TrustWeave = TrustWeave.create()
+val did = TrustWeave.createDid().getOrThrow()
+val credential = TrustWeave.issueCredential(...).getOrThrow()
 ```
 
 **When to use:**
 - Quick prototypes and demos
 - Simple applications with standard requirements
-- When you want VeriCore to handle configuration automatically
+- When you want TrustWeave to handle configuration automatically
 
 ### 2. Service Layer (Direct Interfaces) - Fine-Grained Control
 
@@ -58,7 +58,7 @@ val trustLayer = trustLayer {
 
 ### Component Interaction Flow
 
-Understanding how components interact helps you debug and extend VeriCore:
+Understanding how components interact helps you debug and extend TrustWeave:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -67,8 +67,8 @@ Understanding how components interact helps you debug and extend VeriCore:
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    VeriCore Facade                           │
-│              (VeriCore.create())                             │
+│                    TrustWeave Facade                           │
+│              (TrustWeave.create())                             │
 └───────────────┬───────────────────────────────┬───────────────┘
                 │                               │
                 ▼                               ▼
@@ -98,7 +98,7 @@ Understanding how components interact helps you debug and extend VeriCore:
 
 ### Plugin Architecture
 
-VeriCore uses the Service Provider Interface (SPI) pattern for automatic plugin discovery:
+TrustWeave uses the Service Provider Interface (SPI) pattern for automatic plugin discovery:
 
 1. **Plugin Registration**: Plugins implement provider interfaces (e.g., `DidMethodProvider`)
 2. **Automatic Discovery**: Java ServiceLoader discovers plugins on the classpath
@@ -117,7 +117,7 @@ val didRegistry = DidMethodRegistry().apply {
 
 ### Trust Layer Concept
 
-The **Trust Layer** is VeriCore's configuration DSL that lets you declaratively configure all services:
+The **Trust Layer** is TrustWeave's configuration DSL that lets you declaratively configure all services:
 
 ```kotlin
 val trustLayer = trustLayer {
@@ -161,7 +161,7 @@ sequenceDiagram
     VC-->>App: VerifiableCredential (+ proof)
     App->>Anchor: writePayload(credentialDigest)
     Anchor-->>App: AnchorResult (AnchorRef)
-    note over App,Anchor: Store DID, VC, AnchorRef<br/>Verify later via VeriCore.verifyCredential()
+    note over App,Anchor: Store DID, VC, AnchorRef<br/>Verify later via TrustWeave.verifyCredential()
 ```
 
 **Roles and relationships**
@@ -169,25 +169,24 @@ sequenceDiagram
 - **DID creation**: `DidMethodRegistry` resolves a method implementation, which collaborates with `KeyManagementService` to mint keys and returns a W3C-compliant `DidDocument`.
 - **Credential issuance**: The `CredentialServiceRegistry` hands off to an issuer that canonicalises the payload, signs it through the same KMS, and produces a `VerifiableCredential` with a proof.
 - **Anchoring**: The credential digest (or any payload) flows through `BlockchainAnchorClient`, yielding an `AnchorRef` teams can persist for tamper evidence.
-- **Verification**: When verifying, VeriCore pulls the DID document, replays canonicalisation + signature validation, and optionally checks the anchor reference.
+- **Verification**: When verifying, TrustWeave pulls the DID document, replays canonicalisation + signature validation, and optionally checks the anchor reference.
 
 Use this flow as a mental checklist: if you know which step you are implementing, the linked module sections below show the relevant interfaces and extension points.
 
 ## Module Structure
 
-VeriCore is organized into a domain-centric structure with core modules and plugin implementations:
+TrustWeave is organized into a domain-centric structure with core modules and plugin implementations:
 
 ```
-vericore/
+TrustWeave/
 ├── core/                          # Core framework modules
-│   ├── vericore-core/             # Base types, exceptions, credential APIs
-│   ├── vericore-spi/              # Service Provider Interface definitions
-│   ├── vericore-json/             # JSON canonicalization utilities
-│   ├── vericore-trust/            # Trust registry and trust layer
-│   └── vericore-testkit/          # Test utilities and mocks
+│   ├── TrustWeave-common/             # Base types, exceptions, credential APIs (includes SPI interfaces)
+│   ├── TrustWeave-json/             # JSON canonicalization utilities
+│   ├── TrustWeave-trust/            # Trust registry and trust layer
+│   └── TrustWeave-testkit/          # Test utilities and mocks
 │
 ├── did/                           # DID domain
-│   ├── vericore-did/              # Core DID abstraction
+│   ├── TrustWeave-did/              # Core DID abstraction
 │   └── plugins/                   # DID method implementations
 │       ├── key/                   # did:key implementation
 │       ├── web/                   # did:web implementation
@@ -195,7 +194,7 @@ vericore/
 │       └── ...                    # Other DID methods
 │
 ├── kms/                           # KMS domain
-│   ├── vericore-kms/              # Core KMS abstraction
+│   ├── TrustWeave-kms/              # Core KMS abstraction
 │   └── plugins/                   # KMS implementations
 │       ├── aws/                   # AWS KMS
 │       ├── azure/                 # Azure Key Vault
@@ -203,46 +202,46 @@ vericore/
 │       └── ...                    # Other KMS providers
 │
 ├── chains/                        # Blockchain/Chain domain
-│   ├── vericore-anchor/           # Core anchor abstraction
+│   ├── TrustWeave-anchor/           # Core anchor abstraction
 │   └── plugins/                   # Chain implementations
 │       ├── algorand/              # Algorand adapter
 │       ├── polygon/               # Polygon adapter
 │       └── ...                    # Other blockchain adapters
 │
 └── distribution/                  # Distribution modules
-    ├── vericore-all/              # All-in-one module
-    ├── vericore-bom/              # Bill of Materials
-    └── vericore-examples/         # Example applications
+    ├── TrustWeave-all/              # All-in-one module
+    ├── TrustWeave-bom/              # Bill of Materials
+    └── TrustWeave-examples/         # Example applications
 ```
 
 ## Core Modules
 
-### vericore-core
+### TrustWeave-common
 - Base exception classes
 - Common constants
 - Shared types
 
-### vericore-json
+### TrustWeave-json
 - JSON canonicalization
 - Digest computation (SHA-256 + multibase)
-- No dependencies on other VeriCore modules
+- No dependencies on other TrustWeave modules
 
-### vericore-kms
+### TrustWeave-kms
 - `KeyManagementService` interface
 - Key generation, signing, retrieval
 - Algorithm-agnostic design
 
-### vericore-did
+### TrustWeave-did
 - `DidMethod` interface
 - DID Document models (W3C compliant)
 - `DidMethodRegistry` for method registration (instance-scoped)
 
-### vericore-anchor
+### TrustWeave-anchor
 - `BlockchainAnchorClient` interface
 - `AnchorRef` for chain-agnostic references
 - `BlockchainAnchorRegistry` for client registration (instance-scoped)
 
-### vericore-testkit
+### TrustWeave-testkit
 - In-memory implementations
 - Test utilities
 - Mock implementations for testing
@@ -253,41 +252,41 @@ vericore/
 
 #### Cloud KMS Providers
 
-- **AWS KMS** (`com.geoknoesis.vericore.kms:aws`) – AWS Key Management Service. See [AWS KMS Integration Guide](../integrations/aws-kms.md).
-- **AWS CloudHSM** (`com.geoknoesis.vericore.kms:cloudhsm`) – AWS CloudHSM for dedicated hardware security modules. Documentation coming soon.
-- **Azure Key Vault** (`com.geoknoesis.vericore.kms:azure`) – Azure Key Vault integration. See [Azure KMS Integration Guide](../integrations/azure-kms.md).
-- **Google Cloud KMS** (`com.geoknoesis.vericore.kms:google`) – Google Cloud KMS integration. See [Google KMS Integration Guide](../integrations/google-kms.md).
-- **IBM Key Protect** (`com.geoknoesis.vericore.kms:ibm`) – IBM Cloud Key Protect integration. Documentation coming soon.
+- **AWS KMS** (`com.trustweave.kms:aws`) – AWS Key Management Service. See [AWS KMS Integration Guide](../integrations/aws-kms.md).
+- **AWS CloudHSM** (`com.trustweave.kms:cloudhsm`) – AWS CloudHSM for dedicated hardware security modules. Documentation coming soon.
+- **Azure Key Vault** (`com.trustweave.kms:azure`) – Azure Key Vault integration. See [Azure KMS Integration Guide](../integrations/azure-kms.md).
+- **Google Cloud KMS** (`com.trustweave.kms:google`) – Google Cloud KMS integration. See [Google KMS Integration Guide](../integrations/google-kms.md).
+- **IBM Key Protect** (`com.trustweave.kms:ibm`) – IBM Cloud Key Protect integration. Documentation coming soon.
 
 #### Self-Hosted KMS Providers
 
-- **HashiCorp Vault** (`com.geoknoesis.vericore.kms:hashicorp`) – HashiCorp Vault Transit engine. See [HashiCorp Vault KMS Integration Guide](../integrations/hashicorp-vault-kms.md).
-- **Thales CipherTrust** (`com.geoknoesis.vericore.kms:thales`) – Thales CipherTrust Manager integration. Documentation coming soon.
-- **Thales Luna** (`com.geoknoesis.vericore.kms:thales-luna`) – Thales Luna HSM integration. Documentation coming soon.
-- **CyberArk Conjur** (`com.geoknoesis.vericore.kms:cyberark`) – CyberArk Conjur secrets management integration. Documentation coming soon.
-- **Fortanix DSM** (`com.geoknoesis.vericore.kms:fortanix`) – Fortanix Data Security Manager multi-cloud key management. Documentation coming soon.
-- **Entrust** (`com.geoknoesis.vericore.kms:entrust`) – Entrust key management integration. Documentation coming soon.
-- **Utimaco** (`com.geoknoesis.vericore.kms:utimaco`) – Utimaco HSM integration. Documentation coming soon.
+- **HashiCorp Vault** (`com.trustweave.kms:hashicorp`) – HashiCorp Vault Transit engine. See [HashiCorp Vault KMS Integration Guide](../integrations/hashicorp-vault-kms.md).
+- **Thales CipherTrust** (`com.trustweave.kms:thales`) – Thales CipherTrust Manager integration. Documentation coming soon.
+- **Thales Luna** (`com.trustweave.kms:thales-luna`) – Thales Luna HSM integration. Documentation coming soon.
+- **CyberArk Conjur** (`com.trustweave.kms:cyberark`) – CyberArk Conjur secrets management integration. Documentation coming soon.
+- **Fortanix DSM** (`com.trustweave.kms:fortanix`) – Fortanix Data Security Manager multi-cloud key management. Documentation coming soon.
+- **Entrust** (`com.trustweave.kms:entrust`) – Entrust key management integration. Documentation coming soon.
+- **Utimaco** (`com.trustweave.kms:utimaco`) – Utimaco HSM integration. Documentation coming soon.
 
 #### Other KMS Integrations
 
-- **walt.id** (`com.geoknoesis.vericore.kms:waltid`) – walt.id-based KMS and DID methods. See [walt.id Integration Guide](../integrations/waltid.md).
+- **walt.id** (`com.trustweave.kms:waltid`) – walt.id-based KMS and DID methods. See [walt.id Integration Guide](../integrations/waltid.md).
 
 ### DID Method Plugins
 
-- **GoDiddy** (`com.geoknoesis.vericore.did:godiddy`) – HTTP integration with GoDiddy services. Universal Resolver, Registrar, Issuer, Verifier. Supports 20+ DID methods. See [GoDiddy Integration Guide](../integrations/godiddy.md).
-- **did:key** (`com.geoknoesis.vericore.did:key`) – Native did:key implementation. See [Key DID Integration Guide](../integrations/key-did.md).
-- **did:web** (`com.geoknoesis.vericore.did:web`) – Web DID method. See [Web DID Integration Guide](../integrations/web-did.md).
-- **did:ion** (`com.geoknoesis.vericore.did:ion`) – Microsoft ION DID method. See [ION DID Integration Guide](../integrations/ion-did.md).
+- **GoDiddy** (`com.trustweave.did:godiddy`) – HTTP integration with GoDiddy services. Universal Resolver, Registrar, Issuer, Verifier. Supports 20+ DID methods. See [GoDiddy Integration Guide](../integrations/godiddy.md).
+- **did:key** (`com.trustweave.did:key`) – Native did:key implementation. See [Key DID Integration Guide](../integrations/key-did.md).
+- **did:web** (`com.trustweave.did:web`) – Web DID method. See [Web DID Integration Guide](../integrations/web-did.md).
+- **did:ion** (`com.trustweave.did:ion`) – Microsoft ION DID method. See [ION DID Integration Guide](../integrations/ion-did.md).
 - See [Integration Modules](../integrations/README.md) for all DID method implementations.
 
 ### Blockchain Anchor Plugins
 
-- **Algorand** (`com.geoknoesis.vericore.chains:algorand`) – Algorand blockchain adapter. Mainnet and testnet support. See [Algorand Integration Guide](../integrations/algorand.md).
-- **Polygon** (`com.geoknoesis.vericore.chains:polygon`) – Polygon blockchain adapter. See [Integration Modules](../integrations/README.md#blockchain-anchor-integrations).
-- **Ethereum** (`com.geoknoesis.vericore.chains:ethereum`) – Ethereum blockchain adapter. See [Ethereum Anchor Integration Guide](../integrations/ethereum-anchor.md).
-- **Base** (`com.geoknoesis.vericore.chains:base`) – Base (Coinbase L2) adapter. See [Base Anchor Integration Guide](../integrations/base-anchor.md).
-- **Arbitrum** (`com.geoknoesis.vericore.chains:arbitrum`) – Arbitrum adapter. See [Arbitrum Anchor Integration Guide](../integrations/arbitrum-anchor.md).
+- **Algorand** (`com.trustweave.chains:algorand`) – Algorand blockchain adapter. Mainnet and testnet support. See [Algorand Integration Guide](../integrations/algorand.md).
+- **Polygon** (`com.trustweave.chains:polygon`) – Polygon blockchain adapter. See [Integration Modules](../integrations/README.md#blockchain-anchor-integrations).
+- **Ethereum** (`com.trustweave.chains:ethereum`) – Ethereum blockchain adapter. See [Ethereum Anchor Integration Guide](../integrations/ethereum-anchor.md).
+- **Base** (`com.trustweave.chains:base`) – Base (Coinbase L2) adapter. See [Base Anchor Integration Guide](../integrations/base-anchor.md).
+- **Arbitrum** (`com.trustweave.chains:arbitrum`) – Arbitrum adapter. See [Arbitrum Anchor Integration Guide](../integrations/arbitrum-anchor.md).
 - See [Integration Modules](../integrations/README.md) for all blockchain adapters.
 
 ## Design Patterns
@@ -300,14 +299,14 @@ Registries are owned by the application context rather than global singletons:
 val didRegistry = DidMethodRegistry().apply { register(didMethod) }
 val blockchainRegistry = BlockchainAnchorRegistry().apply { register(chainId, client) }
 
-val config = VeriCoreConfig(
+val config = TrustWeaveConfig(
     kms = kms,
     walletFactory = walletFactory,
     didRegistry = didRegistry,
     blockchainRegistry = blockchainRegistry,
     credentialRegistry = CredentialServiceRegistry.create()
 )
-val vericore = VeriCore.create(config)
+val TrustWeave = TrustWeave.create(config)
 ```
 
 ### Service Provider Interface (SPI)
@@ -334,7 +333,7 @@ All external dependencies are abstracted through interfaces:
 ```
 Application
     ↓
-VeriCoreContext.getDidMethod("key")
+TrustWeaveContext.getDidMethod("key")
     ↓
 DidMethod.createDid()
     ↓
@@ -348,7 +347,7 @@ DidDocument (returned)
 ```
 Application
     ↓
-VeriCoreContext.getBlockchainClient("algorand:mainnet")
+TrustWeaveContext.getBlockchainClient("algorand:mainnet")
     ↓
 BlockchainAnchorClient.writePayload()
     ↓
@@ -374,49 +373,49 @@ Verification Result
 ### Core Module Dependencies
 
 ```
-vericore-core
+TrustWeave-common
     (no dependencies)
 
-vericore-json
-    → vericore-core
+TrustWeave-json
+    → TrustWeave-common
 
-vericore-kms
-    → vericore-core
+TrustWeave-kms
+    → TrustWeave-common
 
-vericore-did
-    → vericore-core
-    → vericore-kms
+TrustWeave-did
+    → TrustWeave-common
+    → TrustWeave-kms
 
-vericore-anchor
-    → vericore-core
-    → vericore-json
+TrustWeave-anchor
+    → TrustWeave-common
+    → TrustWeave-json
 
-vericore-testkit
-    → vericore-core
-    → vericore-json
-    → vericore-kms
-    → vericore-did
-    → vericore-anchor
+TrustWeave-testkit
+    → TrustWeave-common
+    → TrustWeave-json
+    → TrustWeave-kms
+    → TrustWeave-did
+    → TrustWeave-anchor
 ```
 
 ### Integration Module Dependencies
 
 ```
-KMS Plugins (com.geoknoesis.vericore.kms:*)
-    → vericore-core
-    → vericore-kms
+KMS Plugins (com.trustweave.kms:*)
+    → TrustWeave-common
+    → TrustWeave-kms
     See: [KMS Integration Guides](../integrations/README.md#other-did--kms-integrations)
 
-DID Plugins (com.geoknoesis.vericore.did:*)
-    → vericore-core
-    → vericore-did
-    → vericore-kms
+DID Plugins (com.trustweave.did:*)
+    → TrustWeave-common
+    → TrustWeave-did
+    → TrustWeave-kms
     See: [DID Integration Guides](../integrations/README.md#did-method-integrations)
 
-Chain Plugins (com.geoknoesis.vericore.chains:*)
-    → vericore-core
-    → vericore-anchor
-    → vericore-json
+Chain Plugins (com.trustweave.chains:*)
+    → TrustWeave-core
+    → TrustWeave-anchor
+    → TrustWeave-json
     See: [Blockchain Integration Guides](../integrations/README.md#blockchain-anchor-integrations)
 ```
 

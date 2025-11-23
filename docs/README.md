@@ -1,4 +1,4 @@
-# VeriCore
+# TrustWeave
 
 <div align="center">
 
@@ -8,21 +8,21 @@
 
 **A neutral, reusable trust and identity core** library designed to be domain-agnostic, chain-agnostic, Decentralized Identifier (DID)-method-agnostic, and Key Management Service (KMS)-agnostic.
 
-[![Version](https://img.shields.io/badge/version-1.0.0--SNAPSHOT-blue.svg)](https://github.com/geoknoesis/vericore)
+[![Version](https://img.shields.io/badge/version-1.0.0--SNAPSHOT-blue.svg)](https://github.com/geoknoesis/TrustWeave)
 [![License](https://img.shields.io/badge/license-Dual-green.svg)](LICENSE)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.2.0-orange.svg)](https://kotlinlang.org)
 
-[Quick Start](#quick-start) • [Documentation](getting-started/quick-start.md) • [Scenarios](scenarios/README.md) • [GitHub](https://github.com/geoknoesis/vericore)
+[Quick Start](#quick-start) • [Documentation](getting-started/quick-start.md) • [Scenarios](scenarios/README.md) • [GitHub](https://github.com/geoknoesis/TrustWeave)
 
 </div>
 
 ---
 
-## 🚀 What is VeriCore?
+## 🚀 What is TrustWeave?
 
-VeriCore is a **production-ready Kotlin library** for building decentralized identity and trust systems. Built by [Geoknoesis LLC](https://www.geoknoesis.com), VeriCore provides the building blocks you need to implement World Wide Web Consortium (W3C)-compliant verifiable credentials, Decentralized Identifiers (DIDs), and blockchain anchoring—all with a type-safe Application Programming Interface (API).
+TrustWeave is a **production-ready Kotlin library** for building decentralized identity and trust systems. Built by [Geoknoesis LLC](https://www.geoknoesis.com), TrustWeave provides the building blocks you need to implement World Wide Web Consortium (W3C)-compliant verifiable credentials, Decentralized Identifiers (DIDs), and blockchain anchoring—all with a type-safe Application Programming Interface (API).
 
-### ✨ Why VeriCore?
+### ✨ Why TrustWeave?
 
 - 🎯 **Domain-Agnostic** - Works for any use case (education, healthcare, Internet of Things (IoT), supply chain, etc.)
 - 🔗 **Chain-Agnostic** - Supports any blockchain via pluggable adapters
@@ -36,24 +36,24 @@ VeriCore is a **production-ready Kotlin library** for building decentralized ide
 
 ## ⚡ Quick Start
 
-Get started with VeriCore in **30 seconds**:
+Get started with TrustWeave in **30 seconds**:
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
+import com.trustweave.TrustWeave
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
-    // Create VeriCore instance
-    val vericore = VeriCore.create()
+    // Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
     
     // Create a Decentralized Identifier (DID)
-    val did = vericore.createDid().getOrThrow()
+    val did = TrustWeave.createDid().getOrThrow()
     println("Created DID: ${did.id}")
     
     // Issue a verifiable credential
-    val credential = vericore.issueCredential(
+    val credential = TrustWeave.issueCredential(
         issuerDid = did.id,
         issuerKeyId = did.verificationMethod.firstOrNull()?.id ?: error("No key found"),
         credentialSubject = buildJsonObject {
@@ -65,11 +65,11 @@ fun main() = runBlocking {
     ).getOrThrow()
     
     // Verify the credential
-    val verification = vericore.verifyCredential(credential).getOrThrow()
+    val verification = TrustWeave.verifyCredential(credential).getOrThrow()
     println("Credential valid: ${verification.valid}")
     
     // Create a wallet and store the credential
-    val wallet = vericore.createWallet(holderDid = "did:example:alice").getOrThrow()
+    val wallet = TrustWeave.createWallet(holderDid = "did:example:alice").getOrThrow()
     val credentialId = wallet.store(credential)
     println("✅ Stored credential: $credentialId")
 }
@@ -79,7 +79,7 @@ fun main() = runBlocking {
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -117,7 +117,7 @@ Pluggable key management supporting multiple algorithms and backends
 
 ## 🌟 Real-World Use Cases
 
-VeriCore powers trust and identity systems across multiple domains. Explore **25+ complete scenarios** with runnable code examples:
+TrustWeave powers trust and identity systems across multiple domains. Explore **25+ complete scenarios** with runnable code examples:
 
 ### 🔐 Cybersecurity & Access Control
 
@@ -153,9 +153,9 @@ VeriCore powers trust and identity systems across multiple domains. Explore **25
 
 ## 🏗️ Architecture
 
-VeriCore is built on a modular, pluggable architecture:
+TrustWeave is built on a modular, pluggable architecture:
 
-![VeriCore Architecture](assets/images/vericore-architecture.png)
+![TrustWeave Architecture](assets/images/TrustWeave-architecture.png)
 
 
 **Key Design Principles:**
@@ -215,7 +215,7 @@ Each scenario includes:
 
 ```kotlin
 // Academic Credentials
-val degree = vericore.issueCredential(
+val degree = TrustWeave.issueCredential(
     issuerDid = universityDid,
     credentialSubject = buildJsonObject {
         put("id", studentDid)
@@ -226,7 +226,7 @@ val degree = vericore.issueCredential(
 ).getOrThrow()
 
 // Age Verification (Privacy-Preserving)
-val ageCredential = vericore.issueCredential(
+val ageCredential = TrustWeave.issueCredential(
     issuerDid = identityProviderDid,
     credentialSubject = buildJsonObject {
         put("id", individualDid)
@@ -239,7 +239,7 @@ val ageCredential = vericore.issueCredential(
 ).getOrThrow()
 
 // Internet of Things (IoT) Sensor Data Provenance
-val sensorData = vericore.issueCredential(
+val sensorData = TrustWeave.issueCredential(
     issuerDid = sensorDid,
     credentialSubject = buildJsonObject {
         put("sensorData", buildJsonObject {
@@ -257,12 +257,12 @@ val sensorData = vericore.issueCredential(
 
 ## 🛠️ Developer Experience
 
-VeriCore is designed for developer happiness:
+TrustWeave is designed for developer happiness:
 
 ### Type-Safe Configuration
 
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     didMethod("key") {
         algorithm = DidCreationOptions.KeyAlgorithm.ED25519
     }
@@ -276,12 +276,12 @@ val vericore = VeriCore.create {
 ### Predictable Error Handling
 
 ```kotlin
-val result = vericore.createDid()
+val result = TrustWeave.createDid()
 result.fold(
     onSuccess = { did -> println("Created: ${did.id}") },
     onFailure = { error -> 
         when (error) {
-            is VeriCoreError.DidMethodNotRegistered -> 
+            is TrustWeaveError.DidMethodNotRegistered -> 
                 println("Method not registered: ${error.method}")
             else -> println("Error: ${error.message}")
         }
@@ -292,7 +292,7 @@ result.fold(
 ### Composable DSLs
 
 ```kotlin
-val wallet = vericore.createWallet(holderDid = userDid) {
+val wallet = TrustWeave.createWallet(holderDid = userDid) {
     label = "My Wallet"
     enableOrganization = true
     enablePresentation = true
@@ -307,7 +307,7 @@ val wallet = vericore.createWallet(holderDid = userDid) {
 - **Created by**: [Geoknoesis LLC](https://www.geoknoesis.com)
 - **License**: Dual license (Open source for non-commercial, Commercial for production)
 - **Version**: 1.0.0-SNAPSHOT
-- **GitHub**: [geoknoesis/vericore](https://github.com/geoknoesis/vericore)
+- **GitHub**: [geoknoesis/TrustWeave](https://github.com/geoknoesis/TrustWeave)
 
 ---
 

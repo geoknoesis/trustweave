@@ -1,6 +1,6 @@
-# VeriCore Cloud - Implementation Guide
+# TrustWeave Cloud - Implementation Guide
 
-> **Practical code and setup instructions for building VeriCore Cloud SaaS**
+> **Practical code and setup instructions for building TrustWeave Cloud SaaS**
 
 ## Table of Contents
 
@@ -46,7 +46,7 @@ object TechStack {
 }
 ```
 
-**Design significance:** Every component is battle-tested with VeriCore. Kotlin end-to-end keeps skills transferable, and SaaS infrastructure choices minimise cold-start cost without locking you into proprietary tooling.
+**Design significance:** Every component is battle-tested with TrustWeave. Kotlin end-to-end keeps skills transferable, and SaaS infrastructure choices minimise cold-start cost without locking you into proprietary tooling.
 
 ### **Why This Stack?**
 
@@ -91,7 +91,7 @@ fun main() {
     // Starter Plan
     val starterProduct = Product.create(
         ProductCreateParams.builder()
-            .setName("VeriCore Starter")
+            .setName("TrustWeave Starter")
             .setDescription("Production-ready SSI for growing startups")
             .build()
     )
@@ -128,7 +128,7 @@ fun main() {
     // Pro Plan
     val proProduct = Product.create(
         ProductCreateParams.builder()
-            .setName("VeriCore Pro")
+            .setName("TrustWeave Pro")
             .setDescription("Scale your SSI infrastructure with confidence")
             .build()
     )
@@ -196,11 +196,11 @@ data class StripePrices(
 
 ### **Project Structure:**
 
-**Goal:** Establish a baseline folder layout so your team knows where to place configuration, services, and VeriCore-facing routes.  
+**Goal:** Establish a baseline folder layout so your team knows where to place configuration, services, and TrustWeave-facing routes.  
 **Result:** A conventional Ktor project with clear separation between plugins, domain models, and usage/billing services—mirroring Geoknoesis’ production layout.
 
 ```
-vericore-cloud/
+TrustWeave-cloud/
 ├── build.gradle.kts
 ├── src/
 │   ├── main/
@@ -235,8 +235,8 @@ vericore-cloud/
 
 ### **build.gradle.kts:**
 
-**Goal:** Declare all backend dependencies—Ktor, VeriCore, persistence, billing—and enable Kotlin serialization plugins.  
-**Result:** A single Gradle module that compiles the SaaS backend and aligns dependency versions with the main VeriCore distribution.
+**Goal:** Declare all backend dependencies—Ktor, TrustWeave, persistence, billing—and enable Kotlin serialization plugins.  
+**Result:** A single Gradle module that compiles the SaaS backend and aligns dependency versions with the main TrustWeave distribution.
 
 ```kotlin
 plugins {
@@ -260,8 +260,8 @@ dependencies {
     implementation("io.ktor:ktor-server-cors-jvm")
     implementation("io.ktor:ktor-server-rate-limit-jvm")
     
-    // VeriCore
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    // TrustWeave
+    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
     
     // Database
     implementation("org.jetbrains.exposed:exposed-core:0.45.0")
@@ -286,7 +286,7 @@ dependencies {
 }
 ```
 
-**Design significance:** Centralising versions here keeps build reproducibility high; matching Kotlin/Ktor versions with VeriCore avoids ABI drift when you embed the SDK.
+**Design significance:** Centralising versions here keeps build reproducibility high; matching Kotlin/Ktor versions with TrustWeave avoids ABI drift when you embed the SDK.
 
 ### **Application.kt:**
 
@@ -294,11 +294,11 @@ dependencies {
 **Result:** A minimal `module` function that defers to dedicated plugin files—easier to test and override between environments.
 
 ```kotlin
-package com.geoknoesis.vericore.cloud
+package com.trustweave.cloud
 
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
-import com.geoknoesis.vericore.cloud.plugins.*
+import com.trustweave.cloud.plugins.*
 
 fun main(args: Array<String>) {
     EngineMain.main(args)
@@ -395,7 +395,7 @@ object UsageRecords : UUIDTable("usage_records") {
 
 ```kotlin
 // src/main/kotlin/services/UsageService.kt
-package com.geoknoesis.vericore.cloud.services
+package com.trustweave.cloud.services
 
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.sync.RedisCommands
@@ -502,7 +502,7 @@ data class UsageSnapshot(
 
 ```kotlin
 // src/main/kotlin/plugins/RateLimiting.kt
-package com.geoknoesis.vericore.cloud.plugins
+package com.trustweave.cloud.plugins
 
 import io.ktor.server.application.*
 import io.ktor.server.plugins.ratelimit.*
@@ -535,21 +535,21 @@ fun Application.configureRateLimiting() {
 
 ```kotlin
 // src/main/kotlin/routes/DidRoutes.kt
-package com.geoknoesis.vericore.cloud.routes
+package com.trustweave.cloud.routes
 
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.http.*
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.cloud.services.UsageService
-import com.geoknoesis.vericore.did.DidCreationOptions
-import com.geoknoesis.vericore.did.didCreationOptions
+import com.trustweave.TrustWeave
+import com.trustweave.cloud.services.UsageService
+import com.trustweave.did.DidCreationOptions
+import com.trustweave.did.didCreationOptions
 import kotlinx.serialization.Serializable
 
 fun Route.didRoutes(
-    vericore: VeriCore,
+    TrustWeave: TrustWeave,
     usageService: UsageService
 ) {
     route("/v1/dids") {
@@ -580,7 +580,7 @@ fun Route.didRoutes(
             } ?: DidCreationOptions()
 
             // Create DID
-            val didDocument = vericore.createDid(
+            val didDocument = TrustWeave.createDid(
                 method = request.method ?: "key",
                 options = didOptions
             ).getOrThrow()
@@ -601,7 +601,7 @@ fun Route.didRoutes(
             val did = call.parameters["did"] ?: throw IllegalArgumentException("DID required")
             
             // Resolve
-            val result = vericore.resolveDid(did).getOrThrow()
+            val result = TrustWeave.resolveDid(did).getOrThrow()
             
             // Track usage
             usageService.incrementApiCall(org.id)
@@ -630,14 +630,14 @@ data class CreateDidRequest(
 @Serializable
 data class DidResponse(
     val id: String,
-    val document: com.geoknoesis.vericore.did.DidDocument,
+    val document: com.trustweave.did.DidDocument,
     val createdAt: Long
 )
 
 @Serializable
 data class DidResolutionResponse(
-    val document: com.geoknoesis.vericore.did.DidDocument,
-    val metadata: com.geoknoesis.vericore.did.ResolutionMetadata?
+    val document: com.trustweave.did.DidDocument,
+    val metadata: com.trustweave.did.ResolutionMetadata?
 )
 
 @Serializable
@@ -651,20 +651,20 @@ data class ErrorResponse(
 
 ```kotlin
 // src/main/kotlin/routes/CredentialRoutes.kt
-package com.geoknoesis.vericore.cloud.routes
+package com.trustweave.cloud.routes
 
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.http.*
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.cloud.services.UsageService
+import com.trustweave.TrustWeave
+import com.trustweave.cloud.services.UsageService
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
 fun Route.credentialRoutes(
-    vericore: VeriCore,
+    TrustWeave: TrustWeave,
     usageService: UsageService
 ) {
     route("/v1/credentials") {
@@ -684,7 +684,7 @@ fun Route.credentialRoutes(
             }
             
             // Issue credential
-            val credential = vericore.issueCredential(
+            val credential = TrustWeave.issueCredential(
                 issuerDid = request.issuerDid,
                 issuerKeyId = request.issuerKeyId,
                 credentialSubject = request.credentialSubject,
@@ -707,9 +707,9 @@ fun Route.credentialRoutes(
             val request = call.receive<VerifyCredentialRequest>()
             
             // Verify
-            val result = vericore.verifyCredential(
+            val result = TrustWeave.verifyCredential(
                 credential = request.credential,
-                options = request.options ?: com.geoknoesis.vericore.credential.CredentialVerificationOptions()
+                options = request.options ?: com.trustweave.credential.CredentialVerificationOptions()
             ).getOrThrow()
             
             // Track usage
@@ -735,14 +735,14 @@ data class IssueCredentialRequest(
 
 @Serializable
 data class CredentialResponse(
-    val credential: com.geoknoesis.vericore.credential.models.VerifiableCredential,
+    val credential: com.trustweave.credential.models.VerifiableCredential,
     val issuedAt: Long
 )
 
 @Serializable
 data class VerifyCredentialRequest(
-    val credential: com.geoknoesis.vericore.credential.models.VerifiableCredential,
-    val options: com.geoknoesis.vericore.credential.CredentialVerificationOptions? = null
+    val credential: com.trustweave.credential.models.VerifiableCredential,
+    val options: com.trustweave.credential.CredentialVerificationOptions? = null
 )
 
 @Serializable
@@ -761,7 +761,7 @@ data class VerificationResponse(
 
 ```kotlin
 // src/main/kotlin/routes/BillingRoutes.kt
-package com.geoknoesis.vericore.cloud.routes
+package com.trustweave.cloud.routes
 
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -871,7 +871,7 @@ data class MessageResponse(
 
 ```kotlin
 // src/main/kotlin/routes/WebhookRoutes.kt
-package com.geoknoesis.vericore.cloud.routes
+package com.trustweave.cloud.routes
 
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -1130,7 +1130,7 @@ services:
     image: postgres:16
     environment:
       POSTGRES_DB: vericore_cloud
-      POSTGRES_USER: vericore
+      POSTGRES_USER: TrustWeave
       POSTGRES_PASSWORD: vericore_dev
     ports:
       - "5432:5432"
@@ -1148,7 +1148,7 @@ services:
       - "8080:8080"
     environment:
       DATABASE_URL: jdbc:postgresql://postgres:5432/vericore_cloud
-      DATABASE_USER: vericore
+      DATABASE_USER: TrustWeave
       DATABASE_PASSWORD: vericore_dev
       REDIS_URL: redis://redis:6379
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
@@ -1165,7 +1165,7 @@ volumes:
 
 ```toml
 # fly.toml
-app = "vericore-cloud"
+app = "TrustWeave-cloud"
 primary_region = "iad"
 
 [build]
@@ -1212,13 +1212,13 @@ flyctl auth login
 flyctl launch
 
 # Create PostgreSQL
-flyctl postgres create --name vericore-cloud-db
+flyctl postgres create --name TrustWeave-cloud-db
 
 # Attach database
-flyctl postgres attach vericore-cloud-db
+flyctl postgres attach TrustWeave-cloud-db
 
 # Create Redis
-flyctl redis create --name vericore-cloud-redis
+flyctl redis create --name TrustWeave-cloud-redis
 
 # Set secrets
 flyctl secrets set STRIPE_SECRET_KEY=sk_...
@@ -1265,7 +1265,7 @@ flyctl logs
 
 ---
 
-**Ready to build?** This gives you everything you need to launch VeriCore Cloud in 8 weeks! 🚀
+**Ready to build?** This gives you everything you need to launch TrustWeave Cloud in 8 weeks! 🚀
 
 Let me know if you want me to:
 - Generate the complete Ktor application code

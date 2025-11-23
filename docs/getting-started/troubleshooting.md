@@ -1,9 +1,9 @@
 # Troubleshooting Guide
 
-Common issues and solutions when working with VeriCore.
+Common issues and solutions when working with TrustWeave.
 
 > **Version:** 1.0.0-SNAPSHOT  
-> If you encounter issues not covered here, please [file an issue](https://github.com/your-org/vericore/issues) or check the [FAQ](../faq.md).
+> If you encounter issues not covered here, please [file an issue](https://github.com/your-org/TrustWeave/issues) or check the [FAQ](../faq.md).
 
 ## Common Issues
 
@@ -11,7 +11,7 @@ Common issues and solutions when working with VeriCore.
 
 **Error:**
 ```
-VeriCoreError.DidMethodNotRegistered: Method 'web' is not registered
+TrustWeaveError.DidMethodNotRegistered: Method 'web' is not registered
 Available methods: [key]
 ```
 
@@ -19,7 +19,7 @@ Available methods: [key]
 Register the DID method before using it:
 
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     didMethods {
         + DidKeyMethod()  // Already included by default
         + DidWebMethod()  // Add this for did:web support
@@ -28,15 +28,15 @@ val vericore = VeriCore.create {
 ```
 
 **Prevention:**
-- Always check available methods: `vericore.getAvailableDidMethods()`
+- Always check available methods: `trustweave.dids.availableMethods()`
 - Use `did:key` for testing (included by default)
-- Register methods during VeriCore initialization
+- Register methods during TrustWeave initialization
 
 ### Chain Not Registered
 
 **Error:**
 ```
-VeriCoreError.ChainNotRegistered: Chain 'algorand:testnet' is not registered
+TrustWeaveError.ChainNotRegistered: Chain 'algorand:testnet' is not registered
 Available chains: []
 ```
 
@@ -44,7 +44,7 @@ Available chains: []
 Register the blockchain client before anchoring:
 
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     blockchains {
         "algorand:testnet" to algorandClient
         "polygon:mainnet" to polygonClient
@@ -53,9 +53,9 @@ val vericore = VeriCore.create {
 ```
 
 **Prevention:**
-- Check available chains: `vericore.getAvailableChains()`
+- Check available chains: `trustweave.blockchains.availableChains()`
 - Use `InMemoryBlockchainAnchorClient` for testing
-- Register clients during VeriCore initialization
+- Register clients during TrustWeave initialization
 
 ### Credential Verification Fails
 
@@ -69,14 +69,14 @@ CredentialVerificationResult(valid=false, errors=[Proof verification failed])
 1. **Issuer DID not resolvable**
    ```kotlin
    // Ensure issuer DID is registered and resolvable
-   val issuerDid = vericore.dids.create()
+   val issuerDid = TrustWeave.dids.create()
    // Use this DID for issuance
    ```
 
 2. **Key ID mismatch**
    ```kotlin
    // Get the correct key ID from the DID document
-   val issuerDocument = vericore.dids.create()
+   val issuerDocument = TrustWeave.dids.create()
    val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.id
        ?: error("No verification method found")
    ```
@@ -102,7 +102,7 @@ CredentialVerificationResult(valid=false, errors=[Proof verification failed])
 
 **Error:**
 ```
-VeriCoreError.WalletCreationFailed: Provider 'database' not found
+TrustWeaveError.WalletCreationFailed: Provider 'database' not found
 ```
 
 **Solution:**
@@ -111,17 +111,17 @@ VeriCoreError.WalletCreationFailed: Provider 'database' not found
 - Check wallet provider availability
 
 ```kotlin
-val wallet = vericore.createWallet(
+val wallet = trustweave.wallets.create(
     holderDid = "did:key:holder",
-    provider = WalletProvider.InMemory  // Use in-memory for testing
-).getOrThrow()
+    type = WalletType.InMemory  // Use in-memory for testing
+)
 ```
 
 ### Plugin Initialization Fails
 
 **Error:**
 ```
-VeriCoreError.PluginInitializationFailed: Configuration missing
+TrustWeaveError.PluginInitializationFailed: Configuration missing
 ```
 
 **Solution:**
@@ -131,14 +131,16 @@ VeriCoreError.PluginInitializationFailed: Configuration missing
 
 ```kotlin
 val config = mapOf(
-    "database" to mapOf("url" to "jdbc:postgresql://localhost/vericore"),
+    "database" to mapOf("url" to "jdbc:postgresql://localhost/TrustWeave"),
     "apiKey" to System.getenv("PLUGIN_API_KEY")
 )
 
-vericore.initialize(config).fold(
-    onSuccess = { println("Plugins initialized") },
-    onFailure = { error -> println("Initialization failed: ${error.message}") }
-)
+try {
+    trustweave.initialize(config)
+    println("Plugins initialized")
+} catch (error: TrustWeaveError) {
+    println("Initialization failed: ${error.message}")
+}
 ```
 
 ## Debugging Workflows
@@ -161,10 +163,10 @@ dependencies {
         </encoder>
     </appender>
     
-    <!-- VeriCore specific loggers -->
-    <logger name="com.geoknoesis.vericore" level="DEBUG"/>
-    <logger name="com.geoknoesis.vericore.core" level="TRACE"/>
-    <logger name="com.geoknoesis.vericore.plugins" level="DEBUG"/>
+    <!-- TrustWeave specific loggers -->
+    <logger name="com.trustweave" level="DEBUG"/>
+    <logger name="com.trustweave.core" level="TRACE"/>
+    <logger name="com.trustweave.plugins" level="DEBUG"/>
     
     <root level="INFO">
         <appender-ref ref="STDOUT" />
@@ -177,18 +179,18 @@ dependencies {
 Check all registries and available services:
 
 ```kotlin
-fun debugSystemState(vericore: VeriCore) {
-    println("=== VeriCore System State ===")
+fun debugSystemState(trustweave: TrustWeave) {
+    println("=== TrustWeave System State ===")
     
     // Check registered DID methods
-    val methods = vericore.getAvailableDidMethods()
+    val methods = trustweave.dids.availableMethods()
     println("Available DID methods: $methods")
     if (methods.isEmpty()) {
         println("⚠️  WARNING: No DID methods registered!")
     }
     
     // Check registered blockchain chains
-    val chains = vericore.getAvailableChains()
+    val chains = trustweave.blockchains.availableChains()
     println("Available chains: $chains")
     
     // Check plugin status
@@ -197,7 +199,7 @@ fun debugSystemState(vericore: VeriCore) {
     
     // Test basic operations
     println("\n=== Basic Operation Tests ===")
-    val testDid = try { vericore.dids.create() } catch (e: Exception) { null }
+    val testDid = try { trustweave.dids.create() } catch (e: Exception) { null }
     if (testDid != null) {
         println("✅ DID creation works: ${testDid.id}")
     } else {
@@ -211,8 +213,8 @@ fun debugSystemState(vericore: VeriCore) {
 Always validate inputs to catch errors early:
 
 ```kotlin
-import com.geoknoesis.vericore.core.DidValidator
-import com.geoknoesis.vericore.core.CredentialValidator
+import com.trustweave.core.DidValidator
+import com.trustweave.core.CredentialValidator
 
 fun validateBeforeOperation(did: String, credential: VerifiableCredential? = null) {
     // Validate DID format
@@ -227,12 +229,13 @@ fun validateBeforeOperation(did: String, credential: VerifiableCredential? = nul
     
     // Validate DID method is available
     val method = did.substringAfter("did:").substringBefore(":")
-    val availableMethods = vericore.getAvailableDidMethods()
-    if (method !in availableMethods) {
-        println("❌ DID method '$method' not available")
-        println("   Available methods: $availableMethods")
-        return
-    }
+    // Note: This requires a TrustWeave instance - pass it as parameter
+    // val availableMethods = trustweave.dids.availableMethods()
+    // if (method !in availableMethods) {
+    //     println("❌ DID method '$method' not available")
+    //     println("   Available methods: $availableMethods")
+    //     return
+    // }
     
     // Validate credential if provided
     credential?.let {
@@ -274,29 +277,23 @@ suspend fun traceDidResolution(did: String) {
     
     // Step 3: Method availability
     println("\n[Step 3] Checking method availability...")
-    val availableMethods = vericore.getAvailableDidMethods()
-    println("Available methods: $availableMethods")
-    if (method !in availableMethods) {
-        println("❌ Method not available")
-        return
-    }
-    println("✅ Method available")
+    // Note: This requires a TrustWeave instance - pass it as parameter
+    // val availableMethods = trustweave.dids.availableMethods()
+    // println("Available methods: $availableMethods")
+    // if (method !in availableMethods) {
+    //     println("❌ Method not available")
+    //     return
+    // }
+    // println("✅ Method available")
     
     // Step 4: Resolution attempt
     println("\n[Step 4] Attempting resolution...")
     val startTime = System.currentTimeMillis()
-    val resolution = vericore.dids.resolve(did)
-    val result = Result.success(resolution)
-    val duration = System.currentTimeMillis() - startTime
-    
-    result.fold(
-        onSuccess = { resolution ->
-            println("✅ Resolution successful (${duration}ms)")
-            println("   Document ID: ${resolution.document?.id}")
-            println("   Methods: ${resolution.document?.verificationMethod?.size ?: 0}")
-        },
-        onFailure = { error ->
-            println("❌ Resolution failed (${duration}ms)")
+    val resolution = try {
+        trustweave.dids.resolve(did)
+    } catch (error: TrustWeaveError) {
+        val duration = System.currentTimeMillis() - startTime
+        println("❌ Resolution failed (${duration}ms)")
             println("   Error: ${error.message}")
             println("   Code: ${error.code}")
             error.context.forEach { (key, value) ->
@@ -315,14 +312,14 @@ Create a minimal reproducible example:
 suspend fun minimalReproducibleExample() {
     println("=== Minimal Reproducible Example ===")
     
-    // Step 1: Create VeriCore instance
-    println("\n[1] Creating VeriCore instance...")
-    val vericore = VeriCore.create()
-    println("✅ VeriCore created")
+    // Step 1: Create TrustWeave instance
+    println("\n[1] Creating TrustWeave instance...")
+    val TrustWeave = TrustWeave.create()
+    println("✅ TrustWeave created")
     
     // Step 2: Create a DID
     println("\n[2] Creating DID...")
-    val did = vericore.dids.create()
+    val did = TrustWeave.dids.create()
     val didResult = Result.success(did)
     didResult.fold(
         onSuccess = { did ->
@@ -330,7 +327,7 @@ suspend fun minimalReproducibleExample() {
             
             // Step 3: Resolve the DID
             println("\n[3] Resolving DID...")
-            val resolution = vericore.dids.resolve(did.id)
+            val resolution = TrustWeave.dids.resolve(did.id)
             val resolveResult = Result.success(resolution)
             resolveResult.fold(
                 onSuccess = { resolution ->
@@ -357,7 +354,7 @@ suspend fun minimalReproducibleExample() {
 Always examine error context for debugging clues:
 
 ```kotlin
-fun analyzeError(error: VeriCoreError) {
+fun analyzeError(error: TrustWeaveError) {
     println("=== Error Analysis ===")
     println("Code: ${error.code}")
     println("Message: ${error.message}")
@@ -368,17 +365,17 @@ fun analyzeError(error: VeriCoreError) {
     
     // Check for specific error types
     when (error) {
-        is VeriCoreError.DidMethodNotRegistered -> {
+        is TrustWeaveError.DidMethodNotRegistered -> {
             println("\n💡 Suggestions:")
-            println("  - Register the method: vericore.registerDidMethod(...)")
+            println("  - Register the method during TrustWeave.create { didMethods { + DidMethod() } }")
             println("  - Use an available method: ${error.availableMethods}")
         }
-        is VeriCoreError.ChainNotRegistered -> {
+        is TrustWeaveError.ChainNotRegistered -> {
             println("\n💡 Suggestions:")
-            println("  - Register the chain: vericore.registerBlockchainClient(...)")
+            println("  - Register the chain during TrustWeave.create { blockchains { \"chainId\" to client } }")
             println("  - Use an available chain: ${error.availableChains}")
         }
-        is VeriCoreError.InvalidDidFormat -> {
+        is TrustWeaveError.InvalidDidFormat -> {
             println("\n💡 Suggestions:")
             println("  - Check DID format: did:<method>:<identifier>")
             println("  - Validate before use: DidValidator.validateFormat(...)")
@@ -387,7 +384,7 @@ fun analyzeError(error: VeriCoreError) {
             println("\n💡 General suggestions:")
             println("  - Check error context above")
             println("  - Verify inputs are valid")
-            println("  - Check system state: debugSystemState(vericore)")
+            println("  - Check system state: debugSystemState(TrustWeave)")
         }
     }
     
@@ -412,7 +409,7 @@ suspend fun checkNetworkConnectivity() {
     println("Testing resolution of: $testDid")
     
     val startTime = System.currentTimeMillis()
-    val resolution = vericore.dids.resolve(testDid)
+    val resolution = TrustWeave.dids.resolve(testDid)
     val result = Result.success(resolution)
     val duration = System.currentTimeMillis() - startTime
     
@@ -422,7 +419,7 @@ suspend fun checkNetworkConnectivity() {
         },
         onFailure = { error ->
             when (error) {
-                is VeriCoreError.DidNotFound -> {
+                is TrustWeaveError.DidNotFound -> {
                     println("⚠️  Network accessible but DID not found")
                 }
                 else -> {
@@ -467,7 +464,7 @@ val didCache = mutableMapOf<String, DidDocument>()
 
 suspend fun resolveDidCached(did: String): DidDocument? {
     return didCache.getOrPut(did) {
-        vericore.dids.resolve(did).document
+        TrustWeave.dids.resolve(did).document
     }
 }
 ```
@@ -532,7 +529,7 @@ kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    // Your VeriCore code here
+    // Your TrustWeave code here
 }
 ```
 
@@ -544,7 +541,7 @@ If you're still experiencing issues:
 2. **Review Examples**: See the [Quick Start Guide](quick-start.md) for runnable examples
 3. **Check Error Handling**: [Error Handling](../advanced/error-handling.md)
 4. **File an Issue**: Include:
-   - VeriCore version
+   - TrustWeave version
    - Kotlin/Java versions
    - Error message and stack trace
    - Minimal reproducible example

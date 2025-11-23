@@ -401,7 +401,7 @@ All plugins follow these patterns:
 ## Notes
 
 - All new modules have been added to `settings.gradle.kts`
-- Package structure follows: `com.geoknoesis.vericore.{domain}.{plugin}`
+- Package structure follows: `com.trustweave.{domain}.{plugin}`
 - All plugins support algorithm advertisement API
 - SPI registration enables auto-discovery
 

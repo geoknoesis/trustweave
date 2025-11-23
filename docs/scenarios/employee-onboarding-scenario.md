@@ -1,6 +1,6 @@
 # Employee Onboarding and Background Verification Scenario
 
-This guide demonstrates how to build a complete employee onboarding system using VeriCore. You'll learn how employers can verify candidate credentials (education, certifications, work history), how background check providers can issue verification credentials, and how the entire onboarding process can be streamlined with verifiable credentials.
+This guide demonstrates how to build a complete employee onboarding system using TrustWeave. You'll learn how employers can verify candidate credentials (education, certifications, work history), how background check providers can issue verification credentials, and how the entire onboarding process can be streamlined with verifiable credentials.
 
 ## What You'll Build
 
@@ -97,7 +97,7 @@ Traditional employee onboarding has several problems:
 4. **No privacy**: Candidates must share all information
 5. **Compliance risk**: Manual processes prone to errors
 
-VeriCore solves this by enabling:
+TrustWeave solves this by enabling:
 
 - **Instant verification**: Cryptographic proof without contacting institutions
 - **Tamper-proof**: Credentials are cryptographically signed
@@ -132,12 +132,12 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add TrustWeave dependencies to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -151,16 +151,16 @@ dependencies {
 
 ## Step 2: Complete Runnable Example
 
-Here's the full employee onboarding flow using the VeriCore facade API. This complete, copy-paste ready example demonstrates the entire workflow from credential issuance to employer verification.
+Here's the full employee onboarding flow using the TrustWeave facade API. This complete, copy-paste ready example demonstrates the entire workflow from credential issuance to employer verification.
 
 ```kotlin
 package com.example.employee.onboarding
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.credential.PresentationOptions
-import com.geoknoesis.vericore.credential.wallet.Wallet
-import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.credential.PresentationOptions
+import com.trustweave.credential.wallet.Wallet
+import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -172,35 +172,35 @@ fun main() = runBlocking {
     println("Employee Onboarding Scenario - Complete End-to-End Example")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance
-    val vericore = VeriCore.create()
-    println("\n✅ VeriCore initialized")
+    // Step 1: Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
+    println("\n✅ TrustWeave initialized")
     
     // Step 2: Create DIDs for all parties
-    val universityDidDoc = vericore.dids.create()
+    val universityDidDoc = TrustWeave.dids.create()
     val universityDid = universityDidDoc.id
     val universityKeyId = universityDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val previousEmployerDidDoc = vericore.dids.create()
+    val previousEmployerDidDoc = TrustWeave.dids.create()
     val previousEmployerDid = previousEmployerDidDoc.id
     val previousEmployerKeyId = previousEmployerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val certificationBodyDidDoc = vericore.dids.create()
+    val certificationBodyDidDoc = TrustWeave.dids.create()
     val certificationBodyDid = certificationBodyDidDoc.id
     val certificationBodyKeyId = certificationBodyDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val backgroundCheckProviderDidDoc = vericore.dids.create()
+    val backgroundCheckProviderDidDoc = TrustWeave.dids.create()
     val backgroundCheckProviderDid = backgroundCheckProviderDidDoc.id
     val backgroundCheckProviderKeyId = backgroundCheckProviderDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val candidateDidDoc = vericore.dids.create()
+    val candidateDidDoc = TrustWeave.dids.create()
     val candidateDid = candidateDidDoc.id
     
-    val employerDidDoc = vericore.dids.create()
+    val employerDidDoc = TrustWeave.dids.create()
     val employerDid = employerDidDoc.id
     
     println("✅ University DID: $universityDid")
@@ -211,7 +211,7 @@ fun main() = runBlocking {
     println("✅ Employer DID: $employerDid")
     
     // Step 3: Issue education credential
-    val educationCredential = vericore.issueCredential(
+    val educationCredential = TrustWeave.issueCredential(
         issuerDid = universityDid,
         issuerKeyId = universityKeyId,
         credentialSubject = buildJsonObject {
@@ -231,7 +231,7 @@ fun main() = runBlocking {
     println("\n✅ Education credential issued: ${educationCredential.id}")
     
     // Step 4: Issue work history credential
-    val workHistoryCredential = vericore.issueCredential(
+    val workHistoryCredential = TrustWeave.issueCredential(
         issuerDid = previousEmployerDid,
         issuerKeyId = previousEmployerKeyId,
         credentialSubject = buildJsonObject {
@@ -256,7 +256,7 @@ fun main() = runBlocking {
     println("✅ Work history credential issued: ${workHistoryCredential.id}")
     
     // Step 5: Issue certification credential
-    val certificationCredential = vericore.issueCredential(
+    val certificationCredential = TrustWeave.issueCredential(
         issuerDid = certificationBodyDid,
         issuerKeyId = certificationBodyKeyId,
         credentialSubject = buildJsonObject {
@@ -277,7 +277,7 @@ fun main() = runBlocking {
     println("✅ Certification credential issued: ${certificationCredential.id}")
     
     // Step 6: Create candidate wallet and store all credentials
-    val candidateWallet = vericore.createWallet(
+    val candidateWallet = TrustWeave.createWallet(
         holderDid = candidateDid,
         options = WalletCreationOptionsBuilder().apply {
             enableOrganization = true
@@ -309,7 +309,7 @@ fun main() = runBlocking {
     }
     
     // Step 8: Background check provider verifies credentials and issues verification credential
-    val backgroundCheckCredential = vericore.issueCredential(
+    val backgroundCheckCredential = TrustWeave.issueCredential(
         issuerDid = backgroundCheckProviderDid,
         issuerKeyId = backgroundCheckProviderKeyId,
         credentialSubject = buildJsonObject {
@@ -366,16 +366,16 @@ fun main() = runBlocking {
     // Step 10: Employer verifies all credentials
     println("\n📋 Employer Verification Process:")
     
-    val educationVerification = vericore.verifyCredential(educationCredential).getOrThrow()
+    val educationVerification = TrustWeave.verifyCredential(educationCredential).getOrThrow()
     println("Education Credential: ${if (educationVerification.valid) "✅ VALID" else "❌ INVALID"}")
     
-    val workHistoryVerification = vericore.verifyCredential(workHistoryCredential).getOrThrow()
+    val workHistoryVerification = TrustWeave.verifyCredential(workHistoryCredential).getOrThrow()
     println("Work History Credential: ${if (workHistoryVerification.valid) "✅ VALID" else "❌ INVALID"}")
     
-    val certificationVerification = vericore.verifyCredential(certificationCredential).getOrThrow()
+    val certificationVerification = TrustWeave.verifyCredential(certificationCredential).getOrThrow()
     println("Certification Credential: ${if (certificationVerification.valid) "✅ VALID" else "❌ INVALID"}")
     
-    val backgroundCheckVerification = vericore.verifyCredential(backgroundCheckCredential).getOrThrow()
+    val backgroundCheckVerification = TrustWeave.verifyCredential(backgroundCheckCredential).getOrThrow()
     println("Background Check Credential: ${if (backgroundCheckVerification.valid) "✅ VALID" else "❌ INVALID"}")
     
     // Step 11: Display wallet statistics
@@ -415,7 +415,7 @@ fun main() = runBlocking {
 Employee Onboarding Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ VeriCore initialized
+✅ TrustWeave initialized
 ✅ University DID: did:key:z6Mk...
 ✅ Previous Employer DID: did:key:z6Mk...
 ✅ Certification Body DID: did:key:z6Mk...
@@ -461,13 +461,13 @@ Background Check Credential: ✅ VALID
 
 ## Step-by-Step Explanation
 
-### Step 1: VeriCore Initialization
+### Step 1: TrustWeave Initialization
 
-**What this does:** Creates a VeriCore instance with default configuration (in-memory KMS, did:key method).
+**What this does:** Creates a TrustWeave instance with default configuration (in-memory KMS, did:key method).
 
-**Why it matters:** This is the entry point for all VeriCore operations. The default configuration is perfect for development and testing.
+**Why it matters:** This is the entry point for all TrustWeave operations. The default configuration is perfect for development and testing.
 
-**Result:** You have a working VeriCore instance ready to create DIDs and issue credentials.
+**Result:** You have a working TrustWeave instance ready to create DIDs and issue credentials.
 
 ### Step 2: DID Creation for All Parties
 
@@ -545,7 +545,7 @@ Background Check Credential: ✅ VALID
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with VeriCore
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 - [Wallet API](../api-reference/wallet-api.md) - Wallet operations reference

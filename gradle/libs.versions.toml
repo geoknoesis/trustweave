@@ -1,0 +1,115 @@
+[versions]
+# Kotlin
+kotlin = "2.2.21"
+kotlinx-serialization = "1.7.3"
+kotlinx-coroutines = "1.9.0"
+kotlinx-coroutines-test = "1.9.0"
+
+# Testing
+junit = "5.10.1"
+kotest = "5.8.0"
+testcontainers = "1.19.3"
+
+# HTTP & Serialization
+ktor = "2.3.5"
+okhttp = "4.12.0"
+jackson = "2.15.2"
+gson = "2.10.1"
+
+# Blockchain
+web3j = "5.0.1"
+web3j-legacy = "4.10.0"
+bitcoinj = "0.16.2"
+algosdk = "2.10.1"
+
+# Database
+postgresql = "42.7.1"
+mysql = "8.2.0"
+h2 = "2.2.224"
+hikaricp = "5.1.0"
+
+# Security
+bouncycastle = "1.78.1"
+nimbus-jose-jwt = "9.37.3"
+jsonld-java = "0.13.4"
+
+# Cloud SDKs
+aws-sdk-bom = "2.20.0"
+azure-sdk-bom = "1.2.15"
+google-cloud-bom = "26.38.0"
+google-cloud-bom-legacy = "26.22.0"
+
+# Other
+vault-java-driver = "5.1.0"
+microsoft-graph = "5.62.0"
+azure-identity = "1.10.0"
+
+# Build tools
+kover = "0.8.2"
+
+[libraries]
+# Kotlin
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines-test" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+
+# Testing
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
+testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
+testcontainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
+
+# HTTP & Serialization
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+
+# Blockchain
+web3j = { module = "org.web3j:core", version.ref = "web3j" }
+web3j-legacy = { module = "org.web3j:core", version.ref = "web3j-legacy" }
+bitcoinj-core = { module = "org.bitcoinj:bitcoinj-core", version.ref = "bitcoinj" }
+algosdk = { module = "com.algorand:algosdk", version.ref = "algosdk" }
+
+# Database
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+mysql-connector = { module = "com.mysql:mysql-connector-j", version.ref = "mysql" }
+h2 = { module = "com.h2database:h2", version.ref = "h2" }
+hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
+
+# Security
+bouncycastle-prov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
+bouncycastle-pkix = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bouncycastle" }
+nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version.ref = "nimbus-jose-jwt" }
+jsonld-java = { module = "com.github.jsonld-java:jsonld-java", version.ref = "jsonld-java" }
+
+# Cloud SDKs (BOMs)
+aws-sdk-bom = { module = "software.amazon.awssdk:bom", version.ref = "aws-sdk-bom" }
+azure-sdk-bom = { module = "com.azure:azure-sdk-bom", version.ref = "azure-sdk-bom" }
+google-cloud-bom = { module = "com.google.cloud:libraries-bom", version.ref = "google-cloud-bom" }
+google-cloud-bom-legacy = { module = "com.google.cloud:libraries-bom", version.ref = "google-cloud-bom-legacy" }
+
+# Other
+vault-java-driver = { module = "com.bettercloud:vault-java-driver", version.ref = "vault-java-driver" }
+microsoft-graph = { module = "com.microsoft.graph:microsoft-graph", version.ref = "microsoft-graph" }
+azure-identity = { module = "com.azure:azure-identity", version.ref = "azure-identity" }
+
+[bundles]
+# Common dependencies bundle
+kotlinx = ["kotlinx-serialization-json", "kotlinx-coroutines-core"]
+test = ["junit-jupiter", "kotlin-test"]
+test-runtime = ["junit-jupiter-engine"]
+ktor-client = ["ktor-client-core", "ktor-client-cio", "ktor-client-content-negotiation", "ktor-serialization-kotlinx-json"]
+database = ["postgresql", "mysql-connector", "h2", "hikaricp"]
+bouncycastle = ["bouncycastle-prov", "bouncycastle-pkix"]
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+

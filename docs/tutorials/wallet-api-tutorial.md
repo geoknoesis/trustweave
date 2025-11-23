@@ -1,18 +1,18 @@
 # Wallet API Tutorial
 
-This tutorial provides a comprehensive guide to using VeriCore's Wallet API. You'll learn how to create wallets, store credentials, organize them, and create presentations.
+This tutorial provides a comprehensive guide to using TrustWeave's Wallet API. You'll learn how to create wallets, store credentials, organize them, and create presentations.
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-trust:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-trust:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
 }
 ```
 
 **Result:** Gives you the wallet DSL, trust layer builders, and in-memory implementations used throughout this tutorial.
 
-> Tip: The runnable quick-start sample (`./gradlew :vericore-examples:runQuickStartSample`) mirrors the core flows below. Clone it as a starting point before wiring more advanced wallet logic.
+> Tip: The runnable quick-start sample (`./gradlew :TrustWeave-examples:runQuickStartSample`) mirrors the core flows below. Clone it as a starting point before wiring more advanced wallet logic.
 
 ## Prerequisites
 
@@ -33,34 +33,40 @@ dependencies {
 
 ## Creating a Wallet
 
-### Facade Wallet (Recommended)
+### Service API Wallet (Recommended)
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
+import com.trustweave.TrustWeave
+import com.trustweave.wallet.WalletCreationOptions
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val trustweave = TrustWeave.create()
 
-    val wallet = vericore.createWallet(
-        holderDid = "did:key:holder"
-    ) {
-        label = "Holder Wallet"
-        enableOrganization = true
-        enablePresentation = true
-        property("storagePath", "/var/lib/vericore/wallets/holder")
-    }.getOrThrow()
+    try {
+        val wallet = trustweave.wallets.create(
+            holderDid = "did:key:holder",
+            options = WalletCreationOptions(
+                label = "Holder Wallet",
+                enableOrganization = true,
+                enablePresentation = true
+            )
+        )
 
-    println("Wallet ID: ${wallet.walletId}")
+        println("Wallet ID: ${wallet.walletId}")
+        println("Holder: ${wallet.holderDid}")
+    } catch (error: TrustWeaveError) {
+        println("Wallet creation failed: ${error.message}")
+    }
 }
 ```
 
-**Outcome:** Creates a production-style wallet via the VeriCore facade, complete with organization/presentation capabilities.
+**Outcome:** Creates a production-style wallet via the TrustWeave service API, complete with organization/presentation capabilities.
 
 ### Trust Layer DSL
 
 ```kotlin
-import com.geoknoesis.vericore.credential.dsl.trustLayer
+import com.trustweave.credential.dsl.trustLayer
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -88,8 +94,8 @@ fun main() = runBlocking {
 `BasicWallet` and `InMemoryWallet` remain available for lightweight unit tests:
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.credential.BasicWallet
-import com.geoknoesis.vericore.testkit.credential.InMemoryWallet
+import com.trustweave.testkit.credential.BasicWallet
+import com.trustweave.testkit.credential.InMemoryWallet
 
 val basic = BasicWallet()
 val inMemory = InMemoryWallet(holderDid = "did:key:test-holder")
@@ -102,7 +108,7 @@ val inMemory = InMemoryWallet(holderDid = "did:key:test-holder")
 ### Basic Storage
 
 ```kotlin
-import com.geoknoesis.vericore.credential.models.VerifiableCredential
+import com.trustweave.credential.models.VerifiableCredential
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -163,7 +169,7 @@ println("Total credentials: ${allCredentials.size}")
 ### List with Filter
 
 ```kotlin
-import com.geoknoesis.vericore.credential.wallet.CredentialFilter
+import com.trustweave.credential.wallet.CredentialFilter
 
 val workCredentials = wallet.list(
     filter = CredentialFilter(
@@ -304,7 +310,7 @@ val specific = wallet.query {
 ### Basic Presentation
 
 ```kotlin
-import com.geoknoesis.vericore.credential.PresentationOptions
+import com.trustweave.credential.PresentationOptions
 
 if (wallet is CredentialPresentation) {
     val presentation = wallet.createPresentation(
@@ -439,7 +445,7 @@ wallet.withPresentation { presentation ->
 Manage multiple wallets with an instance-scoped directory:
 
 ```kotlin
-import com.geoknoesis.vericore.credential.wallet.WalletDirectory
+import com.trustweave.credential.wallet.WalletDirectory
 
 val directory = WalletDirectory()
 
@@ -463,19 +469,17 @@ val walletsWithCollections = directory.findByCapability("collections")
 Here's a complete example combining all features:
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.credential.InMemoryWallet
-import com.geoknoesis.vericore.credential.models.VerifiableCredential
-import com.geoknoesis.vericore.credential.PresentationOptions
+import com.trustweave.testkit.credential.InMemoryWallet
+import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.PresentationOptions
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
-    // Create wallet
-    val wallet = InMemoryWallet(
-        walletDid = "did:key:wallet",
-        holderDid = "did:key:holder"
-    )
+    // Create wallet using TrustWeave service API
+    val trustweave = TrustWeave.create()
+    val wallet = trustweave.wallets.create(holderDid = "did:key:holder")
     
     // Store credentials
     val credential1 = createCredential("Alice", "alice@example.com")

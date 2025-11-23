@@ -1,6 +1,6 @@
 # Carbon Markets & Digital MRV (dMRV) with Earth Observation
 
-This guide demonstrates how to build a Digital Measurement, Reporting, and Verification (dMRV) system for carbon markets using VeriCore and Earth Observation data. You'll learn how to create verifiable credentials for carbon credits that prevent double counting and enable automated verification.
+This guide demonstrates how to build a Digital Measurement, Reporting, and Verification (dMRV) system for carbon markets using TrustWeave and Earth Observation data. You'll learn how to create verifiable credentials for carbon credits that prevent double counting and enable automated verification.
 
 ## What You'll Build
 
@@ -102,14 +102,14 @@ Carbon markets need:
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
     
     // Test kit for in-memory implementations
-    testImplementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    testImplementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
     
     // Optional: Algorand adapter for real blockchain anchoring
-    implementation("com.geoknoesis.vericore.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -126,9 +126,9 @@ Here's a complete carbon credit dMRV workflow:
 ```kotlin
 package com.example.carbon.markets
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.json.DigestUtils
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.json.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import java.time.Instant
@@ -139,12 +139,12 @@ fun main() = runBlocking {
     println("Carbon Markets & Digital MRV - Complete Example")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance with blockchain
-    val vericore = VeriCore.create()
-    println("\n✅ VeriCore initialized")
+    // Step 1: Create TrustWeave instance with blockchain
+    val TrustWeave = TrustWeave.create()
+    println("\n✅ TrustWeave initialized")
     
     // Step 2: Create DIDs for carbon credit issuer, verifier, and buyer
-    val issuerDid = vericore.dids.create()
+    val issuerDid = TrustWeave.dids.create()
     Result.success(issuerDid).fold(
         onSuccess = { it },
         onFailure = { error ->
@@ -153,7 +153,7 @@ fun main() = runBlocking {
         }
     )
     
-    val verifierDid = vericore.dids.create()
+    val verifierDid = TrustWeave.dids.create()
     Result.success(verifierDid).fold(
         onSuccess = { it },
         onFailure = { error ->
@@ -162,7 +162,7 @@ fun main() = runBlocking {
         }
     )
     
-    val buyerDid = vericore.dids.create()
+    val buyerDid = TrustWeave.dids.create()
     Result.success(buyerDid).fold(
         onSuccess = { it },
         onFailure = { error ->
@@ -203,7 +203,7 @@ fun main() = runBlocking {
     val verifierKeyId = verifierDid.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val verificationCredential = vericore.issueCredential(
+    val verificationCredential = TrustWeave.issueCredential(
         issuerDid = verifierDid.id,
         issuerKeyId = verifierKeyId,
         credentialSubject = buildJsonObject {
@@ -231,7 +231,7 @@ fun main() = runBlocking {
     val issuerKeyId = issuerDid.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val carbonCredit = vericore.issueCredential(
+    val carbonCredit = TrustWeave.issueCredential(
         issuerDid = issuerDid.id,
         issuerKeyId = issuerKeyId,
         credentialSubject = buildJsonObject {
@@ -264,7 +264,7 @@ fun main() = runBlocking {
     println("   Status: issued")
     
     // Step 6: Anchor credit to blockchain (prevent double counting)
-    val anchorResult = vericore.blockchains.anchor(
+    val anchorResult = TrustWeave.blockchains.anchor(
         data = carbonCredit,
         serializer = VerifiableCredential.serializer(),
         chainId = "algorand:testnet"
@@ -282,7 +282,7 @@ fun main() = runBlocking {
     // Step 7: Track credit sale (update status)
     if (anchorResult != null) {
         // Create sale credential
-        val saleCredential = vericore.issueCredential(
+        val saleCredential = TrustWeave.issueCredential(
             issuerDid = issuerDid.id,
             issuerKeyId = issuerKeyId,
             credentialSubject = buildJsonObject {
@@ -325,7 +325,7 @@ fun main() = runBlocking {
         val buyerKeyId = buyerDid.verificationMethod.firstOrNull()?.id
             ?: error("No verification method found")
         
-        val retirementCredential = vericore.issueCredential(
+        val retirementCredential = TrustWeave.issueCredential(
             issuerDid = buyerDid.id,
             issuerKeyId = buyerKeyId,
             credentialSubject = buildJsonObject {
@@ -371,7 +371,7 @@ fun main() = runBlocking {
 // Helper function to check credit status on blockchain
 suspend fun checkCreditStatus(
     creditId: String, 
-    anchorRef: com.geoknoesis.vericore.anchor.AnchorRef
+    anchorRef: com.trustweave.anchor.AnchorRef
 ): String {
     // In production, query blockchain for credit status
     // This prevents double counting by checking if credit was already sold/retired
@@ -385,7 +385,7 @@ suspend fun checkCreditStatus(
 Carbon Markets & Digital MRV - Complete Example
 ======================================================================
 
-✅ VeriCore initialized
+✅ TrustWeave initialized
 ✅ Issuer DID: did:key:z6Mk...
 ✅ Verifier DID: did:key:z6Mk...
 ✅ Buyer DID: did:key:z6Mk...
@@ -421,7 +421,7 @@ The key feature is preventing double counting:
 ```kotlin
 suspend fun preventDoubleCounting(
     creditId: String,
-    anchorRef: com.geoknoesis.vericore.anchor.AnchorRef
+    anchorRef: com.trustweave.anchor.AnchorRef
 ): Boolean {
     // Check blockchain for credit status
     val status = queryBlockchainStatus(creditId, anchorRef)

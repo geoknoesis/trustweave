@@ -1,9 +1,9 @@
-package com.geoknoesis.vericore.testkit.templates
+package com.trustweave.testkit.templates
 
-import com.geoknoesis.vericore.anchor.AnchorRef
-import com.geoknoesis.vericore.anchor.AnchorResult
-import com.geoknoesis.vericore.anchor.BlockchainAnchorClient
-import com.geoknoesis.vericore.testkit.BasePluginTest
+import com.trustweave.anchor.AnchorRef
+import com.trustweave.anchor.AnchorResult
+import com.trustweave.anchor.BlockchainAnchorClient
+import com.trustweave.testkit.BasePluginTest
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject

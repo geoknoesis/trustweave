@@ -2,7 +2,7 @@
 
 ## Overview
 
-This plan outlines the implementation of a HashiCorp Vault Key Management Service (KMS) plugin for VeriCore. The plugin will be implemented as the `kms/plugins/hashicorp` module and will integrate with Vault's Transit secrets engine to provide cryptographic key operations for DID and Verifiable Credential workflows.
+This plan outlines the implementation of a HashiCorp Vault Key Management Service (KMS) plugin for TrustWeave. The plugin will be implemented as the `kms/plugins/hashicorp` module and will integrate with Vault's Transit secrets engine to provide cryptographic key operations for DID and Verifiable Credential workflows.
 
 ## Background
 
@@ -36,8 +36,8 @@ The Transit engine supports the following key types:
 - `kms/plugins/hashicorp/build.gradle.kts`
 
 **Dependencies**:
-- `vericore-core`
-- `vericore-kms`
+- `TrustWeave-common`
+- `TrustWeave-kms`
 - Vault Java client library (e.g., `com.bettercloud:vault-java-driver` or direct HTTP client)
 - HTTP client (OkHttp or similar)
 - JSON serialization (Jackson or Kotlinx Serialization)
@@ -54,7 +54,7 @@ The Transit engine supports the following key types:
 **Task**: Implement `VaultKmsConfig` data class with builder pattern
 
 **Files**:
-- `kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKmsConfig.kt`
+- `kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/TrustWeave/hashicorpkms/VaultKmsConfig.kt`
 
 **Features**:
 - Vault server address (required)
@@ -92,10 +92,10 @@ VaultKmsConfig.builder()
 
 ### 3. Algorithm Mapping
 
-**Task**: Implement `AlgorithmMapping` utilities for VeriCore ↔ Vault Transit mapping
+**Task**: Implement `AlgorithmMapping` utilities for TrustWeave ↔ Vault Transit mapping
 
 **Files**:
-- `kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/vericore/hashicorpkms/AlgorithmMapping.kt`
+- `kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/TrustWeave/hashicorpkms/AlgorithmMapping.kt`
 
 **Mappings**:
 - `Algorithm.Ed25519` → `"ed25519"`
@@ -108,8 +108,8 @@ VaultKmsConfig.builder()
 - `Algorithm.RSA.RSA_4096` → `"rsa-4096"`
 
 **Functions**:
-- `toVaultKeyType(algorithm: Algorithm): String` - Convert VeriCore algorithm to Vault key type
-- `fromVaultKeyType(keyType: String): Algorithm?` - Parse Vault key type to VeriCore algorithm
+- `toVaultKeyType(algorithm: Algorithm): String` - Convert TrustWeave algorithm to Vault key type
+- `fromVaultKeyType(keyType: String): Algorithm?` - Parse Vault key type to TrustWeave algorithm
 - `resolveKeyName(keyId: String, config: VaultKmsConfig): String` - Resolve key name for Vault API
 
 **Acceptance Criteria**:
@@ -124,7 +124,7 @@ VaultKmsConfig.builder()
 **Task**: Implement `VaultKmsClientFactory` for creating Vault HTTP clients
 
 **Files**:
-- `kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKmsClientFactory.kt`
+- `kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/TrustWeave/hashicorpkms/VaultKmsClientFactory.kt`
 
 **Features**:
 - HTTP client creation with proper authentication
@@ -152,7 +152,7 @@ VaultKmsConfig.builder()
 **Task**: Implement `VaultKeyManagementService` implementing `KeyManagementService` interface
 
 **Files**:
-- `kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKeyManagementService.kt`
+- `kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/TrustWeave/hashicorpkms/VaultKeyManagementService.kt`
 
 **Supported Algorithms**:
 - Ed25519
@@ -198,10 +198,10 @@ VaultKmsConfig.builder()
 - Convert PEM to JWK for `KeyHandle.publicKeyJwk`
 
 **Error Handling**:
-- Map Vault API errors to VeriCore exceptions
+- Map Vault API errors to TrustWeave exceptions
 - `404` → `KeyNotFoundException`
-- `403` → `VeriCoreException` with access denied message
-- `400` → `UnsupportedAlgorithmException` or `VeriCoreException`
+- `403` → `TrustWeaveException` with access denied message
+- `400` → `UnsupportedAlgorithmException` or `TrustWeaveException`
 
 **Acceptance Criteria**:
 - All `KeyManagementService` methods implemented
@@ -216,7 +216,7 @@ VaultKmsConfig.builder()
 **Task**: Implement `VaultKeyManagementServiceProvider` for SPI registration
 
 **Files**:
-- `kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKeyManagementServiceProvider.kt`
+- `kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/TrustWeave/hashicorpkms/VaultKeyManagementServiceProvider.kt`
 
 **Features**:
 - Provider name: `"vault"` or `"hashicorp-vault"`
@@ -236,11 +236,11 @@ VaultKmsConfig.builder()
 **Task**: Create SPI registration file
 
 **Files**:
-- `kms/plugins/hashicorp/src/main/resources/META-INF/services/com.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider`
+- `kms/plugins/hashicorp/src/main/resources/META-INF/services/com.trustweave.kms.spi.KeyManagementServiceProvider`
 
 **Content**:
 ```
-com.geoknoesis.vericore.hashicorpkms.VaultKeyManagementServiceProvider
+com.trustweave.hashicorpkms.VaultKeyManagementServiceProvider
 ```
 
 **Acceptance Criteria**:
@@ -253,10 +253,10 @@ com.geoknoesis.vericore.hashicorpkms.VaultKeyManagementServiceProvider
 **Task**: Create comprehensive unit tests
 
 **Files**:
-- `kms/plugins/hashicorp/src/test/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKmsConfigTest.kt`
-- `kms/plugins/hashicorp/src/test/kotlin/com/geoknoesis/vericore/hashicorpkms/AlgorithmMappingTest.kt`
-- `kms/plugins/hashicorp/src/test/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKeyManagementServiceTest.kt`
-- `kms/plugins/hashicorp/src/test/kotlin/com/geoknoesis/vericore/hashicorpkms/VaultKeyManagementServiceProviderTest.kt`
+- `kms/plugins/hashicorp/src/test/kotlin/com/geoknoesis/TrustWeave/hashicorpkms/VaultKmsConfigTest.kt`
+- `kms/plugins/hashicorp/src/test/kotlin/com/geoknoesis/TrustWeave/hashicorpkms/AlgorithmMappingTest.kt`
+- `kms/plugins/hashicorp/src/test/kotlin/com/geoknoesis/TrustWeave/hashicorpkms/VaultKeyManagementServiceTest.kt`
+- `kms/plugins/hashicorp/src/test/kotlin/com/geoknoesis/TrustWeave/hashicorpkms/VaultKeyManagementServiceProviderTest.kt`
 
 **Test Coverage**:
 - Configuration creation and validation
@@ -379,7 +379,7 @@ GET /v1/transit/keys/{keyName}/{version}
 
 ## Algorithm Support Matrix
 
-| VeriCore Algorithm | Vault Transit Key Type | Hash Algorithm | Notes |
+| TrustWeave Algorithm | Vault Transit Key Type | Hash Algorithm | Notes |
 |-------------------|------------------------|----------------|-------|
 | Ed25519 | `ed25519` | N/A (direct signing) | Native Ed25519 support |
 | secp256k1 | `ecdsa-p256k1` | `sha2-256` | Blockchain-compatible |
@@ -434,7 +434,7 @@ Vault Transit uses key names (not IDs) to identify keys. Recommendations:
 ## Vault Policy Example
 
 ```hcl
-# Policy for VeriCore KMS operations
+# Policy for TrustWeave KMS operations
 path "transit/keys/*" {
   capabilities = ["create", "read", "update", "delete"]
 }
@@ -472,8 +472,8 @@ path "transit/keys/+/+" {
 ## Dependencies
 
 ### Required
-- `vericore-core`
-- `vericore-kms`
+- `TrustWeave-common`
+- `TrustWeave-kms`
 - HTTP client (OkHttp or similar)
 - JSON library (Jackson or Kotlinx Serialization)
 
@@ -500,7 +500,7 @@ path "transit/keys/+/+" {
 
 ## Success Criteria
 
-- ✅ All VeriCore algorithms supported (except BLS12-381)
+- ✅ All TrustWeave algorithms supported (except BLS12-381)
 - ✅ Token and AppRole authentication working
 - ✅ Environment variable configuration supported
 - ✅ Proper error handling and exception mapping

@@ -1,6 +1,6 @@
 # Proof of Location Scenario
 
-This guide demonstrates how to implement proof of location credentials using VeriCore, inspired by decentralized geospatial web concepts. You'll learn how to create location-based verifiable credentials, anchor them to blockchains for tamper-proof verification, and build a system for geospatial data integrity.
+This guide demonstrates how to implement proof of location credentials using TrustWeave, inspired by decentralized geospatial web concepts. You'll learn how to create location-based verifiable credentials, anchor them to blockchains for tamper-proof verification, and build a system for geospatial data integrity.
 
 ## What You'll Build
 
@@ -91,7 +91,7 @@ Geospatial data and location claims face several challenges:
 4. **Provenance**: Need to track where location data came from
 5. **Decentralization**: Avoid reliance on central authorities
 
-VeriCore solves this by enabling:
+TrustWeave solves this by enabling:
 
 - **Cryptographic proof**: Location claims are cryptographically signed
 - **Selective disclosure**: Share location without revealing exact coordinates
@@ -125,19 +125,19 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`. These modules provide DID support, credential issuance, wallet storage, and the in-memory services used for location proofs.
+Add TrustWeave dependencies to your `build.gradle.kts`. These modules provide DID support, credential issuance, wallet storage, and the in-memory services used for location proofs.
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
     
     // Test kit for in-memory implementations
-    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -154,23 +154,23 @@ dependencies {
 Here’s the complete proof-of-location workflow. Execute it once to see the happy path (capture → issue → store → present → verify → anchor) before you inspect each step in detail.
 
 ```kotlin
-import com.geoknoesis.vericore.credential.models.VerifiableCredential
-import com.geoknoesis.vericore.credential.models.VerifiablePresentation
-import com.geoknoesis.vericore.credential.CredentialIssuanceOptions
-import com.geoknoesis.vericore.credential.CredentialVerificationOptions
-import com.geoknoesis.vericore.credential.PresentationOptions
-import com.geoknoesis.vericore.credential.issuer.CredentialIssuer
-import com.geoknoesis.vericore.credential.verifier.CredentialVerifier
-import com.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
-import com.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
-import com.geoknoesis.vericore.testkit.credential.InMemoryWallet
-import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
-import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.geoknoesis.vericore.did.DidMethodRegistry
-import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
-import com.geoknoesis.vericore.anchor.anchorTyped
-import com.geoknoesis.vericore.anchor.AnchorResult
+import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.models.VerifiablePresentation
+import com.trustweave.credential.CredentialIssuanceOptions
+import com.trustweave.credential.CredentialVerificationOptions
+import com.trustweave.credential.PresentationOptions
+import com.trustweave.credential.issuer.CredentialIssuer
+import com.trustweave.credential.verifier.CredentialVerifier
+import com.trustweave.credential.proof.Ed25519ProofGenerator
+import com.trustweave.credential.proof.ProofGeneratorRegistry
+import com.trustweave.testkit.credential.InMemoryWallet
+import com.trustweave.testkit.did.DidKeyMockMethod
+import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.did.DidMethodRegistry
+import com.trustweave.anchor.BlockchainAnchorRegistry
+import com.trustweave.anchor.anchorTyped
+import com.trustweave.anchor.AnchorResult
 import kotlinx.serialization.json.Json
 
 @Serializable
@@ -260,10 +260,10 @@ fun main() = runBlocking {
         },
         issuanceDate = Instant.now().toString(),
         expirationDate = null, // Location proofs typically don't expire
-        credentialSchema = com.geoknoesis.vericore.credential.models.CredentialSchema(
+        credentialSchema = com.trustweave.credential.models.CredentialSchema(
             id = "https://example.com/schemas/location.json",
             type = "JsonSchemaValidator2018",
-            schemaFormat = com.geoknoesis.vericore.spi.SchemaFormat.JSON_SCHEMA
+            schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
         )
     )
     
@@ -298,7 +298,7 @@ fun main() = runBlocking {
     println("\nStep 7: Anchoring location proof to blockchain...")
     val credentialDigest = DigestUtils.sha256DigestMultibase(
         kotlinx.serialization.json.Json.encodeToJsonElement(
-            com.geoknoesis.vericore.credential.models.VerifiableCredential.serializer(),
+            com.trustweave.credential.models.VerifiableCredential.serializer(),
             issuedCredential
         )
     )

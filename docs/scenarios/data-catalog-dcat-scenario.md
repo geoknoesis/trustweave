@@ -1,6 +1,6 @@
 # Data Catalog & DCAT Scenario
 
-This guide demonstrates how to build a verifiable data catalog system using VeriCore and DCAT (Data Catalog Vocabulary) for government agencies or enterprises. You'll learn how to create verifiable dataset descriptions, enable dataset discovery, track data lineage, and ensure data catalog integrity.
+This guide demonstrates how to build a verifiable data catalog system using TrustWeave and DCAT (Data Catalog Vocabulary) for government agencies or enterprises. You'll learn how to create verifiable dataset descriptions, enable dataset discovery, track data lineage, and ensure data catalog integrity.
 
 ## What You'll Build
 
@@ -159,19 +159,19 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`. These modules deliver DID support, credential issuance, wallet storage, and the in-memory services used to model DCAT data catalogs.
+Add TrustWeave dependencies to your `build.gradle.kts`. These modules deliver DID support, credential issuance, wallet storage, and the in-memory services used to model DCAT data catalogs.
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
     
     // Test kit for in-memory implementations
-    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -196,9 +196,9 @@ dependencies {
 - **Verification**: Anyone can verify credentials came from publisher
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
-import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
-import com.geoknoesis.vericore.did.DidMethodRegistry
+import com.trustweave.testkit.did.DidKeyMockMethod
+import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -232,7 +232,7 @@ fun main() = runBlocking {
 - **Verification**: Consumers can verify dataset credentials
 
 ```kotlin
-import com.geoknoesis.vericore.credential.models.VerifiableCredential
+import com.trustweave.credential.models.VerifiableCredential
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
@@ -345,8 +345,8 @@ import java.time.Instant
     
     // Compute digest of DCAT dataset description
     // This provides integrity check for the dataset metadata
-    val datasetDigest = com.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
-        com.geoknoesis.vericore.json.Json.encodeToJsonElement(dcatDataset)
+    val datasetDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
+        com.trustweave.json.Json.encodeToJsonElement(dcatDataset)
     )
     
     // Dataset credential wraps DCAT description with verifiable proof
@@ -386,10 +386,10 @@ import java.time.Instant
 - **Verification**: Anyone can verify credential authenticity
 
 ```kotlin
-import com.geoknoesis.vericore.credential.issuer.CredentialIssuer
-import com.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
-import com.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
-import com.geoknoesis.vericore.credential.CredentialIssuanceOptions
+import com.trustweave.credential.issuer.CredentialIssuer
+import com.trustweave.credential.proof.Ed25519ProofGenerator
+import com.trustweave.credential.proof.ProofGeneratorRegistry
+import com.trustweave.credential.CredentialIssuanceOptions
 
     // Step 5: Issue dataset credential with proof
     println("\nStep 5: Issuing dataset credential...")
@@ -503,8 +503,8 @@ import com.geoknoesis.vericore.credential.CredentialIssuanceOptions
                 put("datasetTitle", datasetTitle)
                 put("registrationDate", Instant.now().toString())
                 put("status", "published")
-                put("catalogDigest", com.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
-                    com.geoknoesis.vericore.json.Json.encodeToJsonElement(dcatCatalog)
+                put("catalogDigest", com.trustweave.json.DigestUtils.sha256DigestMultibase(
+                    com.trustweave.json.Json.encodeToJsonElement(dcatCatalog)
                 ))
             })
         },
@@ -554,8 +554,8 @@ import com.geoknoesis.vericore.credential.CredentialIssuanceOptions
 - **Trust**: Builds trust in dataset descriptions
 
 ```kotlin
-import com.geoknoesis.vericore.credential.verifier.CredentialVerifier
-import com.geoknoesis.vericore.credential.CredentialVerificationOptions
+import com.trustweave.credential.verifier.CredentialVerifier
+import com.trustweave.credential.CredentialVerificationOptions
 
     // Step 8: Verify dataset credentials
     println("\nStep 8: Verifying dataset credentials...")
@@ -616,9 +616,9 @@ import com.geoknoesis.vericore.credential.CredentialVerificationOptions
 - **Integrity**: Prevents catalog tampering
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
-import com.geoknoesis.vericore.anchor.anchorTyped
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.anchor.BlockchainAnchorRegistry
+import com.trustweave.anchor.anchorTyped
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -641,7 +641,7 @@ data class CatalogRecord(
     }
     
     // Create catalog record
-    val catalogDigest = com.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
+    val catalogDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
             VerifiableCredential.serializer(),
             issuedCatalogRecord

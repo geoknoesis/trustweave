@@ -1,6 +1,6 @@
 # Professional Identity Wallet Scenario
 
-This guide demonstrates how professionals can build a comprehensive digital identity wallet using VeriCore. You'll learn how to manage multiple credentials (education, work experience, certifications), organize them effectively, and create targeted presentations for different purposes.
+This guide demonstrates how professionals can build a comprehensive digital identity wallet using TrustWeave. You'll learn how to manage multiple credentials (education, work experience, certifications), organize them effectively, and create targeted presentations for different purposes.
 
 ## What You'll Build
 
@@ -98,7 +98,7 @@ Managing these credentials is challenging:
 3. **Privacy concerns**: Sharing everything reveals too much
 4. **Not portable**: Tied to specific platforms or institutions
 
-VeriCore solves this by providing:
+TrustWeave solves this by providing:
 
 - **Unified storage**: All credentials in one wallet
 - **Easy organization**: Collections, tags, and metadata
@@ -126,19 +126,19 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`. These modules cover DID creation, wallet storage, and the in-memory tooling used for professional identity flows.
+Add TrustWeave dependencies to your `build.gradle.kts`. These modules cover DID creation, wallet storage, and the in-memory tooling used for professional identity flows.
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
     
     // Test kit for in-memory implementations
-    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -155,13 +155,13 @@ dependencies {
 Here’s the full professional identity wallet flow. Execute it once to see the end-to-end experience before exploring the step-by-step explanations.
 
 ```kotlin
-import com.geoknoesis.vericore.credential.models.VerifiableCredential
-import com.geoknoesis.vericore.credential.models.VerifiablePresentation
-import com.geoknoesis.vericore.credential.PresentationOptions
-import com.geoknoesis.vericore.testkit.credential.InMemoryWallet
-import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
-import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
-import com.geoknoesis.vericore.did.DidMethodRegistry
+import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.models.VerifiablePresentation
+import com.trustweave.credential.PresentationOptions
+import com.trustweave.testkit.credential.InMemoryWallet
+import com.trustweave.testkit.did.DidKeyMockMethod
+import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put

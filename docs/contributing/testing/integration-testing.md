@@ -1,6 +1,6 @@
 # Integration Testing Best Practices
 
-This guide covers best practices for writing integration tests in VeriCore.
+This guide covers best practices for writing integration tests in TrustWeave.
 
 ## Overview
 

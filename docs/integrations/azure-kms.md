@@ -1,10 +1,10 @@
 # Azure Key Vault Integration
 
-> This guide covers the Azure Key Vault integration for VeriCore. The Azure Key Vault plugin provides production-ready key management with support for Azure Key Vault-compatible algorithms.
+> This guide covers the Azure Key Vault integration for TrustWeave. The Azure Key Vault plugin provides production-ready key management with support for Azure Key Vault-compatible algorithms.
 
 ## Overview
 
-The `kms/plugins/azure` module provides a complete implementation of VeriCore's `KeyManagementService` interface using Azure Key Vault. This integration enables you to:
+The `kms/plugins/azure` module provides a complete implementation of TrustWeave's `KeyManagementService` interface using Azure Key Vault. This integration enables you to:
 
 - Use Azure Key Vault for secure key generation and storage
 - Leverage Azure Key Vault's key versioning and soft-delete capabilities
@@ -18,9 +18,9 @@ Add the Azure Key Vault module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.kms:azure:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.kms:azure:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -31,7 +31,7 @@ dependencies {
 The Azure Key Vault provider can be configured via options map or environment variables:
 
 ```kotlin
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.kms.*
 import java.util.ServiceLoader
 
 // Discover Azure provider
@@ -87,7 +87,7 @@ val kms = azureProvider?.create(mapOf(
 Create a service principal:
 
 ```bash
-az ad sp create-for-rbac --name vericore-kms \
+az ad sp create-for-rbac --name TrustWeave-kms \
     --role "Key Vault Crypto Officer" \
     --scopes /subscriptions/{subscription-id}/resourceGroups/{resource-group}/providers/Microsoft.KeyVault/vaults/{vault-name}
 ```
@@ -114,7 +114,7 @@ val kms = AzureKeyManagementService(config ?: throw IllegalStateException("Azure
 You can also configure directly using the builder:
 
 ```kotlin
-import com.geoknoesis.vericore.azurekms.*
+import com.trustweave.azurekms.*
 
 val config = AzureKmsConfig.builder()
     .vaultUrl("https://myvault.vault.azure.net")
@@ -164,7 +164,7 @@ if (kms?.supportsAlgorithm(Algorithm.P256) == true) {
 ### Generating Keys
 
 ```kotlin
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.kms.*
 
 // Generate P-256 key
 val key = kms.generateKey(Algorithm.P256)
@@ -268,7 +268,7 @@ Azure Key Vault uses key versions. When you create a key, a version is automatic
 
 ## Error Handling
 
-The plugin maps Azure Key Vault exceptions to VeriCore exceptions:
+The plugin maps Azure Key Vault exceptions to TrustWeave exceptions:
 
 ```kotlin
 try {
@@ -277,7 +277,7 @@ try {
     println("Algorithm not supported: ${e.message}")
 } catch (e: KeyNotFoundException) {
     println("Key not found: ${e.message}")
-} catch (e: VeriCoreException) {
+} catch (e: TrustWeaveException) {
     when {
         e.message?.contains("Access denied") == true -> {
             println("Check Azure RBAC permissions")
@@ -392,15 +392,15 @@ val kms = azureProvider?.create(mapOf(
 ))
 ```
 
-## Using with VeriCore
+## Using with TrustWeave
 
 ### Basic Setup
 
 ```kotlin
-import com.geoknoesis.vericore.*
-import com.geoknoesis.vericore.azurekms.*
+import com.trustweave.*
+import com.trustweave.azurekms.*
 
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     kms = AzureKeyManagementService(
         AzureKmsConfig.builder()
             .vaultUrl("https://myvault.vault.azure.net")
@@ -412,7 +412,7 @@ val vericore = VeriCore.create {
 ### With SPI Auto-Discovery
 
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     // Azure Key Vault will be discovered automatically if on classpath
     // Configure via environment variables or system properties
 }
@@ -422,7 +422,7 @@ val vericore = VeriCore.create {
 
 ```kotlin
 // When running on Azure infrastructure, Managed Identity is used automatically
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     kms = AzureKeyManagementService(
         AzureKmsConfig.builder()
             .vaultUrl("https://myvault.vault.azure.net")

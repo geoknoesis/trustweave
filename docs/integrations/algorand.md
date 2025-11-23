@@ -1,10 +1,10 @@
 # Algorand Integration
 
-> This guide covers the Algorand blockchain integration for VeriCore. The Algorand plugin provides blockchain anchoring support for Algorand mainnet, testnet, and betanet chains.
+> This guide covers the Algorand blockchain integration for TrustWeave. The Algorand plugin provides blockchain anchoring support for Algorand mainnet, testnet, and betanet chains.
 
 ## Overview
 
-The `chains/plugins/algorand` module provides a complete implementation of VeriCore's `BlockchainAnchorClient` interface using Algorand blockchain. This integration enables you to:
+The `chains/plugins/algorand` module provides a complete implementation of TrustWeave's `BlockchainAnchorClient` interface using Algorand blockchain. This integration enables you to:
 
 - Anchor data to Algorand mainnet, testnet, or betanet
 - Use Algorand transaction note fields to store payload data
@@ -18,10 +18,10 @@ Add the Algorand module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.chains:algorand:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
     
     // Algorand SDK
     implementation("com.algorand:algosdk:2.7.0")
@@ -35,9 +35,9 @@ dependencies {
 The Algorand adapter supports type-safe configuration using `AlgorandOptions`:
 
 ```kotlin
-import com.geoknoesis.vericore.algorand.*
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.anchor.options.AlgorandOptions
+import com.trustweave.algorand.*
+import com.trustweave.anchor.*
+import com.trustweave.anchor.options.AlgorandOptions
 
 // Create type-safe options
 val options = AlgorandOptions(
@@ -74,8 +74,8 @@ val mainnetClient = AlgorandBlockchainAnchorClient("algorand:mainnet", mainnetOp
 When the `chains/plugins/algorand` module is on the classpath, Algorand adapter is automatically discoverable:
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.anchor.options.AlgorandOptions
+import com.trustweave.anchor.*
+import com.trustweave.anchor.options.AlgorandOptions
 import java.util.ServiceLoader
 
 // Discover Algorand provider
@@ -96,9 +96,9 @@ val client = algorandProvider?.create("algorand:testnet", options)
 ### Anchoring Data
 
 ```kotlin
-import com.geoknoesis.vericore.algorand.*
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.anchor.options.AlgorandOptions
+import com.trustweave.algorand.*
+import com.trustweave.anchor.*
+import com.trustweave.anchor.options.AlgorandOptions
 import kotlinx.coroutines.runBlocking
 
 runBlocking {
@@ -129,7 +129,7 @@ runBlocking {
 ### Reading Anchored Data
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.*
+import com.trustweave.anchor.*
 
 val anchorRef = AnchorRef(
     chainId = "algorand:testnet",
@@ -149,12 +149,12 @@ result.fold(
 )
 ```
 
-### Using with VeriCore Facade
+### Using with TrustWeave Facade
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.algorand.*
-import com.geoknoesis.vericore.anchor.options.AlgorandOptions
+import com.trustweave.TrustWeave
+import com.trustweave.algorand.*
+import com.trustweave.anchor.options.AlgorandOptions
 import kotlinx.coroutines.runBlocking
 
 runBlocking {
@@ -165,10 +165,10 @@ runBlocking {
     )
     val client = AlgorandBlockchainAnchorClient("algorand:testnet", options)
     
-    // Register with VeriCore
-    val vericore = VeriCore.create()
-    // Register during VeriCore.create { }
-    val vericore = VeriCore.create {
+    // Register with TrustWeave
+    val TrustWeave = TrustWeave.create()
+    // Register during TrustWeave.create { }
+    val TrustWeave = TrustWeave.create {
         blockchains {
             "algorand:testnet" to client
         }
@@ -176,7 +176,7 @@ runBlocking {
     
     // Anchor credential
     val credential = /* your credential */
-    val anchorResult = vericore.blockchains.anchor(
+    val anchorResult = TrustWeave.blockchains.anchor(
         data = credential,
         serializer = VerifiableCredential.serializer(),
         chainId = "algorand:testnet"
@@ -216,7 +216,7 @@ val options = AlgorandOptions(
 The Algorand adapter provides structured error handling:
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.exceptions.*
+import com.trustweave.anchor.exceptions.*
 
 try {
     val result = client.writePayload(payload)
@@ -278,6 +278,6 @@ Algorand has very low transaction fees (typically 0.001 ALGO). The adapter autom
 
 - [Algorand Documentation](https://developer.algorand.org/docs/)
 - [Algorand SDK](https://github.com/algorand/java-algorand-sdk)
-- [VeriCore Anchor Module](../modules/vericore-anchor.md)
+- [TrustWeave Anchor Module](../modules/trustweave-anchor.md)
 - [Blockchain Anchoring Guide](../core-concepts/blockchain-anchoring.md)
 

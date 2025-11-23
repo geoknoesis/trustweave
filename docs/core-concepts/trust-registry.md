@@ -22,7 +22,7 @@ The trust registry sits on top of the rest of the issuance/verification stack. B
 
 ### Proof generators
 **Why it matters:** The registry does not create proofs itself, but it relies on credentials and presentations having cryptographic evidence attached.  
-**What to wire:** Register an `Ed25519ProofGenerator` (or your preferred suite) in the `ProofGeneratorRegistry`, or inject one into `CredentialIssuer`. VeriCore’s built-in verifier currently performs structural checks; add dedicated signature validation if your policies require it.  
+**What to wire:** Register an `Ed25519ProofGenerator` (or your preferred suite) in the `ProofGeneratorRegistry`, or inject one into `CredentialIssuer`. TrustWeave's built-in verifier currently performs structural checks; add dedicated signature validation if your policies require it.  
 **Related docs:** [Wallet API Reference – CredentialPresentation](../api-reference/wallet-api.md#credentialpresentation).
 
 ### Schema and status services

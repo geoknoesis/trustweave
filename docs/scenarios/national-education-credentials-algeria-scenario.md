@@ -1,6 +1,6 @@
 # National Education Credentials Scenario (AlgeroPass)
 
-This guide demonstrates how to build a national-level education credential system using VeriCore, specifically designed for Algeria's AlgeroPass initiative. You'll learn how a national education authority can issue verifiable credentials to students, enable cross-institution verification, and provide a unified credential system across the entire country.
+This guide demonstrates how to build a national-level education credential system using TrustWeave, specifically designed for Algeria's AlgeroPass initiative. You'll learn how a national education authority can issue verifiable credentials to students, enable cross-institution verification, and provide a unified credential system across the entire country.
 
 ## What You'll Build
 
@@ -173,19 +173,19 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`. These modules cover DID support, credential issuance, wallet storage, and the in-memory services used across the AlgeroPass scenario.
+Add TrustWeave dependencies to your `build.gradle.kts`. These modules cover DID support, credential issuance, wallet storage, and the in-memory services used across the AlgeroPass scenario.
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
     
     // Test kit for in-memory implementations
-    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -210,9 +210,9 @@ dependencies {
 - **Verification**: Anyone can verify credentials came from authority
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
-import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
-import com.geoknoesis.vericore.did.DidMethodRegistry
+import com.trustweave.testkit.did.DidKeyMockMethod
+import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -291,7 +291,7 @@ fun main() = runBlocking {
 - **Portability**: Enables student mobility
 
 ```kotlin
-import com.geoknoesis.vericore.credential.models.VerifiableCredential
+import com.trustweave.credential.models.VerifiableCredential
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
@@ -357,9 +357,9 @@ import java.time.Instant
 - **Verification**: Anyone can verify credential authenticity
 
 ```kotlin
-import com.geoknoesis.vericore.credential.issuer.CredentialIssuer
-import com.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
-import com.geoknoesis.vericore.credential.CredentialIssuanceOptions
+import com.trustweave.credential.issuer.CredentialIssuer
+import com.trustweave.credential.proof.Ed25519ProofGenerator
+import com.trustweave.credential.CredentialIssuanceOptions
 
     // Step 4: Issue enrollment credential with proof
     println("\nStep 4: Issuing AlgeroPass enrollment credential...")
@@ -496,7 +496,7 @@ import com.geoknoesis.vericore.credential.CredentialIssuanceOptions
 - **Presentation**: Easy creation of presentations
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.credential.InMemoryWallet
+import com.trustweave.testkit.credential.InMemoryWallet
 
     // Step 6: Store credentials in student wallet
     println("\nStep 6: Storing credentials in student wallet...")
@@ -545,8 +545,8 @@ import com.geoknoesis.vericore.testkit.credential.InMemoryWallet
 - **Trust**: Builds trust in credential system
 
 ```kotlin
-import com.geoknoesis.vericore.credential.verifier.CredentialVerifier
-import com.geoknoesis.vericore.credential.CredentialVerificationOptions
+import com.trustweave.credential.verifier.CredentialVerifier
+import com.trustweave.credential.CredentialVerificationOptions
 
     // Step 7: Verify credentials
     println("\nStep 7: Verifying credentials...")
@@ -671,9 +671,9 @@ import com.geoknoesis.vericore.credential.CredentialVerificationOptions
 - **Fraud Prevention**: Prevents credential forgery
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
-import com.geoknoesis.vericore.anchor.anchorTyped
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.anchor.BlockchainAnchorRegistry
+import com.trustweave.anchor.anchorTyped
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -696,7 +696,7 @@ data class AlgeroPassRecord(
     }
     
     // Compute digest of enrollment credential
-    val enrollmentDigest = com.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
+    val enrollmentDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
             VerifiableCredential.serializer(),
             issuedEnrollmentCredential

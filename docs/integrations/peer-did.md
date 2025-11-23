@@ -1,10 +1,10 @@
 # Peer DID Integration
 
-> This guide covers the did:peer method integration for VeriCore. The did:peer plugin provides peer-to-peer DIDs without external registries or blockchains.
+> This guide covers the did:peer method integration for TrustWeave. The did:peer plugin provides peer-to-peer DIDs without external registries or blockchains.
 
 ## Overview
 
-The `did/plugins/peer` module provides an implementation of VeriCore's `DidMethod` interface using the peer DID method. This integration enables you to:
+The `did/plugins/peer` module provides an implementation of TrustWeave's `DidMethod` interface using the peer DID method. This integration enables you to:
 
 - Create and resolve peer DIDs for P2P communication
 - Store DID documents locally (no external registry)
@@ -18,10 +18,10 @@ Add the did:peer module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.did:peer:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore.did:base:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:peer:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -30,8 +30,8 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.geoknoesis.vericore.peerdid.*
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.peerdid.*
+import com.trustweave.kms.*
 
 // Create configuration
 val config = PeerDidConfig.builder()
@@ -64,7 +64,7 @@ val config2 = PeerDidConfig.numalgo2()
 When the module is on the classpath, did:peer is automatically available:
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
+import com.trustweave.did.*
 import java.util.ServiceLoader
 
 // Discover did:peer provider
@@ -183,15 +183,15 @@ val config = PeerDidConfig.builder()
     .build()
 ```
 
-## Integration with VeriCore
+## Integration with TrustWeave
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.peerdid.*
+import com.trustweave.TrustWeave
+import com.trustweave.peerdid.*
 
 val config = PeerDidConfig.numalgo2()
 
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     kms = InMemoryKeyManagementService()
     
     didMethods {
@@ -200,11 +200,11 @@ val vericore = VeriCore.create {
 }
 
 // Use did:peer
-val did = vericore.dids.create("peer") {
+val did = TrustWeave.dids.create("peer") {
     algorithm = KeyAlgorithm.ED25519
 }
 
-val resolved = vericore.dids.resolve(did.id)
+val resolved = TrustWeave.dids.resolve(did.id)
 ```
 
 ## Error Handling
@@ -264,5 +264,5 @@ val result = method.resolveDid(document.id)
 
 - [Peer DID Method Specification](https://identity.foundation/peer-did-method-spec/)
 - [DID Core Specification](https://www.w3.org/TR/did-core/)
-- [VeriCore Core API](../api-reference/core-api.md)
+- [TrustWeave Core API](../api-reference/core-api.md)
 

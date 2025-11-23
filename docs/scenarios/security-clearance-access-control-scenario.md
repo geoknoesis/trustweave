@@ -1,6 +1,6 @@
 # Security Clearance & Access Control Scenario
 
-This guide demonstrates how to build a security clearance and access control system using VeriCore. You'll learn how security authorities can issue clearance credentials, how individuals can store them in wallets, and how systems can verify clearances without exposing full identity or clearance details.
+This guide demonstrates how to build a security clearance and access control system using TrustWeave. You'll learn how security authorities can issue clearance credentials, how individuals can store them in wallets, and how systems can verify clearances without exposing full identity or clearance details.
 
 ## What You'll Build
 
@@ -98,7 +98,7 @@ Traditional clearance verification has several problems:
 4. **Compliance risk**: May violate privacy regulations
 5. **User friction**: Complex verification processes
 
-VeriCore solves this by enabling:
+TrustWeave solves this by enabling:
 
 - **Privacy-preserving**: Selective disclosure shows only clearance level
 - **Cryptographic proof**: Tamper-proof clearance credentials
@@ -129,12 +129,12 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add TrustWeave dependencies to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -146,16 +146,16 @@ dependencies {
 
 ## Step 2: Complete Runnable Example
 
-Here's the full security clearance and access control flow using the VeriCore facade API:
+Here's the full security clearance and access control flow using the TrustWeave facade API:
 
 ```kotlin
 package com.example.security.clearance
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.credential.PresentationOptions
-import com.geoknoesis.vericore.credential.wallet.Wallet
-import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.credential.PresentationOptions
+import com.trustweave.credential.wallet.Wallet
+import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -167,29 +167,29 @@ fun main() = runBlocking {
     println("Security Clearance & Access Control Scenario - Complete End-to-End Example")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance
-    val vericore = VeriCore.create()
-    println("\n✅ VeriCore initialized")
+    // Step 1: Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
+    println("\n✅ TrustWeave initialized")
     
     // Step 2: Create DIDs for security authority, personnel, and classified systems
-    val securityAuthorityDidDoc = vericore.dids.create()
+    val securityAuthorityDidDoc = TrustWeave.dids.create()
     val securityAuthorityDid = securityAuthorityDidDoc.id
     val securityAuthorityKeyId = securityAuthorityDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val personnel1DidDoc = vericore.dids.create()
+    val personnel1DidDoc = TrustWeave.dids.create()
     val personnel1Did = personnel1DidDoc.id
     
-    val personnel2DidDoc = vericore.dids.create()
+    val personnel2DidDoc = TrustWeave.dids.create()
     val personnel2Did = personnel2DidDoc.id
     
-    val topSecretSystemDidDoc = vericore.dids.create()
+    val topSecretSystemDidDoc = TrustWeave.dids.create()
     val topSecretSystemDid = topSecretSystemDidDoc.id
     
-    val secretSystemDidDoc = vericore.dids.create()
+    val secretSystemDidDoc = TrustWeave.dids.create()
     val secretSystemDid = secretSystemDidDoc.id
     
-    val confidentialSystemDidDoc = vericore.dids.create()
+    val confidentialSystemDidDoc = TrustWeave.dids.create()
     val confidentialSystemDid = confidentialSystemDidDoc.id
     
     println("✅ Security Authority DID: $securityAuthorityDid")
@@ -200,7 +200,7 @@ fun main() = runBlocking {
     println("✅ Confidential System DID: $confidentialSystemDid")
     
     // Step 3: Issue Top Secret clearance for Personnel 1
-    val topSecretClearance = vericore.issueCredential(
+    val topSecretClearance = TrustWeave.issueCredential(
         issuerDid = securityAuthorityDid,
         issuerKeyId = securityAuthorityKeyId,
         credentialSubject = buildJsonObject {
@@ -230,7 +230,7 @@ fun main() = runBlocking {
     println("   Note: Full identity NOT included for privacy")
     
     // Step 4: Issue Secret clearance for Personnel 2
-    val secretClearance = vericore.issueCredential(
+    val secretClearance = TrustWeave.issueCredential(
         issuerDid = securityAuthorityDid,
         issuerKeyId = securityAuthorityKeyId,
         credentialSubject = buildJsonObject {
@@ -258,7 +258,7 @@ fun main() = runBlocking {
     println("   Personnel: ${personnel2Did.take(20)}...")
     
     // Step 5: Create personnel wallets and store clearance credentials
-    val personnel1Wallet = vericore.createWallet(
+    val personnel1Wallet = TrustWeave.createWallet(
         holderDid = personnel1Did,
         options = WalletCreationOptionsBuilder().apply {
             enableOrganization = true
@@ -266,7 +266,7 @@ fun main() = runBlocking {
         }.build()
     ).getOrThrow()
     
-    val personnel2Wallet = vericore.createWallet(
+    val personnel2Wallet = TrustWeave.createWallet(
         holderDid = personnel2Did,
         options = WalletCreationOptionsBuilder().apply {
             enableOrganization = true
@@ -297,7 +297,7 @@ fun main() = runBlocking {
     // Step 7: Top Secret system access control
     println("\n🔐 Top Secret System Access Control:")
     
-    val topSecretVerification = vericore.verifyCredential(topSecretClearance).getOrThrow()
+    val topSecretVerification = TrustWeave.verifyCredential(topSecretClearance).getOrThrow()
     
     if (topSecretVerification.valid) {
         val credentialSubject = topSecretClearance.credentialSubject
@@ -327,7 +327,7 @@ fun main() = runBlocking {
     // Step 8: Secret system access control
     println("\n🔐 Secret System Access Control:")
     
-    val secretVerification = vericore.verifyCredential(secretClearance).getOrThrow()
+    val secretVerification = TrustWeave.verifyCredential(secretClearance).getOrThrow()
     
     if (secretVerification.valid) {
         val credentialSubject = secretClearance.credentialSubject
@@ -355,7 +355,7 @@ fun main() = runBlocking {
     println("\n🔐 Confidential System Access Control:")
     
     // Personnel 2 attempts to access Confidential system (lower clearance)
-    val confidentialVerification = vericore.verifyCredential(secretClearance).getOrThrow()
+    val confidentialVerification = TrustWeave.verifyCredential(secretClearance).getOrThrow()
     
     if (confidentialVerification.valid) {
         val credentialSubject = secretClearance.credentialSubject
@@ -482,7 +482,7 @@ fun main() = runBlocking {
 Security Clearance & Access Control Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ VeriCore initialized
+✅ TrustWeave initialized
 ✅ Security Authority DID: did:key:z6Mk...
 ✅ Personnel 1 DID: did:key:z6Mk...
 ✅ Personnel 2 DID: did:key:z6Mk...
@@ -586,7 +586,7 @@ Security Clearance & Access Control Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with VeriCore
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 - [Zero Trust Continuous Authentication Scenario](zero-trust-authentication-scenario.md) - Related authentication scenario

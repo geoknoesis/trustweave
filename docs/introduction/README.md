@@ -1,22 +1,22 @@
 # Introduction
 
-> VeriCore is built and supported by [Geoknoesis LLC](https://www.geoknoesis.com), a standards-focused identity company. This introduction reflects Geoknoesis’ reference architecture for modern trust systems.
+> TrustWeave is built and supported by [Geoknoesis LLC](https://www.geoknoesis.com), a standards-focused identity company. This introduction reflects Geoknoesis’ reference architecture for modern trust systems.
 
-Welcome to VeriCore! This section provides an overview of the library, its purpose, and how it fits into the decentralized identity and trust ecosystem.
+Welcome to TrustWeave! This section provides an overview of the library, its purpose, and how it fits into the decentralized identity and trust ecosystem.
 
 ## What You'll Learn
 
-- What VeriCore is and why it exists
+- What TrustWeave is and why it exists
 - Key features and capabilities
 - Common use cases
 - High-level architecture
 
 ## Next Steps
 
-- [Executive Overview](executive-overview.md) - High-level overview of VeriCore's value proposition, benefits, and market position
+- [Executive Overview](executive-overview.md) - High-level overview of TrustWeave's value proposition, benefits, and market position
 - [The Web of Trust](web-of-trust.md) - Introduction to the web of trust, open standards, and ecosystem benefits
-- [What is VeriCore?](what-is-vericore.md) - Learn about the library's purpose and design philosophy
+- [What is TrustWeave?](what-is-TrustWeave.md) - Learn about the library's purpose and design philosophy
 - [Key Features](key-features.md) - Explore the main capabilities
-- [Use Cases](use-cases.md) - See how VeriCore is used in practice
+- [Use Cases](use-cases.md) - See how TrustWeave is used in practice
 - [Architecture Overview](architecture-overview.md) - Understand the modular design
 

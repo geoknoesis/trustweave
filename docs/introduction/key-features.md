@@ -197,7 +197,7 @@ Comprehensive test support:
 
 ### 24. Credential Rendering
 - **HTML Rendering**: Render credentials as HTML
-- **PDF Rendering**: Render credentials as PDF
+- **PDF Rendering**: Render credentials as PDF (placeholder)
 - **Multiple Formats**: Support for JSON, HTML, PDF, and text formats
 - **Presentation Rendering**: Render verifiable presentations
 - See [Features Documentation](../features/README.md) for details

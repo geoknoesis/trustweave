@@ -1,16 +1,16 @@
 # Migration Guides
 
-This section provides migration guides for upgrading between VeriCore versions and understanding deprecation policies.
+This section provides migration guides for upgrading between TrustWeave versions and understanding deprecation policies.
 
 ## Version Compatibility Matrix
 
-| VeriCore Version | Kotlin | Java | Gradle | Status |
+| TrustWeave Version | Kotlin | Java | Gradle | Status |
 |------------------|--------|------|--------|--------|
 | 1.0.0-SNAPSHOT | 2.2.0+ | 21+ | 8.5+ | Current |
 
 ## Deprecation Policy
 
-VeriCore follows semantic versioning (SemVer) principles:
+TrustWeave follows semantic versioning (SemVer) principles:
 
 - **Major versions** (X.0.0): Breaking changes allowed
 - **Minor versions** (0.X.0): New features, backward compatible

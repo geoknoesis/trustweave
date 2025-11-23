@@ -1,6 +1,6 @@
 # Getting Started
 
-Welcome to VeriCore! This section will help you get up and running quickly.
+Welcome to TrustWeave! This section will help you get up and running quickly.
 
 ## Prerequisites
 
@@ -13,13 +13,13 @@ Welcome to VeriCore! This section will help you get up and running quickly.
 Each guide below introduces a checkpoint in the onboarding journey. Follow them in order the first time through, or jump to the scenario that matches your domain—every page now explains the context, what the code does, and the outcome you should expect.
 
 ### Orientation
-- [Installation](installation.md) – Add VeriCore to your project and confirm the build.
-- [IDE Setup](ide-setup.md) – Configure your IDE (IntelliJ IDEA or VS Code) for VeriCore development.
+- [Installation](installation.md) – Add TrustWeave to your project and confirm the build.
+- [IDE Setup](ide-setup.md) – Configure your IDE (IntelliJ IDEA or VS Code) for TrustWeave development.
 - [Project Setup](project-setup.md) – Configure IDE, Gradle tasks, and environment variables.
 - [Your First Application](your-first-application.md) – Assemble a minimal issuance + verification flow.
 
 ### Hands-on walkthroughs
-- [Quick Start](quick-start.md) – Your first VeriCore application with annotated code snippets.
+- [Quick Start](quick-start.md) – Your first TrustWeave application with annotated code snippets.
 - [Common Patterns](common-patterns.md) – Learn common usage patterns and best practices ⭐
 - [Troubleshooting](troubleshooting.md) – Common issues and solutions ⭐
 
@@ -30,7 +30,7 @@ Each guide below introduces a checkpoint in the onboarding journey. Follow them 
 
 By the end of this section, you'll be able to:
 
-- ✅ Add VeriCore to your project
+- ✅ Add TrustWeave to your project
 - ✅ Create and resolve DIDs
 - ✅ Compute JSON digests
 - ✅ Anchor data to blockchains

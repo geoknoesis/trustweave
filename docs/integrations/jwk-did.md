@@ -1,10 +1,10 @@
 # JWK DID Integration
 
-> This guide covers the did:jwk method integration for VeriCore. The did:jwk plugin provides W3C-standard DID resolution using JSON Web Keys directly.
+> This guide covers the did:jwk method integration for TrustWeave. The did:jwk plugin provides W3C-standard DID resolution using JSON Web Keys directly.
 
 ## Overview
 
-The `did/plugins/jwk` module provides an implementation of VeriCore's `DidMethod` interface using the W3C did:jwk specification. This integration enables you to:
+The `did/plugins/jwk` module provides an implementation of TrustWeave's `DidMethod` interface using the W3C did:jwk specification. This integration enables you to:
 
 - Create and resolve DIDs from JSON Web Keys (JWK) directly
 - Use standard JWK format without multicodec prefixes
@@ -25,12 +25,12 @@ Add the did:jwk module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.did:jwk:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore.did:base:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:jwk:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT")
     
     // JSON processing (included automatically)
     implementation("org.jose4j:jose4j:0.9.5")
@@ -44,9 +44,9 @@ dependencies {
 The did:jwk provider can be configured via options or automatically discovered via SPI:
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
-import com.geoknoesis.vericore.jwkdid.*
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.did.*
+import com.trustweave.jwkdid.*
+import com.trustweave.kms.*
 
 // Manual creation
 val kms = InMemoryKeyManagementService()
@@ -58,7 +58,7 @@ val method = JwkDidMethod(kms)
 When the module is on the classpath, did:jwk is automatically available:
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
+import com.trustweave.did.*
 import java.util.ServiceLoader
 
 // Discover did:jwk provider
@@ -125,16 +125,16 @@ val p256Options = didCreationOptions {
 val p256Did = method.createDid(p256Options)
 ```
 
-### Integration with VeriCore
+### Integration with TrustWeave
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.jwkdid.*
-import com.geoknoesis.vericore.kms.InMemoryKeyManagementService
+import com.trustweave.TrustWeave
+import com.trustweave.jwkdid.*
+import com.trustweave.kms.InMemoryKeyManagementService
 
 val kms = InMemoryKeyManagementService()
 
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     this.kms = kms
     
     didMethods {
@@ -143,13 +143,13 @@ val vericore = VeriCore.create {
 }
 
 // Use did:jwk
-val did = vericore.createDid("jwk") {
+val did = TrustWeave.createDid("jwk") {
     algorithm = KeyAlgorithm.ED25519
 }.getOrThrow()
 
 println("Created DID: ${did.id}")
 
-val resolved = vericore.resolveDid(did.id).getOrThrow()
+val resolved = TrustWeave.resolveDid(did.id).getOrThrow()
 println("Resolved DID: ${resolved.document?.id}")
 ```
 
@@ -188,7 +188,7 @@ did:jwk supports all JWK key types:
 
 ## Algorithm Support
 
-did:jwk supports all VeriCore algorithms through JWK format:
+did:jwk supports all TrustWeave algorithms through JWK format:
 
 - **Ed25519**: `OKP` with `crv: "Ed25519"`
 - **secp256k1**: `EC` with `crv: "secp256k1"`
@@ -262,5 +262,5 @@ did:jwk is very fast:
 
 - [DID JWK Method Specification](https://w3c-ccg.github.io/did-method-jwk/)
 - [JSON Web Key (JWK) RFC 7517](https://tools.ietf.org/html/rfc7517)
-- [VeriCore Core API](../api-reference/core-api.md)
+- [TrustWeave Core API](../api-reference/core-api.md)
 

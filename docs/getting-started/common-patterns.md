@@ -1,7 +1,7 @@
 # Common Patterns
 
 > **Version:** 1.0.0-SNAPSHOT  
-> Learn common usage patterns and best practices for VeriCore.
+> Learn common usage patterns and best practices for TrustWeave.
 
 ## Table of Contents
 
@@ -21,100 +21,95 @@ Complete workflow showing all three parties in a credential ecosystem. This exam
 ```kotlin
 package com.example.patterns.workflow
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val trustweave = TrustWeave.create()
     
     // ============================================
     // 1. ISSUER: Create DID and issue credential
     // ============================================
-    val issuerDidDoc = vericore.dids.create()
-    val result = Result.success(issuerDidDoc)
-    result.fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            when (error) {
-                is VeriCoreError.DidMethodNotRegistered -> {
-                    println("❌ DID method not registered: ${error.method}")
-                    println("   Available methods: ${error.availableMethods}")
-                }
-                else -> {
-                    println("❌ Failed to create issuer DID: ${error.message}")
-                }
+    val issuerDidDoc = try {
+        trustweave.dids.create()
+    } catch (error: TrustWeaveError) {
+        when (error) {
+            is TrustWeaveError.DidMethodNotRegistered -> {
+                println("❌ DID method not registered: ${error.method}")
+                println("   Available methods: ${error.availableMethods}")
             }
-            return@runBlocking
+            else -> {
+                println("❌ Failed to create issuer DID: ${error.message}")
+            }
         }
-    )
+        return@runBlocking
+    }
     
     val issuerDid = issuerDidDoc.id
     val issuerKeyId = issuerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val credential = vericore.issueCredential(
-        issuerDid = issuerDid,
-        issuerKeyId = issuerKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", "did:key:holder-123")
-            put("name", "Alice")
-            put("degree", "Bachelor of Science")
-        },
-        types = listOf("VerifiableCredential", "DegreeCredential")
-    ).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            when (error) {
-                is VeriCoreError.CredentialIssuanceFailed -> {
-                    println("❌ Credential issuance failed: ${error.reason}")
-                    println("   Issuer DID: ${error.issuerDid}")
-                }
-                is VeriCoreError.InvalidDidFormat -> {
-                    println("❌ Invalid issuer DID format: ${error.reason}")
-                }
-                else -> {
-                    println("❌ Failed to issue credential: ${error.message}")
-                }
+    val credential = try {
+        trustweave.credentials.issue(
+            issuer = issuerDid,
+            subject = buildJsonObject {
+                put("id", "did:key:holder-123")
+                put("name", "Alice")
+                put("degree", "Bachelor of Science")
+            },
+            config = IssuanceConfig(
+                proofType = ProofType.Ed25519Signature2020,
+                keyId = issuerKeyId,
+                issuerDid = issuerDid
+            ),
+            types = listOf("VerifiableCredential", "DegreeCredential")
+        )
+    } catch (error: TrustWeaveError) {
+        when (error) {
+            is TrustWeaveError.CredentialInvalid -> {
+                println("❌ Credential issuance failed: ${error.reason}")
             }
-            return@runBlocking
+            is TrustWeaveError.InvalidDidFormat -> {
+                println("❌ Invalid issuer DID format: ${error.reason}")
+            }
+            else -> {
+                println("❌ Failed to issue credential: ${error.message}")
+            }
         }
-    )
+        return@runBlocking
+    }
     
     println("✅ Issuer created credential: ${credential.id}")
     
     // ============================================
     // 2. HOLDER: Store credential in wallet
     // ============================================
-    val holderDidDoc = vericore.dids.create()
-    val result = Result.success(holderDidDoc)
-    result.fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to create holder DID: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val holderDidDoc = try {
+        trustweave.dids.create()
+    } catch (error: TrustWeaveError) {
+        println("❌ Failed to create holder DID: ${error.message}")
+        return@runBlocking
+    }
     
     val holderDid = holderDidDoc.id
     
-    val wallet = vericore.createWallet(holderDid).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            when (error) {
-                is VeriCoreError.WalletCreationFailed -> {
-                    println("❌ Wallet creation failed: ${error.reason}")
-                    println("   Provider: ${error.provider}")
-                }
-                else -> {
-                    println("❌ Failed to create wallet: ${error.message}")
-                }
+    val wallet = try {
+        trustweave.wallets.create(holderDid = holderDid)
+    } catch (error: TrustWeaveError) {
+        when (error) {
+            is TrustWeaveError.WalletCreationFailed -> {
+                println("❌ Wallet creation failed: ${error.reason}")
+                println("   Provider: ${error.provider}")
             }
-            return@runBlocking
+            else -> {
+                println("❌ Failed to create wallet: ${error.message}")
+            }
         }
-    )
+        return@runBlocking
+    }
     
     val credentialId = wallet.store(credential)
     println("✅ Holder stored credential: $credentialId")
@@ -122,21 +117,20 @@ fun main() = runBlocking {
     // ============================================
     // 3. VERIFIER: Verify credential
     // ============================================
-    val verification = vericore.verifyCredential(credential).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            when (error) {
-                is VeriCoreError.CredentialInvalid -> {
-                    println("❌ Credential validation failed: ${error.reason}")
-                    println("   Field: ${error.field}")
-                }
-                else -> {
-                    println("❌ Verification failed: ${error.message}")
-                }
+    val verification = try {
+        trustweave.credentials.verify(credential)
+    } catch (error: TrustWeaveError) {
+        when (error) {
+            is TrustWeaveError.CredentialInvalid -> {
+                println("❌ Credential validation failed: ${error.reason}")
+                println("   Field: ${error.field}")
             }
-            return@runBlocking
+            else -> {
+                println("❌ Verification failed: ${error.message}")
+            }
         }
-    )
+        return@runBlocking
+    }
     
     if (verification.valid) {
         println("✅ Verifier confirmed credential is valid")
@@ -165,7 +159,7 @@ fun main() = runBlocking {
 ```mermaid
 sequenceDiagram
     participant I as Issuer
-    participant VC as VeriCore
+    participant VC as TrustWeave
     participant H as Holder
     participant V as Verifier
     
@@ -214,12 +208,12 @@ Process multiple DIDs or credentials efficiently using coroutines.
 ```kotlin
 package com.example.patterns.batch
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val trustweave = TrustWeave.create()
     
     // Batch DID resolution
     val dids = listOf(
@@ -229,7 +223,9 @@ fun main() = runBlocking {
     )
     
     val results = dids.mapAsync { did ->
-        Result.success(vericore.dids.resolve(did))
+        runCatching {
+            trustweave.dids.resolve(did)
+        }
     }
     
     results.forEachIndexed { index, result ->
@@ -245,22 +241,21 @@ fun main() = runBlocking {
     
     // Batch credential creation
     val credentials = (1..10).mapAsync { index ->
-        val did = vericore.dids.create()
-        Result.success(did).fold(
-            onSuccess = { issuerDid ->
-                vericore.issueCredential(
-                    issuerDid = issuerDid.id,
-                    issuerKeyId = issuerDid.verificationMethod.first().id,
-                    credentialSubject = buildJsonObject {
-                        put("id", "did:key:holder-$index")
-                        put("index", index)
-                    }
+        runCatching {
+            val issuerDid = trustweave.dids.create()
+            trustweave.credentials.issue(
+                issuer = issuerDid.id,
+                subject = buildJsonObject {
+                    put("id", "did:key:holder-$index")
+                    put("index", index)
+                },
+                config = IssuanceConfig(
+                    proofType = ProofType.Ed25519Signature2020,
+                    keyId = issuerDid.verificationMethod.first().id,
+                    issuerDid = issuerDid.id
                 )
-            },
-            onFailure = { error ->
-                Result.failure(error)
-            }
-        )
+            )
+        }
     }
     
     val successful = credentials.filter { it.isSuccess }
@@ -295,23 +290,23 @@ Handle errors gracefully with fallback strategies.
 ```kotlin
 package com.example.patterns.recovery
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // Pattern: Try multiple DID methods with fallback
     fun createDidWithFallback(methods: List<String>): DidDocument? {
         for (method in methods) {
-            val did = vericore.dids.create(method)
+            val did = TrustWeave.dids.create(method)
             val result = Result.success(did)
             result.fold(
                 onSuccess = { return it },
                 onFailure = { error ->
                     when (error) {
-                        is VeriCoreError.DidMethodNotRegistered -> {
+                        is TrustWeaveError.DidMethodNotRegistered -> {
                             println("Method '$method' not available, trying next...")
                             // Continue to next method
                         }
@@ -336,7 +331,7 @@ fun main() = runBlocking {
         var lastError: Throwable? = null
         
         for (attempt in 1..maxRetries) {
-            val resolution = vericore.dids.resolve(did)
+            val resolution = TrustWeave.dids.resolve(did)
             val result = Result.success(resolution)
             result.fold(
                 onSuccess = { return it },
@@ -372,10 +367,10 @@ Manage credentials through their entire lifecycle: issuance, storage, presentati
 ```kotlin
 package com.example.patterns.lifecycle
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.credential.PresentationOptions
-import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.credential.PresentationOptions
+import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -383,10 +378,10 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // Create issuer and holder
-    val issuerDid = vericore.dids.create()
+    val issuerDid = TrustWeave.dids.create()
     Result.success(issuerDid).fold(
         onSuccess = { it },
         onFailure = { error ->
@@ -395,7 +390,7 @@ fun main() = runBlocking {
         }
     )
     
-    val holderDid = vericore.dids.create()
+    val holderDid = TrustWeave.dids.create()
     Result.success(holderDid).fold(
         onSuccess = { it },
         onFailure = { error ->
@@ -406,36 +401,38 @@ fun main() = runBlocking {
     
     // Issue credential with expiration
     val expirationDate = Instant.now().plus(1, ChronoUnit.YEARS).toString()
-    val credential = vericore.issueCredential(
-        issuerDid = issuerDid.id,
-        issuerKeyId = issuerDid.verificationMethod.first().id,
-        credentialSubject = buildJsonObject {
-            put("id", holderDid.id)
-            put("name", "Alice")
-        },
-        expirationDate = expirationDate
-    ).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to issue credential: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val credential = try {
+        trustweave.credentials.issue(
+            issuer = issuerDid.id,
+            subject = buildJsonObject {
+                put("id", holderDid.id)
+                put("name", "Alice")
+            },
+            config = IssuanceConfig(
+                proofType = ProofType.Ed25519Signature2020,
+                keyId = issuerDid.verificationMethod.first().id,
+                issuerDid = issuerDid.id
+            ),
+            expirationDate = expirationDate
+        )
+    } catch (error: TrustWeaveError) {
+        println("❌ Failed to issue credential: ${error.message}")
+        return@runBlocking
+    }
     
     // Store in wallet with lifecycle support
-    val wallet = vericore.createWallet(
-        holderDid = holderDid.id,
-        options = WalletCreationOptionsBuilder().apply {
-            enableOrganization = true
-            enablePresentation = true
-        }.build()
-    ).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to create wallet: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val wallet = try {
+        trustweave.wallets.create(
+            holderDid = holderDid.id,
+            options = WalletCreationOptions(
+                enableOrganization = true,
+                enablePresentation = true
+            )
+        )
+    } catch (error: TrustWeaveError) {
+        println("❌ Failed to create wallet: ${error.message}")
+        return@runBlocking
+    }
     
     val credentialId = wallet.store(credential)
     
@@ -459,13 +456,12 @@ fun main() = runBlocking {
     }
     
     // Verify before using
-    val verification = vericore.verifyCredential(credential).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Verification failed: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val verification = try {
+        trustweave.credentials.verify(credential)
+    } catch (error: TrustWeaveError) {
+        println("❌ Verification failed: ${error.message}")
+        return@runBlocking
+    }
     
     if (!verification.valid) {
         println("⚠️ Credential invalid: ${verification.errors.joinToString()}")
@@ -504,17 +500,17 @@ Anchor the same credential to multiple blockchains for redundancy and interopera
 ```kotlin
 package com.example.patterns.multichain
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.credential.models.VerifiableCredential
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.TrustWeave
+import com.trustweave.anchor.BlockchainAnchorRegistry
+import com.trustweave.core.*
+import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create {
+    val TrustWeave = TrustWeave.create {
         blockchains {
             "algorand:testnet" to InMemoryBlockchainAnchorClient("algorand:testnet")
             "polygon:testnet" to InMemoryBlockchainAnchorClient("polygon:testnet")
@@ -522,47 +518,46 @@ fun main() = runBlocking {
     }
     
     // Issue credential
-    val issuerDid = vericore.dids.create()
-    Result.success(issuerDid).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to create issuer DID: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val issuerDid = try {
+        trustweave.dids.create()
+    } catch (error: TrustWeaveError) {
+        println("❌ Failed to create issuer DID: ${error.message}")
+        return@runBlocking
+    }
     
-    val credential = vericore.issueCredential(
-        issuerDid = issuerDid.id,
-        issuerKeyId = issuerDid.verificationMethod.first().id,
-        credentialSubject = buildJsonObject {
-            put("id", "did:key:holder")
-            put("data", "important-data")
-        }
-    ).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to issue credential: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val credential = try {
+        trustweave.credentials.issue(
+            issuer = issuerDid.id,
+            subject = buildJsonObject {
+                put("id", "did:key:holder")
+                put("data", "important-data")
+            },
+            config = IssuanceConfig(
+                proofType = ProofType.Ed25519Signature2020,
+                keyId = issuerDid.verificationMethod.first().id,
+                issuerDid = issuerDid.id
+            )
+        )
+    } catch (error: TrustWeaveError) {
+        println("❌ Failed to issue credential: ${error.message}")
+        return@runBlocking
+    }
     
     // Anchor to multiple chains
     val chains = listOf("algorand:testnet", "polygon:testnet")
     val anchorResults = chains.mapNotNull { chainId ->
-        vericore.blockchains.anchor(
-            data = credential,
-            serializer = VerifiableCredential.serializer(),
-            chainId = chainId
-        ).fold(
-            onSuccess = { anchor ->
-                println("✅ Anchored to $chainId: ${anchor.ref.txHash}")
-                anchor
-            },
-            onFailure = { error ->
-                println("❌ Failed to anchor to $chainId: ${error.message}")
-                null
-            }
-        )
+        try {
+            val anchor = trustweave.blockchains.anchor(
+                data = credential,
+                serializer = VerifiableCredential.serializer(),
+                chainId = chainId
+            )
+            println("✅ Anchored to $chainId: ${anchor.ref.txHash}")
+            anchor
+        } catch (error: TrustWeaveError) {
+            println("❌ Failed to anchor to $chainId: ${error.message}")
+            null
+        }
     }
     
     println("Anchored to ${anchorResults.size} out of ${chains.size} chains")
@@ -588,47 +583,42 @@ Organize credentials efficiently using collections, tags, and metadata.
 ```kotlin
 package com.example.patterns.organization
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val trustweave = TrustWeave.create()
     
-    val holderDid = vericore.dids.create()
-    Result.success(holderDid).fold(
-        onSuccess = { it.id },
-        onFailure = { error ->
-            println("❌ Failed to create holder DID: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val holderDid = try {
+        trustweave.dids.create()
+    } catch (error: TrustWeaveError) {
+        println("❌ Failed to create holder DID: ${error.message}")
+        return@runBlocking
+    }
     
-    val wallet = vericore.createWallet(
-        holderDid = holderDid,
-        options = WalletCreationOptionsBuilder().apply {
-            enableOrganization = true
-        }.build()
-    ).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to create wallet: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val wallet = try {
+        trustweave.wallets.create(
+            holderDid = holderDid.id,
+            options = WalletCreationOptions(
+                enableOrganization = true
+            )
+        )
+    } catch (error: TrustWeaveError) {
+        println("❌ Failed to create wallet: ${error.message}")
+        return@runBlocking
+    }
     
     // Issue multiple credentials
-    val issuerDid = vericore.dids.create()
-    Result.success(issuerDid).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to create issuer DID: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val issuerDid = try {
+        trustweave.dids.create()
+    } catch (error: TrustWeaveError) {
+        println("❌ Failed to create issuer DID: ${error.message}")
+        return@runBlocking
+    }
     
     val credentials = listOf(
         "Bachelor of Science" to "education",
@@ -637,21 +627,24 @@ fun main() = runBlocking {
     )
     
     val credentialIds = credentials.mapNotNull { (name, category) ->
-        val credential = vericore.issueCredential(
-            issuerDid = issuerDid.id,
-            issuerKeyId = issuerDid.verificationMethod.first().id,
-            credentialSubject = buildJsonObject {
-                put("id", holderDid)
-                put("credentialName", name)
-            },
-            types = listOf("VerifiableCredential", "${category}Credential")
-        ).fold(
-            onSuccess = { it },
-            onFailure = { error ->
-                println("❌ Failed to issue credential '$name': ${error.message}")
-                return@mapNotNull null
-            }
-        )
+        val credential = try {
+            trustweave.credentials.issue(
+                issuer = issuerDid.id,
+                subject = buildJsonObject {
+                    put("id", holderDid.id)
+                    put("credentialName", name)
+                },
+                config = IssuanceConfig(
+                    proofType = ProofType.Ed25519Signature2020,
+                    keyId = issuerDid.verificationMethod.first().id,
+                    issuerDid = issuerDid.id
+                ),
+                types = listOf("VerifiableCredential", "${category}Credential")
+            )
+        } catch (error: TrustWeaveError) {
+            println("❌ Failed to issue credential '$name': ${error.message}")
+            return@mapNotNull null
+        }
         
         val credentialId = wallet.store(credential)
         

@@ -1,10 +1,10 @@
 # Key DID Integration
 
-> This guide covers the native did:key method integration for VeriCore. The did:key plugin provides the most widely-used DID method with zero external dependencies.
+> This guide covers the native did:key method integration for TrustWeave. The did:key plugin provides the most widely-used DID method with zero external dependencies.
 
 ## Overview
 
-The `did/plugins/key` module provides a native implementation of VeriCore's `DidMethod` interface using the W3C did:key specification. This integration enables you to:
+The `did/plugins/key` module provides a native implementation of TrustWeave's `DidMethod` interface using the W3C did:key specification. This integration enables you to:
 
 - Create and resolve DIDs from public keys without external registries
 - Use multibase-encoded public keys for portable DIDs
@@ -25,11 +25,11 @@ Add the did:key module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.did:key:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore.did:base:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:key:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
     
     // Multibase encoding (included automatically)
     implementation("org.multiformats:multibase:1.1.2")
@@ -43,9 +43,9 @@ dependencies {
 The did:key provider can be configured via options or automatically discovered via SPI:
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
-import com.geoknoesis.vericore.keydid.*
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.did.*
+import com.trustweave.keydid.*
+import com.trustweave.kms.*
 
 // Manual creation
 val kms = InMemoryKeyManagementService()
@@ -57,7 +57,7 @@ val method = KeyDidMethod(kms)
 When the module is on the classpath, did:key is automatically available:
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
+import com.trustweave.did.*
 import java.util.ServiceLoader
 
 // Discover did:key provider
@@ -124,16 +124,16 @@ val p256Options = didCreationOptions {
 val p256Did = method.createDid(p256Options)
 ```
 
-### Integration with VeriCore
+### Integration with TrustWeave
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.keydid.*
-import com.geoknoesis.vericore.kms.InMemoryKeyManagementService
+import com.trustweave.TrustWeave
+import com.trustweave.keydid.*
+import com.trustweave.kms.InMemoryKeyManagementService
 
 val kms = InMemoryKeyManagementService()
 
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     this.kms = kms
     
     didMethods {
@@ -142,13 +142,13 @@ val vericore = VeriCore.create {
 }
 
 // Use did:key
-val did = vericore.createDid("key") {
+val did = TrustWeave.createDid("key") {
     algorithm = KeyAlgorithm.ED25519
 }.getOrThrow()
 
 println("Created DID: ${did.id}")
 
-val resolved = vericore.resolveDid(did.id).getOrThrow()
+val resolved = TrustWeave.resolveDid(did.id).getOrThrow()
 println("Resolved DID: ${resolved.document?.id}")
 ```
 
@@ -180,7 +180,7 @@ did:key supports all major cryptographic algorithms:
 
 ## Algorithm Support
 
-did:key natively supports all VeriCore algorithms through the KMS abstraction:
+did:key natively supports all TrustWeave algorithms through the KMS abstraction:
 
 - **Ed25519**: Recommended for most use cases
 - **secp256k1**: For Ethereum ecosystem integration
@@ -243,5 +243,5 @@ did:key is the fastest DID method:
 - [DID Key Method Specification](https://w3c-ccg.github.io/did-method-key/)
 - [Multibase Encoding](https://github.com/multiformats/multibase)
 - [Multicodec](https://github.com/multiformats/multicodec)
-- [VeriCore Core API](../api-reference/core-api.md)
+- [TrustWeave Core API](../api-reference/core-api.md)
 

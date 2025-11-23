@@ -1,15 +1,15 @@
 # Testing Guidelines
 
-This guide outlines testing guidelines and best practices for VeriCore.
+This guide outlines testing guidelines and best practices for TrustWeave.
 
 ## Overview
 
-VeriCore testing strategy includes:
+TrustWeave testing strategy includes:
 
 - **Unit Tests** – test individual components in isolation
 - **Integration Tests** – test component interactions
 - **End-to-End Tests** – test complete workflows
-- **Test Utilities** – `vericore-testkit` for in-memory implementations
+- **Test Utilities** – `TrustWeave-testkit` for in-memory implementations
 
 ## Testing Principles
 
@@ -21,7 +21,7 @@ Each test should be independent:
 @Test
 fun testIsolated() = runBlocking {
     // Each test gets its own fixture
-    val fixture = VeriCoreTestFixture.builder().build().use { fixture ->
+    val fixture = TrustWeaveTestFixture.builder().build().use { fixture ->
         // Test code
     }
 }
@@ -61,8 +61,8 @@ class DidMethodTest {
 ### Testing DID Methods
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.*
-import com.geoknoesis.vericore.did.*
+import com.trustweave.testkit.*
+import com.trustweave.did.*
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 
@@ -86,8 +86,8 @@ class DidMethodTest {
 ### Testing Key Management
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.kms.*
 import kotlin.test.Test
 
 class KmsTest {
@@ -98,7 +98,7 @@ class KmsTest {
         val key = kms.generateKey(Algorithm.Ed25519)
         assertNotNull(key)
         
-        val data = "Hello, VeriCore!".toByteArray()
+        val data = "Hello, TrustWeave!".toByteArray()
         val signature = kms.sign(key.id, data)
         
         assertNotNull(signature)
@@ -112,24 +112,24 @@ class KmsTest {
 ### Testing Credential Workflows
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.*
-import com.geoknoesis.vericore.VeriCore
+import com.trustweave.testkit.*
+import com.trustweave.TrustWeave
 import kotlin.test.Test
 
 class CredentialWorkflowTest {
     @Test
     fun testCredentialIssuanceAndVerification() = runBlocking {
-        val fixture = VeriCoreTestFixture.builder()
+        val fixture = TrustWeaveTestFixture.builder()
             .withInMemoryBlockchainClient("algorand:testnet")
             .build()
             .use { fixture ->
-                val vericore = VeriCore.create()
+                val TrustWeave = TrustWeave.create()
                 
                 // Create issuer DID
-                val issuerDid = vericore.createDid().getOrThrow()
+                val issuerDid = TrustWeave.createDid().getOrThrow()
                 
                 // Issue credential
-                val credential = vericore.issueCredential(
+                val credential = TrustWeave.issueCredential(
                     issuerDid = issuerDid.id,
                     issuerKeyId = issuerDid.document.verificationMethod.first().id,
                     credentialSubject = buildJsonObject {
@@ -139,7 +139,7 @@ class CredentialWorkflowTest {
                 ).getOrThrow()
                 
                 // Verify credential
-                val verificationResult = vericore.verifyCredential(credential).getOrThrow()
+                val verificationResult = TrustWeave.verifyCredential(credential).getOrThrow()
                 assert(verificationResult.valid)
             }
     }
@@ -151,9 +151,9 @@ class CredentialWorkflowTest {
 ### EO Integration Tests
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.eo.BaseEoIntegrationTest
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.geoknoesis.vericore.anchor.*
+import com.trustweave.testkit.eo.BaseEoIntegrationTest
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.anchor.*
 import kotlin.test.Test
 
 class MyEoIntegrationTest : BaseEoIntegrationTest() {
@@ -174,18 +174,18 @@ class MyEoIntegrationTest : BaseEoIntegrationTest() {
 
 ## Test Utilities
 
-### VeriCoreTestFixture
+### TrustWeaveTestFixture
 
 Use test fixtures for setup:
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.*
+import com.trustweave.testkit.*
 import kotlin.test.Test
 
 class FixtureTest {
     @Test
     fun testWithFixture() = runBlocking {
-        val fixture = VeriCoreTestFixture.builder()
+        val fixture = TrustWeaveTestFixture.builder()
             .withKms(InMemoryKeyManagementService())
             .withDidMethod("key") { DidKeyMockMethod(it) }
             .withBlockchainClient("algorand:testnet") {
@@ -213,7 +213,7 @@ fun testErrorHandling() = runBlocking {
     result.fold(
         onSuccess = { fail("Expected error") },
         onFailure = { error ->
-            assert(error is VeriCoreError.KeyNotFound)
+            assert(error is TrustWeaveError.KeyNotFound)
         }
     )
 }
@@ -230,7 +230,7 @@ fun testInvalidInput() = runBlocking {
     result.fold(
         onSuccess = { fail("Expected error") },
         onFailure = { error ->
-            assert(error is VeriCoreError.DidResolutionFailed)
+            assert(error is TrustWeaveError.DidResolutionFailed)
         }
     )
 }
@@ -299,13 +299,13 @@ Aim for:
 ### Specific Module
 
 ```bash
-./gradlew :vericore-core:test
+./gradlew :TrustWeave-core:test
 ```
 
 ### Specific Test Class
 
 ```bash
-./gradlew :vericore-core:test --tests "DidMethodTest"
+./gradlew :TrustWeave-common:test --tests "DidMethodTest"
 ```
 
 ### With Verbose Output
@@ -316,14 +316,15 @@ Aim for:
 
 ## Next Steps
 
-- Review [vericore-testkit Module](../modules/vericore-testkit.md) for testing utilities
+- Review [TrustWeave-testkit Module](../modules/trustweave-testkit.md) for testing utilities
 - See [Testing Strategies](../advanced/testing-strategies.md) for advanced patterns
 - Check [Development Setup](development-setup.md) for environment setup
-- Explore existing tests in VeriCore modules for examples
+- Explore existing tests in TrustWeave modules for examples
 
 ## References
 
-- [vericore-testkit Module](../modules/vericore-testkit.md)
+- [TrustWeave-testkit Module](../modules/trustweave-testkit.md)
 - [Testing Strategies](../advanced/testing-strategies.md)
 - [Kotlin Test Documentation](https://kotlinlang.org/api/latest/kotlin.test/)
+
 

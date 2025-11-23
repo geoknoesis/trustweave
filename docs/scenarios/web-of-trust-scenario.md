@@ -1,12 +1,12 @@
 # Web of Trust Scenario
 
-This document provides a complete walkthrough of using VeriCore's web of trust features, including trust registries, delegation chains, and proof purpose validation.
+This document provides a complete walkthrough of using TrustWeave's web of trust features, including trust registries, delegation chains, and proof purpose validation.
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-trust:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-trust:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -28,7 +28,7 @@ The web of trust scenario demonstrates how to:
 ### Step 1: Configure Trust Layer with Trust Registry
 
 ```kotlin
-import com.geoknoesis.vericore.credential.dsl.*
+import com.trustweave.credential.dsl.*
 import java.time.Instant
 import kotlinx.coroutines.runBlocking
 
@@ -497,6 +497,6 @@ try {
 - [Delegation Documentation](../core-concepts/delegation.md)
 - [Proof Purpose Validation Documentation](../core-concepts/proof-purpose-validation.md)
 - [DID Documentation](../core-concepts/dids.md)
-- [Web of Trust Example](../../distribution/vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/trust/WebOfTrustExample.kt)
-- [Delegation Chain Example](../../distribution/vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/delegation/DelegationChainExample.kt)
+- [Web of Trust Example](../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/trust/WebOfTrustExample.kt)
+- [Delegation Chain Example](../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/delegation/DelegationChainExample.kt)
 

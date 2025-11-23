@@ -4,7 +4,7 @@ Canonicalization ensures that logically equivalent JSON payloads produce identic
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -16,14 +16,14 @@ dependencies {
 - **Signature verification** – the W3C Verifiable Credential data model requires deterministic serialization before signing and verification.
 - **Interoperability** – canonicalization guarantees that independent SDKs agree on a canonical form.
 
-## VeriCore Canonicalization Pipeline
+## TrustWeave Canonicalization Pipeline
 
 1. **Kotlinx Serialization** canonicalizes Kotlin data classes into JSON following your serializers.
 2. **JCS (JSON Canonicalization Scheme)** sorts keys, removes insignificant whitespace, and normalizes numbers/Unicode.
 3. The resulting canonical UTF-8 bytes feed into hashing (`sha256DigestMultibase`) or signing operations.
 
 ```kotlin
-import com.geoknoesis.vericore.json.DigestUtils
+import com.trustweave.json.DigestUtils
 
 val digest = DigestUtils.sha256DigestMultibase(jsonElement)
 println("Canonical digest: $digest")
@@ -47,7 +47,7 @@ The helper accepts either a `JsonElement` or raw JSON string. Use it whenever yo
 
 ## Further Reading
 
-- [Quick Start – Step 2](../getting-started/quick-start.md#step-2-bootstrap-vericore-and-compute-a-digest)
+- [Quick Start – Step 2](../getting-started/quick-start.md#step-2-bootstrap-TrustWeave-and-compute-a-digest)
 - [W3C JSON Canonicalization Scheme](https://www.rfc-editor.org/rfc/rfc8785)
-- [Digest Utilities API](../modules/vericore-json.md) for more helpers.
+- [Digest Utilities API](../modules/trustweave-json.md) for more helpers.
 

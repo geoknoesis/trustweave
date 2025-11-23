@@ -1,6 +1,6 @@
 {
-  "title": "VeriCore Documentation",
-  "description": "Comprehensive developer documentation for VeriCore",
+  "title": "TrustWeave Documentation",
+  "description": "Comprehensive developer documentation for TrustWeave",
   "root": "./docs",
   "structure": {
     "readme": "README.md",

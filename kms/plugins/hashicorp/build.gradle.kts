@@ -1,15 +1,12 @@
 plugins {
-    id("vericore.shared")
     kotlin("jvm")
     kotlin("plugin.serialization")
 }
 
-group = "com.geoknoesis.vericore.kms"
-version = "1.0.0-SNAPSHOT"
-
+group = "com.trustweave.kms"
 dependencies {
-    implementation(project(":core:vericore-core"))
-    implementation(project(":kms:vericore-kms"))
+    implementation(project(":credentials:core"))
+    implementation(project(":kms:core"))
 
     // Vault Java client
     implementation("com.bettercloud:vault-java-driver:5.1.0")
@@ -22,6 +19,6 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
 
     // Test dependencies
-    testImplementation(project(":core:vericore-testkit"))
+    testImplementation(project(":testkit"))
 }
 

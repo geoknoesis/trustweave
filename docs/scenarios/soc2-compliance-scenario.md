@@ -1,6 +1,6 @@
-# SOC2 Compliance with VeriCore
+# SOC2 Compliance with TrustWeave
 
-This guide demonstrates how to build a SOC2 Type II compliant system using VeriCore. You'll learn how to create immutable audit trails, implement access control with verifiable credentials, manage keys securely, and automate compliance reporting.
+This guide demonstrates how to build a SOC2 Type II compliant system using TrustWeave. You'll learn how to create immutable audit trails, implement access control with verifiable credentials, manage keys securely, and automate compliance reporting.
 
 ## What You'll Build
 
@@ -132,14 +132,14 @@ flowchart TD
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
     
     // Test kit for in-memory implementations
-    testImplementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    testImplementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
     
     // Optional: Algorand adapter for real blockchain anchoring
-    implementation("com.geoknoesis.vericore.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -156,9 +156,9 @@ Here's a complete SOC2 compliance workflow:
 ```kotlin
 package com.example.soc2.compliance
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.json.DigestUtils
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.json.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import java.time.Instant
@@ -169,12 +169,12 @@ fun main() = runBlocking {
     println("SOC2 Compliance Scenario - Complete Example")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance
-    val vericore = VeriCore.create()
-    println("\n✅ VeriCore initialized")
+    // Step 1: Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
+    println("\n✅ TrustWeave initialized")
     
     // Step 2: Create DIDs for organization, employees, and auditors
-    val organizationDid = vericore.dids.create()
+    val organizationDid = TrustWeave.dids.create()
     val result = Result.success(organizationDid).fold(
         onSuccess = { it },
         onFailure = { error ->
@@ -183,7 +183,7 @@ fun main() = runBlocking {
         }
     )
     
-    val adminDid = vericore.dids.create()
+    val adminDid = TrustWeave.dids.create()
     Result.success(adminDid).fold(
         onSuccess = { it },
         onFailure = { error ->
@@ -192,7 +192,7 @@ fun main() = runBlocking {
         }
     )
     
-    val employeeDid = vericore.dids.create()
+    val employeeDid = TrustWeave.dids.create()
     Result.success(employeeDid).fold(
         onSuccess = { it },
         onFailure = { error ->
@@ -201,7 +201,7 @@ fun main() = runBlocking {
         }
     )
     
-    val auditorDid = vericore.dids.create()
+    val auditorDid = TrustWeave.dids.create()
     Result.success(auditorDid).fold(
         onSuccess = { it },
         onFailure = { error ->
@@ -220,7 +220,7 @@ fun main() = runBlocking {
         ?: error("No verification method found")
     
     // Admin access credential
-    val adminAccessCredential = vericore.issueCredential(
+    val adminAccessCredential = TrustWeave.issueCredential(
         issuerDid = organizationDid.id,
         issuerKeyId = orgKeyId,
         credentialSubject = buildJsonObject {
@@ -250,7 +250,7 @@ fun main() = runBlocking {
     println("✅ Admin Access Credential issued: ${adminAccessCredential.id}")
     
     // Employee access credential
-    val employeeAccessCredential = vericore.issueCredential(
+    val employeeAccessCredential = TrustWeave.issueCredential(
         issuerDid = organizationDid.id,
         issuerKeyId = orgKeyId,
         credentialSubject = buildJsonObject {
@@ -285,7 +285,7 @@ fun main() = runBlocking {
         put("resourceId", adminAccessCredential.id)
         put("result", "success")
         put("ipAddress", "192.168.1.100")
-        put("userAgent", "VeriCore-Client/1.0")
+        put("userAgent", "TrustWeave-Client/1.0")
         put("details", buildJsonObject {
             put("credentialType", "AccessControlCredential")
             put("role", "Administrator")
@@ -293,7 +293,7 @@ fun main() = runBlocking {
     }
     
     // Anchor audit log to blockchain for immutability
-    val auditAnchorResult = vericore.blockchains.anchor(
+    val auditAnchorResult = TrustWeave.blockchains.anchor(
         data = auditLogEntry,
         serializer = JsonObject.serializer(),
         chainId = "algorand:testnet"
@@ -312,7 +312,7 @@ fun main() = runBlocking {
     println("✅ Audit log entry created and anchored")
     
     // Step 5: Verify access control (CC6.3)
-    val adminVerification = vericore.verifyCredential(adminAccessCredential).fold(
+    val adminVerification = TrustWeave.verifyCredential(adminAccessCredential).fold(
         onSuccess = { it },
         onFailure = { error ->
             println("❌ Admin credential verification failed: ${error.message}")
@@ -330,7 +330,7 @@ fun main() = runBlocking {
     println("   Issuer valid: ${adminVerification.issuerValid}")
     
     // Step 6: Key rotation with history preservation (CC7.3)
-    val newAdminDid = vericore.dids.create()
+    val newAdminDid = TrustWeave.dids.create()
     Result.success(newAdminDid).fold(
         onSuccess = { it },
         onFailure = { error ->
@@ -340,7 +340,7 @@ fun main() = runBlocking {
     )
     
     // Issue key rotation credential
-    val keyRotationCredential = vericore.issueCredential(
+    val keyRotationCredential = TrustWeave.issueCredential(
         issuerDid = organizationDid.id,
         issuerKeyId = orgKeyId,
         credentialSubject = buildJsonObject {
@@ -365,7 +365,7 @@ fun main() = runBlocking {
     println("✅ Key rotation credential issued: ${keyRotationCredential.id}")
     
     // Anchor key rotation to blockchain
-    val keyRotationAnchor = vericore.blockchains.anchor(
+    val keyRotationAnchor = TrustWeave.blockchains.anchor(
         data = keyRotationCredential,
         serializer = VerifiableCredential.serializer(),
         chainId = "algorand:testnet"
@@ -381,7 +381,7 @@ fun main() = runBlocking {
     )
     
     // Step 7: Change management credential (CC7.4)
-    val changeManagementCredential = vericore.issueCredential(
+    val changeManagementCredential = TrustWeave.issueCredential(
         issuerDid = organizationDid.id,
         issuerKeyId = orgKeyId,
         credentialSubject = buildJsonObject {
@@ -408,7 +408,7 @@ fun main() = runBlocking {
     println("✅ Change management credential issued: ${changeManagementCredential.id}")
     
     // Step 8: Incident response credential
-    val incidentCredential = vericore.issueCredential(
+    val incidentCredential = TrustWeave.issueCredential(
         issuerDid = organizationDid.id,
         issuerKeyId = orgKeyId,
         credentialSubject = buildJsonObject {
@@ -474,7 +474,7 @@ fun main() = runBlocking {
     }
     
     // Anchor compliance report
-    val reportAnchor = vericore.blockchains.anchor(
+    val reportAnchor = TrustWeave.blockchains.anchor(
         data = complianceReport,
         serializer = JsonObject.serializer(),
         chainId = "algorand:testnet"
@@ -509,7 +509,7 @@ fun main() = runBlocking {
 SOC2 Compliance Scenario - Complete Example
 ======================================================================
 
-✅ VeriCore initialized
+✅ TrustWeave initialized
 ✅ Organization DID: did:key:z6Mk...
 ✅ Admin DID: did:key:z6Mk...
 ✅ Employee DID: did:key:z6Mk...
@@ -551,7 +551,7 @@ suspend fun checkAccess(
     accessCredential: VerifiableCredential
 ): Boolean {
     // Verify credential
-    val verification = vericore.verifyCredential(accessCredential).getOrThrow()
+    val verification = TrustWeave.verifyCredential(accessCredential).getOrThrow()
     if (!verification.valid) return false
     
     // Check expiration
@@ -603,7 +603,7 @@ suspend fun logAuditEvent(
     saveAuditLogToDatabase(auditEntry)
     
     // Anchor to blockchain for immutability
-    val anchorResult = vericore.blockchains.anchor(
+    val anchorResult = TrustWeave.blockchains.anchor(
         data = auditEntry,
         serializer = JsonObject.serializer(),
         chainId = "algorand:testnet"
@@ -635,12 +635,12 @@ suspend fun rotateKeyWithHistory(
     oldKeyId: String
 ): String {
     // Create new key
-    val newDid = vericore.dids.create()
+    val newDid = TrustWeave.dids.create()
     val newKeyId = newDid.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
     // Issue rotation credential
-    val rotationCredential = vericore.issueCredential(
+    val rotationCredential = TrustWeave.issueCredential(
         issuerDid = issuerDid,
         issuerKeyId = oldKeyId, // Use old key to sign rotation
         credentialSubject = buildJsonObject {
@@ -654,7 +654,7 @@ suspend fun rotateKeyWithHistory(
     ).getOrThrow()
     
     // Anchor rotation to blockchain
-    vericore.blockchains.anchor(
+    TrustWeave.blockchains.anchor(
         data = rotationCredential,
         serializer = VerifiableCredential.serializer(),
         chainId = "algorand:testnet"
@@ -722,7 +722,7 @@ suspend fun generateComplianceReport(
     }
     
     // Anchor report to blockchain
-    vericore.blockchains.anchor(
+    TrustWeave.blockchains.anchor(
         data = report,
         serializer = JsonObject.serializer(),
         chainId = "algorand:testnet"

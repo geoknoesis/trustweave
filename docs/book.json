@@ -1,6 +1,6 @@
 {
-  "title": "VeriCore Developer Documentation",
-  "description": "Comprehensive developer documentation for VeriCore - A neutral, reusable trust and identity core library for Kotlin",
+  "title": "TrustWeave Developer Documentation",
+  "description": "Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin",
   "author": "GeoKnoesis",
   "language": "en",
   "gitbook": ">=3.2.3",
@@ -37,7 +37,7 @@
       "theme": "default"
     },
     "github": {
-      "url": "https://github.com/geoknoesis/vericore"
+      "url": "https://github.com/geoknoesis/trustweave"
     },
     "sharing": {
       "facebook": true,

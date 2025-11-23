@@ -1,6 +1,6 @@
 # walt.id Integration
 
-> This guide covers the walt.id integration for VeriCore. The walt.id plugin provides walt.id-based KMS and DID methods with SPI-based discovery, supporting did:key and did:web methods.
+> This guide covers the walt.id integration for TrustWeave. The walt.id plugin provides walt.id-based KMS and DID methods with SPI-based discovery, supporting did:key and did:web methods.
 
 ## Overview
 
@@ -9,7 +9,7 @@ The `kms/plugins/waltid` module provides integration with walt.id libraries for 
 - Use walt.id KMS for secure key generation and signing
 - Support did:key and did:web DID methods via walt.id
 - Leverage SPI-based auto-discovery of walt.id providers
-- Integrate walt.id libraries seamlessly into VeriCore workflows
+- Integrate walt.id libraries seamlessly into TrustWeave workflows
 
 ## Installation
 
@@ -17,10 +17,10 @@ Add the walt.id module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.kms:waltid:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.kms:waltid:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -31,9 +31,9 @@ dependencies {
 The walt.id integration supports automatic discovery via SPI:
 
 ```kotlin
-import com.geoknoesis.vericore.waltid.WaltIdIntegration
-import com.geoknoesis.vericore.did.*
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.waltid.WaltIdIntegration
+import com.trustweave.did.*
+import com.trustweave.kms.*
 import kotlinx.coroutines.runBlocking
 
 runBlocking {
@@ -54,9 +54,9 @@ runBlocking {
 You can also manually configure walt.id components:
 
 ```kotlin
-import com.geoknoesis.vericore.waltid.*
-import com.geoknoesis.vericore.did.*
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.waltid.*
+import com.trustweave.did.*
+import com.trustweave.kms.*
 
 // Create walt.id KMS
 val kms = WaltIdKeyManagementService()
@@ -76,8 +76,8 @@ registry.register("web", webMethod)
 ### KMS Operations
 
 ```kotlin
-import com.geoknoesis.vericore.waltid.*
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.waltid.*
+import com.trustweave.kms.*
 
 val kms = WaltIdKeyManagementService()
 
@@ -86,7 +86,7 @@ val key = kms.generateKey(Algorithm.Ed25519)
 println("Generated key: ${key.id}")
 
 // Sign data
-val data = "Hello, VeriCore!".toByteArray()
+val data = "Hello, TrustWeave!".toByteArray()
 val signature = kms.sign(key.id, data)
 println("Signature: ${signature.toHexString()}")
 
@@ -98,8 +98,8 @@ println("Public key: ${publicKey.toHexString()}")
 ### DID Operations
 
 ```kotlin
-import com.geoknoesis.vericore.waltid.*
-import com.geoknoesis.vericore.did.*
+import com.trustweave.waltid.*
+import com.trustweave.did.*
 
 val kms = WaltIdKeyManagementService()
 val keyMethod = WaltIdDidKeyMethod(kms)
@@ -117,20 +117,20 @@ val resolutionResult = keyMethod.resolveDid(didDoc.id)
 println("Resolved DID: ${resolutionResult.didDocument?.id}")
 ```
 
-### Using VeriCore Facade
+### Using TrustWeave Facade
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.waltid.WaltIdIntegration
+import com.trustweave.TrustWeave
+import com.trustweave.waltid.WaltIdIntegration
 import kotlinx.coroutines.runBlocking
 
 runBlocking {
     // Setup walt.id integration
     WaltIdIntegration.discoverAndRegister()
     
-    // Use VeriCore facade with walt.id providers
-    val vericore = VeriCore.create()
-    val did = vericore.dids.create()
+    // Use TrustWeave facade with walt.id providers
+    val TrustWeave = TrustWeave.create()
+    val did = TrustWeave.dids.create()
     
     didResult.fold(
         onSuccess = { did -> println("Created: ${did.id}") },
@@ -158,8 +158,8 @@ runBlocking {
 When the `kms/plugins/waltid` module is on the classpath, walt.id providers are automatically discoverable via SPI:
 
 ```kotlin
-import com.geoknoesis.vericore.kms.*
-import com.geoknoesis.vericore.did.*
+import com.trustweave.kms.*
+import com.trustweave.did.*
 import java.util.ServiceLoader
 
 // Discover KMS provider
@@ -189,17 +189,17 @@ See the [walt.id Testing Guide](../../kms/plugins/waltid/TESTING.md) for detaile
 
 ## Error Handling
 
-The walt.id integration follows VeriCore's error handling patterns:
+The walt.id integration follows TrustWeave's error handling patterns:
 
 ```kotlin
-import com.geoknoesis.vericore.core.VeriCoreError
+import com.trustweave.core.TrustWeaveError
 
 val result = kms.generateKey(Algorithm.Ed25519)
 result.fold(
     onSuccess = { key -> println("Key: ${key.id}") },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.KeyGenerationFailed -> {
+            is TrustWeaveError.KeyGenerationFailed -> {
                 println("Key generation failed: ${error.reason}")
             }
             else -> println("Error: ${error.message}")
@@ -220,6 +220,6 @@ result.fold(
 
 - [walt.id Documentation](https://walt.id/)
 - [walt.id GitHub](https://github.com/walt-id/waltid-ssikit)
-- [VeriCore KMS Module](../modules/vericore-kms.md)
-- [VeriCore DID Module](../modules/vericore-did.md)
+- [TrustWeave KMS Module](../modules/trustweave-kms.md)
+- [TrustWeave DID Module](../modules/trustweave-did.md)
 

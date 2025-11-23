@@ -1,10 +1,10 @@
 # Wallet API Reference
 
-Complete API reference for VeriCore's Wallet system.
+Complete API reference for TrustWeave's Wallet system.
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -308,14 +308,14 @@ data class WalletStatistics(
 
 ### WalletCreationOptions
 
-`WalletCreationOptions` is shared by the VeriCore facade, the Trust Layer DSL, and custom `WalletFactory` implementations. It removes the need for untyped configuration blobs while still allowing provider-specific extensions.
+`WalletCreationOptions` is shared by the TrustWeave facade, the Trust Layer DSL, and custom `WalletFactory` implementations. It removes the need for untyped configuration blobs while still allowing provider-specific extensions.
 
 ```kotlin
-import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.trustweave.spi.services.WalletCreationOptionsBuilder
 
 val options = WalletCreationOptionsBuilder().apply {
     label = "Production Wallet"
-    storagePath = "/var/lib/vericore/wallets/holder-42"
+    storagePath = "/var/lib/TrustWeave/wallets/holder-42"
     enableOrganization = true
     enablePresentation = true
     property("connectionString", System.getenv("WALLET_DB_URL"))
@@ -389,7 +389,7 @@ val wallet = trustLayer.wallet {
     holder("did:key:holder")
     enableOrganization()
     enablePresentation()
-    option("connectionString", "jdbc:postgresql://localhost/vericore")
+    option("connectionString", "jdbc:postgresql://localhost/TrustWeave")
 }
 ```
 

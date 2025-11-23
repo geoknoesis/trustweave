@@ -1,19 +1,19 @@
 # Features Usage Guide
 
-This guide explains how to use VeriCore's feature plugins.
+This guide explains how to use TrustWeave's feature plugins.
 
 ## Overview
 
-All features are implemented as standalone plugins that can be instantiated and used independently. They follow VeriCore's plugin architecture and can be integrated into your application as needed.
+All features are implemented as standalone plugins that can be instantiated and used independently. They follow TrustWeave's plugin architecture and can be integrated into your application as needed.
 
 ## 1. Audit Logging
 
 Track all operations with immutable audit logs.
 
 ```kotlin
-import com.geoknoesis.vericore.audit.AuditLogger
-import com.geoknoesis.vericore.audit.InMemoryAuditLogger
-import com.geoknoesis.vericore.audit.AuditEvent
+import com.trustweave.audit.AuditLogger
+import com.trustweave.audit.InMemoryAuditLogger
+import com.trustweave.audit.AuditEvent
 
 val auditLogger: AuditLogger = InMemoryAuditLogger()
 
@@ -43,8 +43,8 @@ val events = auditLogger.getEvents(
 Collect performance and usage metrics.
 
 ```kotlin
-import com.geoknoesis.vericore.metrics.MetricsCollector
-import com.geoknoesis.vericore.metrics.InMemoryMetricsCollector
+import com.trustweave.metrics.MetricsCollector
+import com.trustweave.metrics.InMemoryMetricsCollector
 
 val metrics: MetricsCollector = InMemoryMetricsCollector()
 
@@ -63,9 +63,9 @@ println("Issued: ${counter?.value}, Avg latency: ${latency?.average}ms")
 Generate QR codes for credential sharing.
 
 ```kotlin
-import com.geoknoesis.vericore.qrcode.QrCodeGenerator
-import com.geoknoesis.vericore.qrcode.ZxingQrCodeGenerator
-import com.geoknoesis.vericore.qrcode.QrCodeFormat
+import com.trustweave.qrcode.QrCodeGenerator
+import com.trustweave.qrcode.ZxingQrCodeGenerator
+import com.trustweave.qrcode.QrCodeFormat
 
 val qrGenerator: QrCodeGenerator = ZxingQrCodeGenerator()
 
@@ -90,8 +90,8 @@ val deepLink = qrGenerator.generateDeepLink(
 Send push notifications and webhooks for credential events.
 
 ```kotlin
-import com.geoknoesis.vericore.notifications.NotificationService
-import com.geoknoesis.vericore.notifications.InMemoryNotificationService
+import com.trustweave.notifications.NotificationService
+import com.trustweave.notifications.InMemoryNotificationService
 
 val notifications: NotificationService = InMemoryNotificationService()
 
@@ -116,8 +116,8 @@ notifications.sendWebhook(
 Track credential versions and rollback if needed.
 
 ```kotlin
-import com.geoknoesis.vericore.versioning.CredentialVersioning
-import com.geoknoesis.vericore.versioning.InMemoryCredentialVersioning
+import com.trustweave.versioning.CredentialVersioning
+import com.trustweave.versioning.InMemoryCredentialVersioning
 
 val versioning: CredentialVersioning = InMemoryCredentialVersioning()
 
@@ -141,8 +141,8 @@ val rolledBack = versioning.rollback("cred-123", targetVersion = 1)
 Export and import credentials.
 
 ```kotlin
-import com.geoknoesis.vericore.backup.CredentialBackup
-import com.geoknoesis.vericore.backup.InMemoryCredentialBackup
+import com.trustweave.backup.CredentialBackup
+import com.trustweave.backup.InMemoryCredentialBackup
 
 val backup: CredentialBackup = InMemoryCredentialBackup()
 
@@ -164,8 +164,8 @@ backup.importCredentials(
 Monitor and manage expiring credentials.
 
 ```kotlin
-import com.geoknoesis.vericore.expiration.ExpirationManager
-import com.geoknoesis.vericore.expiration.InMemoryExpirationManager
+import com.trustweave.expiration.ExpirationManager
+import com.trustweave.expiration.InMemoryExpirationManager
 
 val expiration: ExpirationManager = InMemoryExpirationManager()
 
@@ -192,9 +192,9 @@ val renewed = expiration.renewCredential(
 Generate analytics reports.
 
 ```kotlin
-import com.geoknoesis.vericore.analytics.AnalyticsService
-import com.geoknoesis.vericore.analytics.InMemoryAnalyticsService
-import com.geoknoesis.vericore.analytics.ReportPeriod
+import com.trustweave.analytics.AnalyticsService
+import com.trustweave.analytics.InMemoryAnalyticsService
+import com.trustweave.analytics.ReportPeriod
 
 val analytics: AnalyticsService = InMemoryAnalyticsService()
 
@@ -214,8 +214,8 @@ println("Top issuers: ${report.topIssuers}")
 OpenID Connect for Verifiable Credential Issuance.
 
 ```kotlin
-import com.geoknoesis.vericore.oidc4vci.Oidc4VciService
-import com.geoknoesis.vericore.oidc4vci.InMemoryOidc4VciService
+import com.trustweave.oidc4vci.Oidc4VciService
+import com.trustweave.oidc4vci.InMemoryOidc4VciService
 
 val oidc4vci: Oidc4VciService = InMemoryOidc4VciService()
 
@@ -232,9 +232,9 @@ val credential = oidc4vci.issueCredential(
 DIDComm credential exchange protocol.
 
 ```kotlin
-import com.geoknoesis.vericore.didcomm.DidCommService
-import com.geoknoesis.vericore.didcomm.InMemoryDidCommService
-import com.geoknoesis.vericore.didcomm.DidCommMessage
+import com.trustweave.didcomm.DidCommService
+import com.trustweave.didcomm.InMemoryDidCommService
+import com.trustweave.didcomm.DidCommMessage
 
 val didcomm: DidCommService = InMemoryDidCommService()
 
@@ -257,8 +257,8 @@ val received = didcomm.receiveMessage(messageJson)
 Credential Handler API support.
 
 ```kotlin
-import com.geoknoesis.vericore.chapi.ChapiService
-import com.geoknoesis.vericore.chapi.InMemoryChapiService
+import com.trustweave.chapi.ChapiService
+import com.trustweave.chapi.InMemoryChapiService
 
 val chapi: ChapiService = InMemoryChapiService()
 
@@ -280,9 +280,9 @@ chapi.handleStoreRequest(
 Collaborative credential issuance.
 
 ```kotlin
-import com.geoknoesis.vericore.multiparty.MultiPartyIssuance
-import com.geoknoesis.vericore.multiparty.InMemoryMultiPartyIssuance
-import com.geoknoesis.vericore.multiparty.ConsensusType
+import com.trustweave.multiparty.MultiPartyIssuance
+import com.trustweave.multiparty.InMemoryMultiPartyIssuance
+import com.trustweave.multiparty.ConsensusType
 
 val multiParty: MultiPartyIssuance = InMemoryMultiPartyIssuance()
 
@@ -306,8 +306,8 @@ val finalCredential = multiParty.finalizeIssuance(issuanceId)
 System health monitoring.
 
 ```kotlin
-import com.geoknoesis.vericore.health.HealthCheckService
-import com.geoknoesis.vericore.health.InMemoryHealthCheckService
+import com.trustweave.health.HealthCheckService
+import com.trustweave.health.InMemoryHealthCheckService
 
 val health: HealthCheckService = InMemoryHealthCheckService()
 
@@ -322,9 +322,9 @@ println("Components: ${healthStatus.components}")
 Render credentials as HTML or PDF.
 
 ```kotlin
-import com.geoknoesis.vericore.rendering.CredentialRenderer
-import com.geoknoesis.vericore.rendering.InMemoryCredentialRenderer
-import com.geoknoesis.vericore.rendering.RenderingFormat
+import com.trustweave.rendering.CredentialRenderer
+import com.trustweave.rendering.InMemoryCredentialRenderer
+import com.trustweave.rendering.RenderingFormat
 
 val renderer: CredentialRenderer = InMemoryCredentialRenderer()
 
@@ -343,12 +343,12 @@ val htmlPresentation = renderer.renderHtml(presentation)
 Here's how to integrate multiple features together:
 
 ```kotlin
-import com.geoknoesis.vericore.*
-import com.geoknoesis.vericore.audit.*
-import com.geoknoesis.vericore.metrics.*
-import com.geoknoesis.vericore.qrcode.*
+import com.trustweave.*
+import com.trustweave.audit.*
+import com.trustweave.metrics.*
+import com.trustweave.qrcode.*
 
-val vericore = VeriCore.create()
+val TrustWeave = TrustWeave.create()
 val auditLogger = InMemoryAuditLogger()
 val metrics = InMemoryMetricsCollector()
 val qrGenerator = ZxingQrCodeGenerator()
@@ -360,7 +360,7 @@ suspend fun issueCredentialWithTracking(
 ): VerifiableCredential {
     val startTime = System.currentTimeMillis()
     
-    val credential = vericore.issueCredential(
+    val credential = TrustWeave.issueCredential(
         issuerDid = issuerDid,
         subjectDid = subjectDid
     ) { /* credential data */ }.getOrThrow()

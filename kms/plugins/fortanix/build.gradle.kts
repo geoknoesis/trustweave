@@ -1,15 +1,12 @@
 plugins {
-    id("vericore.shared")
     kotlin("jvm")
     kotlin("plugin.serialization")
 }
 
-group = "com.geoknoesis.vericore.kms"
-version = "1.0.0-SNAPSHOT"
-
+group = "com.trustweave.kms"
 dependencies {
-    implementation(project(":core:vericore-core"))
-    implementation(project(":kms:vericore-kms"))
+    implementation(project(":credentials:core"))
+    implementation(project(":kms:core"))
 
     // HTTP client for Fortanix DSM API
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -19,6 +16,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
     // Test dependencies
-    testImplementation(project(":core:vericore-testkit"))
+    testImplementation(project(":testkit"))
 }
 

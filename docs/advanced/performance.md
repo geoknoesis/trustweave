@@ -1,10 +1,10 @@
 # Performance Considerations
 
-This guide covers performance considerations and optimization strategies for VeriCore applications.
+This guide covers performance considerations and optimization strategies for TrustWeave applications.
 
 ## Overview
 
-VeriCore is designed for high performance with:
+TrustWeave is designed for high performance with:
 
 - **Async Operations** – all I/O uses Kotlin coroutines
 - **Efficient Serialization** – Kotlinx Serialization for JSON handling
@@ -15,7 +15,7 @@ VeriCore is designed for high performance with:
 
 ### Coroutine Usage
 
-VeriCore operations are async by default:
+TrustWeave operations are async by default:
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -23,9 +23,9 @@ import kotlinx.coroutines.*
 // Use coroutines for concurrent operations
 suspend fun processMultiple() = coroutineScope {
     val results = listOf(
-        async { vericore.dids.create() },
-        async { vericore.dids.create() },
-        async { vericore.dids.create() }
+        async { TrustWeave.dids.create() },
+        async { TrustWeave.dids.create() },
+        async { TrustWeave.dids.create() }
     )
     
     results.awaitAll()
@@ -43,7 +43,7 @@ Batch operations when possible:
 ```kotlin
 // Batch credential issuance
 val credentials = subjects.map { subject ->
-    vericore.issueCredential(
+    TrustWeave.issueCredential(
         issuerDid = issuerDid.id,
         issuerKeyId = issuerKeyId,
         credentialSubject = subject
@@ -63,7 +63,7 @@ For database-backed services, use connection pooling:
 ```kotlin
 // Use HikariCP or similar for connection pooling
 val dataSource = HikariDataSource().apply {
-    jdbcUrl = "jdbc:postgresql://localhost/vericore"
+    jdbcUrl = "jdbc:postgresql://localhost/TrustWeave"
     maximumPoolSize = 10
 }
 ```
@@ -80,7 +80,7 @@ val didCache = ConcurrentHashMap<String, DidDocument>()
 
 suspend fun resolveWithCache(did: String): DidDocument {
     return didCache.getOrPut(did) {
-        vericore.dids.resolve(did).document!!
+        TrustWeave.dids.resolve(did).document!!
     }
 }
 ```
@@ -94,7 +94,7 @@ suspend fun resolveWithCache(did: String): DidDocument {
 Use `use {}` for automatic cleanup:
 
 ```kotlin
-val fixture = VeriCoreTestFixture.builder().build().use { fixture ->
+val fixture = TrustWeaveTestFixture.builder().build().use { fixture ->
     // Use fixture
     // Automatic cleanup on exit
 }
@@ -167,7 +167,7 @@ Batch blockchain transactions when possible:
 ```kotlin
 // Batch multiple anchors
 val anchors = credentials.map { credential ->
-    async { vericore.anchor(credential, chainId) }
+    async { TrustWeave.anchor(credential, chainId) }
 }
 
 val results = anchors.awaitAll()
@@ -219,7 +219,7 @@ val issuerKeys = ConcurrentHashMap<String, Key>()
 
 suspend fun getOrCreateKey(issuerDid: String): Key {
     return issuerKeys.getOrPut(issuerDid) {
-        vericore.createKey(issuerDid).getOrThrow()
+        TrustWeave.createKey(issuerDid).getOrThrow()
     }
 }
 ```
@@ -235,7 +235,7 @@ Collect performance metrics:
 ```kotlin
 // Measure operation time
 val start = System.currentTimeMillis()
-val did = vericore.dids.create()
+val did = TrustWeave.dids.create()
 val duration = System.currentTimeMillis() - start
 
 println("DID creation took ${duration}ms")
@@ -258,7 +258,7 @@ Design for horizontal scaling:
 
 ```kotlin
 // Stateless operations scale horizontally
-val vericore = VeriCore.create() // No shared state
+val TrustWeave = TrustWeave.create() // No shared state
 ```
 
 **Outcome:** Enables horizontal scaling.
@@ -270,9 +270,9 @@ Use load balancing for services:
 ```kotlin
 // Multiple instances can share load
 val instances = listOf(
-    VeriCore.create(),
-    VeriCore.create(),
-    VeriCore.create()
+    TrustWeave.create(),
+    TrustWeave.create(),
+    TrustWeave.create()
 )
 ```
 
@@ -291,7 +291,7 @@ fun benchmarkDidCreation() = runBlocking {
     val start = System.currentTimeMillis()
     
     repeat(iterations) {
-        vericore.dids.create()
+        TrustWeave.dids.create()
     }
     
     val duration = System.currentTimeMillis() - start

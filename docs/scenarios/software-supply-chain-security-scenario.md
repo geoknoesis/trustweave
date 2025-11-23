@@ -1,6 +1,6 @@
 # Software Supply Chain Security Scenario
 
-This guide demonstrates how to build a software supply chain security system using VeriCore. You'll learn how software publishers can issue provenance credentials, how build systems can attest to software integrity, and how consumers can verify software authenticity to prevent supply chain attacks.
+This guide demonstrates how to build a software supply chain security system using TrustWeave. You'll learn how software publishers can issue provenance credentials, how build systems can attest to software integrity, and how consumers can verify software authenticity to prevent supply chain attacks.
 
 ## What You'll Build
 
@@ -97,7 +97,7 @@ Traditional software distribution has several problems:
 4. **Tampering**: Software can be modified in transit
 5. **No attestation**: No proof of build process integrity
 
-VeriCore solves this by enabling:
+TrustWeave solves this by enabling:
 
 - **Provenance verification**: Verify software source and build
 - **Build attestation**: Cryptographic proof of build integrity
@@ -131,12 +131,12 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add TrustWeave dependencies to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -148,17 +148,17 @@ dependencies {
 
 ## Step 2: Complete Runnable Example
 
-Here's the full software supply chain security flow using the VeriCore facade API:
+Here's the full software supply chain security flow using the TrustWeave facade API:
 
 ```kotlin
 package com.example.software.supplychain
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.credential.PresentationOptions
-import com.geoknoesis.vericore.credential.wallet.Wallet
-import com.geoknoesis.vericore.json.DigestUtils
-import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.credential.PresentationOptions
+import com.trustweave.credential.wallet.Wallet
+import com.trustweave.json.DigestUtils
+import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -171,22 +171,22 @@ fun main() = runBlocking {
     println("Software Supply Chain Security Scenario - Complete End-to-End Example")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance
-    val vericore = VeriCore.create()
-    println("\n✅ VeriCore initialized")
+    // Step 1: Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
+    println("\n✅ TrustWeave initialized")
     
     // Step 2: Create DIDs for software publisher, build system, and consumer
-    val publisherDidDoc = vericore.dids.create()
+    val publisherDidDoc = TrustWeave.dids.create()
     val publisherDid = publisherDidDoc.id
     val publisherKeyId = publisherDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val buildSystemDidDoc = vericore.dids.create()
+    val buildSystemDidDoc = TrustWeave.dids.create()
     val buildSystemDid = buildSystemDidDoc.id
     val buildSystemKeyId = buildSystemDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val consumerDidDoc = vericore.dids.create()
+    val consumerDidDoc = TrustWeave.dids.create()
     val consumerDid = consumerDidDoc.id
     
     println("✅ Software Publisher DID: $publisherDid")
@@ -212,7 +212,7 @@ fun main() = runBlocking {
     println("   Commit hash: abc123def456")
     
     // Step 4: Issue software provenance credential
-    val provenanceCredential = vericore.issueCredential(
+    val provenanceCredential = TrustWeave.issueCredential(
         issuerDid = publisherDid,
         issuerKeyId = publisherKeyId,
         credentialSubject = buildJsonObject {
@@ -245,7 +245,7 @@ fun main() = runBlocking {
     println("   Build environment: Isolated, verified")
     
     // Step 6: Issue build attestation credential
-    val buildAttestationCredential = vericore.issueCredential(
+    val buildAttestationCredential = TrustWeave.issueCredential(
         issuerDid = buildSystemDid,
         issuerKeyId = buildSystemKeyId,
         credentialSubject = buildJsonObject {
@@ -290,7 +290,7 @@ fun main() = runBlocking {
     }
     
     // Step 8: Issue SBOM credential
-    val sbomCredential = vericore.issueCredential(
+    val sbomCredential = TrustWeave.issueCredential(
         issuerDid = buildSystemDid,
         issuerKeyId = buildSystemKeyId,
         credentialSubject = buildJsonObject {
@@ -316,7 +316,7 @@ fun main() = runBlocking {
     println("✅ SBOM credential issued: ${sbomCredential.id}")
     
     // Step 9: Create consumer wallet and store credentials
-    val consumerWallet = vericore.createWallet(
+    val consumerWallet = TrustWeave.createWallet(
         holderDid = consumerDid,
         options = WalletCreationOptionsBuilder().apply {
             enableOrganization = true
@@ -348,7 +348,7 @@ fun main() = runBlocking {
     // Step 11: Consumer verification - Software provenance
     println("\n🔍 Consumer Verification - Software Provenance:")
     
-    val provenanceVerification = vericore.verifyCredential(provenanceCredential).getOrThrow()
+    val provenanceVerification = TrustWeave.verifyCredential(provenanceCredential).getOrThrow()
     
     if (provenanceVerification.valid) {
         val credentialSubject = provenanceCredential.credentialSubject
@@ -377,7 +377,7 @@ fun main() = runBlocking {
     // Step 12: Consumer verification - Build attestation
     println("\n🔍 Consumer Verification - Build Attestation:")
     
-    val buildVerification = vericore.verifyCredential(buildAttestationCredential).getOrThrow()
+    val buildVerification = TrustWeave.verifyCredential(buildAttestationCredential).getOrThrow()
     
     if (buildVerification.valid) {
         val credentialSubject = buildAttestationCredential.credentialSubject
@@ -407,7 +407,7 @@ fun main() = runBlocking {
     // Step 13: Consumer verification - Dependency verification
     println("\n🔍 Consumer Verification - Dependency Verification:")
     
-    val sbomVerification = vericore.verifyCredential(sbomCredential).getOrThrow()
+    val sbomVerification = TrustWeave.verifyCredential(sbomCredential).getOrThrow()
     
     if (sbomVerification.valid) {
         val credentialSubject = sbomCredential.credentialSubject
@@ -443,9 +443,9 @@ fun main() = runBlocking {
     // Step 14: Complete software verification workflow
     println("\n🔍 Complete Software Verification Workflow:")
     
-    val provenanceValid = vericore.verifyCredential(provenanceCredential).getOrThrow().valid
-    val buildValid = vericore.verifyCredential(buildAttestationCredential).getOrThrow().valid
-    val sbomValid = vericore.verifyCredential(sbomCredential).getOrThrow().valid
+    val provenanceValid = TrustWeave.verifyCredential(provenanceCredential).getOrThrow().valid
+    val buildValid = TrustWeave.verifyCredential(buildAttestationCredential).getOrThrow().valid
+    val sbomValid = TrustWeave.verifyCredential(sbomCredential).getOrThrow().valid
     
     if (provenanceValid && buildValid && sbomValid) {
         println("✅ Software Provenance: VERIFIED")
@@ -485,7 +485,7 @@ fun main() = runBlocking {
 Software Supply Chain Security Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ VeriCore initialized
+✅ TrustWeave initialized
 ✅ Software Publisher DID: did:key:z6Mk...
 ✅ Build System DID: did:key:z6Mk...
 ✅ Consumer DID: did:key:z6Mk...
@@ -576,7 +576,7 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with VeriCore
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
 - [IoT Device Identity Scenario](iot-device-identity-scenario.md) - Related device attestation
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
 - [API Reference](../api-reference/core-api.md) - Complete API documentation

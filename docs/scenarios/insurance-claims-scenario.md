@@ -1,6 +1,6 @@
 # Insurance Claims and Verification Scenario
 
-This guide demonstrates how to build a complete insurance claims verification system using VeriCore. You'll learn how insurance companies can issue claim credentials, how service providers (repair shops, medical facilities) can issue verification credentials, and how the entire claims process can be streamlined with verifiable credentials while preventing fraud.
+This guide demonstrates how to build a complete insurance claims verification system using TrustWeave. You'll learn how insurance companies can issue claim credentials, how service providers (repair shops, medical facilities) can issue verification credentials, and how the entire claims process can be streamlined with verifiable credentials while preventing fraud.
 
 ## What You'll Build
 
@@ -97,7 +97,7 @@ Traditional insurance claims have several problems:
 4. **No transparency**: Policyholders can't track status
 5. **Error-prone**: Manual processes prone to mistakes
 
-VeriCore solves this by enabling:
+TrustWeave solves this by enabling:
 
 - **Cryptographic proof**: Tamper-proof claim credentials
 - **Instant verification**: Verify service provider credentials instantly
@@ -132,12 +132,12 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add TrustWeave dependencies to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -149,16 +149,16 @@ dependencies {
 
 ## Step 2: Complete Runnable Example
 
-Here's the full insurance claims verification flow using the VeriCore facade API:
+Here's the full insurance claims verification flow using the TrustWeave facade API:
 
 ```kotlin
 package com.example.insurance.claims
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.credential.PresentationOptions
-import com.geoknoesis.vericore.credential.wallet.Wallet
-import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.credential.PresentationOptions
+import com.trustweave.credential.wallet.Wallet
+import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -170,25 +170,25 @@ fun main() = runBlocking {
     println("Insurance Claims and Verification Scenario - Complete End-to-End Example")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance
-    val vericore = VeriCore.create()
-    println("\n✅ VeriCore initialized")
+    // Step 1: Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
+    println("\n✅ TrustWeave initialized")
     
     // Step 2: Create DIDs for all parties
-    val insuranceCompanyDidDoc = vericore.dids.create()
+    val insuranceCompanyDidDoc = TrustWeave.dids.create()
     val insuranceCompanyDid = insuranceCompanyDidDoc.id
     val insuranceCompanyKeyId = insuranceCompanyDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val policyholderDidDoc = vericore.dids.create()
+    val policyholderDidDoc = TrustWeave.dids.create()
     val policyholderDid = policyholderDidDoc.id
     
-    val assessorDidDoc = vericore.dids.create()
+    val assessorDidDoc = TrustWeave.dids.create()
     val assessorDid = assessorDidDoc.id
     val assessorKeyId = assessorDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val repairShopDidDoc = vericore.dids.create()
+    val repairShopDidDoc = TrustWeave.dids.create()
     val repairShopDid = repairShopDidDoc.id
     val repairShopKeyId = repairShopDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
@@ -199,7 +199,7 @@ fun main() = runBlocking {
     println("✅ Repair Shop DID: $repairShopDid")
     
     // Step 3: Policyholder files claim - Insurance company issues claim credential
-    val claimCredential = vericore.issueCredential(
+    val claimCredential = TrustWeave.issueCredential(
         issuerDid = insuranceCompanyDid,
         issuerKeyId = insuranceCompanyKeyId,
         credentialSubject = buildJsonObject {
@@ -227,7 +227,7 @@ fun main() = runBlocking {
     println("   Status: Filed")
     
     // Step 4: Damage assessor issues assessment credential
-    val assessmentCredential = vericore.issueCredential(
+    val assessmentCredential = TrustWeave.issueCredential(
         issuerDid = assessorDid,
         issuerKeyId = assessorKeyId,
         credentialSubject = buildJsonObject {
@@ -256,7 +256,7 @@ fun main() = runBlocking {
     println("   Assessment Status: Completed")
     
     // Step 5: Repair shop performs repair and issues repair credential
-    val repairCredential = vericore.issueCredential(
+    val repairCredential = TrustWeave.issueCredential(
         issuerDid = repairShopDid,
         issuerKeyId = repairShopKeyId,
         credentialSubject = buildJsonObject {
@@ -293,7 +293,7 @@ fun main() = runBlocking {
     println("   Repair Status: Completed")
     
     // Step 6: Create policyholder wallet and store all credentials
-    val policyholderWallet = vericore.createWallet(
+    val policyholderWallet = TrustWeave.createWallet(
         holderDid = policyholderDid,
         options = WalletCreationOptionsBuilder().apply {
             enableOrganization = true
@@ -325,13 +325,13 @@ fun main() = runBlocking {
     // Step 8: Insurance company verifies all credentials
     println("\n📋 Insurance Company Verification Process:")
     
-    val claimVerification = vericore.verifyCredential(claimCredential).getOrThrow()
+    val claimVerification = TrustWeave.verifyCredential(claimCredential).getOrThrow()
     println("Claim Credential: ${if (claimVerification.valid) "✅ VALID" else "❌ INVALID"}")
     
-    val assessmentVerification = vericore.verifyCredential(assessmentCredential).getOrThrow()
+    val assessmentVerification = TrustWeave.verifyCredential(assessmentCredential).getOrThrow()
     println("Assessment Credential: ${if (assessmentVerification.valid) "✅ VALID" else "❌ INVALID"}")
     
-    val repairVerification = vericore.verifyCredential(repairCredential).getOrThrow()
+    val repairVerification = TrustWeave.verifyCredential(repairCredential).getOrThrow()
     println("Repair Credential: ${if (repairVerification.valid) "✅ VALID" else "❌ INVALID"}")
     
     // Step 9: Verify claim consistency and fraud prevention
@@ -388,7 +388,7 @@ fun main() = runBlocking {
     val allCredentialsValid = listOf(claimVerification, assessmentVerification, repairVerification).all { it.valid }
     
     if (allCredentialsValid && claimNumbersMatch && costVariance <= 10.0) {
-        val paymentCredential = vericore.issueCredential(
+        val paymentCredential = TrustWeave.issueCredential(
             issuerDid = insuranceCompanyDid,
             issuerKeyId = insuranceCompanyKeyId,
             credentialSubject = buildJsonObject {
@@ -452,7 +452,7 @@ fun main() = runBlocking {
 Insurance Claims and Verification Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ VeriCore initialized
+✅ TrustWeave initialized
 ✅ Insurance Company DID: did:key:z6Mk...
 ✅ Policyholder DID: did:key:z6Mk...
 ✅ Damage Assessor DID: did:key:z6Mk...
@@ -527,7 +527,7 @@ Repair Credential: ✅ VALID
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with VeriCore
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 - [Healthcare Medical Records Scenario](healthcare-medical-records-scenario.md) - Related healthcare scenario

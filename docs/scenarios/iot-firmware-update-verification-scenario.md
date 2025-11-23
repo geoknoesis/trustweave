@@ -1,6 +1,6 @@
 # IoT Firmware Update Verification Scenario
 
-This guide demonstrates how to build an IoT firmware update verification system using VeriCore. You'll learn how manufacturers can issue firmware attestation credentials, how update servers can authorize updates, and how devices can verify firmware authenticity before installation.
+This guide demonstrates how to build an IoT firmware update verification system using TrustWeave. You'll learn how manufacturers can issue firmware attestation credentials, how update servers can authorize updates, and how devices can verify firmware authenticity before installation.
 
 ## What You'll Build
 
@@ -97,7 +97,7 @@ Traditional firmware update systems have several problems:
 4. **No integrity proof**: No cryptographic proof of firmware integrity
 5. **Trust issues**: Can't verify manufacturer authenticity
 
-VeriCore solves this by enabling:
+TrustWeave solves this by enabling:
 
 - **Firmware authenticity**: Verify firmware source and manufacturer
 - **Update authorization**: Cryptographic proof of update authorization
@@ -131,12 +131,12 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add TrustWeave dependencies to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -148,17 +148,17 @@ dependencies {
 
 ## Step 2: Complete Runnable Example
 
-Here's the full IoT firmware update verification flow using the VeriCore facade API:
+Here's the full IoT firmware update verification flow using the TrustWeave facade API:
 
 ```kotlin
 package com.example.iot.firmware.update
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.credential.PresentationOptions
-import com.geoknoesis.vericore.credential.wallet.Wallet
-import com.geoknoesis.vericore.json.DigestUtils
-import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.credential.PresentationOptions
+import com.trustweave.credential.wallet.Wallet
+import com.trustweave.json.DigestUtils
+import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -171,22 +171,22 @@ fun main() = runBlocking {
     println("IoT Firmware Update Verification Scenario - Complete End-to-End Example")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance
-    val vericore = VeriCore.create()
-    println("\n✅ VeriCore initialized")
+    // Step 1: Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
+    println("\n✅ TrustWeave initialized")
     
     // Step 2: Create DIDs for manufacturer, update server, and IoT device
-    val manufacturerDidDoc = vericore.dids.create()
+    val manufacturerDidDoc = TrustWeave.dids.create()
     val manufacturerDid = manufacturerDidDoc.id
     val manufacturerKeyId = manufacturerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val updateServerDidDoc = vericore.dids.create()
+    val updateServerDidDoc = TrustWeave.dids.create()
     val updateServerDid = updateServerDidDoc.id
     val updateServerKeyId = updateServerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val deviceDidDoc = vericore.dids.create()
+    val deviceDidDoc = TrustWeave.dids.create()
     val deviceDid = deviceDidDoc.id
     
     println("✅ Manufacturer DID: $manufacturerDid")
@@ -213,7 +213,7 @@ fun main() = runBlocking {
     println("   Firmware Digest: ${firmwareDigest.take(20)}...")
     
     // Step 4: Issue firmware attestation credential
-    val firmwareAttestation = vericore.issueCredential(
+    val firmwareAttestation = TrustWeave.issueCredential(
         issuerDid = manufacturerDid,
         issuerKeyId = manufacturerKeyId,
         credentialSubject = buildJsonObject {
@@ -246,7 +246,7 @@ fun main() = runBlocking {
     println("\n✅ Firmware attestation credential issued: ${firmwareAttestation.id}")
     
     // Step 5: Issue firmware update authorization credential
-    val updateAuthorization = vericore.issueCredential(
+    val updateAuthorization = TrustWeave.issueCredential(
         issuerDid = updateServerDid,
         issuerKeyId = updateServerKeyId,
         credentialSubject = buildJsonObject {
@@ -280,7 +280,7 @@ fun main() = runBlocking {
     println("✅ Firmware update authorization credential issued: ${updateAuthorization.id}")
     
     // Step 6: Create device wallet and store credentials
-    val deviceWallet = vericore.createWallet(
+    val deviceWallet = TrustWeave.createWallet(
         holderDid = deviceDid,
         options = WalletCreationOptionsBuilder().apply {
             enableOrganization = true
@@ -309,7 +309,7 @@ fun main() = runBlocking {
     // Step 8: Device verification - Firmware attestation
     println("\n🔍 Device Verification - Firmware Attestation:")
     
-    val firmwareVerification = vericore.verifyCredential(firmwareAttestation).getOrThrow()
+    val firmwareVerification = TrustWeave.verifyCredential(firmwareAttestation).getOrThrow()
     
     if (firmwareVerification.valid) {
         val credentialSubject = firmwareAttestation.credentialSubject
@@ -340,7 +340,7 @@ fun main() = runBlocking {
     // Step 9: Device verification - Update authorization
     println("\n🔍 Device Verification - Update Authorization:")
     
-    val authorizationVerification = vericore.verifyCredential(updateAuthorization).getOrThrow()
+    val authorizationVerification = TrustWeave.verifyCredential(updateAuthorization).getOrThrow()
     
     if (authorizationVerification.valid) {
         val credentialSubject = updateAuthorization.credentialSubject
@@ -370,8 +370,8 @@ fun main() = runBlocking {
     // Step 10: Complete firmware update verification workflow
     println("\n🔍 Complete Firmware Update Verification Workflow:")
     
-    val firmwareValid = vericore.verifyCredential(firmwareAttestation).getOrThrow().valid
-    val authorizationValid = vericore.verifyCredential(updateAuthorization).getOrThrow().valid
+    val firmwareValid = TrustWeave.verifyCredential(firmwareAttestation).getOrThrow().valid
+    val authorizationValid = TrustWeave.verifyCredential(updateAuthorization).getOrThrow().valid
     
     if (firmwareValid && authorizationValid) {
         // Verify firmware digest matches
@@ -444,7 +444,7 @@ fun main() = runBlocking {
 IoT Firmware Update Verification Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ VeriCore initialized
+✅ TrustWeave initialized
 ✅ Manufacturer DID: did:key:z6Mk...
 ✅ Update Server DID: did:key:z6Mk...
 ✅ IoT Device DID: did:key:z6Mk...
@@ -527,7 +527,7 @@ IoT Firmware Update Verification Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with VeriCore
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
 - [IoT Device Identity Scenario](iot-device-identity-scenario.md) - Related device identity scenario
 - [Software Supply Chain Security Scenario](software-supply-chain-security-scenario.md) - Related software security scenario
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns

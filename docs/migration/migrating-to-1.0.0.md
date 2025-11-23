@@ -1,6 +1,6 @@
-# Migrating to VeriCore 1.0.0
+# Migrating to TrustWeave 1.0.0
 
-This guide helps you migrate from earlier versions of VeriCore to version 1.0.0.
+This guide helps you migrate from earlier versions of TrustWeave to version 1.0.0.
 
 ## Overview of Changes
 
@@ -37,8 +37,8 @@ val client = AlgorandBlockchainAnchorClient(
 ### After (Type-safe)
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.options.AlgorandOptions
-import com.geoknoesis.vericore.anchor.ChainId
+import com.trustweave.anchor.options.AlgorandOptions
+import com.trustweave.anchor.ChainId
 
 val chainId = ChainId.Algorand.Testnet
 val options = AlgorandOptions(
@@ -61,7 +61,7 @@ val client = AlgorandBlockchainAnchorClient(chainId.toString(), options)
 try {
     val result = client.writePayload(payload)
     println("Anchored: ${result.ref.txHash}")
-} catch (e: VeriCoreException) {
+} catch (e: TrustWeaveException) {
     println("Error: ${e.message}")
 }
 ```
@@ -69,14 +69,14 @@ try {
 ### After (Result-based)
 
 ```kotlin
-val result = vericore.anchor(data, serializer, chainId)
+val result = TrustWeave.anchor(data, serializer, chainId)
 result.fold(
     onSuccess = { anchor -> 
         println("Anchored: ${anchor.ref.txHash}")
     },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.ChainNotRegistered -> {
+            is TrustWeaveError.ChainNotRegistered -> {
                 println("Chain not registered: ${error.chainId}")
                 println("Available chains: ${error.availableChains}")
             }
@@ -97,7 +97,7 @@ result.fold(
 
 ```kotlin
 try {
-    val did = vericore.createDid()
+    val did = TrustWeave.createDid()
 } catch (e: IllegalArgumentException) {
     println("Invalid argument: ${e.message}")
 } catch (e: Exception) {
@@ -108,18 +108,18 @@ try {
 ### After
 
 ```kotlin
-val result = vericore.createDid()
+val result = TrustWeave.createDid()
 result.fold(
     onSuccess = { did -> 
         println("Created: ${did.id}")
     },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.DidMethodNotRegistered -> {
+            is TrustWeaveError.DidMethodNotRegistered -> {
                 println("Method not registered: ${error.method}")
                 println("Available methods: ${error.availableMethods}")
             }
-            is VeriCoreError.InvalidDidFormat -> {
+            is TrustWeaveError.InvalidDidFormat -> {
                 println("Invalid format: ${error.reason}")
             }
             else -> {
@@ -139,17 +139,17 @@ result.fold(
 
 ```kotlin
 // No explicit lifecycle management
-val vericore = VeriCore.create()
+val TrustWeave = TrustWeave.create()
 // Use immediately
 ```
 
 ### After
 
 ```kotlin
-val vericore = VeriCore.create()
+val TrustWeave = TrustWeave.create()
 
 // Initialize plugins
-vericore.initialize().fold(
+TrustWeave.initialize().fold(
     onSuccess = { println("Plugins initialized") },
     onFailure = { error -> 
         println("Initialization error: ${error.message}")
@@ -157,16 +157,16 @@ vericore.initialize().fold(
 )
 
 // Start plugins
-vericore.start().fold(
+TrustWeave.start().fold(
     onSuccess = { println("Plugins started") },
     onFailure = { error -> println("Start error: ${error.message}") }
 )
 
-// Use VeriCore
+// Use TrustWeave
 // ...
 
 // Stop plugins (cleanup)
-vericore.stop().fold(
+TrustWeave.stop().fold(
     onSuccess = { println("Plugins stopped") },
     onFailure = { error -> println("Stop error: ${error.message}") }
 )
@@ -183,7 +183,7 @@ val chainId = "algorand:testnet"  // Typo-prone string
 ### After
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.ChainId
+import com.trustweave.anchor.ChainId
 
 val chainId = ChainId.Algorand.Testnet  // Compile-time safe
 // Or use string with validation
@@ -208,7 +208,7 @@ val chainId = "algorand:testnet"  // Still supported, but less safe
 
 **Problem**: Plugins not initialized before use
 
-**Solution**: Call `initialize()` and `start()` before using VeriCore
+**Solution**: Call `initialize()` and `start()` before using TrustWeave
 
 ## Testing Your Migration
 

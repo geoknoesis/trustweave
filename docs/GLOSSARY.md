@@ -1,18 +1,18 @@
-# VeriCore Glossary
+# TrustWeave Glossary
 
-Standard terminology used throughout VeriCore documentation.
+Standard terminology used throughout TrustWeave documentation.
 
 > **Version:** 1.0.0-SNAPSHOT
 
 ## Core Terms
 
 ### Facade
-The **VeriCore** class is the main entry point (facade pattern). It provides a unified API for all VeriCore operations.
+The **TrustWeave** class is the main entry point (facade pattern). It provides a unified API for all TrustWeave operations.
 
 **Example:**
 ```kotlin
-val vericore = VeriCore.create()
-val did = vericore.createDid().getOrThrow()
+val trustweave = TrustWeave.create()
+val did = trustweave.dids.create()
 ```
 
 **Related:** [Core API Reference](api-reference/core-api.md)
@@ -141,9 +141,9 @@ Implementation that creates wallet instances (InMemory, Database, etc.).
 
 **Example:**
 ```kotlin
-val wallet = vericore.createWallet(
+val wallet = trustweave.wallets.create(
     holderDid = "did:key:holder",
-    provider = WalletProvider.InMemory
+    type = WalletType.InMemory
 )
 ```
 
@@ -211,7 +211,7 @@ Identifier for a specific key within a DID document.
 ## Plugin Terms
 
 ### Plugin
-Extensible component that implements VeriCore interfaces (DID methods, anchor clients, etc.).
+Extensible component that implements TrustWeave interfaces (DID methods, anchor clients, etc.).
 
 **Related:** [Plugin Lifecycle](advanced/plugin-lifecycle.md)
 
@@ -232,12 +232,12 @@ interface PluginLifecycle {
 
 ## Error Terms
 
-### VeriCoreError
+### TrustWeaveError
 Sealed hierarchy of structured error types with context.
 
 **Example:**
 ```kotlin
-VeriCoreError.DidMethodNotRegistered(
+TrustWeaveError.DidMethodNotRegistered(
     method = "web",
     availableMethods = listOf("key")
 )
@@ -246,15 +246,16 @@ VeriCoreError.DidMethodNotRegistered(
 **Related:** [Error Handling](advanced/error-handling.md)
 
 ### Result<T>
-Kotlin Result type used for all VeriCore operations.
+Kotlin Result type used for all TrustWeave operations.
 
 **Example:**
 ```kotlin
-val result: Result<DidDocument> = vericore.createDid()
-result.fold(
-    onSuccess = { did -> println("Created: ${did.id}") },
-    onFailure = { error -> println("Error: ${error.message}") }
-)
+try {
+    val did = trustweave.dids.create()
+    println("Created: ${did.id}")
+} catch (error: TrustWeaveError) {
+    println("Error: ${error.message}")
+}
 ```
 
 **Related:** [Error Handling](advanced/error-handling.md)

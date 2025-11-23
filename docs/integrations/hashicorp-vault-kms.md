@@ -1,10 +1,10 @@
 # HashiCorp Vault KMS Integration
 
-> This guide covers the HashiCorp Vault Key Management Service (KMS) integration for VeriCore. The Vault KMS plugin provides production-ready key management using Vault's Transit secrets engine with support for all Vault Transit-compatible algorithms.
+> This guide covers the HashiCorp Vault Key Management Service (KMS) integration for TrustWeave. The Vault KMS plugin provides production-ready key management using Vault's Transit secrets engine with support for all Vault Transit-compatible algorithms.
 
 ## Overview
 
-The `kms/plugins/hashicorp` module provides a complete implementation of VeriCore's `KeyManagementService` interface using HashiCorp Vault's Transit secrets engine. This integration enables you to:
+The `kms/plugins/hashicorp` module provides a complete implementation of TrustWeave's `KeyManagementService` interface using HashiCorp Vault's Transit secrets engine. This integration enables you to:
 
 - Use HashiCorp Vault for secure key generation and storage
 - Leverage Vault's centralized key management and policy-based access control
@@ -18,9 +18,9 @@ Add the HashiCorp Vault KMS module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.kms:hashicorp:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.kms:hashicorp:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -54,7 +54,7 @@ vault secrets enable -path=custom-transit transit
 The Vault KMS provider can be configured via options map or environment variables:
 
 ```kotlin
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.kms.*
 import java.util.ServiceLoader
 
 // Discover Vault provider
@@ -177,7 +177,7 @@ if (kms?.supportsAlgorithm(Algorithm.Ed25519) == true) {
 ### Generating Keys
 
 ```kotlin
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.kms.*
 
 // Generate Ed25519 key with auto-generated name
 val key = kms.generateKey(Algorithm.Ed25519)
@@ -248,7 +248,7 @@ val deleted = kms.deleteKey("did-issuer-key")
 Create a policy that allows key operations:
 
 ```hcl
-# Policy for VeriCore KMS operations
+# Policy for TrustWeave KMS operations
 path "transit/keys/*" {
   capabilities = ["create", "read", "update", "delete"]
 }
@@ -269,8 +269,8 @@ path "transit/keys/+/+" {
 Save this policy and apply it to a token or AppRole:
 
 ```bash
-vault policy write vericore-kms vericore-kms.hcl
-vault token create -policy=vericore-kms
+vault policy write TrustWeave-kms TrustWeave-kms.hcl
+vault token create -policy=TrustWeave-kms
 ```
 
 ### Key Naming Conventions
@@ -318,7 +318,7 @@ The plugin automatically uses the latest key version for signing operations.
 
 ## Error Handling
 
-The plugin maps Vault exceptions to VeriCore exceptions:
+The plugin maps Vault exceptions to TrustWeave exceptions:
 
 ```kotlin
 try {
@@ -327,7 +327,7 @@ try {
     println("Algorithm not supported: ${e.message}")
 } catch (e: KeyNotFoundException) {
     println("Key not found: ${e.message}")
-} catch (e: VeriCoreException) {
+} catch (e: TrustWeaveException) {
     when {
         e.message?.contains("Access denied") == true -> {
             println("Check Vault policies")

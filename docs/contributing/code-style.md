@@ -1,10 +1,10 @@
 # Code Style
 
-This guide outlines the coding conventions and style guidelines for VeriCore.
+This guide outlines the coding conventions and style guidelines for TrustWeave.
 
 ## Overview
 
-VeriCore follows Kotlin coding conventions with some project-specific guidelines:
+TrustWeave follows Kotlin coding conventions with some project-specific guidelines:
 
 - **Kotlin Style Guide** – follows official Kotlin style guide
 - **ktlint** – automated formatting with ktlint
@@ -84,10 +84,10 @@ Organize files logically:
 
 ```kotlin
 // Package declaration
-package com.geoknoesis.vericore.example
+package com.trustweave.example
 
 // Imports
-import com.geoknoesis.vericore.did.*
+import com.trustweave.did.*
 import kotlinx.coroutines.runBlocking
 
 // Class/object definitions
@@ -156,7 +156,7 @@ suspend fun createDid(): Result<DidDocument> {
         Result.success(didDocument)
     } catch (e: Exception) {
         Result.failure(
-            VeriCoreError.DidCreationFailed(
+            TrustWeaveError.DidCreationFailed(
                 reason = e.message ?: "Unknown error"
             )
         )
@@ -169,9 +169,9 @@ suspend fun createDid(): Result<DidDocument> {
 Use structured error types:
 
 ```kotlin
-sealed class VeriCoreError : Exception() {
-    data class DidCreationFailed(val reason: String) : VeriCoreError()
-    data class DidResolutionFailed(val reason: String) : VeriCoreError()
+sealed class TrustWeaveError : Exception() {
+    data class DidCreationFailed(val reason: String) : TrustWeaveError()
+    data class DidResolutionFailed(val reason: String) : TrustWeaveError()
     // ...
 }
 ```
@@ -305,11 +305,12 @@ When reviewing code:
 - Review [Development Setup](development-setup.md) for environment setup
 - See [Testing Guidelines](testing-guidelines.md) for testing practices
 - Check [Pull Request Process](pull-request-process.md) for contribution workflow
-- Explore existing code in VeriCore modules for examples
+- Explore existing code in TrustWeave modules for examples
 
 ## References
 
 - [Kotlin Style Guide](https://kotlinlang.org/docs/coding-conventions.html)
 - [ktlint Documentation](https://ktlint.github.io/)
 - [KDoc Reference](https://kotlinlang.org/docs/kotlin-doc.html)
+
 

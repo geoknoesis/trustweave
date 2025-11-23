@@ -1,6 +1,6 @@
 # Verifiable Credentials (VCs)
 
-> VeriCore expansions in this guide are authored by [Geoknoesis LLC](https://www.geoknoesis.com). They reflect Geoknoesis’ recommended patterns for W3C Verifiable Credentials on the JVM.
+> TrustWeave expansions in this guide are authored by [Geoknoesis LLC](https://www.geoknoesis.com). They reflect Geoknoesis’ recommended patterns for W3C Verifiable Credentials on the JVM.
 
 ## What is a Verifiable Credential?
 
@@ -8,7 +8,7 @@ A **Verifiable Credential** is a tamper-evident attestation following the W3C VC
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -18,19 +18,19 @@ dependencies {
 2. **Credential subject** – the claims being asserted (`name`, `degree`, `license`, etc.).  
 3. **Proof** – cryptographic signature binding the issuer to the credential content.
 
-## Why VCs matter in VeriCore
+## Why VCs matter in TrustWeave
 
 - They are the unit of trust flowing between issuers and verifiers.  
 - Wallets store VCs, anchor clients notarise them, and verification routines replay the proofs.  
 - Typed builders and canonicalisation keep the credential lifecycle consistent across DID methods and signature suites.
 
-## How VeriCore issues and verifies VCs
+## How TrustWeave issues and verifies VCs
 
 | Component | Purpose |
 |-----------|---------|
 | `CredentialServiceRegistry` | Discovers issuer/verifier services (in-memory or SPI). |
-| `VeriCore.credentials.issue()` | High-level facade performing canonicalisation, signing, and proof attachment. |
-| `VeriCore.credentials.verify()` | Rebuilds canonical form, resolves DIDs, validates proofs, and returns `CredentialVerificationResult`. |
+| `TrustWeave.credentials.issue()` | High-level facade performing canonicalisation, signing, and proof attachment. |
+| `TrustWeave.credentials.verify()` | Rebuilds canonical form, resolves DIDs, validates proofs, and returns `CredentialVerificationResult`. |
 | `CredentialIssuanceOptions` | Lower-level SPI options (validity window, schema hints) when using `CredentialServiceRegistry`. |
 
 Detailed API signatures live in the [Credential Service API reference](../api-reference/credential-service-api.md).
@@ -38,12 +38,14 @@ Detailed API signatures live in the [Credential Service API reference](../api-re
 ### Example: issuing a credential
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
+import com.trustweave.TrustWeave
+import com.trustweave.credential.IssuanceConfig
+import com.trustweave.credential.ProofType
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-suspend fun issueEmployeeBadge(vericore: VeriCore, issuerDid: String, issuerKeyId: String) =
-    vericore.credentials.issue(
+suspend fun issueEmployeeBadge(trustweave: TrustWeave, issuerDid: String, issuerKeyId: String) =
+    trustweave.credentials.issue(
         issuer = issuerDid,
         subject = buildJsonObject {
             put("id", "did:key:holder-123")
@@ -60,7 +62,7 @@ suspend fun issueEmployeeBadge(vericore: VeriCore, issuerDid: String, issuerKeyI
 
 **Outcome:** Issues a signed credential using typed issuance options, returning a `VerifiableCredential` that downstream wallets or verifiers can consume.
 
-VeriCore automatically:
+TrustWeave automatically:
 
 - Canonicalises the JSON payload using JSON Canonicalization Scheme (JCS).  
 - Signs the digest through the configured `KeyManagementService`.  
@@ -70,16 +72,17 @@ VeriCore automatically:
 ### Example: verifying a credential
 
 ```kotlin
-import com.geoknoesis.vericore.credential.verifyCredential
+import com.trustweave.TrustWeave
+import com.trustweave.credential.models.VerifiableCredential
 
-suspend fun verifyBadge(vericore: VeriCore, credential: com.geoknoesis.vericore.credential.models.VerifiableCredential) {
-    val result = vericore.credentials.verify(credential)
+suspend fun verifyBadge(trustweave: TrustWeave, credential: VerifiableCredential) {
+    val result = trustweave.credentials.verify(credential)
     // Note: verify() returns CredentialVerificationResult directly, not Result
     if (result.valid) {
-        require(result.valid) { "Proofs failed: ${result.errors}" }
         println("Credential verified with checks: proof=${result.proofValid}, issuer=${result.issuerValid}")
+        println("Not expired: ${result.notExpired}, Not revoked: ${result.notRevoked}")
     } else {
-        println("Verification failed: ${result.errors}")
+        println("Verification failed: ${result.errors.joinToString()}")
     }
 }
 
@@ -92,8 +95,8 @@ Verification resolves the issuer DID document, checks the signature suites, and 
 - **SPI-level options** – drop down to `CredentialServiceRegistry` and supply `CredentialIssuanceOptions` when you need custom proof types, schema hints, or audiences.  
 - **Anchoring** – store the credential digest with a `BlockchainAnchorClient` to prove freshness (see [Blockchain Anchoring](blockchain-anchoring.md)).  
 - **Revocation** – integrate status endpoints by adding `credentialStatus` claims; custom verification policies can enforce them.  
-- **Error handling** – all credential operations return `Result<T>` with structured `VeriCoreError` types. Use `result.fold()` or `result.getOrThrow()` for error handling. See [Error Handling](../advanced/error-handling.md).
-- **Input validation** – VeriCore automatically validates credential structure, issuer DID format, and method registration before issuance.
+- **Error handling** – credential operations throw `TrustWeaveError` exceptions directly. Use `try-catch` blocks for error handling. See [Error Handling](../advanced/error-handling.md).
+- **Input validation** – TrustWeave automatically validates credential structure, issuer DID format, and method registration before issuance.
 
 ## See also
 
@@ -103,7 +106,7 @@ Verification resolves the issuer DID document, checks the signature suites, and 
 - [Architecture Overview](../introduction/architecture-overview.md) for the credential flow diagram.
 # Verifiable Credentials (VCs)
 
-> VeriCore and this guide are maintained by [Geoknoesis LLC](https://www.geoknoesis.com). Geoknoesis provides both the open source toolkit and the commercial support offerings referenced below.
+> TrustWeave and this guide are maintained by [Geoknoesis LLC](https://www.geoknoesis.com). Geoknoesis provides both the open source toolkit and the commercial support offerings referenced below.
 
 ## What is a Verifiable Credential?
 
@@ -157,28 +160,27 @@ A Verifiable Credential contains:
 A credential is **issued** by an issuer to a subject:
 
 ```kotlin
-import com.geoknoesis.vericore.credential.models.VerifiableCredential
-import com.geoknoesis.vericore.credential.CredentialIssuanceOptions
+import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.CredentialIssuanceOptions
 
-// Create credential (without proof)
-val credential = VerifiableCredential(
-    type = listOf("VerifiableCredential", "PersonCredential"),
-    issuer = issuerDid,
-    credentialSubject = buildJsonObject {
+// Issue credential using TrustWeave service API
+val trustweave = TrustWeave.create()
+val issuerDid = trustweave.dids.create()
+val issuerKeyId = issuerDid.document.verificationMethod.first().id
+
+val issuedCredential = trustweave.credentials.issue(
+    issuer = issuerDid.id,
+    subject = buildJsonObject {
         put("id", subjectDid)
         put("name", "Alice")
         put("email", "alice@example.com")
     },
-    issuanceDate = Instant.now().toString()
-)
-
-// Issue credential (add proof)
-val issuedCredential = credentialService.issueCredential(
-    credential,
-    CredentialIssuanceOptions(
-        proofType = "Ed25519Signature2020",
-        keyId = issuerKeyId
-    )
+    config = IssuanceConfig(
+        proofType = ProofType.Ed25519Signature2020,
+        keyId = issuerKeyId,
+        issuerDid = issuerDid.id
+    ),
+    types = listOf("VerifiableCredential", "PersonCredential")
 )
 
 **Outcome:** Produces a signed credential ready for distribution, anchored to the specific proof type and key you configured.
@@ -188,7 +190,7 @@ val issuedCredential = credentialService.issueCredential(
 Store credentials in a wallet:
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.credential.BasicWallet
+import com.trustweave.testkit.credential.BasicWallet
 
 val wallet = BasicWallet()
 val credentialId = wallet.store(issuedCredential)
@@ -201,8 +203,8 @@ val credentialId = wallet.store(issuedCredential)
 Create a **Verifiable Presentation** to share credentials:
 
 ```kotlin
-import com.geoknoesis.vericore.credential.models.VerifiablePresentation
-import com.geoknoesis.vericore.credential.PresentationOptions
+import com.trustweave.credential.models.VerifiablePresentation
+import com.trustweave.credential.PresentationOptions
 
 val presentation = VerifiablePresentation(
     type = listOf("VerifiablePresentation"),
@@ -219,35 +221,25 @@ val presentation = VerifiablePresentation(
 Verify a credential or presentation:
 
 ```kotlin
-import com.geoknoesis.vericore.credential.CredentialVerificationOptions
-import com.geoknoesis.vericore.credential.did.CredentialDidResolver
-import com.geoknoesis.vericore.credential.verifier.CredentialVerifier
-import com.geoknoesis.vericore.did.DidMethodRegistry
-import com.geoknoesis.vericore.did.toCredentialDidResolution
+import com.trustweave.TrustWeave
+import com.trustweave.credential.VerificationConfig
 
-val didRegistry = DidMethodRegistry()
-// register DID methods here, e.g. didRegistry.register(didMethod)
+val trustweave = TrustWeave.create()
 
-val didResolver = CredentialDidResolver { did ->
-    didRegistry.resolve(did).toCredentialDidResolution()
-}
-
-val verifier = CredentialVerifier(didResolver)
-
-val result = verifier.verify(
+val result = trustweave.credentials.verify(
     credential = issuedCredential,
-    options = CredentialVerificationOptions(
+    config = VerificationConfig(
         checkRevocation = false, // Requires status list integration
         checkExpiration = true,
-        validateSchema = false,
-        didResolver = didResolver
+        verifyBlockchainAnchor = false
     )
 )
 
 if (result.valid) {
     println("Credential passed structural checks.")
+    println("Proof valid: ${result.proofValid}, Issuer valid: ${result.issuerValid}")
 } else {
-    println("Verification errors: ${result.errors}")
+    println("Verification errors: ${result.errors.joinToString()}")
 }
 
 **Outcome:** Indicates whether the credential satisfied structural checks (expiration, DID resolution, optional revocation) and surfaces diagnostics for debugging.
@@ -294,7 +286,7 @@ Claims about what you're allowed to do:
 
 ## Proof Types
 
-VeriCore supports multiple proof types:
+TrustWeave supports multiple proof types:
 
 - **Ed25519Signature2020**: Ed25519 signatures (recommended)
 - **JsonWebSignature2020**: JWT-based proofs

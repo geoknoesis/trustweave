@@ -1,6 +1,6 @@
 # Pull Request Process
 
-This guide explains the pull request process for contributing to VeriCore.
+This guide explains the pull request process for contributing to TrustWeave.
 
 ## Overview
 
@@ -226,4 +226,5 @@ After merge:
 - [Conventional Commits](https://www.conventionalcommits.org/)
 - [Git Flow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow)
 - [Code Review Best Practices](https://github.com/google/eng-practices/blob/master/review/)
+
 

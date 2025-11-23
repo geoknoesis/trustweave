@@ -1,6 +1,6 @@
 # Age Verification Scenario
 
-This guide demonstrates how to build a privacy-preserving age verification system using VeriCore. You'll learn how identity providers can issue age credentials, how individuals can store them in wallets, and how service providers can verify age without seeing personal information or full identity details.
+This guide demonstrates how to build a privacy-preserving age verification system using TrustWeave. You'll learn how identity providers can issue age credentials, how individuals can store them in wallets, and how service providers can verify age without seeing personal information or full identity details.
 
 ## What You'll Build
 
@@ -98,7 +98,7 @@ Traditional age verification has several problems:
 4. **Compliance risk**: May violate privacy regulations
 5. **User friction**: Complex verification processes
 
-VeriCore solves this by enabling:
+TrustWeave solves this by enabling:
 
 - **Privacy-preserving**: Selective disclosure shows only age
 - **Cryptographic proof**: Tamper-proof age credentials
@@ -129,12 +129,12 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add TrustWeave dependencies to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -146,17 +146,17 @@ dependencies {
 
 ## Step 2: Complete Runnable Example
 
-Here's the full age verification flow with photo association using the VeriCore facade API:
+Here's the full age verification flow with photo association using the TrustWeave facade API:
 
 ```kotlin
 package com.example.age.verification
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.credential.PresentationOptions
-import com.geoknoesis.vericore.credential.wallet.Wallet
-import com.geoknoesis.vericore.json.DigestUtils
-import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.credential.PresentationOptions
+import com.trustweave.credential.wallet.Wallet
+import com.trustweave.json.DigestUtils
+import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -172,26 +172,26 @@ fun main() = runBlocking {
     println("Age Verification Scenario - Complete End-to-End Example with Photo")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance
-    val vericore = VeriCore.create()
-    println("\n✅ VeriCore initialized")
+    // Step 1: Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
+    println("\n✅ TrustWeave initialized")
     
     // Step 2: Create DIDs for identity provider, individual, and service providers
-    val identityProviderDidDoc = vericore.dids.create()
+    val identityProviderDidDoc = TrustWeave.dids.create()
     val identityProviderDid = identityProviderDidDoc.id
     val identityProviderKeyId = identityProviderDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val individualDidDoc = vericore.dids.create()
+    val individualDidDoc = TrustWeave.dids.create()
     val individualDid = individualDidDoc.id
     
-    val alcoholServiceDidDoc = vericore.dids.create()
+    val alcoholServiceDidDoc = TrustWeave.dids.create()
     val alcoholServiceDid = alcoholServiceDidDoc.id
     
-    val gamblingServiceDidDoc = vericore.dids.create()
+    val gamblingServiceDidDoc = TrustWeave.dids.create()
     val gamblingServiceDid = gamblingServiceDidDoc.id
     
-    val contentServiceDidDoc = vericore.dids.create()
+    val contentServiceDidDoc = TrustWeave.dids.create()
     val contentServiceDid = contentServiceDidDoc.id
     
     println("✅ Identity Provider DID: $identityProviderDid")
@@ -242,7 +242,7 @@ fun main() = runBlocking {
     println("   Thumbnail generated")
     
     // Step 5: Issue age verification credential with photo (privacy-preserving - only age, not DOB)
-    val ageCredential = vericore.issueCredential(
+    val ageCredential = TrustWeave.issueCredential(
         issuerDid = identityProviderDid,
         issuerKeyId = identityProviderKeyId,
         credentialSubject = buildJsonObject {
@@ -277,7 +277,7 @@ fun main() = runBlocking {
     println("   Note: Date of birth NOT included for privacy")
     
     // Step 5: Create individual wallet and store age credential
-    val individualWallet = vericore.createWallet(
+    val individualWallet = TrustWeave.createWallet(
         holderDid = individualDid,
         options = WalletCreationOptionsBuilder().apply {
             enableOrganization = true
@@ -299,7 +299,7 @@ fun main() = runBlocking {
     // Step 7: Alcohol service age verification with photo (21+ required)
     println("\n🍺 Alcohol Service Age Verification (21+ required):")
     
-    val alcoholVerification = vericore.verifyCredential(ageCredential).getOrThrow()
+    val alcoholVerification = TrustWeave.verifyCredential(ageCredential).getOrThrow()
     
     if (alcoholVerification.valid) {
         val credentialSubject = ageCredential.credentialSubject
@@ -343,7 +343,7 @@ fun main() = runBlocking {
     // Step 8: Gambling service age verification (18+ required)
     println("\n🎰 Gambling Service Age Verification (18+ required):")
     
-    val gamblingVerification = vericore.verifyCredential(ageCredential).getOrThrow()
+    val gamblingVerification = TrustWeave.verifyCredential(ageCredential).getOrThrow()
     
     if (gamblingVerification.valid) {
         val credentialSubject = ageCredential.credentialSubject
@@ -370,7 +370,7 @@ fun main() = runBlocking {
     // Step 9: Content service age verification (13+ required for some content)
     println("\n📺 Content Service Age Verification (13+ required):")
     
-    val contentVerification = vericore.verifyCredential(ageCredential).getOrThrow()
+    val contentVerification = TrustWeave.verifyCredential(ageCredential).getOrThrow()
     
     if (contentVerification.valid) {
         val credentialSubject = ageCredential.credentialSubject
@@ -463,7 +463,7 @@ fun main() = runBlocking {
 Age Verification Scenario - Complete End-to-End Example with Photo
 ======================================================================
 
-✅ VeriCore initialized
+✅ TrustWeave initialized
 ✅ Identity Provider DID: did:key:z6Mk...
 ✅ Individual DID: did:key:z6Mk...
 ✅ Alcohol Service DID: did:key:z6Mk...
@@ -570,7 +570,7 @@ Age Verification Scenario - Complete End-to-End Example with Photo
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with VeriCore
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 - [Government Digital Identity Scenario](government-digital-identity-scenario.md) - Related identity scenario

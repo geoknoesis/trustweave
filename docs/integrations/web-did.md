@@ -1,10 +1,10 @@
 # Web DID Integration
 
-> This guide covers the did:web method integration for VeriCore. The did:web plugin provides W3C-compliant DID resolution from HTTPS endpoints.
+> This guide covers the did:web method integration for TrustWeave. The did:web plugin provides W3C-compliant DID resolution from HTTPS endpoints.
 
 ## Overview
 
-The `did/plugins/web` module provides a complete implementation of VeriCore's `DidMethod` interface using the W3C did:web specification. This integration enables you to:
+The `did/plugins/web` module provides a complete implementation of TrustWeave's `DidMethod` interface using the W3C did:web specification. This integration enables you to:
 
 - Create and resolve DIDs from HTTPS endpoints
 - Host DID documents at standard web locations (/.well-known/did.json)
@@ -17,10 +17,10 @@ Add the did:web module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.did:web:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore.did:base:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:web:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -31,9 +31,9 @@ dependencies {
 The did:web provider can be configured via options or automatically discovered via SPI:
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
-import com.geoknoesis.vericore.webdid.*
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.did.*
+import com.trustweave.webdid.*
+import com.trustweave.kms.*
 import okhttp3.OkHttpClient
 
 // Manual creation
@@ -49,7 +49,7 @@ val method = WebDidMethod(kms, httpClient, config)
 When the module is on the classpath, did:web is automatically available:
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
+import com.trustweave.did.*
 import java.util.ServiceLoader
 
 // Discover did:web provider
@@ -205,14 +205,14 @@ s3Client.putObject(
 )
 ```
 
-## Integration with VeriCore
+## Integration with TrustWeave
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.webdid.WebDidMethod
-import com.geoknoesis.vericore.webdid.WebDidConfig
+import com.trustweave.TrustWeave
+import com.trustweave.webdid.WebDidMethod
+import com.trustweave.webdid.WebDidConfig
 
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     kms = InMemoryKeyManagementService()
     
     didMethods {
@@ -221,11 +221,11 @@ val vericore = VeriCore.create {
 }
 
 // Use did:web
-val did = vericore.dids.create("web") {
+val did = TrustWeave.dids.create("web") {
     property("domain", "example.com")
 }
 
-val resolved = vericore.dids.resolve(did.id)
+val resolved = TrustWeave.dids.resolve(did.id)
 ```
 
 ## Error Handling
@@ -299,5 +299,5 @@ This implementation follows the [W3C did:web specification](https://w3c-ccg.gith
 
 - [W3C did:web Specification](https://w3c-ccg.github.io/did-method-web/)
 - [DID Core Specification](https://www.w3.org/TR/did-core/)
-- [VeriCore Core API](../api-reference/core-api.md)
+- [TrustWeave Core API](../api-reference/core-api.md)
 

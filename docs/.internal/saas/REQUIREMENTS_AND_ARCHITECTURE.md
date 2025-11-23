@@ -1,8 +1,8 @@
-# VeriCore Governance as a Service: Requirements, User Scenarios, Architecture & UX Design
+# TrustWeave Governance as a Service: Requirements, User Scenarios, Architecture & UX Design
 
 ## Executive Summary
 
-VeriCore Governance as a Service (GaaS) is a no-code, multitenant SaaS platform that enables enterprises to manage trust anchors and governance policies without writing code. The platform supports project-based organization, allowing organizations to create multiple projects with isolated trust infrastructure.
+TrustWeave Governance as a Service (GaaS) is a no-code, multitenant SaaS platform that enables enterprises to manage trust anchors and governance policies without writing code. The platform supports project-based organization, allowing organizations to create multiple projects with isolated trust infrastructure.
 
 ### Core Principles
 1. **No-Code First**: Visual interfaces for all operations, no coding required
@@ -137,7 +137,7 @@ VeriCore Governance as a Service (GaaS) is a no-code, multitenant SaaS platform 
 **User Journey: Setting Up Trust Anchors for Education Platform**
 
 1. **Onboarding (Day 1)**
-   - Signs up for VeriCore GaaS
+   - Signs up for TrustWeave GaaS
    - Creates organization "State University"
    - Creates project "Education Credentials Platform"
    - Watches 2-minute tutorial video
@@ -187,10 +187,10 @@ VeriCore Governance as a Service (GaaS) is a no-code, multitenant SaaS platform 
 **Profile:**
 - Role: Backend Developer at fintech startup
 - Technical level: High (writes code, uses APIs)
-- Goals: Integrate VeriCore into application, automate trust anchor management
+- Goals: Integrate TrustWeave into application, automate trust anchor management
 - Pain points: Needs API access, wants to script operations
 
-**User Journey: Integrating VeriCore via API**
+**User Journey: Integrating TrustWeave via API**
 
 1. **API Setup (Day 1)**
    - Creates project "KYC Platform"
@@ -217,7 +217,7 @@ VeriCore Governance as a Service (GaaS) is a no-code, multitenant SaaS platform 
    - Documents integration for team
 
 **Success Criteria:**
-- Integrated VeriCore API in <1 day
+- Integrated TrustWeave API in <1 day
 - Automated trust anchor management
 - Zero manual intervention needed
 
@@ -339,7 +339,7 @@ VeriCore Governance as a Service (GaaS) is a no-code, multitenant SaaS platform 
 │  └──────────────┘  └─────────────┘  └─────────────────┘    │
 │                          │                                    │
 │                  ┌───────▼────────┐                          │
-│                  │  VeriCore SDK  │                          │
+│                  │  TrustWeave SDK  │                          │
 │                  │  (Trust Layer) │                          │
 │                  └───────┬────────┘                          │
 │                          │                                    │
@@ -372,7 +372,7 @@ VeriCore Governance as a Service (GaaS) is a no-code, multitenant SaaS platform 
 - **Responsibilities**:
   - Trust anchor CRUD operations
   - DID validation
-  - Integration with VeriCore trust registry
+  - Integration with TrustWeave trust registry
   - Trust anchor status management
 
 #### Component 3: Template Service
@@ -802,7 +802,7 @@ Dashboard
 
 ## 8. Next Steps
 
-This document provides the comprehensive foundation for building VeriCore Governance as a Service. The next steps would be:
+This document provides the comprehensive foundation for building TrustWeave Governance as a Service. The next steps would be:
 
 1. **Detailed Wireframes**: Create detailed wireframes for key screens
 2. **API Specification**: Design detailed REST API specification

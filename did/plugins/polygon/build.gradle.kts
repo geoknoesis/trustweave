@@ -1,25 +1,22 @@
 plugins {
-    id("vericore.shared")
     kotlin("jvm")
     kotlin("plugin.serialization")
 }
 
-group = "com.geoknoesis.vericore.did"
-version = "1.0.0-SNAPSHOT"
-
+group = "com.trustweave.did"
 dependencies {
-    implementation(project(":core:vericore-core"))
-    implementation(project(":did:vericore-did"))
+    implementation(project(":credentials:core"))
+    implementation(project(":did:core"))
     implementation(project(":did:plugins:base"))
     implementation(project(":did:plugins:ethr")) // Reuse ethr implementation
-    implementation(project(":chains:vericore-anchor"))
-    implementation(project(":kms:vericore-kms"))
-    implementation(project(":core:vericore-spi"))
+    implementation(project(":anchors:core"))
+    implementation(project(":kms:core"))
+
     
     // Web3j for Polygon blockchain interaction
     implementation("org.web3j:core:4.10.0")
     
     // Test dependencies
-    testImplementation(project(":core:vericore-testkit"))
+    testImplementation(project(":testkit"))
 }
 

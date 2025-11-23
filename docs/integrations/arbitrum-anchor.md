@@ -1,10 +1,10 @@
 # Arbitrum Blockchain Anchor Integration
 
-> This guide covers the Arbitrum blockchain anchor client integration for VeriCore. The Arbitrum adapter provides the largest L2 by TVL with EVM compatibility.
+> This guide covers the Arbitrum blockchain anchor client integration for TrustWeave. The Arbitrum adapter provides the largest L2 by TVL with EVM compatibility.
 
 ## Overview
 
-The `chains/plugins/arbitrum` module provides a complete implementation of VeriCore's `BlockchainAnchorClient` interface using Arbitrum One, the largest Ethereum L2 by TVL. This integration enables you to:
+The `chains/plugins/arbitrum` module provides a complete implementation of TrustWeave's `BlockchainAnchorClient` interface using Arbitrum One, the largest Ethereum L2 by TVL. This integration enables you to:
 
 - Anchor credential digests on Arbitrum with lower fees than Ethereum
 - Benefit from the largest L2 ecosystem by TVL
@@ -17,10 +17,10 @@ Add the Arbitrum adapter module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.chains:arbitrum:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.chains:arbitrum:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
     
     // Web3j for Arbitrum blockchain (EVM-compatible)
     implementation("org.web3j:core:5.0.1")
@@ -32,8 +32,8 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.arbitrum.*
+import com.trustweave.anchor.*
+import com.trustweave.arbitrum.*
 
 // Create Arbitrum anchor client for mainnet
 val options = mapOf(
@@ -74,8 +74,8 @@ val sepoliaClient = ArbitrumBlockchainAnchorClient(
 When the module is on the classpath, Arbitrum adapter is automatically available:
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.anchor.spi.*
+import com.trustweave.anchor.*
+import com.trustweave.anchor.spi.*
 import java.util.ServiceLoader
 
 // Discover Arbitrum provider
@@ -94,8 +94,8 @@ val client = arbitrumProvider?.create(
 ### Anchoring Data
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.arbitrum.*
+import com.trustweave.anchor.*
+import com.trustweave.arbitrum.*
 import kotlinx.serialization.json.*
 
 val client = ArbitrumBlockchainAnchorClient(
@@ -131,13 +131,13 @@ println("Anchored to Arbitrum: ${result.ref.txHash}")
 - **EVM compatible**: Same tools and patterns as Ethereum
 - **Ethereum security**: Secured by Ethereum mainnet
 
-## Integration with VeriCore
+## Integration with TrustWeave
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.arbitrum.*
+import com.trustweave.TrustWeave
+import com.trustweave.arbitrum.*
 
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     blockchain {
         register(
             ArbitrumBlockchainAnchorClient.MAINNET,

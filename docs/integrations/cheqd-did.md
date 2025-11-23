@@ -1,10 +1,10 @@
 # Cheqd DID (did:cheqd) Integration
 
-> This guide covers the did:cheqd method integration for VeriCore. The did:cheqd plugin provides Cheqd network DID resolution with payment-enabled features.
+> This guide covers the did:cheqd method integration for TrustWeave. The did:cheqd plugin provides Cheqd network DID resolution with payment-enabled features.
 
 ## Overview
 
-The `did/plugins/cheqd` module provides an implementation of VeriCore's `DidMethod` interface using the Cheqd network. This integration enables you to:
+The `did/plugins/cheqd` module provides an implementation of TrustWeave's `DidMethod` interface using the Cheqd network. This integration enables you to:
 
 - Create and resolve DIDs on Cheqd blockchain
 - Store DID documents via blockchain anchoring
@@ -17,11 +17,11 @@ Add the did:cheqd module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.did:cheqd:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore.did:base:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:cheqd:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
     
     // HTTP client for Cheqd network integration
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -33,10 +33,10 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.geoknoesis.vericore.cheqddid.*
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.cheqddid.*
+import com.trustweave.anchor.*
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.kms.*
 
 // Create configuration
 val config = CheqdDidConfig.builder()
@@ -76,8 +76,8 @@ val testnetConfig = CheqdDidConfig.testnet(
 When the module is on the classpath, did:cheqd is automatically available:
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
-import com.geoknoesis.vericore.anchor.*
+import com.trustweave.did.*
+import com.trustweave.anchor.*
 import java.util.ServiceLoader
 
 // Discover did:cheqd provider
@@ -215,18 +215,18 @@ val config = CheqdDidConfig.builder()
 - `mainnet`: Production Cheqd network
 - `testnet`: Test Cheqd network
 
-## Integration with VeriCore
+## Integration with TrustWeave
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.cheqddid.*
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.TrustWeave
+import com.trustweave.cheqddid.*
+import com.trustweave.anchor.*
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 
 val config = CheqdDidConfig.mainnet("https://api.cheqd.net")
 val anchorClient = InMemoryBlockchainAnchorClient("cheqd:mainnet")
 
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     kms = InMemoryKeyManagementService()
     
     blockchain {
@@ -239,11 +239,11 @@ val vericore = VeriCore.create {
 }
 
 // Use did:cheqd
-val did = vericore.createDid("cheqd") {
+val did = TrustWeave.createDid("cheqd") {
     algorithm = KeyAlgorithm.ED25519
 }.getOrThrow()
 
-val resolved = vericore.resolveDid(did.id).getOrThrow()
+val resolved = TrustWeave.resolveDid(did.id).getOrThrow()
 ```
 
 ## Payment-Enabled Operations
@@ -282,7 +282,7 @@ Common errors and solutions:
 For testing without actual blockchain:
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 
 val config = CheqdDidConfig.testnet("https://testnet-api.cheqd.net")
 val anchorClient = InMemoryBlockchainAnchorClient("cheqd:testnet")

@@ -1,13 +1,13 @@
-# VeriCore Use Case Scenarios
+# TrustWeave Use Case Scenarios
 
 > **Version:** 1.0.0-SNAPSHOT  
-> Complete end-to-end workflows demonstrating VeriCore in real-world applications.
+> Complete end-to-end workflows demonstrating TrustWeave in real-world applications.
 
 ## Overview
 
-Each scenario provides a complete, runnable example showing how to use VeriCore for specific use cases. All scenarios follow the same pattern:
+Each scenario provides a complete, runnable example showing how to use TrustWeave for specific use cases. All scenarios follow the same pattern:
 
-1. **Setup** – Create VeriCore instance and configure components
+1. **Setup** – Create TrustWeave instance and configure components
 2. **DID Creation** – Create identifiers for actors (issuers, holders, verifiers)
 3. **Credential Operations** – Issue, store, and verify credentials
 4. **Advanced Features** – Wallet organization, presentations, blockchain anchoring
@@ -158,18 +158,18 @@ Scenarios are organized by domain and use case. Each scenario includes a complet
   Complete insurance claims verification system. Demonstrates claim credentials, damage assessment, repair verification, and fraud prevention.
 
 - **[Parametric Insurance for Travel Disruptions](parametric-insurance-travel-scenario.md)** ⭐  
-  Build parametric travel insurance system similar to Chubb Travel Pro using VeriCore. Automatic payouts for flight delays, weather guarantees, baggage delays, and medical emergencies. Accept data from multiple providers (airlines, IATA, weather services) without custom integrations. Prevents fraud and enables quick payouts.
+  Build parametric travel insurance system similar to Chubb Travel Pro using TrustWeave. Automatic payouts for flight delays, weather guarantees, baggage delays, and medical emergencies. Accept data from multiple providers (airlines, IATA, weather services) without custom integrations. Prevents fraud and enables quick payouts.
 
 - **[Parametric Insurance with Earth Observation](parametric-insurance-eo-scenario.md)** ⭐  
   Parametric insurance using EO data credentials. Standardized data oracle system accepting data from multiple providers (ESA, Planet, NASA). Prevents replay attacks and data corruption. See also [Earth Observation & Climate Applications](#earth-observation--climate-applications) section.
 
 - **[Smart Contract: Parametric Insurance](smart-contract-parametric-insurance-scenario.md)** ⭐  
-  Parametric insurance using VeriCore Smart Contracts abstraction. Demonstrates contract lifecycle, automatic execution based on EO data triggers, verifiable credentials, and blockchain anchoring. Complete workflow from contract creation to automatic payout.
+  Parametric insurance using TrustWeave Smart Contracts abstraction. Demonstrates contract lifecycle, automatic execution based on EO data triggers, verifiable credentials, and blockchain anchoring. Complete workflow from contract creation to automatic payout.
 
 ### 🔒 Compliance & Security
 
 - **[SOC2 Compliance](soc2-compliance-scenario.md)** ⭐  
-  Build SOC2 Type II compliant systems using VeriCore. Immutable audit trails with blockchain anchoring, access control with verifiable credentials, key rotation with history preservation, change management, and automated compliance reporting. Demonstrates how to achieve SOC2 certification with verifiable proof.
+  Build SOC2 Type II compliant systems using TrustWeave. Immutable audit trails with blockchain anchoring, access control with verifiable credentials, key rotation with history preservation, change management, and automated compliance reporting. Demonstrates how to achieve SOC2 certification with verifiable proof.
 
 ## How to Use These Scenarios
 
@@ -190,21 +190,21 @@ Each scenario follows this structure:
 ```kotlin
 fun main() = runBlocking {
     // 1. Setup
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // 2. Create DIDs
-    val issuerDid = vericore.dids.create()
-    val holderDid = vericore.dids.create()
+    val issuerDid = TrustWeave.dids.create()
+    val holderDid = TrustWeave.dids.create()
     
     // 3. Issue Credential
-    val credential = vericore.issueCredential(...).getOrThrow()
+    val credential = TrustWeave.issueCredential(...).getOrThrow()
     
     // 4. Store in Wallet
-    val wallet = vericore.createWallet(holderDid.id).getOrThrow()
+    val wallet = TrustWeave.createWallet(holderDid.id).getOrThrow()
     val credentialId = wallet.store(credential)
     
     // 5. Verify
-    val verification = vericore.verifyCredential(credential).getOrThrow()
+    val verification = TrustWeave.verifyCredential(credential).getOrThrow()
     
     // 6. Advanced features (scenario-specific)
     // ...
@@ -215,11 +215,11 @@ fun main() = runBlocking {
 
 - Java 21+
 - Kotlin 2.2.0+
-- VeriCore dependency (see [Installation](../getting-started/installation.md))
+- TrustWeave dependency (see [Installation](../getting-started/installation.md))
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) – Get started with VeriCore
+- [Quick Start](../getting-started/quick-start.md) – Get started with TrustWeave
 - [Common Patterns](../getting-started/common-patterns.md) – Reusable code patterns
 - [API Reference](../api-reference/core-api.md) – Complete API documentation
 - [Core Concepts](../core-concepts/README.md) – Fundamental concepts

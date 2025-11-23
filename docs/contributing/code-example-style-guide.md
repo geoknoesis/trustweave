@@ -1,6 +1,6 @@
 # Code Example Style Guide
 
-This guide establishes standards for code examples in VeriCore documentation to ensure consistency, clarity, and correctness.
+This guide establishes standards for code examples in TrustWeave documentation to ensure consistency, clarity, and correctness.
 
 ## General Principles
 
@@ -24,8 +24,8 @@ This guide establishes standards for code examples in VeriCore documentation to 
 **Example:**
 ```kotlin
 // Quick start pattern
-val did = vericore.createDid().getOrThrow()
-val credential = vericore.issueCredential(...).getOrThrow()
+val did = TrustWeave.createDid().getOrThrow()
+val credential = TrustWeave.issueCredential(...).getOrThrow()
 ```
 
 **Marking:**
@@ -33,7 +33,7 @@ Add comment when using this pattern:
 ```kotlin
 // Quick start: using getOrThrow() for simplicity
 // In production, use fold() for proper error handling
-val did = vericore.createDid().getOrThrow()
+val did = TrustWeave.createDid().getOrThrow()
 ```
 
 ### Pattern 2: Production Code (fold)
@@ -47,7 +47,7 @@ val did = vericore.createDid().getOrThrow()
 **Example:**
 ```kotlin
 // Production pattern: explicit error handling
-val result = vericore.createDid()
+val result = TrustWeave.createDid()
 result.fold(
     onSuccess = { did -> 
         processDid(did)
@@ -68,9 +68,9 @@ result.fold(
 **Example:**
 ```kotlin
 // Chaining pattern
-val credential = vericore.createDid()
+val credential = TrustWeave.createDid()
     .map { did -> 
-        vericore.issueCredential(issuerDid = did.id, ...)
+        TrustWeave.issueCredential(issuerDid = did.id, ...)
     }
     .flatMap { it }  // Unwrap nested Result
     .getOrThrow()
@@ -83,11 +83,11 @@ val credential = vericore.createDid()
 Always include complete imports at the top of examples:
 
 ```kotlin
-// VeriCore imports
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.did.*
-import com.geoknoesis.vericore.credential.models.VerifiableCredential
+// TrustWeave imports
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.did.*
+import com.trustweave.credential.models.VerifiableCredential
 
 // Kotlinx imports
 import kotlinx.coroutines.runBlocking
@@ -97,7 +97,7 @@ import kotlinx.serialization.json.put
 
 ### Import Organization
 
-1. VeriCore imports (grouped by module)
+1. TrustWeave imports (grouped by module)
 2. Kotlinx imports
 3. Standard library imports
 4. Third-party imports
@@ -116,15 +116,15 @@ import kotlinx.serialization.json.put
 ```kotlin
 // Good: Explains why
 // Using getOrThrow() for quick start - in production use fold()
-val did = vericore.createDid().getOrThrow()
+val did = TrustWeave.createDid().getOrThrow()
 
 // Good: Clarifies behavior
 // This creates an in-memory wallet (testing only)
-val wallet = vericore.createWallet(holderDid).getOrThrow()
+val wallet = TrustWeave.createWallet(holderDid).getOrThrow()
 
 // Bad: States the obvious
 // Create a DID
-val did = vericore.createDid().getOrThrow()
+val did = TrustWeave.createDid().getOrThrow()
 ```
 
 ## Variable Naming
@@ -166,7 +166,7 @@ val cs = buildJsonObject { ... }
 ### Format
 
 ```kotlin
-package com.example.vericore.quickstart
+package com.example.TrustWeave.quickstart
 
 // ... imports ...
 
@@ -187,9 +187,9 @@ fun main() = runBlocking {
 
 ```markdown
 > **Version:** 1.0.0-SNAPSHOT  
-> **API:** VeriCore Facade
+> **API:** TrustWeave Facade
 
-This example uses the VeriCore facade API available in 1.0.0+.
+This example uses the TrustWeave facade API available in 1.0.0+.
 ```
 
 ## Context Indicators
@@ -200,28 +200,28 @@ Add context indicators to examples:
 
 ```kotlin
 // Quick start example
-val did = vericore.createDid().getOrThrow()
+val did = TrustWeave.createDid().getOrThrow()
 
 // Production example
-val result = vericore.createDid()
+val result = TrustWeave.createDid()
 result.fold(
     onSuccess = { did -> /* handle */ },
     onFailure = { error -> /* handle */ }
 )
 
 // Testing example
-val testDid = vericore.createDid().getOrThrow()
+val testDid = TrustWeave.createDid().getOrThrow()
 ```
 
 ## Complete Example Template
 
 ```kotlin
-package com.example.vericore.example
+package com.example.TrustWeave.example
 
-// VeriCore imports
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.did.*
+// TrustWeave imports
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.did.*
 
 // Kotlinx imports
 import kotlinx.coroutines.runBlocking
@@ -237,24 +237,24 @@ import kotlinx.serialization.json.put
  * - Error handling patterns
  */
 fun main() = runBlocking {
-    // Create VeriCore instance
-    val vericore = VeriCore.create()
+    // Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
     
     // Create DID with error handling
-    val didResult = vericore.createDid()
+    val didResult = TrustWeave.createDid()
     didResult.fold(
         onSuccess = { did ->
             println("Created DID: ${did.id}")
             
             // Resolve the DID
-            val resolution = vericore.resolveDid(did.id).getOrThrow()
+            val resolution = TrustWeave.resolveDid(did.id).getOrThrow()
             if (resolution.document != null) {
                 println("Resolved DID document")
             }
         },
         onFailure = { error ->
             when (error) {
-                is VeriCoreError.DidMethodNotRegistered -> {
+                is TrustWeaveError.DidMethodNotRegistered -> {
                     println("Method not registered: ${error.method}")
                 }
                 else -> {

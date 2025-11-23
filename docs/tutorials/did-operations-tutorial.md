@@ -1,19 +1,19 @@
 # DID Operations Tutorial
 
-This tutorial provides a comprehensive guide to performing DID operations with VeriCore. You'll learn how to create, resolve, update, and deactivate DIDs using various DID methods.
+This tutorial provides a comprehensive guide to performing DID operations with TrustWeave. You'll learn how to create, resolve, update, and deactivate DIDs using various DID methods.
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
 }
 ```
 
 **Result:** Gives you the DID registry, DID method interfaces, KMS abstractions, and in-memory implementations used throughout this tutorial.
 
-> Tip: The runnable quick-start sample (`./gradlew :vericore-examples:runQuickStartSample`) mirrors the core flows below. Clone it as a starting point before wiring more advanced DID logic.
+> Tip: The runnable quick-start sample (`./gradlew :TrustWeave-examples:runQuickStartSample`) mirrors the core flows below. Clone it as a starting point before wiring more advanced DID logic.
 
 ## Prerequisites
 
@@ -36,7 +36,7 @@ dependencies {
 A DID method is an implementation of the `DidMethod` interface that supports a specific DID method (e.g., `did:key`, `did:web`, `did:ion`). Each DID method has its own creation, resolution, update, and deactivation logic.
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
+import com.trustweave.did.*
 
 interface DidMethod {
     val method: String
@@ -49,32 +49,27 @@ interface DidMethod {
 
 **What this does:** Defines the contract for DID operations that all DID method implementations must fulfill.
 
-**Outcome:** Enables VeriCore to support multiple DID methods through a unified interface.
+**Outcome:** Enables TrustWeave to support multiple DID methods through a unified interface.
 
 ## Creating DIDs
 
-### Using VeriCore Facade (Recommended)
+### Using TrustWeave Facade (Recommended)
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
+import com.trustweave.TrustWeave
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val trustweave = TrustWeave.create()
     
     // Create DID using did:key method
-    val did = vericore.dids.create()
-    val didResult = Result.success(did)
-    
-    didResult.fold(
-        onSuccess = { did ->
-            println("Created DID: ${did.id}")
-            println("DID Document: ${did.document}")
-        },
-        onFailure = { error ->
-            println("DID creation failed: ${error.message}")
-        }
-    )
+    try {
+        val did = trustweave.dids.create()
+        println("Created DID: ${did.id}")
+        println("DID Document ID: ${did.id}")
+    } catch (error: TrustWeaveError) {
+        println("DID creation failed: ${error.message}")
+    }
 }
 ```
 
@@ -83,22 +78,22 @@ fun main() = runBlocking {
 ### Creating DIDs with Specific Methods
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.did.*
+import com.trustweave.TrustWeave
+import com.trustweave.did.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val trustweave = TrustWeave.create()
     
     // Create DID with did:key method
-    val keyDid = vericore.dids.create("key") {
+    val keyDid = trustweave.dids.create("key") {
         algorithm = KeyAlgorithm.Ed25519
     }
     
-    // Create DID with did:web method
-    val webDid = vericore.dids.create("web") {
-        domain = "example.com"
-        path = "/did/user/alice"
+    // Create DID with did:web method (requires did:web method registration)
+    val webDid = trustweave.dids.create("web") {
+        algorithm = KeyAlgorithm.Ed25519
+        // Note: did:web specific options would be in additionalProperties
     }
     
     println("Key DID: ${keyDid.id}")
@@ -111,9 +106,9 @@ fun main() = runBlocking {
 ### Using DID Method Registry
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
-import com.geoknoesis.vericore.kms.*
-import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.did.*
+import com.trustweave.kms.*
+import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -143,29 +138,28 @@ fun main() = runBlocking {
 
 ## Resolving DIDs
 
-### Resolving DIDs with VeriCore Facade
+### Resolving DIDs with TrustWeave Facade
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
+import com.trustweave.TrustWeave
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val trustweave = TrustWeave.create()
     
     val did = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
-    val resolution = vericore.dids.resolve(did)
-    val resolutionResult = Result.success(resolution)
-    
-    resolutionResult.fold(
-        onSuccess = { result ->
-            println("Resolved DID: ${result.didDocument?.id}")
-            println("Document: ${result.didDocument}")
-            println("Metadata: ${result.metadata}")
-        },
-        onFailure = { error ->
-            println("Resolution failed: ${error.message}")
+    try {
+        val resolution = trustweave.dids.resolve(did)
+        if (resolution.document != null) {
+            println("Resolved DID: ${resolution.document.id}")
+            println("Document: ${resolution.document}")
+            println("Metadata method: ${resolution.metadata.method}")
+        } else {
+            println("DID not found: ${resolution.metadata.error}")
         }
-    )
+    } catch (error: TrustWeaveError) {
+        println("Resolution failed: ${error.message}")
+    }
 }
 ```
 
@@ -174,7 +168,7 @@ fun main() = runBlocking {
 ### Resolving DIDs with Method Registry
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
+import com.trustweave.did.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -202,36 +196,33 @@ fun main() = runBlocking {
 ### Updating DID Documents
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.did.*
+import com.trustweave.TrustWeave
+import com.trustweave.did.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val trustweave = TrustWeave.create()
     
     val did = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
     
     // Update DID document
-    val updateResult = vericore.updateDid(did) { document ->
-        // Add a new service endpoint
-        document.copy(
-            service = document.service + Service(
-                id = "${document.id}#service-1",
-                type = "LinkedDomains",
-                serviceEndpoint = "https://example.com/service"
+    try {
+        val updatedDoc = trustweave.dids.update(did) { document ->
+            // Add a new service endpoint
+            document.copy(
+                service = document.service + Service(
+                    id = "${document.id}#service-1",
+                    type = "LinkedDomains",
+                    serviceEndpoint = "https://example.com/service"
+                )
             )
-        )
-    }
-    
-    updateResult.fold(
-        onSuccess = { updatedDoc ->
-            println("Updated DID: ${updatedDoc.id}")
-            println("Services: ${updatedDoc.service.size}")
-        },
-        onFailure = { error ->
-            println("Update failed: ${error.message}")
         }
-    )
+        
+        println("Updated DID: ${updatedDoc.id}")
+        println("Services: ${updatedDoc.service.size}")
+    } catch (error: TrustWeaveError) {
+        println("Update failed: ${error.message}")
+    }
 }
 ```
 
@@ -242,29 +233,25 @@ fun main() = runBlocking {
 ### Deactivating DIDs
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
+import com.trustweave.TrustWeave
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val trustweave = TrustWeave.create()
     
     val did = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
     
     // Deactivate DID
-    val deactivateResult = vericore.deactivateDid(did)
-    
-    deactivateResult.fold(
-        onSuccess = { success ->
-            if (success) {
-                println("DID deactivated successfully")
-            } else {
-                println("DID deactivation failed")
-            }
-        },
-        onFailure = { error ->
-            println("Deactivation error: ${error.message}")
+    try {
+        val success = trustweave.dids.deactivate(did)
+        if (success) {
+            println("DID deactivated successfully")
+        } else {
+            println("DID deactivation failed")
         }
-    )
+    } catch (error: TrustWeaveError) {
+        println("Deactivation error: ${error.message}")
+    }
 }
 ```
 
@@ -275,8 +262,8 @@ fun main() = runBlocking {
 ### Managing Multiple DID Methods
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.did.*
+import com.trustweave.kms.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -315,34 +302,30 @@ fun main() = runBlocking {
 ### Working with DID Documents
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
+import com.trustweave.did.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
-    val did = vericore.dids.create()
-    val didResult = Result.success(did)
+    val trustweave = TrustWeave.create()
     
-    didResult.fold(
-        onSuccess = { did ->
-            val document = did.document
-            
-            // Access verification methods
-            val verificationMethods = document.verificationMethod
-            println("Verification methods: ${verificationMethods.size}")
-            
-            // Access services
-            val services = document.service
-            println("Services: ${services.size}")
-            
-            // Access authentication methods
-            val authentication = document.authentication
-            println("Authentication methods: ${authentication.size}")
-        },
-        onFailure = { error ->
-            println("Error: ${error.message}")
-        }
-    )
+    try {
+        val did = trustweave.dids.create()
+        val document = did
+        
+        // Access verification methods
+        val verificationMethods = document.verificationMethod
+        println("Verification methods: ${verificationMethods.size}")
+        
+        // Access services
+        val services = document.service
+        println("Services: ${services.size}")
+        
+        // Access authentication methods
+        val authentication = document.authentication
+        println("Authentication methods: ${authentication.size}")
+    } catch (error: TrustWeaveError) {
+        println("Error: ${error.message}")
+    }
 }
 ```
 
@@ -351,32 +334,31 @@ fun main() = runBlocking {
 ### Error Handling
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.VeriCoreError
+import com.trustweave.TrustWeave
+import com.trustweave.core.TrustWeaveError
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val trustweave = TrustWeave.create()
     
-    val did = vericore.dids.create()
-    val result = Result.success(did)
-    result.fold(
-        onSuccess = { did -> println("Created: ${did.id}") },
-        onFailure = { error ->
-            when (error) {
-                is VeriCoreError.DidCreationFailed -> {
-                    println("Creation failed: ${error.reason}")
-                }
-                is VeriCoreError.DidResolutionFailed -> {
-                    println("Resolution failed: ${error.reason}")
-                }
-                is VeriCoreError.DidUpdateFailed -> {
-                    println("Update failed: ${error.reason}")
-                }
-                else -> println("Error: ${error.message}")
+    try {
+        val did = trustweave.dids.create()
+        println("Created: ${did.id}")
+    } catch (error: TrustWeaveError) {
+        when (error) {
+            is TrustWeaveError.DidMethodNotRegistered -> {
+                println("Method not registered: ${error.method}")
+                println("Available methods: ${error.availableMethods}")
             }
+            is TrustWeaveError.InvalidDidFormat -> {
+                println("Invalid DID format: ${error.reason}")
+            }
+            is TrustWeaveError.DidNotFound -> {
+                println("DID not found: ${error.did}")
+            }
+            else -> println("Error: ${error.message}")
         }
-    )
+    }
 }
 ```
 
@@ -392,6 +374,6 @@ fun main() = runBlocking {
 ## References
 
 - [W3C DID Core Specification](https://www.w3.org/TR/did-core/)
-- [VeriCore DID Module](../modules/vericore-did.md)
-- [VeriCore Core API](../api-reference/core-api.md)
+- [TrustWeave DID Module](../modules/trustweave-did.md)
+- [TrustWeave Core API](../api-reference/core-api.md)
 

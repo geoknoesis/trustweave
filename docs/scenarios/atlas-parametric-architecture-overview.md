@@ -1,12 +1,12 @@
-# Atlas Parametric MGA: Architecture Overview with VeriCore
+# Atlas Parametric MGA: Architecture Overview with TrustWeave
 
-> **How VeriCore Powers Your Parametric Insurance MGA**
+> **How TrustWeave Powers Your Parametric Insurance MGA**
 
 ## Executive Summary
 
-This document shows how **VeriCore** serves as the trust and integrity foundation for your parametric insurance MGA platform. VeriCore solves the "Oracle Problem" by providing standardized, verifiable EO data credentials that enable instant payouts with regulatory compliance.
+This document shows how **TrustWeave** serves as the trust and integrity foundation for your parametric insurance MGA platform. TrustWeave solves the "Oracle Problem" by providing standardized, verifiable EO data credentials that enable instant payouts with regulatory compliance.
 
-## The Problem VeriCore Solves
+## The Problem TrustWeave Solves
 
 ### Current Industry Challenge
 
@@ -16,7 +16,7 @@ This document shows how **VeriCore** serves as the trust and integrity foundatio
 - Trust issues: Need cryptographic proof that data used for $50M payout is authentic
 - Regulatory compliance: Need tamper-proof audit trails
 
-### VeriCore Solution
+### TrustWeave Solution
 
 **Standardized EO Data Oracle:**
 - ✅ Accept EO data from any certified provider using W3C Verifiable Credentials
@@ -44,7 +44,7 @@ This document shows how **VeriCore** serves as the trust and integrity foundatio
                     │ Issues VC                     │ Verifies VC
                     │                               │
         ┌───────────▼───────────────────────────────▼──────────┐
-        │         VeriCore Trust Layer                         │
+        │         TrustWeave Trust Layer                         │
         │  ┌──────────────────────────────────────────────┐    │
         │  │  DID Management                              │    │
         │  │  - EO Provider DIDs                         │    │
@@ -92,7 +92,7 @@ This document shows how **VeriCore** serves as the trust and integrity foundatio
 
 ### 1. SAR Flood Parametric
 
-**VeriCore Components:**
+**TrustWeave Components:**
 - **EO Data Credential**: Sentinel-1 SAR flood depth wrapped in VC
 - **Blockchain Anchor**: Tamper-proof trigger record
 - **Payout Credential**: Verifiable payout record
@@ -106,7 +106,7 @@ Automatic Payout
 
 ### 2. Heatwave Parametric
 
-**VeriCore Components:**
+**TrustWeave Components:**
 - **EO Data Credential**: MODIS LST + ERA5 temperature data
 - **Multi-Day Verification**: Consecutive days above threshold
 - **Payout Credential**: Verifiable heatwave payout
@@ -120,7 +120,7 @@ Automatic Payout
 
 ### 3. Solar Attenuation Parametric
 
-**VeriCore Components:**
+**TrustWeave Components:**
 - **EO Data Credential**: AOD + Irradiance data
 - **Attenuation Calculation**: Percentage drop verification
 - **Payout Credential**: Verifiable solar payout
@@ -132,15 +132,15 @@ AOD + Irradiance → EO Provider → Issues VC → Execute Contract →
 Automatic Payout
 ```
 
-## Key VeriCore Features Used
+## Key TrustWeave Features Used
 
 ### 1. DID Management
 
 **Purpose**: Identity for all participants
 ```kotlin
 // Create DIDs for EO providers, insurers, reinsurers
-val eoProviderDid = vericore.dids.create(method = "key")
-val insuranceDid = vericore.dids.create(method = "key")
+val eoProviderDid = TrustWeave.dids.create(method = "key")
+val insuranceDid = TrustWeave.dids.create(method = "key")
 ```
 
 ### 2. Smart Contracts
@@ -148,7 +148,7 @@ val insuranceDid = vericore.dids.create(method = "key")
 **Purpose**: Executable agreements with automatic execution
 ```kotlin
 // Create parametric insurance contract
-val contract = vericore.contracts.draft(
+val contract = TrustWeave.contracts.draft(
     request = ContractDraftRequest(
         contractType = ContractType.Insurance,
         executionModel = ExecutionModel.Parametric(
@@ -161,14 +161,14 @@ val contract = vericore.contracts.draft(
 ).getOrThrow()
 
 // Bind contract (issues VC and anchors)
-val bound = vericore.contracts.bindContract(
+val bound = TrustWeave.contracts.bindContract(
     contractId = contract.id,
     issuerDid = insurerDid,
     issuerKeyId = insurerKeyId
 ).getOrThrow()
 
 // Activate contract
-val active = vericore.contracts.activateContract(bound.contract.id).getOrThrow()
+val active = TrustWeave.contracts.activateContract(bound.contract.id).getOrThrow()
 ```
 
 ### 3. Verifiable Credentials
@@ -176,7 +176,7 @@ val active = vericore.contracts.activateContract(bound.contract.id).getOrThrow()
 **Purpose**: Wrap EO data with cryptographic proof
 ```kotlin
 // Issue EO data credential
-val floodCredential = vericore.credentials.issue(
+val floodCredential = TrustWeave.credentials.issue(
     issuer = eoProviderDid,
     subject = floodData,
     types = listOf("EarthObservationCredential", "InsuranceOracleCredential")
@@ -188,7 +188,7 @@ val floodCredential = vericore.credentials.issue(
 **Purpose**: Automatically execute contracts based on EO data
 ```kotlin
 // Execute contract with EO data
-val result = vericore.contracts.executeContract(
+val result = TrustWeave.contracts.executeContract(
     contract = active,
     executionContext = ExecutionContext(
         triggerData = buildJsonObject {
@@ -209,7 +209,7 @@ if (result.executed) {
 **Purpose**: Verify EO data before using for triggers
 ```kotlin
 // Verify credential before trigger evaluation
-val verification = vericore.credentials.verify(floodCredential)
+val verification = TrustWeave.credentials.verify(floodCredential)
 if (!verification.valid) {
     // Reject trigger
 }
@@ -220,7 +220,7 @@ if (!verification.valid) {
 **Purpose**: Tamper-proof audit trails
 ```kotlin
 // Anchor trigger to blockchain
-val anchorResult = vericore.blockchains.anchor(
+val anchorResult = TrustWeave.blockchains.anchor(
     data = payoutCredential,
     chainId = "algorand:mainnet"
 ).getOrThrow()
@@ -263,8 +263,8 @@ val eoData = acceptEoDataCredential(dataCredential)
 
 ### Phase 1: MVP (Weeks 1-6)
 
-**VeriCore Setup:**
-- ✅ Initialize VeriCore with blockchain anchoring
+**TrustWeave Setup:**
+- ✅ Initialize TrustWeave with blockchain anchoring
 - ✅ Create DIDs for EO providers
 - ✅ Build SAR flood credential issuance
 - ✅ Implement trigger verification
@@ -277,7 +277,7 @@ val eoData = acceptEoDataCredential(dataCredential)
 
 ### Phase 2: Production (Months 2-12)
 
-**VeriCore Enhancements:**
+**TrustWeave Enhancements:**
 - ✅ Multi-provider EO data acceptance
 - ✅ Heatwave product with LST credentials
 - ✅ Solar attenuation product with AOD credentials
@@ -292,7 +292,7 @@ val eoData = acceptEoDataCredential(dataCredential)
 
 ### Phase 3: Scale (Months 12-24)
 
-**VeriCore Scale:**
+**TrustWeave Scale:**
 - ✅ Hurricane product
 - ✅ Drought/NDVI product
 - ✅ Enterprise licensing
@@ -300,7 +300,7 @@ val eoData = acceptEoDataCredential(dataCredential)
 
 ## Competitive Advantage
 
-### Why VeriCore Gives You an Edge
+### Why TrustWeave Gives You an Edge
 
 1. **Only EO-First MGA**: Full-spectrum EO integration (SAR, NDVI, AOD, LST, InSAR)
 2. **Standardized Format**: W3C-compliant VCs work with all providers
@@ -310,7 +310,7 @@ val eoData = acceptEoDataCredential(dataCredential)
 
 ### vs. Competitors
 
-| Feature | Atlas Parametric (VeriCore) | FloodFlash | Arbol | Descartes |
+| Feature | Atlas Parametric (TrustWeave) | FloodFlash | Arbol | Descartes |
 |---------|----------------------------|------------|-------|-----------|
 | EO-First Design | ✅ | ❌ | ❌ | ❌ |
 | Multi-Provider Support | ✅ | ❌ | ❌ | ❌ |
@@ -321,7 +321,7 @@ val eoData = acceptEoDataCredential(dataCredential)
 ## Technical Stack
 
 ### Core Platform
-- **VeriCore**: Trust and integrity foundation
+- **TrustWeave**: Trust and integrity foundation
 - **Kotlin**: Primary language
 - **Spring Boot**: API framework
 - **PostgreSQL**: Policy and payout data
@@ -333,7 +333,7 @@ val eoData = acceptEoDataCredential(dataCredential)
 - **NDVI**: Drought/agriculture
 
 ### Blockchain
-- **Algorand** or **Polygon**: Anchoring (via VeriCore)
+- **Algorand** or **Polygon**: Anchoring (via TrustWeave)
 - **Low Cost**: Anchor digests only, not full data
 
 ### Integration
@@ -347,7 +347,7 @@ val eoData = acceptEoDataCredential(dataCredential)
 
 See [Parametric Insurance MGA Implementation Guide](parametric-insurance-mga-implementation-guide.md) for complete code examples.
 
-### 2. Explore VeriCore
+### 2. Explore TrustWeave
 
 - [Quick Start](../getting-started/quick-start.md)
 - [Parametric Insurance with EO Data](parametric-insurance-eo-scenario.md)
@@ -356,25 +356,25 @@ See [Parametric Insurance MGA Implementation Guide](parametric-insurance-mga-imp
 ### 3. Start Building
 
 ```kotlin
-// Initialize VeriCore
-val vericore = VeriCore.create {
+// Initialize TrustWeave
+val TrustWeave = TrustWeave.create {
     blockchains {
         "algorand:mainnet" to AlgorandBlockchainAnchorClient(...)
     }
 }
 
 // Create EO provider DID
-val eoProviderDid = vericore.dids.create()
+val eoProviderDid = TrustWeave.dids.create()
 
 // Issue EO data credential
-val floodCredential = vericore.credentials.issue(
+val floodCredential = TrustWeave.credentials.issue(
     issuerDid = eoProviderDid.id,
     credentialSubject = floodData,
     types = listOf("EarthObservationCredential")
 ).getOrThrow()
 
 // Anchor to blockchain
-vericore.blockchains.anchor(
+TrustWeave.blockchains.anchor(
     data = floodCredential,
     serializer = VerifiableCredential.serializer(),
     chainId = "algorand:mainnet"
@@ -384,18 +384,18 @@ vericore.blockchains.anchor(
 ## Next Steps
 
 1. **Read Implementation Guide**: [parametric-insurance-mga-implementation-guide.md](parametric-insurance-mga-implementation-guide.md)
-2. **Review VeriCore Docs**: [Getting Started](../getting-started/quick-start.md)
+2. **Review TrustWeave Docs**: [Getting Started](../getting-started/quick-start.md)
 3. **Build MVP**: Start with SAR flood product
 4. **Add Products**: Heatwave, solar attenuation
 5. **Scale**: Multi-provider, global expansion
 
 ## Questions?
 
-- **VeriCore Documentation**: [docs/README.md](../README.md)
+- **TrustWeave Documentation**: [docs/README.md](../README.md)
 - **API Reference**: [API Reference](../api-reference/core-api.md)
 - **Scenarios**: [Scenarios](README.md)
 
 ---
 
-**Built with VeriCore** - The Foundation for Decentralized Trust and Identity
+**Built with TrustWeave** - The Foundation for Decentralized Trust and Identity
 

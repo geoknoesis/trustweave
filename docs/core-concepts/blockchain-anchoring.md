@@ -1,11 +1,11 @@
 # Blockchain Anchoring
 
-Anchoring creates an immutable audit trail for important events or payloads by writing a compact reference to a blockchain. VeriCore standardises the experience so you can leverage tamper evidence without becoming a chain expert.
+Anchoring creates an immutable audit trail for important events or payloads by writing a compact reference to a blockchain. TrustWeave standardises the experience so you can leverage tamper evidence without becoming a chain expert.
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -19,7 +19,7 @@ dependencies {
 
 Anchoring complements verifiable credentials: you can notarise VC digests, presentation receipts, workflow checkpoints—anything that needs an immutable trail.
 
-## How VeriCore anchors payloads
+## How TrustWeave anchors payloads
 
 | Step | Implementation |
 |------|----------------|
@@ -29,13 +29,13 @@ Anchoring complements verifiable credentials: you can notarise VC digests, prese
 | 4. Verify | `readPayload` rehydrates the JSON, or recompute the digest locally and compare to the stored reference. |
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
 import kotlinx.serialization.json.Json
 
-// Using VeriCore facade (recommended)
-val vericore = VeriCore.create()
-val anchorResult = vericore.blockchains.anchor(
+// Using TrustWeave facade (recommended)
+val TrustWeave = TrustWeave.create()
+val anchorResult = TrustWeave.blockchains.anchor(
     data = credential,
     serializer = VerifiableCredential.serializer(),
     chainId = "algorand:testnet"
@@ -44,12 +44,12 @@ println("Anchored tx: ${anchorResult.ref.txHash}")
 
 // With error handling (wrap in try-catch)
 try {
-    val anchor = vericore.blockchains.anchor(data, serializer, chainId)
+    val anchor = TrustWeave.blockchains.anchor(data, serializer, chainId)
 result.fold(
     onSuccess = { anchor -> println("Anchored tx: ${anchor.ref.txHash}") },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.ChainNotRegistered -> {
+            is TrustWeaveError.ChainNotRegistered -> {
                 println("Chain not registered: ${error.chainId}")
             }
             else -> println("Anchoring error: ${error.message}")
@@ -69,12 +69,12 @@ result.fold(
 ## Reading and verifying
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
 
-// Using VeriCore facade (recommended)
-val vericore = VeriCore.create()
-val data = vericore.blockchains.read<VerifiableCredential>(
+// Using TrustWeave facade (recommended)
+val TrustWeave = TrustWeave.create()
+val data = TrustWeave.blockchains.read<VerifiableCredential>(
     ref = anchorRef,
     serializer = VerifiableCredential.serializer()
 )
@@ -82,12 +82,12 @@ println("Read credential: ${data.id}")
 
 // With error handling (wrap in try-catch)
 try {
-    val data = vericore.blockchains.read<VerifiableCredential>(ref, serializer)
+    val data = TrustWeave.blockchains.read<VerifiableCredential>(ref, serializer)
 result.fold(
     onSuccess = { data -> println("Read: ${data.id}") },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.ChainNotRegistered -> {
+            is TrustWeaveError.ChainNotRegistered -> {
                 println("Chain not registered: ${error.chainId}")
             }
             else -> println("Read error: ${error.message}")
@@ -107,8 +107,8 @@ result.fold(
 - **Retry-friendly anchoring** – public chains may require exponential back-off; design idempotent submissions.  
 - **Integrate with revocation** – anchor revocation lists or proofs to create audit trails for credential status changes.  
 - **Testing** – use the in-memory client or spin up Ganache/Testnet clients for end-to-end tests.
-- **Error handling** – all anchoring operations return `Result<T>` with structured `VeriCoreError` types. See [Error Handling](../advanced/error-handling.md).
-- **Input validation** – VeriCore automatically validates chain ID format and registration before anchoring.
+- **Error handling** – all anchoring operations return `Result<T>` with structured `TrustWeaveError` types. See [Error Handling](../advanced/error-handling.md).
+- **Input validation** – TrustWeave automatically validates chain ID format and registration before anchoring.
 
 ## See also
 
@@ -123,7 +123,7 @@ result.fold(
 
 # Blockchain Anchoring
 
-Anchoring creates an immutable audit trail for important events or payloads by writing a compact reference to a blockchain. VeriCore standardizes the experience so you can take advantage of tamper evidence without having to become a chain expert.
+Anchoring creates an immutable audit trail for important events or payloads by writing a compact reference to a blockchain. TrustWeave standardizes the experience so you can take advantage of tamper evidence without having to become a chain expert.
 
 ## Why Anchor?
 
@@ -133,9 +133,9 @@ Anchoring creates an immutable audit trail for important events or payloads by w
 
 Anchoring is complementary to verifiable credentials: you can anchor raw JSON, credential digests, presentation receipts, or any other data you want to notarize.
 
-## How VeriCore Anchoring Works
+## How TrustWeave Anchoring Works
 
-1. **Choose a chain** – VeriCore ships with in-memory clients for testing and adapters for [Algorand](../integrations/algorand.md), [Polygon](../integrations/README.md#blockchain-anchor-integrations), [Ethereum](../integrations/ethereum-anchor.md), [Base](../integrations/base-anchor.md), [Arbitrum](../integrations/arbitrum-anchor.md), Indy, and community providers. Chains are identified using CAIP-2 strings (for example `algorand:testnet`).
+1. **Choose a chain** – TrustWeave ships with in-memory clients for testing and adapters for [Algorand](../integrations/algorand.md), [Polygon](../integrations/README.md#blockchain-anchor-integrations), [Ethereum](../integrations/ethereum-anchor.md), [Base](../integrations/base-anchor.md), [Arbitrum](../integrations/arbitrum-anchor.md), Indy, and community providers. Chains are identified using CAIP-2 strings (for example `algorand:testnet`).
 2. **Serialize the payload** – the SDK serializes your Kotlin data using Kotlinx Serialization before hashing.
 3. **Submit** – the registered `BlockchainAnchorClient` stores the digest on-chain and returns an `AnchorResult` containing the `AnchorRef` (transaction hash, contract/app ID, chain).
 4. **Verify** – later you can `readPayload` or independently recompute the digest to confirm the payload matches the anchor reference.
@@ -178,5 +178,5 @@ println("Stored mediaType=${stored?.mediaType} payload=${stored?.payload}")
 
 - [Quick Start – Step 5](../getting-started/quick-start.md#step-5-verify-and-optionally-anchor)
 - [Blockchain Anchor Registry API](../api-reference/wallet-api.md) *(for wallet anchoring integration)*
-- [VeriCore Anchor module](../modules/vericore-core.md) for implementation details.
+- [TrustWeave Anchor module](../modules/trustweave-anchor.md) for implementation details.
 

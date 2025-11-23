@@ -1,10 +1,10 @@
 # Creating Custom Adapters
 
-This guide explains how to create custom adapters for VeriCore by implementing the service interfaces.
+This guide explains how to create custom adapters for TrustWeave by implementing the service interfaces.
 
 ## Overview
 
-VeriCore's adapter architecture allows you to implement custom:
+TrustWeave's adapter architecture allows you to implement custom:
 
 - **DID Methods** – custom DID method implementations
 - **Blockchain Adapters** – support for new blockchain networks
@@ -17,8 +17,8 @@ VeriCore's adapter architecture allows you to implement custom:
 ### Implementing DidMethod
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.did.*
+import com.trustweave.kms.*
 
 class MyCustomDidMethod(
     private val kms: KeyManagementService,
@@ -108,8 +108,8 @@ class MyCustomDidMethod(
 ### Creating DID Method Provider
 
 ```kotlin
-import com.geoknoesis.vericore.did.spi.DidMethodProvider
-import com.geoknoesis.vericore.did.*
+import com.trustweave.did.spi.DidMethodProvider
+import com.trustweave.did.*
 
 class MyDidMethodProvider : DidMethodProvider {
     override val name: String = "my-did-method"
@@ -139,7 +139,7 @@ class MyDidMethodProvider : DidMethodProvider {
 
 ### Registering Provider
 
-Create service file at `src/main/resources/META-INF/services/com.geoknoesis.vericore.did.spi.DidMethodProvider`:
+Create service file at `src/main/resources/META-INF/services/com.trustweave.did.spi.DidMethodProvider`:
 
 ```
 com.example.MyDidMethodProvider
@@ -150,7 +150,7 @@ com.example.MyDidMethodProvider
 ### Implementing BlockchainAnchorClient
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.*
+import com.trustweave.anchor.*
 
 class MyBlockchainAnchorClient(
     override val chainId: String,
@@ -202,8 +202,8 @@ class MyBlockchainAnchorClient(
 ### Creating Blockchain Adapter Provider
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.spi.BlockchainAnchorClientProvider
-import com.geoknoesis.vericore.anchor.*
+import com.trustweave.anchor.spi.BlockchainAnchorClientProvider
+import com.trustweave.anchor.*
 
 class MyBlockchainAdapterProvider : BlockchainAnchorClientProvider {
     override val name: String = "my-blockchain"
@@ -224,7 +224,7 @@ class MyBlockchainAdapterProvider : BlockchainAnchorClientProvider {
 
 ### Registering Provider
 
-Create service file at `src/main/resources/META-INF/services/com.geoknoesis.vericore.anchor.spi.BlockchainAnchorClientProvider`:
+Create service file at `src/main/resources/META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider`:
 
 ```
 com.example.MyBlockchainAdapterProvider
@@ -235,7 +235,7 @@ com.example.MyBlockchainAdapterProvider
 ### Implementing KeyManagementService
 
 ```kotlin
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.kms.*
 
 class MyKeyManagementService(
     private val config: MyKmsConfig
@@ -293,8 +293,8 @@ class MyKeyManagementService(
 ### Creating KMS Provider
 
 ```kotlin
-import com.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.kms.spi.KeyManagementServiceProvider
+import com.trustweave.kms.*
 
 class MyKmsProvider : KeyManagementServiceProvider {
     override val name: String = "my-kms"
@@ -313,7 +313,7 @@ class MyKmsProvider : KeyManagementServiceProvider {
 
 ### Registering Provider
 
-Create service file at `src/main/resources/META-INF/services/com.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider`:
+Create service file at `src/main/resources/META-INF/services/com.trustweave.kms.spi.KeyManagementServiceProvider`:
 
 ```
 com.example.MyKmsProvider
@@ -324,7 +324,7 @@ com.example.MyKmsProvider
 ### Unit Testing
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.*
+import com.trustweave.testkit.*
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 
@@ -348,7 +348,7 @@ class MyCustomDidMethodTest {
 ### Integration Testing
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.*
+import com.trustweave.testkit.*
 import kotlin.test.Test
 
 class MyBlockchainAdapterIntegrationTest {
@@ -357,7 +357,7 @@ class MyBlockchainAdapterIntegrationTest {
         val config = MyBlockchainConfig.testnet()
         val client = MyBlockchainAnchorClient("myblockchain:testnet", config)
         
-        val payload = "Hello, VeriCore!".toByteArray()
+        val payload = "Hello, TrustWeave!".toByteArray()
         val result = client.writePayload(payload)
         
         val readData = client.readPayload(result.anchorRef)
@@ -370,11 +370,11 @@ class MyBlockchainAdapterIntegrationTest {
 
 ### Error Handling
 
-Use VeriCore's error types:
+Use TrustWeave's error types:
 
 ```kotlin
-import com.geoknoesis.vericore.core.VeriCoreError
-import com.geoknoesis.vericore.core.Result
+import com.trustweave.core.TrustWeaveError
+import com.trustweave.core.Result
 
 suspend fun createDid(options: DidCreationOptions): Result<DidDocument> {
     return try {
@@ -382,7 +382,7 @@ suspend fun createDid(options: DidCreationOptions): Result<DidDocument> {
         Result.success(didDocument)
     } catch (e: Exception) {
         Result.failure(
-            VeriCoreError.DidCreationFailed(
+            TrustWeaveError.DidCreationFailed(
                 reason = e.message ?: "Unknown error"
             )
         )
@@ -417,7 +417,7 @@ class MyDidConfig private constructor(
 Implement `PluginLifecycle` if needed:
 
 ```kotlin
-import com.geoknoesis.vericore.spi.PluginLifecycle
+import com.trustweave.spi.PluginLifecycle
 
 class MyBlockchainAnchorClient(
     override val chainId: String,
@@ -458,5 +458,5 @@ class MyBlockchainAnchorClient(
 - [Creating Plugins](../contributing/creating-plugins.md)
 - [Service Provider Interface](spi.md)
 - [Plugin Lifecycle](plugin-lifecycle.md)
-- [VeriCore SPI Module](../modules/vericore-spi.md)
+- [Service Provider Interface](spi.md)
 

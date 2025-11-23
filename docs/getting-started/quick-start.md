@@ -1,6 +1,6 @@
 # Quick Start
 
-Get started with VeriCore in 5 minutes! This guide will walk you through creating your first VeriCore application.
+Get started with TrustWeave in 5 minutes! This guide will walk you through creating your first TrustWeave application.
 
 > **Version:** 1.0.0-SNAPSHOT  
 > **Kotlin:** 2.2.0+ | **Java:** 21+  
@@ -8,18 +8,18 @@ Get started with VeriCore in 5 minutes! This guide will walk you through creatin
 
 ## Complete Runnable Example
 
-Here's a complete, copy-paste ready example that demonstrates the full VeriCore workflow. This example uses `getOrThrow()` for simplicity in quick-start scenarios. For production code, see the [Production Pattern](#production-pattern-with-error-handling) section below.
+Here's a complete, copy-paste ready example that demonstrates the full TrustWeave workflow. This example uses `getOrThrow()` for simplicity in quick-start scenarios. For production code, see the [Production Pattern](#production-pattern-with-error-handling) section below.
 
 > **Note:** This example uses `getOrThrow()` which is acceptable for quick starts, tests, and prototypes. For production code, always use `fold()` for explicit error handling. See [Error Handling Patterns](#error-handling-patterns) below.
 
 ```kotlin
-package com.example.vericore.quickstart
+package com.example.TrustWeave.quickstart
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
-import com.geoknoesis.vericore.credential.models.VerifiableCredential
-import com.geoknoesis.vericore.json.DigestUtils
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.TrustWeave
+import com.trustweave.anchor.BlockchainAnchorRegistry
+import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.json.DigestUtils
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -27,8 +27,8 @@ import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
-    // Step 1: Create VeriCore instance with defaults
-    val vericore = VeriCore.create()
+    // Step 1: Create TrustWeave instance with defaults
+    val TrustWeave = TrustWeave.create()
 
     // Step 2: Compute a digest (demonstrates canonicalization)
     val credentialSubject = buildJsonObject {
@@ -42,14 +42,14 @@ fun main() = runBlocking {
     // Step 3: Create an issuer DID
     // Note: getOrThrow() is used here for quick-start simplicity
     // In production, use fold() for error handling (see below)
-    val issuerDocument = vericore.dids.create()
+    val issuerDocument = TrustWeave.dids.create()
     val issuerDid = issuerDocument.id
     val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.id
         ?: error("No verification method generated for $issuerDid")
     println("Issuer DID: $issuerDid (keyId=$issuerKeyId)")
 
     // Step 4: Issue a verifiable credential
-    val credential = vericore.credentials.issue(
+    val credential = TrustWeave.credentials.issue(
         issuer = issuerDid,
         subject = credentialSubject,
         config = IssuanceConfig(
@@ -62,7 +62,7 @@ fun main() = runBlocking {
     println("Issued credential id: ${credential.id}")
 
     // Step 5: Verify the credential
-    val verification = vericore.credentials.verify(credential)
+    val verification = TrustWeave.credentials.verify(credential)
     if (verification.valid) {
         println(
             "Verification succeeded (proof=${verification.proofValid}, " +
@@ -100,14 +100,14 @@ For production code, always use `fold()` for explicit error handling:
 
 ```kotlin
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
 
     // Production pattern: Use fold() for all operations
-    val issuerDocument = Result.success(vericore.dids.create()).fold(
+    val issuerDocument = Result.success(TrustWeave.dids.create()).fold(
         onSuccess = { it },
         onFailure = { error ->
             when (error) {
-                is VeriCoreError.DidMethodNotRegistered -> {
+                is TrustWeaveError.DidMethodNotRegistered -> {
                     println("❌ DID method not registered: ${error.method}")
                     println("   Available methods: ${error.availableMethods}")
                 }
@@ -123,7 +123,7 @@ fun main() = runBlocking {
     val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val credential = vericore.credentials.issue(
+    val credential = TrustWeave.credentials.issue(
         issuerDid = issuerDid,
         issuerKeyId = issuerKeyId,
         credentialSubject = buildJsonObject {
@@ -135,7 +135,7 @@ fun main() = runBlocking {
         onSuccess = { it },
         onFailure = { error ->
             when (error) {
-                is VeriCoreError.CredentialIssuanceFailed -> {
+                is TrustWeaveError.CredentialIssuanceFailed -> {
                     println("❌ Credential issuance failed: ${error.reason}")
                 }
                 else -> {
@@ -172,42 +172,42 @@ The sections below explain each step in detail.
 
 ## Step 1: Add a single dependency
 
-**Why:** `vericore-all` bundles every public module (core APIs, DID support, KMS, anchoring, DSLs) so you can get going with one line.  
+**Why:** `TrustWeave-all` bundles every public module (core APIs, DID support, KMS, anchoring, DSLs) so you can get going with one line.  
 **How it works:** It's a convenience metapackage that re-exports the same artifacts you would otherwise add one-by-one.  
 **How simple:** Drop one dependency and you're done.
 
-> **Note:** For production deployments, consider using individual modules instead of `vericore-all` to minimize bundle size. See [Installation Guide](installation.md) for details.
+> **Note:** For production deployments, consider using individual modules instead of `TrustWeave-all` to minimize bundle size. See [Installation Guide](installation.md) for details.
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
-    testImplementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
+    testImplementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
 }
 ```
 
 **What this does**  
-- Pulls in every public VeriCore module (core APIs, DID support, KMS, anchoring, DSLs) with a single coordinate so you never chase transitive dependencies.  
-- Adds `vericore-testkit` for the in-memory DID/KMS/wallet implementations used in the tutorials and automated tests.
+- Pulls in every public TrustWeave module (core APIs, DID support, KMS, anchoring, DSLs) with a single coordinate so you never chase transitive dependencies.  
+- Adds `TrustWeave-testkit` for the in-memory DID/KMS/wallet implementations used in the tutorials and automated tests.
 
 **Design significance**  
-VeriCore promotes a “batteries included” experience for newcomers. The monolithic artifact keeps onboarding simple; when you graduate to production you can swap in individual modules without changing API usage.
+TrustWeave promotes a “batteries included” experience for newcomers. The monolithic artifact keeps onboarding simple; when you graduate to production you can swap in individual modules without changing API usage.
 
-## Step 2: Bootstrap VeriCore and compute a digest
+## Step 2: Bootstrap TrustWeave and compute a digest
 
 **Why:** Most flows start by hashing JSON so signatures and anchors are stable.  
 **How it works:** `DigestUtils.sha256DigestMultibase` canonicalises JSON and returns a multibase string.  
 **How simple:** One helper call, no manual canonicalisation.
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.json.DigestUtils
+import com.trustweave.TrustWeave
+import com.trustweave.json.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
-    // Create VeriCore with sensible defaults (in-memory KMS, did:key method)
-    val vericore = VeriCore.create()
+    // Create TrustWeave with sensible defaults (in-memory KMS, did:key method)
+    val TrustWeave = TrustWeave.create()
 
     // Build credential subject payload
     val credentialSubject = buildJsonObject {
@@ -223,7 +223,7 @@ fun main() = runBlocking {
 ```
 
 **What this does**  
-- Instantiates VeriCore with sensible defaults (in-memory registries) suitable for playground and unit tests.  
+- Instantiates TrustWeave with sensible defaults (in-memory registries) suitable for playground and unit tests.  
 - Builds a credential payload using Kotlinx Serialization builders so the structure is type-safe.  
 - Canonicalises and hashes the payload, returning a multibase-encoded digest you can anchor or sign.
 
@@ -233,26 +233,26 @@ fun main() = runBlocking {
 `DigestUtils.sha256DigestMultibase` prints a deterministic digest (for example `u5v...`) that becomes the integrity reference for later steps.
 
 **Design significance**  
-Everything in VeriCore assumes deterministic canonicalization, so the very first code sample reinforces the pattern: serialize → canonicalize → hash → sign/anchor. This is the backbone of interoperability.
+Everything in TrustWeave assumes deterministic canonicalization, so the very first code sample reinforces the pattern: serialize → canonicalize → hash → sign/anchor. This is the backbone of interoperability.
 
 ## Step 3: Create a DID with typed options
 
 **Why:** You need an issuer DID before issuing credentials.  
-**How it works:** `vericore.dids.create()` uses the bundled DID method registry and typed `DidCreationOptions`.  
+**How it works:** `TrustWeave.dids.create()` uses the bundled DID method registry and typed `DidCreationOptions`.  
 **How simple:** Configure only what you need using a fluent builder—defaults cover the rest.
 
 ```kotlin
 // Simple: use defaults (did:key method, ED25519 algorithm)
-val issuerDocument = vericore.dids.create()
+val issuerDocument = TrustWeave.dids.create()
 val issuerDid = issuerDocument.id
 val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.id
     ?: error("No verification method generated")
 println("Issuer DID: $issuerDid (keyId=$issuerKeyId)")
 
 // Advanced: customize with builder
-val customDid = vericore.dids.create("key") {
-    algorithm = com.geoknoesis.vericore.did.DidCreationOptions.KeyAlgorithm.ED25519
-    purpose(com.geoknoesis.vericore.did.DidCreationOptions.KeyPurpose.AUTHENTICATION)
+val customDid = TrustWeave.dids.create("key") {
+    algorithm = com.trustweave.did.DidCreationOptions.KeyAlgorithm.ED25519
+    purpose(com.trustweave.did.DidCreationOptions.KeyPurpose.AUTHENTICATION)
 }
 ```
 
@@ -269,7 +269,7 @@ Typed builders (`DidCreationOptions`) are a core design choice: they prevent mis
 
 ## Step 4: Issue a credential and store it
 
-**Why:** Credential issuance is the heart of most VeriCore solutions.  
+**Why:** Credential issuance is the heart of most TrustWeave solutions.  
 **How it works:** The facade orchestrates KMS, proofs, and registries, returning a `Result<VerifiableCredential>`.  
 **How simple:** Provide the issuer DID/key and credential subject JSON; the API handles proof generation and validation.
 
@@ -278,7 +278,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 // Issue credential using the issuer DID and key ID from Step 3
-val credential = vericore.credentials.issue(
+val credential = TrustWeave.credentials.issue(
     issuer = issuerDid,
     subject = buildJsonObject {
         put("id", "did:key:holder-placeholder")
@@ -305,11 +305,11 @@ println("Issued credential id: ${credential.id}")
 The printed ID corresponds to a tamper-evident credential JSON object that you can store, present, or anchor.
 
 **Design significance**  
-Facades embrace VeriCore’s “everything returns `Result<T>`” philosophy. By forcing the caller to handle success and failure explicitly, flows stay predictable in production and testable in unit harnesses.
+Facades embrace TrustWeave's "everything returns `Result<T>`" philosophy. By forcing the caller to handle success and failure explicitly, flows stay predictable in production and testable in unit harnesses.
 
 > ✅ **Run the sample**  
-> The full quick-start flow lives in `vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/quickstart/QuickStartSample.kt`.  
-> Execute it locally with `./gradlew :vericore-examples:runQuickStartSample`.
+> The full quick-start flow lives in `TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/quickstart/QuickStartSample.kt`.  
+> Execute it locally with `./gradlew :TrustWeave-examples:runQuickStartSample`.
 
 ## Step 5: Verify the credential
 
@@ -318,10 +318,10 @@ Facades embrace VeriCore’s “everything returns `Result<T>`” philosophy. By
 **How simple:** One call returns a structured result with validation details.
 
 ```kotlin
-import com.geoknoesis.vericore.core.*
+import com.trustweave.core.*
 
 // Verify credential
-val verification = vericore.credentials.verify(credential)
+val verification = TrustWeave.credentials.verify(credential)
 if (verification.valid) {
     println(
         "Verification succeeded (proof=${verification.proofValid}, " +
@@ -350,9 +350,9 @@ You get a `CredentialVerificationResult` with `valid`, `proofValid`, `issuerVali
 **How simple:** Register client, serialize credential, write to chain.
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
-import com.geoknoesis.vericore.credential.models.VerifiableCredential
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.anchor.BlockchainAnchorRegistry
+import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 
@@ -387,7 +387,7 @@ Anchoring is abstracted behind the same interface regardless of provider. The sa
 
 ## Error Handling Patterns
 
-VeriCore provides structured error handling with `Result<T>` and `VeriCoreError` types. Understanding when to use different patterns is important for production code.
+TrustWeave provides structured error handling with `Result<T>` and `TrustWeaveError` types. Understanding when to use different patterns is important for production code.
 
 > **Best Practice:** Always use `fold()` for production code. Use `getOrThrow()` only for quick starts, tests, and prototypes.
 
@@ -402,8 +402,8 @@ Use `getOrThrow()` **only** for:
 ```kotlin
 // ⚠️ Simple usage (throws on error) - Testing/Prototyping Only
 // For production, always use fold() instead
-val did = vericore.dids.create()
-val credential = vericore.credentials.issue(...)
+val did = TrustWeave.dids.create()
+val credential = TrustWeave.credentials.issue(...)
 ```
 
 **Why not in production?** `getOrThrow()` throws exceptions that can crash your application. Production code should handle errors gracefully.
@@ -419,23 +419,23 @@ Use `fold()` **always** for:
 
 ```kotlin
 // ✅ Production pattern with specific error handling
-val did = vericore.dids.create()
+val did = TrustWeave.dids.create()
 // Note: dids.create() returns DidDocument directly (not Result)
 // For error handling, wrap in try-catch or use extension functions
 try {
     processDid(did)
-} catch (e: VeriCoreError.DidMethodNotRegistered) {
+} catch (e: TrustWeaveError.DidMethodNotRegistered) {
     // Handle error
 }
     onFailure = { error ->
         // Handle specific errors
         when (error) {
-            is VeriCoreError.DidMethodNotRegistered -> {
+            is TrustWeaveError.DidMethodNotRegistered -> {
                 logger.warn("DID method not registered: ${error.method}")
                 logger.info("Available methods: ${error.availableMethods}")
                 // Register method and retry, or use fallback
             }
-            is VeriCoreError.InvalidDidFormat -> {
+            is TrustWeaveError.InvalidDidFormat -> {
                 logger.error("Invalid DID format: ${error.reason}")
                 // Show format requirements to user
             }
@@ -452,13 +452,13 @@ try {
 
 ## Handling errors and verification failures
 
-VeriCore provides structured error handling with `Result<T>` and `VeriCoreError` types:
+TrustWeave provides structured error handling with `Result<T>` and `TrustWeaveError` types:
 
 ```kotlin
-import com.geoknoesis.vericore.core.*
+import com.trustweave.core.*
 
 // Verify credential with error handling
-val verification = vericore.credentials.verify(credential)
+val verification = TrustWeave.credentials.verify(credential)
 if (verification.valid) {
     println("Credential is valid")
 } else {
@@ -468,15 +468,15 @@ if (verification.valid) {
 
 // Anchoring with error handling
 try {
-    val anchor = vericore.blockchains.anchor(
+    val anchor = TrustWeave.blockchains.anchor(
         data = data,
         serializer = serializer,
         chainId = "algorand:testnet"
     )
     println("Anchored at: ${anchor.ref.txHash}")
-} catch (error: VeriCoreError) {
+} catch (error: TrustWeaveError) {
     when (error) {
-        is VeriCoreError.ChainNotRegistered -> {
+        is TrustWeaveError.ChainNotRegistered -> {
             println("Chain not registered: ${error.chainId}")
             println("Available chains: ${error.availableChains}")
         }
@@ -491,13 +491,13 @@ For simple cases, you can use `getOrThrow()`:
 
 ```kotlin
 // Simple usage
-val verification = vericore.credentials.verify(credential)
+val verification = TrustWeave.credentials.verify(credential)
 if (verification.valid) {
     println("Credential is valid")
 }
 
-// Or use getOrThrowError for VeriCoreError
-val anchor = vericore.blockchains.anchor(
+// Or use getOrThrowError for TrustWeaveError
+val anchor = TrustWeave.blockchains.anchor(
     data = data,
     serializer = serializer,
     chainId = chainId
@@ -535,7 +535,7 @@ If you encounter issues:
 
 ## Learning Path
 
-Follow this structured path to master VeriCore:
+Follow this structured path to master TrustWeave:
 
 ### 1. Get Started (You are here!)
 - ✅ Complete this Quick Start guide
@@ -567,13 +567,13 @@ Follow this structured path to master VeriCore:
 
 ## What's Next?
 
-**New to VeriCore?**
+**New to TrustWeave?**
 1. Start with [Beginner Tutorial Series](../tutorials/beginner-tutorial-series.md) - Tutorial 1
 2. Complete all 5 tutorials in order
 3. Move to [Common Patterns](common-patterns.md) for production patterns
 
 **Already familiar with DIDs/VCs?**
-1. Review [Common Patterns](common-patterns.md) for VeriCore-specific patterns
+1. Review [Common Patterns](common-patterns.md) for TrustWeave-specific patterns
 2. Explore [Scenarios](../scenarios/README.md) for your use case
 3. Reference [API Reference](../api-reference/core-api.md) as needed
 

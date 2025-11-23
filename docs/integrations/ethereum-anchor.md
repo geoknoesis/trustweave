@@ -1,10 +1,10 @@
 # Ethereum Blockchain Anchor Integration
 
-> This guide covers the Ethereum mainnet blockchain anchor client integration for VeriCore. The Ethereum adapter provides production-ready anchoring for Ethereum mainnet and Sepolia testnet.
+> This guide covers the Ethereum mainnet blockchain anchor client integration for TrustWeave. The Ethereum adapter provides production-ready anchoring for Ethereum mainnet and Sepolia testnet.
 
 ## Overview
 
-The `chains/plugins/ethereum` module provides a complete implementation of VeriCore's `BlockchainAnchorClient` interface using Ethereum mainnet. This integration enables you to:
+The `chains/plugins/ethereum` module provides a complete implementation of TrustWeave's `BlockchainAnchorClient` interface using Ethereum mainnet. This integration enables you to:
 
 - Anchor credential digests on Ethereum mainnet
 - Support Sepolia testnet for development and testing
@@ -17,10 +17,10 @@ Add the Ethereum adapter module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.chains:ethereum:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.chains:ethereum:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
     
     // Web3j for Ethereum blockchain
     implementation("org.web3j:core:5.0.1")
@@ -32,8 +32,8 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.ethereum.*
+import com.trustweave.anchor.*
+import com.trustweave.ethereum.*
 
 // Create Ethereum anchor client for mainnet
 val options = mapOf(
@@ -74,8 +74,8 @@ val sepoliaClient = EthereumBlockchainAnchorClient(
 When the module is on the classpath, Ethereum adapter is automatically available:
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.anchor.spi.*
+import com.trustweave.anchor.*
+import com.trustweave.anchor.spi.*
 import java.util.ServiceLoader
 
 // Discover Ethereum provider
@@ -92,7 +92,7 @@ val client = ethereumProvider?.create(
 ### Integration Helper
 
 ```kotlin
-import com.geoknoesis.vericore.ethereum.*
+import com.trustweave.ethereum.*
 
 // Auto-discover and register
 val result = EthereumIntegration.discoverAndRegister(
@@ -115,8 +115,8 @@ val setup = EthereumIntegration.setup(
 ### Anchoring Data
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.ethereum.*
+import com.trustweave.anchor.*
+import com.trustweave.ethereum.*
 import kotlinx.serialization.json.*
 
 val client = EthereumBlockchainAnchorClient(
@@ -153,13 +153,13 @@ println("Retrieved: ${readResult.payload}")
 | Ethereum Mainnet | `eip155:1` | `https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY` |
 | Sepolia Testnet | `eip155:11155111` | `https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY` |
 
-## Integration with VeriCore
+## Integration with TrustWeave
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.ethereum.*
+import com.trustweave.TrustWeave
+import com.trustweave.ethereum.*
 
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     blockchain {
         register(
             EthereumBlockchainAnchorClient.MAINNET,
@@ -174,7 +174,7 @@ val vericore = VeriCore.create {
 // Anchor a credential digest
 val digest = "uABC123..."
 val payload = buildJsonObject { put("digest", digest) }
-val result = vericore.anchor(EthereumBlockchainAnchorClient.MAINNET, payload).getOrThrow()
+val result = TrustWeave.anchor(EthereumBlockchainAnchorClient.MAINNET, payload).getOrThrow()
 println("Anchored: ${result.ref.txHash}")
 ```
 

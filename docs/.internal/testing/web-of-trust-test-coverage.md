@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document summarizes the comprehensive test coverage for the web of trust features implemented in VeriCore.
+This document summarizes the comprehensive test coverage for the web of trust features implemented in TrustWeave.
 
 ## Test Files Created
 

@@ -1,6 +1,6 @@
 # Security Training & Certification Verification Scenario
 
-This guide demonstrates how to build a security training and certification verification system using VeriCore. You'll learn how training providers can issue training and certification credentials, how individuals can store them in wallets, and how employers can verify security qualifications without manual checks.
+This guide demonstrates how to build a security training and certification verification system using TrustWeave. You'll learn how training providers can issue training and certification credentials, how individuals can store them in wallets, and how employers can verify security qualifications without manual checks.
 
 ## What You'll Build
 
@@ -98,7 +98,7 @@ Traditional certification verification has several problems:
 4. **Not portable**: Certification proof tied to specific systems
 5. **Compliance risk**: Difficult to verify certifications for compliance
 
-VeriCore solves this by enabling:
+TrustWeave solves this by enabling:
 
 - **Instant verification**: Verify certifications instantly
 - **Privacy-preserving**: Selective disclosure shows only certifications
@@ -129,12 +129,12 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add TrustWeave dependencies to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -146,16 +146,16 @@ dependencies {
 
 ## Step 2: Complete Runnable Example
 
-Here's the full security training and certification verification flow using the VeriCore facade API:
+Here's the full security training and certification verification flow using the TrustWeave facade API:
 
 ```kotlin
 package com.example.security.training
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.credential.PresentationOptions
-import com.geoknoesis.vericore.credential.wallet.Wallet
-import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.credential.PresentationOptions
+import com.trustweave.credential.wallet.Wallet
+import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -167,30 +167,30 @@ fun main() = runBlocking {
     println("Security Training & Certification Verification Scenario - Complete End-to-End Example")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance
-    val vericore = VeriCore.create()
-    println("\n✅ VeriCore initialized")
+    // Step 1: Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
+    println("\n✅ TrustWeave initialized")
     
     // Step 2: Create DIDs for training providers, professionals, and employers
-    val isc2DidDoc = vericore.dids.create()
+    val isc2DidDoc = TrustWeave.dids.create()
     val isc2Did = isc2DidDoc.id
     val isc2KeyId = isc2DidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val ecCouncilDidDoc = vericore.dids.create()
+    val ecCouncilDidDoc = TrustWeave.dids.create()
     val ecCouncilDid = ecCouncilDidDoc.id
     val ecCouncilKeyId = ecCouncilDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val comptiaDidDoc = vericore.dids.create()
+    val comptiaDidDoc = TrustWeave.dids.create()
     val comptiaDid = comptiaDidDoc.id
     val comptiaKeyId = comptiaDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val professionalDidDoc = vericore.dids.create()
+    val professionalDidDoc = TrustWeave.dids.create()
     val professionalDid = professionalDidDoc.id
     
-    val employerDidDoc = vericore.dids.create()
+    val employerDidDoc = TrustWeave.dids.create()
     val employerDid = employerDidDoc.id
     
     println("✅ (ISC)² DID: $isc2Did")
@@ -200,7 +200,7 @@ fun main() = runBlocking {
     println("✅ Employer DID: $employerDid")
     
     // Step 3: Issue CISSP certification credential
-    val cisspCredential = vericore.issueCredential(
+    val cisspCredential = TrustWeave.issueCredential(
         issuerDid = isc2Did,
         issuerKeyId = isc2KeyId,
         credentialSubject = buildJsonObject {
@@ -239,7 +239,7 @@ fun main() = runBlocking {
     println("\n✅ CISSP certification credential issued: ${cisspCredential.id}")
     
     // Step 4: Issue CEH certification credential
-    val cehCredential = vericore.issueCredential(
+    val cehCredential = TrustWeave.issueCredential(
         issuerDid = ecCouncilDid,
         issuerKeyId = ecCouncilKeyId,
         credentialSubject = buildJsonObject {
@@ -284,7 +284,7 @@ fun main() = runBlocking {
     println("✅ CEH certification credential issued: ${cehCredential.id}")
     
     // Step 5: Issue Security+ training credential
-    val securityPlusTrainingCredential = vericore.issueCredential(
+    val securityPlusTrainingCredential = TrustWeave.issueCredential(
         issuerDid = comptiaDid,
         issuerKeyId = comptiaKeyId,
         credentialSubject = buildJsonObject {
@@ -312,7 +312,7 @@ fun main() = runBlocking {
     println("✅ Security+ training credential issued: ${securityPlusTrainingCredential.id}")
     
     // Step 6: Create professional wallet and store all credentials
-    val professionalWallet = vericore.createWallet(
+    val professionalWallet = TrustWeave.createWallet(
         holderDid = professionalDid,
         options = WalletCreationOptionsBuilder().apply {
             enableOrganization = true
@@ -345,7 +345,7 @@ fun main() = runBlocking {
     // Step 8: Employer verification - CISSP required
     println("\n🏢 Employer Verification - CISSP Required:")
     
-    val cisspVerification = vericore.verifyCredential(cisspCredential).getOrThrow()
+    val cisspVerification = TrustWeave.verifyCredential(cisspCredential).getOrThrow()
     
     if (cisspVerification.valid) {
         val credentialSubject = cisspCredential.credentialSubject
@@ -375,8 +375,8 @@ fun main() = runBlocking {
     // Step 9: Employer verification - Multiple certifications
     println("\n🏢 Employer Verification - Multiple Certifications Required:")
     
-    val cisspValid = vericore.verifyCredential(cisspCredential).getOrThrow().valid
-    val cehValid = vericore.verifyCredential(cehCredential).getOrThrow().valid
+    val cisspValid = TrustWeave.verifyCredential(cisspCredential).getOrThrow().valid
+    val cehValid = TrustWeave.verifyCredential(cehCredential).getOrThrow().valid
     
     if (cisspValid && cehValid) {
         println("✅ CISSP Certification: VALID")
@@ -393,7 +393,7 @@ fun main() = runBlocking {
     println("\n🏢 Expired Certification Check:")
     
     // Create an expired certification
-    val expiredCertCredential = vericore.issueCredential(
+    val expiredCertCredential = TrustWeave.issueCredential(
         issuerDid = isc2Did,
         issuerKeyId = isc2KeyId,
         credentialSubject = buildJsonObject {
@@ -408,7 +408,7 @@ fun main() = runBlocking {
         expirationDate = Instant.now().minus(30, ChronoUnit.DAYS).toString() // Already expired
     ).getOrThrow()
     
-    val expiredVerification = vericore.verifyCredential(
+    val expiredVerification = TrustWeave.verifyCredential(
         expiredCertCredential,
         options = CredentialVerificationOptions(checkExpiration = true)
     ).getOrThrow()
@@ -481,7 +481,7 @@ fun main() = runBlocking {
 Security Training & Certification Verification Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ VeriCore initialized
+✅ TrustWeave initialized
 ✅ (ISC)² DID: did:key:z6Mk...
 ✅ EC-Council DID: did:key:z6Mk...
 ✅ CompTIA DID: did:key:z6Mk...
@@ -566,7 +566,7 @@ Security Training & Certification Verification Scenario - Complete End-to-End Ex
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with VeriCore
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
 - [Employee Onboarding Scenario](employee-onboarding-scenario.md) - Related onboarding scenario
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
 - [API Reference](../api-reference/core-api.md) - Complete API documentation

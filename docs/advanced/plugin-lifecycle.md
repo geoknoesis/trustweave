@@ -1,10 +1,10 @@
 # Plugin Lifecycle Management
 
-VeriCore provides lifecycle management for plugins that implement the `PluginLifecycle` interface.
+TrustWeave provides lifecycle management for plugins that implement the `PluginLifecycle` interface.
 
 ## Overview
 
-Plugins that implement `PluginLifecycle` can be initialized, started, stopped, and cleaned up through the VeriCore facade. This is useful for plugins that need to:
+Plugins that implement `PluginLifecycle` can be initialized, started, stopped, and cleaned up through the TrustWeave facade. This is useful for plugins that need to:
 
 - Initialize connections or resources
 - Start background processes
@@ -17,7 +17,7 @@ Plugins that implement `PluginLifecycle` can be initialized, started, stopped, a
 - ✅ In-memory implementations (`InMemoryKeyManagementService`, `InMemoryWallet`, etc.)
 - ✅ Simple test scenarios
 - ✅ Quick start examples
-- ✅ Most default VeriCore configurations
+- ✅ Most default TrustWeave configurations
 
 **You DO need lifecycle methods when:**
 - 🔧 Using database-backed services (need connection initialization)
@@ -61,9 +61,9 @@ class DatabaseWalletFactory : WalletFactory, PluginLifecycle {
 **Example - When Lifecycle is NOT Needed:**
 ```kotlin
 // In-memory implementations don't need lifecycle
-val vericore = VeriCore.create() // Uses InMemoryKeyManagementService
+val TrustWeave = TrustWeave.create() // Uses InMemoryKeyManagementService
 // No need to call initialize() or start()
-val did = vericore.dids.create() // Works immediately
+val did = TrustWeave.dids.create() // Works immediately
 ```
 
 ## Plugin Lifecycle Interface
@@ -84,12 +84,12 @@ interface PluginLifecycle {
 Initialize plugins with configuration:
 
 ```kotlin
-val vericore = VeriCore.create()
+val TrustWeave = TrustWeave.create()
 
 val config = mapOf(
     "database" to mapOf(
-        "url" to "jdbc:postgresql://localhost/vericore",
-        "username" to "vericore",
+        "url" to "jdbc:postgresql://localhost/TrustWeave",
+        "username" to "TrustWeave",
         "password" to "secret"
     ),
     "cache" to mapOf(
@@ -98,13 +98,13 @@ val config = mapOf(
     )
 )
 
-vericore.initialize(config).fold(
+TrustWeave.initialize(config).fold(
     onSuccess = { 
         println("All plugins initialized successfully")
     },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.PluginInitializationFailed -> {
+            is TrustWeaveError.PluginInitializationFailed -> {
                 println("Plugin ${error.pluginId} failed to initialize: ${error.reason}")
             }
             else -> {
@@ -120,7 +120,7 @@ vericore.initialize(config).fold(
 Start plugins after initialization:
 
 ```kotlin
-vericore.start().fold(
+TrustWeave.start().fold(
     onSuccess = { 
         println("All plugins started successfully")
     },
@@ -135,7 +135,7 @@ vericore.start().fold(
 Stop plugins before shutdown:
 
 ```kotlin
-vericore.stop().fold(
+TrustWeave.stop().fold(
     onSuccess = { 
         println("All plugins stopped successfully")
     },
@@ -150,7 +150,7 @@ vericore.stop().fold(
 Clean up plugin resources:
 
 ```kotlin
-vericore.cleanup().fold(
+TrustWeave.cleanup().fold(
     onSuccess = { 
         println("All plugins cleaned up successfully")
     },
@@ -163,12 +163,12 @@ vericore.cleanup().fold(
 ## Complete Lifecycle Example
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
 
 suspend fun main() {
-    // Create VeriCore instance
-    val vericore = VeriCore.create {
+    // Create TrustWeave instance
+    val TrustWeave = TrustWeave.create {
         // Configure plugins
         registerDidMethod(MyDidMethod())
         registerBlockchainClient("algorand:testnet", myClient)
@@ -176,26 +176,26 @@ suspend fun main() {
     
     try {
         // Initialize plugins
-        vericore.initialize().getOrThrow()
+        TrustWeave.initialize().getOrThrow()
         println("Plugins initialized")
         
         // Start plugins
-        vericore.start().getOrThrow()
+        TrustWeave.start().getOrThrow()
         println("Plugins started")
         
-        // Use VeriCore
-        val did = vericore.dids.create()
+        // Use TrustWeave
+        val did = TrustWeave.dids.create()
         println("Created DID: ${did.id}")
         
-        // ... use VeriCore ...
+        // ... use TrustWeave ...
         
     } finally {
         // Stop plugins
-        vericore.stop().getOrThrow()
+        TrustWeave.stop().getOrThrow()
         println("Plugins stopped")
         
         // Cleanup plugins
-        vericore.cleanup().getOrThrow()
+        TrustWeave.cleanup().getOrThrow()
         println("Plugins cleaned up")
     }
 }
@@ -206,7 +206,7 @@ suspend fun main() {
 To implement lifecycle management in your plugin:
 
 ```kotlin
-import com.geoknoesis.vericore.spi.PluginLifecycle
+import com.trustweave.spi.PluginLifecycle
 
 class MyBlockchainClient : BlockchainAnchorClient, PluginLifecycle {
     private var initialized = false
@@ -256,7 +256,7 @@ class MyBlockchainClient : BlockchainAnchorClient, PluginLifecycle {
 
 ## Automatic Plugin Discovery
 
-VeriCore automatically discovers plugins that implement `PluginLifecycle` from:
+TrustWeave automatically discovers plugins that implement `PluginLifecycle` from:
 
 - Key Management Services (KMS)
 - Wallet Factories
@@ -272,14 +272,14 @@ Plugins are initialized in the order they are registered, and stopped in reverse
 Lifecycle methods return `Result<Unit>` for error handling:
 
 ```kotlin
-val result = vericore.initialize()
+val result = TrustWeave.initialize()
 result.fold(
     onSuccess = { 
         println("Initialization successful")
     },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.PluginInitializationFailed -> {
+            is TrustWeaveError.PluginInitializationFailed -> {
                 println("Plugin ${error.pluginId} failed: ${error.reason}")
                 // Handle specific plugin failure
             }
@@ -297,28 +297,28 @@ result.fold(
 
 ```kotlin
 // ✅ Good: Initialize before use
-val vericore = VeriCore.create()
-vericore.initialize().getOrThrow()
-vericore.start().getOrThrow()
+val TrustWeave = TrustWeave.create()
+TrustWeave.initialize().getOrThrow()
+TrustWeave.start().getOrThrow()
 
-// Use VeriCore
-val did = vericore.createDid().getOrThrow()
+// Use TrustWeave
+val did = TrustWeave.createDid().getOrThrow()
 ```
 
 ### 2. Use Try-Finally for Cleanup
 
 ```kotlin
 // ✅ Good: Always cleanup
-val vericore = VeriCore.create()
+val TrustWeave = TrustWeave.create()
 try {
-    vericore.initialize().getOrThrow()
-    vericore.start().getOrThrow()
+    TrustWeave.initialize().getOrThrow()
+    TrustWeave.start().getOrThrow()
     
-    // Use VeriCore
+    // Use TrustWeave
     // ...
 } finally {
-    vericore.stop().getOrThrow()
-    vericore.cleanup().getOrThrow()
+    TrustWeave.stop().getOrThrow()
+    TrustWeave.cleanup().getOrThrow()
 }
 ```
 
@@ -326,14 +326,14 @@ try {
 
 ```kotlin
 // ✅ Good: Handle initialization errors
-val result = vericore.initialize()
+val result = TrustWeave.initialize()
 if (result.isFailure) {
     println("Initialization failed: ${result.exceptionOrNull()?.message}")
     // Handle error or exit
     return
 }
 
-vericore.start().getOrThrow()
+TrustWeave.start().getOrThrow()
 ```
 
 ### 4. Implement Lifecycle Methods Properly
@@ -371,6 +371,6 @@ override suspend fun cleanup() {
 ## Related Documentation
 
 - [Error Handling](error-handling.md)
-- [Plugin SPI](../modules/vericore-spi.md)
+- [Service Provider Interface](spi.md)
 - [API Reference](../api-reference/)
 

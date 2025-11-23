@@ -1,6 +1,6 @@
 # Biometric Verification Scenario
 
-This guide demonstrates how to build a complete biometric verification system using VeriCore. You'll learn how identity providers can issue biometric credentials, how individuals can store them in wallets, and how service providers can verify biometric data (fingerprints, face, voice) while maintaining privacy and security.
+This guide demonstrates how to build a complete biometric verification system using TrustWeave. You'll learn how identity providers can issue biometric credentials, how individuals can store them in wallets, and how service providers can verify biometric data (fingerprints, face, voice) while maintaining privacy and security.
 
 ## What You'll Build
 
@@ -98,7 +98,7 @@ Traditional biometric systems have several problems:
 4. **Security vulnerabilities**: Centralized systems are targets
 5. **Compliance risk**: Difficult to comply with regulations
 
-VeriCore solves this by enabling:
+TrustWeave solves this by enabling:
 
 - **Privacy-preserving**: Store templates, not raw biometrics
 - **Decentralized**: No central database
@@ -130,12 +130,12 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add TrustWeave dependencies to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -147,17 +147,17 @@ dependencies {
 
 ## Step 2: Complete Runnable Example
 
-Here's the full biometric verification flow using the VeriCore facade API:
+Here's the full biometric verification flow using the TrustWeave facade API:
 
 ```kotlin
 package com.example.biometric.verification
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.credential.PresentationOptions
-import com.geoknoesis.vericore.credential.wallet.Wallet
-import com.geoknoesis.vericore.json.DigestUtils
-import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.credential.PresentationOptions
+import com.trustweave.credential.wallet.Wallet
+import com.trustweave.json.DigestUtils
+import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -170,23 +170,23 @@ fun main() = runBlocking {
     println("Biometric Verification Scenario - Complete End-to-End Example")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance
-    val vericore = VeriCore.create()
-    println("\n✅ VeriCore initialized")
+    // Step 1: Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
+    println("\n✅ TrustWeave initialized")
     
     // Step 2: Create DIDs for identity provider, individual, and service providers
-    val identityProviderDidDoc = vericore.dids.create()
+    val identityProviderDidDoc = TrustWeave.dids.create()
     val identityProviderDid = identityProviderDidDoc.id
     val identityProviderKeyId = identityProviderDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val individualDidDoc = vericore.dids.create()
+    val individualDidDoc = TrustWeave.dids.create()
     val individualDid = individualDidDoc.id
     
-    val bankDidDoc = vericore.dids.create()
+    val bankDidDoc = TrustWeave.dids.create()
     val bankDid = bankDidDoc.id
     
-    val buildingAccessDidDoc = vericore.dids.create()
+    val buildingAccessDidDoc = TrustWeave.dids.create()
     val buildingAccessDid = buildingAccessDidDoc.id
     
     println("✅ Identity Provider DID: $identityProviderDid")
@@ -243,7 +243,7 @@ fun main() = runBlocking {
     println("   Note: Templates are privacy-preserving (not raw biometrics)")
     
     // Step 4: Issue fingerprint biometric credential
-    val fingerprintCredential = vericore.issueCredential(
+    val fingerprintCredential = TrustWeave.issueCredential(
         issuerDid = identityProviderDid,
         issuerKeyId = identityProviderKeyId,
         credentialSubject = buildJsonObject {
@@ -273,7 +273,7 @@ fun main() = runBlocking {
     println("\n✅ Fingerprint biometric credential issued: ${fingerprintCredential.id}")
     
     // Step 5: Issue face biometric credential
-    val faceCredential = vericore.issueCredential(
+    val faceCredential = TrustWeave.issueCredential(
         issuerDid = identityProviderDid,
         issuerKeyId = identityProviderKeyId,
         credentialSubject = buildJsonObject {
@@ -302,7 +302,7 @@ fun main() = runBlocking {
     println("✅ Face biometric credential issued: ${faceCredential.id}")
     
     // Step 6: Issue voice biometric credential
-    val voiceCredential = vericore.issueCredential(
+    val voiceCredential = TrustWeave.issueCredential(
         issuerDid = identityProviderDid,
         issuerKeyId = identityProviderKeyId,
         credentialSubject = buildJsonObject {
@@ -331,7 +331,7 @@ fun main() = runBlocking {
     println("✅ Voice biometric credential issued: ${voiceCredential.id}")
     
     // Step 7: Create individual wallet and store all biometric credentials
-    val individualWallet = vericore.createWallet(
+    val individualWallet = TrustWeave.createWallet(
         holderDid = individualDid,
         options = WalletCreationOptionsBuilder().apply {
             enableOrganization = true
@@ -363,7 +363,7 @@ fun main() = runBlocking {
     // Step 9: Bank service - Fingerprint authentication
     println("\n🏦 Bank Service - Fingerprint Authentication:")
     
-    val fingerprintVerification = vericore.verifyCredential(fingerprintCredential).getOrThrow()
+    val fingerprintVerification = TrustWeave.verifyCredential(fingerprintCredential).getOrThrow()
     
     if (fingerprintVerification.valid) {
         println("✅ Fingerprint Credential: VALID")
@@ -399,7 +399,7 @@ fun main() = runBlocking {
     // Step 10: Building access - Face recognition
     println("\n🏢 Building Access - Face Recognition:")
     
-    val faceVerification = vericore.verifyCredential(faceCredential).getOrThrow()
+    val faceVerification = TrustWeave.verifyCredential(faceCredential).getOrThrow()
     
     if (faceVerification.valid) {
         println("✅ Face Credential: VALID")
@@ -437,8 +437,8 @@ fun main() = runBlocking {
     // Step 11: Multi-modal biometric verification (fingerprint + face)
     println("\n🔐 Multi-Modal Biometric Verification (Fingerprint + Face):")
     
-    val fingerprintValid = vericore.verifyCredential(fingerprintCredential).getOrThrow().valid
-    val faceValid = vericore.verifyCredential(faceCredential).getOrThrow().valid
+    val fingerprintValid = TrustWeave.verifyCredential(fingerprintCredential).getOrThrow().valid
+    val faceValid = TrustWeave.verifyCredential(faceCredential).getOrThrow().valid
     
     if (fingerprintValid && faceValid) {
         println("✅ Both biometric credentials are valid")
@@ -525,7 +525,7 @@ fun main() = runBlocking {
 Biometric Verification Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ VeriCore initialized
+✅ TrustWeave initialized
 ✅ Identity Provider DID: did:key:z6Mk...
 ✅ Individual DID: did:key:z6Mk...
 ✅ Bank Service DID: did:key:z6Mk...
@@ -614,7 +614,7 @@ Biometric Verification Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with VeriCore
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
 - [Age Verification Scenario](age-verification-scenario.md) - Related age verification with photo
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
 - [API Reference](../api-reference/core-api.md) - Complete API documentation

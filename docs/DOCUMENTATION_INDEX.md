@@ -1,18 +1,18 @@
-# VeriCore Documentation Index
+# TrustWeave Documentation Index
 
-> VeriCore is developed and maintained by [Geoknoesis LLC](https://www.geoknoesis.com).
+> TrustWeave is developed and maintained by [Geoknoesis LLC](https://www.geoknoesis.com).
 
 ## Main Documentation
 
 - **[README.md](../README.md)**: Main project documentation with quick start guide
 - **[CHANGELOG.md](../CHANGELOG.md)**: Detailed changelog of all optimizations and improvements
-- **Runnable quick start**: `./gradlew :vericore-examples:runQuickStartSample`
+- **Runnable quick start**: `./gradlew :TrustWeave-examples:runQuickStartSample`
 
 ## Introduction
 
-- **[Executive Overview](introduction/executive-overview.md)**: High-level overview of VeriCore's value proposition, benefits, market position, and real-world applications
-- **[What is VeriCore?](introduction/what-is-vericore.md)**: Library's purpose, design philosophy, and core principles
-- **[Key Features](introduction/key-features.md)**: Comprehensive overview of VeriCore's capabilities
+- **[Executive Overview](introduction/executive-overview.md)**: High-level overview of TrustWeave's value proposition, benefits, market position, and real-world applications
+- **[What is TrustWeave?](introduction/what-is-TrustWeave.md)**: Library's purpose, design philosophy, and core principles
+- **[Key Features](introduction/key-features.md)**: Comprehensive overview of TrustWeave's capabilities
 - **[Use Cases](introduction/use-cases.md)**: Common applications and use case scenarios
 - **[Architecture Overview](introduction/architecture-overview.md)**: Modular design, module structure, mental model, and extensibility patterns
 
@@ -149,15 +149,15 @@ See **[Scenarios Overview](scenarios/README.md)** for all available scenarios or
 ## Configuration
 
 - **[Configuration Reference](configuration/README.md)**: Complete configuration options and customization guide
-- **[Default Configuration](configuration/defaults.md)**: What defaults are used by `VeriCore.create()` and how to customize them
+- **[Default Configuration](configuration/defaults.md)**: What defaults are used by `TrustWeave.create()` and how to customize them
 
 ## Advanced Topics
 
 - **[Key Rotation](advanced/key-rotation.md)**: Step-by-step issuer rotation guidance with KMS and DID updates
 - **[Verification Policies](advanced/verification-policies.md)**: Enforce expiration, revocation, audience, and anchoring checks
-- **[Error Handling](advanced/error-handling.md)**: Structured error handling with VeriCoreError types, error code quick reference, common pitfalls, and Result utilities
+- **[Error Handling](advanced/error-handling.md)**: Structured error handling with TrustWeaveError types, error code quick reference, common pitfalls, and Result utilities
 - **[Plugin Lifecycle](advanced/plugin-lifecycle.md)**: Initialize, start, stop, and cleanup plugins
-- Testability tips are included throughout using `vericore-testkit`
+- Testability tips are included throughout using `TrustWeave-testkit`
 
 ## Migration Guides
 
@@ -180,13 +180,13 @@ See **[Scenarios Overview](scenarios/README.md)** for all available scenarios or
 ## Module Documentation
 
 ### Core Modules
-- **[vericore-contract](modules/vericore-contract.md)**: Smart Contract abstraction for executable agreements
+- **[TrustWeave-contract](modules/trustweave-contract.md)**: Smart Contract abstraction for executable agreements
   - Contract lifecycle management
   - Execution models (parametric, conditional, scheduled, etc.)
   - Verifiable credentials integration
   - Blockchain anchoring support
 
-- **[vericore-anchor/README.md](../chains/vericore-anchor/src/main/kotlin/com/geoknoesis/vericore/anchor/README.md)**: Comprehensive anchor package documentation
+- **[TrustWeave-anchor/README.md](../chains/TrustWeave-anchor/src/main/kotlin/com/geoknoesis/TrustWeave/anchor/README.md)**: Comprehensive anchor package documentation
   - Type-safe options and chain IDs
   - Exception hierarchy
   - Usage examples
@@ -197,11 +197,11 @@ See **[Scenarios Overview](scenarios/README.md)** for all available scenarios or
 - **[chains/plugins/indy/README.md](../chains/plugins/indy/README.md)**: Hyperledger Indy adapter
 
 ### Test Utilities
-- **[vericore-testkit/eo/README.md](../core/vericore-testkit/src/main/kotlin/com/geoknoesis/vericore/testkit/eo/README.md)**: EO test integration utilities
+- **[TrustWeave-testkit/eo/README.md](../core/TrustWeave-testkit/src/main/kotlin/com/geoknoesis/TrustWeave/testkit/eo/README.md)**: EO test integration utilities
 
 ## Features & Plugins
 
-- **[Features Documentation](features/README.md)**: Overview of all VeriCore features
+- **[Features Documentation](features/README.md)**: Overview of all TrustWeave features
 - **[Feature Details](features/IMPLEMENTED_FEATURES.md)**: Complete list of all features
 - **[Usage Guide](features/USAGE_GUIDE.md)**: How to use features (Audit Logging, Metrics, QR Codes, etc.)
 
@@ -255,8 +255,8 @@ See **[Scenarios Overview](scenarios/README.md)** for all available scenarios or
 
 ### Type-Safe Configuration
 ```kotlin
-import com.geoknoesis.vericore.anchor.options.AlgorandOptions
-import com.geoknoesis.vericore.anchor.ChainId
+import com.trustweave.anchor.options.AlgorandOptions
+import com.trustweave.anchor.ChainId
 
 val chainId = ChainId.Algorand.Testnet
 val options = AlgorandOptions(algodUrl = "...", privateKey = "...")
@@ -265,7 +265,7 @@ val client = AlgorandBlockchainAnchorClient(chainId.toString(), options)
 
 ### Error Handling
 ```kotlin
-import com.geoknoesis.vericore.anchor.exceptions.*
+import com.trustweave.anchor.exceptions.*
 
 try {
     val result = client.writePayload(payload)
@@ -284,7 +284,7 @@ See [CHANGELOG.md](../CHANGELOG.md) for detailed migration guides:
 
 ## Licensing
 
-- VeriCore is dual-licensed. Non-commercial and educational users can rely on the open source license; commercial deployments require a Geoknoesis commercial agreement.
+- TrustWeave is dual-licensed. Non-commercial and educational users can rely on the open source license; commercial deployments require a Geoknoesis commercial agreement.
 - Full details: [Licensing Overview](licensing/README.md)
 
 ## FAQ

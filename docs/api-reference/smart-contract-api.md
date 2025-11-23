@@ -1,6 +1,6 @@
 # Smart Contract API Reference
 
-> Complete API reference for VeriCore Smart Contract operations
+> Complete API reference for TrustWeave Smart Contract operations
 
 ## Overview
 
@@ -9,8 +9,8 @@ The Smart Contract API provides methods for creating, binding, executing, and ma
 ## Service Access
 
 ```kotlin
-val vericore = VeriCore.create()
-val contracts = vericore.contracts
+val TrustWeave = TrustWeave.create()
+val contracts = TrustWeave.contracts
 ```
 
 ## API Methods
@@ -47,7 +47,7 @@ suspend fun createDraft(
 **Example:**
 ```kotlin
 // Recommended: Use draft() for cleaner API
-val contract = vericore.contracts.draft(
+val contract = TrustWeave.contracts.draft(
     request = ContractDraftRequest(
         contractType = ContractType.Insurance,
         executionModel = ExecutionModel.Parametric(...),
@@ -59,7 +59,7 @@ val contract = vericore.contracts.draft(
 ).getOrThrow()
 
 // Alternative: createDraft() is also available
-val contract2 = vericore.contracts.createDraft(request).getOrThrow()
+val contract2 = TrustWeave.contracts.createDraft(request).getOrThrow()
 ```
 
 **Validation:**
@@ -98,7 +98,7 @@ suspend fun bindContract(
 
 **Example:**
 ```kotlin
-val bound = vericore.contracts.bindContract(
+val bound = TrustWeave.contracts.bindContract(
     contractId = contract.id,
     issuerDid = insurerDid,
     issuerKeyId = insurerKeyId,
@@ -129,7 +129,7 @@ suspend fun activateContract(
 
 **Example:**
 ```kotlin
-val active = vericore.contracts.activateContract(contractId).getOrThrow()
+val active = TrustWeave.contracts.activateContract(contractId).getOrThrow()
 ```
 
 **Validation:**
@@ -171,7 +171,7 @@ suspend fun executeContract(
 
 **Example:**
 ```kotlin
-val result = vericore.contracts.executeContract(
+val result = TrustWeave.contracts.executeContract(
     contract = activeContract,
     executionContext = ExecutionContext(
         triggerData = buildJsonObject {
@@ -214,7 +214,7 @@ suspend fun evaluateConditions(
 
 **Example:**
 ```kotlin
-val evaluation = vericore.contracts.evaluateConditions(
+val evaluation = TrustWeave.contracts.evaluateConditions(
     contract = contract,
     inputData = buildJsonObject {
         put("floodDepthCm", 75.0)
@@ -253,7 +253,7 @@ suspend fun updateStatus(
 
 **Example:**
 ```kotlin
-val updated = vericore.contracts.updateStatus(
+val updated = TrustWeave.contracts.updateStatus(
     contractId = contract.id,
     newStatus = ContractStatus.SUSPENDED,
     reason = "Under review"
@@ -283,7 +283,7 @@ suspend fun getContract(contractId: String): Result<SmartContract>
 
 **Example:**
 ```kotlin
-val contract = vericore.contracts.getContract(contractId).getOrThrow()
+val contract = TrustWeave.contracts.getContract(contractId).getOrThrow()
 ```
 
 **Errors:**
@@ -310,7 +310,7 @@ suspend fun verifyContract(
 
 **Example:**
 ```kotlin
-val isValid = vericore.contracts.verifyContract(credentialId).getOrThrow()
+val isValid = TrustWeave.contracts.verifyContract(credentialId).getOrThrow()
 ```
 
 ---
@@ -414,5 +414,5 @@ result.fold(
 
 - [Smart Contracts Core Concepts](../core-concepts/smart-contracts.md) for detailed concepts
 - [Parametric Insurance Scenario](../scenarios/smart-contract-parametric-insurance-scenario.md) for complete example
-- [Core API Reference](core-api.md) for VeriCore facade API
+- [Core API Reference](core-api.md) for TrustWeave facade API
 

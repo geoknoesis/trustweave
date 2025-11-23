@@ -1,6 +1,6 @@
 # Writing Tests Guide
 
-This guide explains how to write tests for VeriCore plugins and components.
+This guide explains how to write tests for TrustWeave plugins and components.
 
 ## Test Structure
 
@@ -9,7 +9,7 @@ This guide explains how to write tests for VeriCore plugins and components.
 Use `BasePluginTest` for unit tests:
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.BasePluginTest
+import com.trustweave.testkit.BasePluginTest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
@@ -29,7 +29,7 @@ class MyPluginTest : BasePluginTest() {
 Use `BaseIntegrationTest` for integration tests:
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.BaseIntegrationTest
+import com.trustweave.testkit.BaseIntegrationTest
 import org.junit.jupiter.api.Tag
 import org.testcontainers.junit.jupiter.Testcontainers
 
@@ -59,7 +59,7 @@ Use the provided templates as starting points:
 
 Comprehensive in-memory workflow templates for trust layer integration tests:
 
-- **Location**: `core/vericore-trust/src/test/kotlin/com/geoknoesis/vericore/integration/InMemoryTrustLayerIntegrationTest.kt`
+- **Location**: `core/TrustWeave-trust/src/test/kotlin/com/geoknoesis/TrustWeave/integration/InMemoryTrustLayerIntegrationTest.kt`
 - **Templates Available**:
   - Complete in-memory workflow
   - Credential revocation workflow

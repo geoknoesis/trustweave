@@ -1,6 +1,6 @@
 # Evaluation Engines
 
-> VeriCore Evaluation Engines provide a pluggable, tamper-proof system for evaluating contract conditions with cryptographic integrity verification.
+> TrustWeave Evaluation Engines provide a pluggable, tamper-proof system for evaluating contract conditions with cryptographic integrity verification.
 
 ## Overview
 
@@ -18,7 +18,7 @@ Traditional contract execution systems have hardcoded evaluation logic, making t
 - Vulnerable to tampering
 - Difficult to update without breaking existing contracts
 
-VeriCore's Evaluation Engine framework solves these problems by:
+TrustWeave's Evaluation Engine framework solves these problems by:
 - Allowing domain-specific engines (parametric insurance, rule engines, etc.)
 - Cryptographically protecting engine implementations
 - Enabling engine updates while maintaining contract integrity
@@ -92,7 +92,7 @@ The evaluation engine API uses `JsonElement` for `inputData` rather than `Any` o
 
 **1. Architectural Consistency**
 
-VeriCore is built on a JSON-first architecture:
+TrustWeave is built on a JSON-first architecture:
 - Verifiable Credentials use JSON-LD format
 - DID Documents are JSON
 - Blockchain anchors store JSON payloads
@@ -103,7 +103,7 @@ Using `JsonElement` maintains consistency across the entire framework, making th
 
 **2. Real-World Data Sources**
 
-All external data sources in VeriCore are JSON-native:
+All external data sources in TrustWeave are JSON-native:
 - **Earth Observation APIs** (ESA, NASA, Planet) → JSON responses
 - **Weather APIs** (NOAA, Weather.com) → JSON responses  
 - **IoT Sensors** → JSON payloads (MQTT, HTTP)
@@ -190,7 +190,7 @@ class CustomEngine : BaseEvaluationEngine() {
 
 **8. Framework Integration**
 
-`JsonElement` works seamlessly with VeriCore's execution flow:
+`JsonElement` works seamlessly with TrustWeave's execution flow:
 
 ```kotlin
 // Data flows naturally through the system
@@ -219,7 +219,7 @@ No conversion layers needed - data flows naturally from external sources through
 - ✅ Supports extensibility
 - ✅ Integrates seamlessly with the framework
 
-Using `Any` would reduce type safety, add conversion complexity, and break consistency with VeriCore's JSON-first architecture.
+Using `Any` would reduce type safety, add conversion complexity, and break consistency with TrustWeave's JSON-first architecture.
 
 ### BaseEvaluationEngine
 
@@ -281,8 +281,8 @@ engines.verify("parametric-insurance", expectedHash)
 ```kotlin
 package com.example.contracts.engines
 
-import com.geoknoesis.vericore.contract.evaluation.*
-import com.geoknoesis.vericore.contract.models.*
+import com.trustweave.contract.evaluation.*
+import com.trustweave.contract.models.*
 
 class MyCustomEngine : BaseEvaluationEngine() {
     override val engineId: String = "my-custom-engine"
@@ -340,7 +340,7 @@ println("Engine hash: ${engine.implementationHash}")
 ### Step 3: Use in Contracts
 
 ```kotlin
-val contract = vericore.contracts.draft(
+val contract = TrustWeave.contracts.draft(
     request = ContractDraftRequest(
         executionModel = ExecutionModel.Parametric(
             triggerType = TriggerType.EarthObservation,
@@ -428,7 +428,7 @@ val engine = ParametricInsuranceEngine()
 engines += engine
 
 // Create parametric insurance contract
-val contract = vericore.contracts.draft(
+val contract = TrustWeave.contracts.draft(
     request = ContractDraftRequest(
         executionModel = ExecutionModel.Parametric(
             triggerType = TriggerType.EarthObservation,
@@ -449,14 +449,14 @@ val contract = vericore.contracts.draft(
 )
 
 // Bind contract (engine hash is captured)
-val bound = vericore.contracts.bindContract(
+val bound = TrustWeave.contracts.bindContract(
     contractId = contract.id,
     issuerDid = issuerDid,
     issuerKeyId = issuerKeyId
 )
 
 // Execute contract (engine integrity is verified)
-val result = vericore.contracts.executeContract(
+val result = TrustWeave.contracts.executeContract(
     contract = bound.contract,
     executionContext = ExecutionContext(
         triggerData = buildJsonObject {
@@ -567,14 +567,14 @@ fun `test threshold evaluation`() {
 }
 ```
 
-## Integration with VeriCore
+## Integration with TrustWeave
 
-Evaluation engines integrate seamlessly with VeriCore's contract system:
+Evaluation engines integrate seamlessly with TrustWeave's contract system:
 
 ### Contract Creation
 
 ```kotlin
-val contract = vericore.contracts.draft(
+val contract = TrustWeave.contracts.draft(
     request = ContractDraftRequest(
         executionModel = ExecutionModel.Parametric(
             triggerType = TriggerType.EarthObservation,
@@ -590,7 +590,7 @@ val contract = vericore.contracts.draft(
 During binding, the engine hash is automatically captured:
 
 ```kotlin
-val bound = vericore.contracts.bindContract(
+val bound = TrustWeave.contracts.bindContract(
     contractId = contract.id,
     issuerDid = issuerDid,
     issuerKeyId = issuerKeyId
@@ -603,7 +603,7 @@ val bound = vericore.contracts.bindContract(
 During execution, engine integrity is automatically verified:
 
 ```kotlin
-val result = vericore.contracts.executeContract(
+val result = TrustWeave.contracts.executeContract(
     contract = contract,
     executionContext = ExecutionContext(
         triggerData = inputData

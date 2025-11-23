@@ -1,10 +1,10 @@
 # Beginner Tutorial Series
 
-A structured learning path for developers new to VeriCore and decentralized identity. Each tutorial builds on the previous one, introducing concepts progressively.
+A structured learning path for developers new to TrustWeave and decentralized identity. Each tutorial builds on the previous one, introducing concepts progressively.
 
 ## Learning Path Overview
 
-This series takes you from zero to building production-ready applications with VeriCore:
+This series takes you from zero to building production-ready applications with TrustWeave:
 
 1. **Tutorial 1: Your First DID** - Create and understand DIDs
 2. **Tutorial 2: Issuing Your First Credential** - Issue and verify credentials
@@ -38,37 +38,37 @@ Create a new Kotlin project and add dependencies:
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
 }
 ```
 
-### Step 2: Create VeriCore Instance
+### Step 2: Create TrustWeave Instance
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
+import com.trustweave.TrustWeave
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    // Create VeriCore with default configuration
+    // Create TrustWeave with default configuration
     // This includes did:key method by default
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
-    println("✅ VeriCore initialized")
+    println("✅ TrustWeave initialized")
 }
 ```
 
-**What this does:** Creates a VeriCore instance with default configuration, including the `did:key` method.
+**What this does:** Creates a TrustWeave instance with default configuration, including the `did:key` method.
 
 ### Step 3: Create Your First DID
 
 ```kotlin
-import com.geoknoesis.vericore.core.*
+import com.trustweave.core.*
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // Create a DID using the default method (did:key)
-    val did = vericore.dids.create()
+    val did = TrustWeave.dids.create()
     val result = Result.success(did)
     
     result.fold(
@@ -91,10 +91,10 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // Create a DID
-    val did = vericore.dids.create()
+    val did = TrustWeave.dids.create()
     val createResult = Result.success(did)
     
     createResult.fold(
@@ -103,7 +103,7 @@ fun main() = runBlocking {
             println("Created DID: $did")
             
             // Resolve the DID we just created
-            val resolution = vericore.dids.resolve(did)
+            val resolution = TrustWeave.dids.resolve(did)
             val resolveResult = Result.success(resolution)
             
             resolveResult.fold(
@@ -129,10 +129,10 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // Try to resolve a non-existent DID
-    val resolution = vericore.dids.resolve("did:key:invalid")
+    val resolution = TrustWeave.dids.resolve("did:key:invalid")
     val result = Result.success(resolution)
     
     result.fold(
@@ -141,11 +141,11 @@ fun main() = runBlocking {
         },
         onFailure = { error ->
             when (error) {
-                is VeriCoreError.DidNotFound -> {
+                is TrustWeaveError.DidNotFound -> {
                     println("❌ DID not found: ${error.did}")
                     println("   Available methods: ${error.availableMethods}")
                 }
-                is VeriCoreError.InvalidDidFormat -> {
+                is TrustWeaveError.InvalidDidFormat -> {
                     println("❌ Invalid DID format: ${error.reason}")
                 }
                 else -> {
@@ -157,7 +157,7 @@ fun main() = runBlocking {
 }
 ```
 
-**What this does:** Demonstrates proper error handling using VeriCore's structured error types.
+**What this does:** Demonstrates proper error handling using TrustWeave's structured error types.
 
 ### Key Takeaways
 
@@ -190,14 +190,14 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // Create issuer DID (the organization issuing credentials)
-    val issuerDid = vericore.dids.create()
+    val issuerDid = TrustWeave.dids.create()
     println("Issuer DID: ${issuerDid.id}")
     
     // Create holder DID (the person receiving the credential)
-    val holderDid = vericore.dids.create()
+    val holderDid = TrustWeave.dids.create()
     println("Holder DID: ${holderDid.id}")
 }
 ```
@@ -207,21 +207,21 @@ fun main() = runBlocking {
 ### Step 2: Issue a Credential
 
 ```kotlin
-import com.geoknoesis.vericore.credential.*
+import com.trustweave.credential.*
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // Create DIDs
-    val issuerDid = vericore.dids.create()
-    val holderDid = vericore.dids.create()
+    val issuerDid = TrustWeave.dids.create()
+    val holderDid = TrustWeave.dids.create()
     
     // Get the first verification method from issuer's DID document
     val issuerKeyId = issuerDid.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
     // Issue a credential
-    val credentialResult = vericore.issueCredential(
+    val credentialResult = TrustWeave.issueCredential(
         issuerDid = issuerDid.id,
         issuerKeyId = issuerKeyId,
         credentialSubject = mapOf(
@@ -256,14 +256,14 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // ... (create DIDs and issue credential from Step 2) ...
     
     val credential = credentialResult.getOrThrow()
     
     // Verify the credential
-    val verificationResult = vericore.verifyCredential(credential)
+    val verificationResult = TrustWeave.verifyCredential(credential)
     
     verificationResult.fold(
         onSuccess = { verification ->
@@ -297,14 +297,14 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // ... (create DIDs) ...
     
     // Issue credential with expiration date (1 year from now)
     val expirationDate = Instant.now().plus(365, ChronoUnit.DAYS)
     
-    val credentialResult = vericore.issueCredential(
+    val credentialResult = TrustWeave.issueCredential(
         issuerDid = issuerDid.id,
         issuerKeyId = issuerKeyId,
         credentialSubject = mapOf(
@@ -353,16 +353,16 @@ fun main() = runBlocking {
 ### Step 1: Create a Wallet
 
 ```kotlin
-import com.geoknoesis.vericore.wallet.*
+import com.trustweave.wallet.*
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // Create holder DID
-    val holderDid = vericore.dids.create()
+    val holderDid = TrustWeave.dids.create()
     
     // Create wallet for the holder
-    val walletResult = vericore.createWallet(
+    val walletResult = TrustWeave.createWallet(
         holderDid = holderDid.id,
         provider = WalletProvider.InMemory  // For testing
     )
@@ -385,15 +385,15 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // Create DIDs and issue credential (from Tutorial 2)
-    val issuerDid = vericore.dids.create()
-    val holderDid = vericore.dids.create()
+    val issuerDid = TrustWeave.dids.create()
+    val holderDid = TrustWeave.dids.create()
     val credential = /* ... issue credential ... */
     
     // Create wallet
-    val wallet = vericore.createWallet(holderDid.id).getOrThrow()
+    val wallet = TrustWeave.createWallet(holderDid.id).getOrThrow()
     
     // Store credential in wallet
     val storeResult = wallet.storeCredential(credential)
@@ -415,7 +415,7 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // ... (create wallet and store credentials) ...
     
@@ -443,10 +443,10 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // Create wallet with organization features enabled
-    val wallet = vericore.createWallet(holderDid.id) {
+    val wallet = TrustWeave.createWallet(holderDid.id) {
         enableOrganization = true
     }.getOrThrow()
     
@@ -511,18 +511,18 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // Issuer: University issuing degrees
-    val issuerDid = vericore.dids.create()
+    val issuerDid = TrustWeave.dids.create()
     val issuerKeyId = issuerDid.verificationMethod.first().id
     
     // Holder: Student receiving degree
-    val holderDid = vericore.dids.create()
-    val holderWallet = vericore.createWallet(holderDid.id).getOrThrow()
+    val holderDid = TrustWeave.dids.create()
+    val holderWallet = TrustWeave.createWallet(holderDid.id).getOrThrow()
     
     // Verifier: Employer verifying degree
-    val verifierDid = vericore.dids.create()
+    val verifierDid = TrustWeave.dids.create()
     
     println("✅ All parties set up")
     println("   Issuer: ${issuerDid.id}")
@@ -537,12 +537,12 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // ... (setup parties) ...
     
     // ISSUER: Issue credential
-    val credential = vericore.issueCredential(
+    val credential = TrustWeave.issueCredential(
         issuerDid = issuerDid.id,
         issuerKeyId = issuerKeyId,
         credentialSubject = mapOf(
@@ -563,7 +563,7 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // ... (setup and issue) ...
     
@@ -576,10 +576,10 @@ fun main() = runBlocking {
 ### Step 4: Create Presentation (Holder)
 
 ```kotlin
-import com.geoknoesis.vericore.presentation.*
+import com.trustweave.presentation.*
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // ... (setup, issue, store) ...
     
@@ -612,14 +612,14 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // ... (complete workflow above) ...
     
     val presentation = presentationResult.getOrThrow()
     
     // VERIFIER: Verify presentation
-    val verificationResult = vericore.verifyPresentation(
+    val verificationResult = TrustWeave.verifyPresentation(
         presentation = presentation,
         challenge = "verifier-challenge-123",  // Must match
         domain = "example-employer.com"  // Must match
@@ -649,7 +649,7 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val TrustWeave = TrustWeave.create()
     
     // ... (setup and issue) ...
     
@@ -705,11 +705,11 @@ fun main() = runBlocking {
 ### Step 1: Register Blockchain Client
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.anchor.options.*
+import com.trustweave.anchor.*
+import com.trustweave.anchor.options.*
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create {
+    val TrustWeave = TrustWeave.create {
         blockchains {
             // Register Algorand testnet client
             "algorand:testnet" to AlgorandBlockchainAnchorClient(
@@ -743,7 +743,7 @@ data class ImportantData(
 )
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create {
+    val TrustWeave = TrustWeave.create {
         // ... (register blockchain client) ...
     }
     
@@ -755,7 +755,7 @@ fun main() = runBlocking {
     )
     
     // Anchor to blockchain
-    val anchorResult = vericore.blockchains.anchor(
+    val anchorResult = TrustWeave.blockchains.anchor(
         data = data,
         serializer = ImportantData.serializer(),
         chainId = "algorand:testnet"
@@ -781,7 +781,7 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val vericore = VeriCore.create {
+    val TrustWeave = TrustWeave.create {
         // ... (register blockchain client) ...
     }
     
@@ -789,7 +789,7 @@ fun main() = runBlocking {
     val anchorRef = anchorResult.getOrThrow().ref
     
     // Read anchored data
-    val readResult = vericore.readAnchor<ImportantData>(
+    val readResult = TrustWeave.readAnchor<ImportantData>(
         ref = anchorRef,
         serializer = ImportantData.serializer()
     )
@@ -811,19 +811,19 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val vericore = VeriCore.create {
+    val TrustWeave = TrustWeave.create {
         // ... (register blockchain client) ...
     }
     
     // Create status list for revocation
-    val statusList = vericore.createStatusList(
+    val statusList = TrustWeave.createStatusList(
         issuerDid = issuerDid.id,
         purpose = StatusPurpose.REVOCATION
     ).getOrThrow()
     
     // Anchor status list to blockchain
     // This makes revocation status tamper-evident
-    val anchorResult = vericore.blockchains.anchor(
+    val anchorResult = TrustWeave.blockchains.anchor(
         data = statusList,
         serializer = StatusListCredential.serializer(),
         chainId = "algorand:testnet"
@@ -868,8 +868,8 @@ After completing this tutorial series, you're ready to:
    - [Key Rotation](../advanced/key-rotation.md)
    - [Verification Policies](../advanced/verification-policies.md)
    - [Error Recovery Patterns](../advanced/error-handling.md#error-recovery-patterns)
-3. **Study Domain Scenarios**: See how VeriCore is used in [real-world scenarios](../scenarios/README.md)
-4. **Contribute**: Help improve VeriCore by [creating plugins](../contributing/creating-plugins.md)
+3. **Study Domain Scenarios**: See how TrustWeave is used in [real-world scenarios](../scenarios/README.md)
+4. **Contribute**: Help improve TrustWeave by [creating plugins](../contributing/creating-plugins.md)
 
 ## Additional Resources
 

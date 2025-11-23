@@ -1,6 +1,6 @@
 # Academic Credentials Scenario
 
-This guide walks you through building a complete academic credential system using VeriCore. You'll learn how universities can issue verifiable diplomas, how students can store them in wallets, and how employers can verify credentials without contacting the university.
+This guide walks you through building a complete academic credential system using TrustWeave. You'll learn how universities can issue verifiable diplomas, how students can store them in wallets, and how employers can verify credentials without contacting the university.
 
 ## What You'll Build
 
@@ -91,7 +91,7 @@ Traditional academic credentials have several problems:
 3. **No privacy**: Sharing a diploma reveals all information
 4. **Not portable**: Credentials are tied to institutions
 
-VeriCore solves this by enabling:
+TrustWeave solves this by enabling:
 
 - **Instant verification**: Cryptographic proof without contacting the university
 - **Tamper-proof**: Credentials are cryptographically signed
@@ -121,19 +121,19 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`. These modules cover DID management, credential issuance, wallet storage, and the in-memory services used throughout this scenario.
+Add TrustWeave dependencies to your `build.gradle.kts`. These modules cover DID management, credential issuance, wallet storage, and the in-memory services used throughout this scenario.
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
     
     // Test kit for in-memory implementations
-    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -147,15 +147,15 @@ dependencies {
 
 ## Step 2: Complete Runnable Example
 
-Here's the full academic credential flow using the VeriCore facade API. This complete, copy-paste ready example demonstrates the entire workflow from issuance to verification.
+Here's the full academic credential flow using the TrustWeave facade API. This complete, copy-paste ready example demonstrates the entire workflow from issuance to verification.
 
 ```kotlin
 package com.example.academic.credentials
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.credential.PresentationOptions
-import com.geoknoesis.vericore.credential.wallet.Wallet
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.credential.PresentationOptions
+import com.trustweave.credential.wallet.Wallet
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -167,24 +167,24 @@ fun main() = runBlocking {
     println("Academic Credentials Scenario - Complete End-to-End Example")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance
-    val vericore = VeriCore.create()
-    println("\n✅ VeriCore initialized")
+    // Step 1: Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
+    println("\n✅ TrustWeave initialized")
     
     // Step 2: Create DIDs for university (issuer) and student (holder)
-    val universityDidDoc = vericore.dids.create()
+    val universityDidDoc = TrustWeave.dids.create()
     val universityDid = universityDidDoc.id
     val universityKeyId = universityDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val studentDidDoc = vericore.dids.create()
+    val studentDidDoc = TrustWeave.dids.create()
     val studentDid = studentDidDoc.id
     
     println("✅ University DID: $universityDid")
     println("✅ Student DID: $studentDid")
     
     // Step 3: Issue a degree credential
-    val credential = vericore.issueCredential(
+    val credential = TrustWeave.issueCredential(
         issuerDid = universityDid,
         issuerKeyId = universityKeyId,
         credentialSubject = buildJsonObject {
@@ -208,7 +208,7 @@ fun main() = runBlocking {
     println("   Issuer: ${credential.issuer}")
     
     // Step 4: Create student wallet and store credential
-    val studentWallet = vericore.createWallet(
+    val studentWallet = TrustWeave.createWallet(
         holderDid = studentDid
     ) {
         enableOrganization = true
@@ -243,7 +243,7 @@ fun main() = runBlocking {
     println("   Credentials: ${presentation.verifiableCredential.size}")
     
     // Step 7: Verify the credential
-    val verification = vericore.verifyCredential(credential).getOrThrow()
+    val verification = TrustWeave.verifyCredential(credential).getOrThrow()
     
     if (verification.valid) {
         println("\n✅ Credential Verification SUCCESS")
@@ -279,7 +279,7 @@ fun main() = runBlocking {
 Academic Credentials Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ VeriCore initialized
+✅ TrustWeave initialized
 ✅ University DID: did:key:z6Mk...
 ✅ Student DID: did:key:z6Mk...
 ✅ Credential issued: https://example.edu/credentials/degree-...
@@ -325,15 +325,15 @@ Academic Credentials Scenario - Complete End-to-End Example
 
 This section breaks down the complete example above into individual steps with explanations.
 
-### Step 1: Initialize VeriCore
+### Step 1: Initialize TrustWeave
 
-Create a VeriCore instance that provides access to all functionality:
+Create a TrustWeave instance that provides access to all functionality:
 
 ```kotlin
-val vericore = VeriCore.create()
+val TrustWeave = TrustWeave.create()
 ```
 
-**What this does:** Initializes VeriCore with default configuration, including in-memory KMS, DID methods, and wallet factories. For production, configure with specific providers.
+**What this does:** Initializes TrustWeave with default configuration, including in-memory KMS, DID methods, and wallet factories. For production, configure with specific providers.
 
 ### Step 2: Create DIDs
 
@@ -341,13 +341,13 @@ Each party (university issuer and student holder) needs their own DID:
 
 ```kotlin
 // Create university DID (issuer)
-val universityDidDoc = vericore.dids.create()
+val universityDidDoc = TrustWeave.dids.create()
 val universityDid = universityDidDoc.id
 val universityKeyId = universityDidDoc.verificationMethod.firstOrNull()?.id
     ?: error("No verification method found")
 
 // Create student DID (holder)
-val studentDidDoc = vericore.dids.create()
+val studentDidDoc = TrustWeave.dids.create()
 val studentDid = studentDidDoc.id
 ```
 
@@ -358,7 +358,7 @@ val studentDid = studentDidDoc.id
 The university creates and issues a verifiable credential:
 
 ```kotlin
-val credential = vericore.issueCredential(
+val credential = TrustWeave.issueCredential(
     issuerDid = universityDid,
     issuerKeyId = universityKeyId,
     credentialSubject = buildJsonObject {
@@ -385,7 +385,7 @@ val credential = vericore.issueCredential(
 Students need a wallet to store their credentials:
 
 ```kotlin
-val studentWallet = vericore.createWallet(
+val studentWallet = TrustWeave.createWallet(
     holderDid = studentDid
 ) {
     enableOrganization = true  // Enable collections and tags
@@ -456,7 +456,7 @@ val presentation = studentWallet.withPresentation { pres ->
 Employers verify the credential cryptographically:
 
 ```kotlin
-val verification = vericore.verifyCredential(credential).getOrThrow()
+val verification = TrustWeave.verifyCredential(credential).getOrThrow()
 
 if (verification.valid) {
     println("Credential is valid!")
@@ -514,15 +514,15 @@ studentWallet.withOrganization { org ->
 
 ### Credential Verification Workflow
 
-Complete verification flow using VeriCore facade:
+Complete verification flow using TrustWeave facade:
 
 ```kotlin
 suspend fun verifyAcademicCredential(
     credential: VerifiableCredential,
     expectedIssuer: String,
-    vericore: VeriCore
+    TrustWeave: TrustWeave
 ): Boolean {
-    val result = vericore.verifyCredential(credential).getOrThrow()
+    val result = TrustWeave.verifyCredential(credential).getOrThrow()
 
     if (!result.valid) return false
     if (credential.issuer != expectedIssuer) return false
@@ -536,7 +536,7 @@ suspend fun verifyAcademicCredential(
 
 ### Trust & Failure Modes
 
-- **Proof verification**: VeriCore's `verifyCredential` performs full cryptographic proof verification. For high-assurance decisions, ensure you're using production-grade KMS providers.
+- **Proof verification**: TrustWeave's `verifyCredential` performs full cryptographic proof verification. For high-assurance decisions, ensure you're using production-grade KMS providers.
 - **Schema validation**: Register schema definitions before enabling schema validation in verification options.
 - **Revocation**: When you add a `credentialStatus` to credentials, ensure you configure a status list resolver. Set `checkRevocation = true` in verification options.
 - **Key custody**: Replace the default in-memory KMS with an HSM or cloud KMS (AWS KMS, Azure Key Vault, etc.) for production. Never persist private keys in plaintext.

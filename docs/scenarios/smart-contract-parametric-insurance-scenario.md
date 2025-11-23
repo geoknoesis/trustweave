@@ -1,8 +1,8 @@
 # Smart Contract: Parametric Insurance Scenario
 
-> **Building Parametric Insurance with VeriCore Smart Contracts**
+> **Building Parametric Insurance with TrustWeave Smart Contracts**
 
-This guide demonstrates how to build a parametric insurance system using VeriCore's Smart Contract abstraction. You'll learn how to create contracts that automatically execute based on Earth Observation (EO) data triggers, with verifiable credentials and blockchain anchoring for trust and auditability.
+This guide demonstrates how to build a parametric insurance system using TrustWeave's Smart Contract abstraction. You'll learn how to create contracts that automatically execute based on Earth Observation (EO) data triggers, with verifiable credentials and blockchain anchoring for trust and auditability.
 
 ## What You'll Build
 
@@ -29,7 +29,7 @@ By the end of this tutorial, you'll have:
 │         │ Issues VC       │ Issues VC       │ Anchors        │
 │         │                 │                 │                │
 │  ┌──────▼─────────────────▼─────────────────▼──────┐       │
-│  │         VeriCore Smart Contract Service          │       │
+│  │         TrustWeave Smart Contract Service          │       │
 │  │  ┌──────────────────────────────────────────┐   │       │
 │  │  │  Contract Lifecycle Management            │   │       │
 │  │  │  - Create Draft                           │   │       │
@@ -48,40 +48,40 @@ By the end of this tutorial, you'll have:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Step 1: Setup VeriCore
+## Step 1: Setup TrustWeave
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.contract.models.*
+import com.trustweave.TrustWeave
+import com.trustweave.contract.models.*
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
 
-// Initialize VeriCore with blockchain anchoring
-val vericore = VeriCore.create {
+// Initialize TrustWeave with blockchain anchoring
+val TrustWeave = TrustWeave.create {
     blockchains {
         "algorand:mainnet" to algorandClient
     }
 }
 
 // Create DIDs for parties
-val insurerDid = vericore.dids.create(method = "key")
-val insuredDid = vericore.dids.create(method = "key")
-val eoProviderDid = vericore.dids.create(method = "key")
+val insurerDid = TrustWeave.dids.create(method = "key")
+val insuredDid = TrustWeave.dids.create(method = "key")
+val eoProviderDid = TrustWeave.dids.create(method = "key")
 ```
 
 ## Step 2: Create Contract Draft
 
 ```kotlin
 suspend fun createFloodInsuranceContract(
-    vericore: VeriCore,
+    TrustWeave: TrustWeave,
     insurerDid: String,
     insuredDid: String,
     coverageAmount: Double,
     location: Location
 ): SmartContract {
     
-    val contract = vericore.contracts.draft(
+    val contract = TrustWeave.contracts.draft(
         request = ContractDraftRequest(
             contractType = ContractType.Insurance,
             executionModel = ExecutionModel.Parametric(
@@ -172,13 +172,13 @@ Binding issues a verifiable credential and anchors to blockchain:
 
 ```kotlin
 suspend fun bindInsuranceContract(
-    vericore: VeriCore,
+    TrustWeave: TrustWeave,
     contract: SmartContract,
     insurerDid: String,
     insurerKeyId: String
 ): BoundContract {
     
-    val bound = vericore.contracts.bindContract(
+    val bound = TrustWeave.contracts.bindContract(
         contractId = contract.id,
         issuerDid = insurerDid,
         issuerKeyId = insurerKeyId,
@@ -199,11 +199,11 @@ suspend fun bindInsuranceContract(
 
 ```kotlin
 suspend fun activateContract(
-    vericore: VeriCore,
+    TrustWeave: TrustWeave,
     contractId: String
 ): SmartContract {
     
-    val active = vericore.contracts.activateContract(contractId).getOrThrow()
+    val active = TrustWeave.contracts.activateContract(contractId).getOrThrow()
     
     println("✅ Contract activated: ${active.id}")
     println("   Status: ${active.status}")
@@ -220,7 +220,7 @@ When EO data arrives (e.g., SAR flood data), process it and execute the contract
 
 ```kotlin
 suspend fun processFloodDataAndExecute(
-    vericore: VeriCore,
+    TrustWeave: TrustWeave,
     contract: SmartContract,
     floodDepthCm: Double,
     eoDataCredential: VerifiableCredential
@@ -236,7 +236,7 @@ suspend fun processFloodDataAndExecute(
     )
     
     // Execute contract
-    val result = vericore.contracts.executeContract(
+    val result = TrustWeave.contracts.executeContract(
         contract = contract,
         executionContext = executionContext
     ).getOrThrow()
@@ -267,21 +267,21 @@ suspend fun processFloodDataAndExecute(
 
 ```kotlin
 suspend fun completeParametricInsuranceWorkflow() {
-    val vericore = VeriCore.create {
+    val TrustWeave = TrustWeave.create {
         blockchains {
             "algorand:mainnet" to algorandClient
         }
     }
     
     // Step 1: Create DIDs
-    val insurerDid = vericore.dids.create(method = "key")
-    val insuredDid = vericore.dids.create(method = "key")
-    val insurerKeyId = vericore.dids.resolve(insurerDid.id)
+    val insurerDid = TrustWeave.dids.create(method = "key")
+    val insuredDid = TrustWeave.dids.create(method = "key")
+    val insurerKeyId = TrustWeave.dids.resolve(insurerDid.id)
         .verificationMethod.firstOrNull()?.id ?: error("No key found")
     
     // Step 2: Create contract draft
     val contract = createFloodInsuranceContract(
-        vericore = vericore,
+        TrustWeave = TrustWeave,
         insurerDid = insurerDid.id,
         insuredDid = insuredDid.id,
         coverageAmount = 1_000_000.0,
@@ -295,21 +295,21 @@ suspend fun completeParametricInsuranceWorkflow() {
     
     // Step 3: Bind contract
     val bound = bindInsuranceContract(
-        vericore = vericore,
+        TrustWeave = TrustWeave,
         contract = contract,
         insurerDid = insurerDid.id,
         insurerKeyId = insurerKeyId
     )
     
     // Step 4: Activate contract
-    val active = activateContract(vericore, bound.contract.id)
+    val active = activateContract(TrustWeave, bound.contract.id)
     
     // Step 5: Simulate flood event
     // In production, this would come from EO data provider
     val floodDepth = 75.0 // cm
     
     // Issue EO data credential (simplified - in production, EO provider issues this)
-    val eoDataCredential = vericore.credentials.issue(
+    val eoDataCredential = TrustWeave.credentials.issue(
         issuer = eoProviderDid.id,
         subject = buildJsonObject {
             put("floodDepthCm", floodDepth)
@@ -324,7 +324,7 @@ suspend fun completeParametricInsuranceWorkflow() {
     
     // Step 6: Execute contract
     val executionResult = processFloodDataAndExecute(
-        vericore = vericore,
+        TrustWeave = TrustWeave,
         contract = active,
         floodDepthCm = floodDepth,
         eoDataCredential = eoDataCredential

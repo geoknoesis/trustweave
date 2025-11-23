@@ -1,6 +1,6 @@
 # Test Patterns
 
-Common test patterns and examples for VeriCore.
+Common test patterns and examples for TrustWeave.
 
 ## Pattern 1: Basic Plugin Test
 

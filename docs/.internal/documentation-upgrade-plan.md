@@ -1,9 +1,9 @@
 # Documentation Context Upgrade Plan
 
-This plan inventories every section in the VeriCore documentation set and sketches how we will add contextual framing and per-snippet explanations. We will work area by area, updating code blocks with “What it does / Why it matters / Result” captions and introducing narrative glue where it is currently missing.
+This plan inventories every section in the TrustWeave documentation set and sketches how we will add contextual framing and per-snippet explanations. We will work area by area, updating code blocks with “What it does / Why it matters / Result” captions and introducing narrative glue where it is currently missing.
 
 ## Introduction
-- `introduction/README.md`, `what-is-vericore.md`, `key-features.md`, `use-cases.md`: keep the high-level story but add brief paragraphs explaining how each example relates to day-to-day SDK usage. No code snippets present.
+- `introduction/README.md`, `what-is-TrustWeave.md`, `key-features.md`, `use-cases.md`: keep the high-level story but add brief paragraphs explaining how each example relates to day-to-day SDK usage. No code snippets present.
 - `introduction/architecture-overview.md`: already updated with a mermaid flow; ensure each embedded snippet (if any) has captions. Currently none; no action required.
 
 ## Getting Started
@@ -17,7 +17,7 @@ This plan inventories every section in the VeriCore documentation set and sketch
 - `dids.md`, `verifiable-credentials.md`, `wallets.md`, `blockchain-anchoring.md`, `key-management.md`, `json-canonicalization.md`, `trust-registry.md`: already structured with “What/Why/How” but audit for any anonymous code blocks and add explicit explanations before/after each.
 
 ## Core Modules
-- `modules/*.md`: for each module page, add an introductory paragraph that explains how the module composes with the rest of VeriCore. Annotate module-specific Kotlin or Gradle snippets with usage rationale.
+- `modules/*.md`: for each module page, add an introductory paragraph that explains how the module composes with the rest of TrustWeave. Annotate module-specific Kotlin or Gradle snippets with usage rationale.
 
 ## Integration Modules
 - `integrations/*.md`: verify each integration example (walt.id, GoDiddy, Algorand, Polygon) uses typed options and add before/after commentary for every snippet describing configuration steps and expected results (e.g., “Registers GoDiddy issuer, returns OkHttp-backed client”).

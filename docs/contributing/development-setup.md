@@ -1,6 +1,6 @@
 # Development Setup
 
-This guide explains how to set up your development environment for VeriCore.
+This guide explains how to set up your development environment for TrustWeave.
 
 ## Prerequisites
 
@@ -20,8 +20,8 @@ This guide explains how to set up your development environment for VeriCore.
 ## Cloning the Repository
 
 ```bash
-git clone https://github.com/geoknoesis/vericore.git
-cd vericore
+git clone https://github.com/geoknoesis/TrustWeave.git
+cd TrustWeave
 ```
 
 ## Building the Project
@@ -42,7 +42,7 @@ cd vericore
 
 ```bash
 # Build specific module
-./gradlew :vericore-core:build
+./gradlew :TrustWeave-core:build
 
 # Build all modules
 ./gradlew build
@@ -60,10 +60,10 @@ cd vericore
 
 ```bash
 # Run tests for specific module
-./gradlew :vericore-core:test
+./gradlew :TrustWeave-core:test
 
 # Run specific test class
-./gradlew :vericore-core:test --tests "DidMethodTest"
+./gradlew :TrustWeave-core:test --tests "DidMethodTest"
 ```
 
 ### EO Integration Tests
@@ -81,7 +81,7 @@ cd vericore
 
 1. Open IntelliJ IDEA
 2. Select "Open or Import"
-3. Navigate to the VeriCore directory
+3. Navigate to the TrustWeave directory
 4. Select the root `build.gradle.kts` file
 5. Select "Open as Project"
 6. Wait for Gradle sync to complete
@@ -128,7 +128,7 @@ git checkout -b feature/my-feature
 ./gradlew test
 
 # Run specific module tests
-./gradlew :vericore-core:test
+./gradlew :TrustWeave-core:test
 ```
 
 ### Building Before Commit

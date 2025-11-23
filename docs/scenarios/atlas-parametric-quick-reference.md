@@ -1,6 +1,6 @@
 # Atlas Parametric MGA: Quick Reference
 
-> **How to Build Your Parametric Insurance MGA with VeriCore**
+> **How to Build Your Parametric Insurance MGA with TrustWeave**
 
 ## 🎯 What You're Building
 
@@ -16,7 +16,7 @@ A parametric insurance MGA platform that:
 ### Step 1: Create Smart Contract
 ```kotlin
 // Create parametric insurance contract
-val contract = vericore.contracts.draft(
+val contract = TrustWeave.contracts.draft(
     request = ContractDraftRequest(
         contractType = ContractType.Insurance,
         executionModel = ExecutionModel.Parametric(
@@ -37,7 +37,7 @@ val contract = vericore.contracts.draft(
 ### Step 2: Bind Contract (Issue VC & Anchor)
 ```kotlin
 // Bind contract - issues VC and anchors to blockchain
-val bound = vericore.contracts.bindContract(
+val bound = TrustWeave.contracts.bindContract(
     contractId = contract.id,
     issuerDid = insurerDid,
     issuerKeyId = insurerKeyId,
@@ -45,13 +45,13 @@ val bound = vericore.contracts.bindContract(
 ).getOrThrow()
 
 // Activate contract
-val active = vericore.contracts.activateContract(bound.contract.id).getOrThrow()
+val active = TrustWeave.contracts.activateContract(bound.contract.id).getOrThrow()
 ```
 
 ### Step 3: EO Provider Issues Data Credential
 ```kotlin
 // EO provider wraps SAR flood data in Verifiable Credential
-val floodCredential = vericore.credentials.issue(
+val floodCredential = TrustWeave.credentials.issue(
     issuer = eoProviderDid,
     subject = sarFloodData,
     types = listOf("EarthObservationCredential", "InsuranceOracleCredential")
@@ -61,7 +61,7 @@ val floodCredential = vericore.credentials.issue(
 ### Step 4: Execute Contract & Payout
 ```kotlin
 // Execute contract with EO data
-val result = vericore.contracts.executeContract(
+val result = TrustWeave.contracts.executeContract(
     contract = active,
     executionContext = ExecutionContext(
         triggerData = buildJsonObject {
@@ -107,7 +107,7 @@ if (result.executed) {
 - **Trigger**: NDVI anomaly + rainfall deficit
 - **Market**: Africa, Asia
 
-## 🔑 Key VeriCore Features
+## 🔑 Key TrustWeave Features
 
 | Feature | What It Does | Why It Matters |
 |---------|--------------|----------------|
@@ -142,7 +142,7 @@ if (result.executed) {
 ## 🚀 Implementation Phases
 
 ### Phase 1: MVP (Weeks 1-6)
-- ✅ Setup VeriCore with blockchain anchoring
+- ✅ Setup TrustWeave with blockchain anchoring
 - ✅ Build SAR flood product
 - ✅ Create broker portal MVP
 - ✅ Implement trigger evaluation
@@ -166,16 +166,16 @@ if (result.executed) {
 2. **[Architecture Overview](atlas-parametric-architecture-overview.md)** - System design
 3. **[EO Scenario](parametric-insurance-eo-scenario.md)** - EO data patterns
 
-### VeriCore Docs
+### TrustWeave Docs
 - [Quick Start](../getting-started/quick-start.md)
 - [API Reference](../api-reference/core-api.md)
 - [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md)
 
 ## 💻 Code Snippets
 
-### Initialize VeriCore
+### Initialize TrustWeave
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     blockchains {
         "algorand:mainnet" to AlgorandBlockchainAnchorClient(...)
     }
@@ -184,7 +184,7 @@ val vericore = VeriCore.create {
 
 ### Create Flood Insurance Contract
 ```kotlin
-val contract = vericore.contracts.draft(
+val contract = TrustWeave.contracts.draft(
     request = ContractDraftRequest(
         contractType = ContractType.Insurance,
         executionModel = ExecutionModel.Parametric(
@@ -225,19 +225,19 @@ val contract = vericore.contracts.draft(
 ### Bind and Activate Contract
 ```kotlin
 // Bind contract (issues VC and anchors)
-val bound = vericore.contracts.bindContract(
+val bound = TrustWeave.contracts.bindContract(
     contractId = contract.id,
     issuerDid = insurerDid,
     issuerKeyId = insurerKeyId
 ).getOrThrow()
 
 // Activate contract
-val active = vericore.contracts.activateContract(bound.contract.id).getOrThrow()
+val active = TrustWeave.contracts.activateContract(bound.contract.id).getOrThrow()
 ```
 
 ### Issue EO Data Credential
 ```kotlin
-val floodCredential = vericore.credentials.issue(
+val floodCredential = TrustWeave.credentials.issue(
     issuer = eoProviderDid,
     subject = buildJsonObject {
         put("dataType", "SarFloodMeasurement")
@@ -250,7 +250,7 @@ val floodCredential = vericore.credentials.issue(
 
 ### Execute Contract
 ```kotlin
-val result = vericore.contracts.executeContract(
+val result = TrustWeave.contracts.executeContract(
     contract = active,
     executionContext = ExecutionContext(
         triggerData = buildJsonObject {
@@ -302,10 +302,10 @@ val eoData = acceptEoDataCredential(dataCredential)
 1. **Read Implementation Guide**: [parametric-insurance-mga-implementation-guide.md](parametric-insurance-mga-implementation-guide.md)
 2. **Review Architecture**: [atlas-parametric-architecture-overview.md](atlas-parametric-architecture-overview.md)
 3. **Smart Contracts Guide**: [Smart Contract: Parametric Insurance](smart-contract-parametric-insurance-scenario.md)
-4. **Explore VeriCore**: [Quick Start](../getting-started/quick-start.md)
+4. **Explore TrustWeave**: [Quick Start](../getting-started/quick-start.md)
 5. **Start Building**: Begin with SAR flood product MVP using Smart Contracts
 
 ---
 
-**Built with VeriCore** - The Foundation for Decentralized Trust and Identity
+**Built with TrustWeave** - The Foundation for Decentralized Trust and Identity
 

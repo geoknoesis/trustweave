@@ -1,10 +1,10 @@
-# VeriCore Google Cloud KMS Plugin
+# TrustWeave Google Cloud KMS Plugin
 
-Google Cloud Key Management Service (KMS) integration for VeriCore.
+Google Cloud Key Management Service (KMS) integration for trustweave.
 
 ## Overview
 
-This module provides a complete implementation of VeriCore's `KeyManagementService` interface using Google Cloud KMS. It enables secure key generation, signing, and management using Google Cloud's managed cryptographic services.
+This module provides a complete implementation of TrustWeave's `KeyManagementService` interface using Google Cloud KMS. It enables secure key generation, signing, and management using Google Cloud's managed cryptographic services.
 
 ## Features
 
@@ -22,15 +22,15 @@ Add to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-google-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-google-kms:1.0.0-SNAPSHOT")
 }
 ```
 
 ## Quick Start
 
 ```kotlin
-import com.geoknoesis.vericore.googlekms.*
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.googlekms.*
+import com.trustweave.kms.*
 
 // Configure
 val config = GoogleKmsConfig.builder()
@@ -92,7 +92,7 @@ val kms = GoogleCloudKeyManagementService(config ?: throw IllegalStateException(
 The plugin registers itself via Java ServiceLoader:
 
 ```kotlin
-import com.geoknoesis.vericore.kms.spi.*
+import com.trustweave.kms.spi.*
 import java.util.ServiceLoader
 
 val providers = ServiceLoader.load(KeyManagementServiceProvider::class.java)
@@ -130,5 +130,5 @@ For detailed documentation, see:
 
 ## License
 
-See the main VeriCore LICENSE file.
+See the main TrustWeave LICENSE file.
 

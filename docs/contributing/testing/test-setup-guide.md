@@ -1,6 +1,6 @@
 # Test Setup Guide
 
-This guide explains how to set up the test environment for VeriCore development.
+This guide explains how to set up the test environment for TrustWeave development.
 
 ## Prerequisites
 

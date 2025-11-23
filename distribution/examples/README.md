@@ -1,0 +1,84 @@
+# TrustWeave Examples
+
+This module contains runnable examples demonstrating various use cases for trustweave.
+
+## Available Examples
+
+### Earth Observation
+- **File**: `com.trustweave.examples.eo.EarthObservationExample`
+- **Description**: Demonstrates EO data integrity workflow with artifacts, linksets, VCs, and blockchain anchoring
+- **Run**: `./gradlew :TrustWeave-examples:runEarthObservation`
+
+### Academic Credentials
+- **File**: `com.trustweave.examples.academic.AcademicCredentialsExample`
+- **Description**: Shows how universities issue degree credentials and students manage them in wallets
+- **Run**: `./gradlew :TrustWeave-examples:runAcademicCredentials`
+
+### Professional Identity
+- **File**: `com.trustweave.examples.professional.ProfessionalIdentityExample`
+- **Description**: Demonstrates professional credential wallet with education, work experience, and certifications
+- **Run**: `./gradlew :TrustWeave-examples:runProfessionalIdentity`
+
+### Indy Integration
+- **File**: `com.trustweave.examples.indy.IndyIntegrationExample`
+- **Description**: Complete end-to-end scenario using Hyperledger Indy for blockchain anchoring. Demonstrates DID creation, credential issuance, verification, wallet storage, and anchoring to Indy blockchain (BCovrin Testnet)
+- **Run**: `./gradlew :TrustWeave-examples:runIndyIntegration`
+
+## Running Examples
+
+Each example can be run using Gradle:
+
+```bash
+# Run Earth Observation example
+./gradlew :TrustWeave-examples:runEarthObservation
+
+# Run Academic Credentials example
+./gradlew :TrustWeave-examples:runAcademicCredentials
+
+# Run Professional Identity example
+./gradlew :TrustWeave-examples:runProfessionalIdentity
+
+# Run Indy Integration example
+./gradlew :TrustWeave-examples:runIndyIntegration
+```
+
+## Building Examples
+
+To compile all examples:
+
+```bash
+./gradlew :TrustWeave-examples:compileKotlin
+```
+
+## Source Code Location
+
+All example source code is located in:
+```
+TrustWeave-examples/src/main/kotlin/io/geoknoesis/TrustWeave/examples/
+```
+
+Each example is organized in its own package:
+- `eo/` - Earth Observation examples
+- `academic/` - Academic Credentials examples
+- `professional/` - Professional Identity examples
+- `location/` - Proof of Location examples
+- `spatial/` - Spatial Web Authorization examples
+- `workflow/` - Digital Workflow Provenance examples
+- `news/` - News Industry examples
+- `dcat/` - Data Catalog DCAT examples
+- `healthcare/` - Healthcare Medical Records examples
+- `government/` - Government Digital Identity examples
+- `supplychain/` - Supply Chain Traceability examples
+- `financial/` - Financial Services KYC examples
+- `iot/` - IoT Device Identity examples
+- `national/` - National Education Credentials examples
+- `indy/` - Indy Integration examples
+
+## Documentation
+
+For detailed explanations of each scenario, see the documentation in `docs/getting-started/`:
+- [Earth Observation Scenario](../../docs/getting-started/earth-observation-scenario.md)
+- [Academic Credentials Scenario](../../docs/getting-started/academic-credentials-scenario.md)
+- [Professional Identity Scenario](../../docs/getting-started/professional-identity-scenario.md)
+- And more...
+

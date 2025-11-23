@@ -1,6 +1,6 @@
 # Blockchain-Anchored Revocation
 
-VeriCore provides a sophisticated revocation management system that combines fast off-chain status lists with tamper-proof blockchain anchoring. This hybrid approach gives you the performance of off-chain storage with the immutability guarantees of blockchain.
+TrustWeave provides a sophisticated revocation management system that combines fast off-chain status lists with tamper-proof blockchain anchoring. This hybrid approach gives you the performance of off-chain storage with the immutability guarantees of blockchain.
 
 ## Overview
 
@@ -79,10 +79,10 @@ Determines when status lists should be anchored to blockchain.
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
     // Add blockchain anchor client for your chain
-    implementation("com.geoknoesis.vericore:vericore-anchor-algorand:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor-algorand:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -91,7 +91,7 @@ dependencies {
 Choose an implementation based on your needs:
 
 ```kotlin
-import com.geoknoesis.vericore.credential.revocation.*
+import com.trustweave.credential.revocation.*
 
 // For development/testing
 val statusListManager = InMemoryStatusListManager()
@@ -105,7 +105,7 @@ val statusListManager = DatabaseStatusListManager(dataSource)
 Set up your blockchain anchor client:
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.*
+import com.trustweave.anchor.*
 
 val anchorClient = AlgorandBlockchainAnchorClient(
     algodUrl = "https://testnet-api.algonode.cloud",
@@ -198,7 +198,7 @@ println("Status List Purpose: ${statusList.credentialSubject.statusPurpose}")
 When issuing a credential, include the status list reference:
 
 ```kotlin
-import com.geoknoesis.vericore.credential.models.*
+import com.trustweave.credential.models.*
 
 val credential = VerifiableCredential(
     id = "cred-123",
@@ -308,8 +308,8 @@ println("Status list anchored at: $anchorRef")
 Here's a complete example showing the full workflow:
 
 ```kotlin
-import com.geoknoesis.vericore.credential.revocation.*
-import com.geoknoesis.vericore.anchor.*
+import com.trustweave.credential.revocation.*
+import com.trustweave.anchor.*
 import java.time.Duration
 
 suspend fun main() {

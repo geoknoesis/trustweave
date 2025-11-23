@@ -1,18 +1,17 @@
 # API Reference
 
-Complete API reference for VeriCore.
+Complete API reference for TrustWeave.
 
 ## Core API
 
-- **[Core API](core-api.md)**: VeriCore facade API
-  - DID operations (`createDid()`, `resolveDid()`)
-  - Credential operations (`issueCredential()`, `verifyCredential()`)
-  - Wallet operations (`createWallet()`)
-  - Blockchain anchoring (`anchor()`, `readAnchor()`)
+- **[Core API](core-api.md)**: TrustWeave facade API
+  - DID operations (`dids.create()`, `dids.resolve()`, `dids.update()`, `dids.deactivate()`)
+  - Credential operations (`credentials.issue()`, `credentials.verify()`)
+  - Wallet operations (`wallets.create()`)
+  - Blockchain anchoring (`blockchains.anchor()`, `blockchains.read()`)
+  - Smart contract operations (`contracts.draft()`, `contracts.bindContract()`, `contracts.executeContract()`, etc.)
   - Plugin lifecycle management (`initialize()`, `start()`, `stop()`, `cleanup()`)
-  - Error handling with `VeriCoreError` types
-  - Input validation utilities
-  - Result utilities
+  - Error handling with `TrustWeaveError` types
 
 ## Service APIs
 
@@ -43,50 +42,54 @@ Complete API reference for VeriCore.
 
 ## Error Handling
 
-All VeriCore API operations return `Result<T>` for consistent error handling:
+Most TrustWeave API operations throw `TrustWeaveError` exceptions on failure. Some operations (like contract operations) return `Result<T>` directly. Check the method signature for each operation.
 
 ```kotlin
-import com.geoknoesis.vericore.core.*
+import com.trustweave.core.*
 
-val result = vericore.createDid()
-result.fold(
-    onSuccess = { did -> println("Created: ${did.id}") },
-    onFailure = { error ->
-        when (error) {
-            is VeriCoreError.DidMethodNotRegistered -> {
-                println("Method not registered: ${error.method}")
-            }
-            else -> println("Error: ${error.message}")
+try {
+    val did = trustweave.dids.create()
+    val credential = trustweave.credentials.issue(...)
+    val wallet = trustweave.wallets.create(holderDid = did.id)
+} catch (error: TrustWeaveError) {
+    when (error) {
+        is TrustWeaveError.DidMethodNotRegistered -> {
+            println("Method not registered: ${error.method}")
+            println("Available methods: ${error.availableMethods}")
         }
+        is TrustWeaveError.ChainNotRegistered -> {
+            println("Chain not registered: ${error.chainId}")
+            println("Available chains: ${error.availableChains}")
+        }
+        else -> println("Error: ${error.message}")
     }
-)
+}
 ```
 
 See [Error Handling](../advanced/error-handling.md) for detailed error handling patterns.
 
-## Input Validation
+## Configuration
 
-VeriCore validates inputs before operations:
+TrustWeave is configured during creation using a DSL:
 
 ```kotlin
-import com.geoknoesis.vericore.core.*
-
-// Validate DID format
-val validation = DidValidator.validateFormat("did:key:z6Mk...")
-if (!validation.isValid()) {
-    println("Invalid DID format")
-}
-
-// Validate credential structure
-val validation = CredentialValidator.validateStructure(credential)
-if (!validation.isValid()) {
-    println("Credential validation failed")
-}
-
-// Validate chain ID
-val validation = ChainIdValidator.validateFormat("algorand:testnet")
-if (!validation.isValid()) {
-    println("Invalid chain ID format")
+val trustweave = TrustWeave.create {
+    kms = InMemoryKeyManagementService()
+    walletFactory = TestkitWalletFactory()
+    
+    didMethods {
+        + DidKeyMethod()
+        + DidWebMethod()
+    }
+    
+    blockchains {
+        "algorand:testnet" to algorandClient
+        "polygon:mainnet" to polygonClient
+    }
+    
+    credentialServices {
+        + MyCredentialService()
+    }
 }
 ```
 
@@ -95,22 +98,21 @@ if (!validation.isValid()) {
 Manage plugin initialization and cleanup:
 
 ```kotlin
-val vericore = VeriCore.create()
+val trustweave = TrustWeave.create()
 
 // Initialize plugins
-vericore.initialize().getOrThrow()
-
-// Start plugins
-vericore.start().getOrThrow()
-
-// Use VeriCore
-// ...
-
-// Stop plugins
-vericore.stop().getOrThrow()
-
-// Cleanup plugins
-vericore.cleanup().getOrThrow()
+try {
+    trustweave.initialize()
+    trustweave.start()
+    
+    // Use TrustWeave
+    // ...
+    
+    trustweave.stop()
+    trustweave.cleanup()
+} catch (error: TrustWeaveError) {
+    println("Plugin lifecycle error: ${error.message}")
+}
 ```
 
 See [Plugin Lifecycle](../advanced/plugin-lifecycle.md) for detailed plugin lifecycle management.

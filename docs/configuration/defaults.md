@@ -1,13 +1,13 @@
 # Default Configuration
 
-This document explains the default configuration used by `VeriCore.create()` and how to customize it.
+This document explains the default configuration used by `TrustWeave.create()` and how to customize it.
 
 ## Default Configuration Overview
 
-When you call `VeriCore.create()` without any configuration, VeriCore uses the following defaults:
+When you call `TrustWeave.create()` without any configuration, TrustWeave uses the following defaults:
 
 ```kotlin
-val vericore = VeriCore.create()  // Uses defaults below
+val TrustWeave = TrustWeave.create()  // Uses defaults below
 ```
 
 ### Default Components
@@ -51,17 +51,17 @@ val vericore = VeriCore.create()  // Uses defaults below
 1. **Blockchain Clients**
    - No blockchain clients registered
    - Must be added manually for anchoring
-   - Example: `VeriCore.create { blockchains { "algorand:testnet" to client } }`
+   - Example: `TrustWeave.create { blockchains { "algorand:testnet" to client } }`
 
 2. **Additional DID Methods**
    - Only `did:key` is registered
    - Other methods must be added manually
-   - Example: `VeriCore.create { didMethods { + DidWebMethod() } }`
+   - Example: `TrustWeave.create { didMethods { + DidWebMethod() } }`
 
 3. **Production KMS**
    - In-memory KMS is for testing only
    - Production KMS must be configured
-   - Example: `VeriCore.create { kms = AwsKeyManagementService(...) }`
+   - Example: `TrustWeave.create { kms = AwsKeyManagementService(...) }`
 
 ## Default Behavior Details
 
@@ -69,10 +69,10 @@ val vericore = VeriCore.create()  // Uses defaults below
 
 ```kotlin
 // Default behavior
-val did = vericore.dids.create()
+val did = TrustWeave.dids.create()
 
 // Equivalent to:
-val did = vericore.dids.create(
+val did = TrustWeave.dids.create(
     method = "key",  // Default method
     options = DidCreationOptions(
         algorithm = KeyAlgorithm.ED25519,  // Default algorithm
@@ -90,7 +90,7 @@ val did = vericore.dids.create(
 
 ```kotlin
 // Default behavior
-val credential = vericore.issueCredential(
+val credential = TrustWeave.issueCredential(
     issuerDid = issuerDid,
     issuerKeyId = issuerKeyId,
     credentialSubject = subject,
@@ -107,10 +107,10 @@ val credential = vericore.issueCredential(
 
 ```kotlin
 // Default behavior
-val wallet = vericore.createWallet(holderDid = "did:key:holder").getOrThrow()
+val wallet = TrustWeave.createWallet(holderDid = "did:key:holder").getOrThrow()
 
 // Equivalent to:
-val wallet = vericore.createWallet(
+val wallet = TrustWeave.createWallet(
     holderDid = "did:key:holder",
     walletId = UUID.randomUUID().toString(),  // Auto-generated
     provider = WalletProvider.InMemory,  // Default provider
@@ -130,7 +130,7 @@ val wallet = vericore.createWallet(
 ### Option 1: Builder DSL (Recommended)
 
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     // Override KMS
     kms = AwsKeyManagementService(
         region = "us-east-1",
@@ -157,7 +157,7 @@ val vericore = VeriCore.create {
 ### Option 2: Configuration Object
 
 ```kotlin
-val config = VeriCoreConfig(
+val config = TrustWeaveConfig(
     kms = AwsKeyManagementService(...),
     walletFactory = DatabaseWalletFactory(...),
     didRegistry = DidMethodRegistry().apply {
@@ -169,7 +169,7 @@ val config = VeriCoreConfig(
     }
 )
 
-val vericore = VeriCore.create(config)
+val TrustWeave = TrustWeave.create(config)
 ```
 
 ## Production Configuration
@@ -207,15 +207,15 @@ val vericore = VeriCore.create(config)
 
 ```kotlin
 // Check registered DID methods
-val methods = vericore.getAvailableDidMethods()
+val methods = TrustWeave.getAvailableDidMethods()
 println("Available DID methods: $methods")
 
 // Check registered blockchain chains
-val chains = vericore.getAvailableChains()
+val chains = TrustWeave.getAvailableChains()
 println("Available chains: $chains")
 
 // Check wallet capabilities
-val wallet = vericore.createWallet("did:key:holder").getOrThrow()
+val wallet = TrustWeave.createWallet("did:key:holder").getOrThrow()
 println("Wallet capabilities: ${wallet.capabilities}")
 ```
 

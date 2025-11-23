@@ -1,14 +1,14 @@
 # Error Handling
 
-VeriCore provides structured error handling with rich context for better debugging and error recovery.
+TrustWeave provides structured error handling with rich context for better debugging and error recovery.
 
 ## Overview
 
-All VeriCore API operations return `Result<T>`, which provides a consistent way to handle both success and failure cases. Errors are automatically converted to `VeriCoreError` types with structured context.
+All TrustWeave API operations return `Result<T>`, which provides a consistent way to handle both success and failure cases. Errors are automatically converted to `TrustWeaveError` types with structured context.
 
 ## Error Types
 
-VeriCore uses a sealed hierarchy of error types that extend `VeriCoreException`. All errors include:
+TrustWeave uses a sealed hierarchy of error types that extend `TrustWeaveException`. All errors include:
 - **code**: String error code for programmatic handling
 - **message**: Human-readable error message
 - **context**: Map of additional context information
@@ -36,19 +36,19 @@ VeriCore uses a sealed hierarchy of error types that extend `VeriCoreException`.
 
 ```kotlin
 // DID not found
-VeriCoreError.DidNotFound(
+TrustWeaveError.DidNotFound(
     did = "did:key:z6Mk...",
     availableMethods = listOf("key", "web")
 )
 
 // DID method not registered
-VeriCoreError.DidMethodNotRegistered(
+TrustWeaveError.DidMethodNotRegistered(
     method = "web",
     availableMethods = listOf("key")
 )
 
 // Invalid DID format
-VeriCoreError.InvalidDidFormat(
+TrustWeaveError.InvalidDidFormat(
     did = "invalid-did",
     reason = "DID must match format: did:<method>:<identifier>"
 )
@@ -58,14 +58,14 @@ VeriCoreError.InvalidDidFormat(
 
 ```kotlin
 // Credential validation failed
-VeriCoreError.CredentialInvalid(
+TrustWeaveError.CredentialInvalid(
     reason = "Credential issuer is required",
     credentialId = "urn:uuid:123",
     field = "issuer"
 )
 
 // Credential issuance failed
-VeriCoreError.CredentialIssuanceFailed(
+TrustWeaveError.CredentialIssuanceFailed(
     reason = "Failed to sign credential",
     issuerDid = "did:key:issuer"
 )
@@ -75,7 +75,7 @@ VeriCoreError.CredentialIssuanceFailed(
 
 ```kotlin
 // Chain not registered
-VeriCoreError.ChainNotRegistered(
+TrustWeaveError.ChainNotRegistered(
     chainId = "ethereum:mainnet",
     availableChains = listOf("algorand:testnet", "polygon:testnet")
 )
@@ -85,7 +85,7 @@ VeriCoreError.ChainNotRegistered(
 
 ```kotlin
 // Wallet creation failed
-VeriCoreError.WalletCreationFailed(
+TrustWeaveError.WalletCreationFailed(
     reason = "Provider not found",
     provider = "database",
     walletId = "wallet-123"
@@ -96,13 +96,13 @@ VeriCoreError.WalletCreationFailed(
 
 ```kotlin
 // Plugin not found
-VeriCoreError.PluginNotFound(
+TrustWeaveError.PluginNotFound(
     pluginId = "waltid-credential",
     pluginType = "credential-service"
 )
 
 // Plugin initialization failed
-VeriCoreError.PluginInitializationFailed(
+TrustWeaveError.PluginInitializationFailed(
     pluginId = "waltid-credential",
     reason = "Configuration missing"
 )
@@ -112,7 +112,7 @@ VeriCoreError.PluginInitializationFailed(
 
 ```kotlin
 // Validation failed
-VeriCoreError.ValidationFailed(
+TrustWeaveError.ValidationFailed(
     field = "issuer",
     reason = "Invalid DID format",
     value = "invalid-did"
@@ -123,7 +123,7 @@ VeriCoreError.ValidationFailed(
 
 ```kotlin
 // Invalid operation
-VeriCoreError.InvalidOperation(
+TrustWeaveError.InvalidOperation(
     code = "INVALID_OPERATION",
     message = "Operation not allowed in current state",
     context = mapOf("operation" to "createDid", "state" to "stopped"),
@@ -131,15 +131,15 @@ VeriCoreError.InvalidOperation(
 )
 
 // Invalid state
-VeriCoreError.InvalidState(
+TrustWeaveError.InvalidState(
     code = "INVALID_STATE",
-    message = "VeriCore not initialized",
+    message = "TrustWeave not initialized",
     context = emptyMap(),
     cause = null
 )
 
 // Unknown error (catch-all)
-VeriCoreError.Unknown(
+TrustWeaveError.Unknown(
     code = "UNKNOWN_ERROR",
     message = "Unexpected error occurred",
     context = emptyMap(),
@@ -171,13 +171,13 @@ Quick lookup table for common error codes and their solutions:
 ❌ **Bad:**
 ```kotlin
 // Throws exception, crashes application
-val did = vericore.dids.create()
+val did = TrustWeave.dids.create()
 ```
 
 ✅ **Good:**
 ```kotlin
 // Handle errors gracefully
-val did = vericore.dids.create()
+val did = TrustWeave.dids.create()
 // Note: dids.create() returns DidDocument directly, not Result
 // For error handling, wrap in try-catch
 result.fold(
@@ -216,11 +216,11 @@ result.fold(
         
         // Use context for better error handling
         when (error) {
-            is VeriCoreError.DidMethodNotRegistered -> {
+            is TrustWeaveError.DidMethodNotRegistered -> {
                 logger.info("Available methods: ${error.availableMethods}")
                 // Suggest alternatives to user
             }
-            is VeriCoreError.ChainNotRegistered -> {
+            is TrustWeaveError.ChainNotRegistered -> {
                 logger.info("Available chains: ${error.availableChains}")
                 // Suggest fallback chains
             }
@@ -236,7 +236,7 @@ result.fold(
 
 ❌ **Bad:**
 ```kotlin
-val verification = vericore.verifyCredential(credential).getOrThrow()
+val verification = TrustWeave.verifyCredential(credential).getOrThrow()
 if (verification.valid) {
     // Use credential without checking warnings
     processCredential(credential)
@@ -245,7 +245,7 @@ if (verification.valid) {
 
 ✅ **Good:**
 ```kotlin
-val verification = vericore.verifyCredential(credential).getOrThrow()
+val verification = TrustWeave.verifyCredential(credential).getOrThrow()
 if (verification.valid) {
     // Check warnings before using
     if (verification.warnings.isNotEmpty()) {
@@ -275,7 +275,7 @@ if (verification.valid) {
 ❌ **Bad:**
 ```kotlin
 // No validation, may fail with cryptic error
-val resolution = vericore.dids.resolve(userInputDid)
+val resolution = TrustWeave.dids.resolve(userInputDid)
 ```
 
 ✅ **Good:**
@@ -285,7 +285,7 @@ val validation = DidValidator.validateFormat(userInputDid)
 if (!validation.isValid()) {
     val error = validation as ValidationResult.Invalid
     return Result.failure(
-        VeriCoreError.InvalidDidFormat(
+        TrustWeaveError.InvalidDidFormat(
             did = userInputDid,
             reason = error.message
         )
@@ -293,7 +293,7 @@ if (!validation.isValid()) {
 }
 
 // Now safe to proceed
-val resolution = vericore.dids.resolve(userInputDid)
+val resolution = TrustWeave.dids.resolve(userInputDid)
 ```
 
 **Why:** Early validation provides better error messages and prevents unnecessary operations.
@@ -315,18 +315,18 @@ result.fold(
 result.fold(
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.DidMethodNotRegistered -> {
+            is TrustWeaveError.DidMethodNotRegistered -> {
                 // Specific handling for method not registered
                 logger.warn("Method not registered: ${error.method}")
                 logger.info("Available methods: ${error.availableMethods}")
                 // Register method or suggest alternatives
             }
-            is VeriCoreError.InvalidDidFormat -> {
+            is TrustWeaveError.InvalidDidFormat -> {
                 // Specific handling for invalid format
                 logger.error("Invalid DID format: ${error.reason}")
                 // Show format requirements to user
             }
-            is VeriCoreError.CredentialInvalid -> {
+            is TrustWeaveError.CredentialInvalid -> {
                 // Specific handling for invalid credential
                 logger.error("Credential invalid: ${error.reason}")
                 logger.debug("Field: ${error.field}")
@@ -348,13 +348,13 @@ result.fold(
 ### Basic Error Handling
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
 
-val vericore = VeriCore.create()
+val TrustWeave = TrustWeave.create()
 
 // Handle errors with fold
-val did = vericore.dids.create()
+val did = TrustWeave.dids.create()
 // Note: dids.create() returns DidDocument directly, not Result
 // For error handling, wrap in try-catch
 result.fold(
@@ -363,7 +363,7 @@ result.fold(
     },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.DidMethodNotRegistered -> {
+            is TrustWeaveError.DidMethodNotRegistered -> {
                 println("Method not registered: ${error.method}")
                 println("Available methods: ${error.availableMethods}")
             }
@@ -382,10 +382,10 @@ result.fold(
 
 ```kotlin
 // For simple cases where you want to throw on error
-val did = vericore.dids.create()
+val did = TrustWeave.dids.create()
 
 // For better error messages, use getOrThrowError
-val did = vericore.dids.create() // Throws VeriCoreError on failure
+val did = TrustWeave.dids.create() // Throws TrustWeaveError on failure
 ```
 
 ### Error Context
@@ -393,12 +393,12 @@ val did = vericore.dids.create() // Throws VeriCoreError on failure
 All errors include context information that can help with debugging:
 
 ```kotlin
-val result = vericore.anchor(data, serializer, "ethereum:mainnet")
+val result = TrustWeave.anchor(data, serializer, "ethereum:mainnet")
 result.fold(
     onSuccess = { anchor -> println("Anchored: ${anchor.ref.txHash}") },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.ChainNotRegistered -> {
+            is TrustWeaveError.ChainNotRegistered -> {
                 println("Chain ID: ${error.chainId}")
                 println("Available chains: ${error.availableChains}")
                 println("Context: ${error.context}")
@@ -411,16 +411,16 @@ result.fold(
 
 ### Converting Exceptions to Errors
 
-VeriCore automatically converts exceptions to `VeriCoreError`:
+TrustWeave automatically converts exceptions to `TrustWeaveError`:
 
 ```kotlin
-import com.geoknoesis.vericore.core.toVeriCoreError
+import com.trustweave.core.toTrustWeaveError
 
 try {
     // Some operation that might throw
     val result = someOperation()
 } catch (e: Exception) {
-    val error = e.toVeriCoreError()
+    val error = e.toTrustWeaveError()
     println("Error code: ${error.code}")
     println("Context: ${error.context}")
 }
@@ -428,17 +428,17 @@ try {
 
 ## Result Utilities
 
-VeriCore provides extension functions for working with `Result<T>`:
+TrustWeave provides extension functions for working with `Result<T>`:
 
 ### mapError
 
 Transform errors in a Result:
 
 ```kotlin
-val did = vericore.dids.create()
+val did = TrustWeave.dids.create()
 // Note: dids.create() returns DidDocument directly, not Result
 // For error handling, wrap in try-catch
-    .mapError { it.toVeriCoreError() }
+    .mapError { it.toTrustWeaveError() }
 ```
 
 ### combine
@@ -447,9 +447,9 @@ Combine multiple Results:
 
 ```kotlin
 val results = listOf(
-    async { vericore.dids.create() },
-    async { vericore.dids.create() },
-    async { vericore.dids.create() }
+    async { TrustWeave.dids.create() },
+    async { TrustWeave.dids.create() },
+    async { TrustWeave.dids.create() }
 )
 
 val combined = results.combine { dids ->
@@ -469,7 +469,7 @@ Batch operations with async mapping:
 ```kotlin
 val dids = listOf("did:key:1", "did:key:2", "did:key:3")
 val results = dids.mapAsync { did ->
-    vericore.dids.resolve(did)
+    TrustWeave.dids.resolve(did)
 }
 
 results.fold(
@@ -482,12 +482,12 @@ results.fold(
 
 ## Input Validation
 
-VeriCore validates inputs before operations to catch errors early:
+TrustWeave validates inputs before operations to catch errors early:
 
 ### DID Validation
 
 ```kotlin
-import com.geoknoesis.vericore.core.DidValidator
+import com.trustweave.core.DidValidator
 
 // Validate DID format
 val validation = DidValidator.validateFormat("did:key:z6Mk...")
@@ -509,7 +509,7 @@ if (!methodValidation.isValid()) {
 ### Credential Validation
 
 ```kotlin
-import com.geoknoesis.vericore.core.CredentialValidator
+import com.trustweave.core.CredentialValidator
 
 // Validate credential structure
 val validation = CredentialValidator.validateStructure(credential)
@@ -529,7 +529,7 @@ if (!proofValidation.isValid()) {
 ### Chain ID Validation
 
 ```kotlin
-import com.geoknoesis.vericore.core.ChainIdValidator
+import com.trustweave.core.ChainIdValidator
 
 // Validate chain ID format
 val validation = ChainIdValidator.validateFormat("algorand:testnet")
@@ -551,10 +551,10 @@ if (!registeredValidation.isValid()) {
 
 ```kotlin
 // ❌ Bad: Ignoring errors
-val did = vericore.dids.create()
+val did = TrustWeave.dids.create()
 
 // ✅ Good: Handling errors explicitly
-val did = vericore.dids.create()
+val did = TrustWeave.dids.create()
 // Note: dids.create() returns DidDocument directly, not Result
 // For error handling, wrap in try-catch
 result.fold(
@@ -567,7 +567,7 @@ result.fold(
 
 ```kotlin
 // ✅ Good: Use error context for debugging
-val result = vericore.anchor(data, serializer, chainId)
+val result = TrustWeave.anchor(data, serializer, chainId)
 result.fold(
     onSuccess = { /* success */ },
     onFailure = { error ->
@@ -582,16 +582,16 @@ result.fold(
 
 ```kotlin
 // ✅ Good: Handle specific error types
-val did = vericore.dids.create(method = "web")
+val did = TrustWeave.dids.create(method = "web")
 result.fold(
     onSuccess = { /* success */ },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.DidMethodNotRegistered -> {
+            is TrustWeaveError.DidMethodNotRegistered -> {
                 // Suggest available methods
                 println("Method 'web' not available. Try: ${error.availableMethods}")
             }
-            is VeriCoreError.InvalidDidFormat -> {
+            is TrustWeaveError.InvalidDidFormat -> {
                 // Show format requirements
                 println("Invalid format: ${error.reason}")
             }
@@ -611,10 +611,10 @@ result.fold(
 val did = "did:key:z6Mk..."
 val validation = DidValidator.validateFormat(did)
 if (!validation.isValid()) {
-    return Result.failure(VeriCoreError.InvalidDidFormat(did, validation.errorMessage() ?: ""))
+    return Result.failure(TrustWeaveError.InvalidDidFormat(did, validation.errorMessage() ?: ""))
 }
 
-val resolution = vericore.dids.resolve(did)
+val resolution = TrustWeave.dids.resolve(did)
 ```
 
 ### 5. Use Result Utilities
@@ -622,7 +622,7 @@ val resolution = vericore.dids.resolve(did)
 ```kotlin
 // ✅ Good: Use combine for batch operations
 val dids = listOf("did:key:1", "did:key:2", "did:key:3")
-    val results = dids.map { vericore.dids.resolve(it) }
+    val results = dids.map { TrustWeave.dids.resolve(it) }
 
 val combined = results.combine { resolutions ->
     resolutions.mapNotNull { it.document?.id }
@@ -639,14 +639,14 @@ combined.fold(
 When managing plugin lifecycles, errors are handled automatically:
 
 ```kotlin
-val vericore = VeriCore.create()
+val TrustWeave = TrustWeave.create()
 
 // Initialize plugins
-vericore.initialize().fold(
+TrustWeave.initialize().fold(
     onSuccess = { println("Plugins initialized") },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.PluginInitializationFailed -> {
+            is TrustWeaveError.PluginInitializationFailed -> {
                 println("Plugin ${error.pluginId} failed to initialize: ${error.reason}")
             }
             else -> println("Error: ${error.message}")
@@ -655,19 +655,19 @@ vericore.initialize().fold(
 )
 
 // Start plugins
-vericore.start().fold(
+TrustWeave.start().fold(
     onSuccess = { println("Plugins started") },
     onFailure = { error -> println("Error starting plugins: ${error.message}") }
 )
 
 // Stop plugins
-vericore.stop().fold(
+TrustWeave.stop().fold(
     onSuccess = { println("Plugins stopped") },
     onFailure = { error -> println("Error stopping plugins: ${error.message}") }
 )
 
 // Cleanup plugins
-vericore.cleanup().fold(
+TrustWeave.cleanup().fold(
     onSuccess = { println("Plugins cleaned up") },
     onFailure = { error -> println("Error cleaning up: ${error.message}") }
 )
@@ -681,8 +681,8 @@ If you're migrating from exception-based error handling to Result-based:
 
 ```kotlin
 try {
-    val did = vericore.dids.create()
-    val credential = vericore.issueCredential(...)
+    val did = TrustWeave.dids.create()
+    val credential = TrustWeave.issueCredential(...)
 } catch (e: IllegalArgumentException) {
     println("Invalid argument: ${e.message}")
 } catch (e: Exception) {
@@ -693,10 +693,10 @@ try {
 ### After (Result-based)
 
 ```kotlin
-val did = vericore.dids.create()
+val did = TrustWeave.dids.create()
 didResult.fold(
     onSuccess = { did ->
-        val credentialResult = vericore.issueCredential(...)
+        val credentialResult = TrustWeave.issueCredential(...)
         credentialResult.fold(
             onSuccess = { credential -> /* success */ },
             onFailure = { error -> /* handle error */ }
@@ -704,7 +704,7 @@ didResult.fold(
     },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.DidMethodNotRegistered -> {
+            is TrustWeaveError.DidMethodNotRegistered -> {
                 println("Method not registered: ${error.method}")
             }
             else -> println("Error: ${error.message}")
@@ -731,7 +731,7 @@ suspend fun <T> retryWithBackoff(
     operation: suspend () -> Result<T>
 ): Result<T> {
     var delay = initialDelay.toDouble()
-    var lastError: VeriCoreError? = null
+    var lastError: TrustWeaveError? = null
     
     repeat(maxRetries) { attempt ->
         val result = operation()
@@ -743,9 +743,9 @@ suspend fun <T> retryWithBackoff(
                 
                 // Don't retry on certain errors
                 when (error) {
-                    is VeriCoreError.InvalidDidFormat,
-                    is VeriCoreError.CredentialInvalid,
-                    is VeriCoreError.ValidationFailed -> {
+                    is TrustWeaveError.InvalidDidFormat,
+                    is TrustWeaveError.CredentialInvalid,
+                    is TrustWeaveError.ValidationFailed -> {
                         return result // Don't retry validation errors
                     }
                     else -> {
@@ -761,7 +761,7 @@ suspend fun <T> retryWithBackoff(
         )
     }
     
-    return Result.failure(lastError ?: VeriCoreError.Unknown(
+    return Result.failure(lastError ?: TrustWeaveError.Unknown(
         code = "RETRY_EXHAUSTED",
         message = "Operation failed after $maxRetries retries",
         context = emptyMap(),
@@ -771,7 +771,7 @@ suspend fun <T> retryWithBackoff(
 
 // Usage
 val result = retryWithBackoff {
-    vericore.dids.resolve("did:web:example.com")
+    TrustWeave.dids.resolve("did:web:example.com")
 }
 ```
 
@@ -788,7 +788,7 @@ suspend fun resolveDidWithFallback(
     
     // Try preferred method first
     if (method in preferredMethods) {
-        val resolution = vericore.dids.resolve(did)
+        val resolution = TrustWeave.dids.resolve(did)
         if (result.isSuccess) return result
     }
     
@@ -797,15 +797,15 @@ suspend fun resolveDidWithFallback(
         if (fallbackMethod == method) continue
         
         val fallbackDid = did.replace("did:$method:", "did:$fallbackMethod:")
-        val resolution = vericore.dids.resolve(fallbackDid)
+        val resolution = TrustWeave.dids.resolve(fallbackDid)
         if (result.isSuccess) {
             return result
         }
     }
     
-    return Result.failure(VeriCoreError.DidNotFound(
+    return Result.failure(TrustWeaveError.DidNotFound(
         did = did,
-        availableMethods = vericore.getAvailableDidMethods()
+        availableMethods = TrustWeave.getAvailableDidMethods()
     ))
 }
 ```
@@ -819,19 +819,19 @@ suspend fun createDidWithAutoRegistration(
     method: String,
     options: DidCreationOptions? = null
 ): Result<DidDocument> {
-    val did = vericore.dids.create(method, options)
+    val did = TrustWeave.dids.create(method, options)
     
     return result.fold(
         onSuccess = { did -> Result.success(did) },
         onFailure = { error ->
             when (error) {
-                is VeriCoreError.DidMethodNotRegistered -> {
+                is TrustWeaveError.DidMethodNotRegistered -> {
                     // Try to find and register the method
                     val methodClass = findDidMethodClass(method)
                     if (methodClass != null) {
-                        vericore.registerDidMethod(methodClass)
+                        TrustWeave.registerDidMethod(methodClass)
                         // Retry after registration
-                        vericore.dids.create(method, options)
+                        TrustWeave.dids.create(method, options)
                     } else {
                         Result.failure(error)
                     }
@@ -891,7 +891,7 @@ class CircuitBreaker(
                     state = CircuitState.HALF_OPEN
                     halfOpenSuccessCount = 0
                 } else {
-                    return Result.failure(VeriCoreError.InvalidState(
+                    return Result.failure(TrustWeaveError.InvalidState(
                         code = "CIRCUIT_OPEN",
                         message = "Circuit breaker is open",
                         context = mapOf("timeout" to timeout.toString()),
@@ -925,7 +925,7 @@ class CircuitBreaker(
 val circuitBreaker = CircuitBreaker()
 
 val result = circuitBreaker.execute {
-    vericore.dids.resolve("did:web:example.com")
+    TrustWeave.dids.resolve("did:web:example.com")
 }
 ```
 
@@ -938,7 +938,7 @@ suspend fun verifyCredentialWithFallback(
     credential: VerifiableCredential,
     strictMode: Boolean = false
 ): CredentialVerificationResult {
-    val result = vericore.verifyCredential(credential).getOrNull()
+    val result = TrustWeave.verifyCredential(credential).getOrNull()
     
     if (result != null && result.valid) {
         return result
@@ -977,10 +977,10 @@ suspend fun batchResolveDids(
     dids: List<String>
 ): Result<Map<String, DidResolutionResult>> {
     val results = mutableMapOf<String, DidResolutionResult>()
-    val errors = mutableListOf<VeriCoreError>()
+    val errors = mutableListOf<TrustWeaveError>()
     
     dids.forEach { did ->
-        val resolution = vericore.dids.resolve(did)
+        val resolution = TrustWeave.dids.resolve(did)
         result.fold(
             onSuccess = { resolution -> results[did] = resolution },
             onFailure = { error -> errors.add(error) }
@@ -990,7 +990,7 @@ suspend fun batchResolveDids(
     return if (errors.isEmpty() || results.isNotEmpty()) {
         Result.success(results)
     } else {
-        Result.failure(VeriCoreError.Unknown(
+        Result.failure(TrustWeaveError.Unknown(
             code = "BATCH_FAILED",
             message = "All operations failed: ${errors.size} errors",
             context = mapOf("errors" to errors.map { it.code }.joinToString()),
@@ -1017,7 +1017,7 @@ suspend fun <T> withTimeoutOrError(
             operation()
         }
     } catch (e: TimeoutCancellationException) {
-        Result.failure(VeriCoreError.Unknown(
+        Result.failure(TrustWeaveError.Unknown(
             code = "OPERATION_TIMEOUT",
             message = "Operation timed out after ${timeoutMillis}ms",
             context = mapOf("timeout" to timeoutMillis.toString()),
@@ -1028,7 +1028,7 @@ suspend fun <T> withTimeoutOrError(
 
 // Usage
 val result = withTimeoutOrError(5000) {
-    vericore.dids.resolve("did:web:example.com")
+    TrustWeave.dids.resolve("did:web:example.com")
 }
 ```
 

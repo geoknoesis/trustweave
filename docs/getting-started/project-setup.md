@@ -1,6 +1,6 @@
 # Project Setup
 
-Set up your development environment for working with VeriCore.
+Set up your development environment for working with TrustWeave.
 
 ## Prerequisites
 
@@ -45,8 +45,8 @@ Set up your development environment for working with VeriCore.
 Clone the codebase so you can build and run examples locally.
 
 ```bash
-git clone https://github.com/your-org/vericore.git
-cd vericore
+git clone https://github.com/your-org/TrustWeave.git
+cd TrustWeave
 ```
 
 **Result:** You now have the repository checked out on your machine and are positioned at the project root.
@@ -85,38 +85,37 @@ On Windows shells use the Gradle wrapper with `.bat`.
 ## Project Structure
 
 ```
-vericore/
+TrustWeave/
 ├── build.gradle.kts          # Root build file
 ├── settings.gradle.kts       # Project settings
 ├── buildSrc/                 # Build configuration
 ├── core/                     # Core framework modules
-│   ├── vericore-core/        # Base types, exceptions, credential APIs
-│   ├── vericore-spi/         # Service Provider Interface
-│   ├── vericore-json/        # JSON utilities
-│   ├── vericore-trust/       # Trust registry
-│   └── vericore-testkit/     # Test utilities
+│   ├── TrustWeave-common/        # Base types, exceptions, credential APIs (includes SPI interfaces)
+│   ├── TrustWeave-json/        # JSON utilities
+│   ├── TrustWeave-trust/       # Trust registry
+│   └── TrustWeave-testkit/     # Test utilities
 ├── did/                      # DID domain
-│   ├── vericore-did/         # Core DID abstraction
+│   ├── TrustWeave-did/         # Core DID abstraction
 │   └── plugins/              # DID method implementations
 │       ├── key/              # did:key
 │       ├── web/              # did:web
 │       └── ...               # Other DID methods
 ├── kms/                      # KMS domain
-│   ├── vericore-kms/         # Core KMS abstraction
+│   ├── TrustWeave-kms/         # Core KMS abstraction
 │   └── plugins/              # KMS implementations
 │       ├── aws/              # AWS KMS
 │       ├── azure/            # Azure Key Vault
 │       └── ...               # Other KMS providers
 ├── chains/                   # Blockchain domain
-│   ├── vericore-anchor/      # Core anchor abstraction
+│   ├── TrustWeave-anchor/      # Core anchor abstraction
 │   └── plugins/              # Chain implementations
 │       ├── algorand/         # Algorand adapter
 │       ├── polygon/          # Polygon adapter
 │       └── ...               # Other blockchain adapters
 └── distribution/             # Distribution modules
-    ├── vericore-all/         # All-in-one module
-    ├── vericore-bom/         # Bill of Materials
-    └── vericore-examples/    # Example applications
+    ├── TrustWeave-all/         # All-in-one module
+    ├── TrustWeave-bom/         # Bill of Materials
+    └── TrustWeave-examples/    # Example applications
 ```
 
 ## Development Workflow
@@ -130,17 +129,17 @@ Gradle tasks let you execute tests for the whole workspace or specific modules/c
 ./gradlew test
 
 # Run tests for specific module
-./gradlew :core:vericore-core:test
+./gradlew :core:TrustWeave-common:test
 
 # Run specific test class
-./gradlew :core:vericore-core:test --tests "VeriCoreExceptionTest"
+./gradlew :core:TrustWeave-common:test --tests "TrustWeaveExceptionTest"
 ```
 
 **Result:** Successful runs keep CI parity with local development; failures point you at the module or class that needs attention.
 
 ### Code Formatting
 
-VeriCore uses Kotlin's standard formatting. Use IntelliJ IDEA's auto-format:
+TrustWeave uses Kotlin's standard formatting. Use IntelliJ IDEA's auto-format:
 
 - **Mac**: `Cmd + Option + L`
 - **Windows/Linux**: `Ctrl + Alt + L`
@@ -223,5 +222,5 @@ java -version  # Should show 21.x.x
 
 - [Quick Start](quick-start.md) - Create your first application
 - [Your First Application](your-first-application.md) - Build a complete example
-- [Contributing](../contributing/README.md) - Contribute to VeriCore
+- [Contributing](../contributing/README.md) - Contribute to TrustWeave
 

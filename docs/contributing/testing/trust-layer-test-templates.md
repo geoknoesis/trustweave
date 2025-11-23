@@ -4,7 +4,7 @@ This guide explains how to use the comprehensive in-memory test templates for tr
 
 ## Overview
 
-The trust layer test templates provide complete, working examples of common VeriCore workflows using only in-memory components. These templates serve as:
+The trust layer test templates provide complete, working examples of common TrustWeave workflows using only in-memory components. These templates serve as:
 
 - **Reference implementations** for common use cases
 - **Starting points** for creating new integration tests
@@ -15,7 +15,7 @@ The trust layer test templates provide complete, working examples of common Veri
 
 The test templates are located in:
 ```
-core/vericore-trust/src/test/kotlin/com/geoknoesis/vericore/integration/InMemoryTrustLayerIntegrationTest.kt
+core/TrustWeave-trust/src/test/kotlin/com/geoknoesis/TrustWeave/integration/InMemoryTrustLayerIntegrationTest.kt
 ```
 
 ## Key Pattern: Extract Key ID from DID Document
@@ -506,5 +506,5 @@ val presentation = presentation(presentationService) {
 - [Test Patterns](test-patterns.md) - Common test patterns
 - [Integration Testing](integration-testing.md) - Integration test best practices
 - [Plugin Credential Handling](plugin-credential-handling.md) - Handling external service credentials
-- [vericore-testkit Module](../../modules/vericore-testkit.md) - Testkit components overview
+- [TrustWeave-testkit Module](../../modules/trustweave-testkit.md) - Testkit components overview
 

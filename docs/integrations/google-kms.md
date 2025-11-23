@@ -1,10 +1,10 @@
 # Google Cloud KMS Integration
 
-> This guide covers the Google Cloud Key Management Service (KMS) integration for VeriCore. The Google Cloud KMS plugin provides production-ready key management with support for all Google Cloud KMS-compatible algorithms.
+> This guide covers the Google Cloud Key Management Service (KMS) integration for TrustWeave. The Google Cloud KMS plugin provides production-ready key management with support for all Google Cloud KMS-compatible algorithms.
 
 ## Overview
 
-The `kms/plugins/google` module provides a complete implementation of VeriCore's `KeyManagementService` interface using Google Cloud Key Management Service. This integration enables you to:
+The `kms/plugins/google` module provides a complete implementation of TrustWeave's `KeyManagementService` interface using Google Cloud Key Management Service. This integration enables you to:
 
 - Use Google Cloud KMS for secure key generation and storage
 - Leverage Google Cloud KMS's key versioning and rotation capabilities
@@ -17,9 +17,9 @@ Add the Google Cloud KMS module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.kms:google:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.kms:google:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -30,8 +30,8 @@ dependencies {
 The Google Cloud KMS provider can be configured via options map or environment variables:
 
 ```kotlin
-import com.geoknoesis.vericore.kms.*
-import com.geoknoesis.vericore.googlekms.*
+import com.trustweave.kms.*
+import com.trustweave.googlekms.*
 import java.util.ServiceLoader
 
 // Discover Google Cloud KMS provider
@@ -117,7 +117,7 @@ val kms = GoogleCloudKeyManagementService(config ?: throw IllegalStateException(
 You can also configure directly using the builder:
 
 ```kotlin
-import com.geoknoesis.vericore.googlekms.*
+import com.trustweave.googlekms.*
 
 val config = GoogleKmsConfig.builder()
     .projectId("my-project")
@@ -168,7 +168,7 @@ if (kms?.supportsAlgorithm(Algorithm.Secp256k1) == true) {
 ### Generating Keys
 
 ```kotlin
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.kms.*
 
 // Generate secp256k1 key
 val key = kms.generateKey(Algorithm.Secp256k1)
@@ -262,7 +262,7 @@ Google Cloud KMS uses key versions. When you create a key, a primary version is 
 
 ## Error Handling
 
-The plugin maps Google Cloud exceptions to VeriCore exceptions:
+The plugin maps Google Cloud exceptions to TrustWeave exceptions:
 
 ```kotlin
 try {
@@ -271,7 +271,7 @@ try {
     println("Algorithm not supported: ${e.message}")
 } catch (e: KeyNotFoundException) {
     println("Key not found: ${e.message}")
-} catch (e: VeriCoreException) {
+} catch (e: TrustWeaveException) {
     when {
         e.message?.contains("Permission denied") == true -> {
             println("Check IAM permissions")
@@ -380,20 +380,20 @@ val kms = googleProvider?.create(mapOf(
 ))
 ```
 
-## Using with VeriCore
+## Using with TrustWeave
 
 ### Basic Setup
 
 ```kotlin
-import com.geoknoesis.vericore.*
-import com.geoknoesis.vericore.googlekms.*
+import com.trustweave.*
+import com.trustweave.googlekms.*
 
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     kms = GoogleCloudKeyManagementService(
         GoogleKmsConfig.builder()
             .projectId("my-project")
             .location("us-east1")
-            .keyRing("vericore-keys")
+            .keyRing("TrustWeave-keys")
             .build()
     )
 }
@@ -402,7 +402,7 @@ val vericore = VeriCore.create {
 ### With SPI Auto-Discovery
 
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     // Google Cloud KMS will be discovered automatically if on classpath
     // Configure via environment variables or system properties
 }

@@ -1,6 +1,6 @@
 # Web of Trust Migration Guide
 
-This guide helps you migrate existing VeriCore code to use the new web of trust features and updated DID Document structure.
+This guide helps you migrate existing TrustWeave code to use the new web of trust features and updated DID Document structure.
 
 ## Breaking Changes
 
@@ -122,6 +122,6 @@ No APIs have been deprecated. All new features are additive and backward compati
 ## Examples
 
 See the following examples for migration patterns:
-- [Web of Trust Example](../../distribution/vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/trust/WebOfTrustExample.kt)
-- [Delegation Chain Example](../../distribution/vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/delegation/DelegationChainExample.kt)
+- [Web of Trust Example](../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/trust/WebOfTrustExample.kt)
+- [Delegation Chain Example](../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/delegation/DelegationChainExample.kt)
 

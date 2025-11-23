@@ -1,15 +1,12 @@
 plugins {
-    id("vericore.shared")
     kotlin("jvm")
     kotlin("plugin.serialization")
 }
 
-group = "com.geoknoesis.vericore.kms"
-version = "1.0.0-SNAPSHOT"
-
+group = "com.trustweave.kms"
 dependencies {
-    implementation(project(":core:vericore-core"))
-    implementation(project(":kms:vericore-kms"))
+    implementation(project(":credentials:core"))
+    implementation(project(":kms:core"))
 
     // HTTP client for IBM Key Protect API
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -23,6 +20,6 @@ dependencies {
     // from IBM's repository or use IBM Cloud SDK when available.
 
     // Test dependencies
-    testImplementation(project(":core:vericore-testkit"))
+    testImplementation(project(":testkit"))
 }
 

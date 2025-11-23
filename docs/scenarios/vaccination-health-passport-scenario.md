@@ -1,6 +1,6 @@
 # Vaccination and Health Passport Scenario
 
-This guide demonstrates how to build a complete vaccination and health passport system using VeriCore. You'll learn how healthcare providers can issue vaccination credentials, how individuals can store them in wallets, and how verifiers (airlines, venues, employers) can verify vaccination status while preserving privacy.
+This guide demonstrates how to build a complete vaccination and health passport system using TrustWeave. You'll learn how healthcare providers can issue vaccination credentials, how individuals can store them in wallets, and how verifiers (airlines, venues, employers) can verify vaccination status while preserving privacy.
 
 ## What You'll Build
 
@@ -95,7 +95,7 @@ Traditional health records have several problems:
 4. **Verification slow**: Manual verification takes time
 5. **Fraud risk**: Paper records can be forged
 
-VeriCore solves this by enabling:
+TrustWeave solves this by enabling:
 
 - **Privacy-preserving**: Selective disclosure shows only vaccination status
 - **Instant verification**: Cryptographic proof without contacting providers
@@ -126,12 +126,12 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add TrustWeave dependencies to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -143,16 +143,16 @@ dependencies {
 
 ## Step 2: Complete Runnable Example
 
-Here's the full vaccination and health passport flow using the VeriCore facade API:
+Here's the full vaccination and health passport flow using the TrustWeave facade API:
 
 ```kotlin
 package com.example.vaccination.healthpassport
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.credential.PresentationOptions
-import com.geoknoesis.vericore.credential.wallet.Wallet
-import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.credential.PresentationOptions
+import com.trustweave.credential.wallet.Wallet
+import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -164,20 +164,20 @@ fun main() = runBlocking {
     println("Vaccination and Health Passport Scenario - Complete End-to-End Example")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance
-    val vericore = VeriCore.create()
-    println("\n✅ VeriCore initialized")
+    // Step 1: Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
+    println("\n✅ TrustWeave initialized")
     
     // Step 2: Create DIDs for healthcare provider and individual
-    val healthcareProviderDidDoc = vericore.dids.create()
+    val healthcareProviderDidDoc = TrustWeave.dids.create()
     val healthcareProviderDid = healthcareProviderDidDoc.id
     val healthcareProviderKeyId = healthcareProviderDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val individualDidDoc = vericore.dids.create()
+    val individualDidDoc = TrustWeave.dids.create()
     val individualDid = individualDidDoc.id
     
-    val airlineDidDoc = vericore.dids.create()
+    val airlineDidDoc = TrustWeave.dids.create()
     val airlineDid = airlineDidDoc.id
     
     println("✅ Healthcare Provider DID: $healthcareProviderDid")
@@ -185,7 +185,7 @@ fun main() = runBlocking {
     println("✅ Airline Verifier DID: $airlineDid")
     
     // Step 3: Issue first vaccination credential (COVID-19, Dose 1)
-    val vaccination1Credential = vericore.issueCredential(
+    val vaccination1Credential = TrustWeave.issueCredential(
         issuerDid = healthcareProviderDid,
         issuerKeyId = healthcareProviderKeyId,
         credentialSubject = buildJsonObject {
@@ -210,7 +210,7 @@ fun main() = runBlocking {
     println("\n✅ First vaccination credential issued: ${vaccination1Credential.id}")
     
     // Step 4: Issue second vaccination credential (COVID-19, Dose 2)
-    val vaccination2Credential = vericore.issueCredential(
+    val vaccination2Credential = TrustWeave.issueCredential(
         issuerDid = healthcareProviderDid,
         issuerKeyId = healthcareProviderKeyId,
         credentialSubject = buildJsonObject {
@@ -236,7 +236,7 @@ fun main() = runBlocking {
     println("✅ Second vaccination credential issued: ${vaccination2Credential.id}")
     
     // Step 5: Issue booster vaccination credential
-    val boosterCredential = vericore.issueCredential(
+    val boosterCredential = TrustWeave.issueCredential(
         issuerDid = healthcareProviderDid,
         issuerKeyId = healthcareProviderKeyId,
         credentialSubject = buildJsonObject {
@@ -263,7 +263,7 @@ fun main() = runBlocking {
     println("✅ Booster vaccination credential issued: ${boosterCredential.id}")
     
     // Step 6: Create health wallet and store all vaccination credentials
-    val healthWallet = vericore.createWallet(
+    val healthWallet = TrustWeave.createWallet(
         holderDid = individualDid,
         options = WalletCreationOptionsBuilder().apply {
             enableOrganization = true
@@ -312,7 +312,7 @@ fun main() = runBlocking {
     // Step 9: Airline verifies vaccination status
     println("\n✈️ Airline Verification Process:")
     
-    val boosterVerification = vericore.verifyCredential(boosterCredential).getOrThrow()
+    val boosterVerification = TrustWeave.verifyCredential(boosterCredential).getOrThrow()
     
     if (boosterVerification.valid) {
         println("✅ Vaccination Credential: VALID")
@@ -379,7 +379,7 @@ fun main() = runBlocking {
 Vaccination and Health Passport Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ VeriCore initialized
+✅ TrustWeave initialized
 ✅ Healthcare Provider DID: did:key:z6Mk...
 ✅ Individual DID: did:key:z6Mk...
 ✅ Airline Verifier DID: did:key:z6Mk...
@@ -442,7 +442,7 @@ Vaccination and Health Passport Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with VeriCore
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 - [Healthcare Medical Records Scenario](healthcare-medical-records-scenario.md) - Related healthcare scenario

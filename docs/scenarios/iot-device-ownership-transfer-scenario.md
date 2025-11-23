@@ -1,6 +1,6 @@
 # IoT Device Ownership Transfer Scenario
 
-This guide demonstrates how to build an IoT device ownership transfer system using VeriCore. You'll learn how device owners can transfer ownership securely, how new owners can verify transfer authorization, and how previous owners can be revoked while maintaining a complete audit trail.
+This guide demonstrates how to build an IoT device ownership transfer system using TrustWeave. You'll learn how device owners can transfer ownership securely, how new owners can verify transfer authorization, and how previous owners can be revoked while maintaining a complete audit trail.
 
 ## What You'll Build
 
@@ -97,7 +97,7 @@ Traditional ownership transfer has several problems:
 4. **Trust issues**: Can't verify device ownership history
 5. **Security risk**: Unauthorized access from previous owners
 
-VeriCore solves this by enabling:
+TrustWeave solves this by enabling:
 
 - **Secure transfer**: Cryptographic proof of ownership transfer
 - **Access revocation**: Properly revoke previous owner access
@@ -131,12 +131,12 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add TrustWeave dependencies to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -148,16 +148,16 @@ dependencies {
 
 ## Step 2: Complete Runnable Example
 
-Here's the full IoT device ownership transfer flow using the VeriCore facade API:
+Here's the full IoT device ownership transfer flow using the TrustWeave facade API:
 
 ```kotlin
 package com.example.iot.ownership.transfer
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.credential.PresentationOptions
-import com.geoknoesis.vericore.credential.wallet.Wallet
-import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.credential.PresentationOptions
+import com.trustweave.credential.wallet.Wallet
+import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -169,27 +169,27 @@ fun main() = runBlocking {
     println("IoT Device Ownership Transfer Scenario - Complete End-to-End Example")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance
-    val vericore = VeriCore.create()
-    println("\n✅ VeriCore initialized")
+    // Step 1: Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
+    println("\n✅ TrustWeave initialized")
     
     // Step 2: Create DIDs for manufacturer, current owner, and new owner
-    val manufacturerDidDoc = vericore.dids.create()
+    val manufacturerDidDoc = TrustWeave.dids.create()
     val manufacturerDid = manufacturerDidDoc.id
     val manufacturerKeyId = manufacturerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val currentOwnerDidDoc = vericore.dids.create()
+    val currentOwnerDidDoc = TrustWeave.dids.create()
     val currentOwnerDid = currentOwnerDidDoc.id
     val currentOwnerKeyId = currentOwnerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val newOwnerDidDoc = vericore.dids.create()
+    val newOwnerDidDoc = TrustWeave.dids.create()
     val newOwnerDid = newOwnerDidDoc.id
     val newOwnerKeyId = newOwnerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val deviceDidDoc = vericore.dids.create()
+    val deviceDidDoc = TrustWeave.dids.create()
     val deviceDid = deviceDidDoc.id
     
     println("✅ Manufacturer DID: $manufacturerDid")
@@ -198,7 +198,7 @@ fun main() = runBlocking {
     println("✅ Device DID: $deviceDid")
     
     // Step 3: Issue initial device ownership credential to current owner
-    val currentOwnershipCredential = vericore.issueCredential(
+    val currentOwnershipCredential = TrustWeave.issueCredential(
         issuerDid = manufacturerDid,
         issuerKeyId = manufacturerKeyId,
         credentialSubject = buildJsonObject {
@@ -223,7 +223,7 @@ fun main() = runBlocking {
     println("   Ownership Date: ${Instant.now().minus(365, ChronoUnit.DAYS)}")
     
     // Step 4: Create ownership transfer request credential
-    val transferRequestCredential = vericore.issueCredential(
+    val transferRequestCredential = TrustWeave.issueCredential(
         issuerDid = currentOwnerDid,
         issuerKeyId = currentOwnerKeyId,
         credentialSubject = buildJsonObject {
@@ -251,7 +251,7 @@ fun main() = runBlocking {
     // Step 5: Verify transfer request
     println("\n🔍 Transfer Request Verification:")
     
-    val transferRequestVerification = vericore.verifyCredential(transferRequestCredential).getOrThrow()
+    val transferRequestVerification = TrustWeave.verifyCredential(transferRequestCredential).getOrThrow()
     
     if (transferRequestVerification.valid) {
         val credentialSubject = transferRequestCredential.credentialSubject
@@ -278,7 +278,7 @@ fun main() = runBlocking {
     }
     
     // Step 6: Issue new ownership credential to new owner
-    val newOwnershipCredential = vericore.issueCredential(
+    val newOwnershipCredential = TrustWeave.issueCredential(
         issuerDid = manufacturerDid,
         issuerKeyId = manufacturerKeyId,
         credentialSubject = buildJsonObject {
@@ -310,7 +310,7 @@ fun main() = runBlocking {
     println("   Ownership Date: ${Instant.now()}")
     
     // Step 7: Create wallets for current and new owners
-    val currentOwnerWallet = vericore.createWallet(
+    val currentOwnerWallet = TrustWeave.createWallet(
         holderDid = currentOwnerDid,
         options = WalletCreationOptionsBuilder().apply {
             enableOrganization = true
@@ -318,7 +318,7 @@ fun main() = runBlocking {
         }.build()
     ).getOrThrow()
     
-    val newOwnerWallet = vericore.createWallet(
+    val newOwnerWallet = TrustWeave.createWallet(
         holderDid = newOwnerDid,
         options = WalletCreationOptionsBuilder().apply {
             enableOrganization = true
@@ -352,7 +352,7 @@ fun main() = runBlocking {
     // Step 9: Verify new ownership
     println("\n🔍 New Ownership Verification:")
     
-    val newOwnershipVerification = vericore.verifyCredential(newOwnershipCredential).getOrThrow()
+    val newOwnershipVerification = TrustWeave.verifyCredential(newOwnershipCredential).getOrThrow()
     
     if (newOwnershipVerification.valid) {
         val credentialSubject = newOwnershipCredential.credentialSubject
@@ -381,7 +381,7 @@ fun main() = runBlocking {
     // Step 10: Verify previous owner revocation
     println("\n🔍 Previous Owner Revocation Verification:")
     
-    val currentOwnershipVerification = vericore.verifyCredential(currentOwnershipCredential).getOrThrow()
+    val currentOwnershipVerification = TrustWeave.verifyCredential(currentOwnershipCredential).getOrThrow()
     
     if (currentOwnershipVerification.valid) {
         val credentialSubject = currentOwnershipCredential.credentialSubject
@@ -449,7 +449,7 @@ fun main() = runBlocking {
 IoT Device Ownership Transfer Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ VeriCore initialized
+✅ TrustWeave initialized
 ✅ Manufacturer DID: did:key:z6Mk...
 ✅ Current Owner DID: did:key:z6Mk...
 ✅ New Owner DID: did:key:z6Mk...
@@ -540,7 +540,7 @@ IoT Device Ownership Transfer Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with VeriCore
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
 - [IoT Device Identity Scenario](iot-device-identity-scenario.md) - Related device identity scenario
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
 - [API Reference](../api-reference/core-api.md) - Complete API documentation

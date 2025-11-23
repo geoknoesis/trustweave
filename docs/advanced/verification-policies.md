@@ -1,6 +1,6 @@
 # Verification Policies
 
-Verifiers often need more than a boolean “valid/invalid”. VeriCore lets you layer policy checks—expiration, audience, revocation status, anchor validation—on top of signature verification.
+Verifiers often need more than a boolean “valid/invalid”. TrustWeave lets you layer policy checks—expiration, audience, revocation status, anchor validation—on top of signature verification.
 
 ## Built-in options
 
@@ -14,15 +14,15 @@ Verifiers often need more than a boolean “valid/invalid”. VeriCore lets you 
 ## Custom policy workflow
 
 1. Configure the options object.  
-2. Call `VeriCore.verifyCredential` (or presentation variant).  
+2. Call `TrustWeave.verifyCredential` (or presentation variant).  
 3. Inspect `CredentialVerificationResult` for detailed diagnostics (`valid`, `errors`, `warnings`, individual booleans).  
 4. Apply domain-specific rules to the result.
 
 **Goal:** Combine built-in verification switches with organisation-specific rules.  
-**Prerequisites:** A `VerifiableCredential` you want to vet and a `VeriCore` facade that is already configured with the necessary DID resolvers and status services.
+**Prerequisites:** A `VerifiableCredential` you want to vet and a `TrustWeave` facade that is already configured with the necessary DID resolvers and status services.
 
 ```kotlin
-import com.geoknoesis.vericore.credential.CredentialVerificationOptions
+import com.trustweave.credential.CredentialVerificationOptions
 
 val options = CredentialVerificationOptions(
     checkExpiration = true,
@@ -32,7 +32,7 @@ val options = CredentialVerificationOptions(
     requireAnchoring = true
 )
 
-val result = vericore.verifyCredential(credential, options)
+val result = TrustWeave.verifyCredential(credential, options)
 result.fold(
     onSuccess = { verification ->
         if (verification.valid) {
@@ -49,7 +49,7 @@ result.fold(
     },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.CredentialInvalid -> {
+            is TrustWeaveError.CredentialInvalid -> {
                 println("Credential validation failed: ${error.reason}")
                 println("Field: ${error.field}")
             }
@@ -73,7 +73,7 @@ result.fold(
 A `CredentialVerificationResult` that captures pass/fail state plus individual flags. If any toggle fails, `valid` is `false` and the `errors` list carries human-readable reasons.
 
 **Design significance**  
-Instead of returning ad-hoc maps, VeriCore models verification output as a strongly typed data class. This keeps policy code expressive and makes it easy to unit test individual failure paths.
+Instead of returning ad-hoc maps, TrustWeave models verification output as a strongly typed data class. This keeps policy code expressive and makes it easy to unit test individual failure paths.
 
 ## Extending status and anchor checks
 
@@ -83,7 +83,7 @@ Instead of returning ad-hoc maps, VeriCore models verification output as a stron
 
 ## Testing policies
 
-Use `vericore-testkit` to simulate responses (expired credentials, revoked status, missing anchors). This ensures policy regressions surface in CI:
+Use `TrustWeave-testkit` to simulate responses (expired credentials, revoked status, missing anchors). This ensures policy regressions surface in CI:
 
 **Goal:** Assert that an expired credential fails the configured policy before it reaches production.
 
@@ -91,7 +91,7 @@ Use `vericore-testkit` to simulate responses (expired credentials, revoked statu
 val expiredCredential = testFixture.createCredential {
     expirationDate = Instant.now().minusSeconds(60).toString()
 }
-val policyResult = vericore.verifyCredential(expiredCredential, options)
+val policyResult = TrustWeave.verifyCredential(expiredCredential, options)
 assertFalse(policyResult.getOrThrow().valid)
 ```
 
@@ -109,6 +109,6 @@ By leaning on the same DSL-driven options you use in production, your tests doub
 
 - [Verifiable Credentials](../core-concepts/verifiable-credentials.md) for credential structure.  
 - [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) to understand how anchors feed policy checks.  
-- [Quick Start sample](../../distribution/vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/quickstart/QuickStartSample.kt) demonstrates baseline verification.  
+- [Quick Start sample](../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/quickstart/QuickStartSample.kt) demonstrates baseline verification.  
 - [Key Rotation](key-rotation.md) for maintaining trusted key sets.
 

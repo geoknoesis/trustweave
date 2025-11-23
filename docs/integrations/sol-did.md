@@ -1,10 +1,10 @@
 # Solana DID Integration
 
-> This guide covers the did:sol method integration for VeriCore. The did:sol plugin provides Solana DID resolution with account-based storage on Solana blockchain.
+> This guide covers the did:sol method integration for TrustWeave. The did:sol plugin provides Solana DID resolution with account-based storage on Solana blockchain.
 
 ## Overview
 
-The `did/plugins/sol` module provides an implementation of VeriCore's `DidMethod` interface using the Solana blockchain. This integration enables you to:
+The `did/plugins/sol` module provides an implementation of TrustWeave's `DidMethod` interface using the Solana blockchain. This integration enables you to:
 
 - Create and resolve DIDs on Solana blockchain
 - Store DID documents in Solana program accounts
@@ -18,11 +18,11 @@ Add the did:sol module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.did:sol:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore.did:base:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:sol:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
     
     // HTTP client for Solana RPC
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -34,10 +34,10 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.geoknoesis.vericore.soldid.*
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.soldid.*
+import com.trustweave.anchor.*
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.kms.*
 
 // Create configuration
 val config = SolDidConfig.builder()
@@ -77,7 +77,7 @@ val devnetConfig = SolDidConfig.devnet(
 When the module is on the classpath, did:sol is automatically available:
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
+import com.trustweave.did.*
 import java.util.ServiceLoader
 
 // Discover did:sol provider
@@ -199,18 +199,18 @@ val config = SolDidConfig.builder()
 | Devnet | `https://api.devnet.solana.com` |
 | Testnet | `https://api.testnet.solana.com` |
 
-## Integration with VeriCore
+## Integration with TrustWeave
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.soldid.*
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.TrustWeave
+import com.trustweave.soldid.*
+import com.trustweave.anchor.*
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 
 val config = SolDidConfig.devnet("https://api.devnet.solana.com")
 val anchorClient = InMemoryBlockchainAnchorClient("solana:devnet")
 
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     kms = InMemoryKeyManagementService()
     
     blockchains {
@@ -223,11 +223,11 @@ val vericore = VeriCore.create {
 }
 
 // Use did:sol
-val did = vericore.createDid("sol") {
+val did = TrustWeave.createDid("sol") {
     algorithm = KeyAlgorithm.ED25519
 }.getOrThrow()
 
-val resolved = vericore.resolveDid(did.id).getOrThrow()
+val resolved = TrustWeave.resolveDid(did.id).getOrThrow()
 ```
 
 ## Error Handling
@@ -246,7 +246,7 @@ Common errors and solutions:
 For testing without actual Solana:
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 
 val config = SolDidConfig.devnet("https://api.devnet.solana.com")
 val anchorClient = InMemoryBlockchainAnchorClient("solana:devnet")

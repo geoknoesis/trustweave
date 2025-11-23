@@ -1,10 +1,10 @@
-# VeriCore Cloud - Pricing Strategy
+# TrustWeave Cloud - Pricing Strategy
 
 > **Strategic Pricing for SSI/DID Infrastructure as a Service**
 
 ## Executive Summary
 
-VeriCore Cloud uses a **value-based tiered pricing model** designed to:
+TrustWeave Cloud uses a **value-based tiered pricing model** designed to:
 - **Maximize developer adoption** (generous free tier)
 - **Convert growth-stage companies** (affordable Pro tier)
 - **Capture enterprise value** (custom Enterprise tier)
@@ -92,7 +92,7 @@ object FreeTier {
 
 ### **Strategic Purpose:**
 - **Top of funnel**: Drive massive adoption
-- **Education**: Learn VeriCore, build prototypes
+- **Education**: Learn TrustWeave, build prototypes
 - **SEO**: Generate content, tutorials, blog posts
 - **Conversion**: Upgrade when hitting limits
 
@@ -539,7 +539,7 @@ data class Usage(
 
 #### **Email Alerts:**
 ```
-Subject: 🚨 VeriCore: You've reached 80% of your credential limit
+Subject: 🚨 TrustWeave: You've reached 80% of your credential limit
 
 Hi [Customer],
 
@@ -625,7 +625,7 @@ object AddOns {
 ```kotlin
 object ProfessionalServices {
     data class MigrationService(
-        val description: String = "Migrate from existing SSI system to VeriCore",
+        val description: String = "Migrate from existing SSI system to TrustWeave",
         val estimatedHours: IntRange = 40..80,
         val hourlyRate: Int = 250,
         val fixedPrice: Int = 15000 // Average
@@ -746,7 +746,7 @@ object SelfHostedLicensing {
 
 #### **SaaS → Self-Hosted (Upsell):**
 ```
-"Need more control? Deploy VeriCore on-premise"
+"Need more control? Deploy TrustWeave on-premise"
 
 Perfect for:
 ✓ Regulatory compliance (HIPAA, FedRAMP)
@@ -760,7 +760,7 @@ Starting at $5,000/year + infrastructure costs
 
 #### **Self-Hosted → SaaS (Downsell/Retain):**
 ```
-"Simplify your infrastructure with VeriCore Cloud"
+"Simplify your infrastructure with TrustWeave Cloud"
 
 Let us handle:
 ✓ Deployments & updates
@@ -770,7 +770,7 @@ Let us handle:
 
 Starting at $49/month (no infrastructure costs!)
 
-[Try VeriCore Cloud]
+[Try TrustWeave Cloud]
 ```
 
 ---
@@ -852,7 +852,7 @@ object CompetitorPricing {
 }
 ```
 
-### **VeriCore Positioning:**
+### **TrustWeave Positioning:**
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -863,9 +863,9 @@ object CompetitorPricing {
 │      │         Okta 💰                          │
 │      │         Auth0 💰                         │
 │      │                                          │
-│      │                  VeriCore Pro ⭐        │
+│      │                  TrustWeave Pro ⭐        │
 │      │         Trinsic                          │
-│      │    VeriCore Starter                      │
+│      │    TrustWeave Starter                      │
 │      │    Clerk / Supabase                      │
 │      │                                          │
 │      │    AWS Cognito                           │
@@ -874,7 +874,7 @@ object CompetitorPricing {
 │      └─────────────────────────────→            │
 │   Low Value              High Value             │
 │                                                 │
-│  VeriCore = High Value, Mid-Market Price        │
+│  TrustWeave = High Value, Mid-Market Price        │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -1098,7 +1098,7 @@ Yes! We offer 50% off for funded startups (<$1M ARR) and registered
 nonprofits. [Apply here](https://geoknoesis.com/programs)
 
 ### Can I self-host instead of using the cloud?
-Absolutely. VeriCore is open source (AGPL v3.0). For commercial 
+Absolutely. TrustWeave is open source (AGPL v3.0). For commercial 
 self-hosting, you need a commercial license starting at $5,000/year.
 [Learn more](https://geoknoesis.com/self-hosted)
 

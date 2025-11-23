@@ -1,14 +1,14 @@
 # Configuration Reference
 
-Complete reference for configuring VeriCore.
+Complete reference for configuring TrustWeave.
 
 ## Configuration Methods
 
-VeriCore supports three configuration methods:
+TrustWeave supports three configuration methods:
 
-1. **Defaults**: `VeriCore.create()` - Uses testkit defaults
-2. **Builder DSL**: `VeriCore.create { }` - Recommended for most cases
-3. **Config Object**: `VeriCore.create(config)` - For programmatic configuration
+1. **Defaults**: `TrustWeave.create()` - Uses testkit defaults
+2. **Builder DSL**: `TrustWeave.create { }` - Recommended for most cases
+3. **Config Object**: `TrustWeave.create(config)` - For programmatic configuration
 
 ## Configuration Components
 
@@ -26,7 +26,7 @@ VeriCore supports three configuration methods:
 
 **Configuration:**
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     kms = AwsKeyManagementService(
         region = "us-east-1",
         credentials = awsCredentials
@@ -53,7 +53,7 @@ val vericore = VeriCore.create {
 
 **Configuration:**
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     didMethods {
         + DidKeyMethod(kms)
         + DidWebMethod(kms) { domain = "example.com" }
@@ -82,7 +82,7 @@ val vericore = VeriCore.create {
 
 **Configuration:**
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     blockchains {
         "algorand:testnet" to AlgorandBlockchainAnchorClient(
             chainId = "algorand:testnet",
@@ -111,7 +111,7 @@ val vericore = VeriCore.create {
 
 **Configuration:**
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     walletFactory = DatabaseWalletFactory(
         dataSource = dataSource,
         enableOrganization = true,
@@ -132,7 +132,7 @@ val vericore = VeriCore.create {
 
 **Configuration:**
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     credentialServices {
         + MyCustomCredentialService()
         + HttpCredentialService(endpoint = "https://issuer.example.com")
@@ -157,7 +157,7 @@ val vericore = VeriCore.create {
 
 **Configuration:**
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     // Proof generators configured via CredentialServiceRegistry
     // Default Ed25519ProofGenerator is registered automatically
 }
@@ -168,7 +168,7 @@ val vericore = VeriCore.create {
 
 ## Configuration Validation
 
-VeriCore validates configuration during creation:
+TrustWeave validates configuration during creation:
 
 ### Validation Rules
 
@@ -180,20 +180,20 @@ VeriCore validates configuration during creation:
 
 ### Validation Errors
 
-Configuration validation errors are returned as `VeriCoreError.ValidationFailed`:
+Configuration validation errors are returned as `TrustWeaveError.ValidationFailed`:
 
 ```kotlin
 val result = runCatching {
-    VeriCore.create {
+    TrustWeave.create {
         // Invalid configuration
     }
 }
 
 result.fold(
-    onSuccess = { vericore -> /* success */ },
+    onSuccess = { TrustWeave -> /* success */ },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.ValidationFailed -> {
+            is TrustWeaveError.ValidationFailed -> {
                 println("Configuration invalid: ${error.reason}")
                 println("Field: ${error.field}")
                 println("Value: ${error.value}")
@@ -209,7 +209,7 @@ result.fold(
 ### Development Configuration
 
 ```kotlin
-val devVericore = VeriCore.create {
+val devVericore = TrustWeave.create {
     // Use testkit defaults
     // No additional configuration needed
 }
@@ -218,7 +218,7 @@ val devVericore = VeriCore.create {
 ### Testing Configuration
 
 ```kotlin
-val testVericore = VeriCore.create {
+val testVericore = TrustWeave.create {
     kms = InMemoryKeyManagementService()
     didMethods {
         + DidKeyMockMethod(kms)
@@ -232,7 +232,7 @@ val testVericore = VeriCore.create {
 ### Production Configuration
 
 ```kotlin
-val prodVericore = VeriCore.create {
+val prodVericore = TrustWeave.create {
     kms = AwsKeyManagementService(
         region = System.getenv("AWS_REGION"),
         credentials = awsCredentials

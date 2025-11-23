@@ -1,14 +1,14 @@
-# VeriCore DSL Guide
+# TrustWeave DSL Guide
 
 ## Overview
 
-The VeriCore DSL (Domain-Specific Language) provides a fluent, type-safe API for working with verifiable credentials, making it easier to configure trust layers, issue credentials, verify credentials, create presentations, and manage wallets.
+The TrustWeave DSL (Domain-Specific Language) provides a fluent, type-safe API for working with verifiable credentials, making it easier to configure trust layers, issue credentials, verify credentials, create presentations, and manage wallets.
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-trust:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-trust:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -29,7 +29,7 @@ The trust layer configuration is the foundation of the DSL. It centralizes the s
 ### Basic Configuration
 
 ```kotlin
-import com.geoknoesis.vericore.credential.dsl.*
+import com.trustweave.credential.dsl.*
 
 val trustLayer = trustLayer {
     keys {

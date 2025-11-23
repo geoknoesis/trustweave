@@ -64,8 +64,8 @@ The `book.json` file in the `docs` directory contains the GitBook configuration:
 
 ```json
 {
-  "title": "VeriCore Developer Documentation",
-  "description": "Comprehensive developer documentation for VeriCore",
+  "title": "TrustWeave Developer Documentation",
+  "description": "Comprehensive developer documentation for TrustWeave",
   "author": "GeoKnoesis",
   "language": "en",
   "gitbook": ">=3.2.3",
@@ -88,7 +88,7 @@ The `book.json` file in the `docs` directory contains the GitBook configuration:
   ],
   "pluginsConfig": {
     "github": {
-      "url": "https://github.com/geoknoesis/vericore"
+      "url": "https://github.com/geoknoesis/TrustWeave"
     }
   }
 }

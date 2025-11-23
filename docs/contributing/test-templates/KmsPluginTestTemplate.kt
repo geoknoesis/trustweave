@@ -1,10 +1,10 @@
-package com.geoknoesis.vericore.testkit.templates
+package com.trustweave.testkit.templates
 
-import com.geoknoesis.vericore.kms.Algorithm
-import com.geoknoesis.vericore.kms.KeyManagementService
-import com.geoknoesis.vericore.kms.KeyNotFoundException
-import com.geoknoesis.vericore.kms.UnsupportedAlgorithmException
-import com.geoknoesis.vericore.testkit.BasePluginTest
+import com.trustweave.kms.Algorithm
+import com.trustweave.kms.KeyManagementService
+import com.trustweave.kms.KeyNotFoundException
+import com.trustweave.kms.UnsupportedAlgorithmException
+import com.trustweave.testkit.BasePluginTest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

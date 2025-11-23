@@ -1,6 +1,6 @@
 # Frequently Asked Questions
 
-VeriCore is produced by **Geoknoesis LLC** ([www.geoknoesis.com](https://www.geoknoesis.com)). This FAQ highlights the questions developers ask most often when wiring the SDK into real systems.
+TrustWeave is produced by **Geoknoesis LLC** ([www.geoknoesis.com](https://www.geoknoesis.com)). This FAQ highlights the questions developers ask most often when wiring the SDK into real systems.
 
 ## How do I run the quick-start sample?
 
@@ -8,7 +8,7 @@ VeriCore is produced by **Geoknoesis LLC** ([www.geoknoesis.com](https://www.geo
 **Command:** Run the Gradle helper task; it bootstraps in-memory services so no external dependencies are required.
 
 ```bash
-./gradlew :vericore-examples:runQuickStartSample
+./gradlew :TrustWeave-examples:runQuickStartSample
 ```
 
 **Result:** A credential is issued, verified with full error handling, and anchored via the in-memory blockchain client—use the output as a baseline for your own experiments.
@@ -18,14 +18,14 @@ VeriCore is produced by **Geoknoesis LLC** ([www.geoknoesis.com](https://www.geo
 **Overview:** Implement the DID interface, register it, and point call sites at the new method name—no global singletons required.
 
 1. Implement `DidMethod` (and optionally `DidMethodProvider` if you want SPI auto-discovery).  
-2. Register it with `DidMethodRegistry` while building your `VeriCoreConfig`.  
+2. Register it with `DidMethodRegistry` while building your `TrustWeaveConfig`.  
 3. Update wallets or services that create DIDs so they pass the new method identifier.  
 
 See [DIDs](core-concepts/dids.md) and [Wallet API – DidManagement](api-reference/wallet-api.md#didmanagement) for code samples that show the typed option builders involved.
 
-## What licence applies to VeriCore?
+## What licence applies to TrustWeave?
 
-VeriCore uses a **dual licence**:
+TrustWeave uses a **dual licence**:
 
 - **Non-commercial / education:** open-source licence.  
 - **Commercial deployments:** Geoknoesis commercial licence.
@@ -34,7 +34,7 @@ Details and contact paths live in the [Licensing Overview](licensing/README.md).
 
 ## How do I test without a blockchain or external KMS?
 
-Use `vericore-testkit`. It ships in-memory DID methods, KMS, and blockchain anchor clients that mirror the production interfaces. Because everything stays in process, your unit tests and CI runs remain deterministic and fast.
+Use `TrustWeave-testkit`. It ships in-memory DID methods, KMS, and blockchain anchor clients that mirror the production interfaces. Because everything stays in process, your unit tests and CI runs remain deterministic and fast.
 
 ## Where can I find API signatures and parameters?
 
@@ -46,25 +46,25 @@ Use `vericore-testkit`. It ships in-memory DID methods, KMS, and blockchain anch
 
 Configure `CredentialVerificationOptions` (see [Verification Policies](advanced/verification-policies.md)). You can enable expiration checks, proof-purpose enforcement, anchoring requirements, revocation lookups, and domain/audience validation—all while receiving a structured `CredentialVerificationResult`.
 
-## How do I handle errors in VeriCore?
+## How do I handle errors in TrustWeave?
 
-All VeriCore operations return `Result<T>` with structured `VeriCoreError` types:
+Most TrustWeave operations throw `TrustWeaveError` exceptions on failure. Some operations (like contract operations) return `Result<T>` directly:
 
 ```kotlin
-import com.geoknoesis.vericore.core.*
+import com.trustweave.core.*
 
-val result = vericore.createDid()
-result.fold(
-    onSuccess = { did -> println("Created: ${did.id}") },
-    onFailure = { error ->
-        when (error) {
-            is VeriCoreError.DidMethodNotRegistered -> {
-                println("Method not registered: ${error.method}")
-            }
-            else -> println("Error: ${error.message}")
+try {
+    val did = trustweave.dids.create()
+    println("Created: ${did.id}")
+} catch (error: TrustWeaveError) {
+    when (error) {
+        is TrustWeaveError.DidMethodNotRegistered -> {
+            println("Method not registered: ${error.method}")
+            println("Available methods: ${error.availableMethods}")
         }
+        else -> println("Error: ${error.message}")
     }
-)
+}
 ```
 
 See [Error Handling](advanced/error-handling.md) for detailed error handling patterns and validation utilities.

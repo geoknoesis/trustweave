@@ -1,19 +1,19 @@
 # Credential Issuance Tutorial
 
-This tutorial provides a comprehensive guide to issuing verifiable credentials with VeriCore. You'll learn how to issue credentials, verify them, and handle the complete credential lifecycle.
+This tutorial provides a comprehensive guide to issuing verifiable credentials with TrustWeave. You'll learn how to issue credentials, verify them, and handle the complete credential lifecycle.
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
 }
 ```
 
 **Result:** Gives you the credential issuance APIs, DID methods, KMS abstractions, and in-memory implementations used throughout this tutorial.
 
-> Tip: The runnable quick-start sample (`./gradlew :vericore-examples:runQuickStartSample`) mirrors the core flows below. Clone it as a starting point before wiring more advanced credential logic.
+> Tip: The runnable quick-start sample (`./gradlew :TrustWeave-examples:runQuickStartSample`) mirrors the core flows below. Clone it as a starting point before wiring more advanced credential logic.
 
 ## Prerequisites
 
@@ -47,20 +47,21 @@ A verifiable credential is a tamper-evident credential that has authorship that 
 
 ## Issuing Credentials
 
-### Using VeriCore Facade (Recommended)
+### Using TrustWeave Service API (Recommended)
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
+import com.trustweave.TrustWeave
+import com.trustweave.credential.IssuanceConfig
+import com.trustweave.credential.ProofType
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val trustweave = TrustWeave.create()
     
     // Create issuer DID
-    val issuerDid = vericore.dids.create()
-    val issuerDidResult = Result.success(issuerDid)
-    val issuerDid = issuerDidResult.getOrThrow()
+    val issuerDid = trustweave.dids.create()
+    val issuerKeyId = issuerDid.document.verificationMethod.first().id
     
     // Create credential subject
     val credentialSubject = buildJsonObject {
@@ -71,23 +72,25 @@ fun main() = runBlocking {
     }
     
     // Issue credential
-    val credentialResult = vericore.issueCredential(
-        issuerDid = issuerDid.id,
-        issuerKeyId = issuerDid.document.verificationMethod.first().id,
-        credentialSubject = credentialSubject
-    )
-    
-    credentialResult.fold(
-        onSuccess = { credential ->
-            println("Issued credential: ${credential.id}")
-            println("Issuer: ${credential.issuer}")
-            println("Subject: ${credential.credentialSubject}")
-            println("Proof: ${credential.proof}")
-        },
-        onFailure = { error ->
-            println("Issuance failed: ${error.message}")
-        }
-    )
+    try {
+        val credential = trustweave.credentials.issue(
+            issuer = issuerDid.id,
+            subject = credentialSubject,
+            config = IssuanceConfig(
+                proofType = ProofType.Ed25519Signature2020,
+                keyId = issuerKeyId,
+                issuerDid = issuerDid.id
+            ),
+            types = listOf("VerifiableCredential", "PersonCredential")
+        )
+        
+        println("Issued credential: ${credential.id}")
+        println("Issuer: ${credential.issuer}")
+        println("Subject: ${credential.credentialSubject}")
+        println("Proof: ${credential.proof}")
+    } catch (error: TrustWeaveError) {
+        println("Issuance failed: ${error.message}")
+    }
 }
 ```
 
@@ -96,16 +99,17 @@ fun main() = runBlocking {
 ### Issuing Credentials with Custom Options
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.credential.*
+import com.trustweave.TrustWeave
+import com.trustweave.credential.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
-    val issuerDid = vericore.dids.create()
+    val trustweave = TrustWeave.create()
+    val issuerDid = trustweave.dids.create()
+    val issuerKeyId = issuerDid.document.verificationMethod.first().id
     
     // Create credential subject
     val credentialSubject = buildJsonObject {
@@ -115,27 +119,26 @@ fun main() = runBlocking {
     }
     
     // Issue credential with custom expiration
-    val credentialResult = vericore.issueCredential(
-        issuerDid = issuerDid.id,
-        issuerKeyId = issuerDid.document.verificationMethod.first().id,
-        credentialSubject = credentialSubject
-    ) {
-        expirationDate = Instant.now().plus(365, ChronoUnit.DAYS)
-        credentialStatus = CredentialStatus(
-            id = "${issuerDid.id}#status",
-            type = "RevocationList2020Status"
+    try {
+        val credential = trustweave.credentials.issue(
+            issuer = issuerDid.id,
+            subject = credentialSubject,
+            config = IssuanceConfig(
+                proofType = ProofType.Ed25519Signature2020,
+                keyId = issuerKeyId,
+                issuerDid = issuerDid.id,
+                expirationDate = Instant.now().plus(365, ChronoUnit.DAYS).toString()
+            ),
+            types = listOf("VerifiableCredential", "PersonCredential")
         )
-    }
-    
-    credentialResult.fold(
-        onSuccess = { credential ->
-            println("Issued credential with expiration: ${credential.expirationDate}")
+        
+        println("Issued credential with expiration: ${credential.expirationDate}")
+        if (credential.credentialStatus != null) {
             println("Status: ${credential.credentialStatus}")
-        },
-        onFailure = { error ->
-            println("Error: ${error.message}")
         }
-    )
+    } catch (error: TrustWeaveError) {
+        println("Error: ${error.message}")
+    }
 }
 ```
 
@@ -146,132 +149,131 @@ fun main() = runBlocking {
 ### Verifying Credentials
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
+import com.trustweave.TrustWeave
+import com.trustweave.credential.VerificationConfig
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val trustweave = TrustWeave.create()
     
     val credential = /* previously issued credential */
     
     // Verify credential
-    val verificationResult = vericore.verifyCredential(credential)
-    
-    verificationResult.fold(
-        onSuccess = { result ->
-            if (result.valid) {
-                println("Credential is valid")
-                println("Issuer: ${result.issuerDid}")
-                println("Subject: ${result.subjectDid}")
-            } else {
-                println("Credential is invalid: ${result.reason}")
-            }
-        },
-        onFailure = { error ->
-            println("Verification failed: ${error.message}")
+    try {
+        val result = trustweave.credentials.verify(credential)
+        
+        if (result.valid) {
+            println("Credential is valid")
+            println("Proof valid: ${result.proofValid}")
+            println("Issuer valid: ${result.issuerValid}")
+            println("Not expired: ${result.notExpired}")
+            println("Not revoked: ${result.notRevoked}")
+        } else {
+            println("Credential is invalid")
+            println("Errors: ${result.errors.joinToString()}")
         }
-    )
+    } catch (error: TrustWeaveError) {
+        println("Verification failed: ${error.message}")
+    }
 }
 ```
 
 **Outcome:** Verifies a credential's signature and validity.
 
-### Verifying with Proof Purpose
+### Verifying with Custom Configuration
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.credential.*
+import com.trustweave.TrustWeave
+import com.trustweave.credential.VerificationConfig
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val trustweave = TrustWeave.create()
     
     val credential = /* previously issued credential */
     
-    // Verify credential with specific proof purpose
-    val verificationResult = vericore.verifyCredential(
-        credential = credential,
-        proofPurpose = ProofPurpose.Authentication
-    )
-    
-    verificationResult.fold(
-        onSuccess = { result ->
-            if (result.valid) {
-                println("Credential verified with proof purpose: ${ProofPurpose.Authentication}")
-            }
-        },
-        onFailure = { error ->
-            println("Error: ${error.message}")
+    // Verify credential with custom configuration
+    try {
+        val config = VerificationConfig(
+            checkExpiration = true,
+            checkRevocation = true,
+            verifyBlockchainAnchor = false
+        )
+        
+        val result = trustweave.credentials.verify(credential, config)
+        
+        if (result.valid) {
+            println("Credential verified successfully")
+            println("All checks passed: proof=${result.proofValid}, issuer=${result.issuerValid}")
+        } else {
+            println("Verification failed: ${result.errors.joinToString()}")
         }
-    )
+    } catch (error: TrustWeaveError) {
+        println("Error: ${error.message}")
+    }
 }
 ```
 
-**Outcome:** Verifies a credential with a specific proof purpose requirement.
+**Outcome:** Verifies a credential with custom verification configuration.
 
 ## Credential Lifecycle
 
 ### Credential Lifecycle Management
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.credential.*
+import com.trustweave.TrustWeave
+import com.trustweave.credential.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.*
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
-    val issuerDid = vericore.dids.create()
+    val trustweave = TrustWeave.create()
+    val issuerDid = trustweave.dids.create()
+    val issuerKeyId = issuerDid.document.verificationMethod.first().id
     
     // Issue credential
-    val credential = vericore.issueCredential(
-        issuerDid = issuerDid.id,
-        issuerKeyId = issuerDid.document.verificationMethod.first().id,
-        credentialSubject = buildJsonObject { put("id", "did:key:subject") }
-    ).getOrThrow()
-    
-    println("Issued: ${credential.id}")
-    
-    // Verify credential
-    val verificationResult = vericore.verifyCredential(credential).getOrThrow()
-    println("Valid: ${verificationResult.valid}")
-    
-    // Revoke credential (if revocation list is supported)
-    val revokeResult = vericore.revokeCredential(
-        credentialId = credential.id,
-        issuerDid = issuerDid.id
-    )
-    
-    revokeResult.fold(
-        onSuccess = { success ->
-            if (success) {
-                println("Credential revoked")
-                
-                // Verify revoked credential
-                val revokeVerification = vericore.verifyCredential(credential).getOrThrow()
-                println("Still valid: ${revokeVerification.valid}")
-            }
-        },
-        onFailure = { error ->
-            println("Revocation failed: ${error.message}")
-        }
-    )
+    try {
+        val credential = trustweave.credentials.issue(
+            issuer = issuerDid.id,
+            subject = buildJsonObject { put("id", "did:key:subject") },
+            config = IssuanceConfig(
+                proofType = ProofType.Ed25519Signature2020,
+                keyId = issuerKeyId,
+                issuerDid = issuerDid.id
+            ),
+            types = listOf("VerifiableCredential")
+        )
+        
+        println("Issued: ${credential.id}")
+        
+        // Verify credential
+        val verificationResult = trustweave.credentials.verify(credential)
+        println("Valid: ${verificationResult.valid}")
+        
+        // Note: Revocation is typically handled through credential status lists
+        // and checked during verification. See revocation documentation for details.
+        
+    } catch (error: TrustWeaveError) {
+        println("Error: ${error.message}")
+    }
 }
 ```
 
-**Outcome:** Demonstrates the complete credential lifecycle from issuance to revocation.
+**Outcome:** Demonstrates the complete credential lifecycle from issuance to verification.
 
 ## Advanced Credential Operations
 
 ### Batch Credential Issuance
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
+import com.trustweave.TrustWeave
+import com.trustweave.credential.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
-    val issuerDid = vericore.dids.create()
+    val trustweave = TrustWeave.create()
+    val issuerDid = trustweave.dids.create()
     val issuerKeyId = issuerDid.document.verificationMethod.first().id
     
     // Create multiple credential subjects
@@ -282,12 +284,22 @@ fun main() = runBlocking {
     )
     
     // Issue credentials in batch
-    val credentials = subjects.map { subject ->
-        vericore.issueCredential(
-            issuerDid = issuerDid.id,
-            issuerKeyId = issuerKeyId,
-            credentialSubject = subject
-        ).getOrThrow()
+    val credentials = subjects.mapNotNull { subject ->
+        try {
+            trustweave.credentials.issue(
+                issuer = issuerDid.id,
+                subject = subject,
+                config = IssuanceConfig(
+                    proofType = ProofType.Ed25519Signature2020,
+                    keyId = issuerKeyId,
+                    issuerDid = issuerDid.id
+                ),
+                types = listOf("VerifiableCredential", "PersonCredential")
+            )
+        } catch (error: TrustWeaveError) {
+            println("Failed to issue credential for ${subject["id"]}: ${error.message}")
+            null
+        }
     }
     
     println("Issued ${credentials.size} credentials")
@@ -302,36 +314,40 @@ fun main() = runBlocking {
 ### Credential Presentations
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.credential.*
+import com.trustweave.TrustWeave
+import com.trustweave.credential.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
+    val trustweave = TrustWeave.create()
     
     val credentials = /* list of credentials */
-    val holderDid = vericore.dids.create()
+    val holderDid = trustweave.dids.create()
+    val holderKeyId = holderDid.document.verificationMethod.first().id
     
     // Create presentation
-    val presentationResult = vericore.createPresentation(
-        credentials = credentials,
-        holderDid = holderDid.id
-    )
-    
-    presentationResult.fold(
-        onSuccess = { presentation ->
-            println("Created presentation: ${presentation.id}")
-            println("Holder: ${presentation.holder}")
-            println("Credentials: ${presentation.verifiableCredential.size}")
-            
-            // Verify presentation
-            val verifyResult = vericore.verifyPresentation(presentation).getOrThrow()
-            println("Presentation valid: ${verifyResult.valid}")
-        },
-        onFailure = { error ->
-            println("Presentation creation failed: ${error.message}")
-        }
-    )
+    try {
+        val presentation = trustweave.credentials.createPresentation(
+            credentials = credentials,
+            holderDid = holderDid.id,
+            config = PresentationConfig(
+                proofType = ProofType.Ed25519Signature2020,
+                keyId = holderKeyId,
+                holderDid = holderDid.id
+            )
+        )
+        
+        println("Created presentation: ${presentation.id}")
+        println("Holder: ${presentation.holder}")
+        println("Credentials: ${presentation.verifiableCredential.size}")
+        
+        // Verify presentation
+        val verifyResult = trustweave.credentials.verifyPresentation(presentation)
+        println("Presentation valid: ${verifyResult.valid}")
+        
+    } catch (error: TrustWeaveError) {
+        println("Presentation creation failed: ${error.message}")
+    }
 }
 ```
 
@@ -342,41 +358,53 @@ fun main() = runBlocking {
 ### Structured Error Handling
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.VeriCoreError
+import com.trustweave.TrustWeave
+import com.trustweave.core.TrustWeaveError
+import com.trustweave.credential.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.*
 
 fun main() = runBlocking {
-    val vericore = VeriCore.create()
-    val issuerDid = vericore.dids.create()
+    val trustweave = TrustWeave.create()
+    val issuerDid = trustweave.dids.create()
+    val issuerKeyId = issuerDid.document.verificationMethod.first().id
     
-    val result = vericore.issueCredential(
-        issuerDid = issuerDid.id,
-        issuerKeyId = issuerDid.document.verificationMethod.first().id,
-        credentialSubject = buildJsonObject { put("id", "did:key:subject") }
-    )
-    
-    result.fold(
-        onSuccess = { credential -> println("Issued: ${credential.id}") },
-        onFailure = { error ->
-            when (error) {
-                is VeriCoreError.CredentialInvalid -> {
-                    println("Invalid credential: ${error.reason}")
+    try {
+        val credential = trustweave.credentials.issue(
+            issuer = issuerDid.id,
+            subject = buildJsonObject { put("id", "did:key:subject") },
+            config = IssuanceConfig(
+                proofType = ProofType.Ed25519Signature2020,
+                keyId = issuerKeyId,
+                issuerDid = issuerDid.id
+            ),
+            types = listOf("VerifiableCredential")
+        )
+        
+        println("Issued: ${credential.id}")
+        
+    } catch (error: TrustWeaveError) {
+        when (error) {
+            is TrustWeaveError.CredentialInvalid -> {
+                println("Invalid credential: ${error.reason}")
+                if (error.field != null) {
+                    println("Field: ${error.field}")
                 }
-                is VeriCoreError.CredentialIssuanceFailed -> {
-                    println("Issuance failed: ${error.reason}")
-                }
-                is VeriCoreError.CredentialVerificationFailed -> {
-                    println("Verification failed: ${error.reason}")
-                }
-                else -> println("Error: ${error.message}")
             }
+            is TrustWeaveError.InvalidDidFormat -> {
+                println("Invalid DID format: ${error.reason}")
+            }
+            is TrustWeaveError.DidMethodNotRegistered -> {
+                println("DID method not registered: ${error.method}")
+                println("Available methods: ${error.availableMethods}")
+            }
+            else -> println("Error: ${error.message}")
         }
-    )
+    }
 }
 ```
 
-**Outcome:** Demonstrates structured error handling for credential operations.
+**Outcome:** Demonstrates structured error handling for credential operations using try-catch.
 
 ## Next Steps
 
@@ -388,6 +416,6 @@ fun main() = runBlocking {
 ## References
 
 - [W3C Verifiable Credentials Specification](https://www.w3.org/TR/vc-data-model/)
-- [VeriCore Core Module](../modules/vericore-core.md)
-- [VeriCore Core API](../api-reference/core-api.md)
+- [TrustWeave Common Module](../modules/trustweave-common.md)
+- [TrustWeave Core API](../api-reference/core-api.md)
 

@@ -1,6 +1,6 @@
 # Core API Reference
 
-Complete API reference for VeriCore's core facade API.
+Complete API reference for TrustWeave's core facade API.
 
 > **Version:** 1.0.0-SNAPSHOT  
 > **Kotlin:** 2.2.0+ | **Java:** 21+  
@@ -8,19 +8,26 @@ Complete API reference for VeriCore's core facade API.
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
 }
 ```
 
 ## Overview
 
-The VeriCore facade provides a unified, elegant API for decentralized identity and trust operations. All operations return `Result<T>` for consistent error handling.
+The TrustWeave facade provides a unified, elegant API for decentralized identity and trust operations. Operations throw `TrustWeaveError` exceptions on failure, which you can catch and handle. Some operations (like contract operations) return `Result<T>` directly.
 
 **Key Concepts:**
-- **Facade**: The `VeriCore` class is the main entry point (facade pattern)
-- **Service**: Implementations like `CredentialService`, `WalletService` (concrete implementations)
-- **Provider**: Factory pattern implementations like `CredentialServiceProvider`, `WalletFactory`
+- **Facade**: The `TrustWeave` class is the main entry point (facade pattern)
+- **Service**: Focused services like `DidService`, `CredentialService`, `WalletService`, `BlockchainService`, `ContractService`
+- **Provider**: Factory pattern implementations like `WalletFactory`
 - **Registry**: Collections like `DidMethodRegistry`, `BlockchainAnchorRegistry` (method/chain collections)
+
+**Service Organization:**
+- **`dids`**: DID operations (create, resolve, update, deactivate)
+- **`credentials`**: Credential operations (issue, verify)
+- **`wallets`**: Wallet creation
+- **`blockchains`**: Blockchain anchoring (anchor, read)
+- **`contracts`**: Smart contract operations (draft, bind, execute, etc.)
 
 ## Quick Reference
 
@@ -28,26 +35,31 @@ The VeriCore facade provides a unified, elegant API for decentralized identity a
 |-----------|--------|---------|
 | Create DID | `dids.create()` | `DidDocument` |
 | Resolve DID | `dids.resolve(did)` | `DidResolutionResult` |
+| Update DID | `dids.update(did, updater)` | `DidDocument` |
+| Deactivate DID | `dids.deactivate(did)` | `Boolean` |
+| Get Available DID Methods | `dids.availableMethods()` | `List<String>` |
 | Issue Credential | `credentials.issue(...)` | `VerifiableCredential` |
-| Verify Credential | `credentials.verify(credential)` | `CredentialVerificationResult` |
-| Create Wallet | `wallets.create(holderDid)` | `Wallet` |
+| Verify Credential | `credentials.verify(credential, config)` | `CredentialVerificationResult` |
+| Create Wallet | `wallets.create(holderDid, ...)` | `Wallet` |
 | Anchor Data | `blockchains.anchor(data, serializer, chainId)` | `AnchorResult` |
 | Read Anchor | `blockchains.read(ref, serializer)` | `T` |
-| Get Available DID Methods | `dids.availableMethods()` | `List<String>` |
 | Get Available Chains | `blockchains.availableChains()` | `List<String>` |
-| Register DID Methods | `didMethods { + DidKeyMethod() }` | `Unit` |
-| Register Blockchain Clients | `blockchains { "chainId" to client }` | `Unit` |
+| Create Contract Draft | `contracts.draft(request)` | `Result<SmartContract>` |
+| Bind Contract | `contracts.bindContract(...)` | `Result<BoundContract>` |
+| Execute Contract | `contracts.executeContract(...)` | `Result<ExecutionResult>` |
+| Register DID Methods | `didMethods { + DidKeyMethod() }` | `Unit` (during creation) |
+| Register Blockchain Clients | `blockchains { "chainId" to client }` | `Unit` (during creation) |
 
-## VeriCore Class
+## TrustWeave Class
 
-### Creating VeriCore Instances
+### Creating TrustWeave Instances
 
 ```kotlin
 // Create with defaults
-val vericore = VeriCore.create()
+val TrustWeave = TrustWeave.create()
 
 // Create with custom configuration
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     kms = InMemoryKeyManagementService()
     walletFactory = MyWalletFactory()
     
@@ -63,295 +75,29 @@ val vericore = VeriCore.create {
 }
 
 // Create from config
-val config = VeriCoreConfig(...)
-val vericore = VeriCore.create(config)
+val config = TrustWeaveConfig(...)
+val TrustWeave = TrustWeave.create(config)
 ```
 
-### Utility Methods
+### Service Properties
 
-#### getAvailableDidMethods
+The TrustWeave facade exposes services through properties:
 
-Returns a list of registered DID method names available in the current VeriCore instance.
-
-```kotlin
-fun getAvailableDidMethods(): List<String>
-```
-
-**Returns:** `List<String>` - List of DID method names (e.g., `["key", "web", "ion"]`)
-
-**Performance Characteristics:**
-- **Time Complexity:** O(N) where N is the number of registered methods
-- **Space Complexity:** O(N) for the returned list
-- **Network Calls:** 0 (local operation)
-- **Thread Safety:** ✅ Thread-safe (read-only operation)
-
-**Edge Cases:**
-- If no methods registered, returns empty list `[]`
-- Method names are returned in registration order (implementation-dependent)
-- Returns only method names, not method instances
-
-**Use Cases:**
-- Check available methods before creating DIDs
-- Display available methods to users
-- Validate method names before operations
-- Debugging method registration issues
+- **`dids`**: `DidService` - DID operations (create, resolve, update, deactivate)
+- **`credentials`**: `CredentialService` - Credential operations (issue, verify)
+- **`wallets`**: `WalletService` - Wallet creation
+- **`blockchains`**: `BlockchainService` - Blockchain anchoring operations
+- **`contracts`**: `ContractService` - Smart contract operations
 
 **Example:**
 ```kotlin
-// Check available methods
-val methods = vericore.getAvailableDidMethods()
-println("Available DID methods: $methods")
+val trustweave = TrustWeave.create()
 
-// Use in error handling
-val result = vericore.dids.create("web")
-result.fold(
-    onSuccess = { did -> println("Created: ${did.id}") },
-    onFailure = { error ->
-        when (error) {
-            is VeriCoreError.DidMethodNotRegistered -> {
-                println("Method 'web' not available")
-                println("Available methods: ${vericore.getAvailableDidMethods()}")
-                // Suggest alternative or register method
-            }
-            else -> println("Error: ${error.message}")
-        }
-    }
-)
-
-// Validate before use
-val desiredMethod = "web"
-if (desiredMethod in vericore.getAvailableDidMethods()) {
-    val did = vericore.dids.create(desiredMethod)
-} else {
-    println("Method '$desiredMethod' not available")
-    println("Available: ${vericore.getAvailableDidMethods()}")
-}
+// Access services
+val did = trustweave.dids.create()
+val methods = trustweave.dids.availableMethods()
+val chains = trustweave.blockchains.availableChains()
 ```
-
-#### getAvailableChains
-
-Returns a list of registered blockchain chain IDs available for anchoring operations.
-
-```kotlin
-fun getAvailableChains(): List<String>
-```
-
-**Returns:** `List<String>` - List of chain IDs in CAIP-2 format (e.g., `["algorand:testnet", "polygon:mainnet"]`)
-
-**Performance Characteristics:**
-- **Time Complexity:** O(N) where N is the number of registered chains
-- **Space Complexity:** O(N) for the returned list
-- **Network Calls:** 0 (local operation)
-- **Thread Safety:** ✅ Thread-safe (read-only operation)
-
-**Edge Cases:**
-- If no chains registered, returns empty list `[]`
-- Chain IDs are returned in registration order (implementation-dependent)
-- Returns only chain IDs, not client instances
-
-**Use Cases:**
-- Check available chains before anchoring
-- Display available chains to users
-- Validate chain IDs before operations
-- Debugging chain registration issues
-
-**Example:**
-```kotlin
-// Check available chains
-val chains = vericore.getAvailableChains()
-println("Available chains: $chains")
-
-// Use in error handling
-val result = vericore.blockchains.anchor(
-    data = data,
-    serializer = serializer,
-    chainId = "algorand:testnet"
-)
-result.fold(
-    onSuccess = { anchor -> println("Anchored: ${anchor.ref.txHash}") },
-    onFailure = { error ->
-        when (error) {
-            is VeriCoreError.ChainNotRegistered -> {
-                println("Chain 'algorand:testnet' not available")
-                println("Available chains: ${vericore.getAvailableChains()}")
-                // Suggest alternative or register chain
-            }
-            else -> println("Error: ${error.message}")
-        }
-    }
-)
-
-// Validate before use
-val desiredChain = "algorand:testnet"
-if (desiredChain in vericore.getAvailableChains()) {
-    val anchor = vericore.blockchains.anchor(
-        data = data,
-        serializer = serializer,
-        chainId = desiredChain
-    )
-} else {
-    println("Chain '$desiredChain' not available")
-    println("Available: ${vericore.getAvailableChains()}")
-}
-```
-
-#### registerDidMethod
-
-Registers a DID method implementation with the VeriCore instance. The method becomes available for creating and resolving DIDs.
-
-```kotlin
-fun registerDidMethod(method: DidMethod)
-```
-
-**Parameters:**
-- `method`: The DID method implementation to register (required, must implement `DidMethod` interface)
-
-**Returns:** `Unit` (no return value)
-
-**Performance Characteristics:**
-- **Time Complexity:** O(1) for registration (hash map insertion)
-- **Space Complexity:** O(1) (single method registration)
-- **Network Calls:** 0 (local operation)
-- **Thread Safety:** ⚠️ Not thread-safe (modifies registry state)
-  - Register methods during initialization or in a synchronized context
-  - Avoid registering methods concurrently
-
-**Edge Cases:**
-- If method with same name already registered, replaces existing method
-- If method is `null`, throws `IllegalArgumentException`
-- Registration is immediate - method available immediately after call
-- Method must be properly initialized before registration
-
-**Use Cases:**
-- Add custom DID method implementations
-- Register methods discovered via SPI
-- Dynamically add methods at runtime
-- Replace default method implementations
-
-**Example:**
-```kotlin
-import com.geoknoesis.vericore.did.*
-
-// Register a DID method
-val webMethod = DidWebMethod(
-    kms = vericore.kms,
-    domain = "example.com"
-)
-vericore.registerDidMethod(webMethod)
-
-// Verify registration
-val methods = vericore.getAvailableDidMethods()
-println("Registered methods: $methods") // Should include "web"
-
-// Now can use the method
-val did = vericore.dids.create("web")
-println("Created web DID: ${did.id}")
-
-// Register multiple methods during initialization
-val vericore = VeriCore.create {
-    didMethods {
-        + DidKeyMethod(kms)
-        + DidIonMethod(kms)
-        + DidWebMethod(kms) { domain = "example.com" }
-    }
-}
-
-// Check all registered methods
-println("All methods: ${vericore.getAvailableDidMethods()}")
-```
-
-**Best Practices:**
-- Register methods during VeriCore initialization
-- Use SPI discovery for automatic registration when possible
-- Register methods before creating DIDs that use them
-- Check `getAvailableDidMethods()` after registration to verify
-
-**Note:** Prefer registering methods during `VeriCore.create { }` configuration when possible for better organization and thread safety.
-
-#### Registering Blockchain Clients
-
-Register blockchain clients using the DSL during VeriCore initialization. The `registerBlockchainClient()` method has been removed in favor of the DSL pattern.
-
-**Recommended Pattern:**
-```kotlin
-val vericore = VeriCore.create {
-    blockchains {
-        "chainId" to client
-    }
-}
-```
-
-**Parameters:**
-- `chainId`: Chain ID in CAIP-2 format (e.g., `"algorand:testnet"`, `"polygon:mainnet"`) (required)
-- `client`: The blockchain anchor client implementation (required, must implement `BlockchainAnchorClient`)
-
-**Returns:** `Unit` (no return value)
-
-**Performance Characteristics:**
-- **Time Complexity:** O(1) for registration (hash map insertion)
-- **Space Complexity:** O(1) (single client registration)
-- **Network Calls:** 0 (local operation, but client may validate connection)
-- **Thread Safety:** ⚠️ Not thread-safe (modifies registry state)
-  - Register clients during initialization or in a synchronized context
-  - Avoid registering clients concurrently
-
-**Edge Cases:**
-- If chain ID with same value already registered, replaces existing client
-- If `chainId` is invalid format, may throw `IllegalArgumentException`
-- If `client` is `null`, throws `IllegalArgumentException`
-- Registration is immediate - client available immediately after call
-- Client should be properly initialized before registration
-
-**Use Cases:**
-- Add blockchain clients for anchoring
-- Register clients for different networks (testnet/mainnet)
-- Dynamically add clients at runtime
-- Replace client implementations
-
-**Example:**
-```kotlin
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.anchor.options.*
-
-// Register Algorand testnet client
-val algorandClient = AlgorandBlockchainAnchorClient(
-    chainId = "algorand:testnet",
-    options = AlgorandOptions(
-        algodUrl = "https://testnet-api.algonode.cloud",
-        privateKey = "your-private-key"
-    )
-)
-val vericore = VeriCore.create {
-    blockchains {
-        "algorand:testnet" to algorandClient
-        "algorand:mainnet" to algorandMainnetClient
-        "polygon:testnet" to polygonTestnetClient
-    }
-}
-
-// Verify registration
-val chains = vericore.blockchains.availableChains()
-println("Registered chains: $chains") // Should include "algorand:testnet"
-
-// Now can use for anchoring
-val anchor = vericore.blockchains.anchor(
-    data = myData,
-    serializer = MyData.serializer(),
-    chainId = "algorand:testnet"
-)
-
-// Check all registered chains
-println("All chains: ${vericore.blockchains.availableChains()}")
-```
-
-**Best Practices:**
-- Register clients during VeriCore initialization
-- Use proper chain ID format (CAIP-2: `chain:network`)
-- Initialize clients with proper credentials before registration
-- Register clients before anchoring operations
-- Check `getAvailableChains()` after registration to verify
-
-**Note:** Prefer registering clients during `VeriCore.create { }` configuration when possible for better organization and thread safety.
 
 ### DID Operations
 
@@ -371,7 +117,7 @@ suspend fun create(
 ): DidDocument
 ```
 
-**Access via:** `vericore.dids.create()`
+**Access via:** `TrustWeave.dids.create()`
 
 **Parameters:**
 
@@ -404,7 +150,7 @@ suspend fun create(
 - `assertionMethod`: Assertion key references (for signing)
 - `service`: Optional service endpoints
 
-**Note:** This method throws `VeriCoreError` exceptions on failure. For error handling, wrap in try-catch or use extension functions.
+**Note:** This method throws `TrustWeaveError` exceptions on failure. For error handling, wrap in try-catch or use extension functions.
 
 **Default Behavior:**
 - Uses `did:key` method if not specified
@@ -413,10 +159,10 @@ suspend fun create(
 - Adds key to `authentication` and `assertionMethod` arrays
 
 **Edge Cases:**
-- If method not registered → `VeriCoreError.DidMethodNotRegistered` with available methods list
-- If algorithm not supported by method → `VeriCoreError.ValidationFailed` with reason
-- If KMS fails to generate key → `VeriCoreError.InvalidOperation` with context
-- If method-specific validation fails → `VeriCoreError.ValidationFailed` with field details
+- If method not registered → `TrustWeaveError.DidMethodNotRegistered` with available methods list
+- If algorithm not supported by method → `TrustWeaveError.ValidationFailed` with reason
+- If KMS fails to generate key → `TrustWeaveError.InvalidOperation` with context
+- If method-specific validation fails → `TrustWeaveError.ValidationFailed` with field details
 
 **Performance:**
 - Time complexity: O(1) for key generation (if cached)
@@ -426,28 +172,28 @@ suspend fun create(
 **Example:**
 ```kotlin
 // Simple usage (uses defaults: did:key, ED25519)
-val did = vericore.dids.create()
+val did = TrustWeave.dids.create()
 
 // With custom method
-val webDid = vericore.dids.create(method = "web")
+val webDid = TrustWeave.dids.create(method = "web")
 
 // With builder
-val did = vericore.dids.create("key") {
+val did = TrustWeave.dids.create("key") {
     algorithm = DidCreationOptions.KeyAlgorithm.ED25519
     purpose(DidCreationOptions.KeyPurpose.AUTHENTICATION)
 }
 
 // With error handling
-val result = vericore.dids.create()
+val result = TrustWeave.dids.create()
 result.fold(
     onSuccess = { did -> println("Created: ${did.id}") },
     onFailure = { error -> 
         when (error) {
-            is VeriCoreError.DidMethodNotRegistered -> {
+            is TrustWeaveError.DidMethodNotRegistered -> {
                 println("Method not registered: ${error.method}")
                 println("Available methods: ${error.availableMethods}")
             }
-            is VeriCoreError.ValidationFailed -> {
+            is TrustWeaveError.ValidationFailed -> {
                 println("Validation failed: ${error.reason}")
                 println("Field: ${error.field}")
             }
@@ -458,10 +204,10 @@ result.fold(
 ```
 
 **Errors:**
-- `VeriCoreError.DidMethodNotRegistered` - Method is not registered (includes available methods)
-- `VeriCoreError.InvalidDidFormat` - Invalid DID format (if validation fails)
-- `VeriCoreError.ValidationFailed` - Configuration validation failed
-- `VeriCoreError.InvalidOperation` - KMS operation failed
+- `TrustWeaveError.DidMethodNotRegistered` - Method is not registered (includes available methods)
+- `TrustWeaveError.InvalidDidFormat` - Invalid DID format (if validation fails)
+- `TrustWeaveError.ValidationFailed` - Configuration validation failed
+- `TrustWeaveError.InvalidOperation` - KMS operation failed
 
 #### resolve
 
@@ -471,7 +217,7 @@ Resolves a DID to its document.
 suspend fun resolve(did: String): DidResolutionResult
 ```
 
-**Access via:** `vericore.dids.resolve(did)`
+**Access via:** `TrustWeave.dids.resolve(did)`
 
 **Parameters:**
 
@@ -479,7 +225,7 @@ suspend fun resolve(did: String): DidResolutionResult
   - **Format**: Must match `did:<method>:<identifier>` pattern
   - **Example**: `"did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"`
   - **Validation**: Automatically validated before resolution
-  - **Requirements**: Method must be registered in VeriCore instance
+  - **Requirements**: Method must be registered in TrustWeave instance
 
 **Returns:** `DidResolutionResult` directly (not wrapped in Result)
 
@@ -506,14 +252,14 @@ data class DidResolutionMetadata(
 - `metadata.error`: Error message if resolution failed (document will be null)
 
 **Failure Case:**
-- Throws `VeriCoreError` exception with specific error type
+- Throws `TrustWeaveError` exception with specific error type
 - For error handling, wrap in try-catch or use extension functions
 
 **Edge Cases:**
-- If DID format invalid → `VeriCoreError.InvalidDidFormat` with reason
-- If method not registered → `VeriCoreError.DidMethodNotRegistered` with available methods
-- If DID not found → `VeriCoreError.DidNotFound` with DID and available methods
-- If resolution service unavailable → `VeriCoreError.InvalidOperation` with context
+- If DID format invalid → `TrustWeaveError.InvalidDidFormat` with reason
+- If method not registered → `TrustWeaveError.DidMethodNotRegistered` with available methods
+- If DID not found → `TrustWeaveError.DidNotFound` with DID and available methods
+- If resolution service unavailable → `TrustWeaveError.InvalidOperation` with context
 
 **Performance:**
 - Time complexity: O(1) for local methods (did:key), O(n) for network methods where n = network latency
@@ -523,7 +269,7 @@ data class DidResolutionMetadata(
 **Example:**
 ```kotlin
 // Simple usage
-val result = vericore.dids.resolve("did:key:z6Mk...")
+val result = TrustWeave.dids.resolve("did:key:z6Mk...")
 if (result.document != null) {
     println("DID resolved: ${result.document.id}")
     println("Method: ${result.metadata.method}")
@@ -533,7 +279,7 @@ if (result.document != null) {
 }
 
 // With error handling
-val result = vericore.dids.resolve("did:key:z6Mk...")
+val result = TrustWeave.dids.resolve("did:key:z6Mk...")
 result.fold(
     onSuccess = { resolution ->
         if (resolution.document != null) {
@@ -545,15 +291,15 @@ result.fold(
     },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.InvalidDidFormat -> {
+            is TrustWeaveError.InvalidDidFormat -> {
                 println("Invalid DID format: ${error.reason}")
                 println("Expected format: did:<method>:<identifier>")
             }
-            is VeriCoreError.DidMethodNotRegistered -> {
+            is TrustWeaveError.DidMethodNotRegistered -> {
                 println("Method not registered: ${error.method}")
                 println("Available methods: ${error.availableMethods}")
             }
-            is VeriCoreError.DidNotFound -> {
+            is TrustWeaveError.DidNotFound -> {
                 println("DID not found: ${error.did}")
                 println("Available methods: ${error.availableMethods}")
             }
@@ -569,9 +315,92 @@ result.fold(
 ```
 
 **Errors:**
-- `VeriCoreError.InvalidDidFormat` - Invalid DID format (includes reason)
-- `VeriCoreError.DidMethodNotRegistered` - Method is not registered (includes available methods)
-- `VeriCoreError.DidNotFound` - DID not found (includes DID and available methods)
+- `TrustWeaveError.InvalidDidFormat` - Invalid DID format (includes reason)
+- `TrustWeaveError.DidMethodNotRegistered` - Method is not registered (includes available methods)
+- `TrustWeaveError.DidNotFound` - DID not found (includes DID and available methods)
+
+#### update
+
+Updates a DID document by applying a transformation function.
+
+```kotlin
+suspend fun update(
+    did: String,
+    updater: (DidDocument) -> DidDocument
+): DidDocument
+```
+
+**Access via:** `TrustWeave.dids.update(did, updater)`
+
+**Parameters:**
+- **`did`** (String, required): The DID to update
+- **`updater`** (Function, required): Function that transforms the current document to the new document
+
+**Returns:** `DidDocument` - The updated DID document
+
+**Edge Cases:**
+- If DID format invalid → `TrustWeaveError.InvalidDidFormat`
+- If method not registered → `TrustWeaveError.DidMethodNotRegistered`
+- If update operation fails → `TrustWeaveError.InvalidOperation`
+
+**Example:**
+```kotlin
+val updated = trustweave.dids.update("did:key:example") { document ->
+    document.copy(
+        service = document.service + Service(
+            id = "${document.id}#service-1",
+            type = "LinkedDomains",
+            serviceEndpoint = "https://example.com/service"
+        )
+    )
+}
+```
+
+#### deactivate
+
+Deactivates a DID, marking it as no longer active.
+
+```kotlin
+suspend fun deactivate(did: String): Boolean
+```
+
+**Access via:** `TrustWeave.dids.deactivate(did)`
+
+**Parameters:**
+- **`did`** (String, required): The DID to deactivate
+
+**Returns:** `Boolean` - `true` if deactivated successfully, `false` otherwise
+
+**Edge Cases:**
+- If DID format invalid → `TrustWeaveError.InvalidDidFormat`
+- If method not registered → `TrustWeaveError.DidMethodNotRegistered`
+- If DID already deactivated → Returns `false`
+
+**Example:**
+```kotlin
+val deactivated = trustweave.dids.deactivate("did:key:example")
+if (deactivated) {
+    println("DID deactivated successfully")
+}
+```
+
+#### availableMethods
+
+Gets a list of available DID method names.
+
+```kotlin
+fun availableMethods(): List<String>
+```
+
+**Access via:** `TrustWeave.dids.availableMethods()`
+
+**Returns:** `List<String>` - List of registered DID method names
+
+**Example:**
+```kotlin
+val methods = trustweave.dids.availableMethods()
+println("Available methods: $methods") // ["key", "web", "ion"]
+```
 
 ### Credential Operations
 
@@ -644,28 +473,28 @@ suspend fun issueCredential(
   - `credentialSubject`: Provided subject data
   - `type`: Credential types
   - `proof`: Cryptographic proof (signature)
-- **Failure**: `VeriCoreError` with specific error type
+- **Failure**: `TrustWeaveError` with specific error type
 
 **Edge Cases:**
 
 - **If `issuerKeyId` doesn't exist in DID document**:
-  - Returns: `VeriCoreError.InvalidDidFormat` with reason indicating key not found
+  - Returns: `TrustWeaveError.InvalidDidFormat` with reason indicating key not found
   - Solution: Verify key exists using `didDocument.verificationMethod.find { it.id == issuerKeyId }`
 
 - **If `credentialSubject` missing `"id"` field**:
-  - Returns: `VeriCoreError.CredentialInvalid` with `field = "credentialSubject.id"`
+  - Returns: `TrustWeaveError.CredentialInvalid` with `field = "credentialSubject.id"`
   - Solution: Always include `"id"` field in credential subject
 
 - **If issuer DID method not registered**:
-  - Returns: `VeriCoreError.DidMethodNotRegistered` with available methods list
+  - Returns: `TrustWeaveError.DidMethodNotRegistered` with available methods list
   - Solution: Register DID method or use available method
 
 - **If issuer DID not resolvable**:
-  - Returns: `VeriCoreError.DidNotFound` with available methods
+  - Returns: `TrustWeaveError.DidNotFound` with available methods
   - Solution: Ensure DID is valid and method is registered
 
 - **If `expirationDate` is invalid format**:
-  - Returns: `VeriCoreError.ValidationFailed` with reason
+  - Returns: `TrustWeaveError.ValidationFailed` with reason
   - Solution: Use ISO 8601 format (e.g., `"2025-12-31T23:59:59Z"`)
 
 **Performance Characteristics:**
@@ -687,7 +516,7 @@ suspend fun issueCredential(
 **Example:**
 ```kotlin
 // Simple usage
-val credential = vericore.credentials.issue(
+val credential = trustweave.credentials.issue(
     issuer = "did:key:issuer",
     subject = buildJsonObject {
         put("id", "did:key:subject")
@@ -703,14 +532,14 @@ val credential = vericore.credentials.issue(
 
 // With error handling (wrap in try-catch)
 try {
-    val credential = vericore.credentials.issue(...)
+    val credential = trustweave.credentials.issue(...)
     println("Issued: ${credential.id}")
-} catch (error: VeriCoreError) {
+} catch (error: TrustWeaveError) {
     when (error) {
-        is VeriCoreError.InvalidDidFormat -> {
+        is TrustWeaveError.InvalidDidFormat -> {
             println("Invalid issuer DID: ${error.reason}")
         }
-        is VeriCoreError.CredentialInvalid -> {
+        is TrustWeaveError.CredentialInvalid -> {
             println("Credential invalid: ${error.reason}")
             println("Field: ${error.field}")
         }
@@ -720,9 +549,9 @@ try {
 ```
 
 **Errors:**
-- `VeriCoreError.InvalidDidFormat` - Invalid issuer DID format
-- `VeriCoreError.DidMethodNotRegistered` - Issuer DID method not registered
-- `VeriCoreError.CredentialInvalid` - Credential validation failed
+- `TrustWeaveError.InvalidDidFormat` - Invalid issuer DID format
+- `TrustWeaveError.DidMethodNotRegistered` - Issuer DID method not registered
+- `TrustWeaveError.CredentialInvalid` - Credential validation failed
 
 #### verify
 
@@ -735,7 +564,7 @@ suspend fun verify(
 ): CredentialVerificationResult
 ```
 
-**Access via:** `vericore.credentials.verify(credential, config)`
+**Access via:** `TrustWeave.credentials.verify(credential, config)`
 
 **Parameters:**
 - `credential`: The verifiable credential to verify (required, must be valid JSON-LD structure)
@@ -775,75 +604,52 @@ suspend fun verify(
 - If credential expired and `checkExpiration = true` → `notExpired = false`, `valid = false`
 - If credential revoked and `enforceStatus = true` → `notRevoked = false`, `valid = false`
 - If proof signature invalid → `proofValid = false`, `valid = false`
-- If issuer DID method not registered → Returns `VeriCoreError.DidMethodNotRegistered`
-- If credential structure invalid → Returns `VeriCoreError.CredentialInvalid`
+- If issuer DID method not registered → Returns `TrustWeaveError.DidMethodNotRegistered`
+- If credential structure invalid → Returns `TrustWeaveError.CredentialInvalid`
 
 **Example:**
 ```kotlin
-// Simple usage (testing/prototyping)
-val result = vericore.verifyCredential(credential).getOrThrow()
+// Simple usage
+val result = trustweave.credentials.verify(credential)
 if (result.valid) {
     println("Credential is valid")
 } else {
     println("Errors: ${result.errors}")
 }
 
-// Production pattern with error handling
-val result = vericore.verifyCredential(credential)
-result.fold(
-    onSuccess = { verification ->
-        if (verification.valid) {
-            println("✅ Credential is valid")
-            println("   Proof valid: ${verification.proofValid}")
-            println("   Issuer valid: ${verification.issuerValid}")
-            println("   Not expired: ${verification.notExpired}")
-            println("   Not revoked: ${verification.notRevoked}")
-            
-            if (verification.warnings.isNotEmpty()) {
-                println("   Warnings: ${verification.warnings.joinToString()}")
-            }
-        } else {
-            println("❌ Credential invalid")
-            println("   Errors: ${verification.errors.joinToString()}")
-            println("   Proof valid: ${verification.proofValid}")
-            println("   Issuer valid: ${verification.issuerValid}")
-        }
-    },
-    onFailure = { error ->
-        when (error) {
-            is VeriCoreError.CredentialInvalid -> {
-                println("❌ Credential validation failed: ${error.reason}")
-                println("   Field: ${error.field}")
-            }
-            is VeriCoreError.DidMethodNotRegistered -> {
-                println("❌ Issuer DID method not registered: ${error.method}")
-                println("   Available methods: ${error.availableMethods}")
-            }
-            else -> {
-                println("❌ Verification error: ${error.message}")
-            }
-        }
-    }
-)
-
-// With custom verification options
-val options = CredentialVerificationOptions(
+// With custom verification configuration
+val config = VerificationConfig(
+    checkRevocation = true,
     checkExpiration = true,
-    enforceStatus = true,
-    expectedAudience = setOf("did:key:verifier-123")
+    verifyBlockchainAnchor = true,
+    chainId = "algorand:testnet"
 )
+val result = trustweave.credentials.verify(credential, config)
 
-val result = vericore.credentials.verify(credential, VerificationConfig.from(options))
+if (result.valid) {
+    println("✅ Credential is valid")
+    println("   Proof valid: ${result.proofValid}")
+    println("   Issuer valid: ${result.issuerValid}")
+    println("   Not expired: ${result.notExpired}")
+    println("   Not revoked: ${result.notRevoked}")
+    
+    if (result.warnings.isNotEmpty()) {
+        println("   Warnings: ${result.warnings.joinToString()}")
+    }
+} else {
+    println("❌ Credential invalid")
+    println("   Errors: ${result.errors.joinToString()}")
+}
 ```
 
 **Errors:**
-- `VeriCoreError.CredentialInvalid` - Credential validation failed (missing fields, invalid structure)
-- `VeriCoreError.DidMethodNotRegistered` - Issuer DID method not registered
-- `VeriCoreError.DidNotFound` - Issuer DID cannot be resolved
+- `TrustWeaveError.CredentialInvalid` - Credential validation failed (missing fields, invalid structure)
+- `TrustWeaveError.DidMethodNotRegistered` - Issuer DID method not registered
+- `TrustWeaveError.DidNotFound` - Issuer DID cannot be resolved
 
 ### Revocation and Status List Management
 
-VeriCore provides comprehensive revocation management with blockchain anchoring support. See [Blockchain-Anchored Revocation](../core-concepts/blockchain-anchored-revocation.md) for detailed documentation.
+TrustWeave provides comprehensive revocation management with blockchain anchoring support. See [Blockchain-Anchored Revocation](../core-concepts/blockchain-anchored-revocation.md) for detailed documentation.
 
 #### createStatusList
 
@@ -884,7 +690,7 @@ suspend fun createStatusList(
 
 **Example:**
 ```kotlin
-val statusList = vericore.createStatusList(
+val statusList = TrustWeave.createStatusList(
     issuerDid = "did:key:issuer",
     purpose = StatusPurpose.REVOCATION,
     size = 65536  // 8KB status list
@@ -895,7 +701,7 @@ val statusList = vericore.createStatusList(
     },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.DidNotFound -> {
+            is TrustWeaveError.DidNotFound -> {
                 println("Issuer DID not found: ${error.did}")
             }
             else -> println("Error: ${error.message}")
@@ -905,9 +711,9 @@ val statusList = vericore.createStatusList(
 ```
 
 **Errors:**
-- `VeriCoreError.DidNotFound` - Issuer DID cannot be resolved
-- `VeriCoreError.InvalidDidFormat` - Invalid issuer DID format
-- `VeriCoreError.ValidationFailed` - Invalid size or purpose value
+- `TrustWeaveError.DidNotFound` - Issuer DID cannot be resolved
+- `TrustWeaveError.InvalidDidFormat` - Invalid issuer DID format
+- `TrustWeaveError.ValidationFailed` - Invalid size or purpose value
 
 #### revokeCredential
 
@@ -940,7 +746,7 @@ suspend fun revokeCredential(
 
 **Example:**
 ```kotlin
-val revoked = vericore.revokeCredential(
+val revoked = TrustWeave.revokeCredential(
     credentialId = "urn:uuid:credential-123",
     statusListId = statusList.id
 ).fold(
@@ -953,7 +759,7 @@ val revoked = vericore.revokeCredential(
     },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.ValidationFailed -> {
+            is TrustWeaveError.ValidationFailed -> {
                 println("Invalid credential ID or status list ID")
             }
             else -> println("Revocation error: ${error.message}")
@@ -963,8 +769,8 @@ val revoked = vericore.revokeCredential(
 ```
 
 **Errors:**
-- `VeriCoreError.ValidationFailed` - Invalid credential ID or status list ID format
-- `VeriCoreError.InvalidState` - Status list not found or full
+- `TrustWeaveError.ValidationFailed` - Invalid credential ID or status list ID format
+- `TrustWeaveError.InvalidState` - Status list not found or full
 
 #### suspendCredential
 
@@ -997,7 +803,7 @@ suspend fun suspendCredential(
 
 **Example:**
 ```kotlin
-val suspended = vericore.suspendCredential(
+val suspended = TrustWeave.suspendCredential(
     credentialId = "urn:uuid:credential-123",
     statusListId = suspensionList.id
 ).fold(
@@ -1010,10 +816,10 @@ val suspended = vericore.suspendCredential(
     },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.ValidationFailed -> {
+            is TrustWeaveError.ValidationFailed -> {
                 println("❌ Invalid credential ID or status list ID")
             }
-            is VeriCoreError.InvalidState -> {
+            is TrustWeaveError.InvalidState -> {
                 println("❌ Status list not found or full")
             }
             else -> {
@@ -1025,8 +831,8 @@ val suspended = vericore.suspendCredential(
 ```
 
 **Errors:**
-- `VeriCoreError.ValidationFailed` - Invalid credential ID or status list ID format
-- `VeriCoreError.InvalidState` - Status list not found or full
+- `TrustWeaveError.ValidationFailed` - Invalid credential ID or status list ID format
+- `TrustWeaveError.InvalidState` - Status list not found or full
 
 #### checkRevocationStatus
 
@@ -1055,13 +861,13 @@ suspend fun checkRevocationStatus(
 
 **Edge Cases:**
 - If credential has no `credentialStatus` field → Returns `revoked = false`, `suspended = false`
-- If status list not found → Returns `VeriCoreError.InvalidState`
+- If status list not found → Returns `TrustWeaveError.InvalidState`
 - If credential ID hash collision → Extremely rare (1 in 2^64), may return incorrect status
-- If status list not accessible → Returns `VeriCoreError.InvalidOperation`
+- If status list not accessible → Returns `TrustWeaveError.InvalidOperation`
 
 **Example:**
 ```kotlin
-val status = vericore.checkRevocationStatus(credential).fold(
+val status = TrustWeave.checkRevocationStatus(credential).fold(
     onSuccess = { status ->
         when {
             status.revoked -> {
@@ -1080,10 +886,10 @@ val status = vericore.checkRevocationStatus(credential).fold(
     },
     onFailure = { error ->
         when (error) {
-            is VeriCoreError.InvalidState -> {
+            is TrustWeaveError.InvalidState -> {
                 println("❌ Status list not found")
             }
-            is VeriCoreError.InvalidOperation -> {
+            is TrustWeaveError.InvalidOperation -> {
                 println("❌ Cannot access status list: ${error.message}")
             }
             else -> {
@@ -1095,16 +901,16 @@ val status = vericore.checkRevocationStatus(credential).fold(
 ```
 
 **Errors:**
-- `VeriCoreError.InvalidState` - Status list not found or not accessible
-- `VeriCoreError.InvalidOperation` - Cannot access status list (network error, etc.)
-- `VeriCoreError.CredentialInvalid` - Credential structure invalid (missing required fields)
+- `TrustWeaveError.InvalidState` - Status list not found or not accessible
+- `TrustWeaveError.InvalidOperation` - Cannot access status list (network error, etc.)
+- `TrustWeaveError.CredentialInvalid` - Credential structure invalid (missing required fields)
 
 #### Using BlockchainRevocationRegistry
 
 For blockchain-anchored revocation, use `BlockchainRevocationRegistry` with an anchoring strategy:
 
 ```kotlin
-import com.geoknoesis.vericore.credential.revocation.*
+import com.trustweave.credential.revocation.*
 import java.time.Duration
 
 // Create status list manager
@@ -1226,53 +1032,35 @@ suspend fun createWallet(
 **Example:**
 ```kotlin
 // Simple usage (in-memory, for testing)
-val wallet = vericore.createWallet("did:key:holder").fold(
-    onSuccess = { w -> 
-        println("Created wallet: ${w.walletId}")
-        println("Holder: ${w.holderDid}")
-    },
-    onFailure = { error ->
-        when (error) {
-            is VeriCoreError.WalletCreationFailed -> {
-                println("Wallet creation failed: ${error.reason}")
-                println("Provider: ${error.provider}")
-            }
-            is VeriCoreError.InvalidDidFormat -> {
-                println("Invalid holder DID: ${error.reason}")
-            }
-            else -> println("Error: ${error.message}")
-        }
-    }
+val wallet = trustweave.wallets.create(holderDid = "did:key:holder")
+println("Created wallet: ${wallet.walletId}")
+println("Holder: ${wallet.holderDid}")
+
+// With custom type and options
+val wallet = trustweave.wallets.create(
+    holderDid = "did:key:holder",
+    type = WalletType.Database,
+    options = WalletCreationOptions(
+        label = "Holder Wallet",
+        enableOrganization = true,
+        enablePresentation = true
+    )
 )
 
-// With builder (production-ready with persistence)
-val wallet = vericore.createWallet("did:key:holder") {
-    label = "Holder Wallet"
-    storagePath = "/wallets/holder-123"
-    enableOrganization = true
-    enablePresentation = true
-    encryptionKey = SecretKeySpec(keyBytes, "AES")
-}.getOrThrow()
-
-// With database provider
-val wallet = vericore.createWallet(
-    holderDid = "did:key:holder",
-    provider = WalletProvider.Database,
-    options = WalletCreationOptions(
-        storagePath = "jdbc:postgresql://localhost/vericore",
-        enableOrganization = true
-    )
-).getOrThrow()
+// Use wallet directly
+wallet.store(credential)
+val retrieved = wallet.get(credentialId)
+val allCredentials = wallet.list()
 ```
 
 **Errors:**
-- `VeriCoreError.WalletCreationFailed` - Wallet creation failed (provider not found, configuration invalid, storage unavailable, duplicate wallet ID)
-- `VeriCoreError.InvalidDidFormat` - Invalid holder DID format
-- `VeriCoreError.ValidationFailed` - Invalid wallet options or configuration
+- `TrustWeaveError.WalletCreationFailed` - Wallet creation failed (provider not found, configuration invalid, storage unavailable, duplicate wallet ID)
+- `TrustWeaveError.InvalidDidFormat` - Invalid holder DID format
+- `TrustWeaveError.ValidationFailed` - Invalid wallet options or configuration
 
 **Example - With Organization and Presentation:**
 ```kotlin
-val wallet = vericore.createWallet("did:key:holder") {
+val wallet = TrustWeave.createWallet("did:key:holder") {
     enableOrganization = true
     enablePresentation = true
     storagePath = "/wallets/holder-123"
@@ -1329,41 +1117,34 @@ suspend fun <T : Any> anchor(
 ```kotlin
 // Simple usage
 val myData = MyData(id = "123", value = "test")
-val result = vericore.blockchains.anchor(
-    data = myData,
-    serializer = MyData.serializer(),
-    chainId = "algorand:testnet"
-).fold(
-    onSuccess = { anchor ->
-        println("Anchored at: ${anchor.ref.txHash}")
-        println("Block: ${anchor.ref.blockNumber}")
-        println("Timestamp: ${anchor.timestamp}")
-        // Store anchorRef for later retrieval
-        saveAnchorRef(anchor.ref)
-    },
-    onFailure = { error ->
-        when (error) {
-            is VeriCoreError.ChainNotRegistered -> {
-                println("Chain not registered: ${error.chainId}")
-                println("Available chains: ${error.availableChains}")
-                // Register chain or use alternative
-            }
-            is VeriCoreError.ValidationFailed -> {
-                println("Invalid data or chain ID: ${error.reason}")
-            }
-            else -> {
-                println("Anchoring error: ${error.message}")
-                error.cause?.printStackTrace()
-            }
+try {
+    val anchor = trustweave.blockchains.anchor(
+        data = myData,
+        serializer = MyData.serializer(),
+        chainId = "algorand:testnet"
+    )
+    println("Anchored at: ${anchor.ref.txHash}")
+    println("Block: ${anchor.ref.blockNumber}")
+    println("Timestamp: ${anchor.timestamp}")
+    // Store anchorRef for later retrieval
+    saveAnchorRef(anchor.ref)
+} catch (error: TrustWeaveError) {
+    when (error) {
+        is TrustWeaveError.ChainNotRegistered -> {
+            println("Chain not registered: ${error.chainId}")
+            println("Available chains: ${error.availableChains}")
+        }
+        else -> {
+            println("Anchoring error: ${error.message}")
         }
     }
-)
+}
 
 // With timeout handling
 import kotlinx.coroutines.withTimeout
 
-val result = withTimeout(30000) { // 30 second timeout
-    vericore.blockchains.anchor(
+val anchor = withTimeout(30000) { // 30 second timeout
+    trustweave.blockchains.anchor(
         data = data,
         serializer = serializer,
         chainId = chainId
@@ -1372,9 +1153,9 @@ val result = withTimeout(30000) { // 30 second timeout
 ```
 
 **Errors:**
-- `VeriCoreError.ChainNotRegistered` - Chain ID not registered in registry
-- `VeriCoreError.ValidationFailed` - Invalid chain ID format or data serialization failure
-- `VeriCoreError.Unknown` - Blockchain transaction failed (network error, insufficient funds, etc.)
+- `TrustWeaveError.ChainNotRegistered` - Chain ID not registered in registry
+- `TrustWeaveError.ValidationFailed` - Invalid chain ID format or data serialization failure
+- `TrustWeaveError.Unknown` - Blockchain transaction failed (network error, insufficient funds, etc.)
 
 #### readAnchor
 
@@ -1411,43 +1192,133 @@ suspend fun <T : Any> readAnchor(
 **Example:**
 ```kotlin
 // Simple usage
-val data = vericore.readAnchor<MyData>(
-    ref = anchorRef,
-    serializer = MyData.serializer()
-).fold(
-    onSuccess = { retrieved ->
-        println("Read data: $retrieved")
-        println("Verified against on-chain digest")
-    },
-    onFailure = { error ->
-        when (error) {
-            is VeriCoreError.ChainNotRegistered -> {
-                println("Chain not registered: ${error.chainId}")
-                println("Available chains: ${error.availableChains}")
-            }
-            is VeriCoreError.ValidationFailed -> {
-                println("Data verification failed - possible tampering!")
-                println("Reason: ${error.reason}")
-            }
-            else -> {
-                println("Read error: ${error.message}")
-                error.cause?.printStackTrace()
-            }
+val anchorRef = AnchorRef(
+    chainId = "algorand:testnet",
+    txHash = "abc123..."
+)
+try {
+    val data = trustweave.blockchains.read<MyData>(
+        ref = anchorRef,
+        serializer = MyData.serializer()
+    )
+    println("Read data: $data")
+    println("Verified against on-chain digest")
+} catch (error: TrustWeaveError) {
+    when (error) {
+        is TrustWeaveError.ChainNotRegistered -> {
+            println("Chain not registered: ${error.chainId}")
+            println("Available chains: ${error.availableChains}")
+        }
+        is TrustWeaveError.ValidationFailed -> {
+            println("Data verification failed - possible tampering!")
+            println("Reason: ${error.reason}")
+        }
+        else -> {
+            println("Read error: ${error.message}")
         }
     }
-)
-
-// With type safety
-val result: Result<MyData> = vericore.readAnchor(
-    ref = anchorRef,
-    serializer = MyData.serializer()
-)
+}
 ```
 
 **Errors:**
-- `VeriCoreError.ChainNotRegistered` - Chain ID not registered in registry
-- `VeriCoreError.ValidationFailed` - Data digest doesn't match on-chain digest (tamper detected) or deserialization failed
-- `VeriCoreError.Unknown` - Transaction not found or data retrieval failed
+- `TrustWeaveError.ChainNotRegistered` - Chain ID not registered in registry
+- `TrustWeaveError.ValidationFailed` - Data digest doesn't match on-chain digest (tamper detected) or deserialization failed
+- `TrustWeaveError.Unknown` - Transaction not found or data retrieval failed
+
+#### availableChains
+
+Gets a list of available blockchain chain IDs.
+
+```kotlin
+fun availableChains(): List<String>
+```
+
+**Access via:** `TrustWeave.blockchains.availableChains()`
+
+**Returns:** `List<String>` - List of registered blockchain chain IDs in CAIP-2 format
+
+**Example:**
+```kotlin
+val chains = trustweave.blockchains.availableChains()
+println("Available chains: $chains") // ["algorand:testnet", "polygon:mainnet"]
+```
+
+### Smart Contract Operations
+
+The `contracts` service provides operations for creating, binding, and executing smart contracts.
+
+#### draft
+
+Creates a contract draft.
+
+```kotlin
+suspend fun draft(request: ContractDraftRequest): Result<SmartContract>
+```
+
+**Access via:** `TrustWeave.contracts.draft(request)`
+
+**Parameters:**
+- **`request`** (ContractDraftRequest, required): Contract draft request containing contract type, execution model, parties, terms, etc.
+
+**Returns:** `Result<SmartContract>` - The created contract draft
+
+**Example:**
+```kotlin
+val contract = trustweave.contracts.draft(
+    request = ContractDraftRequest(
+        contractType = ContractType.Insurance,
+        executionModel = ExecutionModel.Parametric(...),
+        parties = ContractParties(...),
+        terms = ContractTerms(...),
+        effectiveDate = Instant.now().toString(),
+        contractData = buildJsonObject { ... }
+    )
+).getOrThrow()
+```
+
+#### bindContract
+
+Binds a contract by issuing a credential and anchoring it to a blockchain.
+
+```kotlin
+suspend fun bindContract(
+    contractId: String,
+    issuerDid: String,
+    issuerKeyId: String,
+    chainId: String
+): Result<BoundContract>
+```
+
+**Access via:** `TrustWeave.contracts.bindContract(...)`
+
+**Returns:** `Result<BoundContract>` - The bound contract with credential and anchor reference
+
+#### executeContract
+
+Executes a contract based on its execution model.
+
+```kotlin
+suspend fun executeContract(
+    contract: SmartContract,
+    executionContext: ExecutionContext
+): Result<ExecutionResult>
+```
+
+**Access via:** `TrustWeave.contracts.executeContract(contract, executionContext)`
+
+**Returns:** `Result<ExecutionResult>` - The execution result
+
+#### Other Contract Methods
+
+- **`issueCredential(contract, issuerDid, issuerKeyId)`**: Issues a verifiable credential for a contract
+- **`anchorContract(contract, credential, chainId)`**: Anchors a contract to a blockchain
+- **`activateContract(contractId)`**: Activates a contract (moves from PENDING to ACTIVE)
+- **`evaluateConditions(contract, inputData)`**: Evaluates contract conditions
+- **`updateStatus(contractId, newStatus, reason, metadata)`**: Updates contract status
+- **`getContract(contractId)`**: Gets a contract by ID
+- **`verifyContract(credentialId)`**: Verifies a contract credential
+
+See [Smart Contract API](smart-contract-api.md) for detailed documentation.
 
 ### Plugin Lifecycle Management
 
@@ -1461,16 +1332,18 @@ suspend fun initialize(config: Map<String, Any?> = emptyMap()): Result<Unit>
 
 **Example:**
 ```kotlin
-val vericore = VeriCore.create()
+val trustweave = TrustWeave.create()
 
 val config = mapOf(
-    "database" to mapOf("url" to "jdbc:postgresql://localhost/vericore")
+    "database" to mapOf("url" to "jdbc:postgresql://localhost/TrustWeave")
 )
 
-vericore.initialize(config).fold(
-    onSuccess = { println("Plugins initialized") },
-    onFailure = { error -> println("Initialization error: ${error.message}") }
-)
+try {
+    trustweave.initialize(config)
+    println("Plugins initialized")
+} catch (error: TrustWeaveError) {
+    println("Initialization error: ${error.message}")
+}
 ```
 
 #### start
@@ -1483,10 +1356,12 @@ suspend fun start(): Result<Unit>
 
 **Example:**
 ```kotlin
-vericore.start().fold(
-    onSuccess = { println("Plugins started") },
-    onFailure = { error -> println("Start error: ${error.message}") }
-)
+try {
+    trustweave.start()
+    println("Plugins started")
+} catch (error: TrustWeaveError) {
+    println("Start error: ${error.message}")
+}
 ```
 
 #### stop
@@ -1499,10 +1374,12 @@ suspend fun stop(): Result<Unit>
 
 **Example:**
 ```kotlin
-vericore.stop().fold(
-    onSuccess = { println("Plugins stopped") },
-    onFailure = { error -> println("Stop error: ${error.message}") }
-)
+try {
+    trustweave.stop()
+    println("Plugins stopped")
+} catch (error: TrustWeaveError) {
+    println("Stop error: ${error.message}")
+}
 ```
 
 #### cleanup
@@ -1515,101 +1392,106 @@ suspend fun cleanup(): Result<Unit>
 
 **Example:**
 ```kotlin
-vericore.cleanup().fold(
-    onSuccess = { println("Plugins cleaned up") },
-    onFailure = { error -> println("Cleanup error: ${error.message}") }
-)
+try {
+    trustweave.cleanup()
+    println("Plugins cleaned up")
+} catch (error: TrustWeaveError) {
+    println("Cleanup error: ${error.message}")
+}
 ```
 
 ## Error Types
 
-All operations can return errors of type `VeriCoreError`. See [Error Handling](../advanced/error-handling.md) for complete error type documentation.
+All operations can return errors of type `TrustWeaveError`. See [Error Handling](../advanced/error-handling.md) for complete error type documentation.
 
 ### Common Error Types
 
-- `VeriCoreError.DidMethodNotRegistered` - DID method not registered
-- `VeriCoreError.InvalidDidFormat` - Invalid DID format
-- `VeriCoreError.CredentialInvalid` - Credential validation failed
-- `VeriCoreError.ChainNotRegistered` - Chain ID not registered
-- `VeriCoreError.WalletCreationFailed` - Wallet creation failed
-- `VeriCoreError.PluginInitializationFailed` - Plugin initialization failed
+- `TrustWeaveError.DidMethodNotRegistered` - DID method not registered
+- `TrustWeaveError.InvalidDidFormat` - Invalid DID format
+- `TrustWeaveError.CredentialInvalid` - Credential validation failed
+- `TrustWeaveError.ChainNotRegistered` - Chain ID not registered
+- `TrustWeaveError.WalletCreationFailed` - Wallet creation failed
+- `TrustWeaveError.PluginInitializationFailed` - Plugin initialization failed
 
-## Result Utilities
+## Error Handling
 
-VeriCore provides extension functions for working with `Result<T>`:
+All TrustWeave operations throw `TrustWeaveError` exceptions on failure. Operations do not return `Result<T>` directly - they throw exceptions that you can catch and handle.
 
-### mapError
-
-Transform errors in a Result:
-
+**Example:**
 ```kotlin
-val result = vericore.dids.create()
-    .mapError { it.toVeriCoreError() }
-```
-
-### combine
-
-Combine multiple Results:
-
-```kotlin
-val results = listOf(
-    vericore.dids.create(),
-    vericore.dids.create(),
-    vericore.dids.create()
-)
-
-val combined = results.combine { dids ->
-    dids.map { it.id }
+try {
+    val did = trustweave.dids.create()
+    val credential = trustweave.credentials.issue(...)
+    val wallet = trustweave.wallets.create(holderDid = did.id)
+} catch (error: TrustWeaveError) {
+    when (error) {
+        is TrustWeaveError.DidMethodNotRegistered -> {
+            println("Method not registered: ${error.method}")
+            println("Available methods: ${error.availableMethods}")
+        }
+        is TrustWeaveError.ChainNotRegistered -> {
+            println("Chain not registered: ${error.chainId}")
+            println("Available chains: ${error.availableChains}")
+        }
+        else -> println("Error: ${error.message}")
+    }
 }
 ```
 
-### mapAsync
+**Note:** Some operations (like contract operations) return `Result<T>` directly. Check the method signature for each operation.
 
-Batch operations with async mapping:
+## Configuration
+
+### Registering DID Methods
+
+DID methods are registered during TrustWeave creation using the DSL:
 
 ```kotlin
-val dids = listOf("did:key:1", "did:key:2", "did:key:3")
-val results = dids.mapAsync { did ->
-    vericore.dids.resolve(did)
+val trustweave = TrustWeave.create {
+    didMethods {
+        + DidKeyMethod(kms)
+        + DidWebMethod(kms) { domain = "example.com" }
+        + DidIonMethod(kms)
+    }
 }
 ```
 
-## Input Validation
+### Registering Blockchain Clients
 
-VeriCore validates inputs before operations:
-
-### DID Validation
+Blockchain clients are registered during TrustWeave creation using the DSL:
 
 ```kotlin
-import com.geoknoesis.vericore.core.DidValidator
-
-val validation = DidValidator.validateFormat("did:key:z6Mk...")
-if (!validation.isValid()) {
-    val error = validation as ValidationResult.Invalid
-    println("Validation failed: ${error.message}")
+val trustweave = TrustWeave.create {
+    blockchains {
+        "algorand:testnet" to algorandClient
+        "polygon:mainnet" to polygonClient
+        "ethereum:mainnet" to ethereumClient
+    }
 }
 ```
 
-### Credential Validation
+### Registering Credential Services
+
+Credential services can be registered during creation:
 
 ```kotlin
-import com.geoknoesis.vericore.core.CredentialValidator
-
-val validation = CredentialValidator.validateStructure(credential)
-if (!validation.isValid()) {
-    val error = validation as ValidationResult.Invalid
-    println("Credential validation failed: ${error.message}")
+val trustweave = TrustWeave.create {
+    credentialServices {
+        + MyCredentialService()
+    }
 }
 ```
 
-### Chain ID Validation
+### Registering Proof Generators
+
+Proof generators can be registered during creation:
 
 ```kotlin
-import com.geoknoesis.vericore.core.ChainIdValidator
-
-val validation = ChainIdValidator.validateFormat("algorand:testnet")
-if (!validation.isValid()) {
-    println("Invalid chain ID format")
+val trustweave = TrustWeave.create {
+    proofGenerators {
+        + Ed25519ProofGenerator(signer)
+        + BbsProofGenerator(signer)
+    }
 }
 ```
 

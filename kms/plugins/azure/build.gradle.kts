@@ -1,15 +1,12 @@
 plugins {
-    id("vericore.shared")
     kotlin("jvm")
     kotlin("plugin.serialization")
 }
 
-group = "com.geoknoesis.vericore.kms"
-version = "1.0.0-SNAPSHOT"
-
+group = "com.trustweave.kms"
 dependencies {
-    implementation(project(":core:vericore-core"))
-    implementation(project(":kms:vericore-kms"))
+    implementation(project(":credentials:core"))
+    implementation(project(":kms:core"))
 
     // Azure SDK for Key Vault
     implementation(platform("com.azure:azure-sdk-bom:1.2.15"))
@@ -17,6 +14,6 @@ dependencies {
     implementation("com.azure:azure-identity")
 
     // Test dependencies
-    testImplementation(project(":core:vericore-testkit"))
+    testImplementation(project(":testkit"))
 }
 

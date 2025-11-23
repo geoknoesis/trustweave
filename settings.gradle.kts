@@ -1,47 +1,30 @@
+// Configure plugin management - this defines repositories and plugin versions
+// that can be used across all build scripts without specifying versions again.
 pluginManagement {
     repositories {
         mavenCentral()
         gradlePluginPortal()
     }
+    
+    // Declare plugin versions here so subprojects can use them without specifying versions.
+    // For example, subprojects can use kotlin("jvm") and Gradle will automatically use version 2.2.21.
     plugins {
-        kotlin("jvm") version "2.2.0"
-        kotlin("plugin.serialization") version "2.2.0"
+        kotlin("jvm") version "2.2.21"
+        kotlin("plugin.serialization") version "2.2.21"
     }
 }
 
-rootProject.name = "vericore"
+// Set the root project name (used for artifact names and project identification).
+rootProject.name = "trustweave"
 
 // Core modules
-include("core:vericore-core")
-include("core:vericore-spi")
-include("core:vericore-json")
-include("core:vericore-trust")
-include("core:vericore-testkit")
-include("core:vericore-contract")
-include("core:plugins:bbs-proof")
-include("core:plugins:jwt-proof")
-include("core:plugins:ld-proof")
-include("core:plugins:database-wallet")
-include("core:plugins:file-wallet")
-include("core:plugins:cloud-wallet")
-include("core:plugins:database-status-list")
-include("core:plugins:audit-logging")
-include("core:plugins:metrics")
-include("core:plugins:qr-code")
-include("core:plugins:notifications")
-include("core:plugins:credential-versioning")
-include("core:plugins:credential-backup")
-include("core:plugins:expiration-management")
-include("core:plugins:analytics")
-include("core:plugins:oidc4vci")
-include("core:plugins:multi-party-issuance")
-include("core:plugins:health-checks")
-include("core:plugins:credential-rendering")
-include("core:plugins:didcomm")
-include("core:plugins:chapi")
+include("common")
+include("trust")
+include("testkit")
+include("contract")
 
 // DID domain
-include("did:vericore-did")
+include("did:core")
 include("did:plugins:base")
 include("did:plugins:key")
 include("did:plugins:web")
@@ -60,8 +43,14 @@ include("did:plugins:btcr")
 include("did:plugins:tezos")
 include("did:plugins:orb")
 
+// Wallet domain
+include("wallet:core")
+include("wallet:plugins:database")
+include("wallet:plugins:file")
+include("wallet:plugins:cloud")
+
 // KMS domain
-include("kms:vericore-kms")
+include("kms:core")
 include("kms:plugins:aws")
 include("kms:plugins:azure")
 include("kms:plugins:google")
@@ -75,120 +64,48 @@ include("kms:plugins:utimaco")
 include("kms:plugins:cloudhsm")
 include("kms:plugins:entrust")
 include("kms:plugins:waltid")
+include("kms:plugins:venafi")
 
-// Chains domain
-include("chains:vericore-anchor")
-include("chains:plugins:algorand")
-include("chains:plugins:polygon")
-include("chains:plugins:ethereum")
-include("chains:plugins:base")
-include("chains:plugins:arbitrum")
-include("chains:plugins:optimism")
-include("chains:plugins:zksync")
-include("chains:plugins:bitcoin")
-include("chains:plugins:starknet")
-include("chains:plugins:cardano")
-include("chains:plugins:ganache")
-include("chains:plugins:indy")
+// Anchors domain
+include("anchors:core")
+include("anchors:plugins:algorand")
+include("anchors:plugins:polygon")
+include("anchors:plugins:ethereum")
+include("anchors:plugins:base")
+include("anchors:plugins:arbitrum")
+include("anchors:plugins:optimism")
+include("anchors:plugins:zksync")
+include("anchors:plugins:bitcoin")
+include("anchors:plugins:starknet")
+include("anchors:plugins:cardano")
+include("anchors:plugins:ganache")
+include("anchors:plugins:indy")
 
-// Integration modules
-include("integrations:servicenow")
-include("integrations:salesforce")
-include("integrations:entra")
-include("integrations:venafi")
+// Credentials domain
+include("credentials:core")
+include("credentials:plugins:proof:bbs")
+include("credentials:plugins:proof:jwt")
+include("credentials:plugins:proof:ld")
+include("credentials:plugins:status-list:database")
+include("credentials:plugins:platforms:servicenow")
+include("credentials:plugins:platforms:salesforce")
+include("credentials:plugins:platforms:entra")
+include("credentials:plugins:audit-logging")
+include("credentials:plugins:metrics")
+include("credentials:plugins:qr-code")
+include("credentials:plugins:notifications")
+include("credentials:plugins:versioning")
+include("credentials:plugins:backup")
+include("credentials:plugins:expiration")
+include("credentials:plugins:analytics")
+include("credentials:plugins:oidc4vci")
+include("credentials:plugins:multi-party")
+include("credentials:plugins:health-checks")
+include("credentials:plugins:rendering")
+include("credentials:plugins:didcomm")
+include("credentials:plugins:chapi")
 
-// Distribution modules
-include("distribution:vericore-all")
-include("distribution:vericore-bom")
-include("distribution:vericore-examples")
-
-// Project directory mappings - Core
-project(":core:vericore-core").projectDir = file("core/vericore-core")
-project(":core:vericore-spi").projectDir = file("core/vericore-spi")
-project(":core:vericore-json").projectDir = file("core/vericore-json")
-project(":core:vericore-trust").projectDir = file("core/vericore-trust")
-project(":core:vericore-testkit").projectDir = file("core/vericore-testkit")
-project(":core:vericore-contract").projectDir = file("core/vericore-contract")
-project(":core:plugins:bbs-proof").projectDir = file("core/plugins/bbs-proof")
-project(":core:plugins:jwt-proof").projectDir = file("core/plugins/jwt-proof")
-project(":core:plugins:ld-proof").projectDir = file("core/plugins/ld-proof")
-project(":core:plugins:database-wallet").projectDir = file("core/plugins/database-wallet")
-project(":core:plugins:file-wallet").projectDir = file("core/plugins/file-wallet")
-project(":core:plugins:cloud-wallet").projectDir = file("core/plugins/cloud-wallet")
-project(":core:plugins:database-status-list").projectDir = file("core/plugins/database-status-list")
-project(":core:plugins:audit-logging").projectDir = file("core/plugins/audit-logging")
-project(":core:plugins:metrics").projectDir = file("core/plugins/metrics")
-project(":core:plugins:qr-code").projectDir = file("core/plugins/qr-code")
-project(":core:plugins:notifications").projectDir = file("core/plugins/notifications")
-project(":core:plugins:credential-versioning").projectDir = file("core/plugins/credential-versioning")
-project(":core:plugins:credential-backup").projectDir = file("core/plugins/credential-backup")
-project(":core:plugins:expiration-management").projectDir = file("core/plugins/expiration-management")
-project(":core:plugins:analytics").projectDir = file("core/plugins/analytics")
-project(":core:plugins:oidc4vci").projectDir = file("core/plugins/oidc4vci")
-project(":core:plugins:multi-party-issuance").projectDir = file("core/plugins/multi-party-issuance")
-project(":core:plugins:health-checks").projectDir = file("core/plugins/health-checks")
-project(":core:plugins:credential-rendering").projectDir = file("core/plugins/credential-rendering")
-project(":core:plugins:didcomm").projectDir = file("core/plugins/didcomm")
-project(":core:plugins:chapi").projectDir = file("core/plugins/chapi")
-
-// Project directory mappings - DID domain
-project(":did:vericore-did").projectDir = file("did/vericore-did")
-project(":did:plugins:base").projectDir = file("did/plugins/base")
-project(":did:plugins:key").projectDir = file("did/plugins/key")
-project(":did:plugins:web").projectDir = file("did/plugins/web")
-project(":did:plugins:ethr").projectDir = file("did/plugins/ethr")
-project(":did:plugins:ion").projectDir = file("did/plugins/ion")
-project(":did:plugins:polygon").projectDir = file("did/plugins/polygon")
-project(":did:plugins:sol").projectDir = file("did/plugins/sol")
-project(":did:plugins:peer").projectDir = file("did/plugins/peer")
-project(":did:plugins:ens").projectDir = file("did/plugins/ens")
-project(":did:plugins:plc").projectDir = file("did/plugins/plc")
-project(":did:plugins:cheqd").projectDir = file("did/plugins/cheqd")
-project(":did:plugins:jwk").projectDir = file("did/plugins/jwk")
-project(":did:plugins:godiddy").projectDir = file("did/plugins/godiddy")
-project(":did:plugins:threebox").projectDir = file("did/plugins/threebox")
-project(":did:plugins:btcr").projectDir = file("did/plugins/btcr")
-project(":did:plugins:tezos").projectDir = file("did/plugins/tezos")
-project(":did:plugins:orb").projectDir = file("did/plugins/orb")
-
-// Project directory mappings - KMS domain
-project(":kms:vericore-kms").projectDir = file("kms/vericore-kms")
-project(":kms:plugins:aws").projectDir = file("kms/plugins/aws")
-project(":kms:plugins:azure").projectDir = file("kms/plugins/azure")
-project(":kms:plugins:google").projectDir = file("kms/plugins/google")
-project(":kms:plugins:hashicorp").projectDir = file("kms/plugins/hashicorp")
-project(":kms:plugins:ibm").projectDir = file("kms/plugins/ibm")
-project(":kms:plugins:thales").projectDir = file("kms/plugins/thales")
-project(":kms:plugins:cyberark").projectDir = file("kms/plugins/cyberark")
-project(":kms:plugins:fortanix").projectDir = file("kms/plugins/fortanix")
-project(":kms:plugins:thales-luna").projectDir = file("kms/plugins/thales-luna")
-project(":kms:plugins:utimaco").projectDir = file("kms/plugins/utimaco")
-project(":kms:plugins:cloudhsm").projectDir = file("kms/plugins/cloudhsm")
-project(":kms:plugins:entrust").projectDir = file("kms/plugins/entrust")
-project(":kms:plugins:waltid").projectDir = file("kms/plugins/waltid")
-
-// Project directory mappings - Chains domain
-project(":chains:vericore-anchor").projectDir = file("chains/vericore-anchor")
-project(":chains:plugins:algorand").projectDir = file("chains/plugins/algorand")
-project(":chains:plugins:polygon").projectDir = file("chains/plugins/polygon")
-project(":chains:plugins:ethereum").projectDir = file("chains/plugins/ethereum")
-project(":chains:plugins:base").projectDir = file("chains/plugins/base")
-project(":chains:plugins:arbitrum").projectDir = file("chains/plugins/arbitrum")
-project(":chains:plugins:optimism").projectDir = file("chains/plugins/optimism")
-project(":chains:plugins:zksync").projectDir = file("chains/plugins/zksync")
-project(":chains:plugins:bitcoin").projectDir = file("chains/plugins/bitcoin")
-project(":chains:plugins:starknet").projectDir = file("chains/plugins/starknet")
-project(":chains:plugins:cardano").projectDir = file("chains/plugins/cardano")
-project(":chains:plugins:ganache").projectDir = file("chains/plugins/ganache")
-project(":chains:plugins:indy").projectDir = file("chains/plugins/indy")
-
-// Project directory mappings - Integrations
-project(":integrations:servicenow").projectDir = file("integrations/servicenow")
-project(":integrations:salesforce").projectDir = file("integrations/salesforce")
-project(":integrations:entra").projectDir = file("integrations/entra")
-project(":integrations:venafi").projectDir = file("integrations/venafi")
-
-// Project directory mappings - Distribution
-project(":distribution:vericore-all").projectDir = file("distribution/vericore-all")
-project(":distribution:vericore-bom").projectDir = file("distribution/vericore-bom")
-project(":distribution:vericore-examples").projectDir = file("distribution/vericore-examples")
+// Distribution
+include("distribution:all")
+include("distribution:bom")
+include("distribution:examples")

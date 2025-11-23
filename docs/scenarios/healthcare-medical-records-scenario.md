@@ -1,6 +1,6 @@
 # Healthcare & Medical Records Scenario
 
-This guide demonstrates how to build a healthcare credential system using VeriCore that enables patient privacy, secure medical record sharing, HIPAA compliance, and cross-provider interoperability.
+This guide demonstrates how to build a healthcare credential system using TrustWeave that enables patient privacy, secure medical record sharing, HIPAA compliance, and cross-provider interoperability.
 
 ## What You'll Build
 
@@ -162,19 +162,19 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`. These cover DID management, credential issuance, wallet storage, and the in-memory services used in the healthcare walkthrough.
+Add TrustWeave dependencies to your `build.gradle.kts`. These cover DID management, credential issuance, wallet storage, and the in-memory services used in the healthcare walkthrough.
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
     
     // Test kit for in-memory implementations
-    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -191,22 +191,22 @@ dependencies {
 Here’s the full healthcare credential management flow. Execute it first to see the big picture, then read on for step-by-step explanations.
 
 ```kotlin
-import com.geoknoesis.vericore.credential.models.VerifiableCredential
-import com.geoknoesis.vericore.credential.models.VerifiablePresentation
-import com.geoknoesis.vericore.credential.CredentialIssuanceOptions
-import com.geoknoesis.vericore.credential.CredentialVerificationOptions
-import com.geoknoesis.vericore.credential.PresentationOptions
-import com.geoknoesis.vericore.credential.issuer.CredentialIssuer
-import com.geoknoesis.vericore.credential.verifier.CredentialVerifier
-import com.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
-import com.geoknoesis.vericore.credential.proof.ProofGeneratorRegistry
-import com.geoknoesis.vericore.testkit.credential.InMemoryWallet
-import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
-import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
-import com.geoknoesis.vericore.anchor.anchorTyped
-import com.geoknoesis.vericore.did.DidMethodRegistry
+import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.models.VerifiablePresentation
+import com.trustweave.credential.CredentialIssuanceOptions
+import com.trustweave.credential.CredentialVerificationOptions
+import com.trustweave.credential.PresentationOptions
+import com.trustweave.credential.issuer.CredentialIssuer
+import com.trustweave.credential.verifier.CredentialVerifier
+import com.trustweave.credential.proof.Ed25519ProofGenerator
+import com.trustweave.credential.proof.ProofGeneratorRegistry
+import com.trustweave.testkit.credential.InMemoryWallet
+import com.trustweave.testkit.did.DidKeyMockMethod
+import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.anchor.BlockchainAnchorRegistry
+import com.trustweave.anchor.anchorTyped
+import com.trustweave.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
@@ -453,9 +453,9 @@ fun main() = runBlocking {
     
     // Step 12: Anchor critical records to blockchain
     println("\nStep 12: Anchoring critical records to blockchain...")
-    val prescriptionDigest = com.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
+    val prescriptionDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
-            com.geoknoesis.vericore.credential.models.VerifiableCredential.serializer(),
+            com.trustweave.credential.models.VerifiableCredential.serializer(),
             issuedPrescription
         )
     )
@@ -534,10 +534,10 @@ fun createPrescriptionCredential(
         },
         issuanceDate = Instant.now().toString(),
         expirationDate = Instant.now().plus(30, ChronoUnit.DAYS).toString(),
-        credentialSchema = com.geoknoesis.vericore.credential.models.CredentialSchema(
+        credentialSchema = com.trustweave.credential.models.CredentialSchema(
             id = "https://example.com/schemas/prescription.json",
             type = "JsonSchemaValidator2018",
-            schemaFormat = com.geoknoesis.vericore.spi.SchemaFormat.JSON_SCHEMA
+            schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
         )
     )
 }
@@ -573,10 +573,10 @@ fun createLabResultsCredential(
         },
         issuanceDate = Instant.now().toString(),
         expirationDate = null, // Lab results don't expire
-        credentialSchema = com.geoknoesis.vericore.credential.models.CredentialSchema(
+        credentialSchema = com.trustweave.credential.models.CredentialSchema(
             id = "https://example.com/schemas/lab-results.json",
             type = "JsonSchemaValidator2018",
-            schemaFormat = com.geoknoesis.vericore.spi.SchemaFormat.JSON_SCHEMA
+            schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
         )
     )
 }
@@ -606,10 +606,10 @@ fun createVaccinationCredential(
         },
         issuanceDate = Instant.now().toString(),
         expirationDate = null, // Vaccination records don't expire
-        credentialSchema = com.geoknoesis.vericore.credential.models.CredentialSchema(
+        credentialSchema = com.trustweave.credential.models.CredentialSchema(
             id = "https://example.com/schemas/vaccination.json",
             type = "JsonSchemaValidator2018",
-            schemaFormat = com.geoknoesis.vericore.spi.SchemaFormat.JSON_SCHEMA
+            schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
         )
     )
 }
@@ -637,10 +637,10 @@ fun createConsentCredential(
         },
         issuanceDate = Instant.now().toString(),
         expirationDate = expirationDate,
-        credentialSchema = com.geoknoesis.vericore.credential.models.CredentialSchema(
+        credentialSchema = com.trustweave.credential.models.CredentialSchema(
             id = "https://example.com/schemas/consent.json",
             type = "JsonSchemaValidator2018",
-            schemaFormat = com.geoknoesis.vericore.spi.SchemaFormat.JSON_SCHEMA
+            schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
         )
     )
 }

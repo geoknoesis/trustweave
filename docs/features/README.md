@@ -1,10 +1,10 @@
-# VeriCore Features
+# TrustWeave Features
 
-This directory contains documentation for all VeriCore features and plugins.
+This directory contains documentation for all TrustWeave features and plugins.
 
 ## Overview
 
-VeriCore provides a comprehensive set of features for building verifiable credential systems. All features follow VeriCore's plugin architecture, making them easy to integrate and extend.
+TrustWeave provides a comprehensive set of features for building verifiable credential systems. All features follow TrustWeave's plugin architecture, making them easy to integrate and extend.
 
 ## Documentation
 
@@ -41,13 +41,13 @@ All features can be used independently:
 
 ```kotlin
 // Example: Using Audit Logging
-import com.geoknoesis.vericore.audit.*
+import com.trustweave.audit.*
 
 val auditLogger = InMemoryAuditLogger()
 auditLogger.logEvent(AuditEvent(...))
 
 // Example: Using Metrics
-import com.geoknoesis.vericore.metrics.*
+import com.trustweave.metrics.*
 
 val metrics = InMemoryMetricsCollector()
 metrics.increment("credentials.issued")
@@ -57,7 +57,7 @@ See [USAGE_GUIDE.md](USAGE_GUIDE.md) for detailed examples of each feature.
 
 ## Architecture
 
-All features follow VeriCore's plugin architecture:
+All features follow TrustWeave's plugin architecture:
 
 1. **Interface Definition**: Each feature defines a clear interface
 2. **In-Memory Implementation**: For testing and development
@@ -68,7 +68,7 @@ All features follow VeriCore's plugin architecture:
 Features can be integrated into your application in several ways:
 
 1. **Standalone**: Use features independently
-2. **With VeriCore**: Integrate with the main VeriCore facade
+2. **With TrustWeave**: Integrate with the main TrustWeave facade
 3. **Custom**: Create your own implementations
 
 See [USAGE_GUIDE.md](USAGE_GUIDE.md) for integration examples.

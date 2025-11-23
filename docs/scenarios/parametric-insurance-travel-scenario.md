@@ -1,6 +1,6 @@
 # Parametric Insurance for Travel Disruptions
 
-This guide demonstrates how to build a parametric travel insurance system using VeriCore, similar to Chubb Travel Pro. You'll learn how to create verifiable credentials for travel disruption data (flight delays, weather events, baggage tracking) that trigger automatic insurance payouts, solving the "Oracle Problem" by enabling standardized, multi-provider data ecosystems for travel insurance.
+This guide demonstrates how to build a parametric travel insurance system using TrustWeave, similar to Chubb Travel Pro. You'll learn how to create verifiable credentials for travel disruption data (flight delays, weather events, baggage tracking) that trigger automatic insurance payouts, solving the "Oracle Problem" by enabling standardized, multi-provider data ecosystems for travel insurance.
 
 ## What You'll Build
 
@@ -103,14 +103,14 @@ Travel parametric insurance needs:
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
     
     // Test kit for in-memory implementations
-    testImplementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    testImplementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
     
     // Optional: Algorand adapter for real blockchain anchoring
-    implementation("com.geoknoesis.vericore.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -127,9 +127,9 @@ Here's a complete travel parametric insurance workflow covering flight delays, w
 ```kotlin
 package com.example.travel.insurance
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.json.DigestUtils
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.json.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -141,15 +141,15 @@ fun main() = runBlocking {
     println("Parametric Travel Insurance - Complete Example")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance
-    val vericore = VeriCore.create()
-    println("\n✅ VeriCore initialized")
+    // Step 1: Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
+    println("\n✅ TrustWeave initialized")
     
     // Step 2: Create DIDs for insurance company, airline, weather service, and baggage system
-    val insuranceDid = vericore.dids.create()
-    val airlineDid = vericore.dids.create()
-    val weatherServiceDid = vericore.dids.create()
-    val baggageSystemDid = vericore.dids.create()
+    val insuranceDid = TrustWeave.dids.create()
+    val airlineDid = TrustWeave.dids.create()
+    val weatherServiceDid = TrustWeave.dids.create()
+    val baggageSystemDid = TrustWeave.dids.create()
     
     println("✅ Insurance Company DID: ${insuranceDid.id}")
     println("✅ Airline DID: ${airlineDid.id}")
@@ -193,7 +193,7 @@ fun main() = runBlocking {
     val delayDigest = DigestUtils.sha256DigestMultibase(flightDelayData)
     
     // Airline issues verifiable credential for flight delay
-    val flightDelayCredential = vericore.issueCredential(
+    val flightDelayCredential = TrustWeave.issueCredential(
         issuerDid = airlineDid.id,
         issuerKeyId = airlineKeyId,
         credentialSubject = buildJsonObject {
@@ -210,7 +210,7 @@ fun main() = runBlocking {
     println("✅ Flight Delay Credential issued: ${flightDelayCredential.id}")
     
     // Verify credential
-    val delayVerification = vericore.verifyCredential(flightDelayCredential).getOrThrow()
+    val delayVerification = TrustWeave.verifyCredential(flightDelayCredential).getOrThrow()
     if (!delayVerification.valid) {
         println("❌ Flight delay credential invalid")
         return@runBlocking
@@ -236,7 +236,7 @@ fun main() = runBlocking {
         val insuranceKeyId = insuranceDid.verificationMethod.firstOrNull()?.id
             ?: error("No verification method found")
         
-        val delayPayoutCredential = vericore.issueCredential(
+        val delayPayoutCredential = TrustWeave.issueCredential(
             issuerDid = insuranceDid.id,
             issuerKeyId = insuranceKeyId,
             credentialSubject = buildJsonObject {
@@ -303,7 +303,7 @@ fun main() = runBlocking {
     val weatherDigest = DigestUtils.sha256DigestMultibase(weatherData)
     
     // Weather service issues verifiable credential
-    val weatherCredential = vericore.issueCredential(
+    val weatherCredential = TrustWeave.issueCredential(
         issuerDid = weatherServiceDid.id,
         issuerKeyId = weatherKeyId,
         credentialSubject = buildJsonObject {
@@ -320,7 +320,7 @@ fun main() = runBlocking {
     println("✅ Weather Event Credential issued: ${weatherCredential.id}")
     
     // Verify credential
-    val weatherVerification = vericore.verifyCredential(weatherCredential).getOrThrow()
+    val weatherVerification = TrustWeave.verifyCredential(weatherCredential).getOrThrow()
     if (!weatherVerification.valid) {
         println("❌ Weather credential invalid")
         return@runBlocking
@@ -346,7 +346,7 @@ fun main() = runBlocking {
         println("   ✅ TRIGGER MET: Severe weather causes travel disruption")
         println("   💰 Automatic payout should be triggered")
         
-        val weatherPayoutCredential = vericore.issueCredential(
+        val weatherPayoutCredential = TrustWeave.issueCredential(
             issuerDid = insuranceDid.id,
             issuerKeyId = insuranceKeyId,
             credentialSubject = buildJsonObject {
@@ -404,7 +404,7 @@ fun main() = runBlocking {
     val baggageDigest = DigestUtils.sha256DigestMultibase(baggageData)
     
     // Baggage system issues verifiable credential
-    val baggageCredential = vericore.issueCredential(
+    val baggageCredential = TrustWeave.issueCredential(
         issuerDid = baggageSystemDid.id,
         issuerKeyId = baggageKeyId,
         credentialSubject = buildJsonObject {
@@ -421,7 +421,7 @@ fun main() = runBlocking {
     println("✅ Baggage Delay Credential issued: ${baggageCredential.id}")
     
     // Verify credential
-    val baggageVerification = vericore.verifyCredential(baggageCredential).getOrThrow()
+    val baggageVerification = TrustWeave.verifyCredential(baggageCredential).getOrThrow()
     if (!baggageVerification.valid) {
         println("❌ Baggage credential invalid")
         return@runBlocking
@@ -444,7 +444,7 @@ fun main() = runBlocking {
         println("   ✅ TRIGGER MET: Baggage delay exceeds threshold")
         println("   💰 Automatic payout should be triggered")
         
-        val baggagePayoutCredential = vericore.issueCredential(
+        val baggagePayoutCredential = TrustWeave.issueCredential(
             issuerDid = insuranceDid.id,
             issuerKeyId = insuranceKeyId,
             credentialSubject = buildJsonObject {
@@ -520,7 +520,7 @@ fun main() = runBlocking {
 Parametric Travel Insurance - Complete Example
 ======================================================================
 
-✅ VeriCore initialized
+✅ TrustWeave initialized
 ✅ Insurance Company DID: did:key:z6Mk...
 ✅ Airline DID: did:key:z6Mk...
 ✅ Weather Service DID: did:key:z6Mk...
@@ -593,7 +593,7 @@ suspend fun acceptTravelDataFromAnyProvider(
     dataCredential: VerifiableCredential
 ): Boolean {
     // Verify credential
-    val verification = vericore.verifyCredential(dataCredential).getOrThrow()
+    val verification = TrustWeave.verifyCredential(dataCredential).getOrThrow()
     if (!verification.valid) return false
     
     // Check if provider is certified
@@ -633,7 +633,7 @@ val medicalData = buildJsonObject {
 
 val medicalDigest = DigestUtils.sha256DigestMultibase(medicalData)
 
-val medicalCredential = vericore.issueCredential(
+val medicalCredential = TrustWeave.issueCredential(
     issuerDid = medicalProviderDid.id,
     issuerKeyId = medicalKeyId,
     credentialSubject = buildJsonObject {
@@ -647,7 +647,7 @@ val medicalCredential = vericore.issueCredential(
 ).getOrThrow()
 
 // Automatic payout for medical emergencies
-val medicalPayoutCredential = vericore.issueCredential(
+val medicalPayoutCredential = TrustWeave.issueCredential(
     issuerDid = insuranceDid.id,
     issuerKeyId = insuranceKeyId,
     credentialSubject = buildJsonObject {
@@ -666,7 +666,7 @@ val medicalPayoutCredential = vericore.issueCredential(
 
 ## Step 5: Embedding in Travel Booking Process
 
-Integrate VeriCore Pro into travel booking platforms:
+Integrate TrustWeave Pro into travel booking platforms:
 
 ```kotlin
 // Embedded in airline booking system
@@ -678,7 +678,7 @@ suspend fun bookFlightWithInsurance(
     val booking = airline.bookFlight(flightDetails)
     
     // Create insurance policy credential
-    val policyCredential = vericore.issueCredential(
+    val policyCredential = TrustWeave.issueCredential(
         issuerDid = insuranceDid.id,
         issuerKeyId = insuranceKeyId,
         credentialSubject = buildJsonObject {
@@ -709,7 +709,7 @@ Anchor travel credentials to blockchain for immutable audit trail:
 
 ```kotlin
 // Anchor flight delay credential
-val anchorResult = vericore.blockchains.anchor(
+val anchorResult = TrustWeave.blockchains.anchor(
     data = flightDelayCredential,
     serializer = VerifiableCredential.serializer(),
     chainId = "algorand:testnet"
@@ -753,7 +753,7 @@ if (anchorResult != null) {
 - Enable automatic payouts for flight delays, weather disruptions, and baggage issues
 
 **Travel Booking Platform Integration:**
-- Embed VeriCore Pro into booking process
+- Embed TrustWeave Pro into booking process
 - Issue insurance policy credentials at time of booking
 - Enable automatic claims processing
 - Provide transparency and trust to travelers

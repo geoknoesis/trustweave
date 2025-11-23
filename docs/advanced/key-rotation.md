@@ -1,6 +1,6 @@
 # Key Rotation Strategies
 
-Rotating signing keys keeps verifiable credential ecosystems resilient: compromised keys can be retired, and auditors gain a clear timeline of which key was active when. VeriCore treats key rotation as a collaboration between the KMS, DID registry, and credential services.
+Rotating signing keys keeps verifiable credential ecosystems resilient: compromised keys can be retired, and auditors gain a clear timeline of which key was active when. TrustWeave treats key rotation as a collaboration between the KMS, DID registry, and credential services.
 
 ## When to rotate
 
@@ -8,7 +8,7 @@ Rotating signing keys keeps verifiable credential ecosystems resilient: compromi
 - Incident response if a private key is suspected to be leaked.  
 - Upgrading to a new signature suite or hardware security module.
 
-## How rotation works in VeriCore
+## How rotation works in TrustWeave
 
 1. **Mint a replacement key** via `KeyManagementService`.  
 2. **Update the DID document** published for the issuer (new verification method, adjust `assertionMethod`).  
@@ -16,18 +16,18 @@ Rotating signing keys keeps verifiable credential ecosystems resilient: compromi
 4. **Maintain historic keys** so existing credentials remain verifiable until they expire or are re-issued.
 
 **Goal:** Create a fresh Ed25519 key and append it to an existing DID document while keeping the old key for historical verification.  
-**Prerequisites:** Build your `VeriCore` instance from a `VeriCoreConfig` so you retain direct access to the underlying KMS and DID registry.
+**Prerequisites:** Build your `TrustWeave` instance from a `TrustWeaveConfig` so you retain direct access to the underlying KMS and DID registry.
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.VeriCoreDefaults
+import com.trustweave.TrustWeave
+import com.trustweave.TrustWeaveDefaults
 import kotlinx.coroutines.runBlocking
 
 fun rotateIssuerDid() = runBlocking {
-    val config = VeriCoreDefaults.inMemory()
-    val vericore = VeriCore.create(config)
+    val config = TrustWeaveDefaults.inMemory()
+    val TrustWeave = TrustWeave.create(config)
 
-    val issuerDocument = vericore.dids.create()
+    val issuerDocument = TrustWeave.dids.create()
     val issuerDid = issuerDocument.id
 
     val newKey = config.kms.generateKey(
@@ -58,7 +58,7 @@ fun rotateIssuerDid() = runBlocking {
 ```
 
 **What this does**  
-- Reuses the same configuration that bootstrapped `VeriCore` so the sample can call the KMS and DID registry directly.  
+- Reuses the same configuration that bootstrapped `TrustWeave` so the sample can call the KMS and DID registry directly.  
 - Generates a labelled Ed25519 key and appends it to the DID’s assertion methods without removing prior verification material.  
 - Prints the updated DID so you can verify the new fragment.
 
@@ -66,9 +66,9 @@ fun rotateIssuerDid() = runBlocking {
 `updatedDocument` contains both the old and the new verification method entries, ensuring existing credentials remain verifiable while future credentials rely on the new key.
 
 **Design significance**  
-VeriCore keeps cryptographic operations behind typed services. Holding onto the original `VeriCoreConfig` is an intentional pattern: it lets advanced workflows (like manual key rotation) operate on the same single source of truth your facade uses internally.
+TrustWeave keeps cryptographic operations behind typed services. Holding onto the original `TrustWeaveConfig` is an intentional pattern: it lets advanced workflows (like manual key rotation) operate on the same single source of truth your facade uses internally.
 
-> Tip: use `vericore-testkit` to simulate rotation in tests—`InMemoryKeyManagementService` lets you assert that both old and new keys are available during the transition.
+> Tip: use `TrustWeave-testkit` to simulate rotation in tests—`InMemoryKeyManagementService` lets you assert that both old and new keys are available during the transition.
 
 ## Publishing the updated DID
 
@@ -84,7 +84,7 @@ After rotation update any issuance code to reference the new `keyId`:
 **Prerequisites:** The DID document has already been updated and published to whichever resolver your ecosystem relies on.
 
 ```kotlin
-val credential = vericore.issueCredential(
+val credential = TrustWeave.issueCredential(
     issuerDid = issuerDid,
     issuerKeyId = "$issuerDid#${newKey.id}",
     credentialSubject = subjectJson,
@@ -119,5 +119,5 @@ Keep issuing with the old key until the updated DID is published and cached by v
 - [Key Management](../core-concepts/key-management.md) for the underlying abstractions.  
 - [DIDs](../core-concepts/dids.md) for publication guidance.  
 - [Verification Policies](verification-policies.md) to enforce that proofs are signed with an expected key set.  
-- [Quick Start sample](../../distribution/vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/quickstart/QuickStartSample.kt) for runnable issuance code.
+- [Quick Start sample](../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/quickstart/QuickStartSample.kt) for runnable issuance code.
 

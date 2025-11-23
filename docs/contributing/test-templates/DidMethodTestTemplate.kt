@@ -1,9 +1,9 @@
-package com.geoknoesis.vericore.testkit.templates
+package com.trustweave.testkit.templates
 
-import com.geoknoesis.vericore.did.DidCreationOptions
-import com.geoknoesis.vericore.did.DidCreationOptions.KeyAlgorithm
-import com.geoknoesis.vericore.did.DidMethod
-import com.geoknoesis.vericore.testkit.BasePluginTest
+import com.trustweave.did.DidCreationOptions
+import com.trustweave.did.DidCreationOptions.KeyAlgorithm
+import com.trustweave.did.DidMethod
+import com.trustweave.testkit.BasePluginTest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -106,7 +106,7 @@ abstract class DidMethodTestTemplate : BasePluginTest() {
         val updated = method.updateDid(document.id) { doc ->
             // Add a service endpoint
             doc.copy(
-                service = doc.service + com.geoknoesis.vericore.did.Service(
+                service = doc.service + com.trustweave.did.Service(
                     id = "${doc.id}#service-1",
                     type = "LinkedDomains",
                     serviceEndpoint = "https://example.com"

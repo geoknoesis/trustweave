@@ -1,12 +1,12 @@
 # Use Cases
 
-VeriCore is designed to be domain-agnostic, making it suitable for a wide range of applications. Here are some common use cases:
+TrustWeave is designed to be domain-agnostic, making it suitable for a wide range of applications. Here are some common use cases:
 
 ## Earth Observation (EO) Catalogues
 
 **Problem**: EO data needs verifiable provenance and integrity guarantees.
 
-**Solution**: Use VeriCore to:
+**Solution**: Use TrustWeave to:
 - Create DIDs for data providers
 - Compute digests for datasets and metadata
 - Anchor digests to blockchains for tamper-proof records
@@ -24,7 +24,7 @@ VeriCore is designed to be domain-agnostic, making it suitable for a wide range 
 
 **Problem**: Decentralized spatial data requires identity and trust mechanisms.
 
-**Solution**: Use VeriCore to:
+**Solution**: Use TrustWeave to:
 - Establish identity for spatial data nodes
 - Anchor spatial data references to blockchains
 - Verify data authenticity and provenance
@@ -34,7 +34,7 @@ VeriCore is designed to be domain-agnostic, making it suitable for a wide range 
 
 **Problem**: AI agents need verifiable identity and trust relationships.
 
-**Solution**: Use VeriCore to:
+**Solution**: Use TrustWeave to:
 - Create DIDs for AI agents
 - Issue credentials for agent capabilities
 - Verify agent credentials before interaction
@@ -44,7 +44,7 @@ VeriCore is designed to be domain-agnostic, making it suitable for a wide range 
 
 **Problem**: Track products through supply chain with verifiable records.
 
-**Solution**: Use VeriCore to:
+**Solution**: Use TrustWeave to:
 - Create DIDs for supply chain participants
 - Issue credentials for product attributes
 - Anchor product events to blockchain
@@ -54,7 +54,7 @@ VeriCore is designed to be domain-agnostic, making it suitable for a wide range 
 
 **Problem**: Verify academic credentials without centralized authorities.
 
-**Solution**: Use VeriCore to:
+**Solution**: Use TrustWeave to:
 - Create DIDs for educational institutions
 - Issue Verifiable Credentials for degrees/certificates
 - Anchor credential digests to blockchain
@@ -64,7 +64,7 @@ VeriCore is designed to be domain-agnostic, making it suitable for a wide range 
 
 **Problem**: Users need self-sovereign identity management.
 
-**Solution**: Use VeriCore to:
+**Solution**: Use TrustWeave to:
 - Create user DIDs
 - Manage keys through KMS
 - Issue and store Verifiable Credentials
@@ -74,7 +74,7 @@ VeriCore is designed to be domain-agnostic, making it suitable for a wide range 
 
 **Problem**: IoT devices need secure identity and attestation.
 
-**Solution**: Use VeriCore to:
+**Solution**: Use TrustWeave to:
 - Create DIDs for IoT devices
 - Issue credentials for device capabilities
 - Anchor device events to blockchain
@@ -84,7 +84,7 @@ VeriCore is designed to be domain-agnostic, making it suitable for a wide range 
 
 **Problem**: Ensure content hasn't been tampered with.
 
-**Solution**: Use VeriCore to:
+**Solution**: Use TrustWeave to:
 - Compute content digests
 - Anchor digests to blockchain
 - Verify content integrity by comparing digests
@@ -94,7 +94,7 @@ VeriCore is designed to be domain-agnostic, making it suitable for a wide range 
 
 **Problem**: Applications need to work across multiple blockchains.
 
-**Solution**: Use VeriCore's chain-agnostic interface to:
+**Solution**: Use TrustWeave's chain-agnostic interface to:
 - Anchor data to different chains
 - Read data from any supported chain
 - Switch chains without code changes

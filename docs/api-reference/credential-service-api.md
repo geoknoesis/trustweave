@@ -4,12 +4,11 @@ This document describes the SPI surface that credential issuers/verifiers plug i
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-spi:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
-**Result:** Your project can implement and register custom credential providers using the SPI documented below.
+**Result:** Your project can implement and register custom credential providers using the SPI documented below. SPI interfaces are included in `trustweave-core`.
 
 ## Core Interfaces
 
@@ -49,7 +48,7 @@ interface CredentialService {
 
 | Method | Purpose | Returns | Exceptions | Notes |
 |--------|---------|---------|------------|-------|
-| `issueCredential` | Canonicalise + sign a VC. | `VerifiableCredential` (with proof). | `IllegalArgumentException` for unsupported proof types or schemas. | Used by `VeriCore.issueCredential` facade. |
+| `issueCredential` | Canonicalise + sign a VC. | `VerifiableCredential` (with proof). | `IllegalArgumentException` for unsupported proof types or schemas. | Used by `TrustWeave.credentials.issue()` facade. |
 | `verifyCredential` | Validate a VC’s proof and optional policies. | `CredentialVerificationResult` | `IllegalStateException` if configuration missing (resolver, status service). | Returns `valid=false` when checks fail. |
 | `createPresentation` | Assemble a verifiable presentation. | `VerifiablePresentation` | Depends on provider (unsupported -> `UnsupportedOperationException`). | Typically optional; many issuers delegate to wallet presentation services. |
 | `verifyPresentation` | Validate presentation proofs and challenges. | `PresentationVerificationResult` | `IllegalArgumentException` for invalid challenge/domain. | Verifiers should check `result.errors`. |
@@ -77,7 +76,7 @@ interface CredentialServiceProvider {
 `CredentialServiceCreationOptions` replaces the old `Map<String, Any?>` pattern with a structured configuration object.
 
 ```kotlin
-import com.geoknoesis.vericore.credential.CredentialServiceCreationOptionsBuilder
+import com.trustweave.credential.CredentialServiceCreationOptionsBuilder
 
 val options = CredentialServiceCreationOptionsBuilder().apply {
     enabled = true
@@ -124,9 +123,9 @@ class HttpIssuerProvider : CredentialServiceProvider {
 }
 ```
 
-## Consumption from VeriCore
+## Consumption from TrustWeave
 
-When the provider is on the classpath, `CredentialServiceRegistry` and the VeriCore facade automatically hand it the typed options:
+When the provider is on the classpath, `CredentialServiceRegistry` and the TrustWeave facade automatically hand it the typed options:
 
 ```kotlin
 val registry = CredentialServiceRegistry.create()
@@ -143,6 +142,6 @@ val credential = registry.issue(
 
 ## Related samples
 
-- [`QuickStartSample`](../../distribution/vericore-examples/src/main/kotlin/com/geoknoesis/vericore/examples/quickstart/QuickStartSample.kt) demonstrates issuance, verification, and anchoring using the default in-memory provider chain.
-- Scenario examples in `vericore-examples` showcase custom providers (HTTP issuers, GoDiddy integrations).
+- [`QuickStartSample`](../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/quickstart/QuickStartSample.kt) demonstrates issuance, verification, and anchoring using the default in-memory provider chain.
+- Scenario examples in `TrustWeave-examples` showcase custom providers (HTTP issuers, GoDiddy integrations).
 

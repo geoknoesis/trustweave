@@ -1,12 +1,12 @@
 # Tutorials
 
-The tutorials in this section walk through complete VeriCore workflows, showing how typed options, DSLs, and Result-based responses fit together in runnable Kotlin.
+The tutorials in this section walk through complete TrustWeave workflows, showing how typed options, DSLs, and Result-based responses fit together in runnable Kotlin.
 
 ## Tutorial Series
 
 ### Beginner Tutorial Series
 
-**[Beginner Tutorial Series](beginner-tutorial-series.md)** - Start here if you're new to VeriCore or decentralized identity:
+**[Beginner Tutorial Series](beginner-tutorial-series.md)** - Start here if you're new to TrustWeave or decentralized identity:
 
 1. **Tutorial 1: Your First DID** - Create and understand DIDs (15-20 min)
 2. **Tutorial 2: Issuing Your First Credential** - Issue and verify credentials (20-25 min)
@@ -48,7 +48,7 @@ This series provides a structured learning path from zero to building production
 
 Before diving in:
 
-- Install VeriCore by following the [installation guide](../getting-started/installation.md).
+- Install TrustWeave by following the [installation guide](../getting-started/installation.md).
 - Be comfortable with Kotlin coroutines and the `Result`-returning facade APIs.
 - For beginners: Start with the [Beginner Tutorial Series](beginner-tutorial-series.md).
 - For experienced developers: Jump to specific advanced tutorials.
@@ -103,7 +103,7 @@ Start with [Beginner Tutorial Series](beginner-tutorial-series.md) and complete 
 3. Reference [API Reference](../api-reference/core-api.md) as needed
 
 **Production Ready:**
-1. Review [Common Patterns](../getting-started/common-patterns.md) for VeriCore-specific patterns
+1. Review [Common Patterns](../getting-started/common-patterns.md) for TrustWeave-specific patterns
 2. Study [Scenarios](../scenarios/README.md) for your use case
 3. Consult [Error Handling](../advanced/error-handling.md) for production patterns
 

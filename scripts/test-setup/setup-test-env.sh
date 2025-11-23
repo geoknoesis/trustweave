@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Test environment setup script for VeriCore
+# Test environment setup script for TrustWeave
 # This script sets up the test environment and validates configuration
 
 set -e
 
-echo "VeriCore Test Environment Setup"
+echo "TrustWeave Test Environment Setup"
 echo "================================"
 echo ""
 
@@ -54,10 +54,10 @@ echo ""
 
 # Set test environment variables
 echo "Setting test environment variables..."
-export VERICORE_TEST_USE_REAL_SERVICES=false
-export VERICORE_TEST_TIMEOUT_SECONDS=30
-export VERICORE_SKIP_INTEGRATION_TESTS=false
-export VERICORE_TEST_LOG_LEVEL=INFO
+export TRUSTWEAVE_TEST_USE_REAL_SERVICES=false
+export TRUSTWEAVE_TEST_TIMEOUT_SECONDS=30
+export TRUSTWEAVE_SKIP_INTEGRATION_TESTS=false
+export TRUSTWEAVE_TEST_LOG_LEVEL=INFO
 
 echo "✓ Environment variables set"
 echo ""

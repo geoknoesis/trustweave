@@ -1,8 +1,8 @@
-# Parametric Insurance MGA Implementation Guide with VeriCore
+# Parametric Insurance MGA Implementation Guide with TrustWeave
 
 > **Building "Atlas Parametric" - An EO-Driven Parametric Insurance MGA**
 
-This comprehensive guide shows you how to build your parametric insurance MGA solution using VeriCore as the trust and integrity foundation. This implementation covers SAR flood, heatwave, solar attenuation, hurricane, and drought parametric products with instant payouts and objective EO triggers.
+This comprehensive guide shows you how to build your parametric insurance MGA solution using TrustWeave as the trust and integrity foundation. This implementation covers SAR flood, heatwave, solar attenuation, hurricane, and drought parametric products with instant payouts and objective EO triggers.
 
 ## Executive Summary
 
@@ -14,7 +14,7 @@ This comprehensive guide shows you how to build your parametric insurance MGA so
 - Tamper-proof trigger verification
 - Regulatory-compliant audit trails
 
-**Why VeriCore:**
+**Why TrustWeave:**
 - **Trust Foundation**: Verifiable Credentials for EO data integrity
 - **Multi-Provider Support**: Accept data from ESA, Planet, NASA, NOAA without custom integrations
 - **Blockchain Anchoring**: Tamper-proof trigger records for regulatory compliance
@@ -38,7 +38,7 @@ This comprehensive guide shows you how to build your parametric insurance MGA so
 │           └────────────────────┼─────────────────────┘          │
 │                                │                                 │
 │                    ┌───────────▼────────────┐                   │
-│                    │   VeriCore Trust Layer │                   │
+│                    │   TrustWeave Trust Layer │                   │
 │                    │  ┌──────────────────┐  │                   │
 │                    │  │ DID Management   │  │                   │
 │                    │  │ VC Issuance      │  │                   │
@@ -58,9 +58,9 @@ This comprehensive guide shows you how to build your parametric insurance MGA so
 
 ## Core Components
 
-### 1. VeriCore Trust Layer
+### 1. TrustWeave Trust Layer
 
-VeriCore provides:
+TrustWeave provides:
 - **DID Management**: Identity for insurers, EO providers, reinsurers, brokers
 - **Verifiable Credentials**: EO data wrapped in VCs for integrity
 - **Blockchain Anchoring**: Tamper-proof trigger records
@@ -114,10 +114,10 @@ Automated payouts:
 ```kotlin
 package com.atlasparametric.products.flood
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.contract.models.*
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.json.DigestUtils
+import com.trustweave.TrustWeave
+import com.trustweave.contract.models.*
+import com.trustweave.core.*
+import com.trustweave.json.DigestUtils
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
@@ -128,7 +128,7 @@ import java.time.Instant
  * Uses Sentinel-1 SAR data to detect flood depth and trigger automatic payouts
  */
 class SarFloodProduct(
-    private val vericore: VeriCore,
+    private val TrustWeave: TrustWeave,
     private val eoProviderDid: String
 ) {
     
@@ -142,7 +142,7 @@ class SarFloodProduct(
         location: Location
     ): SmartContract {
         
-        val contract = vericore.contracts.draft(
+        val contract = TrustWeave.contracts.draft(
             request = ContractDraftRequest(
                 contractType = ContractType.Insurance,
                 executionModel = ExecutionModel.Parametric(
@@ -223,7 +223,7 @@ class SarFloodProduct(
         insurerKeyId: String
     ): BoundContract {
         
-        val bound = vericore.contracts.bindContract(
+        val bound = TrustWeave.contracts.bindContract(
             contractId = contract.id,
             issuerDid = insurerDid,
             issuerKeyId = insurerKeyId,
@@ -241,7 +241,7 @@ class SarFloodProduct(
         location: Location,
         sarData: SarFloodMeasurement,
         timestamp: Instant
-    ): Result<VerifiableCredential> = vericoreCatching {
+    ): Result<VerifiableCredential> = trustweaveCatching {
         
         // Step 1: Create EO data payload
         val floodData = buildJsonObject {
@@ -272,13 +272,13 @@ class SarFloodProduct(
         val dataDigest = DigestUtils.sha256DigestMultibase(floodData)
         
         // Step 3: Issue verifiable credential for EO data
-        val eoProviderKeyId = vericore.dids.resolve(eoProviderDid)
+        val eoProviderKeyId = TrustWeave.dids.resolve(eoProviderDid)
             .getOrThrow()
             .verificationMethod
             .firstOrNull()?.id
             ?: error("No verification method found")
         
-        val floodCredential = vericore.credentials.issue(
+        val floodCredential = TrustWeave.credentials.issue(
             issuer = eoProviderDid,
             subject = buildJsonObject {
                 put("id", "sar-flood-${location.id}-${timestamp.toEpochMilli()}")
@@ -301,7 +301,7 @@ class SarFloodProduct(
         ).getOrThrow()
         
         // Step 4: Anchor to blockchain for tamper-proof record
-        val anchorResult = vericore.blockchains.anchor(
+        val anchorResult = TrustWeave.blockchains.anchor(
             data = floodCredential,
             serializer = VerifiableCredential.serializer(),
             chainId = "algorand:mainnet"
@@ -338,7 +338,7 @@ class SarFloodProduct(
         )
         
         // Execute contract
-        val result = vericore.contracts.executeContract(
+        val result = TrustWeave.contracts.executeContract(
             contract = contract,
             executionContext = executionContext
         ).getOrThrow()
@@ -389,16 +389,16 @@ data class SarFloodMeasurement(
 ```kotlin
 package com.atlasparametric.products.heatwave
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.json.DigestUtils
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.json.DigestUtils
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
 import java.time.Duration
 
 class HeatwaveProduct(
-    private val vericore: VeriCore,
+    private val TrustWeave: TrustWeave,
     private val eoProviderDid: String
 ) {
     
@@ -409,7 +409,7 @@ class HeatwaveProduct(
         location: Location,
         lstData: List<LstMeasurement>,
         threshold: HeatwaveThreshold
-    ): Result<VerifiableCredential> = vericoreCatching {
+    ): Result<VerifiableCredential> = trustweaveCatching {
         
         // Calculate consecutive days above threshold
         val consecutiveDays = calculateConsecutiveDays(lstData, threshold.temperatureC)
@@ -435,13 +435,13 @@ class HeatwaveProduct(
         
         val dataDigest = DigestUtils.sha256DigestMultibase(heatwaveData)
         
-        val eoProviderKeyId = vericore.dids.resolve(eoProviderDid)
+        val eoProviderKeyId = TrustWeave.dids.resolve(eoProviderDid)
             .getOrThrow()
             .verificationMethod
             .firstOrNull()?.id
             ?: error("No verification method found")
         
-        val heatwaveCredential = vericore.credentials.issue(
+        val heatwaveCredential = TrustWeave.credentials.issue(
             issuerDid = eoProviderDid,
             issuerKeyId = eoProviderKeyId,
             credentialSubject = buildJsonObject {
@@ -461,7 +461,7 @@ class HeatwaveProduct(
         ).getOrThrow()
         
         // Anchor to blockchain
-        vericore.blockchains.anchor(
+        TrustWeave.blockchains.anchor(
             data = heatwaveCredential,
             serializer = VerifiableCredential.serializer(),
             chainId = "algorand:mainnet"
@@ -481,7 +481,7 @@ class HeatwaveProduct(
         location: Location
     ): SmartContract {
         
-        val contract = vericore.contracts.draft(
+        val contract = TrustWeave.contracts.draft(
             request = ContractDraftRequest(
                 contractType = ContractType.Insurance,
                 executionModel = ExecutionModel.Parametric(
@@ -560,7 +560,7 @@ class HeatwaveProduct(
             }
         )
         
-        return vericore.contracts.executeContract(
+        return TrustWeave.contracts.executeContract(
             contract = contract,
             executionContext = executionContext
         ).getOrThrow()
@@ -617,15 +617,15 @@ data class HeatwavePolicy(
 ```kotlin
 package com.atlasparametric.products.solar
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.json.DigestUtils
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.json.DigestUtils
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
 
 class SolarAttenuationProduct(
-    private val vericore: VeriCore,
+    private val TrustWeave: TrustWeave,
     private val eoProviderDid: String
 ) {
     
@@ -636,7 +636,7 @@ class SolarAttenuationProduct(
         location: Location,
         aodData: AodMeasurement,
         irradianceData: IrradianceMeasurement
-    ): Result<VerifiableCredential> = vericoreCatching {
+    ): Result<VerifiableCredential> = trustweaveCatching {
         
         // Calculate attenuation percentage
         val baselineIrradiance = irradianceData.baselineWattPerSqM
@@ -663,13 +663,13 @@ class SolarAttenuationProduct(
         
         val dataDigest = DigestUtils.sha256DigestMultibase(solarData)
         
-        val eoProviderKeyId = vericore.dids.resolve(eoProviderDid)
+        val eoProviderKeyId = TrustWeave.dids.resolve(eoProviderDid)
             .getOrThrow()
             .verificationMethod
             .firstOrNull()?.id
             ?: error("No verification method found")
         
-        val solarCredential = vericore.credentials.issue(
+        val solarCredential = TrustWeave.credentials.issue(
             issuerDid = eoProviderDid,
             issuerKeyId = eoProviderKeyId,
             credentialSubject = buildJsonObject {
@@ -689,7 +689,7 @@ class SolarAttenuationProduct(
         ).getOrThrow()
         
         // Anchor to blockchain
-        vericore.blockchains.anchor(
+        TrustWeave.blockchains.anchor(
             data = solarCredential,
             serializer = VerifiableCredential.serializer(),
             chainId = "algorand:mainnet"
@@ -706,7 +706,7 @@ class SolarAttenuationProduct(
         solarCredential: VerifiableCredential
     ): TriggerResult {
         
-        val verification = vericore.credentials.verify(solarCredential)
+        val verification = TrustWeave.credentials.verify(solarCredential)
         if (!verification.valid) {
             return TriggerResult(triggered = false, reason = "Credential invalid")
         }
@@ -769,22 +769,22 @@ data class SolarPolicy(
 
 ```kotlin
 suspend fun completeFloodInsuranceWorkflow() {
-    // Step 1: Initialize VeriCore
-    val vericore = VeriCore.create {
+    // Step 1: Initialize TrustWeave
+    val TrustWeave = TrustWeave.create {
         blockchains {
             "algorand:mainnet" to algorandClient
         }
     }
     
     // Step 2: Create DIDs for parties
-    val insurerDid = vericore.dids.create(method = "key")
-    val insuredDid = vericore.dids.create(method = "key")
-    val eoProviderDid = vericore.dids.create(method = "key")
-    val insurerKeyId = vericore.dids.resolve(insurerDid.id)
+    val insurerDid = TrustWeave.dids.create(method = "key")
+    val insuredDid = TrustWeave.dids.create(method = "key")
+    val eoProviderDid = TrustWeave.dids.create(method = "key")
+    val insurerKeyId = TrustWeave.dids.resolve(insurerDid.id)
         .verificationMethod.firstOrNull()?.id ?: error("No key found")
     
     // Step 3: Initialize product
-    val floodProduct = SarFloodProduct(vericore, eoProviderDid.id)
+    val floodProduct = SarFloodProduct(TrustWeave, eoProviderDid.id)
     
     // Step 4: Create contract
     val contract = floodProduct.createFloodContract(
@@ -808,7 +808,7 @@ suspend fun completeFloodInsuranceWorkflow() {
     )
     
     // Step 6: Activate contract
-    val active = vericore.contracts.activateContract(bound.contract.id).getOrThrow()
+    val active = TrustWeave.contracts.activateContract(bound.contract.id).getOrThrow()
     
     // Step 7: Process EO data (in production, this comes from EO provider)
     val floodCredential = floodProduct.processSarFloodData(
@@ -849,8 +849,8 @@ suspend fun completeFloodInsuranceWorkflow() {
 ```kotlin
 package com.atlasparametric
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.chains.algorand.AlgorandBlockchainAnchorClient
+import com.trustweave.TrustWeave
+import com.trustweave.chains.algorand.AlgorandBlockchainAnchorClient
 import com.atlasparametric.products.flood.SarFloodProduct
 import com.atlasparametric.products.heatwave.HeatwaveProduct
 import com.atlasparametric.products.solar.SolarAttenuationProduct
@@ -863,14 +863,14 @@ import kotlinx.coroutines.runBlocking
  */
 class AtlasParametricPlatform {
     
-    private val vericore: VeriCore
+    private val TrustWeave: TrustWeave
     private val sarFloodProduct: SarFloodProduct
     private val heatwaveProduct: HeatwaveProduct
     private val solarProduct: SolarAttenuationProduct
     
     init {
-        // Initialize VeriCore with blockchain anchoring
-        vericore = VeriCore.create {
+        // Initialize TrustWeave with blockchain anchoring
+        TrustWeave = TrustWeave.create {
             blockchains {
                 "algorand:mainnet" to AlgorandBlockchainAnchorClient(
                     chainId = "algorand:mainnet",
@@ -881,13 +881,13 @@ class AtlasParametricPlatform {
         
         // Create DIDs for EO providers
         val eoProviderDid = runBlocking {
-            vericore.dids.create(method = "key")
+            TrustWeave.dids.create(method = "key")
         }
         
         // Initialize products
-        sarFloodProduct = SarFloodProduct(vericore, eoProviderDid.id)
-        heatwaveProduct = HeatwaveProduct(vericore, eoProviderDid.id)
-        solarProduct = SolarAttenuationProduct(vericore, eoProviderDid.id)
+        sarFloodProduct = SarFloodProduct(TrustWeave, eoProviderDid.id)
+        heatwaveProduct = HeatwaveProduct(TrustWeave, eoProviderDid.id)
+        solarProduct = SolarAttenuationProduct(TrustWeave, eoProviderDid.id)
     }
     
     /**
@@ -994,14 +994,14 @@ data class PayoutResult(
 
 ## Multi-Provider EO Data Acceptance
 
-One of VeriCore's key advantages is accepting EO data from multiple providers:
+One of TrustWeave's key advantages is accepting EO data from multiple providers:
 
 ```kotlin
 /**
  * Accept EO data from any certified provider
  */
 class MultiProviderEoDataService(
-    private val vericore: VeriCore
+    private val TrustWeave: TrustWeave
 ) {
     
     private val certifiedProviders = setOf(
@@ -1016,10 +1016,10 @@ class MultiProviderEoDataService(
      */
     suspend fun acceptEoDataCredential(
         dataCredential: VerifiableCredential
-    ): Result<EoData> = vericoreCatching {
+    ): Result<EoData> = trustweaveCatching {
         
         // Step 1: Verify credential
-        val verification = vericore.verifyCredential(dataCredential).getOrThrow()
+        val verification = TrustWeave.verifyCredential(dataCredential).getOrThrow()
         if (!verification.valid) {
             error("Credential verification failed: ${verification.errors}")
         }
@@ -1115,10 +1115,10 @@ class BrokerPortalController(
 
 ```kotlin
 /**
- * Audit Trail Service using VeriCore blockchain anchoring
+ * Audit Trail Service using TrustWeave blockchain anchoring
  */
 class AuditTrailService(
-    private val vericore: VeriCore
+    private val TrustWeave: TrustWeave
 ) {
     
     /**
@@ -1139,7 +1139,7 @@ class AuditTrailService(
         }
         
         // Anchor to blockchain for immutability
-        val anchorResult = vericore.blockchains.anchor(
+        val anchorResult = TrustWeave.blockchains.anchor(
             data = auditRecord,
             serializer = JsonObject.serializer(),
             chainId = "algorand:mainnet"
@@ -1160,7 +1160,7 @@ class AuditTrailService(
     ): Boolean {
         
         // Read from blockchain
-        val client = vericore.getBlockchainClient(record.anchorRef.chainId)
+        val client = TrustWeave.getBlockchainClient(record.anchorRef.chainId)
             ?: return false
         
         val anchorResult = client.readPayload(record.anchorRef)
@@ -1175,8 +1175,8 @@ class AuditTrailService(
 
 ### Phase 1: MVP (Weeks 1-6)
 
-1. **Setup VeriCore**
-   - Initialize VeriCore with Algorand or Polygon
+1. **Setup TrustWeave**
+   - Initialize TrustWeave with Algorand or Polygon
    - Create DIDs for EO providers
    - Setup blockchain anchoring
 
@@ -1198,7 +1198,7 @@ class AuditTrailService(
 4. **Regulatory compliance features**
 5. **Reinsurer dashboard**
 
-## Key Benefits of Using VeriCore
+## Key Benefits of Using TrustWeave
 
 1. **Standardization**: W3C-compliant format works with all EO providers
 2. **Trust**: Cryptographic proof of data integrity
@@ -1213,12 +1213,12 @@ class AuditTrailService(
    - [Parametric Insurance with EO Data](parametric-insurance-eo-scenario.md)
    - [Earth Observation Scenario](earth-observation-scenario.md)
 
-2. **Explore VeriCore APIs**:
+2. **Explore TrustWeave APIs**:
    - [Core API Reference](../api-reference/core-api.md)
    - [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md)
 
 3. **Start Building**:
-   - Clone VeriCore repository
+   - Clone TrustWeave repository
    - Follow [Quick Start Guide](../getting-started/quick-start.md)
    - Implement SAR flood product first
 

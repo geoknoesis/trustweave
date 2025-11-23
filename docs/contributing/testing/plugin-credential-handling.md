@@ -1,10 +1,10 @@
 # Plugin Credential Handling for Tests
 
-This guide explains how VeriCore handles tests that require external credentials, tokens, or API keys for plugins.
+This guide explains how TrustWeave handles tests that require external credentials, tokens, or API keys for plugins.
 
 ## Overview
 
-VeriCore uses a **self-describing plugin architecture** where each plugin advertises what environment variables it needs. Tests can be annotated to require specific plugins, and the test framework automatically skips tests when required credentials are not available.
+TrustWeave uses a **self-describing plugin architecture** where each plugin advertises what environment variables it needs. Tests can be annotated to require specific plugins, and the test framework automatically skips tests when required credentials are not available.
 
 ## How It Works
 
@@ -35,7 +35,7 @@ interface KeyManagementServiceProvider {
 ### Basic Usage
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.annotations.RequiresPlugin
+import com.trustweave.testkit.annotations.RequiresPlugin
 
 @RequiresPlugin("aws")
 @Test
@@ -137,7 +137,7 @@ export VERICORE_TEST_SKIP_IF_NO_CREDENTIALS=false
 You can also check credentials programmatically:
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.config.TestConfig
+import com.trustweave.testkit.config.TestConfig
 
 @Test
 fun `test with manual check`() = runBlocking {

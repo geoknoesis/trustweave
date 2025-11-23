@@ -1,14 +1,14 @@
-# Creating VeriCore Plugins
+# Creating TrustWeave Plugins
 
-This guide explains how to create custom plugins for VeriCore by implementing the various plugin interfaces.
+This guide explains how to create custom plugins for TrustWeave by implementing the various plugin interfaces.
 
 ## Overview
 
-VeriCore is designed with a plugin architecture that allows you to extend functionality by implementing specific interfaces. Plugins can be registered manually or discovered automatically via the Service Provider Interface (SPI).
+TrustWeave is designed with a plugin architecture that allows you to extend functionality by implementing specific interfaces. Plugins can be registered manually or discovered automatically via the Service Provider Interface (SPI).
 
 ## Plugin Types
 
-VeriCore supports the following plugin interfaces:
+TrustWeave supports the following plugin interfaces:
 
 1. **DidMethod** - Implement custom DID methods (e.g., did:web, did:key, did:ion)
 2. **BlockchainAnchorClient** - Add support for new blockchain networks
@@ -24,13 +24,13 @@ Add the necessary dependencies to your project:
 ```kotlin
 dependencies {
     // Core interfaces
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
     
     // SPI support (optional, for auto-discovery)
-    implementation("com.geoknoesis.vericore:vericore-spi:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -54,10 +54,10 @@ interface DidMethod {
 ### Example Implementation
 
 ```kotlin
-package com.example.vericore.plugins
+package com.example.TrustWeave.plugins
 
-import com.geoknoesis.vericore.did.*
-import com.geoknoesis.vericore.kms.KeyManagementService
+import com.trustweave.did.*
+import com.trustweave.kms.KeyManagementService
 import java.time.Instant
 import java.util.UUID
 
@@ -163,7 +163,7 @@ class ExampleDidMethod(
 
 **Manual Registration:**
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     kms = InMemoryKeyManagementService()
     
     didMethods {
@@ -172,10 +172,10 @@ val vericore = VeriCore.create {
 }
 ```
 
-**Or via VeriCore instance:**
+**Or via TrustWeave instance:**
 ```kotlin
-val vericore = VeriCore.create()
-vericore.registerDidMethod(ExampleDidMethod(kms))
+val TrustWeave = TrustWeave.create()
+TrustWeave.registerDidMethod(ExampleDidMethod(kms))
 ```
 
 ## 2. Implementing a Blockchain Anchor Client
@@ -198,10 +198,10 @@ interface BlockchainAnchorClient {
 ### Example Implementation
 
 ```kotlin
-package com.example.vericore.plugins
+package com.example.TrustWeave.plugins
 
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.core.NotFoundException
+import com.trustweave.anchor.*
+import com.trustweave.core.NotFoundException
 import kotlinx.serialization.json.JsonElement
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
@@ -261,7 +261,7 @@ class ExampleBlockchainAnchorClient(
 For production implementations, extend `AbstractBlockchainAnchorClient` which provides fallback storage and common patterns:
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.AbstractBlockchainAnchorClient
+import com.trustweave.anchor.AbstractBlockchainAnchorClient
 
 class MyBlockchainClient(
     chainId: String,
@@ -301,14 +301,14 @@ class MyBlockchainClient(
 ### Registration
 
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     blockchains {
         "example:mainnet" to ExampleBlockchainAnchorClient("example:mainnet")
     }
 }
 
 // Or after creation
-vericore.registerBlockchainClient(
+TrustWeave.registerBlockchainClient(
     "example:mainnet",
     ExampleBlockchainAnchorClient("example:mainnet")
 )
@@ -335,11 +335,11 @@ interface ProofGenerator {
 ### Example Implementation
 
 ```kotlin
-package com.example.vericore.plugins
+package com.example.TrustWeave.plugins
 
-import com.geoknoesis.vericore.credential.models.*
-import com.geoknoesis.vericore.credential.proof.*
-import com.geoknoesis.vericore.core.normalizeKeyId
+import com.trustweave.credential.models.*
+import com.trustweave.credential.proof.*
+import com.trustweave.core.normalizeKeyId
 
 /**
  * Example proof generator implementation.
@@ -386,7 +386,7 @@ class ExampleProofGenerator(
 ### Registration
 
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     proofGenerators {
         + ExampleProofGenerator { data, keyId ->
             kms.sign(keyId, data)
@@ -423,9 +423,9 @@ interface KeyManagementService {
 ### Example Implementation
 
 ```kotlin
-package com.example.vericore.plugins
+package com.example.TrustWeave.plugins
 
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.kms.*
 import java.security.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -500,7 +500,7 @@ class ExampleKeyManagementService : KeyManagementService {
 ### Registration
 
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     kms = ExampleKeyManagementService()
 }
 ```
@@ -542,12 +542,12 @@ interface CredentialService {
 ### Example Implementation
 
 ```kotlin
-package com.example.vericore.plugins
+package com.example.TrustWeave.plugins
 
-import com.geoknoesis.vericore.credential.*
-import com.geoknoesis.vericore.credential.models.*
-import com.geoknoesis.vericore.credential.proof.*
-import com.geoknoesis.vericore.spi.SchemaFormat
+import com.trustweave.credential.*
+import com.trustweave.credential.models.*
+import com.trustweave.credential.proof.*
+import com.trustweave.spi.SchemaFormat
 
 /**
  * Example credential service implementation.
@@ -671,7 +671,7 @@ class ExampleCredentialService(
 ### Registration
 
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     credentialServices {
         + ExampleCredentialService(proofGenerator)
     }
@@ -699,10 +699,10 @@ interface WalletFactory {
 ### Example Implementation
 
 ```kotlin
-package com.example.vericore.plugins
+package com.example.TrustWeave.plugins
 
-import com.geoknoesis.vericore.spi.services.*
-import com.geoknoesis.vericore.credential.wallet.Wallet
+import com.trustweave.spi.services.*
+import com.trustweave.credential.wallet.Wallet
 
 /**
  * Example wallet factory implementation.
@@ -746,7 +746,7 @@ class ExampleWalletFactory : WalletFactory {
 ### Registration
 
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     walletFactory = ExampleWalletFactory()
 }
 ```
@@ -755,10 +755,10 @@ val vericore = VeriCore.create {
 
 ### Manual Registration
 
-Register plugins directly when creating VeriCore:
+Register plugins directly when creating TrustWeave:
 
 ```kotlin
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     kms = MyKms()
     walletFactory = MyWalletFactory()
     
@@ -782,13 +782,13 @@ val vericore = VeriCore.create {
 
 ### Runtime Registration
 
-Register plugins after VeriCore creation:
+Register plugins after TrustWeave creation:
 
 ```kotlin
-val vericore = VeriCore.create()
+val TrustWeave = TrustWeave.create()
 
-vericore.registerDidMethod(MyDidMethod(kms))
-vericore.registerBlockchainClient("myChain:mainnet", MyBlockchainClient("myChain:mainnet"))
+TrustWeave.registerDidMethod(MyDidMethod(kms))
+TrustWeave.registerBlockchainClient("myChain:mainnet", MyBlockchainClient("myChain:mainnet"))
 ```
 
 ### SPI Auto-Discovery (Advanced)
@@ -808,7 +808,7 @@ class MyDidMethodProvider : DidMethodProvider {
 }
 ```
 
-2. Create service file: `META-INF/services/com.geoknoesis.vericore.did.DidMethodProvider`
+2. Create service file: `META-INF/services/com.trustweave.did.DidMethodProvider`
 ```
 com.example.MyDidMethodProvider
 ```
@@ -818,7 +818,7 @@ com.example.MyDidMethodProvider
 Plugins can optionally implement `PluginLifecycle` for initialization and cleanup:
 
 ```kotlin
-import com.geoknoesis.vericore.spi.PluginLifecycle
+import com.trustweave.spi.PluginLifecycle
 
 class MyBlockchainClient : BlockchainAnchorClient, PluginLifecycle {
     
@@ -843,24 +843,24 @@ class MyBlockchainClient : BlockchainAnchorClient, PluginLifecycle {
 }
 ```
 
-VeriCore automatically manages lifecycle for all registered plugins:
+TrustWeave automatically manages lifecycle for all registered plugins:
 
 ```kotlin
-val vericore = VeriCore.create { ... }
+val TrustWeave = TrustWeave.create { ... }
 
 // Initialize all plugins
-vericore.initialize().getOrThrow()
+TrustWeave.initialize().getOrThrow()
 
 // Start all plugins
-vericore.start().getOrThrow()
+TrustWeave.start().getOrThrow()
 
-// ... use vericore ...
+// ... use TrustWeave ...
 
 // Stop all plugins
-vericore.stop().getOrThrow()
+TrustWeave.stop().getOrThrow()
 
 // Cleanup
-vericore.cleanup().getOrThrow()
+TrustWeave.cleanup().getOrThrow()
 ```
 
 See [Plugin Lifecycle](../advanced/plugin-lifecycle.md) for more details.
@@ -906,15 +906,15 @@ class ExampleDidMethodTest {
 
 ```kotlin
 @Test
-fun `test plugin with VeriCore`() = runTest {
-    val vericore = VeriCore.create {
+fun `test plugin with TrustWeave`() = runTest {
+    val TrustWeave = TrustWeave.create {
         kms = InMemoryKeyManagementService()
         didMethods {
             + ExampleDidMethod(kms!!)
         }
     }
     
-    val did = vericore.createDid("example").getOrThrow()
+    val did = TrustWeave.createDid("example").getOrThrow()
     assertTrue(did.id.startsWith("did:example:"))
 }
 ```
@@ -932,7 +932,7 @@ fun `test plugin with VeriCore`() = runTest {
 
 ## Next Steps
 
-- Review existing implementations in `vericore-testkit` for reference
+- Review existing implementations in `TrustWeave-testkit` for reference
 - See [Integration Modules](../integrations/README.md) for production examples
 - Check [Plugin Lifecycle](../advanced/plugin-lifecycle.md) for lifecycle management
 - Review [Architecture Overview](../introduction/architecture-overview.md) for design patterns

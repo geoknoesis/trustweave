@@ -1,6 +1,6 @@
 # Core Concepts
 
-Welcome to VeriCore's core concepts! This section introduces the fundamental building blocks of decentralized identity and trust systems.
+Welcome to TrustWeave's core concepts! This section introduces the fundamental building blocks of decentralized identity and trust systems.
 
 ## What You'll Learn
 
@@ -47,7 +47,7 @@ Example: A university diploma, driver's license, or professional certification.
 
 ### Wallets
 
-A **Wallet** is a secure container for managing your credentials and identities. VeriCore wallets support:
+A **Wallet** is a secure container for managing your credentials and identities. TrustWeave wallets support:
 
 - **Credential Storage**: Store and organize verifiable credentials
 - **Organization**: Collections, tags, and metadata

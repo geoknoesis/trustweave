@@ -1,10 +1,10 @@
 # Security Best Practices
 
-This guide covers security best practices for using VeriCore in production environments.
+This guide covers security best practices for using TrustWeave in production environments.
 
 ## Overview
 
-VeriCore handles sensitive cryptographic operations and identity management. Following security best practices is essential for production deployments.
+TrustWeave handles sensitive cryptographic operations and identity management. Following security best practices is essential for production deployments.
 
 ## Key Management
 
@@ -58,7 +58,7 @@ val kms = GoogleKeyManagementService(
 ❌ **Don't**: Store credentials in plain text
 ```kotlin
 // BAD: No encryption
-val wallet = vericore.createWallet(holderDid) {
+val wallet = TrustWeave.createWallet(holderDid) {
     storagePath = "/var/credentials"  // Unencrypted!
 }
 ```
@@ -66,7 +66,7 @@ val wallet = vericore.createWallet(holderDid) {
 ✅ **Do**: Use encrypted storage
 ```kotlin
 // GOOD: Encrypted storage
-val wallet = vericore.createWallet(holderDid) {
+val wallet = TrustWeave.createWallet(holderDid) {
     storagePath = "/var/credentials"
     encryptionKey = secureKey  // Use secure key management
     property("encryptionAlgorithm", "AES-256-GCM")
@@ -109,7 +109,7 @@ val wallet = vericore.createWallet(holderDid) {
 - **Revocation Checks**: Verify credential is not revoked
 
 ```kotlin
-val verification = vericore.verifyCredential(credential).getOrThrow()
+val verification = TrustWeave.verifyCredential(credential).getOrThrow()
 
 // Check all validation flags
 if (!verification.valid) {
@@ -175,7 +175,7 @@ catch (e: Exception) {
 catch (e: Exception) {
     logger.error("Operation failed", e)  // Log full details
     return Result.failure(
-        VeriCoreError.Unknown(
+        TrustWeaveError.Unknown(
             message = "Operation failed. Please try again.",  // Generic message
             context = emptyMap()
         )

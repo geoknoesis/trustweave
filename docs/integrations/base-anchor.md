@@ -1,10 +1,10 @@
 # Base Blockchain Anchor Integration
 
-> This guide covers the Base (Coinbase L2) blockchain anchor client integration for VeriCore. The Base adapter provides fast and low-cost anchoring with Ethereum security.
+> This guide covers the Base (Coinbase L2) blockchain anchor client integration for TrustWeave. The Base adapter provides fast and low-cost anchoring with Ethereum security.
 
 ## Overview
 
-The `chains/plugins/base` module provides a complete implementation of VeriCore's `BlockchainAnchorClient` interface using Base, Coinbase's Ethereum L2. This integration enables you to:
+The `chains/plugins/base` module provides a complete implementation of TrustWeave's `BlockchainAnchorClient` interface using Base, Coinbase's Ethereum L2. This integration enables you to:
 
 - Anchor credential digests on Base with lower fees than Ethereum
 - Benefit from Coinbase's backing and ecosystem
@@ -17,10 +17,10 @@ Add the Base adapter module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.chains:base:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.chains:base:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
     
     // Web3j for Base blockchain (EVM-compatible)
     implementation("org.web3j:core:5.0.1")
@@ -32,8 +32,8 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.base.*
+import com.trustweave.anchor.*
+import com.trustweave.base.*
 
 // Create Base anchor client for mainnet
 val options = mapOf(
@@ -74,8 +74,8 @@ val sepoliaClient = BaseBlockchainAnchorClient(
 When the module is on the classpath, Base adapter is automatically available:
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.anchor.spi.*
+import com.trustweave.anchor.*
+import com.trustweave.anchor.spi.*
 import java.util.ServiceLoader
 
 // Discover Base provider
@@ -94,8 +94,8 @@ val client = baseProvider?.create(
 ### Anchoring Data
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.base.*
+import com.trustweave.anchor.*
+import com.trustweave.base.*
 import kotlinx.serialization.json.*
 
 val client = BaseBlockchainAnchorClient(
@@ -131,13 +131,13 @@ println("Anchored to Base: ${result.ref.txHash}")
 - **EVM compatible**: Same tools and patterns as Ethereum
 - **Ethereum security**: Secured by Ethereum mainnet
 
-## Integration with VeriCore
+## Integration with TrustWeave
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.base.*
+import com.trustweave.TrustWeave
+import com.trustweave.base.*
 
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     blockchain {
         register(
             BaseBlockchainAnchorClient.MAINNET,

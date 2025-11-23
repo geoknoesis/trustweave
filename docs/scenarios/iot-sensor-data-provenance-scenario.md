@@ -1,6 +1,6 @@
 # IoT Sensor Data Provenance & Integrity Scenario
 
-This guide demonstrates how to build an IoT sensor data provenance and integrity system using VeriCore. You'll learn how sensor manufacturers can issue sensor attestation credentials, how sensors can create data attestation credentials, and how data consumers can verify sensor data authenticity and integrity.
+This guide demonstrates how to build an IoT sensor data provenance and integrity system using TrustWeave. You'll learn how sensor manufacturers can issue sensor attestation credentials, how sensors can create data attestation credentials, and how data consumers can verify sensor data authenticity and integrity.
 
 ## What You'll Build
 
@@ -97,7 +97,7 @@ Traditional sensor data systems have several problems:
 4. **No integrity proof**: No cryptographic proof of data integrity
 5. **Trust issues**: Can't verify sensor authenticity
 
-VeriCore solves this by enabling:
+TrustWeave solves this by enabling:
 
 - **Data provenance**: Verify sensor data source and lineage
 - **Data integrity**: Cryptographic proof data hasn't been tampered with
@@ -131,12 +131,12 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add TrustWeave dependencies to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -148,17 +148,17 @@ dependencies {
 
 ## Step 2: Complete Runnable Example
 
-Here's the full IoT sensor data provenance and integrity flow using the VeriCore facade API:
+Here's the full IoT sensor data provenance and integrity flow using the TrustWeave facade API:
 
 ```kotlin
 package com.example.iot.sensor.data
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.credential.PresentationOptions
-import com.geoknoesis.vericore.credential.wallet.Wallet
-import com.geoknoesis.vericore.json.DigestUtils
-import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.credential.PresentationOptions
+import com.trustweave.credential.wallet.Wallet
+import com.trustweave.json.DigestUtils
+import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -171,27 +171,27 @@ fun main() = runBlocking {
     println("IoT Sensor Data Provenance & Integrity Scenario - Complete End-to-End Example")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance
-    val vericore = VeriCore.create()
-    println("\n✅ VeriCore initialized")
+    // Step 1: Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
+    println("\n✅ TrustWeave initialized")
     
     // Step 2: Create DIDs for sensor manufacturer, sensors, and data consumer
-    val manufacturerDidDoc = vericore.dids.create()
+    val manufacturerDidDoc = TrustWeave.dids.create()
     val manufacturerDid = manufacturerDidDoc.id
     val manufacturerKeyId = manufacturerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val temperatureSensorDidDoc = vericore.dids.create()
+    val temperatureSensorDidDoc = TrustWeave.dids.create()
     val temperatureSensorDid = temperatureSensorDidDoc.id
     val temperatureSensorKeyId = temperatureSensorDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val humiditySensorDidDoc = vericore.dids.create()
+    val humiditySensorDidDoc = TrustWeave.dids.create()
     val humiditySensorDid = humiditySensorDidDoc.id
     val humiditySensorKeyId = humiditySensorDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val dataConsumerDidDoc = vericore.dids.create()
+    val dataConsumerDidDoc = TrustWeave.dids.create()
     val dataConsumerDid = dataConsumerDidDoc.id
     
     println("✅ Sensor Manufacturer DID: $manufacturerDid")
@@ -200,7 +200,7 @@ fun main() = runBlocking {
     println("✅ Data Consumer DID: $dataConsumerDid")
     
     // Step 3: Issue sensor attestation credential for temperature sensor
-    val temperatureSensorAttestation = vericore.issueCredential(
+    val temperatureSensorAttestation = TrustWeave.issueCredential(
         issuerDid = manufacturerDid,
         issuerKeyId = manufacturerKeyId,
         credentialSubject = buildJsonObject {
@@ -232,7 +232,7 @@ fun main() = runBlocking {
     println("\n✅ Temperature sensor attestation credential issued: ${temperatureSensorAttestation.id}")
     
     // Step 4: Issue sensor attestation credential for humidity sensor
-    val humiditySensorAttestation = vericore.issueCredential(
+    val humiditySensorAttestation = TrustWeave.issueCredential(
         issuerDid = manufacturerDid,
         issuerKeyId = manufacturerKeyId,
         credentialSubject = buildJsonObject {
@@ -312,7 +312,7 @@ fun main() = runBlocking {
     // Note: In production, sensors would sign these with their own keys
     // For this example, we'll use the manufacturer's key to simulate sensor signing
     
-    val temperatureDataAttestation = vericore.issueCredential(
+    val temperatureDataAttestation = TrustWeave.issueCredential(
         issuerDid = temperatureSensorDid,
         issuerKeyId = temperatureSensorKeyId,
         credentialSubject = buildJsonObject {
@@ -337,7 +337,7 @@ fun main() = runBlocking {
     
     println("\n✅ Temperature data attestation credential issued: ${temperatureDataAttestation.id}")
     
-    val humidityDataAttestation = vericore.issueCredential(
+    val humidityDataAttestation = TrustWeave.issueCredential(
         issuerDid = humiditySensorDid,
         issuerKeyId = humiditySensorKeyId,
         credentialSubject = buildJsonObject {
@@ -363,7 +363,7 @@ fun main() = runBlocking {
     println("✅ Humidity data attestation credential issued: ${humidityDataAttestation.id}")
     
     // Step 7: Create consumer wallet and store credentials
-    val consumerWallet = vericore.createWallet(
+    val consumerWallet = TrustWeave.createWallet(
         holderDid = dataConsumerDid,
         options = WalletCreationOptionsBuilder().apply {
             enableOrganization = true
@@ -399,7 +399,7 @@ fun main() = runBlocking {
     // Step 9: Data consumer verification - Sensor attestation
     println("\n🔍 Data Consumer Verification - Sensor Attestation:")
     
-    val tempSensorVerification = vericore.verifyCredential(temperatureSensorAttestation).getOrThrow()
+    val tempSensorVerification = TrustWeave.verifyCredential(temperatureSensorAttestation).getOrThrow()
     
     if (tempSensorVerification.valid) {
         val credentialSubject = temperatureSensorAttestation.credentialSubject
@@ -429,7 +429,7 @@ fun main() = runBlocking {
     // Step 10: Data consumer verification - Data integrity
     println("\n🔍 Data Consumer Verification - Data Integrity:")
     
-    val tempDataVerification = vericore.verifyCredential(temperatureDataAttestation).getOrThrow()
+    val tempDataVerification = TrustWeave.verifyCredential(temperatureDataAttestation).getOrThrow()
     
     if (tempDataVerification.valid) {
         val credentialSubject = temperatureDataAttestation.credentialSubject
@@ -465,8 +465,8 @@ fun main() = runBlocking {
     // Step 11: Complete data provenance verification workflow
     println("\n🔍 Complete Data Provenance Verification Workflow:")
     
-    val sensorAttestationValid = vericore.verifyCredential(temperatureSensorAttestation).getOrThrow().valid
-    val dataAttestationValid = vericore.verifyCredential(temperatureDataAttestation).getOrThrow().valid
+    val sensorAttestationValid = TrustWeave.verifyCredential(temperatureSensorAttestation).getOrThrow().valid
+    val dataAttestationValid = TrustWeave.verifyCredential(temperatureDataAttestation).getOrThrow().valid
     
     if (sensorAttestationValid && dataAttestationValid) {
         println("✅ Sensor Attestation: VERIFIED")
@@ -507,7 +507,7 @@ fun main() = runBlocking {
 IoT Sensor Data Provenance & Integrity Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ VeriCore initialized
+✅ TrustWeave initialized
 ✅ Sensor Manufacturer DID: did:key:z6Mk...
 ✅ Temperature Sensor DID: did:key:z6Mk...
 ✅ Humidity Sensor DID: did:key:z6Mk...
@@ -591,7 +591,7 @@ IoT Sensor Data Provenance & Integrity Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with VeriCore
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
 - [IoT Device Identity Scenario](iot-device-identity-scenario.md) - Related device identity scenario
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
 - [API Reference](../api-reference/core-api.md) - Complete API documentation

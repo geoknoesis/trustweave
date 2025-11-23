@@ -1,6 +1,6 @@
 # Your First Application
 
-Build a complete VeriCore application that demonstrates the full workflow: creating DIDs, computing digests, and anchoring to blockchains.
+Build a complete TrustWeave application that demonstrates the full workflow: creating DIDs, computing digests, and anchoring to blockchains.
 
 ## Complete Example: Verifiable Credential Workflow
 
@@ -15,12 +15,12 @@ This example shows how to:
 The block below wires together in-memory services so you can run the whole workflow locally without external infrastructure.
 
 ```kotlin
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.did.*
-import com.geoknoesis.vericore.json.DigestUtils
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
-import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.anchor.*
+import com.trustweave.did.*
+import com.trustweave.json.DigestUtils
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.testkit.did.DidKeyMockMethod
+import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlinx.serialization.Serializable
@@ -98,9 +98,9 @@ fun main() = runBlocking {
 
 ## Running the Example
 
-1. Create a new Kotlin file: `VeriCoreExample.kt`
+1. Create a new Kotlin file: `TrustWeaveExample.kt`
 2. Copy the code above
-3. Ensure you have VeriCore dependencies in your `build.gradle.kts`
+3. Ensure you have TrustWeave dependencies in your `build.gradle.kts`
 4. Run the application
 
 ## Understanding the Code
@@ -139,7 +139,7 @@ Canonicalise and hash the credential payload.
 val digest = DigestUtils.sha256DigestMultibase(vcPayload)
 ```
 
-- **What happens:** VeriCore applies JSON Canonicalization Scheme (JCS) and then hashes the bytes with SHA-256.
+- **What happens:** TrustWeave applies JSON Canonicalization Scheme (JCS) and then hashes the bytes with SHA-256.
 - **Result:** `digest` is a multibase string you can store or anchor; identical payloads always produce the same value.
 
 ### Blockchain Anchoring

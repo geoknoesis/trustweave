@@ -1,6 +1,6 @@
 # News Industry & Content Provenance Scenario
 
-This guide demonstrates how to build a news content provenance system using VeriCore to track and verify the authenticity, authorship, and processing history of news articles, images, and multimedia content.
+This guide demonstrates how to build a news content provenance system using TrustWeave to track and verify the authenticity, authorship, and processing history of news articles, images, and multimedia content.
 
 ## What You'll Build
 
@@ -119,16 +119,16 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`. These modules provide DID/credential APIs plus the in-memory services used to model newsroom workflows.
+Add TrustWeave dependencies to your `build.gradle.kts`. These modules provide DID/credential APIs plus the in-memory services used to model newsroom workflows.
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-json:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -149,9 +149,9 @@ dependencies {
 - **Attribution**: Enables proper attribution
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.did.DidKeyMockMethod
-import com.geoknoesis.vericore.testkit.kms.InMemoryKeyManagementService
-import com.geoknoesis.vericore.did.DidMethodRegistry
+import com.trustweave.testkit.did.DidKeyMockMethod
+import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -228,7 +228,7 @@ fun main() = runBlocking {
 - **Verification**: Can verify content hasn't changed
 
 ```kotlin
-import com.geoknoesis.vericore.credential.models.VerifiableCredential
+import com.trustweave.credential.models.VerifiableCredential
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
@@ -249,7 +249,7 @@ import java.time.Instant
     
     // Compute content hash for integrity verification
     // Any modification to content will change this hash
-    val contentHash = com.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
+    val contentHash = com.trustweave.json.DigestUtils.sha256DigestMultibase(
         articleContent.encodeToByteArray()
     )
     
@@ -314,9 +314,9 @@ import java.time.Instant
 - **Verification**: Anyone can verify authorship
 
 ```kotlin
-import com.geoknoesis.vericore.credential.issuer.CredentialIssuer
-import com.geoknoesis.vericore.credential.proof.Ed25519ProofGenerator
-import com.geoknoesis.vericore.credential.CredentialIssuanceOptions
+import com.trustweave.credential.issuer.CredentialIssuer
+import com.trustweave.credential.proof.Ed25519ProofGenerator
+import com.trustweave.credential.CredentialIssuanceOptions
 
     // Step 5: Issue authorship credential
     println("\nStep 5: Issuing authorship credential...")
@@ -382,7 +382,7 @@ import com.geoknoesis.vericore.credential.CredentialIssuanceOptions
         lead researcher at the Medical Research Institute.
     """.trimIndent()
     
-    val modifiedHash = com.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
+    val modifiedHash = com.trustweave.json.DigestUtils.sha256DigestMultibase(
         modifiedContent.encodeToByteArray()
     )
     
@@ -556,8 +556,8 @@ import com.geoknoesis.vericore.credential.CredentialIssuanceOptions
 - **Trust**: Builds reader trust
 
 ```kotlin
-import com.geoknoesis.vericore.credential.verifier.CredentialVerifier
-import com.geoknoesis.vericore.credential.CredentialVerificationOptions
+import com.trustweave.credential.verifier.CredentialVerifier
+import com.trustweave.credential.CredentialVerificationOptions
 
     // Step 9: Verify content authenticity
     println("\nStep 9: Verifying content authenticity...")
@@ -591,7 +591,7 @@ import com.geoknoesis.vericore.credential.CredentialVerificationOptions
     }
     
     // Verify content hash matches
-    val currentContentHash = com.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
+    val currentContentHash = com.trustweave.json.DigestUtils.sha256DigestMultibase(
         modifiedContent.encodeToByteArray()
     )
     
@@ -615,9 +615,9 @@ import com.geoknoesis.vericore.credential.CredentialVerificationOptions
 - **Accountability**: Holds publishers accountable
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.geoknoesis.vericore.anchor.BlockchainAnchorRegistry
-import com.geoknoesis.vericore.anchor.anchorTyped
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.anchor.BlockchainAnchorRegistry
+import com.trustweave.anchor.anchorTyped
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -640,7 +640,7 @@ data class ContentProvenanceRecord(
     }
     
     // Create provenance record
-    val provenanceDigest = com.geoknoesis.vericore.json.DigestUtils.sha256DigestMultibase(
+    val provenanceDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
             VerifiableCredential.serializer(),
             issuedPublicationCredential

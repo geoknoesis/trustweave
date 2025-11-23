@@ -1,20 +1,20 @@
 # Service Provider Interface (SPI)
 
-This guide explains how VeriCore uses the Java Service Provider Interface (SPI) for auto-discovery of plugins and adapters.
+This guide explains how TrustWeave uses the Java Service Provider Interface (SPI) for auto-discovery of plugins and adapters.
 
 ## Overview
 
-VeriCore uses SPI to automatically discover and load plugins at runtime without requiring explicit registration code. This enables:
+TrustWeave uses SPI to automatically discover and load plugins at runtime without requiring explicit registration code. This enables:
 
 - **Auto-discovery** – plugins are automatically found on the classpath
 - **Loose coupling** – plugins can be added without modifying application code
 - **Modularity** – plugins are discovered independently of the main application
 
-## How SPI Works in VeriCore
+## How SPI Works in TrustWeave
 
 ### Provider Interfaces
 
-VeriCore defines several provider interfaces:
+TrustWeave defines several provider interfaces:
 
 - `DidMethodProvider` – discovers DID method implementations
 - `KeyManagementServiceProvider` – discovers KMS implementations
@@ -26,9 +26,9 @@ VeriCore defines several provider interfaces:
 SPI uses service files in `META-INF/services/` to discover providers:
 
 ```
-META-INF/services/com.geoknoesis.vericore.did.spi.DidMethodProvider
-META-INF/services/com.geoknoesis.vericore.kms.spi.KeyManagementServiceProvider
-META-INF/services/com.geoknoesis.vericore.anchor.spi.BlockchainAnchorClientProvider
+META-INF/services/com.trustweave.did.spi.DidMethodProvider
+META-INF/services/com.trustweave.kms.spi.KeyManagementServiceProvider
+META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 ```
 
 Each file contains the fully qualified class name of the provider implementation.
@@ -38,7 +38,7 @@ Each file contains the fully qualified class name of the provider implementation
 ### Discovering Providers
 
 ```kotlin
-import com.geoknoesis.vericore.did.spi.DidMethodProvider
+import com.trustweave.did.spi.DidMethodProvider
 import java.util.ServiceLoader
 
 // Discover DID method providers
@@ -58,8 +58,8 @@ providers.forEach { provider ->
 ### Creating Providers
 
 ```kotlin
-import com.geoknoesis.vericore.did.spi.DidMethodProvider
-import com.geoknoesis.vericore.did.*
+import com.trustweave.did.spi.DidMethodProvider
+import com.trustweave.did.*
 
 class MyDidMethodProvider : DidMethodProvider {
     override val name: String = "my-did-method"
@@ -85,7 +85,7 @@ class MyDidMethodProvider : DidMethodProvider {
 Create a service file at:
 
 ```
-src/main/resources/META-INF/services/com.geoknoesis.vericore.did.spi.DidMethodProvider
+src/main/resources/META-INF/services/com.trustweave.did.spi.DidMethodProvider
 ```
 
 With content:
@@ -98,27 +98,27 @@ com.example.MyDidMethodProvider
 
 **Outcome:** Your provider is automatically discovered when the module is on the classpath.
 
-## SPI in VeriCore Modules
+## SPI in TrustWeave Modules
 
 ### DID Method Providers
 
 ```kotlin
 // did/plugins/key/src/main/resources/META-INF/services/...
-com.geoknoesis.vericore.did.key.KeyDidMethodProvider
+com.trustweave.did.key.KeyDidMethodProvider
 ```
 
 ### KMS Providers
 
 ```kotlin
 // kms/plugins/aws/src/main/resources/META-INF/services/...
-com.geoknoesis.vericore.awskms.AwsKeyManagementServiceProvider
+com.trustweave.awskms.AwsKeyManagementServiceProvider
 ```
 
 ### Blockchain Adapter Providers
 
 ```kotlin
 // chains/plugins/algorand/src/main/resources/META-INF/services/...
-com.geoknoesis.vericore.algorand.AlgorandBlockchainAnchorClientProvider
+com.trustweave.algorand.AlgorandBlockchainAnchorClientProvider
 ```
 
 ## Benefits of SPI
@@ -130,7 +130,7 @@ Plugins can be added or removed without modifying application code:
 ```kotlin
 // Add chains/plugins/algorand dependency to enable Algorand adapter
 dependencies {
-    implementation("com.geoknoesis.vericore:chains/plugins/algorand:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:chains/plugins/algorand:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -215,7 +215,7 @@ override fun create(
 **Problem:** Multiple providers for same method
 
 **Solution:**
-- VeriCore uses the first provider found
+- TrustWeave uses the first provider found
 - Use explicit provider selection if needed
 - Order providers via dependency order if critical
 
@@ -223,11 +223,11 @@ override fun create(
 
 - Review [Creating Plugins](../contributing/creating-plugins.md) for plugin implementation
 - See [Plugin Lifecycle](plugin-lifecycle.md) for lifecycle management
-- Check [vericore-spi Module](../modules/vericore-spi.md) for SPI module details
+- SPI interfaces are included in `TrustWeave-common`. See [Core Modules](../modules/core-modules.md) for details
 
 ## References
 
 - [Java Service Provider Interface](https://docs.oracle.com/javase/tutorial/ext/basics/spi.html)
-- [VeriCore SPI Module](../modules/vericore-spi.md)
+- [Core Modules](../modules/core-modules.md)
 - [Creating Plugins](../contributing/creating-plugins.md)
 

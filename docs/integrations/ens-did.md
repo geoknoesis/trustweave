@@ -1,10 +1,10 @@
 # ENS DID (did:ens) Integration
 
-> This guide covers the did:ens method integration for VeriCore. The did:ens plugin provides human-readable DID resolution using Ethereum Name Service (ENS).
+> This guide covers the did:ens method integration for TrustWeave. The did:ens plugin provides human-readable DID resolution using Ethereum Name Service (ENS).
 
 ## Overview
 
-The `did/plugins/ens` module provides an implementation of VeriCore's `DidMethod` interface using the Ethereum Name Service (ENS) resolver. This integration enables you to:
+The `did/plugins/ens` module provides an implementation of TrustWeave's `DidMethod` interface using the Ethereum Name Service (ENS) resolver. This integration enables you to:
 
 - Resolve human-readable DID identifiers (e.g., `did:ens:example.eth`)
 - Map ENS domain names to Ethereum addresses
@@ -17,18 +17,18 @@ Add the did:ens module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.did:ens:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-did:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore.did:base:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore.did:ethr:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-anchor:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:ens:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:ethr:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
     
     // Web3j for Ethereum blockchain
     implementation("org.web3j:core:4.10.0")
     
     // Optional: Polygon client for EVM-compatible chains
-    implementation("com.geoknoesis.vericore.chains:polygon:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.chains:polygon:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -37,10 +37,10 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.geoknoesis.vericore.ensdid.*
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.polygon.PolygonBlockchainAnchorClient
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.ensdid.*
+import com.trustweave.anchor.*
+import com.trustweave.polygon.PolygonBlockchainAnchorClient
+import com.trustweave.kms.*
 
 // Create configuration
 val config = EnsDidConfig.builder()
@@ -75,8 +75,8 @@ val mainnetConfig = EnsDidConfig.mainnet(
 When the module is on the classpath, did:ens is automatically available:
 
 ```kotlin
-import com.geoknoesis.vericore.did.*
-import com.geoknoesis.vericore.anchor.*
+import com.trustweave.did.*
+import com.trustweave.anchor.*
 import java.util.ServiceLoader
 
 // Discover did:ens provider
@@ -181,18 +181,18 @@ val config = EnsDidConfig.builder()
 | Ethereum Mainnet | `0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e` |
 | Sepolia Testnet | `0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e` |
 
-## Integration with VeriCore
+## Integration with TrustWeave
 
 ```kotlin
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.ensdid.*
-import com.geoknoesis.vericore.anchor.*
-import com.geoknoesis.vericore.polygon.PolygonBlockchainAnchorClient
+import com.trustweave.TrustWeave
+import com.trustweave.ensdid.*
+import com.trustweave.anchor.*
+import com.trustweave.polygon.PolygonBlockchainAnchorClient
 
 val config = EnsDidConfig.mainnet("https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY")
 val anchorClient = PolygonBlockchainAnchorClient(config.chainId, config.toMap())
 
-val vericore = VeriCore.create {
+val TrustWeave = TrustWeave.create {
     kms = InMemoryKeyManagementService()
     
     blockchain {
@@ -205,7 +205,7 @@ val vericore = VeriCore.create {
 }
 
 // Resolve did:ens
-val resolved = vericore.resolveDid("did:ens:example.eth").getOrThrow()
+val resolved = TrustWeave.resolveDid("did:ens:example.eth").getOrThrow()
 ```
 
 ## Error Handling
@@ -226,7 +226,7 @@ Common errors and solutions:
 For testing without actual ENS resolution:
 
 ```kotlin
-import com.geoknoesis.vericore.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 
 val config = EnsDidConfig.mainnet("https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY")
 val anchorClient = InMemoryBlockchainAnchorClient(config.chainId)
@@ -263,7 +263,7 @@ did:ens:company.eth
 Use ENS for organizational identities:
 
 ```kotlin
-did:ens:vericore.eth      // Company DID
+did:ens:TrustWeave.eth      // Company DID
 did:ens:engineering.eth   // Department DID
 did:ens:alice.eth         // Employee DID
 ```

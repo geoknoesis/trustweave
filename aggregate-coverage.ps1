@@ -1,19 +1,19 @@
 # Script to aggregate Kover coverage reports from all modules
 
 $modules = @(
-    "vericore-core",
-    "vericore-anchor", 
-    "vericore-did",
-    "vericore-kms",
-    "vericore-json",
-    "vericore-testkit",
-    "vericore-examples",
-    "vericore-ganache",
-    "vericore-waltid",
-    "vericore-algorand",
-    "vericore-polygon",
-    "vericore-godiddy",
-    "vericore-indy"
+    "core:trustweave-core",
+    "chains:trustweave-anchor", 
+    "did:trustweave-did",
+    "kms:trustweave-kms",
+    "core:trustweave-json",
+    "core:trustweave-testkit",
+    "distribution:trustweave-examples",
+    "chains:plugins:ganache",
+    "kms:plugins:waltid",
+    "chains:plugins:algorand",
+    "chains:plugins:polygon",
+    "did:plugins:godiddy",
+    "chains:plugins:indy"
 )
 
 $totalClasses = 0
@@ -30,7 +30,8 @@ $coveredInstructions = 0
 $moduleResults = @()
 
 foreach ($module in $modules) {
-    $xmlPath = Join-Path $module "build\reports\kover\report.xml"
+    $modulePath = $module -replace ":", "\"
+    $xmlPath = Join-Path $modulePath "build\reports\kover\report.xml"
     if (Test-Path $xmlPath) {
         [xml]$xml = Get-Content $xmlPath
         
@@ -117,7 +118,7 @@ $overallBranchPct = if ($totalBranches -gt 0) { [math]::Round(($coveredBranches 
 $overallLinePct = if ($totalLines -gt 0) { [math]::Round(($coveredLines / $totalLines) * 100, 1) } else { 0 }
 $overallInstructionPct = if ($totalInstructions -gt 0) { [math]::Round(($coveredInstructions / $totalInstructions) * 100, 1) } else { 0 }
 
-Write-Host "`n=== VERICORE PROJECT COVERAGE SUMMARY ===" -ForegroundColor Cyan
+Write-Host "`n=== TRUSTWEAVE PROJECT COVERAGE SUMMARY ===" -ForegroundColor Cyan
 Write-Host "`nOverall Coverage:" -ForegroundColor Yellow
 Write-Host "  Class Coverage:      $overallClassPct% ($coveredClasses/$totalClasses)" -ForegroundColor $(if ($overallClassPct -ge 80) { "Green" } elseif ($overallClassPct -ge 50) { "Yellow" } else { "Red" })
 Write-Host "  Method Coverage:     $overallMethodPct% ($coveredMethods/$totalMethods)" -ForegroundColor $(if ($overallMethodPct -ge 80) { "Green" } elseif ($overallMethodPct -ge 50) { "Yellow" } else { "Red" })

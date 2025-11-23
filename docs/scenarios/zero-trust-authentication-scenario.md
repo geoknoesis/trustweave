@@ -1,6 +1,6 @@
 # Zero Trust Continuous Authentication Scenario
 
-This guide demonstrates how to build a Zero Trust continuous authentication system using VeriCore. You'll learn how authentication authorities can issue short-lived authentication credentials, how users can store them in wallets, and how systems can continuously verify authentication without traditional session-based access.
+This guide demonstrates how to build a Zero Trust continuous authentication system using TrustWeave. You'll learn how authentication authorities can issue short-lived authentication credentials, how users can store them in wallets, and how systems can continuously verify authentication without traditional session-based access.
 
 ## What You'll Build
 
@@ -98,7 +98,7 @@ Traditional authentication has several problems:
 4. **Context ignorance**: No awareness of user context
 5. **Password fatigue**: Constant password entry frustrates users
 
-VeriCore solves this by enabling:
+TrustWeave solves this by enabling:
 
 - **Continuous verification**: Verify identity continuously
 - **No sessions**: Eliminate session-based access
@@ -129,12 +129,12 @@ flowchart TD
 
 ## Step 1: Add Dependencies
 
-Add VeriCore dependencies to your `build.gradle.kts`:
+Add TrustWeave dependencies to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    // Core VeriCore modules
-    implementation("com.geoknoesis.vericore:vericore-all:1.0.0-SNAPSHOT")
+    // Core TrustWeave modules
+    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -146,16 +146,16 @@ dependencies {
 
 ## Step 2: Complete Runnable Example
 
-Here's the full Zero Trust continuous authentication flow using the VeriCore facade API:
+Here's the full Zero Trust continuous authentication flow using the TrustWeave facade API:
 
 ```kotlin
 package com.example.zero.trust
 
-import com.geoknoesis.vericore.VeriCore
-import com.geoknoesis.vericore.core.*
-import com.geoknoesis.vericore.credential.PresentationOptions
-import com.geoknoesis.vericore.credential.wallet.Wallet
-import com.geoknoesis.vericore.spi.services.WalletCreationOptionsBuilder
+import com.trustweave.TrustWeave
+import com.trustweave.core.*
+import com.trustweave.credential.PresentationOptions
+import com.trustweave.credential.wallet.Wallet
+import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -167,23 +167,23 @@ fun main() = runBlocking {
     println("Zero Trust Continuous Authentication Scenario - Complete End-to-End Example")
     println("=".repeat(70))
     
-    // Step 1: Create VeriCore instance
-    val vericore = VeriCore.create()
-    println("\n✅ VeriCore initialized")
+    // Step 1: Create TrustWeave instance
+    val TrustWeave = TrustWeave.create()
+    println("\n✅ TrustWeave initialized")
     
     // Step 2: Create DIDs for authentication authority, users, and systems
-    val authAuthorityDidDoc = vericore.dids.create()
+    val authAuthorityDidDoc = TrustWeave.dids.create()
     val authAuthorityDid = authAuthorityDidDoc.id
     val authAuthorityKeyId = authAuthorityDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
     
-    val userDidDoc = vericore.dids.create()
+    val userDidDoc = TrustWeave.dids.create()
     val userDid = userDidDoc.id
     
-    val deviceDidDoc = vericore.dids.create()
+    val deviceDidDoc = TrustWeave.dids.create()
     val deviceDid = deviceDidDoc.id
     
-    val systemDidDoc = vericore.dids.create()
+    val systemDidDoc = TrustWeave.dids.create()
     val systemDid = systemDidDoc.id
     
     println("✅ Authentication Authority DID: $authAuthorityDid")
@@ -192,7 +192,7 @@ fun main() = runBlocking {
     println("✅ System DID: $systemDid")
     
     // Step 3: Issue short-lived authentication credential (15 minutes)
-    val authCredential = vericore.issueCredential(
+    val authCredential = TrustWeave.issueCredential(
         issuerDid = authAuthorityDid,
         issuerKeyId = authAuthorityKeyId,
         credentialSubject = buildJsonObject {
@@ -225,7 +225,7 @@ fun main() = runBlocking {
     println("   Note: No traditional session created")
     
     // Step 4: Create user wallet and store authentication credential
-    val userWallet = vericore.createWallet(
+    val userWallet = TrustWeave.createWallet(
         holderDid = userDid,
         options = WalletCreationOptionsBuilder().apply {
             enableOrganization = true
@@ -247,7 +247,7 @@ fun main() = runBlocking {
     // Step 6: Initial authentication verification
     println("\n🔐 Initial Authentication Verification:")
     
-    val initialVerification = vericore.verifyCredential(authCredential).getOrThrow()
+    val initialVerification = TrustWeave.verifyCredential(authCredential).getOrThrow()
     
     if (initialVerification.valid) {
         val credentialSubject = authCredential.credentialSubject
@@ -279,7 +279,7 @@ fun main() = runBlocking {
     println("\n🔐 Continuous Re-Authentication (5 minutes later):")
     
     // Simulate time passing - in production, this would be a real-time check
-    val reAuthCredential = vericore.issueCredential(
+    val reAuthCredential = TrustWeave.issueCredential(
         issuerDid = authAuthorityDid,
         issuerKeyId = authAuthorityKeyId,
         credentialSubject = buildJsonObject {
@@ -306,7 +306,7 @@ fun main() = runBlocking {
         expirationDate = Instant.now().plus(15, ChronoUnit.MINUTES).toString()
     ).getOrThrow()
     
-    val reAuthVerification = vericore.verifyCredential(reAuthCredential).getOrThrow()
+    val reAuthVerification = TrustWeave.verifyCredential(reAuthCredential).getOrThrow()
     
     if (reAuthVerification.valid) {
         println("✅ Re-Authentication Credential: VALID")
@@ -323,7 +323,7 @@ fun main() = runBlocking {
     println("\n🔐 Expired Credential Verification:")
     
     // Create an expired credential
-    val expiredCredential = vericore.issueCredential(
+    val expiredCredential = TrustWeave.issueCredential(
         issuerDid = authAuthorityDid,
         issuerKeyId = authAuthorityKeyId,
         credentialSubject = buildJsonObject {
@@ -337,7 +337,7 @@ fun main() = runBlocking {
         expirationDate = Instant.now().minus(5, ChronoUnit.MINUTES).toString() // Already expired
     ).getOrThrow()
     
-    val expiredVerification = vericore.verifyCredential(
+    val expiredVerification = TrustWeave.verifyCredential(
         expiredCredential,
         options = CredentialVerificationOptions(checkExpiration = true)
     ).getOrThrow()
@@ -352,7 +352,7 @@ fun main() = runBlocking {
     // Step 9: High-risk scenario verification
     println("\n🔐 High-Risk Scenario Verification:")
     
-    val highRiskCredential = vericore.issueCredential(
+    val highRiskCredential = TrustWeave.issueCredential(
         issuerDid = authAuthorityDid,
         issuerKeyId = authAuthorityKeyId,
         credentialSubject = buildJsonObject {
@@ -375,7 +375,7 @@ fun main() = runBlocking {
         expirationDate = Instant.now().plus(15, ChronoUnit.MINUTES).toString()
     ).getOrThrow()
     
-    val highRiskVerification = vericore.verifyCredential(highRiskCredential).getOrThrow()
+    val highRiskVerification = TrustWeave.verifyCredential(highRiskCredential).getOrThrow()
     
     if (highRiskVerification.valid) {
         val credentialSubject = highRiskCredential.credentialSubject
@@ -454,7 +454,7 @@ fun main() = runBlocking {
 Zero Trust Continuous Authentication Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ VeriCore initialized
+✅ TrustWeave initialized
 ✅ Authentication Authority DID: did:key:z6Mk...
 ✅ User DID: did:key:z6Mk...
 ✅ Device DID: did:key:z6Mk...
@@ -546,7 +546,7 @@ Zero Trust Continuous Authentication Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with VeriCore
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
 - [Security Clearance Scenario](security-clearance-access-control-scenario.md) - Related access control scenario
 - [IoT Device Identity Scenario](iot-device-identity-scenario.md) - Device attestation integration
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns

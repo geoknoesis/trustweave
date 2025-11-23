@@ -1,10 +1,10 @@
 # AWS KMS Integration
 
-> This guide covers the AWS Key Management Service (KMS) integration for VeriCore. The AWS KMS plugin provides production-ready key management with FIPS 140-3 Level 3 compliance and support for all AWS KMS-compatible algorithms.
+> This guide covers the AWS Key Management Service (KMS) integration for TrustWeave. The AWS KMS plugin provides production-ready key management with FIPS 140-3 Level 3 compliance and support for all AWS KMS-compatible algorithms.
 
 ## Overview
 
-The `kms/plugins/aws` module provides a complete implementation of VeriCore's `KeyManagementService` interface using AWS Key Management Service. This integration enables you to:
+The `kms/plugins/aws` module provides a complete implementation of TrustWeave's `KeyManagementService` interface using AWS Key Management Service. This integration enables you to:
 
 - Use AWS KMS for secure key generation and storage with **FIPS 140-3 Level 3 validated HSMs**
 - Leverage AWS KMS's automatic key rotation capabilities
@@ -18,9 +18,9 @@ Add the AWS KMS module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.geoknoesis.vericore.kms:aws:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-kms:1.0.0-SNAPSHOT")
-    implementation("com.geoknoesis.vericore:vericore-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.kms:aws:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -31,7 +31,7 @@ dependencies {
 The AWS KMS provider can be configured via options map or environment variables:
 
 ```kotlin
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.kms.*
 import java.util.ServiceLoader
 
 // Discover AWS provider
@@ -146,7 +146,7 @@ if (kms?.supportsAlgorithm(Algorithm.Ed25519) == true) {
 ### Generating Keys
 
 ```kotlin
-import com.geoknoesis.vericore.kms.*
+import com.trustweave.kms.*
 
 // Generate Ed25519 key
 val key = kms.generateKey(Algorithm.Ed25519)
@@ -242,9 +242,9 @@ val key = kms.generateKey(
 - Annual rotation schedule
 - Historical key versions maintained by AWS
 
-### 2. VeriCore Manual Rotation Pattern
+### 2. TrustWeave Manual Rotation Pattern
 
-For more control, use VeriCore's manual rotation pattern:
+For more control, use TrustWeave's manual rotation pattern:
 
 ```kotlin
 // Step 1: Generate new key
@@ -292,14 +292,14 @@ val key2 = kms.generateKey(
 
 ## Error Handling
 
-The plugin maps AWS exceptions to VeriCore exceptions:
+The plugin maps AWS exceptions to TrustWeave exceptions:
 
 ```kotlin
 try {
     val key = kms.generateKey(Algorithm.Ed25519)
 } catch (e: UnsupportedAlgorithmException) {
     println("Algorithm not supported: ${e.message}")
-} catch (e: VeriCoreException) {
+} catch (e: TrustWeaveException) {
     when {
         e.message?.contains("Access denied") == true -> {
             println("Check IAM permissions")

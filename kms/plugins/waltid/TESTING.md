@@ -9,25 +9,25 @@ gradle test
 
 ### Run Only walt.id Adapter Tests
 ```bash
-gradle :vericore-waltid:test
+gradle :TrustWeave-waltid:test
 ```
 
 ### Run Specific Test Classes
 ```bash
 # SPI discovery tests
-gradle :vericore-waltid:test --tests "SpiDiscoveryTest"
+gradle :TrustWeave-waltid:test --tests "SpiDiscoveryTest"
 
 # End-to-end integration tests
-gradle :vericore-waltid:test --tests "WaltIdEndToEndTest"
+gradle :TrustWeave-waltid:test --tests "WaltIdEndToEndTest"
 
 # Error handling tests
-gradle :vericore-waltid:test --tests "WaltIdErrorHandlingTest"
+gradle :TrustWeave-waltid:test --tests "WaltIdErrorHandlingTest"
 
 # KMS adapter tests
-gradle :vericore-waltid:test --tests "WaltIdKeyManagementServiceTest"
+gradle :TrustWeave-waltid:test --tests "WaltIdKeyManagementServiceTest"
 
 # DID method tests
-gradle :vericore-waltid:test --tests "WaltIdDidMethodTest"
+gradle :TrustWeave-waltid:test --tests "WaltIdDidMethodTest"
 ```
 
 ## Test Coverage
@@ -51,7 +51,7 @@ gradle :vericore-waltid:test --tests "WaltIdDidMethodTest"
 - Complete workflows using walt.id adapters
 - DID creation and resolution
 - Multiple DID methods coexistence
-- Integration with VeriCore registries
+- Integration with TrustWeave registries
 
 ### 5. Error Handling Tests (`WaltIdErrorHandlingTest`)
 - Tests exception handling
@@ -62,7 +62,7 @@ gradle :vericore-waltid:test --tests "WaltIdDidMethodTest"
 
 ### Test SPI Discovery
 ```kotlin
-import com.geoknoesis.vericore.waltid.WaltIdIntegration
+import com.trustweave.waltid.WaltIdIntegration
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -74,7 +74,7 @@ fun main() = runBlocking {
 
 ### Test DID Creation
 ```kotlin
-import com.geoknoesis.vericore.waltid.WaltIdIntegration
+import com.trustweave.waltid.WaltIdIntegration
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -94,11 +94,11 @@ fun main() = runBlocking {
 
 Once walt.id dependencies are configured:
 
-1. **Uncomment dependencies** in `vericore-waltid/build.gradle.kts`
+1. **Uncomment dependencies** in `TrustWeave-waltid/build.gradle.kts`
 2. **Update adapter implementations** to use real walt.id APIs
 3. **Run tests** to verify integration:
    ```bash
-   gradle :vericore-waltid:test
+   gradle :TrustWeave-waltid:test
    ```
 
 ## Test Results

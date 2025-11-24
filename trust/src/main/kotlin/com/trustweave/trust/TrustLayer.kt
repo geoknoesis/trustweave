@@ -7,9 +7,9 @@ import com.trustweave.credential.dsl.IssuanceBuilder
 import com.trustweave.credential.dsl.VerificationBuilder
 import com.trustweave.wallet.Wallet
 import com.trustweave.wallet.dsl.WalletBuilder
-import com.trustweave.did.dsl.DidBuilder
-import com.trustweave.did.dsl.DidDocumentBuilder
-import com.trustweave.did.dsl.DelegationBuilder
+import com.trustweave.trust.dsl.did.DidBuilder
+import com.trustweave.trust.dsl.did.DidDocumentBuilder
+import com.trustweave.trust.dsl.did.DelegationBuilder
 import com.trustweave.trust.dsl.KeyRotationBuilder
 import com.trustweave.did.delegation.DelegationChainResult
 
@@ -131,7 +131,7 @@ class TrustLayer private constructor(
      * @param block DSL block for specifying the update
      * @return The updated DID document
      */
-    suspend fun updateDid(block: DidDocumentBuilder.() -> Unit): Any {
+    suspend fun updateDid(block: DidDocumentBuilder.() -> Unit): com.trustweave.did.DidDocument {
         return context.updateDid(block)
     }
     

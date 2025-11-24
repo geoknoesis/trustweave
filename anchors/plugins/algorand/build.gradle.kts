@@ -5,13 +5,13 @@ plugins {
 
 group = "com.trustweave.chains"
 dependencies {
-    implementation(project(":credentials:core"))
-    implementation(project(":anchors:core"))
+    implementation(project(":credentials:credential-core"))
+    implementation(project(":anchors:anchor-core"))
     implementation("com.algorand:algosdk:2.10.1")
 
     // Test dependencies
     testImplementation(project(":testkit"))
-    testImplementation(project(":did:core")) // For did method implementations
-    testImplementation(project(":kms:core")) // For KeyManagementService
+    testImplementation(project(":did:did-core")) // For did method implementations
+    testImplementation(project(":kms:kms-core")) // For KeyManagementService
 }
 

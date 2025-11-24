@@ -4,7 +4,7 @@ import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.anchor.BlockchainAnchorRegistry
 import com.trustweave.credential.CredentialServiceRegistry
 import com.trustweave.did.DidMethod
-import com.trustweave.did.DidMethodRegistry
+import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking

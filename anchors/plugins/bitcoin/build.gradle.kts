@@ -5,8 +5,8 @@ plugins {
 
 group = "com.trustweave.chains"
 dependencies {
-    implementation(project(":anchors:core"))
-    implementation(project(":credentials:core"))
+    implementation(project(":anchors:anchor-core"))
+    implementation(project(":credentials:credential-core"))
     
     // BitcoinJ for Bitcoin blockchain interaction
     implementation("org.bitcoinj:bitcoinj-core:0.16.2")

@@ -5,10 +5,10 @@ plugins {
 
 group = "com.trustweave.did"
 dependencies {
-    implementation(project(":credentials:core"))
-    implementation(project(":did:core"))
+    implementation(project(":credentials:credential-core"))
+    implementation(project(":did:did-core"))
     implementation(project(":did:plugins:base"))
-    implementation(project(":kms:core"))
+    implementation(project(":kms:kms-core"))
 
     
     // HTTP client for AT Protocol integration

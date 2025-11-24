@@ -8,13 +8,13 @@ plugins {
 
 group = "com.trustweave"
 dependencies {
-    implementation(project(":credentials:core"))
+    implementation(project(":credentials:credential-core"))
 
     implementation(project(":trust"))
     implementation(project(":distribution:all"))
-    implementation(project(":anchors:core"))
-    implementation(project(":did:core"))
-    implementation(project(":kms:core"))
+    implementation(project(":anchors:anchor-core"))
+    implementation(project(":did:did-core"))
+    implementation(project(":kms:kms-core"))
     implementation(project(":testkit"))
     
     // For blockchain examples

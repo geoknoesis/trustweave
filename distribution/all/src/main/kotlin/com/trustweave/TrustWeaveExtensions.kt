@@ -2,7 +2,7 @@ package com.trustweave
 
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.CredentialVerificationResult
-import com.trustweave.did.DidResolutionResult
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.services.VerificationConfig
 
 /**

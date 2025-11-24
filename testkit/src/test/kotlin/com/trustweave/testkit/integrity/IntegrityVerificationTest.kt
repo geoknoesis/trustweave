@@ -3,7 +3,7 @@ package com.trustweave.testkit.integrity
 import com.trustweave.anchor.AnchorRef
 import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.did.DidMethodRegistry
+import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.testkit.did.DidKeyMockMethod

@@ -5,8 +5,8 @@ plugins {
 
 group = "com.trustweave.chains"
 dependencies {
-    implementation(project(":anchors:core"))
-    implementation(project(":credentials:core"))
+    implementation(project(":anchors:anchor-core"))
+    implementation(project(":credentials:credential-core"))
     
     // Web3j for Ethereum-compatible chains (zkSync is EVM-compatible)
     implementation("org.web3j:core:4.9.8")

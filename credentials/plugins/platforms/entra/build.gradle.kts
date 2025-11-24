@@ -5,7 +5,7 @@ plugins {
 
 group = "com.trustweave.integrations"
 dependencies {
-    implementation(project(":credentials:core"))
+    implementation(project(":credentials:credential-core"))
 
     
     // Microsoft Graph API client

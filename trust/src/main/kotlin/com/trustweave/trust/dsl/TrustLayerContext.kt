@@ -8,14 +8,11 @@ import com.trustweave.credential.dsl.VerificationBuilder
 import com.trustweave.wallet.Wallet
 import com.trustweave.wallet.dsl.WalletBuilder
 import com.trustweave.wallet.dsl.WalletDslProvider
-import com.trustweave.did.dsl.DidDslProvider
-import com.trustweave.did.resolution.DidResolver
+import com.trustweave.trust.dsl.did.DidDslProvider
+import com.trustweave.did.resolver.DidResolver
 import com.trustweave.credential.anchor.CredentialAnchorService
 import com.trustweave.did.DidDocument
 import com.trustweave.did.DidMethod
-import com.trustweave.did.services.DidDocumentAccess
-import com.trustweave.did.services.VerificationMethodAccess
-import com.trustweave.did.services.DidMethodService
 import com.trustweave.kms.services.KmsService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -130,27 +127,6 @@ class TrustLayerContext(
      */
     fun getTrustRegistry(): com.trustweave.trust.TrustRegistry? {
         return config.trustRegistry as? com.trustweave.trust.TrustRegistry
-    }
-    
-    /**
-     * Get the DID document access service adapter.
-     */
-    override fun getDidDocumentAccess(): DidDocumentAccess? {
-        return config.didDocumentAccess
-    }
-    
-    /**
-     * Get the verification method access service adapter.
-     */
-    override fun getVerificationMethodAccess(): VerificationMethodAccess? {
-        return config.verificationMethodAccess
-    }
-    
-    /**
-     * Get the DID method service adapter.
-     */
-    override fun getDidMethodService(): DidMethodService? {
-        return config.didMethodService
     }
     
     /**

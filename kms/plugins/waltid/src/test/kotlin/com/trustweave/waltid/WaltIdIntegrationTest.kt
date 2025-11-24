@@ -1,6 +1,6 @@
 package com.trustweave.waltid
 
-import com.trustweave.did.DidMethodRegistry
+import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test

@@ -4,8 +4,9 @@ import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.DidCreationOptions
 import com.trustweave.did.DidDocument
 import com.trustweave.did.DidMethod
-import com.trustweave.did.DidResolutionResult
-import com.trustweave.godiddy.registrar.GodiddyRegistrar
+import com.trustweave.did.registrar.DidRegistrar
+import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.did.resolver.UniversalResolver
 import com.trustweave.godiddy.resolver.GodiddyResolver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -16,8 +17,8 @@ import kotlinx.coroutines.withContext
  */
 class GodiddyDidMethod(
     override val method: String,
-    private val resolver: GodiddyResolver,
-    private val registrar: GodiddyRegistrar?
+    private val resolver: UniversalResolver,
+    private val registrar: DidRegistrar?
 ) : DidMethod {
 
     override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {

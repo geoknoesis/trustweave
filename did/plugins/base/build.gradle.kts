@@ -6,10 +6,10 @@ plugins {
 group = "com.trustweave.did"
 dependencies {
     implementation(project(":common"))   // Root-level common (exceptions)
-    implementation(project(":did:core"))
-    implementation(project(":kms:core"))
-    implementation(project(":anchors:core"))
-    implementation(project(":credentials:core"))
+    implementation(project(":did:did-core"))
+    implementation(project(":kms:kms-core"))
+    implementation(project(":anchors:anchor-core"))
+    implementation(project(":credentials:credential-core"))
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     
     // Test dependencies

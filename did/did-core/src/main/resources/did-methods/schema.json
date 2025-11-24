@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://identity.foundation/did-registration/method-registry-entry.json",
+  "title": "DID Method Registry Entry",
+  "description": "JSON schema for DID method registry entries following the DID Registration specification from https://identity.foundation/did-registration/",
+  "type": "object",
+  "required": ["name"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The DID method name (e.g., 'web', 'key', 'ion'). This becomes the method identifier in 'did:method:id' format.",
+      "pattern": "^[a-z0-9]+$",
+      "minLength": 1,
+      "maxLength": 50,
+      "examples": ["web", "key", "ion", "ethr", "polygon"]
+    },
+    "status": {
+      "type": "string",
+      "description": "Implementation status of the method",
+      "enum": ["proposed", "implemented", "deprecated", "withdrawn"],
+      "default": "implemented"
+    },
+    "specification": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to the full DID method specification document"
+    },
+    "contact": {
+      "type": "object",
+      "description": "Contact information for the method maintainers",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the maintainer or organization"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Email address for contact"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to maintainer website or documentation"
+        }
+      }
+    },
+    "implementations": {
+      "type": "array",
+      "description": "List of implementations available for this DID method. Each implementation typically includes a driverUrl pointing to a resolver service.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the implementation (e.g., 'Universal Resolver', 'GoDiddy')"
+          },
+          "driverUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to the driver/resolver service for this implementation. Typically a Universal Resolver endpoint."
+          },
+          "testNet": {
+            "type": "boolean",
+            "description": "Whether this implementation is for a test network",
+            "default": false
+          }
+        },
+        "required": ["driverUrl"]
+      },
+      "minItems": 0
+    }
+  },
+  "additionalProperties": true,
+  "examples": [
+    {
+      "name": "web",
+      "status": "implemented",
+      "specification": "https://w3c-ccg.github.io/did-method-web/",
+      "contact": {
+        "name": "W3C Credentials Community Group",
+        "url": "https://www.w3.org/community/credentials/"
+      },
+      "implementations": [
+        {
+          "name": "Universal Resolver",
+          "driverUrl": "https://dev.uniresolver.io",
+          "testNet": false
+        }
+      ]
+    }
+  ]
+}

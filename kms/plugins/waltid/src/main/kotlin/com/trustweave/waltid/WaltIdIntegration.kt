@@ -1,7 +1,7 @@
 package com.trustweave.waltid
 
 import com.trustweave.did.DidCreationOptions
-import com.trustweave.did.DidMethodRegistry
+import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.did.spi.DidMethodProvider
 import com.trustweave.kms.KeyManagementService
 import com.trustweave.kms.spi.KeyManagementServiceProvider

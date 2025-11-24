@@ -5,12 +5,12 @@ plugins {
 
 group = "com.trustweave.did"
 dependencies {
-    implementation(project(":credentials:core"))
-    implementation(project(":did:core"))
+    implementation(project(":credentials:credential-core"))
+    implementation(project(":did:did-core"))
     implementation(project(":did:plugins:base"))
     implementation(project(":did:plugins:ethr")) // Reuse ethr implementation
-    implementation(project(":anchors:core"))
-    implementation(project(":kms:core"))
+    implementation(project(":anchors:anchor-core"))
+    implementation(project(":kms:kms-core"))
 
     
     // Web3j for Polygon blockchain interaction

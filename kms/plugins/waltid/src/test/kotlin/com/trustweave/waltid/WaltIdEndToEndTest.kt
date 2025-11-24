@@ -1,7 +1,7 @@
 package com.trustweave.waltid
 
 import com.trustweave.did.DidCreationOptions
-import com.trustweave.did.DidMethodRegistry
+import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.did.didCreationOptions
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test

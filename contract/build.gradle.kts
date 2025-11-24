@@ -6,14 +6,14 @@ plugins {
 group = "com.trustweave"
 dependencies {
     implementation(kotlin("reflect"))
-    implementation(project(":credentials:core"))
-    implementation(project(":anchors:core"))
-    implementation(project(":did:core"))
+    implementation(project(":credentials:credential-core"))
+    implementation(project(":anchors:anchor-core"))
+    implementation(project(":did:did-core"))
     
     // Test dependencies
     testImplementation(project(":testkit"))
-    testImplementation(project(":did:core"))
-    testImplementation(project(":kms:core"))
+    testImplementation(project(":did:did-core"))
+    testImplementation(project(":kms:kms-core"))
 }
 
 

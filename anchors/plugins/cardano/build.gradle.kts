@@ -5,8 +5,8 @@ plugins {
 
 group = "com.trustweave.chains"
 dependencies {
-    implementation(project(":anchors:core"))
-    implementation(project(":credentials:core"))
+    implementation(project(":anchors:anchor-core"))
+    implementation(project(":credentials:credential-core"))
     
     // HTTP client for Cardano API
     // Note: Cardano uses UTXO model, different from account-based chains

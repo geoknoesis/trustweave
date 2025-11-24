@@ -30,6 +30,12 @@ dependencies {
     implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
     
     // SPI support (optional, for auto-discovery)
+    // Note: Module paths have been renamed to avoid circular dependency issues:
+    // - did:core → did:did-core
+    // - credentials:core → credentials:credential-core
+    // - kms:core → kms:kms-core
+    // - anchors:core → anchors:anchor-core
+    // - wallet:core → wallet:wallet-core
     implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```

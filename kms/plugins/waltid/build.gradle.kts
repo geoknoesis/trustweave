@@ -13,9 +13,9 @@ repositories {
 val WALTID_VERSION = "2025.1.0-PRE-RELEASE.5"
 
 dependencies {
-    implementation(project(":credentials:core"))
-    implementation(project(":did:core"))
-    implementation(project(":kms:core"))
+    implementation(project(":credentials:credential-core"))
+    implementation(project(":did:did-core"))
+    implementation(project(":kms:kms-core"))
     implementation("id.walt.did:waltid-did:$WALTID_VERSION")
     // Add other walt.id modules as needed:
     // implementation("id.walt.crypto:waltid-crypto:$WALTID_VERSION")

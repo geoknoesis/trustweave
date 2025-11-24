@@ -1,8 +1,9 @@
 package com.trustweave.godiddy.registrar
 
 import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.did.DidCreationOptions
 import com.trustweave.did.DidDocument
+import com.trustweave.did.registrar.DidRegistrar
+import com.trustweave.did.registrar.model.*
 import com.trustweave.godiddy.GodiddyClient
 import com.trustweave.godiddy.models.*
 import kotlinx.coroutines.Dispatchers
@@ -11,32 +12,40 @@ import kotlinx.serialization.json.*
 
 /**
  * Client for godiddy Universal Registrar service.
+ * 
+ * Implements the [DidRegistrar] interface to provide DID lifecycle operations
+ * via the Universal Registrar protocol according to the DID Registration specification.
  */
 class GodiddyRegistrar(
     private val client: GodiddyClient
-) {
+) : DidRegistrar {
     /**
-     * Creates a new DID using Universal Registrar.
+     * Creates a new DID using Universal Registrar according to DID Registration spec.
      *
      * @param method The DID method name (e.g., "web", "key")
-     * @param options Method-specific options for DID creation
-     * @return The created DID Document
+     * @param options Creation options according to DID Registration spec
+     * @return Registration response with jobId and didState
      */
-    suspend fun createDid(method: String, options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
+    override suspend fun createDid(method: String, options: CreateDidOptions): DidRegistrationResponse = withContext(Dispatchers.IO) {
         try {
             // Universal Registrar endpoint: POST /1.0/operations
             val path = "/1.0/operations"
             
-            // Convert options to JsonElement map
-            val jsonOptions = options.toMap().mapValues { (_, value) ->
-                when (value) {
-                    is String -> JsonPrimitive(value)
-                    is Number -> JsonPrimitive(value.toDouble())
-                    is Boolean -> JsonPrimitive(value)
-                    is Map<*, *> -> JsonObject(value.mapKeys { it.key.toString() }
-                        .mapValues { convertToJsonElement(it.value) })
-                    is List<*> -> JsonArray(value.map { convertToJsonElement(it) })
-                    else -> JsonNull
+            // Convert CreateDidOptions to JsonElement map for Godiddy API
+            val jsonOptions = buildMap<String, JsonElement> {
+                put("keyManagementMode", JsonPrimitive(options.keyManagementMode.name.lowercase()))
+                if (options.keyManagementMode == KeyManagementMode.INTERNAL_SECRET) {
+                    put("storeSecrets", JsonPrimitive(options.storeSecrets))
+                    put("returnSecrets", JsonPrimitive(options.returnSecrets))
+                }
+                options.secret?.let { secret ->
+                    put("secret", convertSecretToJson(secret))
+                }
+                options.didDocument?.let { doc ->
+                    put("didDocument", convertDidDocumentToJson(doc))
+                }
+                options.methodSpecificOptions.forEach { (key, value) ->
+                    put(key, value)
                 }
             }
             
@@ -47,13 +56,35 @@ class GodiddyRegistrar(
             
             val response: GodiddyCreateDidResponse = client.post(path, request)
             
-            if (response.did == null || response.didDocument == null) {
-                throw TrustWeaveException("Failed to create DID: ${response.jobId ?: "unknown error"}")
+            // Convert Godiddy response to spec-compliant DidRegistrationResponse
+            val didState = if (response.did != null && response.didDocument != null) {
+                val docJson = response.didDocument.jsonObject
+                val didDocument = convertToDidDocument(docJson, response.did)
+                DidState(
+                    state = OperationState.FINISHED,
+                    did = response.did,
+                    didDocument = didDocument
+                )
+            } else if (response.jobId != null) {
+                // Long-running operation
+                DidState(
+                    state = OperationState.WAIT,
+                    did = null,
+                    didDocument = null
+                )
+            } else {
+                DidState(
+                    state = OperationState.FAILED,
+                    did = null,
+                    didDocument = null,
+                    reason = response.error ?: "DID creation failed"
+                )
             }
             
-            // Convert response to DidDocument
-            val docJson = response.didDocument.jsonObject
-            convertToDidDocument(docJson, response.did)
+            DidRegistrationResponse(
+                jobId = response.jobId,
+                didState = didState
+            )
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: Exception) {
@@ -62,13 +93,18 @@ class GodiddyRegistrar(
     }
     
     /**
-     * Updates a DID Document using Universal Registrar.
+     * Updates a DID Document using Universal Registrar according to DID Registration spec.
      *
      * @param did The DID to update
      * @param document The updated DID Document
-     * @return The updated DID Document
+     * @param options Update options according to DID Registration spec
+     * @return Registration response with jobId and didState
      */
-    suspend fun updateDid(did: String, document: DidDocument): DidDocument = withContext(Dispatchers.IO) {
+    override suspend fun updateDid(
+        did: String,
+        document: DidDocument,
+        options: UpdateDidOptions
+    ): DidRegistrationResponse = withContext(Dispatchers.IO) {
         try {
             // Universal Registrar endpoint: POST /1.0/operations (with update operation)
             val path = "/1.0/operations"
@@ -76,21 +112,51 @@ class GodiddyRegistrar(
             // Convert DidDocument to JsonObject
             val docJson = convertDidDocumentToJson(document)
             
+            // Convert UpdateDidOptions to JsonElement map
+            val jsonOptions = buildMap<String, JsonElement> {
+                options.secret?.let { secret ->
+                    put("secret", convertSecretToJson(secret))
+                }
+                options.methodSpecificOptions.forEach { (key, value) ->
+                    put(key, value)
+                }
+            }
+            
             val request = GodiddyUpdateDidRequest(
                 did = did,
                 didDocument = docJson,
-                options = emptyMap()
+                options = jsonOptions
             )
             
             val response: GodiddyOperationResponse = client.post(path, request)
             
-            if (!response.success || response.didDocument == null) {
-                throw TrustWeaveException("Failed to update DID $did: ${response.error ?: "unknown error"}")
+            // Convert Godiddy response to spec-compliant DidRegistrationResponse
+            val didState = if (response.success && response.didDocument != null) {
+                val updatedDocJson = response.didDocument.jsonObject
+                val updatedDocument = convertToDidDocument(updatedDocJson, did)
+                DidState(
+                    state = OperationState.FINISHED,
+                    did = did,
+                    didDocument = updatedDocument
+                )
+            } else if (response.jobId != null) {
+                DidState(
+                    state = OperationState.WAIT,
+                    did = did,
+                    didDocument = null
+                )
+            } else {
+                DidState(
+                    state = OperationState.FAILED,
+                    did = did,
+                    didDocument = null
+                )
             }
             
-            // Convert response back to DidDocument
-            val updatedDocJson = response.didDocument.jsonObject
-            convertToDidDocument(updatedDocJson, did)
+            DidRegistrationResponse(
+                jobId = response.jobId,
+                didState = didState
+            )
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: Exception) {
@@ -99,25 +165,98 @@ class GodiddyRegistrar(
     }
     
     /**
-     * Deactivates a DID using Universal Registrar.
+     * Deactivates a DID using Universal Registrar according to DID Registration spec.
      *
      * @param did The DID to deactivate
-     * @return true if the DID was successfully deactivated
+     * @param options Deactivation options according to DID Registration spec
+     * @return Registration response with jobId and didState
      */
-    suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deactivateDid(
+        did: String,
+        options: DeactivateDidOptions
+    ): DidRegistrationResponse = withContext(Dispatchers.IO) {
         try {
             // Universal Registrar endpoint: POST /1.0/operations (with deactivate operation)
             val path = "/1.0/operations"
             
+            // Convert DeactivateDidOptions to JsonElement map
+            val jsonOptions = buildMap<String, JsonElement> {
+                options.secret?.let { secret ->
+                    put("secret", convertSecretToJson(secret))
+                }
+                options.methodSpecificOptions.forEach { (key, value) ->
+                    put(key, value)
+                }
+            }
+            
             val request = GodiddyDeactivateDidRequest(
                 did = did,
-                options = emptyMap()
+                options = jsonOptions
             )
             
             val response: GodiddyOperationResponse = client.post(path, request)
-            response.success
+            
+            // Convert Godiddy response to spec-compliant DidRegistrationResponse
+            val didState = if (response.success) {
+                DidState(
+                    state = OperationState.FINISHED,
+                    did = did,
+                    didDocument = null
+                )
+            } else if (response.jobId != null) {
+                DidState(
+                    state = OperationState.WAIT,
+                    did = did,
+                    didDocument = null
+                )
+            } else {
+                DidState(
+                    state = OperationState.FAILED,
+                    did = did,
+                    didDocument = null
+                )
+            }
+            
+            DidRegistrationResponse(
+                jobId = response.jobId,
+                didState = didState
+            )
         } catch (e: Exception) {
             throw TrustWeaveException("Failed to deactivate DID $did: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Converts Secret to JsonObject for API requests.
+     */
+    private fun convertSecretToJson(secret: Secret): JsonObject {
+        return buildJsonObject {
+            secret.keys?.let { keys ->
+                putJsonArray("keys") {
+                    keys.forEach { key ->
+                        add(buildJsonObject {
+                            key.id?.let { put("id", it) }
+                            key.type?.let { put("type", it) }
+                            key.privateKeyJwk?.let { jwk ->
+                                putJsonObject("privateKeyJwk") {
+                                    jwk.forEach { (k, v) ->
+                                        put(k, convertToJsonElement(v))
+                                    }
+                                }
+                            }
+                            key.privateKeyMultibase?.let { put("privateKeyMultibase", it) }
+                            key.additionalProperties?.forEach { (k, v) ->
+                                put(k, v)
+                            }
+                        })
+                    }
+                }
+            }
+            secret.recoveryKey?.let { put("recoveryKey", it) }
+            secret.updateKey?.let { put("updateKey", it) }
+            secret.methodSpecificSecrets?.forEach { (k, v) ->
+                put(k, v)
+            }
         }
     }
     
@@ -236,7 +375,7 @@ class GodiddyRegistrar(
             val publicKeyMultibase = vmObj["publicKeyMultibase"]?.jsonPrimitive?.content
             
             if (vmId != null && vmType != null) {
-                com.trustweave.did.VerificationMethodRef(
+                com.trustweave.did.VerificationMethod(
                     id = vmId,
                     type = vmType,
                     controller = controller,
@@ -274,7 +413,7 @@ class GodiddyRegistrar(
             
             if (sId != null && sType != null && sEndpoint != null) {
                 val endpoint = convertJsonElement(sEndpoint) ?: return@mapNotNull null
-                com.trustweave.did.Service(
+                com.trustweave.did.DidService(
                     id = sId,
                     type = sType,
                     serviceEndpoint = endpoint

@@ -4,7 +4,7 @@ import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.dsl.StoredCredential
 import com.trustweave.wallet.Wallet
 import com.trustweave.wallet.dsl.OrganizationResult
-import com.trustweave.did.dsl.DidBuilder
+import com.trustweave.trust.dsl.did.DidBuilder
 
 /**
  * Trust Layer Convenience Extensions.

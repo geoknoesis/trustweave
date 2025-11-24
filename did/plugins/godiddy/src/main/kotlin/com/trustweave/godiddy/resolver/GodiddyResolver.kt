@@ -3,7 +3,8 @@ package com.trustweave.godiddy.resolver
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.DidDocument
 import com.trustweave.did.DidDocumentMetadata
-import com.trustweave.did.DidResolutionResult
+import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.did.resolver.UniversalResolver
 import com.trustweave.godiddy.GodiddyClient
 import com.trustweave.godiddy.models.GodiddyResolutionResponse
 import io.ktor.client.call.*
@@ -14,18 +15,28 @@ import kotlinx.serialization.json.*
 import java.time.Instant
 
 /**
- * Client for godiddy Universal Resolver service.
+ * GoDiddy implementation of Universal Resolver.
+ * 
+ * This class implements the [UniversalResolver] interface using GoDiddy's
+ * hosted Universal Resolver service. GoDiddy provides access to 20+ DID methods
+ * through a standard Universal Resolver HTTP API.
+ * 
+ * **Example Usage**:
+ * ```kotlin
+ * val config = GodiddyConfig(baseUrl = "https://api.godiddy.com")
+ * val client = GodiddyClient(config)
+ * val resolver: UniversalResolver = GodiddyResolver(client)
+ * 
+ * val result = resolver.resolveDid("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
+ * ```
  */
 class GodiddyResolver(
     private val client: GodiddyClient
-) {
-    /**
-     * Resolves a DID using Universal Resolver.
-     *
-     * @param did The DID to resolve
-     * @return DidResolutionResult containing the resolved document
-     */
-    suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
+) : UniversalResolver {
+    
+    override val baseUrl: String
+        get() = client.config.baseUrl
+    override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             // Universal Resolver endpoint: GET /1.0.0/universal-resolver/identifiers/{did}
             val path = "/1.0.0/universal-resolver/identifiers/$did"
@@ -223,6 +234,14 @@ class GodiddyResolver(
             is JsonObject -> element.entries.associate { it.key to convertJsonElement(it.value) }
             is JsonNull -> null
         }
+    }
+    
+    override suspend fun getSupportedMethods(): List<String>? {
+        // GoDiddy supports many methods, but doesn't expose a standard API endpoint
+        // to query them. Return null to indicate this information is not available.
+        // In practice, the supported methods are documented or can be discovered
+        // through the DID method provider SPI.
+        return null
     }
 }
 

@@ -5,10 +5,11 @@ plugins {
 
 group = "com.trustweave"
 dependencies {
-    implementation(project(":credentials:core"))
-    implementation(project(":wallet:core"))  // Wallet interfaces    implementation(project(":anchors:core"))
-    implementation(project(":did:core"))
-    implementation(project(":kms:core"))
+    implementation(project(":credentials:credential-core"))
+    implementation(project(":wallet:wallet-core"))  // Wallet interfaces
+    implementation(project(":anchors:anchor-core"))
+    implementation(project(":did:did-core"))
+    implementation(project(":kms:kms-core"))
     implementation(project(":trust"))
     
     // JUnit for test base classes

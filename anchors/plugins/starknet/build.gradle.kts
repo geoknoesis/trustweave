@@ -5,8 +5,8 @@ plugins {
 
 group = "com.trustweave.chains"
 dependencies {
-    implementation(project(":anchors:core"))
-    implementation(project(":credentials:core"))
+    implementation(project(":anchors:anchor-core"))
+    implementation(project(":credentials:credential-core"))
     
     // HTTP client for StarkNet RPC API
     // Note: StarkNet uses Cairo, not EVM, so requires different approach than Web3j

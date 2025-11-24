@@ -1,6 +1,7 @@
 package com.trustweave.godiddy
 
-import com.trustweave.did.DidMethodRegistry
+import com.trustweave.did.registry.DidMethodRegistry
+import com.trustweave.did.resolver.UniversalResolver
 import com.trustweave.godiddy.issuer.GodiddyIssuer
 import com.trustweave.godiddy.registrar.GodiddyRegistrar
 import com.trustweave.godiddy.resolver.GodiddyResolver
@@ -22,8 +23,9 @@ data class GodiddyIntegrationResult(
     
     /**
      * Universal Resolver client instance.
+     * Exposed as [UniversalResolver] interface for better abstraction.
      */
-    val resolver: GodiddyResolver? = null,
+    val resolver: UniversalResolver? = null,
     
     /**
      * Universal Registrar client instance.

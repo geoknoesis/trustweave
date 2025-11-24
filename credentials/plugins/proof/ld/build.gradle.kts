@@ -5,7 +5,7 @@ plugins {
 
 group = "com.trustweave.credentials"
 dependencies {
-    implementation(project(":credentials:core"))
+    implementation(project(":credentials:credential-core"))
     
     // JSON-LD for canonicalization
     implementation("com.github.jsonld-java:jsonld-java:0.13.4")

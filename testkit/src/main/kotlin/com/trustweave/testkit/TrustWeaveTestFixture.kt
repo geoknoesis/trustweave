@@ -7,7 +7,7 @@ import com.trustweave.did.DidCreationOptions
 import com.trustweave.did.DidCreationOptions.KeyAlgorithm
 import com.trustweave.did.DidDocument
 import com.trustweave.did.DidMethod
-import com.trustweave.did.DidMethodRegistry
+import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.did.didCreationOptions
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.testkit.did.DidKeyMockMethod

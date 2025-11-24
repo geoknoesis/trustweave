@@ -3,19 +3,16 @@ package com.trustweave.trust.dsl
 import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.anchor.BlockchainAnchorRegistry
 import com.trustweave.credential.CredentialServiceRegistry
-import com.trustweave.did.resolution.DidResolver
+import com.trustweave.did.resolver.DidResolver
 import com.trustweave.credential.issuer.CredentialIssuer
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.did.DidMethod
-import com.trustweave.did.DidMethodRegistry
+import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.anchor.services.BlockchainAnchorClientFactory
 import com.trustweave.trust.services.TrustRegistryFactory
 import com.trustweave.revocation.services.StatusListManagerFactory
-import com.trustweave.did.services.DidDocumentAccess
-import com.trustweave.did.services.VerificationMethodAccess
-import com.trustweave.did.services.DidMethodService
 import com.trustweave.credential.SchemaFormat
 import com.trustweave.kms.services.KmsService
 import kotlinx.coroutines.Dispatchers
@@ -77,9 +74,6 @@ class TrustLayerConfig private constructor(
     val statusListManager: Any? = null,
     val trustRegistry: Any? = null,
     val walletFactory: WalletFactory? = null,
-    val didDocumentAccess: DidDocumentAccess? = null,
-    val verificationMethodAccess: VerificationMethodAccess? = null,
-    val didMethodService: DidMethodService? = null,
     val kmsService: KmsService? = null
 ) {
     val didMethods: Map<String, Any>
@@ -288,9 +282,6 @@ class TrustLayerConfig private constructor(
             val resolvedWalletFactory = walletFactory ?: getDefaultWalletFactory()
             
             // Create service adapters (no reflection, direct instantiation)
-            val resolvedDidDocumentAccess = com.trustweave.did.services.DidDocumentAccessAdapter()
-            val resolvedVerificationMethodAccess = com.trustweave.did.services.VerificationMethodAccessAdapter()
-            val resolvedDidMethodService = com.trustweave.did.services.DidMethodServiceAdapter()
             val resolvedKmsService = com.trustweave.testkit.services.TestkitKmsService()
             
             val registriesSnapshot = TrustLayerRegistries(
@@ -313,9 +304,6 @@ class TrustLayerConfig private constructor(
                 statusListManager = resolvedStatusListManager,
                 trustRegistry = resolvedTrustRegistry,
                 walletFactory = resolvedWalletFactory,
-                didDocumentAccess = resolvedDidDocumentAccess,
-                verificationMethodAccess = resolvedVerificationMethodAccess,
-                didMethodService = resolvedDidMethodService,
                 kmsService = resolvedKmsService
             )
         }

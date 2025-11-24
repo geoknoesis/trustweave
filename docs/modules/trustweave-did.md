@@ -1,6 +1,6 @@
-# trustweave-did
+# trustweave-did (Core Module)
 
-The `trustweave-did` module provides Decentralized Identifier (DID) and DID Document management with support for pluggable DID methods.
+The `trustweave-did` module provides Decentralized Identifier (DID) and DID Document management with support for pluggable DID methods, DID resolution, and DID registration interfaces.
 
 ```kotlin
 dependencies {
@@ -10,18 +10,60 @@ dependencies {
 }
 ```
 
-**Result:** Gradle exposes the DID registry, DID method interfaces, and DID Document models so you can create, resolve, update, and deactivate DIDs using any supported DID method.
+**Result:** Gradle exposes the DID registry, DID method interfaces, DID Document models, DID resolution, and DID registration interfaces so you can create, resolve, update, and deactivate DIDs using any supported DID method.
 
 ## Overview
 
-The `trustweave-did` module provides:
+The `trustweave-did` core module provides:
 
 - **DidMethod Interface** – contract for DID method implementations
 - **DID Document Models** – W3C-compliant DID Document structures
 - **DidMethodRegistry** – instance-scoped registry for managing DID methods
 - **DID Resolution** – unified interface for resolving DIDs across methods
+- **DID Registration** – interfaces and models for DID registration operations
 - **DID Operations** – create, resolve, update, and deactivate operations
 - **SPI Support** – service provider interface for auto-discovery of DID method implementations
+- **JSON Registration** – support for loading DID methods from JSON configuration files
+
+## Architecture
+
+```mermaid
+graph TB
+    subgraph "trustweave-did Core Module"
+        DidMethod[DidMethod Interface]
+        DidMethodRegistry[DidMethodRegistry]
+        DidResolver[DidResolver]
+        DidRegistrar[DidRegistrar Interface]
+        DidDocument[DidDocument Models]
+        DidValidator[DidValidator]
+    end
+    
+    subgraph "DID Method Implementations"
+        KeyMethod[did:key]
+        WebMethod[did:web]
+        EthrMethod[did:ethr]
+        IonMethod[did:ion]
+        HttpMethod[HttpDidMethod]
+    end
+    
+    subgraph "External Services"
+        UniversalResolver[Universal Resolver]
+        UniversalRegistrar[Universal Registrar]
+    end
+    
+    DidMethod --> DidMethodRegistry
+    DidMethodRegistry --> DidResolver
+    DidMethod --> DidRegistrar
+    DidResolver --> UniversalResolver
+    HttpMethod --> UniversalResolver
+    HttpMethod --> UniversalRegistrar
+    DidRegistrar --> UniversalRegistrar
+    
+    style DidMethod fill:#e1f5ff
+    style DidMethodRegistry fill:#e1f5ff
+    style DidResolver fill:#e1f5ff
+    style DidRegistrar fill:#e1f5ff
+```
 
 ## Key Components
 
@@ -59,18 +101,113 @@ val didDoc = method?.createDid(options)
 
 **Outcome:** Allows multiple DID methods to coexist in the same application context.
 
+### DidResolver
+
+```kotlin
+val resolver = RegistryBasedResolver(registry)
+val result = resolver.resolve("did:key:z6Mk...")
+```
+
+**What this does:** Provides a unified interface for resolving DIDs across different methods.
+
+**Outcome:** Enables method-agnostic DID resolution with proper error handling.
+
+### DidRegistrar Interface
+
+```kotlin
+import com.trustweave.did.registrar.*
+
+interface DidRegistrar {
+    suspend fun createDid(method: String, options: CreateDidOptions): DidRegistrationResponse
+    suspend fun updateDid(did: String, document: DidDocument, options: UpdateDidOptions): DidRegistrationResponse
+    suspend fun deactivateDid(did: String, options: DeactivateDidOptions): DidRegistrationResponse
+}
+```
+
+**What this does:** Defines the contract for DID registration operations according to the DID Registration specification.
+
+**Outcome:** Enables method-agnostic DID creation, updates, and deactivation through registrar services.
+
+**Note:** The `DidRegistrar` interface is defined in the core module, but implementations are provided in the `trustweave-did-registrar` module. See [DID Registrar Module](trustweave-did-registrar.md) for implementation details.
+
 ### DID Document Models
 
 The module includes W3C-compliant models for:
 
 - `DidDocument` – complete DID Document structure
 - `VerificationMethod` – public key and verification methods
-- `Service` – service endpoints
+- `DidService` – service endpoints
 - `DidResolutionResult` – resolution response with metadata
+- `DidRegistrationResponse` – registration response with job tracking
+- `DidState` – operation state (finished, failed, action, wait)
+- `Secret` – key material for registration operations
 
-**What this does:** Provides type-safe, serializable models for DID documents that comply with W3C DID Core specification.
+**What this does:** Provides type-safe, serializable models for DID documents that comply with W3C DID Core specification and DID Registration specification.
 
 **Outcome:** Ensures interoperability with other DID implementations and proper serialization.
+
+### JSON-Based DID Method Registration
+
+The module supports loading DID methods from JSON configuration files that follow the [DID Method Registry](https://identity.foundation/did-registration/) format:
+
+```kotlin
+val loader = JsonDidMethodLoader()
+val method = loader.loadFromFile(Paths.get("did-methods/web.json"))
+registry.register(method)
+```
+
+**What this does:** Enables DID methods to be registered without writing code, using JSON configuration files.
+
+**Outcome:** Simplifies adding support for new DID methods by providing configuration-driven registration.
+
+See [DID Registration Integration Guide](../integrations/did-registration/README.md) for detailed information.
+
+## Component Relationships
+
+```mermaid
+graph LR
+    subgraph "Core Interfaces"
+        DM[DidMethod]
+        DR[DidRegistrar]
+        DRes[DidResolver]
+    end
+    
+    subgraph "Registry & Resolution"
+        DMR[DidMethodRegistry]
+        RBR[RegistryBasedResolver]
+        DUR[DefaultUniversalResolver]
+    end
+    
+    subgraph "Registration Models"
+        CRO[CreateDidOptions]
+        URO[UpdateDidOptions]
+        DRO[DeactivateDidOptions]
+        DRR[DidRegistrationResponse]
+        DS[DidState]
+    end
+    
+    subgraph "Document Models"
+        DD[DidDocument]
+        VM[VerificationMethod]
+        DSvc[DidService]
+    end
+    
+    DM --> DMR
+    DMR --> RBR
+    RBR --> DRes
+    DR --> DRR
+    DRR --> DS
+    DM --> DD
+    DD --> VM
+    DD --> DSvc
+    DR --> CRO
+    DR --> URO
+    DR --> DRO
+    
+    style DM fill:#e1f5ff
+    style DR fill:#e1f5ff
+    style DRes fill:#e1f5ff
+```
 
 ## Usage Example
 
@@ -99,7 +236,7 @@ fun main() = runBlocking {
     if (resolution.document != null) {
         println("Resolved DID: ${resolution.document.id}")
     } else {
-        println("DID not found: ${resolution.metadata.error}")
+        println("DID not found: ${resolution.resolutionMetadata["error"]}")
     }
 }
 ```
@@ -124,12 +261,50 @@ TrustWeave provides implementations for:
 - **did:sol** (`com.trustweave.did:sol`) – Solana DID method. See [Solana DID Integration Guide](../integrations/sol-did.md).
 - **did:cheqd** (`com.trustweave.did:cheqd`) – Cheqd DID method. See [Cheqd DID Integration Guide](../integrations/cheqd-did.md).
 
-See the [DID Integration Guides](../integrations/README.md) for detailed information about each method.
+Additionally, the module supports HTTP-based DID methods through JSON configuration. See [DID Registration Integration Guide](../integrations/did-registration/README.md) for details.
+
+## Module Structure
+
+```mermaid
+graph TD
+    subgraph "did:did-core Package Structure"
+        A[com.trustweave.did]
+        A --> B[DidMethod.kt]
+        A --> C[DidCreationOptions.kt]
+        A --> D[model/]
+        A --> E[registry/]
+        A --> F[resolver/]
+        A --> G[registrar/]
+        A --> H[registration/]
+        A --> I[validation/]
+        A --> J[spi/]
+        
+        D --> D1[DidModels.kt]
+        E --> E1[DidMethodRegistry.kt]
+        F --> F1[DidResolver.kt]
+        F --> F2[RegistryBasedResolver.kt]
+        F --> F3[UniversalResolver.kt]
+        G --> G1[DidRegistrar.kt]
+        G --> G2[model/]
+        H --> H1[loader/]
+        H --> H2[impl/]
+        H --> H3[mapper/]
+    end
+    
+    style A fill:#e1f5ff
+    style G fill:#fff4e1
+    style H fill:#e8f5e9
+```
 
 ## Dependencies
 
 - Depends on [`trustweave-common`](trustweave-common.md) for core types, exceptions, and SPI interfaces
 - Depends on [`trustweave-kms`](trustweave-kms.md) for key operations
+
+## Related Modules
+
+- **[trustweave-did-registrar](trustweave-did-registrar.md)** – DID Registrar implementations (clients and adapters)
+- **[trustweave-did-registrar-server](trustweave-did-registrar-server.md)** – Universal Registrar server implementation
 
 ## Next Steps
 
@@ -137,4 +312,4 @@ See the [DID Integration Guides](../integrations/README.md) for detailed informa
 - Explore [DID Integration Guides](../integrations/README.md) for specific method setups
 - See [DID Operations Tutorial](../tutorials/did-operations-tutorial.md) for step-by-step examples
 - Check [Creating Plugins](../contributing/creating-plugins.md) to implement custom DID methods
-
+- Learn about [DID Registration](../integrations/did-registration/README.md) for JSON-based method registration

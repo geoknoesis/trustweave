@@ -5,9 +5,9 @@ import com.trustweave.anchor.BlockchainAnchorRegistry
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
 import com.trustweave.credential.proof.ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
-import com.trustweave.did.DefaultDidMethodRegistry
 import com.trustweave.did.DidMethod
-import com.trustweave.did.DidMethodRegistry
+import com.trustweave.did.registry.DefaultDidMethodRegistry
+import com.trustweave.did.registry.DidMethodRegistry
 
 fun createTestDidRegistry(vararg methods: DidMethod): DidMethodRegistry {
     return DefaultDidMethodRegistry().apply {

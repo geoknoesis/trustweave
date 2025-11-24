@@ -5,8 +5,8 @@ plugins {
 
 group = "com.trustweave.kms"
 dependencies {
-    implementation(project(":credentials:core"))
-    implementation(project(":kms:core"))
+    implementation(project(":credentials:credential-core"))
+    implementation(project(":kms:kms-core"))
 
     // HTTP client for Entrust nShield HSM API
     implementation("com.squareup.okhttp3:okhttp:4.12.0")

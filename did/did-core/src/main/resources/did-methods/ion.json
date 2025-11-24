@@ -1,0 +1,17 @@
+{
+  "name": "ion",
+  "status": "implemented",
+  "specification": "https://identity.foundation/ion/",
+  "contact": {
+    "name": "ION Team",
+    "url": "https://identity.foundation/"
+  },
+  "implementations": [
+    {
+      "name": "Universal Resolver",
+      "driverUrl": "https://dev.uniresolver.io",
+      "testNet": false
+    }
+  ]
+}
+

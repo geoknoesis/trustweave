@@ -1,6 +1,6 @@
 package com.trustweave.godiddy
 
-import com.trustweave.did.DidMethodRegistry
+import com.trustweave.did.registry.DidMethodRegistry
 import kotlin.test.*
 
 /**

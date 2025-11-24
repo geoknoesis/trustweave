@@ -8,7 +8,7 @@ import com.trustweave.did.validation.DidValidator
 import com.trustweave.did.DidCreationOptionsBuilder
 import com.trustweave.did.DidDocument
 import com.trustweave.did.DidMethod
-import com.trustweave.did.DidResolutionResult
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.didCreationOptions
 
 /**

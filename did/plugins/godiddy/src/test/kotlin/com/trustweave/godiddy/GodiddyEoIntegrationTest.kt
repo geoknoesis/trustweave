@@ -1,7 +1,7 @@
 package com.trustweave.godiddy
 
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
-import com.trustweave.did.DidMethodRegistry
+import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.testkit.integrity.IntegrityVerifier

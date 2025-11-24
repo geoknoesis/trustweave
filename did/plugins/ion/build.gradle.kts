@@ -5,11 +5,11 @@ plugins {
 
 group = "com.trustweave.did"
 dependencies {
-    implementation(project(":credentials:core"))
-    implementation(project(":did:core"))
+    implementation(project(":credentials:credential-core"))
+    implementation(project(":did:did-core"))
     implementation(project(":did:plugins:base"))
-    implementation(project(":anchors:core"))
-    implementation(project(":kms:core"))
+    implementation(project(":anchors:anchor-core"))
+    implementation(project(":kms:kms-core"))
 
     
     // HTTP client for ION node communication

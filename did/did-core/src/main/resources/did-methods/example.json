@@ -1,0 +1,17 @@
+{
+  "name": "example",
+  "status": "implemented",
+  "specification": "https://example.com/did-method-spec",
+  "contact": {
+    "name": "Example Team",
+    "email": "contact@example.com"
+  },
+  "implementations": [
+    {
+      "name": "Universal Resolver",
+      "driverUrl": "https://dev.uniresolver.io",
+      "testNet": false
+    }
+  ]
+}
+

@@ -89,33 +89,45 @@ TrustWeave/
 ├── build.gradle.kts          # Root build file
 ├── settings.gradle.kts       # Project settings
 ├── buildSrc/                 # Build configuration
-├── core/                     # Core framework modules
-│   ├── TrustWeave-common/        # Base types, exceptions, credential APIs (includes SPI interfaces)
-│   ├── TrustWeave-json/        # JSON utilities
-│   ├── TrustWeave-trust/       # Trust registry
-│   └── TrustWeave-testkit/     # Test utilities
+├── common/                   # Common utilities
 ├── did/                      # DID domain
-│   ├── TrustWeave-did/         # Core DID abstraction
+│   ├── did-core/             # Core DID abstraction (renamed from core)
+│   ├── registrar/            # DID Registrar implementation
+│   ├── registrar-server/     # Universal Registrar server
 │   └── plugins/              # DID method implementations
 │       ├── key/              # did:key
 │       ├── web/              # did:web
 │       └── ...               # Other DID methods
 ├── kms/                      # KMS domain
-│   ├── trustweave-kms/         # Core KMS abstraction
+│   ├── kms-core/             # Core KMS abstraction (renamed from core)
 │   └── plugins/              # KMS implementations
 │       ├── aws/              # AWS KMS
 │       ├── azure/            # Azure Key Vault
 │       └── ...               # Other KMS providers
-├── chains/                   # Blockchain domain
-│   ├── trustweave-anchor/      # Core anchor abstraction
+├── anchors/                  # Blockchain domain
+│   ├── anchor-core/          # Core anchor abstraction (renamed from core)
 │   └── plugins/              # Chain implementations
 │       ├── algorand/         # Algorand adapter
 │       ├── polygon/          # Polygon adapter
 │       └── ...               # Other blockchain adapters
+├── credentials/              # Credentials domain
+│   ├── credential-core/      # Core credential abstraction (renamed from core)
+│   └── plugins/              # Credential plugins
+├── wallet/                   # Wallet domain
+│   ├── wallet-core/          # Core wallet abstraction (renamed from core)
+│   └── plugins/              # Wallet storage implementations
 └── distribution/             # Distribution modules
-    ├── trustweave-all/         # All-in-one module
-    ├── TrustWeave-bom/         # Bill of Materials
-    └── TrustWeave-examples/    # Example applications
+    ├── all/                  # All-in-one module
+    ├── bom/                  # Bill of Materials
+    └── examples/             # Example applications
+```
+
+**Note:** Module folders ending with `:core` have been renamed to avoid circular dependency issues:
+- `did/core` → `did/did-core`
+- `credentials/core` → `credentials/credential-core`
+- `kms/core` → `kms/kms-core`
+- `anchors/core` → `anchors/anchor-core`
+- `wallet/core` → `wallet/wallet-core`
 ```
 
 ## Development Workflow

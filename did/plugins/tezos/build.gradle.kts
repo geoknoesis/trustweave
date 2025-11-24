@@ -5,10 +5,10 @@ plugins {
 
 group = "com.trustweave.did"
 dependencies {
-    implementation(project(":did:core"))
+    implementation(project(":did:did-core"))
     implementation(project(":did:plugins:base"))
-    implementation(project(":credentials:core"))
-    implementation(project(":kms:core"))
+    implementation(project(":credentials:credential-core"))
+    implementation(project(":kms:kms-core"))
     
     // Tezos SDK (using HTTP client directly)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")

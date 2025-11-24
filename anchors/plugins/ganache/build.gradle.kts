@@ -5,8 +5,8 @@ plugins {
 
 group = "com.trustweave.chains"
 dependencies {
-    implementation(project(":credentials:core"))
-    implementation(project(":anchors:core"))
+    implementation(project(":credentials:credential-core"))
+    implementation(project(":anchors:anchor-core"))
     implementation("org.web3j:core:5.0.1")
 
     // Testcontainers for Ganache Docker container
@@ -15,7 +15,7 @@ dependencies {
 
     // Test dependencies
     testImplementation(project(":testkit"))
-    testImplementation(project(":did:core"))
-    testImplementation(project(":kms:core"))
+    testImplementation(project(":did:did-core"))
+    testImplementation(project(":kms:kms-core"))
 }
 

@@ -24,7 +24,7 @@ include("testkit")
 include("contract")
 
 // DID domain
-include("did:core")
+include("did:did-core")
 include("did:registrar")
 include("did:registrar-server")
 include("did:plugins:base")
@@ -46,13 +46,13 @@ include("did:plugins:tezos")
 include("did:plugins:orb")
 
 // Wallet domain
-include("wallet:core")
+include("wallet:wallet-core")
 include("wallet:plugins:database")
 include("wallet:plugins:file")
 include("wallet:plugins:cloud")
 
 // KMS domain
-include("kms:core")
+include("kms:kms-core")
 include("kms:plugins:aws")
 include("kms:plugins:azure")
 include("kms:plugins:google")
@@ -69,7 +69,7 @@ include("kms:plugins:waltid")
 include("kms:plugins:venafi")
 
 // Anchors domain
-include("anchors:core")
+include("anchors:anchor-core")
 include("anchors:plugins:algorand")
 include("anchors:plugins:polygon")
 include("anchors:plugins:ethereum")
@@ -84,7 +84,7 @@ include("anchors:plugins:ganache")
 include("anchors:plugins:indy")
 
 // Credentials domain
-include("credentials:core")
+include("credentials:credential-core")
 include("credentials:plugins:proof:bbs")
 include("credentials:plugins:proof:jwt")
 include("credentials:plugins:proof:ld")

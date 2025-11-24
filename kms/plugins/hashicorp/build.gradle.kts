@@ -5,8 +5,8 @@ plugins {
 
 group = "com.trustweave.kms"
 dependencies {
-    implementation(project(":credentials:core"))
-    implementation(project(":kms:core"))
+    implementation(project(":credentials:credential-core"))
+    implementation(project(":kms:kms-core"))
 
     // Vault Java client
     implementation("com.bettercloud:vault-java-driver:5.1.0")

@@ -5,10 +5,10 @@ plugins {
 
 group = "com.trustweave.did"
 dependencies {
-    implementation(project(":did:core"))
+    implementation(project(":did:did-core"))
     implementation(project(":did:plugins:base"))
-    implementation(project(":credentials:core"))
-    implementation(project(":kms:core"))
+    implementation(project(":credentials:credential-core"))
+    implementation(project(":kms:kms-core"))
     
     // HTTP client for IPFS/3Box API
     // Note: IPFS client dependencies may not be available in public Maven repositories

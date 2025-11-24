@@ -1,9 +1,9 @@
 package com.trustweave.trust.dsl
 
-import com.trustweave.did.dsl.DidDslProvider
-import com.trustweave.did.services.DidDocumentAccess
-import com.trustweave.did.services.VerificationMethodAccess
-import com.trustweave.did.services.DidMethodService
+import com.trustweave.did.DidDocument
+import com.trustweave.did.DidMethod
+import com.trustweave.did.VerificationMethodRef
+import com.trustweave.trust.dsl.did.DidDslProvider
 import com.trustweave.kms.services.KmsService
 import com.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
@@ -70,7 +70,7 @@ class KeyRotationBuilder(
      * 
      * @return Updated DID document
      */
-    suspend fun rotate(): Any = withContext(Dispatchers.IO) { // Returns DidDocument but using Any to avoid dependency
+    suspend fun rotate(): DidDocument = withContext(Dispatchers.IO) {
         val targetDid = did ?: throw IllegalStateException(
             "DID is required. Use did(\"did:key:...\")"
         )
@@ -86,7 +86,7 @@ class KeyRotationBuilder(
         )
         
         // Get DID method from provider
-        val didMethod = didProvider.getDidMethod(methodName) as? com.trustweave.did.DidMethod
+        val didMethod = didProvider.getDidMethod(methodName) as? DidMethod
             ?: throw IllegalStateException(
                 "DID method '$methodName' is not configured. " +
                 "Configure it in trustLayer { did { method(\"$methodName\") { ... } } }"
@@ -97,20 +97,11 @@ class KeyRotationBuilder(
         val publicKeyJwk = kmsService.getPublicKeyJwk(newKeyHandle)
         val keyId = kmsService.getKeyId(newKeyHandle)
         
-        // Get service instances for DID document manipulation from provider
-        val docAccess = didProvider.getDidDocumentAccess()
-            ?: throw IllegalStateException("DidDocumentAccess not configured")
-        val vmAccess = didProvider.getVerificationMethodAccess()
-            ?: throw IllegalStateException("VerificationMethodAccess not configured")
-        val didMethodService = didProvider.getDidMethodService()
-            ?: throw IllegalStateException("DidMethodService not configured")
-        
-        // Update DID document using service interfaces
-        val updatedDoc = didMethodService.updateDid(didMethod, targetDid) { currentDoc: Any ->
-            // Create updater function using service interfaces
+        // Update DID document using DidMethod directly
+        val updatedDoc = didMethod.updateDid(targetDid) { currentDoc ->
             updateDocumentForKeyRotation(
                 currentDoc, targetDid, keyId, algorithm, 
-                publicKeyJwk, oldKeyIds, docAccess, vmAccess
+                publicKeyJwk, oldKeyIds
             )
         }
         
@@ -118,24 +109,28 @@ class KeyRotationBuilder(
     }
     
     /**
-     * Update document for key rotation using service interfaces.
+     * Update document for key rotation using direct types.
      */
     private fun updateDocumentForKeyRotation(
-        currentDoc: Any,
+        currentDoc: DidDocument,
         targetDid: String,
         keyId: String,
         algorithm: String,
         publicKeyJwk: Map<String, Any?>?,
-        oldKeyIds: List<String>,
-        docAccess: DidDocumentAccess,
-        vmAccess: VerificationMethodAccess
-    ): Any {
-        // Extract current verification methods using service interface
-        val currentVm = docAccess.getVerificationMethod(currentDoc)
+        oldKeyIds: List<String>
+    ): DidDocument {
+        // Filter out old keys
+        val filteredVm = currentDoc.verificationMethod.filter { vm ->
+            !oldKeyIds.any { oldId -> vm.id.contains(oldId) }
+        }
         
-        // Extract current authentication and assertion using service interface
-        val currentAuth = docAccess.getAuthentication(currentDoc)
-        val currentAssertion = docAccess.getAssertionMethod(currentDoc)
+        val filteredAuth = currentDoc.authentication.filter { auth ->
+            !oldKeyIds.any { oldId -> auth.contains(oldId) }
+        }
+        
+        val filteredAssertion = currentDoc.assertionMethod.filter { assertion ->
+            !oldKeyIds.any { oldId -> assertion.contains(oldId) }
+        }
         
         // Create new verification method
         val newVmId = "$targetDid#$keyId"
@@ -145,22 +140,7 @@ class KeyRotationBuilder(
             else -> "JsonWebKey2020"
         }
         
-        // Filter out old keys using service interface
-        val filteredVm = currentVm.filter { vm ->
-            val vmId = vmAccess.getId(vm)
-            !oldKeyIds.any { oldId -> vmId.contains(oldId) }
-        }
-        
-        val filteredAuth = currentAuth.filter { auth ->
-            !oldKeyIds.any { oldId -> auth.contains(oldId) }
-        }
-        
-        val filteredAssertion = currentAssertion.filter { assertion ->
-            !oldKeyIds.any { oldId -> assertion.contains(oldId) }
-        }
-        
-        // Create new verification method object using service interface
-        val newVm = docAccess.createVerificationMethod(
+        val newVm = VerificationMethodRef(
             id = newVmId,
             type = vmType,
             controller = targetDid,
@@ -168,18 +148,11 @@ class KeyRotationBuilder(
             publicKeyMultibase = null
         )
         
-        // Create updated document
-        val updatedVm = filteredVm + newVm
-        val updatedAuth = filteredAuth + newVmId
-        val updatedAssertion = filteredAssertion + newVmId
-        
-        // Use copy method from docAccess
-        return docAccess.copyDocument(
-            doc = currentDoc,
-            id = targetDid,
-            verificationMethod = updatedVm,
-            authentication = updatedAuth,
-            assertionMethod = updatedAssertion
+        // Create updated document using copy
+        return currentDoc.copy(
+            verificationMethod = filteredVm + newVm,
+            authentication = filteredAuth + newVmId,
+            assertionMethod = filteredAssertion + newVmId
         )
     }
 }

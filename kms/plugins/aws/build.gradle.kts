@@ -5,8 +5,8 @@ plugins {
 
 group = "com.trustweave.kms"
 dependencies {
-    implementation(project(":credentials:core"))
-    implementation(project(":kms:core"))
+    implementation(project(":credentials:credential-core"))
+    implementation(project(":kms:kms-core"))
 
     // AWS SDK v2 for KMS
     implementation(platform("software.amazon.awssdk:bom:2.20.0"))

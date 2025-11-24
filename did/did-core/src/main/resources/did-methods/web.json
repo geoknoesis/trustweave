@@ -1,0 +1,17 @@
+{
+  "name": "web",
+  "status": "implemented",
+  "specification": "https://w3c-ccg.github.io/did-method-web/",
+  "contact": {
+    "name": "W3C Credentials Community Group",
+    "url": "https://www.w3.org/community/credentials/"
+  },
+  "implementations": [
+    {
+      "name": "Universal Resolver",
+      "driverUrl": "https://dev.uniresolver.io",
+      "testNet": false
+    }
+  ]
+}
+

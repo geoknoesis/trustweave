@@ -11,10 +11,10 @@ javaPlatform {
 
 dependencies {
     constraints {
-        api(project(":credentials:core"))
-        api(project(":kms:core"))
-        api(project(":did:core"))
-        api(project(":anchors:core"))
+        api(project(":credentials:credential-core"))
+        api(project(":kms:kms-core"))
+        api(project(":did:did-core"))
+        api(project(":anchors:anchor-core"))
         api(project(":testkit"))
         api(project(":kms:plugins:waltid"))
         api(project(":did:plugins:godiddy"))

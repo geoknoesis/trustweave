@@ -1,0 +1,17 @@
+{
+  "name": "example-godiddy",
+  "status": "implemented",
+  "specification": "https://example.com/did-method-spec",
+  "contact": {
+    "name": "Example Team",
+    "email": "contact@example.com"
+  },
+  "implementations": [
+    {
+      "name": "GoDiddy",
+      "driverUrl": "https://api.godiddy.com",
+      "testNet": false
+    }
+  ]
+}
+

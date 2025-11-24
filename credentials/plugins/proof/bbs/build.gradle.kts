@@ -5,7 +5,7 @@ plugins {
 
 group = "com.trustweave.credentials"
 dependencies {
-    implementation(project(":credentials:core"))
+    implementation(project(":credentials:credential-core"))
     
     // BBS+ signature library
     // Note: Using mattr-bbs-signatures or similar when available

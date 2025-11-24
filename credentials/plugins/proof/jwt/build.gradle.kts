@@ -5,7 +5,7 @@ plugins {
 
 group = "com.trustweave.credentials"
 dependencies {
-    implementation(project(":credentials:core"))
+    implementation(project(":credentials:credential-core"))
     
     // JWT library
     implementation("com.nimbusds:nimbus-jose-jwt:9.37.3")

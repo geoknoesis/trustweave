@@ -1,7 +1,7 @@
 package com.trustweave.godiddy
 
 import com.trustweave.did.DidCreationOptions
-import com.trustweave.did.DidMethodRegistry
+import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.did.spi.DidMethodProvider
 import com.trustweave.godiddy.issuer.GodiddyIssuer
 import com.trustweave.godiddy.registrar.GodiddyRegistrar

@@ -77,6 +77,8 @@
   * [trustweave-json](modules/trustweave-json.md)
   * [trustweave-kms](modules/trustweave-kms.md)
   * [trustweave-did](modules/trustweave-did.md)
+  * [trustweave-did-registrar](modules/trustweave-did-registrar.md)
+  * [trustweave-did-registrar-server](modules/trustweave-did-registrar-server.md)
   * [trustweave-anchor](modules/trustweave-anchor.md)
   * [trustweave-testkit](modules/trustweave-testkit.md)
 

@@ -6,8 +6,8 @@ plugins {
 group = "com.trustweave.kms"
 dependencies {
     implementation(project(":common"))    // Root-level common (exceptions)
-    implementation(project(":credentials:core"))
-    implementation(project(":kms:core"))
+    implementation(project(":credentials:credential-core"))
+    implementation(project(":kms:kms-core"))
 
 
     // Google Cloud KMS SDK

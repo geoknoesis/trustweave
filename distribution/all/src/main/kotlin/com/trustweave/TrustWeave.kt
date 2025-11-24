@@ -8,9 +8,9 @@ import com.trustweave.credential.CredentialService
 import com.trustweave.credential.CredentialServiceRegistry
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.credential.proof.ProofGenerator
-import com.trustweave.did.DidMethodRegistry
+import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.did.DidMethod
-import com.trustweave.did.DidResolutionResult
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.exception.DidError
 import com.trustweave.kms.KeyManagementService
 import com.trustweave.services.*

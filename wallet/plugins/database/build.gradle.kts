@@ -5,8 +5,8 @@ plugins {
 
 group = "com.trustweave.core"
 dependencies {
-    implementation(project(":credentials:core"))
-    implementation(project(":wallet:core"))  // Wallet interfaces
+    implementation(project(":credentials:credential-core"))
+    implementation(project(":wallet:wallet-core"))  // Wallet interfaces
 
     
     // JDBC drivers

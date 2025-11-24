@@ -5,13 +5,14 @@ plugins {
 
 group = "com.trustweave.did"
 dependencies {
-    implementation(project(":credentials:core"))
-    implementation(project(":did:core"))
-    implementation(project(":kms:core"))
+    implementation(project(":credentials:credential-core"))
+    implementation(project(":did:did-core"))
+    implementation(project(":did:registrar"))
+    implementation(project(":kms:kms-core"))
     implementation(libs.bundles.ktor.client)
 
     // Test dependencies
     testImplementation(project(":testkit"))
-    testImplementation(project(":anchors:core"))
+    testImplementation(project(":anchors:anchor-core"))
 }
 

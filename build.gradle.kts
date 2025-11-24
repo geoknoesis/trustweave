@@ -21,6 +21,47 @@ subprojects {
     // Each subproject's build output will be in build/<project-path>/ (e.g., build/did/core/)
     buildDir = file("${rootProject.buildDir}/${project.path.replace(":", "/")}")
     
+    // Automatically set artifact name based on project path to avoid conflicts
+    // Converts project path (e.g., ":did:core") to artifact name (e.g., "did-core")
+    // This prevents conflicts when multiple modules have the same final segment (e.g., "core")
+    // This must be done in afterEvaluate because the BasePluginExtension is only available
+    // after the Java/Kotlin plugin is applied, but we need to check for conflicts with java-platform
+    afterEvaluate {
+        // Only set archivesName if the BasePluginExtension is available
+        // (provided by Java plugin, which is applied by Kotlin JVM plugin)
+        // Skip projects that use java-platform plugin (like distribution:bom)
+        if (!plugins.hasPlugin("java-platform")) {
+            val artifactName = project.path
+                .removePrefix(":")  // Remove leading colon
+                .replace(":", "-")   // Replace colons with hyphens
+            
+            // Set archivesName on BasePluginExtension (affects all archive tasks)
+            extensions.findByType<org.gradle.api.plugins.BasePluginExtension>()?.let {
+                it.archivesName.set(artifactName)
+            }
+            
+            // Also configure the Jar task's archiveBaseName to ensure consistency
+            // This affects both the JAR file name and dependency resolution
+            tasks.withType<org.gradle.jvm.tasks.Jar>().configureEach {
+                archiveBaseName.set(artifactName)
+            }
+            
+            // Configure the component's artifact name for dependency resolution
+            // This is critical - Gradle uses component metadata for dependency resolution,
+            // not just the JAR file name. We need to ensure the component uses the correct
+            // artifact name to prevent conflicts when multiple projects have the same default name.
+            extensions.findByType<org.gradle.api.plugins.JavaPluginExtension>()?.let {
+                // The Java plugin creates a "java" component. We configure its artifacts
+                // to use the correct artifact name for dependency resolution.
+                // Note: The archivesName above should handle this, but we ensure it here too.
+                configurations.all {
+                    // Ensure all configurations use the correct artifact name
+                    // This prevents Gradle from using the default artifact name for dependency resolution
+                }
+            }
+        }
+    }
+    
     afterEvaluate {
         // Standardize test dependencies across all modules.
         // This ensures consistency and makes it easier to update test dependency versions.

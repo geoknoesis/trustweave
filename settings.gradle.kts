@@ -25,6 +25,8 @@ include("contract")
 
 // DID domain
 include("did:core")
+include("did:registrar")
+include("did:registrar-server")
 include("did:plugins:base")
 include("did:plugins:key")
 include("did:plugins:web")

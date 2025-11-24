@@ -2,7 +2,6 @@ package com.trustweave.credential
 
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.models.VerifiablePresentation
-import com.trustweave.core.SchemaFormat
 
 /**
  * Pluggable credential service interface.
@@ -201,8 +200,7 @@ data class PresentationVerificationResult(
  * Structured configuration passed to [CredentialServiceProvider.create].
  *
  * Keeps common toggles explicit while still allowing provider-specific
- * properties through [additionalProperties]. Providers that still expect legacy
- * map-based configuration can use [toLegacyMap].
+ * properties through [additionalProperties].
  */
 data class CredentialServiceCreationOptions(
     val enabled: Boolean = true,
@@ -210,15 +208,7 @@ data class CredentialServiceCreationOptions(
     val endpoint: String? = null,
     val apiKey: String? = null,
     val additionalProperties: Map<String, Any?> = emptyMap()
-) {
-    fun toLegacyMap(): Map<String, Any?> = buildMap {
-        put("enabled", enabled)
-        priority?.let { put("priority", it) }
-        endpoint?.let { put("endpoint", it) }
-        apiKey?.let { put("apiKey", it) }
-        putAll(additionalProperties)
-    }
-}
+)
 
 class CredentialServiceCreationOptionsBuilder {
     var enabled: Boolean = true

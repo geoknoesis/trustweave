@@ -2,7 +2,7 @@ package com.trustweave.credential.proof
 
 import com.trustweave.credential.models.Proof
 import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.json.DigestUtils
+import com.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*

@@ -5,26 +5,24 @@ TrustWeave is organised into small, composable modules. The list below explains 
 ## Module Overview
 
 - **SPI Interfaces** – Shared plugin/service abstractions and adapter loader utilities are included in `trustweave-common`. SPI functionality is available when you include `trustweave-common` or other TrustWeave modules.
-- **TrustWeave-trust** – Trust registry interfaces and runtime helpers. Needed when modelling trust anchors or resolving multi-party provenance.
-- **[TrustWeave-common](trustweave-common.md)** – Credential-domain APIs, DSLs, and wallet utilities. Most applications compile against this module.
-- **[TrustWeave-json](trustweave-json.md)** – JSON canonicalisation and digest helpers. Pair this with anchoring or signing modules to ensure deterministic hashing.
-- **[TrustWeave-kms](trustweave-kms.md)** – Key management abstractions and helpers. Required whenever you integrate HSMs or cloud KMS backends.
-- **[TrustWeave-did](trustweave-did.md)** – DID and DID document management with pluggable DID methods. Enables DID creation/resolution across modules.
-- **[TrustWeave-anchor](trustweave-anchor.md)** – Blockchain anchoring abstraction with chain-agnostic interfaces. Use it to notarise digests on Algorand, Polygon, etc.
-- **[TrustWeave-contract](trustweave-contract.md)** – Smart Contract abstraction for executable agreements with verifiable credentials and blockchain anchoring.
-- **[TrustWeave-testkit](trustweave-testkit.md)** – In-memory mocks for every SPI. Import this in unit tests or quick-start prototypes.
+- **trustweave-trust** – Trust registry interfaces and runtime helpers. Needed when modelling trust anchors or resolving multi-party provenance.
+- **[trustweave-common](trustweave-common.md)** – Domain-agnostic core infrastructure. Includes plugin system (registry, metadata, configuration, provider chains), structured error handling (13+ granular error types), JSON canonicalization, digest computation, and Result utilities. Most applications compile against this module.
+- **[trustweave-kms](trustweave-kms.md)** – Key management abstractions and helpers. Required whenever you integrate HSMs or cloud KMS backends.
+- **[trustweave-did](trustweave-did.md)** – DID and DID document management with pluggable DID methods. Enables DID creation/resolution across modules.
+- **[trustweave-anchor](trustweave-anchor.md)** – Blockchain anchoring abstraction with chain-agnostic interfaces. Use it to notarise digests on Algorand, Polygon, etc.
+- **[trustweave-contract](trustweave-contract.md)** – Smart Contract abstraction for executable agreements with verifiable credentials and blockchain anchoring.
+- **[trustweave-testkit](trustweave-testkit.md)** – In-memory mocks for every SPI. Import this in unit tests or quick-start prototypes.
 
 ## Module Dependencies
 
 ```text
-TrustWeave-trust → TrustWeave-common (includes SPI)
-TrustWeave-common (includes SPI interfaces)
-TrustWeave-json → TrustWeave-common
-TrustWeave-kms → TrustWeave-common
-TrustWeave-did → TrustWeave-common, TrustWeave-kms
-TrustWeave-anchor → TrustWeave-common, TrustWeave-json
-TrustWeave-contract → TrustWeave-common, TrustWeave-json, TrustWeave-anchor, TrustWeave-did
-TrustWeave-testkit → TrustWeave-common, TrustWeave-trust, TrustWeave-did, TrustWeave-kms, TrustWeave-anchor
+trustweave-trust → trustweave-common (includes SPI)
+trustweave-common (includes SPI interfaces, JSON utilities, plugin infrastructure)
+trustweave-kms → trustweave-common
+trustweave-did → trustweave-common, trustweave-kms
+trustweave-anchor → trustweave-common
+trustweave-contract → trustweave-common, trustweave-anchor, trustweave-did
+trustweave-testkit → trustweave-common, trustweave-trust, trustweave-did, trustweave-kms, trustweave-anchor
 ```
 
 When you need a specific building block, add it to `dependencies` explicitly:

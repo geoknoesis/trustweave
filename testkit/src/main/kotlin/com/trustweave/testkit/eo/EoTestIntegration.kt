@@ -3,7 +3,7 @@ package com.trustweave.testkit.eo
 import com.trustweave.anchor.AnchorResult
 import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.json.DigestUtils
+import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.integrity.IntegrityVerifier
 import com.trustweave.testkit.integrity.IntegrityVerificationResult
 import com.trustweave.testkit.integrity.TestDataBuilders

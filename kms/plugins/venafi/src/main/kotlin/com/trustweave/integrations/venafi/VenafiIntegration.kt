@@ -1,6 +1,6 @@
 package com.trustweave.integrations.venafi
 
-import com.trustweave.core.TrustWeaveException
+import com.trustweave.core.exception.TrustWeaveException
 
 /**
  * Venafi integration for trustweave.

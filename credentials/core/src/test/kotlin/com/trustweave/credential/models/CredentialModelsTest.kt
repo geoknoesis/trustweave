@@ -75,7 +75,7 @@ class CredentialModelsTest {
         val schema = CredentialSchema(
             id = "https://example.com/schemas/person",
             type = "JsonSchemaValidator2018",
-            schemaFormat = com.trustweave.core.SchemaFormat.JSON_SCHEMA
+            schemaFormat = SchemaFormat.JSON_SCHEMA
         )
         
         assertEquals("https://example.com/schemas/person", schema.id)

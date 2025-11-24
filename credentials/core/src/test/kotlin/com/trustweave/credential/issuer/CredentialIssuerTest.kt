@@ -8,7 +8,7 @@ import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.credential.schema.JsonSchemaValidator
 import com.trustweave.credential.schema.SchemaRegistry
 import com.trustweave.credential.schema.SchemaValidatorRegistry
-import com.trustweave.core.SchemaFormat
+import com.trustweave.credential.SchemaFormat
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.AfterEach

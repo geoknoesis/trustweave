@@ -2,7 +2,7 @@ package com.trustweave.credential.dsl
 
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.schema.SchemaRegistry
-import com.trustweave.core.SchemaFormat
+import com.trustweave.credential.SchemaFormat
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
@@ -159,7 +159,7 @@ class SchemaDslTest {
         
         val result = trustLayer.registerSchema {
             id(schemaId)
-            format(com.trustweave.core.SchemaFormat.SHACL)
+            format(SchemaFormat.SHACL)
             shacl {
                 put("@context", "https://www.w3.org/ns/shacl#")
                 put("sh:targetClass", "TestCredential")

@@ -1,4 +1,4 @@
-package com.trustweave.core
+package com.trustweave.core.exception
 
 /**
  * Common exception types for TrustWeave.

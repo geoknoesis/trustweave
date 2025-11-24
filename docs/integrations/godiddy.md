@@ -214,7 +214,7 @@ See the [GoDiddy Documentation](https://godiddy.com/docs) for a complete list of
 The GoDiddy integration follows TrustWeave's error handling patterns:
 
 ```kotlin
-import com.trustweave.core.TrustWeaveError
+import com.trustweave.core.exception.TrustWeaveError
 
 val result = resolver.resolveDid(did)
 result.fold(

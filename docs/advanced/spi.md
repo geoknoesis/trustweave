@@ -223,7 +223,7 @@ override fun create(
 
 - Review [Creating Plugins](../contributing/creating-plugins.md) for plugin implementation
 - See [Plugin Lifecycle](plugin-lifecycle.md) for lifecycle management
-- SPI interfaces are included in `TrustWeave-common`. See [Core Modules](../modules/core-modules.md) for details
+- SPI interfaces are included in `trustweave-common`. See [Core Modules](../modules/core-modules.md) for details
 
 ## References
 

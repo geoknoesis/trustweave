@@ -26,9 +26,7 @@ dependencies {
     implementation(project(":did:plugins:key"))
     implementation(project(":did:plugins:jwk"))
     
-    // Test dependencies
-    testImplementation(libs.kotlin.test)
-    testImplementation(libs.junit.jupiter)
+    // Test dependencies are standardized in root build.gradle.kts
 }
 
 // Configure Java toolchain for all JavaExec tasks

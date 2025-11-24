@@ -359,7 +359,7 @@ fun main() = runBlocking {
 
 ```kotlin
 import com.trustweave.TrustWeave
-import com.trustweave.core.TrustWeaveError
+import com.trustweave.core.exception.TrustWeaveError
 import com.trustweave.credential.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*

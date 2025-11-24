@@ -7,7 +7,7 @@ import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.testkit.integrity.IntegrityVerifier
 import com.trustweave.testkit.integrity.TestDataBuilders
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
-import com.trustweave.json.DigestUtils
+import com.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import java.time.Instant
@@ -344,7 +344,7 @@ fun main() = runBlocking {
         issuer = issuerDid.id,
         subject = credentialSubject,
         config = com.trustweave.services.IssuanceConfig(
-            proofType = com.trustweave.core.types.ProofType.Ed25519Signature2020,
+            proofType = com.trustweave.credential.proof.ProofType.Ed25519Signature2020,
             keyId = issuerKeyId,
             issuerDid = issuerDid.id
         ),

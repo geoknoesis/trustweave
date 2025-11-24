@@ -1,6 +1,6 @@
 package com.trustweave
 
-import com.trustweave.core.types.ProofType
+import com.trustweave.credential.proof.ProofType
 import com.trustweave.services.IssuanceConfig
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject

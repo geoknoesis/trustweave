@@ -373,8 +373,8 @@ class MyBlockchainAdapterIntegrationTest {
 Use TrustWeave's error types:
 
 ```kotlin
-import com.trustweave.core.TrustWeaveError
-import com.trustweave.core.Result
+import com.trustweave.core.exception.TrustWeaveError
+import kotlin.Result
 
 suspend fun createDid(options: DidCreationOptions): Result<DidDocument> {
     return try {

@@ -2,7 +2,7 @@ package com.trustweave.credential
 
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.models.VerifiablePresentation
-import com.trustweave.core.SchemaFormat
+import com.trustweave.credential.SchemaFormat
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test

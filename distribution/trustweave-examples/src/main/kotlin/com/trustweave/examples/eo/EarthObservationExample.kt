@@ -3,11 +3,13 @@ package com.trustweave.examples.eo
 import com.trustweave.TrustWeave
 import com.trustweave.core.*
 import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.proof.ProofType
+import com.trustweave.services.IssuanceConfig
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.testkit.integrity.IntegrityVerifier
 import com.trustweave.testkit.integrity.TestDataBuilders
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
-import com.trustweave.json.DigestUtils
+import com.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import java.time.Instant
@@ -343,8 +345,8 @@ fun main() = runBlocking {
     val credential = trustweave.credentials.issue(
         issuer = issuerDid.id,
         subject = credentialSubject,
-        config = com.trustweave.services.IssuanceConfig(
-            proofType = com.trustweave.core.types.ProofType.Ed25519Signature2020,
+        config = IssuanceConfig(
+            proofType = ProofType.Ed25519Signature2020,
             keyId = issuerKeyId,
             issuerDid = issuerDid.id
         ),

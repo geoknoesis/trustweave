@@ -1,6 +1,6 @@
-# TrustWeave-did
+# trustweave-did
 
-The `TrustWeave-did` module provides Decentralized Identifier (DID) and DID Document management with support for pluggable DID methods.
+The `trustweave-did` module provides Decentralized Identifier (DID) and DID Document management with support for pluggable DID methods.
 
 ```kotlin
 dependencies {
@@ -14,7 +14,7 @@ dependencies {
 
 ## Overview
 
-The `TrustWeave-did` module provides:
+The `trustweave-did` module provides:
 
 - **DidMethod Interface** – contract for DID method implementations
 - **DID Document Models** – W3C-compliant DID Document structures
@@ -128,8 +128,8 @@ See the [DID Integration Guides](../integrations/README.md) for detailed informa
 
 ## Dependencies
 
-- Depends on [`TrustWeave-common`](trustweave-common.md) for core types, exceptions, and SPI interfaces
-- Depends on [`TrustWeave-kms`](trustweave-kms.md) for key operations
+- Depends on [`trustweave-common`](trustweave-common.md) for core types, exceptions, and SPI interfaces
+- Depends on [`trustweave-kms`](trustweave-kms.md) for key operations
 
 ## Next Steps
 

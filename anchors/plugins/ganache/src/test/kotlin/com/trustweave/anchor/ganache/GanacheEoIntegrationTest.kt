@@ -2,7 +2,7 @@ package com.trustweave.anchor.ganache
 
 import com.trustweave.anchor.*
 import com.trustweave.did.DidDocument
-import com.trustweave.json.DigestUtils
+import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.integrity.IntegrityVerifier
 import com.trustweave.testkit.integrity.TestDataBuilders

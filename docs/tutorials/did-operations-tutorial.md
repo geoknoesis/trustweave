@@ -335,7 +335,7 @@ fun main() = runBlocking {
 
 ```kotlin
 import com.trustweave.TrustWeave
-import com.trustweave.core.TrustWeaveError
+import com.trustweave.core.exception.TrustWeaveError
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {

@@ -18,7 +18,7 @@ package com.example.TrustWeave.quickstart
 import com.trustweave.TrustWeave
 import com.trustweave.anchor.BlockchainAnchorRegistry
 import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.json.DigestUtils
+import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -172,11 +172,11 @@ The sections below explain each step in detail.
 
 ## Step 1: Add a single dependency
 
-**Why:** `TrustWeave-all` bundles every public module (core APIs, DID support, KMS, anchoring, DSLs) so you can get going with one line.  
+**Why:** `trustweave-all` bundles every public module (core APIs, DID support, KMS, anchoring, DSLs) so you can get going with one line.  
 **How it works:** It's a convenience metapackage that re-exports the same artifacts you would otherwise add one-by-one.  
 **How simple:** Drop one dependency and you're done.
 
-> **Note:** For production deployments, consider using individual modules instead of `TrustWeave-all` to minimize bundle size. See [Installation Guide](installation.md) for details.
+> **Note:** For production deployments, consider using individual modules instead of `trustweave-all` to minimize bundle size. See [Installation Guide](installation.md) for details.
 
 ```kotlin
 dependencies {
@@ -187,7 +187,7 @@ dependencies {
 
 **What this does**  
 - Pulls in every public TrustWeave module (core APIs, DID support, KMS, anchoring, DSLs) with a single coordinate so you never chase transitive dependencies.  
-- Adds `TrustWeave-testkit` for the in-memory DID/KMS/wallet implementations used in the tutorials and automated tests.
+- Adds `trustweave-testkit` for the in-memory DID/KMS/wallet implementations used in the tutorials and automated tests.
 
 **Design significance**  
 TrustWeave promotes a “batteries included” experience for newcomers. The monolithic artifact keeps onboarding simple; when you graduate to production you can swap in individual modules without changing API usage.
@@ -200,7 +200,7 @@ TrustWeave promotes a “batteries included” experience for newcomers. The mon
 
 ```kotlin
 import com.trustweave.TrustWeave
-import com.trustweave.json.DigestUtils
+import com.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -308,8 +308,8 @@ The printed ID corresponds to a tamper-evident credential JSON object that you c
 Facades embrace TrustWeave's "everything returns `Result<T>`" philosophy. By forcing the caller to handle success and failure explicitly, flows stay predictable in production and testable in unit harnesses.
 
 > ✅ **Run the sample**  
-> The full quick-start flow lives in `TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/quickstart/QuickStartSample.kt`.  
-> Execute it locally with `./gradlew :TrustWeave-examples:runQuickStartSample`.
+> The full quick-start flow lives in `distribution/examples/src/main/kotlin/com/trustweave/examples/quickstart/QuickStartSample.kt`.  
+> Execute it locally with `./gradlew :distribution:examples:runQuickStartSample`.
 
 ## Step 5: Verify the credential
 
@@ -318,7 +318,8 @@ Facades embrace TrustWeave's "everything returns `Result<T>`" philosophy. By for
 **How simple:** One call returns a structured result with validation details.
 
 ```kotlin
-import com.trustweave.core.*
+import com.trustweave.core.exception.*
+import com.trustweave.core.util.*
 
 // Verify credential
 val verification = TrustWeave.credentials.verify(credential)
@@ -455,7 +456,8 @@ try {
 TrustWeave provides structured error handling with `Result<T>` and `TrustWeaveError` types:
 
 ```kotlin
-import com.trustweave.core.*
+import com.trustweave.core.exception.*
+import com.trustweave.core.util.*
 
 // Verify credential with error handling
 val verification = TrustWeave.credentials.verify(credential)

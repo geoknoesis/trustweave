@@ -5,7 +5,7 @@ import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.schema.SchemaRegistry
 import com.trustweave.credential.schema.SchemaRegistrationResult
 import com.trustweave.credential.schema.SchemaValidationResult
-import com.trustweave.core.SchemaFormat
+import com.trustweave.credential.SchemaFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject

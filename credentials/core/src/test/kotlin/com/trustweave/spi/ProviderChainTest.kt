@@ -43,7 +43,7 @@ class ProviderChainTest {
     }
 
     @Test
-    fun `test execute throws ProviderChainException when all fail`() = runBlocking {
+    fun `test execute throws AllProvidersFailed when all fail`() = runBlocking {
         val providers = listOf(
             TestProvider("provider-1", shouldFail = true),
             TestProvider("provider-2", shouldFail = true)
@@ -51,7 +51,7 @@ class ProviderChainTest {
         
         val chain = ProviderChain(providers)
         
-        assertFailsWith<ProviderChainException> {
+        assertFailsWith<com.trustweave.core.exception.TrustWeaveError.AllProvidersFailed> {
             chain.execute { provider ->
                 provider.getValue()
             }
@@ -133,10 +133,10 @@ class ProviderChainTest {
     }
 
     @Test
-    fun `test createProviderChain fails when no providers found`() {
+    fun `test createProviderChain throws NoProvidersFound when no providers found`() {
         PluginRegistry.clear()
         
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<com.trustweave.core.exception.TrustWeaveError.NoProvidersFound> {
             createProviderChain<TestProvider>(listOf("nonexistent-plugin"))
         }
     }

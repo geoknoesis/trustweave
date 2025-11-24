@@ -1,4 +1,4 @@
-package com.trustweave.core.types
+package com.trustweave.credential.proof
 
 /**
  * Type-safe proof type representation.

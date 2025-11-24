@@ -9,7 +9,7 @@ TrustWeave testing strategy includes:
 - **Unit Tests** – test individual components in isolation
 - **Integration Tests** – test component interactions
 - **End-to-End Tests** – test complete workflows
-- **Test Utilities** – `TrustWeave-testkit` for in-memory implementations
+- **Test Utilities** – `trustweave-testkit` for in-memory implementations
 
 ## Testing Principles
 
@@ -299,13 +299,13 @@ Aim for:
 ### Specific Module
 
 ```bash
-./gradlew :TrustWeave-core:test
+./gradlew :common:test
 ```
 
 ### Specific Test Class
 
 ```bash
-./gradlew :TrustWeave-common:test --tests "DidMethodTest"
+./gradlew :common:test --tests "DidMethodTest"
 ```
 
 ### With Verbose Output
@@ -316,7 +316,7 @@ Aim for:
 
 ## Next Steps
 
-- Review [TrustWeave-testkit Module](../modules/trustweave-testkit.md) for testing utilities
+- Review [trustweave-testkit Module](../modules/trustweave-testkit.md) for testing utilities
 - See [Testing Strategies](../advanced/testing-strategies.md) for advanced patterns
 - Check [Development Setup](development-setup.md) for environment setup
 - Explore existing tests in TrustWeave modules for examples

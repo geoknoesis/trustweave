@@ -10,8 +10,8 @@ import com.trustweave.anchor.*
 import com.trustweave.anchor.exceptions.BlockchainConnectionException
 import com.trustweave.anchor.exceptions.BlockchainTransactionException
 import com.trustweave.anchor.options.AlgorandOptions
-import com.trustweave.core.NotFoundException
-import com.trustweave.core.TrustWeaveException
+import com.trustweave.core.exception.NotFoundException
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.serialization.json.*
 import java.nio.charset.StandardCharsets
 

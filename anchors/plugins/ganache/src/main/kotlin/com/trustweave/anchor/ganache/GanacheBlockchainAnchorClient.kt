@@ -4,8 +4,8 @@ import com.trustweave.anchor.*
 import com.trustweave.anchor.exceptions.BlockchainConfigurationException
 import com.trustweave.anchor.exceptions.BlockchainTransactionException
 import com.trustweave.anchor.options.GanacheOptions
-import com.trustweave.core.NotFoundException
-import com.trustweave.core.TrustWeaveException
+import com.trustweave.core.exception.NotFoundException
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.serialization.json.*
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.http.HttpService

@@ -1,6 +1,6 @@
 package com.trustweave.anchor.exceptions
 
-import com.trustweave.core.TrustWeaveException
+import com.trustweave.core.exception.TrustWeaveException
 
 /**
  * Base exception for blockchain-related errors.
@@ -137,4 +137,22 @@ class BlockchainUnsupportedOperationException(
     operation: String? = null,
     cause: Throwable? = null
 ) : BlockchainException(message, chainId, operation, cause)
+
+/**
+ * Exception thrown when a blockchain chain is not registered.
+ * 
+ * @param chainId The chain ID that is not registered
+ * @param availableChains List of available chain IDs
+ * @param cause The underlying exception
+ */
+class ChainNotRegisteredException(
+    val chainId: String,
+    val availableChains: List<String>,
+    cause: Throwable? = null
+) : BlockchainException(
+    message = "Blockchain chain '$chainId' is not registered. Available chains: $availableChains",
+    chainId = chainId,
+    operation = "registration",
+    cause = cause
+)
 

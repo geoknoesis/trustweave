@@ -1,6 +1,6 @@
 package com.trustweave.iondid
 
-import com.trustweave.core.TrustWeaveException
+import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.DidDocument
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

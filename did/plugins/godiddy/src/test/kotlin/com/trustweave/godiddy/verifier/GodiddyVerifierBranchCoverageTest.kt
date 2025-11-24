@@ -1,6 +1,6 @@
 package com.trustweave.godiddy.verifier
 
-import com.trustweave.core.TrustWeaveException
+import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.godiddy.GodiddyClient
 import com.trustweave.godiddy.GodiddyConfig
 import kotlinx.coroutines.runBlocking

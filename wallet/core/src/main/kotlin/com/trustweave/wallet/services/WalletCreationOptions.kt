@@ -13,20 +13,7 @@ data class WalletCreationOptions(
     val enableOrganization: Boolean = false,
     val enablePresentation: Boolean = false,
     val additionalProperties: Map<String, Any?> = emptyMap()
-) {
-    /**
-    * Converts the structured options into a legacy map for providers that still
-    * expect key/value pairs.
-    */
-    fun toLegacyMap(): Map<String, Any?> = buildMap {
-        label?.let { put("label", it) }
-        storagePath?.let { put("storagePath", it) }
-        encryptionKey?.let { put("encryptionKey", it) }
-        if (enableOrganization) put("enableOrganization", true)
-        if (enablePresentation) put("enablePresentation", true)
-        putAll(additionalProperties)
-    }
-}
+)
 
 /**
  * Fluent builder used by DSLs to configure [WalletCreationOptions].

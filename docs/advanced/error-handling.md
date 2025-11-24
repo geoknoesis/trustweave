@@ -16,76 +16,103 @@ TrustWeave uses a sealed hierarchy of error types that extend `TrustWeaveExcepti
 
 ### Complete Error Type Reference
 
-| Error Type | Code | Properties | When It Occurs |
-|------------|------|------------|----------------|
-| `DidNotFound` | `DID_NOT_FOUND` | `did`, `availableMethods` | DID resolution fails |
-| `DidMethodNotRegistered` | `DID_METHOD_NOT_REGISTERED` | `method`, `availableMethods` | Using unregistered DID method |
-| `InvalidDidFormat` | `INVALID_DID_FORMAT` | `did`, `reason` | DID format validation fails |
-| `CredentialInvalid` | `CREDENTIAL_INVALID` | `reason`, `credentialId`, `field` | Credential validation fails |
-| `CredentialIssuanceFailed` | `CREDENTIAL_ISSUANCE_FAILED` | `reason`, `issuerDid` | Credential issuance fails |
-| `ChainNotRegistered` | `CHAIN_NOT_REGISTERED` | `chainId`, `availableChains` | Using unregistered blockchain |
-| `WalletCreationFailed` | `WALLET_CREATION_FAILED` | `reason`, `provider`, `walletId` | Wallet creation fails |
-| `PluginNotFound` | `PLUGIN_NOT_FOUND` | `pluginId`, `pluginType` | Plugin lookup fails |
-| `PluginInitializationFailed` | `PLUGIN_INITIALIZATION_FAILED` | `pluginId`, `reason` | Plugin initialization fails |
-| `ValidationFailed` | `VALIDATION_FAILED` | `field`, `reason`, `value` | Input validation fails |
-| `InvalidOperation` | `INVALID_OPERATION` | `message`, `context`, `cause` | Invalid operation attempted |
-| `InvalidState` | `INVALID_STATE` | `message`, `context`, `cause` | Invalid state detected |
-| `Unknown` | `UNKNOWN_ERROR` | `message`, `context`, `cause` | Unhandled exception |
+| Error Type | Code | Properties | When It Occurs | Module |
+|------------|------|------------|----------------|--------|
+| **Plugin Errors** ||||
+| `BlankPluginId` | `BLANK_PLUGIN_ID` | - | Plugin ID is blank | `common` |
+| `PluginAlreadyRegistered` | `PLUGIN_ALREADY_REGISTERED` | `pluginId`, `existingPlugin` | Duplicate plugin registration | `common` |
+| `PluginNotFound` | `PLUGIN_NOT_FOUND` | `pluginId`, `pluginType` | Plugin lookup fails | `common` |
+| `PluginInitializationFailed` | `PLUGIN_INITIALIZATION_FAILED` | `pluginId`, `reason` | Plugin initialization fails | `common` |
+| **Provider Errors** ||||
+| `NoProvidersFound` | `NO_PROVIDERS_FOUND` | `pluginIds`, `availablePlugins` | No providers found for plugin IDs | `common` |
+| `PartialProvidersFound` | `PARTIAL_PROVIDERS_FOUND` | `requestedIds`, `foundIds`, `missingIds` | Some providers found, some missing | `common` |
+| `AllProvidersFailed` | `ALL_PROVIDERS_FAILED` | `attemptedProviders`, `providerErrors`, `lastException` | All providers in chain failed | `common` |
+| **Configuration Errors** ||||
+| `ConfigNotFound` | `CONFIG_NOT_FOUND` | `path` | Configuration file/resource not found | `common` |
+| `ConfigReadFailed` | `CONFIG_READ_FAILED` | `path`, `reason` | Failed to read configuration file | `common` |
+| `InvalidConfigFormat` | `INVALID_CONFIG_FORMAT` | `jsonString`, `parseError`, `field` | Invalid JSON format in configuration | `common` |
+| **JSON/Digest Errors** ||||
+| `InvalidJson` | `INVALID_JSON` | `jsonString`, `parseError`, `position` | Invalid JSON parsing error | `common` |
+| `JsonEncodeFailed` | `JSON_ENCODE_FAILED` | `element`, `reason` | JSON encoding/serialization failed | `common` |
+| `DigestFailed` | `DIGEST_FAILED` | `algorithm`, `reason` | Digest computation failed | `common` |
+| `EncodeFailed` | `ENCODE_FAILED` | `operation`, `reason` | Encoding operation failed | `common` |
+| **Generic Errors** ||||
+| `ValidationFailed` | `VALIDATION_FAILED` | `field`, `reason`, `value` | Input validation fails | `common` |
+| `InvalidOperation` | `INVALID_OPERATION` | `message`, `context`, `cause` | Invalid operation attempted | `common` |
+| `InvalidState` | `INVALID_STATE` | `message`, `context`, `cause` | Invalid state detected | `common` |
+| `Unknown` | `UNKNOWN_ERROR` | `message`, `context`, `cause` | Unhandled exception | `common` |
+| `UnsupportedAlgorithm` | `UNSUPPORTED_ALGORITHM` | `algorithm`, `supportedAlgorithms` | Algorithm not supported | `common` |
+| **Domain-Specific Errors** (in respective modules) ||||
+| `DidNotFound` | `DID_NOT_FOUND` | `did`, `availableMethods` | DID resolution fails | `did` |
+| `DidMethodNotRegistered` | `DID_METHOD_NOT_REGISTERED` | `method`, `availableMethods` | Using unregistered DID method | `did` |
+| `InvalidDidFormat` | `INVALID_DID_FORMAT` | `did`, `reason` | DID format validation fails | `did` |
+| `CredentialInvalid` | `CREDENTIAL_INVALID` | `reason`, `credentialId`, `field` | Credential validation fails | `credentials` |
+| `CredentialIssuanceFailed` | `CREDENTIAL_ISSUANCE_FAILED` | `reason`, `issuerDid` | Credential issuance fails | `credentials` |
+| `ChainNotRegistered` | `CHAIN_NOT_REGISTERED` | `chainId`, `availableChains` | Using unregistered blockchain | `anchor` |
+| `WalletCreationFailed` | `WALLET_CREATION_FAILED` | `reason`, `provider`, `walletId` | Wallet creation fails | `wallet` |
 
-### DID-Related Errors
+### DID-Related Errors (in `trustweave-did` module)
 
 ```kotlin
+import com.trustweave.did.exception.DidError
+
 // DID not found
-TrustWeaveError.DidNotFound(
+DidError.DidNotFound(
     did = "did:key:z6Mk...",
     availableMethods = listOf("key", "web")
 )
 
 // DID method not registered
-TrustWeaveError.DidMethodNotRegistered(
+DidError.DidMethodNotRegistered(
     method = "web",
     availableMethods = listOf("key")
 )
 
 // Invalid DID format
-TrustWeaveError.InvalidDidFormat(
+DidError.InvalidDidFormat(
     did = "invalid-did",
     reason = "DID must match format: did:<method>:<identifier>"
 )
 ```
 
-### Credential-Related Errors
+### Credential-Related Errors (in `trustweave-credentials` module)
 
 ```kotlin
+import com.trustweave.credential.exception.CredentialError
+
 // Credential validation failed
-TrustWeaveError.CredentialInvalid(
+CredentialError.CredentialInvalid(
     reason = "Credential issuer is required",
     credentialId = "urn:uuid:123",
     field = "issuer"
 )
 
 // Credential issuance failed
-TrustWeaveError.CredentialIssuanceFailed(
+CredentialError.CredentialIssuanceFailed(
     reason = "Failed to sign credential",
     issuerDid = "did:key:issuer"
 )
 ```
 
-### Blockchain-Related Errors
+### Blockchain-Related Errors (in `trustweave-anchor` module)
 
 ```kotlin
+import com.trustweave.anchor.exceptions.BlockchainError
+
 // Chain not registered
-TrustWeaveError.ChainNotRegistered(
+BlockchainError.ChainNotRegistered(
     chainId = "ethereum:mainnet",
     availableChains = listOf("algorand:testnet", "polygon:testnet")
 )
 ```
 
-### Wallet-Related Errors
+### Wallet-Related Errors (in `trustweave-wallet` module)
 
 ```kotlin
+import com.trustweave.wallet.exception.WalletError
+
 // Wallet creation failed
-TrustWeaveError.WalletCreationFailed(
+WalletError.WalletCreationFailed(
     reason = "Provider not found",
     provider = "database",
     walletId = "wallet-123"
@@ -95,6 +122,15 @@ TrustWeaveError.WalletCreationFailed(
 ### Plugin-Related Errors
 
 ```kotlin
+// Blank plugin ID
+TrustWeaveError.BlankPluginId()
+
+// Plugin already registered
+TrustWeaveError.PluginAlreadyRegistered(
+    pluginId = "waltid-credential",
+    existingPlugin = "walt.id Credential Service"
+)
+
 // Plugin not found
 TrustWeaveError.PluginNotFound(
     pluginId = "waltid-credential",
@@ -105,6 +141,84 @@ TrustWeaveError.PluginNotFound(
 TrustWeaveError.PluginInitializationFailed(
     pluginId = "waltid-credential",
     reason = "Configuration missing"
+)
+```
+
+### Provider Chain Errors
+
+```kotlin
+// No providers found
+TrustWeaveError.NoProvidersFound(
+    pluginIds = listOf("provider1", "provider2"),
+    availablePlugins = listOf("provider3", "provider4")
+)
+
+// Partial providers found
+TrustWeaveError.PartialProvidersFound(
+    requestedIds = listOf("provider1", "provider2", "provider3"),
+    foundIds = listOf("provider1", "provider2"),
+    missingIds = listOf("provider3")
+)
+
+// All providers failed
+TrustWeaveError.AllProvidersFailed(
+    attemptedProviders = listOf("provider1", "provider2"),
+    providerErrors = mapOf(
+        "provider1" to "Connection timeout",
+        "provider2" to "Authentication failed"
+    ),
+    lastException = timeoutException
+)
+```
+
+### Configuration Errors
+
+```kotlin
+// Configuration file not found
+TrustWeaveError.ConfigNotFound(
+    path = "/path/to/config.json"
+)
+
+// Configuration read failed
+TrustWeaveError.ConfigReadFailed(
+    path = "/path/to/config.json",
+    reason = "Permission denied"
+)
+
+// Invalid configuration format
+TrustWeaveError.InvalidConfigFormat(
+    jsonString = "{ invalid json }",
+    parseError = "Expected ',' or '}'",
+    field = "plugins"
+)
+```
+
+### JSON/Digest Errors
+
+```kotlin
+// Invalid JSON
+TrustWeaveError.InvalidJson(
+    jsonString = "{ invalid }",
+    parseError = "Expected ',' or '}'",
+    position = "line 1, column 10"
+)
+
+// JSON encoding failed
+TrustWeaveError.JsonEncodeFailed(
+    element = "{ large object }",
+    reason = "Circular reference detected"
+)
+
+// Digest computation failed
+TrustWeaveError.DigestFailed(
+    algorithm = "SHA-256",
+    reason = "Algorithm not available"
+)
+
+// Encoding failed
+TrustWeaveError.EncodeFailed(
+    operation = "base58-encoding",
+    reason = "Invalid byte array"
 )
 ```
 
@@ -160,8 +274,20 @@ Quick lookup table for common error codes and their solutions:
 | `CREDENTIAL_ISSUANCE_FAILED` | `CredentialIssuanceFailed` | Signing failed, key not found, DID resolution failed | Verify issuer DID is resolvable, check key exists in DID document |
 | `CHAIN_NOT_REGISTERED` | `ChainNotRegistered` | Chain not registered in registry | Register blockchain client via `registerBlockchainClient()` or use available chain from `getAvailableChains()` |
 | `WALLET_CREATION_FAILED` | `WalletCreationFailed` | Provider not found, configuration invalid, storage unavailable | Check provider name, verify configuration, ensure storage accessible |
+| `BLANK_PLUGIN_ID` | `BlankPluginId` | Plugin ID is blank | Provide a non-blank plugin ID |
+| `PLUGIN_ALREADY_REGISTERED` | `PluginAlreadyRegistered` | Plugin already registered | Unregister existing plugin or use different ID |
 | `PLUGIN_NOT_FOUND` | `PluginNotFound` | Plugin not on classpath, not registered | Add plugin dependency, register plugin manually |
 | `PLUGIN_INITIALIZATION_FAILED` | `PluginInitializationFailed` | Configuration missing, connection failed, dependency issue | Check plugin configuration, verify dependencies, test connectivity |
+| `NO_PROVIDERS_FOUND` | `NoProvidersFound` | No providers found for plugin IDs | Check plugin IDs, verify plugins are registered |
+| `PARTIAL_PROVIDERS_FOUND` | `PartialProvidersFound` | Some providers found, some missing | Check missing plugin IDs, register missing plugins |
+| `ALL_PROVIDERS_FAILED` | `AllProvidersFailed` | All providers in chain failed | Check provider errors, verify provider configuration |
+| `CONFIG_NOT_FOUND` | `ConfigNotFound` | Configuration file/resource not found | Check file path, verify resource exists |
+| `CONFIG_READ_FAILED` | `ConfigReadFailed` | Failed to read configuration file | Check file permissions, verify file is readable |
+| `INVALID_CONFIG_FORMAT` | `InvalidConfigFormat` | Invalid JSON format in configuration | Validate JSON syntax, check field types |
+| `INVALID_JSON` | `InvalidJson` | Invalid JSON parsing error | Validate JSON syntax, check for malformed JSON |
+| `JSON_ENCODE_FAILED` | `JsonEncodeFailed` | JSON encoding/serialization failed | Check for circular references, verify object structure |
+| `DIGEST_FAILED` | `DigestFailed` | Digest computation failed | Verify algorithm is available, check input data |
+| `ENCODE_FAILED` | `EncodeFailed` | Encoding operation failed | Verify encoding operation, check input data |
 | `VALIDATION_FAILED` | `ValidationFailed` | Input doesn't meet requirements | Validate inputs before operations, check format requirements |
 
 ## Common Pitfalls
@@ -487,7 +613,7 @@ TrustWeave validates inputs before operations to catch errors early:
 ### DID Validation
 
 ```kotlin
-import com.trustweave.core.DidValidator
+import com.trustweave.core.util.DidValidator
 
 // Validate DID format
 val validation = DidValidator.validateFormat("did:key:z6Mk...")

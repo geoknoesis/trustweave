@@ -2,7 +2,7 @@ package com.trustweave.anchor.algorand
 
 import com.trustweave.anchor.BlockchainAnchorRegistry
 import com.trustweave.did.DidDocument
-import com.trustweave.json.DigestUtils
+import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.integrity.IntegrityVerifier
 import com.trustweave.testkit.integrity.TestDataBuilders

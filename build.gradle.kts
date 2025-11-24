@@ -16,7 +16,22 @@ allprojects {
 }
 
 subprojects {
+    // Configure all subprojects to build into the root project's build directory.
+    // This centralizes all build outputs under the project root for easier cleanup and organization.
+    // Each subproject's build output will be in build/<project-path>/ (e.g., build/did/core/)
+    buildDir = file("${rootProject.buildDir}/${project.path.replace(":", "/")}")
+    
     afterEvaluate {
+        // Standardize test dependencies across all modules.
+        // This ensures consistency and makes it easier to update test dependency versions.
+        // Modules can still add additional test dependencies if needed.
+        // Only apply if the Java plugin is applied (which provides the testImplementation configuration).
+        extensions.findByType<org.gradle.api.plugins.JavaPluginExtension>()?.let {
+            project.dependencies {
+                add("testImplementation", libs.bundles.test)
+                add("testRuntimeOnly", libs.junit.jupiter.engine)
+            }
+        }
         // Configure Kotlin compiler options for all subprojects.
         // Without explicit configuration, Gradle defaults to whatever JVM version Gradle itself is running on,
         // which can vary across environments and cause inconsistent builds.

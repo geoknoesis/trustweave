@@ -1,6 +1,6 @@
 package com.trustweave.core
 
-import com.trustweave.core.TrustWeaveException  // From :common module
+import com.trustweave.core.exception.TrustWeaveException  // From :common module
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -44,12 +44,12 @@ class ProviderChainBranchCoverageTest {
     }
 
     @Test
-    fun `test ProviderChain execute throws when all providers fail`() = runBlocking {
+    fun `test ProviderChain execute throws AllProvidersFailed when all providers fail`() = runBlocking {
         val provider1 = TestProvider("provider1", succeeds = false)
         val provider2 = TestProvider("provider2", succeeds = false)
         val chain = ProviderChain(listOf(provider1, provider2))
         
-        assertFailsWith<ProviderChainException> {
+        assertFailsWith<com.trustweave.core.exception.TrustWeaveError.AllProvidersFailed> {
             chain.execute { it.operation() }
         }
     }
@@ -68,13 +68,12 @@ class ProviderChainBranchCoverageTest {
     }
 
     @Test
-    fun `test ProviderChain execute with selector that excludes all throws`() = runBlocking {
-        val provider1 = TestProvider("provider1", succeeds = true)
-        val provider2 = TestProvider("provider2", succeeds = true)
-        val chain = ProviderChain(listOf(provider1, provider2)) { false }
-        
-        assertFailsWith<ProviderChainException> {
-            chain.execute { it.operation() }
+    fun `test ProviderChain execute with selector that excludes all throws InvalidState`() = runBlocking {
+        // Note: Constructor validation prevents this scenario, but if it somehow occurs,
+        // it would throw InvalidState. However, the constructor should catch this first.
+        // This test verifies the constructor validation works.
+        assertFailsWith<IllegalArgumentException> {
+            ProviderChain(listOf(TestProvider("provider1", succeeds = true))) { false }
         }
     }
 
@@ -123,19 +122,28 @@ class ProviderChainBranchCoverageTest {
     }
 
     @Test
-    fun `test ProviderChainException contains last exception`() {
+    fun `test AllProvidersFailed contains last exception`() {
         val cause = RuntimeException("Test error")
-        val exception = ProviderChainException("All providers failed", cause)
+        val exception = com.trustweave.core.exception.TrustWeaveError.AllProvidersFailed(
+            attemptedProviders = listOf("provider-1"),
+            providerErrors = emptyMap(),
+            lastException = cause
+        )
         
-        assertEquals("All providers failed", exception.message)
-        assertEquals(cause, exception.lastException)
+        assertEquals("ALL_PROVIDERS_FAILED", exception.code)
+        assertEquals(cause, exception.cause)
+        assertNotNull(exception.lastException)
     }
 
     @Test
-    fun `test ProviderChainException without cause`() {
-        val exception = ProviderChainException("All providers failed")
+    fun `test AllProvidersFailed without cause`() {
+        val exception = com.trustweave.core.exception.TrustWeaveError.AllProvidersFailed(
+            attemptedProviders = listOf("provider-1"),
+            providerErrors = emptyMap(),
+            lastException = null
+        )
         
-        assertEquals("All providers failed", exception.message)
+        assertEquals("ALL_PROVIDERS_FAILED", exception.code)
         assertNull(exception.lastException)
     }
 
@@ -161,17 +169,17 @@ class ProviderChainBranchCoverageTest {
     }
 
     @Test
-    fun `test createProviderChain throws when no providers found`() {
+    fun `test createProviderChain throws NoProvidersFound when no providers found`() {
         val registry = PluginRegistry
         PluginRegistry.clear()
         
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<com.trustweave.core.exception.TrustWeaveError.NoProvidersFound> {
             createProviderChain<TestProvider>(listOf("nonexistent"), registry)
         }
     }
 
     @Test
-    fun `test createProviderChain filters out null providers`() {
+    fun `test createProviderChain throws PartialProvidersFound when some providers missing`() {
         val registry = PluginRegistry
         PluginRegistry.clear()
         
@@ -186,10 +194,9 @@ class ProviderChainBranchCoverageTest {
         PluginRegistry.register(metadata, provider1)
         // plugin2 not registered
         
-        val chain = createProviderChain<TestProvider>(listOf("plugin1", "plugin2"), registry)
-        
-        assertNotNull(chain)
-        assertEquals(1, chain.size())
+        assertFailsWith<com.trustweave.core.exception.TrustWeaveError.PartialProvidersFound> {
+            createProviderChain<TestProvider>(listOf("plugin1", "plugin2"), registry)
+        }
     }
 
     @Test

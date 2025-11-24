@@ -1,6 +1,6 @@
-# TrustWeave-anchor
+# trustweave-anchor
 
-The `TrustWeave-anchor` module provides blockchain anchoring abstraction with chain-agnostic interfaces for notarizing data on various blockchains.
+The `trustweave-anchor` module provides blockchain anchoring abstraction with chain-agnostic interfaces for notarizing data on various blockchains.
 
 ```kotlin
 dependencies {
@@ -14,7 +14,7 @@ dependencies {
 
 ## Overview
 
-The `TrustWeave-anchor` module provides:
+The `trustweave-anchor` module provides:
 
 - **BlockchainAnchorClient Interface** – chain-agnostic interface for anchoring operations
 - **AnchorRef** – chain-agnostic reference structure (chain ID + transaction hash)
@@ -154,8 +154,7 @@ The module provides structured exception handling:
 
 ## Dependencies
 
-- Depends on [`TrustWeave-common`](trustweave-common.md) for core types, exceptions, and SPI interfaces
-- Depends on [`TrustWeave-json`](trustweave-json.md) for JSON canonicalization
+- Depends on [`trustweave-common`](trustweave-common.md) for core types, exceptions, and SPI interfaces (JSON utilities are included in `trustweave-common`)
 
 ## Next Steps
 

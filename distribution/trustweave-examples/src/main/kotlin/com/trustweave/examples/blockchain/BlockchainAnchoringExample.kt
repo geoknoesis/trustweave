@@ -6,7 +6,7 @@ import com.trustweave.chain.ethereum.EthereumBlockchainAnchorClient
 import com.trustweave.chain.base.BaseBlockchainAnchorClient
 import com.trustweave.chain.arbitrum.ArbitrumBlockchainAnchorClient
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.trustweave.json.DigestUtils
+import com.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.*

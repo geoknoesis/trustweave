@@ -1,11 +1,11 @@
-# TrustWeave-contract Module
+# trustweave-contract Module
 
 > **Version:** 1.0.0-SNAPSHOT  
 > Domain-agnostic Smart Contract abstraction with verifiable credentials and blockchain anchoring
 
 ## Overview
 
-The `TrustWeave-contract` module provides a generic Smart Contract abstraction for executable agreements between parties. It integrates with TrustWeave's verifiable credentials and blockchain anchoring to provide trust, auditability, and automation.
+The `trustweave-contract` module provides a generic Smart Contract abstraction for executable agreements between parties. It integrates with TrustWeave's verifiable credentials and blockchain anchoring to provide trust, auditability, and automation.
 
 ## Purpose
 
@@ -36,16 +36,15 @@ dependencies {
 }
 ```
 
-**Note:** This module is included in `TrustWeave-all`, so you may already have access if you're using the all-in-one distribution.
+**Note:** This module is included in `trustweave-all`, so you may already have access if you're using the all-in-one distribution.
 
 ## Module Dependencies
 
 ```
-TrustWeave-contract
-    → TrustWeave-common (includes SPI)
-    → TrustWeave-json
-    → TrustWeave-anchor
-    → TrustWeave-did
+trustweave-contract
+    → trustweave-common (includes SPI, JSON utilities)
+    → trustweave-anchor
+    → trustweave-did
 ```
 
 ## Key Components

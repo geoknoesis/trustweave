@@ -101,19 +101,19 @@ TrustWeave/
 │       ├── web/              # did:web
 │       └── ...               # Other DID methods
 ├── kms/                      # KMS domain
-│   ├── TrustWeave-kms/         # Core KMS abstraction
+│   ├── trustweave-kms/         # Core KMS abstraction
 │   └── plugins/              # KMS implementations
 │       ├── aws/              # AWS KMS
 │       ├── azure/            # Azure Key Vault
 │       └── ...               # Other KMS providers
 ├── chains/                   # Blockchain domain
-│   ├── TrustWeave-anchor/      # Core anchor abstraction
+│   ├── trustweave-anchor/      # Core anchor abstraction
 │   └── plugins/              # Chain implementations
 │       ├── algorand/         # Algorand adapter
 │       ├── polygon/          # Polygon adapter
 │       └── ...               # Other blockchain adapters
 └── distribution/             # Distribution modules
-    ├── TrustWeave-all/         # All-in-one module
+    ├── trustweave-all/         # All-in-one module
     ├── TrustWeave-bom/         # Bill of Materials
     └── TrustWeave-examples/    # Example applications
 ```
@@ -132,7 +132,7 @@ Gradle tasks let you execute tests for the whole workspace or specific modules/c
 ./gradlew :core:TrustWeave-common:test
 
 # Run specific test class
-./gradlew :core:TrustWeave-common:test --tests "TrustWeaveExceptionTest"
+./gradlew :common:test --tests "TrustWeaveExceptionTest"
 ```
 
 **Result:** Successful runs keep CI parity with local development; failures point you at the module or class that needs attention.

@@ -1,16 +1,18 @@
-# TrustWeave-json
+# JSON Utilities
 
-The `TrustWeave-json` module provides JSON canonicalization and digest computation utilities.
+JSON canonicalization and digest computation utilities are part of the `trustweave-common` module.
 
-Add it to your build when you need deterministic hashing:
+> **Note:** As of version 1.0.0, JSON utilities are no longer in a separate module. They are included in `trustweave-common` under the `com.trustweave.core.util` package.
+
+Add the common module to your build when you need deterministic hashing:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
-**Result:** Gradle pulls in the canonicalisation helpers so calls such as `DigestUtils.sha256DigestMultibase` are available in your project.
+**Result:** Gradle pulls in the canonicalisation helpers so calls such as `DigestUtils.sha256DigestMultibase` are available in your project. The `DigestUtils` class is located in the `com.trustweave.core.util` package.
 
 ## Overview
 
@@ -142,7 +144,7 @@ Digests are encoded using multibase with base58btc encoding:
 ### Computing a Digest
 
 ```kotlin
-import com.trustweave.json.DigestUtils
+import com.trustweave.core.util.DigestUtils
 import kotlinx.serialization.json.*
 
 val vc = buildJsonObject {

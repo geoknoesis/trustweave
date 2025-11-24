@@ -1,7 +1,7 @@
 package com.trustweave.contract.evaluation
 
 import com.trustweave.contract.models.ConditionType
-import com.trustweave.json.DigestUtils
+import com.trustweave.core.util.DigestUtils
 import kotlinx.serialization.json.*
 import java.io.InputStream
 import java.security.MessageDigest

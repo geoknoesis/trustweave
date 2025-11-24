@@ -1,6 +1,6 @@
 package com.trustweave.waltid
 
-import com.trustweave.core.TrustWeaveException
+import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.didCreationOptions
 import com.trustweave.kms.KeyNotFoundException
 import kotlinx.coroutines.runBlocking

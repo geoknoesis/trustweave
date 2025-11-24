@@ -1,8 +1,8 @@
 package com.trustweave.contract
 
 import com.trustweave.contract.models.*
-import com.trustweave.core.ValidationResult
-import com.trustweave.core.DidValidator
+import com.trustweave.core.util.ValidationResult
+import com.trustweave.core.util.DidValidator
 import java.time.Instant
 
 /**

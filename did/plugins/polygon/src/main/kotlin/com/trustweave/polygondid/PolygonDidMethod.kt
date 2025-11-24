@@ -4,6 +4,7 @@ import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.did.*
 import com.trustweave.did.base.AbstractBlockchainDidMethod
 import com.trustweave.did.base.DidMethodUtils
+import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.kms.KeyManagementService
 import com.trustweave.ethrdid.EthrDidMethod
 import kotlinx.coroutines.Dispatchers
@@ -99,7 +100,7 @@ class PolygonDidMethod(
             
             polygonDocument
         } catch (e: Exception) {
-            throw com.trustweave.core.TrustWeaveException(
+            throw TrustWeaveException(
                 "Failed to create did:polygon: ${e.message}",
                 e
             )
@@ -167,7 +168,7 @@ class PolygonDidMethod(
             
             polygonUpdated
         } catch (e: Exception) {
-            throw com.trustweave.core.TrustWeaveException(
+            throw TrustWeaveException(
                 "Failed to update did:polygon: ${e.message}",
                 e
             )
@@ -190,7 +191,7 @@ class PolygonDidMethod(
             
             deactivated
         } catch (e: Exception) {
-            throw com.trustweave.core.TrustWeaveException(
+            throw TrustWeaveException(
                 "Failed to deactivate did:polygon: ${e.message}",
                 e
             )

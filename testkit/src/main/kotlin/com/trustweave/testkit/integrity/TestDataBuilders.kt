@@ -1,6 +1,6 @@
 package com.trustweave.testkit.integrity
 
-import com.trustweave.json.DigestUtils
+import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.integrity.models.*
 import kotlinx.serialization.json.*
 

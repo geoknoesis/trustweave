@@ -1,11 +1,11 @@
-# TrustWeave-trust
+# trustweave-trust
 
-The `TrustWeave-trust` module provides the trust-layer building blocks that sit
+The `trustweave-trust` module provides the trust-layer building blocks that sit
 between credential workflows and registry/provider integrations.
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:TrustWeave-trust:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-trust:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -15,7 +15,7 @@ dependencies {
 
 - Trust registry interfaces (`TrustRegistry`, `TrustAnchorMetadata`,
   `TrustPathResult`).
-- Support code for trust-layer DSLs (`TrustWeave-common` delegates to this module).
+- Support code for trust-layer DSLs (`trustweave-common` delegates to this module).
 - Shared contract for integration modules to expose trust anchors and trust
   resolution logic.
 
@@ -41,7 +41,7 @@ suspend fun seedTrust(registry: TrustRegistry) {
 
 Implementations can be provided by testkits (`InMemoryTrustRegistry`) or custom
 modules; they can be wrapped as `TrustRegistryService` via
-`TrustRegistryServiceAdapter` (included in `TrustWeave-common`).
+`TrustRegistryServiceAdapter` (included in `trustweave-common`).
 
 ## Dependencies
 

@@ -13,9 +13,9 @@ TrustWeave provides comprehensive testing utilities and strategies for:
 
 ## Testing Utilities
 
-### TrustWeave-testkit
+### trustweave-testkit
 
-The `TrustWeave-testkit` module provides in-memory implementations:
+The `trustweave-testkit` module provides in-memory implementations:
 
 - `InMemoryKeyManagementService` – in-memory KMS for testing
 - `InMemoryBlockchainAnchorClient` – in-memory blockchain client for testing
@@ -346,7 +346,7 @@ Aim for:
 
 ## Next Steps
 
-- Review [TrustWeave-testkit Module](../modules/trustweave-testkit.md) for testing utilities
+- Review [trustweave-testkit Module](../modules/trustweave-testkit.md) for testing utilities
 - See [Error Handling](error-handling.md) for error testing patterns
 - Check [Creating Plugins](../contributing/creating-plugins.md) for plugin testing
 - Explore existing tests in TrustWeave modules for examples

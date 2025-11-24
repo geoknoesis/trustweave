@@ -3,7 +3,7 @@ package com.trustweave.hashicorpkms
 import com.bettercloud.vault.Vault
 import com.bettercloud.vault.VaultException
 import com.bettercloud.vault.response.LogicalResponse
-import com.trustweave.core.TrustWeaveException
+import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyHandle
 import com.trustweave.kms.KeyManagementService

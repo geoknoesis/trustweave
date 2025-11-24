@@ -1,7 +1,7 @@
 package com.trustweave.testkit
 
 import com.trustweave.anchor.*
-import com.trustweave.json.DigestUtils
+import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.integrity.TestDataBuilders
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*

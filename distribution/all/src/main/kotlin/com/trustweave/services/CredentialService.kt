@@ -2,8 +2,12 @@ package com.trustweave.services
 
 import com.trustweave.TrustWeaveContext
 import com.trustweave.core.*
-import com.trustweave.core.normalizeKeyId
-import com.trustweave.core.types.ProofType
+import com.trustweave.core.util.ValidationResult
+import com.trustweave.did.util.normalizeKeyId
+import com.trustweave.did.exception.DidError
+import com.trustweave.did.validation.DidValidator
+import com.trustweave.credential.exception.CredentialError
+import com.trustweave.credential.proof.ProofType
 import com.trustweave.credential.*
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.models.VerifiablePresentation
@@ -13,6 +17,7 @@ import com.trustweave.credential.verifier.CredentialVerifier
 import com.trustweave.credential.did.CredentialDidResolver
 import com.trustweave.credential.presentation.PresentationService
 import com.trustweave.did.toCredentialDidResolution
+import com.trustweave.anchor.AnchorRef
 import com.trustweave.kms.KeyManagementService
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -76,7 +81,7 @@ class CredentialService(
         // Validate issuer DID format
         DidValidator.validateFormat(issuer).let {
             if (!it.isValid()) {
-                throw TrustWeaveError.InvalidDidFormat(
+                throw DidError.InvalidDidFormat(
                     did = issuer,
                     reason = it.errorMessage() ?: "Invalid issuer DID format"
                 )
@@ -87,7 +92,7 @@ class CredentialService(
         val availableMethods = context.getAvailableDidMethods()
         DidValidator.validateMethod(issuer, availableMethods).let {
             if (!it.isValid()) {
-                throw TrustWeaveError.DidMethodNotRegistered(
+                throw DidError.DidMethodNotRegistered(
                     method = DidValidator.extractMethod(issuer) ?: "unknown",
                     availableMethods = availableMethods
                 )
@@ -121,7 +126,7 @@ class CredentialService(
         // Validate credential structure
         CredentialValidator.validateStructure(credential).let {
             if (!it.isValid()) {
-                throw TrustWeaveError.CredentialInvalid(
+                throw CredentialError.CredentialInvalid(
                     reason = it.errorMessage() ?: "Invalid credential structure",
                     credentialId = credentialId,
                     field = (it as? ValidationResult.Invalid)?.field
@@ -229,7 +234,7 @@ class CredentialService(
         }
         
         return try {
-            val anchorRef = com.trustweave.anchor.AnchorRef(
+            val anchorRef = AnchorRef(
                 chainId = chainId,
                 txHash = txHash
             )

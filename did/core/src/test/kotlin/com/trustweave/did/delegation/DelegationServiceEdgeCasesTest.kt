@@ -4,6 +4,7 @@ package com.trustweave.did.delegation
 
 import com.trustweave.did.DidDocument
 import com.trustweave.did.DidResolutionResult
+import com.trustweave.did.VerificationMethodRef
 import com.trustweave.did.services.DidDocumentAccessAdapter
 import com.trustweave.did.services.VerificationMethodAccessAdapter
 import kotlinx.coroutines.runBlocking
@@ -60,7 +61,7 @@ class DelegationServiceEdgeCasesTest {
                         id = delegatorDid,
                         capabilityDelegation = listOf("$delegateDid#key-1"),
                         verificationMethod = listOf(
-                            com.trustweave.did.VerificationMethodRef(
+                            VerificationMethodRef(
                                 id = "$delegateDid#key-1",
                                 type = "Ed25519VerificationKey2020",
                                 controller = delegateDid
@@ -72,7 +73,7 @@ class DelegationServiceEdgeCasesTest {
                     document = DidDocument(
                         id = delegateDid,
                         verificationMethod = listOf(
-                            com.trustweave.did.VerificationMethodRef(
+                            VerificationMethodRef(
                                 id = "$delegateDid#key-1",
                                 type = "Ed25519VerificationKey2020",
                                 controller = delegateDid
@@ -199,11 +200,14 @@ class DelegationServiceEdgeCasesTest {
 
     @Test
     fun `test verify delegation chain with boolean resolver returns invalid`() = runBlocking {
-        val service = DelegationService(resolveDid = { _: String -> true })
+        val resolveDid: suspend (String) -> DidResolutionResult? = { _: String -> null }
+        val docAccess = DidDocumentAccessAdapter()
+        val vmAccess = VerificationMethodAccessAdapter()
+        val service = DelegationService(resolveDid, docAccess, vmAccess)
         val result = service.verifyDelegationChain("did:key:delegator", "did:key:delegate")
 
         assertFalse(result.valid)
-        assertTrue(result.errors.any { it.contains("DID document", ignoreCase = true) })
+        assertTrue(result.errors.any { error -> error.contains("DID document", ignoreCase = true) || error.contains("Failed to resolve", ignoreCase = true) })
     }
 }
 

@@ -1,6 +1,6 @@
 package com.trustweave.waltid.did
 
-import com.trustweave.core.TrustWeaveException
+import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
 import com.trustweave.did.spi.DidMethodProvider
 import com.trustweave.kms.KeyManagementService

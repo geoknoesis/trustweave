@@ -1,6 +1,6 @@
-# TrustWeave-testkit
+# trustweave-testkit
 
-The `TrustWeave-testkit` module provides in-memory test implementations and utilities for all TrustWeave service interfaces. This module is essential for testing and prototyping without external dependencies.
+The `trustweave-testkit` module provides in-memory test implementations and utilities for all TrustWeave service interfaces. This module is essential for testing and prototyping without external dependencies.
 
 ```kotlin
 dependencies {
@@ -12,7 +12,7 @@ dependencies {
 
 ## Overview
 
-The `TrustWeave-testkit` module provides:
+The `trustweave-testkit` module provides:
 
 - **In-Memory Implementations** – mock implementations of all SPI interfaces
 - **Test Fixtures** – comprehensive test fixture builder for complete test environments
@@ -171,7 +171,7 @@ val fixture = TrustWeaveTestFixture.builder()
 
 ## Dependencies
 
-- Depends on all TrustWeave modules (`TrustWeave-common` (includes SPI), `TrustWeave-trust`, `TrustWeave-did`, `TrustWeave-kms`, `TrustWeave-anchor`)
+- Depends on all TrustWeave modules (`trustweave-common` (includes SPI), `trustweave-trust`, `trustweave-did`, `trustweave-kms`, `trustweave-anchor`)
 - No external runtime dependencies (all implementations are in-memory)
 
 ## Best Practices

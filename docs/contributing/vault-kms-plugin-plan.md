@@ -36,8 +36,8 @@ The Transit engine supports the following key types:
 - `kms/plugins/hashicorp/build.gradle.kts`
 
 **Dependencies**:
-- `TrustWeave-common`
-- `TrustWeave-kms`
+- `trustweave-common`
+- `trustweave-kms`
 - Vault Java client library (e.g., `com.bettercloud:vault-java-driver` or direct HTTP client)
 - HTTP client (OkHttp or similar)
 - JSON serialization (Jackson or Kotlinx Serialization)
@@ -472,8 +472,8 @@ path "transit/keys/+/+" {
 ## Dependencies
 
 ### Required
-- `TrustWeave-common`
-- `TrustWeave-kms`
+- `trustweave-common`
+- `trustweave-kms`
 - HTTP client (OkHttp or similar)
 - JSON library (Jackson or Kotlinx Serialization)
 

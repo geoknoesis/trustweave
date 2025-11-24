@@ -179,14 +179,15 @@ TrustWeave is organized into a domain-centric structure with core modules and pl
 
 ```
 TrustWeave/
-├── core/                          # Core framework modules
-│   ├── TrustWeave-common/             # Base types, exceptions, credential APIs (includes SPI interfaces)
-│   ├── TrustWeave-json/             # JSON canonicalization utilities
-│   ├── TrustWeave-trust/            # Trust registry and trust layer
-│   └── TrustWeave-testkit/          # Test utilities and mocks
+├── common/                         # Common module
+│   └── trustweave-common/             # Base types, exceptions, JSON utilities, plugin infrastructure (includes SPI interfaces)
+├── trust/                          # Trust module
+│   └── trustweave-trust/            # Trust registry and trust layer
+├── testkit/                        # Test utilities
+│   └── trustweave-testkit/          # Test utilities and mocks
 │
 ├── did/                           # DID domain
-│   ├── TrustWeave-did/              # Core DID abstraction
+│   ├── trustweave-did/              # Core DID abstraction
 │   └── plugins/                   # DID method implementations
 │       ├── key/                   # did:key implementation
 │       ├── web/                   # did:web implementation
@@ -194,7 +195,7 @@ TrustWeave/
 │       └── ...                    # Other DID methods
 │
 ├── kms/                           # KMS domain
-│   ├── TrustWeave-kms/              # Core KMS abstraction
+│   ├── trustweave-kms/              # Core KMS abstraction
 │   └── plugins/                   # KMS implementations
 │       ├── aws/                   # AWS KMS
 │       ├── azure/                 # Azure Key Vault
@@ -202,46 +203,44 @@ TrustWeave/
 │       └── ...                    # Other KMS providers
 │
 ├── chains/                        # Blockchain/Chain domain
-│   ├── TrustWeave-anchor/           # Core anchor abstraction
+│   ├── trustweave-anchor/           # Core anchor abstraction
 │   └── plugins/                   # Chain implementations
 │       ├── algorand/              # Algorand adapter
 │       ├── polygon/               # Polygon adapter
 │       └── ...                    # Other blockchain adapters
 │
 └── distribution/                  # Distribution modules
-    ├── TrustWeave-all/              # All-in-one module
-    ├── TrustWeave-bom/              # Bill of Materials
-    └── TrustWeave-examples/         # Example applications
+    ├── trustweave-all/              # All-in-one module
+    ├── trustweave-bom/              # Bill of Materials
+    └── trustweave-examples/         # Example applications
 ```
 
 ## Core Modules
 
-### TrustWeave-common
-- Base exception classes
-- Common constants
-- Shared types
+### trustweave-common
+- Base exception classes (`com.trustweave.core.exception`)
+- Common constants and utilities (`com.trustweave.core.util`)
+- Plugin infrastructure (`com.trustweave.core.plugin`)
+- JSON canonicalization and digest computation (`com.trustweave.core.util.DigestUtils`)
+- Input validation utilities (`com.trustweave.core.util`)
+- Result extensions and error handling (`com.trustweave.core.util`)
 
-### TrustWeave-json
-- JSON canonicalization
-- Digest computation (SHA-256 + multibase)
-- No dependencies on other TrustWeave modules
-
-### TrustWeave-kms
+### trustweave-kms
 - `KeyManagementService` interface
 - Key generation, signing, retrieval
 - Algorithm-agnostic design
 
-### TrustWeave-did
+### trustweave-did
 - `DidMethod` interface
 - DID Document models (W3C compliant)
 - `DidMethodRegistry` for method registration (instance-scoped)
 
-### TrustWeave-anchor
+### trustweave-anchor
 - `BlockchainAnchorClient` interface
 - `AnchorRef` for chain-agnostic references
 - `BlockchainAnchorRegistry` for client registration (instance-scoped)
 
-### TrustWeave-testkit
+### trustweave-testkit
 - In-memory implementations
 - Test utilities
 - Mock implementations for testing
@@ -373,49 +372,43 @@ Verification Result
 ### Core Module Dependencies
 
 ```
-TrustWeave-common
-    (no dependencies)
+trustweave-common
+    (no dependencies - includes JSON utilities, plugin infrastructure, SPI interfaces)
 
-TrustWeave-json
-    → TrustWeave-common
+trustweave-kms
+    → trustweave-common
 
-TrustWeave-kms
-    → TrustWeave-common
+trustweave-did
+    → trustweave-common
+    → trustweave-kms
 
-TrustWeave-did
-    → TrustWeave-common
-    → TrustWeave-kms
+trustweave-anchor
+    → trustweave-common
 
-TrustWeave-anchor
-    → TrustWeave-common
-    → TrustWeave-json
-
-TrustWeave-testkit
-    → TrustWeave-common
-    → TrustWeave-json
-    → TrustWeave-kms
-    → TrustWeave-did
-    → TrustWeave-anchor
+trustweave-testkit
+    → trustweave-common
+    → trustweave-kms
+    → trustweave-did
+    → trustweave-anchor
 ```
 
 ### Integration Module Dependencies
 
 ```
 KMS Plugins (com.trustweave.kms:*)
-    → TrustWeave-common
-    → TrustWeave-kms
+    → trustweave-common
+    → trustweave-kms
     See: [KMS Integration Guides](../integrations/README.md#other-did--kms-integrations)
 
 DID Plugins (com.trustweave.did:*)
-    → TrustWeave-common
-    → TrustWeave-did
-    → TrustWeave-kms
+    → trustweave-common
+    → trustweave-did
+    → trustweave-kms
     See: [DID Integration Guides](../integrations/README.md#did-method-integrations)
 
 Chain Plugins (com.trustweave.chains:*)
-    → TrustWeave-core
-    → TrustWeave-anchor
-    → TrustWeave-json
+    → trustweave-common
+    → trustweave-anchor
     See: [Blockchain Integration Guides](../integrations/README.md#blockchain-anchor-integrations)
 ```
 

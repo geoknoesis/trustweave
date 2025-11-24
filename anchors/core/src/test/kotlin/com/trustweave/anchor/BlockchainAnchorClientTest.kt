@@ -1,6 +1,6 @@
 package com.trustweave.anchor
 
-import com.trustweave.core.NotFoundException
+import com.trustweave.core.exception.NotFoundException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.AfterEach

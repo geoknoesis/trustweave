@@ -1,6 +1,6 @@
 package com.trustweave.integrations.salesforce
 
-import com.trustweave.core.TrustWeaveException
+import com.trustweave.core.exception.TrustWeaveException
 
 /**
  * Salesforce integration for trustweave.

@@ -3,7 +3,9 @@ package com.trustweave.examples.quickstart
 import com.trustweave.TrustWeave
 import com.trustweave.anchor.BlockchainAnchorRegistry
 import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.json.DigestUtils
+import com.trustweave.credential.proof.ProofType
+import com.trustweave.core.util.DigestUtils
+import com.trustweave.services.IssuanceConfig
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -35,8 +37,8 @@ fun main(): Unit = runBlocking {
     val credential = trustweave.credentials.issue(
         issuer = issuerDid,
         subject = credentialSubject,
-        config = com.trustweave.services.IssuanceConfig(
-            proofType = com.trustweave.core.types.ProofType.Ed25519Signature2020,
+        config = IssuanceConfig(
+            proofType = ProofType.Ed25519Signature2020,
             keyId = issuerKeyId,
             issuerDid = issuerDid
         ),

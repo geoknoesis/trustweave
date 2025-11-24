@@ -192,7 +192,7 @@ See the [walt.id Testing Guide](../../kms/plugins/waltid/TESTING.md) for detaile
 The walt.id integration follows TrustWeave's error handling patterns:
 
 ```kotlin
-import com.trustweave.core.TrustWeaveError
+import com.trustweave.core.exception.TrustWeaveError
 
 val result = kms.generateKey(Algorithm.Ed25519)
 result.fold(

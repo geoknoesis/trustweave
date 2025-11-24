@@ -1,12 +1,12 @@
 package com.trustweave.googlekms
 
-import com.trustweave.core.TrustWeaveException
+import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyHandle
 import com.trustweave.kms.KeyManagementService
 import com.trustweave.kms.KeyNotFoundException
 import com.trustweave.kms.UnsupportedAlgorithmException
-import com.trustweave.core.PluginLifecycle
+import com.trustweave.core.plugin.PluginLifecycle
 import com.google.api.gax.rpc.NotFoundException
 import com.google.api.gax.rpc.PermissionDeniedException
 import com.google.cloud.kms.v1.CryptoKey

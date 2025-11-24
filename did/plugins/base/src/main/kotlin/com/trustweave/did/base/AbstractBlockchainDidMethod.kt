@@ -1,8 +1,8 @@
 package com.trustweave.did.base
 
 import com.trustweave.anchor.BlockchainAnchorClient
-import com.trustweave.core.NotFoundException
-import com.trustweave.core.TrustWeaveException
+import com.trustweave.core.exception.NotFoundException
+import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
 import com.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers

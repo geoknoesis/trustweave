@@ -1,6 +1,6 @@
-# TrustWeave-kms
+# trustweave-kms
 
-The `TrustWeave-kms` module provides the key management service abstraction used throughout TrustWeave. This module defines the interface for key generation, signing, and management operations.
+The `trustweave-kms` module provides the key management service abstraction used throughout TrustWeave. This module defines the interface for key generation, signing, and management operations.
 
 ```kotlin
 dependencies {
@@ -13,7 +13,7 @@ dependencies {
 
 ## Overview
 
-The `TrustWeave-kms` module provides:
+The `trustweave-kms` module provides:
 
 - **KeyManagementService Interface** – algorithm-agnostic interface for key operations
 - **Algorithm Support** – types for supported algorithms (Ed25519, secp256k1, P-256/P-384/P-521, RSA)
@@ -102,13 +102,13 @@ See the [Key Management](../core-concepts/key-management.md) guide for detailed 
 
 ## Dependencies
 
-- Depends on [`TrustWeave-common`](trustweave-common.md) for core types and exceptions
-- Upstream modules (DID methods, credential services) depend on `TrustWeave-kms` for key operations
+- Depends on [`trustweave-common`](trustweave-common.md) for core types and exceptions
+- Upstream modules (DID methods, credential services) depend on `trustweave-kms` for key operations
 
 ## Next Steps
 
 - Review [Key Management Concepts](../core-concepts/key-management.md) for usage patterns
 - Explore [KMS Integration Guides](../integrations/README.md) for specific provider setups
-- See [`TrustWeave-testkit`](trustweave-testkit.md) for in-memory implementations for testing
+- See [`trustweave-testkit`](trustweave-testkit.md) for in-memory implementations for testing
 - Check [Creating Plugins](../contributing/creating-plugins.md) to implement custom KMS backends
 

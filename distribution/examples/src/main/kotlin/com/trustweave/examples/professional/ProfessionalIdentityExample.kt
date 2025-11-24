@@ -50,7 +50,7 @@ fun main() = runBlocking {
         
         schemas {
             autoValidate(false)
-            defaultFormat(com.trustweave.core.SchemaFormat.JSON_SCHEMA)
+            defaultFormat(SchemaFormat.JSON_SCHEMA)
         }
         
         // Configure trust registry

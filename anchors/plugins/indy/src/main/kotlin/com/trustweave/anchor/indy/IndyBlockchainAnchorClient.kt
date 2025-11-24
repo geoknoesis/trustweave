@@ -2,8 +2,8 @@ package com.trustweave.anchor.indy
 
 import com.trustweave.anchor.*
 import com.trustweave.anchor.options.IndyOptions
-import com.trustweave.core.NotFoundException
-import com.trustweave.core.TrustWeaveException
+import com.trustweave.core.exception.NotFoundException
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.serialization.json.*
 import java.nio.charset.StandardCharsets
 

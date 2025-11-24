@@ -1,6 +1,6 @@
 package com.trustweave.godiddy.resolver
 
-import com.trustweave.core.TrustWeaveException
+import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.DidDocument
 import com.trustweave.did.DidDocumentMetadata
 import com.trustweave.did.DidResolutionResult

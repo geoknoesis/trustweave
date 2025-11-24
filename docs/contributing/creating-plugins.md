@@ -24,9 +24,9 @@ Add the necessary dependencies to your project:
 ```kotlin
 dependencies {
     // Core interfaces
-    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
     
     // SPI support (optional, for auto-discovery)
@@ -201,7 +201,7 @@ interface BlockchainAnchorClient {
 package com.example.TrustWeave.plugins
 
 import com.trustweave.anchor.*
-import com.trustweave.core.NotFoundException
+import com.trustweave.core.exception.NotFoundException
 import kotlinx.serialization.json.JsonElement
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
@@ -339,7 +339,7 @@ package com.example.TrustWeave.plugins
 
 import com.trustweave.credential.models.*
 import com.trustweave.credential.proof.*
-import com.trustweave.core.normalizeKeyId
+import com.trustweave.core.util.normalizeKeyId
 
 /**
  * Example proof generator implementation.
@@ -932,7 +932,7 @@ fun `test plugin with TrustWeave`() = runTest {
 
 ## Next Steps
 
-- Review existing implementations in `TrustWeave-testkit` for reference
+- Review existing implementations in `trustweave-testkit` for reference
 - See [Integration Modules](../integrations/README.md) for production examples
 - Check [Plugin Lifecycle](../advanced/plugin-lifecycle.md) for lifecycle management
 - Review [Architecture Overview](../introduction/architecture-overview.md) for design patterns

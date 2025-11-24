@@ -1,4 +1,4 @@
-package com.trustweave.core
+package com.trustweave.core.plugin
 
 /**
  * Metadata about a plugin/provider.
@@ -29,23 +29,30 @@ data class PluginMetadata(
 /**
  * Capabilities of a plugin.
  *
- * Describes what the plugin can do - which blockchains it supports,
- * which DID methods, proof types, schema formats, etc.
+ * Describes what the plugin can do. This class is domain-agnostic:
+ * - Use `features` for generic feature flags (e.g., "selective-disclosure", "revocation")
+ * - Use `extensions` only for truly custom/unknown capabilities not handled by domain modules
  *
- * @param supportedBlockchains List of supported blockchain chain IDs (CAIP-2 format)
- * @param supportedDidMethods List of supported DID method names (e.g., "key", "web", "ion")
- * @param supportedProofTypes List of supported proof types (e.g., "Ed25519Signature2020", "JsonWebSignature2020")
- * @param supportedSchemaFormats List of supported schema validation formats
- * @param supportedCredentialFormats List of supported credential formats (e.g., "w3c-vc", "sd-jwt-vc")
+ * **Important:** Domain-specific capabilities (blockchains, DID methods, proof types, etc.)
+ * should be handled by their respective domain modules, not stored here. For example:
+ * - Blockchain capabilities → `anchors:core` module (via `BlockchainAnchorClient` interface)
+ * - DID method capabilities → `did:core` module (via `DidMethod` interface)
+ * - Credential proof types → `credentials:core` module (via `CredentialService` interface)
+ *
+ * **Example:**
+ * ```kotlin
+ * val capabilities = PluginCapabilities(
+ *     features = setOf("selective-disclosure", "revocation")
+ *     // Domain-specific capabilities are handled by domain modules, not stored here
+ * )
+ * ```
+ *
  * @param features Set of feature flags (e.g., "selective-disclosure", "revocation", "credential-storage")
+ * @param extensions Extensible map for truly custom capabilities not handled by domain modules
  */
 data class PluginCapabilities(
-    val supportedBlockchains: List<String> = emptyList(),
-    val supportedDidMethods: List<String> = emptyList(),
-    val supportedProofTypes: List<String> = emptyList(),
-    val supportedSchemaFormats: List<SchemaFormat> = emptyList(),
-    val supportedCredentialFormats: List<String> = emptyList(),
-    val features: Set<String> = emptySet() // "selective-disclosure", "revocation", "credential-storage", etc.
+    val features: Set<String> = emptySet(),
+    val extensions: Map<String, Any> = emptyMap()
 )
 
 /**
@@ -99,17 +106,4 @@ interface PluginLifecycle {
      */
     suspend fun cleanup()
 }
-
-/**
- * Schema format enumeration.
- * Used to specify which schema validation format a plugin supports.
- */
-enum class SchemaFormat {
-    /** JSON Schema Draft 7 or Draft 2020-12 */
-    JSON_SCHEMA,
-
-    /** SHACL (Shapes Constraint Language) for RDF validation */
-    SHACL
-}
-
 

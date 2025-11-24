@@ -4,18 +4,20 @@ import com.trustweave.anchor.BlockchainAnchorRegistry
 import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
 import com.trustweave.core.*
+import com.trustweave.credential.CredentialService
 import com.trustweave.credential.CredentialServiceRegistry
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.credential.proof.ProofGenerator
 import com.trustweave.did.DidMethodRegistry
 import com.trustweave.did.DidMethod
 import com.trustweave.did.DidResolutionResult
+import com.trustweave.did.exception.DidError
 import com.trustweave.kms.KeyManagementService
 import com.trustweave.services.*
 import com.trustweave.wallet.services.WalletFactory
 import com.trustweave.wallet.services.WalletCreationOptionsBuilder
 import com.trustweave.wallet.services.WalletCreationOptions
-import com.trustweave.core.PluginLifecycle
+import com.trustweave.core.plugin.PluginLifecycle
 
 /**
  * Main entry point for TrustWeave library.
@@ -321,7 +323,7 @@ class TrustWeaveContext private constructor(
             did.substringBefore(":")
         }
         val method = didRegistry.get(methodName)
-            ?: throw TrustWeaveError.DidMethodNotRegistered(
+            ?: throw DidError.DidMethodNotRegistered(
                 method = methodName,
                 availableMethods = didRegistry.getAllMethodNames()
             )
@@ -533,7 +535,7 @@ data class TrustWeaveConfig(
         inner class CredentialServicesBuilder(
             private val registry: CredentialServiceRegistry
         ) {
-            operator fun com.trustweave.credential.CredentialService.unaryPlus() {
+            operator fun CredentialService.unaryPlus() {
                 registry.register(this)
             }
         }

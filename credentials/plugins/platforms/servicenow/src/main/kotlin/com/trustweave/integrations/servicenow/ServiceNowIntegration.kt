@@ -1,6 +1,6 @@
 package com.trustweave.integrations.servicenow
 
-import com.trustweave.core.TrustWeaveException
+import com.trustweave.core.exception.TrustWeaveException
 
 /**
  * ServiceNow integration for trustweave.

@@ -213,8 +213,8 @@ fun debugSystemState(trustweave: TrustWeave) {
 Always validate inputs to catch errors early:
 
 ```kotlin
-import com.trustweave.core.DidValidator
-import com.trustweave.core.CredentialValidator
+import com.trustweave.core.util.DidValidator
+import com.trustweave.credential.validation.CredentialValidator
 
 fun validateBeforeOperation(did: String, credential: VerifiableCredential? = null) {
     // Validate DID format

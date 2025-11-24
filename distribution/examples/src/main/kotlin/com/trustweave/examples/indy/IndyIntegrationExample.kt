@@ -2,7 +2,7 @@ package com.trustweave.examples.indy
 
 import com.trustweave.TrustWeave
 import com.trustweave.core.*
-import com.trustweave.core.types.ProofType
+import com.trustweave.credential.proof.ProofType
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.wallet.Wallet
 import com.trustweave.chain.indy.IndyBlockchainAnchorClient

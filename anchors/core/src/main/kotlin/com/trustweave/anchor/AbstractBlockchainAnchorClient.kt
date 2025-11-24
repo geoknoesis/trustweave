@@ -1,8 +1,8 @@
 package com.trustweave.anchor
 
 import com.trustweave.anchor.exceptions.BlockchainTransactionException
-import com.trustweave.core.NotFoundException
-import com.trustweave.core.TrustWeaveException
+import com.trustweave.core.exception.NotFoundException
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*

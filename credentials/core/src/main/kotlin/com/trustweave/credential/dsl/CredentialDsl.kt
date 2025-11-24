@@ -6,7 +6,7 @@ import com.trustweave.credential.models.Evidence
 import com.trustweave.credential.models.RefreshService
 import com.trustweave.credential.models.TermsOfUse
 import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.core.SchemaFormat
+import com.trustweave.credential.SchemaFormat
 import kotlinx.serialization.json.*
 import java.time.Instant
 import java.time.temporal.ChronoUnit

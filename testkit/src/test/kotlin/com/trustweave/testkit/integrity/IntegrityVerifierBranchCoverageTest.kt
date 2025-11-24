@@ -2,7 +2,8 @@ package com.trustweave.testkit.integrity
 
 import com.trustweave.anchor.AnchorRef
 import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.json.DigestUtils
+import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
@@ -104,7 +105,7 @@ class IntegrityVerifierBranchCoverageTest {
         }
         val anchorRef = AnchorRef(chainId = "nonexistent:chain", txHash = "tx-123")
         
-        assertFailsWith<com.trustweave.core.TrustWeaveException> {
+        assertFailsWith<TrustWeaveException> {
             IntegrityVerifier.verifyVcIntegrity(vc, anchorRef, BlockchainAnchorRegistry())
         }
     }
@@ -119,7 +120,7 @@ class IntegrityVerifierBranchCoverageTest {
         }
         val anchorResult = client.writePayload(payload, "application/json")
         
-        assertFailsWith<com.trustweave.core.TrustWeaveException> {
+        assertFailsWith<TrustWeaveException> {
             IntegrityVerifier.verifyVcIntegrity(vc, anchorResult.ref, registry)
         }
     }

@@ -1,4 +1,4 @@
-package com.trustweave.core
+package com.trustweave.core.util
 
 /**
  * Common constants and utilities for TrustWeave.

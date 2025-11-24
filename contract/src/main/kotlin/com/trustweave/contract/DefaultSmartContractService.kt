@@ -7,7 +7,9 @@ import com.trustweave.contract.evaluation.*
 import com.trustweave.contract.models.*
 import com.trustweave.core.trustweaveCatching
 import kotlin.Result
-import com.trustweave.core.ValidationResult
+import com.trustweave.core.exception.InvalidOperationException
+import com.trustweave.core.exception.NotFoundException
+import com.trustweave.core.util.ValidationResult
 import com.trustweave.credential.CredentialService as CredentialServiceInterface
 import com.trustweave.credential.models.VerifiableCredential
 import kotlinx.serialization.json.*
@@ -41,7 +43,7 @@ class DefaultSmartContractService(
         // Validate request
         val validation = ContractValidator.validateDraftRequest(request)
         if (!validation.isValid()) {
-            throw com.trustweave.core.InvalidOperationException(
+            throw InvalidOperationException(
                 validation.errorMessage() ?: "Invalid contract draft request"
             )
         }
@@ -148,7 +150,7 @@ class DefaultSmartContractService(
         chainId: String
     ): Result<BoundContract> = trustweaveCatching {
         val contract = contracts[contractId]
-            ?: throw com.trustweave.core.NotFoundException("Contract not found: $contractId")
+            ?: throw NotFoundException("Contract not found: $contractId")
         
         // Issue credential
         val credential = issueContractCredential(contract, issuerDid, issuerKeyId).getOrThrow()
@@ -181,7 +183,7 @@ class DefaultSmartContractService(
         contractId: String
     ): Result<SmartContract> = trustweaveCatching {
         val contract = contracts[contractId]
-            ?: throw com.trustweave.core.NotFoundException("Contract not found: $contractId")
+            ?: throw NotFoundException("Contract not found: $contractId")
         
         // Validate state transition
         val transitionValidation = ContractValidator.validateStateTransition(
@@ -189,14 +191,14 @@ class DefaultSmartContractService(
             ContractStatus.ACTIVE
         )
         if (!transitionValidation.isValid()) {
-            throw com.trustweave.core.InvalidOperationException(
+            throw InvalidOperationException(
                 transitionValidation.errorMessage() ?: "Invalid state transition"
             )
         }
         
         // Check if contract is expired
         if (ContractValidator.isExpired(contract)) {
-            throw com.trustweave.core.InvalidOperationException(
+            throw InvalidOperationException(
                 "Cannot activate expired contract"
             )
         }
@@ -217,7 +219,7 @@ class DefaultSmartContractService(
     ): Result<ExecutionResult> = trustweaveCatching {
         // Validate contract is active
         if (contract.status != ContractStatus.ACTIVE) {
-            throw com.trustweave.core.InvalidOperationException(
+            throw InvalidOperationException(
                 "Contract must be in ACTIVE status to execute. Current status: ${contract.status}"
             )
         }
@@ -226,7 +228,7 @@ class DefaultSmartContractService(
         if (ContractValidator.isExpired(contract)) {
             // Auto-expire contract
             updateStatus(contract.id, ContractStatus.EXPIRED, "Contract expired").getOrThrow()
-            throw com.trustweave.core.InvalidOperationException(
+            throw InvalidOperationException(
                 "Cannot execute expired contract"
             )
         }
@@ -351,7 +353,7 @@ class DefaultSmartContractService(
         metadata: JsonElement?
     ): Result<SmartContract> = trustweaveCatching {
         val contract = contracts[contractId]
-            ?: throw com.trustweave.core.NotFoundException("Contract not found: $contractId")
+            ?: throw NotFoundException("Contract not found: $contractId")
         
         // Validate state transition
         val transitionValidation = ContractValidator.validateStateTransition(
@@ -359,7 +361,7 @@ class DefaultSmartContractService(
             newStatus
         )
         if (!transitionValidation.isValid()) {
-            throw com.trustweave.core.InvalidOperationException(
+            throw InvalidOperationException(
                 transitionValidation.errorMessage() ?: "Invalid state transition"
             )
         }
@@ -376,7 +378,7 @@ class DefaultSmartContractService(
     
     override suspend fun getContract(contractId: String): Result<SmartContract> = trustweaveCatching {
         contracts[contractId]
-            ?: throw com.trustweave.core.NotFoundException("Contract not found: $contractId")
+            ?: throw NotFoundException("Contract not found: $contractId")
     }
     
     override suspend fun verifyContract(
@@ -388,7 +390,7 @@ class DefaultSmartContractService(
         
         // Find contract by credential ID
         val contract = contracts.values.firstOrNull { it.credentialId == credentialId }
-            ?: throw com.trustweave.core.NotFoundException(
+            ?: throw NotFoundException(
                 "Contract not found for credential ID: $credentialId"
             )
         

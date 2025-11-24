@@ -2,8 +2,8 @@ package com.trustweave.testkit.integrity
 
 import com.trustweave.anchor.AnchorRef
 import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.core.TrustWeaveException
-import com.trustweave.json.DigestUtils
+import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.integrity.models.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

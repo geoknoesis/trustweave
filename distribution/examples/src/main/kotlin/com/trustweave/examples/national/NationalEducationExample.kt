@@ -2,7 +2,10 @@ package com.trustweave.examples.national
 
 import com.trustweave.TrustWeave
 import com.trustweave.core.*
+import com.trustweave.core.util.DigestUtils
 import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.proof.ProofType
+import com.trustweave.services.IssuanceConfig
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
 import kotlinx.coroutines.runBlocking
@@ -151,8 +154,8 @@ fun main() = runBlocking {
     val enrollmentCredential = trustweave.credentials.issue(
         issuer = authorityDid.id,
         subject = enrollmentSubject,
-        config = com.trustweave.services.IssuanceConfig(
-            proofType = com.trustweave.core.types.ProofType.Ed25519Signature2020,
+        config = IssuanceConfig(
+            proofType = ProofType.Ed25519Signature2020,
             keyId = authorityKeyId,
             issuerDid = authorityDid.id
         ),
@@ -275,8 +278,8 @@ fun main() = runBlocking {
     val achievementCredential = trustweave.credentials.issue(
         issuer = authorityDid.id,
         subject = achievementSubject,
-        config = com.trustweave.services.IssuanceConfig(
-            proofType = com.trustweave.core.types.ProofType.Ed25519Signature2020,
+        config = IssuanceConfig(
+            proofType = ProofType.Ed25519Signature2020,
             keyId = authorityKeyId,
             issuerDid = authorityDid.id
         ),
@@ -319,8 +322,8 @@ fun main() = runBlocking {
     val achievementCredentialJson = anchorJson.encodeToJsonElement(VerifiableCredential.serializer(), achievementCredential)
     
     // Compute digests
-    val enrollmentDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(enrollmentCredentialJson)
-    val achievementDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(achievementCredentialJson)
+    val enrollmentDigest = DigestUtils.sha256DigestMultibase(enrollmentCredentialJson)
+    val achievementDigest = DigestUtils.sha256DigestMultibase(achievementCredentialJson)
     
     // Create AlgeroPass record for enrollment
     val enrollmentRecord = buildJsonObject {

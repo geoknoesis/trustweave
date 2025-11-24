@@ -1,5 +1,6 @@
 package com.trustweave.anchor
 
+import com.trustweave.core.exception.NotFoundException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.AfterEach
@@ -146,7 +147,7 @@ class BlockchainRegistryTest {
             }
             
             override suspend fun readPayload(ref: AnchorRef): AnchorResult {
-                return storage[ref.txHash] ?: throw com.trustweave.core.NotFoundException("Not found: ${ref.txHash}")
+                return storage[ref.txHash] ?: throw NotFoundException("Not found: ${ref.txHash}")
             }
         }
     }

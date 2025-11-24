@@ -1,6 +1,6 @@
 package com.trustweave.integrations.entra
 
-import com.trustweave.core.TrustWeaveException
+import com.trustweave.core.exception.TrustWeaveException
 
 /**
  * Microsoft Entra ID (Azure AD) integration for trustweave.

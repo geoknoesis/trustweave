@@ -2,7 +2,7 @@ package com.trustweave.testkit
 
 import com.trustweave.anchor.AnchorResult
 import com.trustweave.anchor.BlockchainAnchorClient
-import com.trustweave.json.DigestUtils
+import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService

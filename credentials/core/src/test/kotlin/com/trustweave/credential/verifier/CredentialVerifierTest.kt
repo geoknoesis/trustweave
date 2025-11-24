@@ -9,7 +9,7 @@ import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.schema.JsonSchemaValidator
 import com.trustweave.credential.schema.SchemaRegistry
 import com.trustweave.credential.schema.SchemaValidatorRegistry
-import com.trustweave.core.SchemaFormat
+import com.trustweave.credential.SchemaFormat
 import com.trustweave.credential.did.CredentialDidResolver
 import com.trustweave.credential.did.CredentialDidResolution
 import com.trustweave.credential.proof.Ed25519ProofGenerator

@@ -1,4 +1,6 @@
-package com.trustweave.core
+package com.trustweave.core.util
+
+import com.trustweave.core.exception.toTrustWeaveError
 
 /**
  * Extension functions for Result<T> to improve error handling.
@@ -37,27 +39,42 @@ fun <T> Result<T>.getOrThrowError(): T {
  * @return The result value or the default value
  */
 inline fun <T> Result<T>.getOrElse(transform: (Throwable) -> T): T {
-    return getOrNull() ?: transform(exceptionOrNull()!!)
+    return fold(
+        onSuccess = { it },
+        onFailure = transform
+    )
 }
 
 /**
  * Combines multiple Results into a single Result containing a list of values.
  * 
+ * This function uses an "all-or-nothing" strategy: if any Result in the list
+ * is a failure, the entire operation fails. This is implemented by using
+ * getOrThrow() which will throw the first encountered exception, causing
+ * runCatching to wrap it in a Result.failure.
+ * 
+ * For partial success scenarios, use mapNotNull or filter instead.
+ * 
  * @param transform Function to transform the list of values
- * @return Result containing the transformed value
+ * @return Result containing the transformed value, or failure if any input Result failed
  */
 fun <T, R> List<Result<T>>.combine(transform: (List<T>) -> R): Result<R> = runCatching {
+    // getOrThrow() will throw on first failure, short-circuiting the map operation.
+    // This ensures we don't process remaining items if one has already failed.
     val values = map { it.getOrThrow() }
     transform(values)
 }
 
 /**
- * Maps a list of items to Results and combines them.
+ * Maps a list of items to Results and combines them sequentially.
+ * 
+ * Note: Despite the name, this function executes sequentially, not in parallel.
+ * For parallel execution, use coroutines with async/await.
  * 
  * @param transform Function to transform each item to a Result
  * @return Result containing the list of transformed values
  */
-suspend fun <T, R> List<T>.mapAsync(
+suspend fun <T, R> List<T>.mapSequential(
     transform: suspend (T) -> Result<R>
 ): Result<List<R>> = runCatching {
     map { transform(it).getOrThrow() }
@@ -71,11 +88,14 @@ suspend fun <T, R> List<T>.mapAsync(
  * 
  * **Example:**
  * ```kotlin
- * suspend fun createDid(): Result<DidDocument> = trustweaveCatching {
+ * suspend fun performOperation(): Result<ResultType> = trustweaveCatching {
  *     // operation that might throw
- *     didMethod.createDid(options)
+ *     someService.performOperation(options)
  * }
  * ```
+ * 
+ * **Note:** The error conversion transforms any `Throwable` to a `TrustWeaveError` (which extends
+ * `TrustWeaveException` and thus `Throwable`), so the type system allows this transformation.
  * 
  * @param block The suspend block to execute
  * @return Result with the block result or a TrustWeaveError
@@ -95,8 +115,8 @@ suspend inline fun <T> trustweaveCatching(
  * 
  * **Example:**
  * ```kotlin
- * trustweave.createDid()
- *     .onSuccess { did -> println("Created: ${did.id}") }
+ * result
+ *     .onSuccess { value -> println("Success: $value") }
  *     .onFailure { error -> println("Error: ${error.message}") }
  * ```
  * 
@@ -105,7 +125,7 @@ suspend inline fun <T> trustweaveCatching(
  */
 inline fun <T> Result<T>.onSuccess(action: (value: T) -> Unit): Result<T> {
     if (isSuccess) {
-        action(getOrNull()!!)
+        getOrNull()?.let(action)
     }
     return this
 }
@@ -115,8 +135,8 @@ inline fun <T> Result<T>.onSuccess(action: (value: T) -> Unit): Result<T> {
  * 
  * **Example:**
  * ```kotlin
- * trustweave.createDid()
- *     .onSuccess { did -> println("Created: ${did.id}") }
+ * result
+ *     .onSuccess { value -> println("Success: $value") }
  *     .onFailure { error -> println("Error: ${error.message}") }
  * ```
  * 
@@ -125,40 +145,9 @@ inline fun <T> Result<T>.onSuccess(action: (value: T) -> Unit): Result<T> {
  */
 inline fun <T> Result<T>.onFailure(action: (exception: Throwable) -> Unit): Result<T> {
     if (isFailure) {
-        action(exceptionOrNull()!!)
+        exceptionOrNull()?.let(action)
     }
     return this
 }
 
-/**
- * Normalizes a key ID by extracting the fragment identifier.
- * 
- * Key IDs can be provided in multiple formats:
- * - Full DID URL: `did:key:z6Mk...#key-1` → returns `key-1`
- * - Fragment only: `#key-1` → returns `key-1`
- * - Plain key ID: `key-1` → returns `key-1`
- * 
- * **Example:**
- * ```kotlin
- * normalizeKeyId("did:key:z6Mk...#key-1") // returns "key-1"
- * normalizeKeyId("#key-1")                // returns "key-1"
- * normalizeKeyId("key-1")                  // returns "key-1"
- * normalizeKeyId("did:key:z6Mk...")       // returns "did:key:z6Mk..."
- * ```
- * 
- * @param keyId The key ID to normalize (may include DID URL or fragment)
- * @return The normalized key ID (fragment part if present, otherwise the original keyId)
- */
-fun normalizeKeyId(keyId: String): String {
-    if (keyId.isEmpty()) return keyId
-    
-    val fragmentIndex = keyId.indexOf('#')
-    return if (fragmentIndex >= 0 && fragmentIndex < keyId.length - 1) {
-        // Has # and content after it
-        keyId.substring(fragmentIndex + 1)
-    } else {
-        // No # or # is at the end (edge case)
-        keyId
-    }
-}
 

@@ -4,11 +4,11 @@ Canonicalization ensures that logically equivalent JSON payloads produce identic
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
-**Result:** Lets you use `DigestUtils` and canonicalisation helpers shown in this guide.
+**Result:** Lets you use `DigestUtils` and canonicalisation helpers shown in this guide. Note: `DigestUtils` is now part of the `common` module in `com.trustweave.core.util` package.
 
 ## Why Canonicalize?
 
@@ -23,7 +23,7 @@ dependencies {
 3. The resulting canonical UTF-8 bytes feed into hashing (`sha256DigestMultibase`) or signing operations.
 
 ```kotlin
-import com.trustweave.json.DigestUtils
+import com.trustweave.core.util.DigestUtils
 
 val digest = DigestUtils.sha256DigestMultibase(jsonElement)
 println("Canonical digest: $digest")

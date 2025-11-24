@@ -1,6 +1,6 @@
 package com.trustweave.core
 
-import com.trustweave.core.SchemaFormat
+import com.trustweave.credential.SchemaFormat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -75,24 +75,30 @@ class PluginRegistryTest {
     }
 
     @Test
-    fun `test findBlockchainPlugins`() {
+    fun `test findBlockchainPlugins using features`() {
         val metadata = PluginMetadata(
             id = "algorand-plugin",
             name = "Algorand Plugin",
             version = "1.0.0",
             provider = "algorand",
-            capabilities = PluginCapabilities(supportedBlockchains = listOf("algorand:testnet", "algorand:mainnet"))
+            capabilities = PluginCapabilities(
+                features = setOf("blockchain-anchoring")
+            )
         )
         
         PluginRegistry.register(metadata, Any())
         
-        val plugins = PluginRegistry.findBlockchainPlugins("algorand:testnet")
-        assertEquals(1, plugins.size)
-        assertEquals("algorand-plugin", plugins.first().id)
+        // Find by generic capability
+        val blockchainPlugins = PluginRegistry.findByCapability("blockchain-anchoring")
+        assertEquals(1, blockchainPlugins.size)
+        assertEquals("algorand-plugin", blockchainPlugins.first().id)
+        
+        // Note: Specific blockchain chain IDs are handled by the BlockchainAnchorClient
+        // interface in the anchors:core module, not stored in PluginCapabilities
     }
 
     @Test
-    fun `test findCredentialStorePlugins`() {
+    fun `test findCredentialStorePlugins using findByCapability`() {
         val metadata = PluginMetadata(
             id = "store-plugin",
             name = "Store Plugin",
@@ -103,7 +109,8 @@ class PluginRegistryTest {
         
         PluginRegistry.register(metadata, Any())
         
-        val plugins = PluginRegistry.findCredentialStorePlugins()
+        // Use generic findByCapability instead of domain-specific method
+        val plugins = PluginRegistry.findByCapability("credential-storage")
         assertEquals(1, plugins.size)
     }
 
@@ -140,35 +147,26 @@ class PluginRegistryTest {
     }
 
     @Test
-    fun `test findByProofType`() {
+    fun `test credential plugin capabilities`() {
         val metadata = PluginMetadata(
             id = "ed25519-plugin",
             name = "Ed25519 Plugin",
             version = "1.0.0",
             provider = "test",
-            capabilities = PluginCapabilities(supportedProofTypes = listOf("Ed25519Signature2020", "JsonWebSignature2020"))
+            capabilities = PluginCapabilities(
+                features = setOf("credential-issuance", "credential-verification")
+            )
         )
         
         PluginRegistry.register(metadata, Any())
         
-        val plugins = PluginRegistry.findByProofType("Ed25519Signature2020")
+        // Find by generic capability
+        val plugins = PluginRegistry.findByCapability("credential-issuance")
         assertEquals(1, plugins.size)
-    }
-
-    @Test
-    fun `test findBySchemaFormat`() {
-        val metadata = PluginMetadata(
-            id = "json-schema-plugin",
-            name = "JSON Schema Plugin",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities(supportedSchemaFormats = listOf(SchemaFormat.JSON_SCHEMA))
-        )
         
-        PluginRegistry.register(metadata, Any())
-        
-        val plugins = PluginRegistry.findBySchemaFormat(SchemaFormat.JSON_SCHEMA)
-        assertEquals(1, plugins.size)
+        // Note: Specific proof types and schema formats are handled by the
+        // CredentialService interface in credentials:core module (via supportedProofTypes
+        // and supportedSchemaFormats properties), not stored in PluginCapabilities
     }
 
     @Test

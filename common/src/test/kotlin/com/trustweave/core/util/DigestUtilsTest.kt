@@ -1,9 +1,10 @@
-package com.trustweave.json
+package com.trustweave.core.util
 
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 class DigestUtilsTest {
 
@@ -41,7 +42,7 @@ class DigestUtilsTest {
         val json = """{"key":"value with \"quotes\" and\nnewlines"}"""
         val canonical = DigestUtils.canonicalizeJson(json)
         // Should escape properly
-        assert(canonical.contains("\\\""))
+        assertTrue(canonical.contains("\\\""), "Should escape quotes in JSON strings")
     }
 
     @Test
@@ -54,7 +55,7 @@ class DigestUtilsTest {
 
         // After canonicalization, they should be the same
         assertEquals(digest1, digest2)
-        assert(digest1.startsWith("u"))
+        assertTrue(digest1.startsWith("u"), "Digest should start with multibase prefix 'u'")
     }
 
     @Test
@@ -91,11 +92,49 @@ class DigestUtilsTest {
         val digest = DigestUtils.sha256DigestMultibase(data)
 
         // Should start with 'u' (multibase prefix for base58btc)
-        assert(digest.startsWith("u"))
+        assertTrue(digest.startsWith("u"), "Digest should start with multibase prefix 'u'")
         // Should be base58 encoded (only contains base58 characters)
         val base58Chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
         val encodedPart = digest.substring(1)
-        assert(encodedPart.all { it in base58Chars })
+        assertTrue(encodedPart.all { it in base58Chars }, 
+            "Encoded part should only contain base58 characters")
+    }
+
+    @Test
+    fun `canonicalizeJson handles empty object`() {
+        val json = "{}"
+        val canonical = DigestUtils.canonicalizeJson(json)
+        assertEquals("{}", canonical)
+    }
+
+    @Test
+    fun `canonicalizeJson handles empty array`() {
+        val json = """{"arr":[]}"""
+        val canonical = DigestUtils.canonicalizeJson(json)
+        assertEquals("""{"arr":[]}""", canonical)
+    }
+
+    @Test
+    fun `canonicalizeJson handles null values`() {
+        val json = """{"key":null}"""
+        val canonical = DigestUtils.canonicalizeJson(json)
+        assertEquals("""{"key":null}""", canonical)
+    }
+
+    @Test
+    fun `canonicalizeJson handles boolean values`() {
+        val json = """{"true":true,"false":false}"""
+        val canonical = DigestUtils.canonicalizeJson(json)
+        assertEquals("""{"false":false,"true":true}""", canonical)
+    }
+
+    @Test
+    fun `canonicalizeJson handles numeric values`() {
+        val json = """{"int":42,"float":3.14,"negative":-1}"""
+        val canonical = DigestUtils.canonicalizeJson(json)
+        assertTrue(canonical.contains("42"))
+        assertTrue(canonical.contains("3.14"))
+        assertTrue(canonical.contains("-1"))
     }
 }
 

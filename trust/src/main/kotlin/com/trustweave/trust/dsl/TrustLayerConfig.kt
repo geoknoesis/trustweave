@@ -16,6 +16,7 @@ import com.trustweave.revocation.services.StatusListManagerFactory
 import com.trustweave.did.services.DidDocumentAccess
 import com.trustweave.did.services.VerificationMethodAccess
 import com.trustweave.did.services.DidMethodService
+import com.trustweave.credential.SchemaFormat
 import com.trustweave.kms.services.KmsService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -708,13 +709,13 @@ class TrustLayerConfig private constructor(
      */
     class SchemaConfigBuilder {
         var autoValidate: Boolean = false
-        var defaultFormat: com.trustweave.core.SchemaFormat = com.trustweave.core.SchemaFormat.JSON_SCHEMA
+        var defaultFormat: SchemaFormat = SchemaFormat.JSON_SCHEMA
         
         fun autoValidate(enabled: Boolean) {
             autoValidate = enabled
         }
         
-        fun defaultFormat(format: com.trustweave.core.SchemaFormat) {
+        fun defaultFormat(format: SchemaFormat) {
             defaultFormat = format
         }
     }

@@ -1,5 +1,6 @@
 ---
 title: Quick Start
+layout: default
 ---
 
 # Quick Start

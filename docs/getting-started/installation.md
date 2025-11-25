@@ -2,6 +2,13 @@
 title: Installation
 nav_order: 2
 parent: Getting Started
+keywords:
+  - installation
+  - setup
+  - gradle
+  - maven
+  - dependencies
+  - prerequisites
 ---
 
 # Installation

@@ -1,5 +1,15 @@
 ---
 title: Use Case Scenarios
+keywords:
+  - scenarios
+  - use cases
+  - examples
+  - workflows
+  - real-world
+  - healthcare
+  - education
+  - supply chain
+  - iot
 ---
 
 # TrustWeave Use Case Scenarios

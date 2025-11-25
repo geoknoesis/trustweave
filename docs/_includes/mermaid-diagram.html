@@ -1,0 +1,14 @@
+{% if include.title %}
+<div class="mermaid-diagram-title">{{ include.title }}</div>
+{% endif %}
+
+<div class="mermaid-wrapper">
+```mermaid
+{{ include.diagram }}
+```
+</div>
+
+{% if include.caption %}
+<div class="mermaid-diagram-caption">{{ include.caption }}</div>
+{% endif %}
+

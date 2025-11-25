@@ -2,6 +2,12 @@
 title: Common Patterns
 nav_order: 7
 parent: Getting Started
+keywords:
+  - patterns
+  - best practices
+  - common tasks
+  - examples
+  - production
 ---
 
 # Common Patterns

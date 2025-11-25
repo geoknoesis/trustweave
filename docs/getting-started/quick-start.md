@@ -2,6 +2,15 @@
 title: Quick Start
 nav_order: 3
 parent: Getting Started
+keywords:
+  - quick start
+  - getting started
+  - first credential
+  - tutorial
+  - beginner
+  - example
+  - did
+  - verifiable credential
 ---
 
 # Quick Start

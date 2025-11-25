@@ -39,6 +39,53 @@ $gitbook-code-bg: #f5f5f5;
     padding: 20px;
     border-radius: 4px;
     margin: 20px 0;
+    text-align: center;
+    overflow-x: auto;
+    min-height: 200px;
+    display: block;
+    
+    // Ensure diagrams are visible
+    svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    
+    // Fix for sequence diagrams
+    &.sequence-diagram {
+      min-height: 300px;
+    }
+  }
+  
+  // Mermaid wrapper for better rendering
+  .mermaid-wrapper {
+    margin: 2rem 0;
+    padding: 1rem;
+    background-color: #fafafa;
+    border: 1px solid $gitbook-border;
+    border-radius: 4px;
+    overflow-x: auto;
+    
+    .mermaid {
+      margin: 0;
+      background-color: transparent;
+    }
+  }
+  
+  .mermaid-diagram-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: $gitbook-text;
+    font-size: 1.1em;
+  }
+  
+  .mermaid-diagram-caption {
+    margin-top: 0.5rem;
+    font-size: 0.9em;
+    color: $gitbook-text-light;
+    font-style: italic;
+    text-align: center;
   }
 
   // Better heading styles (GitBook style)
@@ -141,6 +188,66 @@ $gitbook-code-bg: #f5f5f5;
   .tip {
     background-color: #e8f5e9;
     border-color: #388e3c;
+  }
+  
+  // Code example enhancements
+  .code-example {
+    position: relative;
+    margin: 1.5rem 0;
+    
+    .code-example-badge {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      padding: 0.25rem 0.5rem;
+      background: #10b981;
+      color: white;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      z-index: 10;
+    }
+    
+    .code-example-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: $gitbook-text;
+    }
+    
+    .code-example-source {
+      text-align: right;
+      margin-top: 0.5rem;
+      font-size: 0.875rem;
+      
+      a {
+        color: $gitbook-primary;
+        text-decoration: none;
+        
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+      
+      .external-icon {
+        font-size: 0.75em;
+        margin-left: 0.25rem;
+      }
+    }
+    
+    .code-example-output {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #f3f4f6;
+      border-left: 3px solid #10b981;
+      border-radius: 4px;
+      
+      pre {
+        margin: 0;
+        background: transparent;
+        border: none;
+        padding: 0;
+      }
+    }
   }
 }
 

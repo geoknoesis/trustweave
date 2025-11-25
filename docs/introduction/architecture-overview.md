@@ -2,6 +2,13 @@
 title: Architecture Overview
 nav_order: 6
 parent: Introduction
+keywords:
+  - architecture
+  - design
+  - modules
+  - plugins
+  - services
+  - structure
 ---
 
 # Architecture Overview

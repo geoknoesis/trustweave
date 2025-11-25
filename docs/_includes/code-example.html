@@ -1,0 +1,32 @@
+{% if include.title %}
+<div class="code-example-title">{{ include.title }}</div>
+{% endif %}
+
+{% if include.runnable %}
+<div class="code-example-badge runnable">✓ Runnable</div>
+{% endif %}
+
+{% if include.source %}
+<div class="code-example-source">
+  <a href="{{ include.source }}" target="_blank" rel="noopener noreferrer">
+    View Source <span class="external-icon">↗</span>
+  </a>
+</div>
+{% endif %}
+
+{% highlight kotlin %}
+{{ include.code }}
+{% endhighlight %}
+
+{% if include.output %}
+<div class="code-example-output">
+  <strong>Expected Output:</strong>
+  <pre>{{ include.output }}</pre>
+</div>
+{% endif %}
+
+{% if include.note %}
+{: .note }
+> **Note:** {{ include.note }}
+{% endif %}
+

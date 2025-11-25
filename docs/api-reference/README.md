@@ -139,10 +139,18 @@ See [Plugin Lifecycle](../advanced/plugin-lifecycle.md) for detailed plugin life
 - [Getting Started](../getting-started/README.md) - Installation and setup
 - [Quick Start](../getting-started/quick-start.md) - Your first application
 - [Core Concepts](../core-concepts/README.md) - Understand DIDs, credentials, and wallets
+- [Mental Model](../introduction/mental-model.md) - Understand how TrustWeave works
 
 **Ready to dive deeper?**
 - [Error Handling](../advanced/error-handling.md) - Error handling patterns
 - [Plugin Lifecycle](../advanced/plugin-lifecycle.md) - Plugin lifecycle management
+- [Common Patterns](../getting-started/common-patterns.md) - Production-ready patterns
 - [Tutorials](../tutorials/README.md) - Step-by-step guides
 - [Use Case Scenarios](../scenarios/README.md) - Real-world examples
+
+**Looking for specific APIs?**
+- [Core API](core-api.md) - TrustLayer facade API (DIDs, credentials, wallets, blockchain)
+- [Wallet API](wallet-api.md) - Wallet operations and capabilities
+- [Credential Service API](credential-service-api.md) - Credential service SPI
+- [Smart Contract API](smart-contract-api.md) - Smart contract operations
 

@@ -2,6 +2,14 @@
 title: TrustWeave Mental Model
 nav_order: 7
 parent: Introduction
+keywords:
+  - mental model
+  - architecture
+  - concepts
+  - trustlayer
+  - dsl
+  - plugins
+  - services
 ---
 
 # TrustWeave Mental Model

@@ -1,5 +1,13 @@
 ---
 title: Error Handling
+nav_order: 6
+parent: Advanced Topics
+keywords:
+  - error handling
+  - exceptions
+  - trustweaveerror
+  - debugging
+  - troubleshooting
 ---
 
 # Error Handling

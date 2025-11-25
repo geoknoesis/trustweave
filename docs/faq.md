@@ -1,6 +1,12 @@
 ---
 title: Frequently Asked Questions
 nav_order: 12
+keywords:
+  - faq
+  - frequently asked questions
+  - troubleshooting
+  - help
+  - common questions
 ---
 
 # Frequently Asked Questions

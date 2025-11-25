@@ -1,6 +1,13 @@
 ---
 title: Core Concepts
 nav_order: 2
+keywords:
+  - core concepts
+  - dids
+  - verifiable credentials
+  - wallets
+  - blockchain
+  - key management
 ---
 
 # Core Concepts

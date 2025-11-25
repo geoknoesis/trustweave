@@ -1,5 +1,16 @@
 ---
 title: Key Management
+nav_order: 7
+parent: Core Concepts
+keywords:
+  - key management
+  - kms
+  - keys
+  - cryptography
+  - aws kms
+  - azure key vault
+  - waltid
+  - security
 ---
 
 # Key Management
@@ -273,9 +284,19 @@ Add `META-INF/services/com.trustweave.kms.spi.KeyManagementServiceProvider` cont
 
 **Important:** All providers MUST implement `supportedAlgorithms` and all KMS instances MUST implement `getSupportedAlgorithms()`.
 
-## Related Reading
+## Next Steps
 
-- [Wallet API Reference](../api-reference/wallet-api.md#keymanagement) for DSL hooks and typed options.
-- [Testkit KMS](../modules/trustweave-common.md) documentation for testing helpers.
-- [SPI Guide](../advanced/spi.md) to build custom providers.
+**Ready to use Key Management?**
+- [Wallet API Reference – KeyManagement](../api-reference/wallet-api.html#keymanagement) - DSL hooks and typed options
+- [Algorithm Compatibility Table](algorithm-compatibility-table.html) - Algorithm support across DIDs, VCs, AWS KMS, and Azure Key Vault
+- [KMS Integrations](../integrations/README.html#key-management-systems-kms) - AWS KMS, Azure Key Vault, WaltID, and more
+
+**Want to learn more?**
+- [DIDs](dids.html) - Understand how keys are used in DID documents
+- [Verifiable Credentials](verifiable-credentials.html) - Learn how keys sign credentials
+- [SPI Guide](../advanced/spi.html) - Build custom KMS providers
+
+**Explore related concepts:**
+- [Testkit KMS](../modules/trustweave-common.html) - Testing helpers
+- [Security Best Practices](../security/README.html) - Security guidelines
 

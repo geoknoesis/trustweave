@@ -1,5 +1,16 @@
 ---
 title: Blockchain Anchoring
+nav_order: 4
+parent: Core Concepts
+keywords:
+  - blockchain
+  - anchoring
+  - tamper evidence
+  - integrity
+  - timestamping
+  - algorand
+  - polygon
+  - ethereum
 ---
 
 # Blockchain Anchoring
@@ -178,9 +189,19 @@ println("Stored mediaType=${stored?.mediaType} payload=${stored?.payload}")
 - Publication timestamps for news or research.
 - Any workflow where you need evidence that “this existed in this exact form at this time.”
 
-## See Also
+## Next Steps
 
-- [Quick Start – Step 5](../getting-started/quick-start.md#step-5-verify-and-optionally-anchor)
-- [Blockchain Anchor Registry API](../api-reference/wallet-api.md) *(for wallet anchoring integration)*
-- [TrustWeave Anchor module](../modules/trustweave-anchor.md) for implementation details.
+**Ready to use Blockchain Anchoring?**
+- [Quick Start – Step 5](../getting-started/quick-start.html#step-5-verify-and-optionally-anchor) - Anchor your first credential
+- [Core API Reference – Blockchain Operations](../api-reference/core-api.html#blockchain-anchoring) - Complete API documentation
+- [TrustWeave Anchor Module](../modules/trustweave-anchor.html) - Implementation details
+
+**Want to learn more?**
+- [Verifiable Credentials](verifiable-credentials.html) - Issue and verify credentials
+- [Blockchain-Anchored Revocation](blockchain-anchored-revocation.html) - Revocation with blockchain anchoring
+- [Smart Contracts](smart-contracts.html) - Executable agreements with anchoring
+
+**Explore integrations:**
+- [Blockchain Integrations](../integrations/README.html#blockchain-anchoring) - Algorand, Polygon, Ethereum, and more
+- [Use Case Scenarios](../scenarios/README.html) - Real-world anchoring examples
 

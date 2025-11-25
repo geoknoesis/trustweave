@@ -2,6 +2,15 @@
 title: Use Cases
 nav_order: 5
 parent: Introduction
+keywords:
+  - use cases
+  - examples
+  - earth observation
+  - spatial web
+  - supply chain
+  - healthcare
+  - education
+  - iot
 ---
 
 # Use Cases

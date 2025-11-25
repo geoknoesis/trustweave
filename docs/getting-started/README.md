@@ -1,6 +1,12 @@
 ---
 title: Getting Started
 nav_order: 1
+keywords:
+  - getting started
+  - installation
+  - quick start
+  - setup
+  - onboarding
 ---
 
 # Getting Started

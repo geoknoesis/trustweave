@@ -2,6 +2,13 @@
 title: Key Features
 nav_order: 4
 parent: Introduction
+keywords:
+  - features
+  - capabilities
+  - domain-agnostic
+  - chain-agnostic
+  - did-method-agnostic
+  - kms-agnostic
 ---
 
 # Key Features

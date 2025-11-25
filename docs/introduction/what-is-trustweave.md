@@ -2,6 +2,12 @@
 title: What is TrustWeave?
 nav_order: 2
 parent: Introduction
+keywords:
+  - what is trustweave
+  - introduction
+  - overview
+  - purpose
+  - design philosophy
 ---
 
 # What is TrustWeave?
@@ -53,7 +59,13 @@ Traditional identity and trust systems are often tightly coupled to specific tec
 
 ## Next Steps
 
-- Learn about [Key Features](key-features.md)
-- Explore [Use Cases](use-cases.md)
-- Understand the [Architecture Overview](architecture-overview.md)
+**New to TrustWeave?**
+- [Key Features](key-features.html) - Explore the main capabilities
+- [Use Cases](use-cases.html) - See how TrustWeave is used in practice
+- [Architecture Overview](architecture-overview.html) - Understand the modular design
+- [Mental Model](mental-model.html) - Core concepts and how they fit together
+
+**Ready to get started?**
+- [Getting Started](../getting-started/README.html) - Installation and quick start
+- [Quick Start](../getting-started/quick-start.html) - Create your first credential in 5 minutes
 

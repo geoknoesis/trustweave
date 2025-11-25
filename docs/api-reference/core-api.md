@@ -2,6 +2,15 @@
 title: Core API Reference
 nav_order: 2
 parent: API Reference
+keywords:
+  - api
+  - core api
+  - trustlayer
+  - dids
+  - credentials
+  - wallets
+  - blockchain
+  - trust
 ---
 
 # Core API Reference

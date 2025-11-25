@@ -1,6 +1,11 @@
 ---
 title: Introduction
 nav_order: 0
+keywords:
+  - introduction
+  - overview
+  - what is trustweave
+  - getting started
 ---
 
 # Introduction

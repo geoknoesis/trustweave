@@ -26,6 +26,7 @@ plugins:
   - jekyll-seo-tag
   - jekyll-sitemap
   - jekyll-mermaid
+  - jekyll-relative-links
 
 # Exclude files from processing
 exclude:
@@ -318,6 +319,11 @@ nav:
 # Kramdown settings for markdown processing
 kramdown:
   syntax_highlighter: rouge
+  hard_wrap: false
+  auto_ids: true
+  footnote_nr: 1
+  entity_output: as_char
+  toc_levels: 1..6
   syntax_highlighter_opts:
     block:
       line_numbers: true

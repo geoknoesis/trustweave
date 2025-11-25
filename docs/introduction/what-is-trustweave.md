@@ -1,5 +1,7 @@
 ---
 title: What is TrustWeave?
+nav_order: 2
+parent: Introduction
 ---
 
 # What is TrustWeave?

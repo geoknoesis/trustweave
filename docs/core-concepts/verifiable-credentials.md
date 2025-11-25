@@ -1,5 +1,7 @@
 ---
 title: Verifiable Credentials (VCs)
+nav_order: 3
+parent: Core Concepts
 ---
 
 # Verifiable Credentials (VCs)

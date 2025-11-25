@@ -1,5 +1,7 @@
 ---
 title: Project Setup
+nav_order: 5
+parent: Getting Started
 ---
 
 # Project Setup

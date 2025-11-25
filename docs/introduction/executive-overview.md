@@ -1,5 +1,7 @@
 ---
 title: "Executive Overview: TrustWeave"
+nav_order: 3
+parent: Introduction
 ---
 
 # Executive Overview: TrustWeave

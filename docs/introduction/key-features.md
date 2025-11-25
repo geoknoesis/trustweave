@@ -1,5 +1,7 @@
 ---
 title: Key Features
+nav_order: 4
+parent: Introduction
 ---
 
 # Key Features

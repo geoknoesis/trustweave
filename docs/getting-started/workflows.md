@@ -1,5 +1,7 @@
 ---
 title: Common Workflows
+nav_order: 9
+parent: Getting Started
 ---
 
 # Common Workflows

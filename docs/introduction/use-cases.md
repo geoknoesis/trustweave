@@ -1,5 +1,7 @@
 ---
 title: Use Cases
+nav_order: 5
+parent: Introduction
 ---
 
 # Use Cases

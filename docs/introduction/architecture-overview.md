@@ -1,5 +1,7 @@
 ---
 title: Architecture Overview
+nav_order: 6
+parent: Introduction
 ---
 
 # Architecture Overview

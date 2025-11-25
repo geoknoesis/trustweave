@@ -1,5 +1,7 @@
 ---
 title: Your First Application
+nav_order: 4
+parent: Getting Started
 ---
 
 # Your First Application

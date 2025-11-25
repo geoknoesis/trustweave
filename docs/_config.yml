@@ -67,6 +67,7 @@ just_the_docs:
 
   # Breadcrumbs
   breadcrumbs: true
+  has_breadcrumbs: true
 
   # Color scheme (GitBook-like)
   color_scheme: light

@@ -1,5 +1,7 @@
 ---
 title: Common Patterns
+nav_order: 7
+parent: Getting Started
 ---
 
 # Common Patterns

@@ -1,5 +1,7 @@
 ---
 title: "The Web of Trust: Foundation for Decentralized Trust"
+nav_order: 8
+parent: Introduction
 ---
 
 # The Web of Trust: Foundation for Decentralized Trust

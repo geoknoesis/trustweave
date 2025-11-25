@@ -1,5 +1,7 @@
 ---
 title: TrustWeave DSL Guide
+nav_order: 10
+parent: Getting Started
 ---
 
 # TrustWeave DSL Guide

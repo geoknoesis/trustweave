@@ -1,5 +1,7 @@
 ---
 title: Troubleshooting Guide
+nav_order: 11
+parent: Getting Started
 ---
 
 # Troubleshooting Guide

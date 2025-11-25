@@ -1,5 +1,7 @@
 ---
 title: IDE Setup Guide
+nav_order: 6
+parent: Getting Started
 ---
 
 # IDE Setup Guide

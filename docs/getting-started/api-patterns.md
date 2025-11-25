@@ -1,5 +1,7 @@
 ---
 title: API Patterns and Best Practices
+nav_order: 8
+parent: Getting Started
 ---
 
 # API Patterns and Best Practices

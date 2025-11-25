@@ -1,5 +1,7 @@
 ---
 title: Core API Reference
+nav_order: 2
+parent: API Reference
 ---
 
 # Core API Reference

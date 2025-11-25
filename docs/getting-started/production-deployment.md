@@ -1,5 +1,7 @@
 ---
 title: Production Deployment Guide
+nav_order: 12
+parent: Getting Started
 ---
 
 # Production Deployment Guide

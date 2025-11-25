@@ -1,5 +1,7 @@
 ---
 title: TrustWeave Mental Model
+nav_order: 7
+parent: Introduction
 ---
 
 # TrustWeave Mental Model

@@ -21,6 +21,300 @@ defaults:
       path: ""
     values:
       layout: default
+      nav_exclude: true  # Exclude all pages by default
+  # Include only specific files that are in nav structure
+  - scope:
+      path: "introduction/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "introduction/what-is-trustweave.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "introduction/executive-overview.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "introduction/key-features.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "introduction/use-cases.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "introduction/architecture-overview.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "introduction/mental-model.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "introduction/web-of-trust.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "getting-started/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "getting-started/installation.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "getting-started/quick-start.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "getting-started/your-first-application.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "getting-started/project-setup.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "getting-started/ide-setup.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "getting-started/common-patterns.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "getting-started/api-patterns.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "getting-started/workflows.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "getting-started/dsl-guide.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "getting-started/troubleshooting.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "getting-started/production-deployment.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "core-concepts/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "core-concepts/dids.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "core-concepts/verifiable-credentials.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "core-concepts/wallets.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "core-concepts/blockchain-anchoring.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "core-concepts/smart-contracts.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "core-concepts/trust-registry.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "core-concepts/key-management.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "core-concepts/credential-exchange-protocols.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "core-concepts/delegation.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "core-concepts/evaluation-engines.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "core-concepts/proof-purpose-validation.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "core-concepts/blockchain-anchored-revocation.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "core-concepts/json-canonicalization.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "core-concepts/algorithm-compatibility-table.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "tutorials/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "tutorials/beginner-tutorial-series.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "tutorials/did-operations-tutorial.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "tutorials/credential-issuance-tutorial.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "tutorials/wallet-api-tutorial.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "scenarios/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "features/credential-exchange-protocols/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "api-reference/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "api-reference/core-api.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "api-reference/wallet-api.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "api-reference/credential-service-api.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "api-reference/smart-contract-api.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "integrations/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "advanced/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "advanced/key-rotation.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "advanced/verification-policies.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "advanced/spi.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "advanced/custom-adapters.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "advanced/plugin-lifecycle.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "advanced/error-handling.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "advanced/testing-strategies.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "advanced/performance.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "modules/core-modules.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "configuration/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "migration/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "security/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "licensing/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "comparison/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "contributing/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "contributing/development-setup.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "contributing/code-style.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "contributing/testing-guidelines.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "contributing/pull-request-process.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "contributing/creating-plugins.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "faq.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "GLOSSARY.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "plugins.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "TRUSTWEAVE_WHITEPAPER.md"
+    values:
+      nav_exclude: false
 
 # Theme: Just the Docs (GitBook-like appearance)
 theme: just-the-docs
@@ -45,6 +339,8 @@ exclude:
   - book.json
   - SUMMARY.md
   - .internal
+  - DOCUMENTATION_REVIEW.md
+  - IMPLEMENTATION_SUMMARY.md
 
 # Just the Docs Theme Configuration
 just_the_docs:

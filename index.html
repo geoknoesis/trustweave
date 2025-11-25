@@ -3,7 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrustWeave - The Foundation for Decentralized Trust and Identity</title>
+    <title>TrustWeave - Chain-Agnostic Identity SDK for Kotlin | Open Source</title>
+    <meta name="description" content="Build verifiable identity systems without vendor lock-in. TrustWeave works with any blockchain, DID method, or KMS. 25+ examples included. Free & open source.">
+    <meta name="keywords" content="decentralized identity, verifiable credentials, DID, blockchain identity, Kotlin SDK, open source identity, chain-agnostic, KMS-agnostic">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="TrustWeave - Chain-Agnostic Identity SDK for Kotlin">
+    <meta property="og:description" content="Build verifiable identity systems without vendor lock-in. TrustWeave works with any blockchain, DID method, or KMS.">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="TrustWeave - Chain-Agnostic Identity SDK">
+    <meta name="twitter:description" content="Build verifiable identity systems without vendor lock-in. 25+ examples included.">
     <style>
         * {
             margin: 0;
@@ -410,15 +422,25 @@
         /* Responsive */
         @media (max-width: 768px) {
             .hero h1 {
-                font-size: 2.5rem;
+                font-size: 2rem;
             }
 
             .hero p {
-                font-size: 1.125rem;
+                font-size: 1rem;
             }
 
             .nav-links {
-                gap: 1rem;
+                gap: 0.5rem;
+                font-size: 0.9rem;
+            }
+            
+            .nav-links a {
+                padding: 0.25rem 0.5rem;
+            }
+            
+            .nav-links a.btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
             }
 
             .waitlist-form {
@@ -427,6 +449,22 @@
 
             .waitlist-form input,
             .waitlist-form button {
+                width: 100%;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .section-subtitle {
+                font-size: 1rem;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+            }
+            
+            .hero-buttons .btn {
                 width: 100%;
             }
         }
@@ -563,6 +601,71 @@
         </div>
     </section>
 
+    <!-- Problem-Solution Section -->
+    <section class="features" style="background: var(--bg-light); padding: 6rem 2rem;">
+        <div class="container">
+            <h2 class="section-title">The Problem You're Solving</h2>
+            <div style="max-width: 900px; margin: 0 auto;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-top: 3rem;">
+                    <div style="background: white; padding: 2rem; border-radius: 1rem; border: 2px solid #fee; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                        <h3 style="color: #dc2626; margin-bottom: 1rem; font-size: 1.25rem;">❌ Vendor Lock-In Costs You</h3>
+                        <ul style="list-style: none; padding: 0; color: var(--text-light); line-height: 1.8;">
+                            <li style="margin-bottom: 0.5rem;">• Switching blockchains? Rewrite your code</li>
+                            <li style="margin-bottom: 0.5rem;">• Changing DID methods? Start over</li>
+                            <li style="margin-bottom: 0.5rem;">• Need different KMS? Rebuild from scratch</li>
+                        </ul>
+                    </div>
+                    <div style="background: white; padding: 2rem; border-radius: 1rem; border: 2px solid #d1fae5; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                        <h3 style="color: var(--accent); margin-bottom: 1rem; font-size: 1.25rem;">✅ TrustWeave Solves This</h3>
+                        <ul style="list-style: none; padding: 0; color: var(--text-light); line-height: 1.8;">
+                            <li style="margin-bottom: 0.5rem;">• Write once, deploy anywhere</li>
+                            <li style="margin-bottom: 0.5rem;">• Switch technologies with configuration</li>
+                            <li style="margin-bottom: 0.5rem;">• Future-proof your infrastructure</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases Quick Wins -->
+    <section class="features" style="padding: 6rem 2rem; background: var(--bg);">
+        <div class="container">
+            <h2 class="section-title">TrustWeave Powers Real-World Applications</h2>
+            <p class="section-subtitle">Production-ready use cases across multiple industries</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 3rem;">
+                <div style="background: white; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border);">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎓</div>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Academic Credentials</h3>
+                    <p style="color: var(--text-light); font-size: 0.9rem;">Universities issue verifiable diplomas</p>
+                </div>
+                <div style="background: white; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border);">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🏥</div>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Healthcare Records</h3>
+                    <p style="color: var(--text-light); font-size: 0.9rem;">HIPAA-compliant patient data verification</p>
+                </div>
+                <div style="background: white; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border);">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📦</div>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Supply Chain</h3>
+                    <p style="color: var(--text-light); font-size: 0.9rem;">Track products from source to consumer</p>
+                </div>
+                <div style="background: white; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border);">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔌</div>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">IoT Devices</h3>
+                    <p style="color: var(--text-light); font-size: 0.9rem;">Secure device identity and firmware verification</p>
+                </div>
+                <div style="background: white; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border);">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🛰️</div>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Earth Observation</h3>
+                    <p style="color: var(--text-light); font-size: 0.9rem;">Verify satellite data provenance</p>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 2rem;">
+                <a href="/trustweave/scenarios/" class="btn btn-primary">View 25+ Use Case Scenarios →</a>
+            </div>
+        </div>
+    </section>
+
     <!-- Features Section -->
     <section class="features" id="features">
         <div class="container">
@@ -649,21 +752,169 @@
         </div>
     </section>
 
-    <!-- Open Source Section -->
-    <section class="opensource" id="opensource">
+    <!-- Open Source vs SaaS Section -->
+    <section class="opensource" id="opensource" style="background: var(--bg-light);">
         <div class="container">
-            <h2 class="section-title">Get Started with Open Source</h2>
-            <p class="section-subtitle">TrustWeave is available as an open source library. Start building today!</p>
-            <div class="opensource-grid">
-                <div class="opensource-card">
-                    <h3>📚 Documentation</h3>
-                    <p>Comprehensive guides, API references, and 25+ real-world scenarios</p>
-                    <a href="/trustweave/" class="btn btn-primary">Documentation</a>
+            <h2 class="section-title">Choose Your Path</h2>
+            <p class="section-subtitle">TrustWeave is available as open source today, with managed SaaS coming soon</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; margin-top: 3rem; max-width: 1000px; margin-left: auto; margin-right: auto;">
+                <!-- Open Source Card -->
+                <div style="background: white; padding: 3rem; border-radius: 1.5rem; border: 2px solid var(--primary); box-shadow: 0 8px 24px rgba(0,0,0,0.1); position: relative;">
+                    <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 0.5rem 1.5rem; border-radius: 2rem; font-size: 0.9rem; font-weight: 600;">
+                        🆓 Free Forever
+                    </div>
+                    <h3 style="font-size: 1.75rem; margin-bottom: 1rem; margin-top: 1rem; color: var(--text);">Open Source</h3>
+                    <p style="color: var(--text-light); margin-bottom: 2rem; font-size: 1.05rem;">
+                        <strong>Perfect for:</strong> Developers building custom solutions, organizations with existing infrastructure, teams that want full control
+                    </p>
+                    
+                    <div style="margin-bottom: 2rem;">
+                        <h4 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text);">Includes:</h4>
+                        <ul style="list-style: none; padding: 0; color: var(--text-light); line-height: 2;">
+                            <li style="display: flex; align-items: start; gap: 0.5rem;">
+                                <span style="color: var(--accent);">✅</span>
+                                <span>Complete SDK and libraries</span>
+                            </li>
+                            <li style="display: flex; align-items: start; gap: 0.5rem;">
+                                <span style="color: var(--accent);">✅</span>
+                                <span>25+ real-world examples</span>
+                            </li>
+                            <li style="display: flex; align-items: start; gap: 0.5rem;">
+                                <span style="color: var(--accent);">✅</span>
+                                <span>Comprehensive documentation</span>
+                            </li>
+                            <li style="display: flex; align-items: start; gap: 0.5rem;">
+                                <span style="color: var(--accent);">✅</span>
+                                <span>Community support</span>
+                            </li>
+                            <li style="display: flex; align-items: start; gap: 0.5rem;">
+                                <span style="color: var(--accent);">✅</span>
+                                <span>Apache 2.0 license</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <a href="/trustweave/getting-started/quick-start.html" class="btn btn-primary" style="width: 100%; text-align: center; display: block;">
+                        Get Started Free →
+                    </a>
                 </div>
-                <div class="opensource-card">
-                    <h3>💻 GitHub Repository</h3>
-                    <p>Explore the codebase, contribute, and join the community</p>
-                    <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" class="btn btn-primary">View on GitHub</a>
+                
+                <!-- SaaS Card -->
+                <div style="background: white; padding: 3rem; border-radius: 1.5rem; border: 2px solid var(--border); box-shadow: 0 8px 24px rgba(0,0,0,0.1); position: relative;">
+                    <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: var(--secondary); color: white; padding: 0.5rem 1.5rem; border-radius: 2rem; font-size: 0.9rem; font-weight: 600;">
+                        💼 Coming Soon
+                    </div>
+                    <h3 style="font-size: 1.75rem; margin-bottom: 1rem; margin-top: 1rem; color: var(--text);">Managed SaaS</h3>
+                    <p style="color: var(--text-light); margin-bottom: 2rem; font-size: 1.05rem;">
+                        <strong>Perfect for:</strong> Teams that want managed infrastructure, organizations needing SLAs and support, companies that want to focus on product, not ops
+                    </p>
+                    
+                    <div style="margin-bottom: 2rem;">
+                        <h4 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text);">Everything in Open Source, plus:</h4>
+                        <ul style="list-style: none; padding: 0; color: var(--text-light); line-height: 2;">
+                            <li style="display: flex; align-items: start; gap: 0.5rem;">
+                                <span style="color: var(--accent);">✅</span>
+                                <span>Managed infrastructure</span>
+                            </li>
+                            <li style="display: flex; align-items: start; gap: 0.5rem;">
+                                <span style="color: var(--accent);">✅</span>
+                                <span>99.9% uptime SLA</span>
+                            </li>
+                            <li style="display: flex; align-items: start; gap: 0.5rem;">
+                                <span style="color: var(--accent);">✅</span>
+                                <span>Priority support</span>
+                            </li>
+                            <li style="display: flex; align-items: start; gap: 0.5rem;">
+                                <span style="color: var(--accent);">✅</span>
+                                <span>Advanced monitoring</span>
+                            </li>
+                            <li style="display: flex; align-items: start; gap: 0.5rem;">
+                                <span style="color: var(--accent);">✅</span>
+                                <span>Compliance certifications</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <a href="#waitlist" class="btn btn-secondary" style="width: 100%; text-align: center; display: block;">
+                        Join Waitlist →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- What's Included Section -->
+    <section class="features" style="padding: 6rem 2rem; background: var(--bg);">
+        <div class="container">
+            <h2 class="section-title">Everything You Need to Get Started</h2>
+            <p class="section-subtitle">Complete developer experience with production-ready examples</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 3rem;">
+                <div style="background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%); padding: 2rem; border-radius: 1rem; border: 1px solid var(--border);">
+                    <h3 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text);">📚 Complete Developer Experience</h3>
+                    <ul style="list-style: none; padding: 0; color: var(--text-light); line-height: 2;">
+                        <li>✅ 25+ Real-World Use Case Scenarios</li>
+                        <li>✅ Step-by-Step Tutorials</li>
+                        <li>✅ Comprehensive API Documentation</li>
+                        <li>✅ Runnable Code Examples</li>
+                        <li>✅ Common Patterns & Best Practices</li>
+                        <li>✅ FAQ & Troubleshooting Guides</li>
+                    </ul>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%); padding: 2rem; border-radius: 1rem; border: 1px solid var(--border);">
+                    <h3 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text);">🚀 Production-Ready Features</h3>
+                    <ul style="list-style: none; padding: 0; color: var(--text-light); line-height: 2;">
+                        <li>✅ 10+ Supported Blockchains</li>
+                        <li>✅ 15+ DID Methods Supported</li>
+                        <li>✅ Multiple KMS Integrations</li>
+                        <li>✅ Type-Safe Kotlin APIs</li>
+                        <li>✅ Coroutine-Based Async Operations</li>
+                        <li>✅ Comprehensive Test Coverage</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Company Credibility Section -->
+    <section class="features" style="padding: 6rem 2rem; background: var(--bg-light);">
+        <div class="container">
+            <h2 class="section-title">Built by Geoknoesis LLC</h2>
+            <p class="section-subtitle">TrustWeave represents Geoknoesis' reference architecture for decentralized trust</p>
+            
+            <div style="max-width: 800px; margin: 2rem auto; background: white; padding: 3rem; border-radius: 1.5rem; box-shadow: 0 4px 24px rgba(0,0,0,0.1);">
+                <p style="color: var(--text-light); line-height: 1.8; margin-bottom: 2rem; font-size: 1.05rem;">
+                    Built by a team with deep expertise in decentralized identity systems, blockchain technology, 
+                    enterprise software architecture, and standards compliance (W3C, CAIP-2).
+                </p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔐</div>
+                        <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--text);">Decentralized Identity</h4>
+                        <p style="color: var(--text-light); font-size: 0.9rem;">Deep expertise in DID and VC standards</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">⛓️</div>
+                        <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--text);">Blockchain Technology</h4>
+                        <p style="color: var(--text-light); font-size: 0.9rem;">Multi-chain integration experience</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🏢</div>
+                        <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--text);">Enterprise Architecture</h4>
+                        <p style="color: var(--text-light); font-size: 0.9rem;">Production-ready system design</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">✅</div>
+                        <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--text);">Standards Compliance</h4>
+                        <p style="color: var(--text-light); font-size: 0.9rem;">W3C, CAIP-2 certified</p>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 2rem;">
+                    <a href="https://www.geoknoesis.com" target="_blank" class="btn btn-outline">Learn More About Geoknoesis →</a>
                 </div>
             </div>
         </div>
@@ -673,8 +924,32 @@
     <section class="cta-section" id="waitlist">
         <div class="cta-container">
             <div class="cta-box">
-                <h2>Join the TrustWeave SaaS Waitlist</h2>
-                <p>Be among the first to access our managed SaaS platform. Get notified when we launch!</p>
+                <h2>Get Early Access to Managed TrustWeave Infrastructure</h2>
+                <p style="font-size: 1.125rem; margin-bottom: 1.5rem;">
+                    Be among the first to access our managed SaaS platform when it launches.
+                </p>
+                
+                <div style="background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%); padding: 1.5rem; border-radius: 1rem; margin-bottom: 2rem; border: 1px solid var(--border);">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text);">Early adopters get:</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div style="display: flex; align-items: start; gap: 0.5rem;">
+                            <span style="color: var(--accent); font-size: 1.25rem;">🎁</span>
+                            <span style="color: var(--text-light); font-size: 0.95rem;">Exclusive launch pricing (save up to 50%)</span>
+                        </div>
+                        <div style="display: flex; align-items: start; gap: 0.5rem;">
+                            <span style="color: var(--accent); font-size: 1.25rem;">🚀</span>
+                            <span style="color: var(--text-light); font-size: 0.95rem;">Priority onboarding and setup</span>
+                        </div>
+                        <div style="display: flex; align-items: start; gap: 0.5rem;">
+                            <span style="color: var(--accent); font-size: 1.25rem;">📞</span>
+                            <span style="color: var(--text-light); font-size: 0.95rem;">Direct access to our engineering team</span>
+                        </div>
+                        <div style="display: flex; align-items: start; gap: 0.5rem;">
+                            <span style="color: var(--accent); font-size: 1.25rem;">💡</span>
+                            <span style="color: var(--text-light); font-size: 0.95rem;">Opportunity to influence product roadmap</span>
+                        </div>
+                    </div>
+                </div>
                 <form class="waitlist-form" id="waitlistForm" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
                     <input 
                         type="email" 

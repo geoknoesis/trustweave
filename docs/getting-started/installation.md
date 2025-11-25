@@ -120,34 +120,34 @@ Add TrustWeave dependencies to your `pom.xml`. The snippet lists the minimum set
     <!-- Core modules (required) -->
     <dependency>
         <groupId>com.trustweave</groupId>
-        <artifactId>TrustWeave-core</artifactId>
+        <artifactId>trustweave-core</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
         <groupId>com.trustweave</groupId>
-        <artifactId>TrustWeave-json</artifactId>
+        <artifactId>trustweave-json</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
         <groupId>com.trustweave</groupId>
-        <artifactId>TrustWeave-kms</artifactId>
+        <artifactId>trustweave-kms</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
         <groupId>com.trustweave</groupId>
-        <artifactId>TrustWeave-did</artifactId>
+        <artifactId>trustweave-did</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
         <groupId>com.trustweave</groupId>
-        <artifactId>TrustWeave-anchor</artifactId>
+        <artifactId>trustweave-anchor</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </dependency>
     
     <!-- Test kit (for testing) -->
     <dependency>
         <groupId>com.trustweave</groupId>
-        <artifactId>TrustWeave-testkit</artifactId>
+        <artifactId>trustweave-testkit</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <scope>test</scope>
     </dependency>

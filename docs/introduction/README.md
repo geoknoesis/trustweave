@@ -1,6 +1,6 @@
 ---
 title: Introduction
-nav_order: 10
+nav_order: 0
 ---
 
 # Introduction
@@ -18,10 +18,18 @@ Welcome to TrustWeave! This section provides an overview of the library, its pur
 
 ## Next Steps
 
-- [Executive Overview](executive-overview.md) - High-level overview of TrustWeave's value proposition, benefits, and market position
-- [The Web of Trust](web-of-trust.md) - Introduction to the web of trust, open standards, and ecosystem benefits
-- [What is TrustWeave?](what-is-TrustWeave.md) - Learn about the library's purpose and design philosophy
+**New to TrustWeave?** Start here:
+- [What is TrustWeave?](what-is-trustweave.md) - Learn about the library's purpose and design philosophy
+- [Architecture Overview](architecture-overview.md) - Understand the modular design
+- [Mental Model](mental-model.md) - Core concepts and how they fit together
+
+**Ready to build?**
+- [Getting Started](../getting-started/README.md) - Installation and quick start
+- [Quick Start](../getting-started/quick-start.md) - Create your first credential in 5 minutes
+
+**Want to learn more?**
+- [Executive Overview](executive-overview.md) - High-level overview of TrustWeave's value proposition
 - [Key Features](key-features.md) - Explore the main capabilities
 - [Use Cases](use-cases.md) - See how TrustWeave is used in practice
-- [Architecture Overview](architecture-overview.md) - Understand the modular design
+- [Web of Trust](web-of-trust.md) - Introduction to the web of trust and open standards
 

@@ -1,6 +1,6 @@
 ---
 title: Tutorials
-nav_order: 6
+nav_order: 3
 ---
 
 # Tutorials
@@ -114,10 +114,20 @@ Start with [Beginner Tutorial Series](beginner-tutorial-series.md) and complete 
 
 ## Next Steps
 
-After completing tutorials:
+**After completing tutorials:**
 
-- Deepen your verification strategy with the [Verification Policies](../advanced/verification-policies.md) guide.
-- Consult the [API reference](../api-reference/README.md) for parameter-by-parameter details.
-- Explore industry workflows in the [scenario playbook](../scenarios/README.md) to see how the same primitives adapt to different domains.
-- Study [Common Patterns](../getting-started/common-patterns.md) for production-ready patterns.
+**Ready to build?**
+- [Use Case Scenarios](../scenarios/README.md) - 25+ real-world examples with complete code
+- [Common Patterns](../getting-started/common-patterns.md) - Production-ready patterns
+- [Your First Application](../getting-started/your-first-application.md) - Complete example
+
+**Want to go deeper?**
+- [Core Concepts](../core-concepts/README.md) - Deep dives into DIDs, credentials, wallets
+- [API Reference](../api-reference/README.md) - Complete API documentation
+- [Advanced Topics](../advanced/README.md) - Key rotation, verification policies, custom adapters
+
+**Production deployment?**
+- [Production Deployment](../getting-started/production-deployment.md) - Best practices
+- [Error Handling](../advanced/error-handling.md) - Error handling patterns
+- [Verification Policies](../advanced/verification-policies.md) - Verification strategies
 

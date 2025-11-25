@@ -94,8 +94,19 @@ See the [Algorithm Compatibility Table](algorithm-compatibility-table.md) for a 
 
 ## Next Steps
 
+**New to TrustWeave?**
+- [Introduction](../introduction/README.md) - Start here to understand what TrustWeave is
+- [Mental Model](../introduction/mental-model.md) - Understand how concepts fit together
+- [Getting Started](../getting-started/README.md) - Installation and quick start
+
+**Ready to learn concepts?**
 - Start with [Decentralized Identifiers (DIDs)](dids.md) to understand identity
 - Then learn about [Verifiable Credentials](verifiable-credentials.md) for credentials
 - Explore [Wallets](wallets.md) for credential management
-- Check out the [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) for hands-on examples
+- Check out [Blockchain Anchoring](blockchain-anchoring.md) for data integrity
+
+**Want hands-on practice?**
+- [Tutorials](../tutorials/README.md) - Step-by-step guides
+- [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) - Hands-on wallet examples
+- [Use Case Scenarios](../scenarios/README.md) - Real-world examples
 

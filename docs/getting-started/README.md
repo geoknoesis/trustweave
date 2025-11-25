@@ -45,3 +45,18 @@ By the end of this section, you'll be able to:
 
 Let's get started!
 
+## Next Steps
+
+**First time here?**
+- [Introduction](../introduction/README.md) - Learn what TrustWeave is and why it exists
+- [Mental Model](../introduction/mental-model.md) - Understand the core concepts
+
+**Ready to code?**
+- [Installation](installation.md) - Add TrustWeave to your project
+- [Quick Start](quick-start.md) - Create your first credential in 5 minutes
+- [Your First Application](your-first-application.md) - Build a complete example
+
+**Looking for examples?**
+- [Use Case Scenarios](../scenarios/README.md) - 25+ real-world examples
+- [Tutorials](../tutorials/README.md) - Step-by-step guides
+

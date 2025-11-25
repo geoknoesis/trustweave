@@ -7,6 +7,17 @@ nav_order: 4
 
 Complete API reference for TrustWeave.
 
+## Quick Reference
+
+| Category | Methods | Page |
+|----------|---------|------|
+| **DIDs** | `createDid()`, `resolveDid()`, `updateDid()`, `deactivateDid()` | [Core API](core-api.md#did-operations) |
+| **Credentials** | `issue()`, `verify()`, `present()` | [Core API](core-api.md#credential-operations) |
+| **Wallets** | `create()`, `store()`, `query()`, `present()` | [Wallet API](wallet-api.md) |
+| **Blockchain** | `anchor()`, `read()`, `verify()` | [Core API](core-api.md#blockchain-operations) |
+| **Smart Contracts** | `draft()`, `bindContract()`, `executeContract()` | [Smart Contract API](smart-contract-api.md) |
+| **Trust** | `addTrustAnchor()`, `isTrustedIssuer()`, `getTrustPath()` | [Core API](core-api.md#trust-operations) |
+
 ## Core API
 
 - **[Core API](core-api.md)**: TrustWeave facade API
@@ -122,10 +133,16 @@ try {
 
 See [Plugin Lifecycle](../advanced/plugin-lifecycle.md) for detailed plugin lifecycle management.
 
-## Related Documentation
+## Next Steps
 
+**New to TrustWeave?**
+- [Getting Started](../getting-started/README.md) - Installation and setup
+- [Quick Start](../getting-started/quick-start.md) - Your first application
+- [Core Concepts](../core-concepts/README.md) - Understand DIDs, credentials, and wallets
+
+**Ready to dive deeper?**
 - [Error Handling](../advanced/error-handling.md) - Error handling patterns
 - [Plugin Lifecycle](../advanced/plugin-lifecycle.md) - Plugin lifecycle management
-- [Core Concepts](../core-concepts/README.md) - Core concepts and usage
 - [Tutorials](../tutorials/README.md) - Step-by-step guides
+- [Use Case Scenarios](../scenarios/README.md) - Real-world examples
 

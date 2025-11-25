@@ -1,6 +1,5 @@
 ---
-title: TrustWeave Use Case Scenarios
-nav_order: 7
+title: Use Case Scenarios
 ---
 
 # TrustWeave Use Case Scenarios

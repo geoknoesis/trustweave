@@ -65,6 +65,9 @@ just_the_docs:
   # Heading anchor links
   heading_anchors: true
 
+  # Breadcrumbs
+  breadcrumbs: true
+
   # Color scheme (GitBook-like)
   color_scheme: light
 
@@ -86,6 +89,28 @@ just_the_docs:
 
 # Navigation structure - Organized by logical learning path
 nav:
+  # ============================================
+  # PART 0: INTRODUCTION (First - foundational content)
+  # ============================================
+  - title: Introduction
+    children:
+      - title: Overview
+        url: introduction/README.md
+      - title: What is TrustWeave?
+        url: introduction/what-is-trustweave.md
+      - title: Executive Overview
+        url: introduction/executive-overview.md
+      - title: Key Features
+        url: introduction/key-features.md
+      - title: Use Cases
+        url: introduction/use-cases.md
+      - title: Architecture Overview
+        url: introduction/architecture-overview.md
+      - title: Mental Model
+        url: introduction/mental-model.md
+      - title: Web of Trust
+        url: introduction/web-of-trust.md
+
   # ============================================
   # PART 1: GETTING STARTED
   # ============================================
@@ -123,8 +148,6 @@ nav:
     children:
       - title: Overview
         url: core-concepts/README.md
-      - title: Mental Model
-        url: introduction/mental-model.md
       - title: Decentralized Identifiers (DIDs)
         url: core-concepts/dids.md
       - title: Verifiable Credentials
@@ -155,12 +178,116 @@ nav:
         url: core-concepts/algorithm-compatibility-table.md
 
   # ============================================
-  # PART 3: FEATURES & CAPABILITIES
+  # PART 3: TUTORIALS & EXAMPLES
   # ============================================
-  - title: Features
+  - title: Tutorials & Examples
     children:
       - title: Overview
-        url: features/README.md
+        url: tutorials/README.md
+      - title: Beginner Tutorial Series
+        url: tutorials/beginner-tutorial-series.md
+      - title: Your First DID
+        url: tutorials/did-operations-tutorial.md
+      - title: Credential Issuance
+        url: tutorials/credential-issuance-tutorial.md
+      - title: Wallet API
+        url: tutorials/wallet-api-tutorial.md
+      - title: Use Case Scenarios
+        children:
+          - title: Overview
+            url: scenarios/README.md
+          - title: Identity & Verification
+            children:
+              - title: Government Digital Identity
+                url: scenarios/government-digital-identity-scenario.md
+              - title: Professional Identity
+                url: scenarios/professional-identity-scenario.md
+              - title: Age Verification
+                url: scenarios/age-verification-scenario.md
+              - title: Financial Services (KYC)
+                url: scenarios/financial-services-kyc-scenario.md
+          - title: Education & Credentials
+            children:
+              - title: Academic Credentials
+                url: scenarios/academic-credentials-scenario.md
+              - title: National Education Credentials (Algeria)
+                url: scenarios/national-education-credentials-algeria-scenario.md
+          - title: Cybersecurity & Access Control
+            children:
+              - title: Zero Trust Continuous Authentication
+                url: scenarios/zero-trust-authentication-scenario.md
+              - title: Security Clearance & Access Control
+                url: scenarios/security-clearance-access-control-scenario.md
+              - title: Biometric Verification
+                url: scenarios/biometric-verification-scenario.md
+              - title: Security Training & Certification
+                url: scenarios/security-training-certification-scenario.md
+              - title: Software Supply Chain Security
+                url: scenarios/software-supply-chain-security-scenario.md
+              - title: SOC2 Compliance
+                url: scenarios/soc2-compliance-scenario.md
+          - title: Healthcare
+            children:
+              - title: Healthcare Medical Records
+                url: scenarios/healthcare-medical-records-scenario.md
+              - title: Vaccination and Health Passports
+                url: scenarios/vaccination-health-passport-scenario.md
+          - title: Supply Chain & Provenance
+            children:
+              - title: Supply Chain Traceability
+                url: scenarios/supply-chain-traceability-scenario.md
+              - title: Supply Chain & EUDR Compliance
+                url: scenarios/supply-chain-eudr-compliance-scenario.md
+              - title: Digital Workflow & Provenance
+                url: scenarios/digital-workflow-provenance-scenario.md
+          - title: Geospatial & Location
+            children:
+              - title: Proof of Location
+                url: scenarios/proof-of-location-scenario.md
+              - title: Earth Observation
+                url: scenarios/earth-observation-scenario.md
+              - title: Spatial Web Authorization
+                url: scenarios/spatial-web-authorization-scenario.md
+          - title: Climate & Environment
+            children:
+              - title: Parametric Insurance with Earth Observation
+                url: scenarios/parametric-insurance-eo-scenario.md
+              - title: Carbon Markets & Digital MRV
+                url: scenarios/carbon-markets-dmrv-scenario.md
+          - title: Employment & Professional
+            children:
+              - title: Employee Onboarding
+                url: scenarios/employee-onboarding-scenario.md
+          - title: IoT & Devices
+            children:
+              - title: IoT Device Identity
+                url: scenarios/iot-device-identity-scenario.md
+              - title: IoT Sensor Data Provenance
+                url: scenarios/iot-sensor-data-provenance-scenario.md
+              - title: IoT Firmware Update Verification
+                url: scenarios/iot-firmware-update-verification-scenario.md
+              - title: IoT Device Ownership Transfer
+                url: scenarios/iot-device-ownership-transfer-scenario.md
+          - title: Insurance & Claims
+            children:
+              - title: Insurance Claims and Verification
+                url: scenarios/insurance-claims-scenario.md
+              - title: Parametric Insurance for Travel Disruptions
+                url: scenarios/parametric-insurance-travel-scenario.md
+          - title: Media & Content
+            children:
+              - title: News Industry
+                url: scenarios/news-industry-scenario.md
+              - title: Event Ticketing and Access Control
+                url: scenarios/event-ticketing-scenario.md
+          - title: Data Management
+            children:
+              - title: Data Catalog & DCAT
+                url: scenarios/data-catalog-dcat-scenario.md
+          - title: Trust & Reputation
+            children:
+              - title: Web of Trust
+                url: scenarios/web-of-trust-scenario.md
       - title: Credential Exchange Protocols
         children:
           - title: Overview
@@ -259,123 +386,7 @@ nav:
             url: integrations/godiddy.md
 
   # ============================================
-  # PART 6: TUTORIALS & EXAMPLES
-  # ============================================
-  - title: Tutorials
-    children:
-      - title: Overview
-        url: tutorials/README.md
-      - title: Beginner Tutorial Series
-        url: tutorials/beginner-tutorial-series.md
-      - title: Your First DID
-        url: tutorials/did-operations-tutorial.md
-      - title: Credential Issuance
-        url: tutorials/credential-issuance-tutorial.md
-      - title: Wallet API
-        url: tutorials/wallet-api-tutorial.md
-
-  # ============================================
-  # PART 7: USE CASE SCENARIOS
-  # ============================================
-  - title: Use Case Scenarios
-    children:
-      - title: Overview
-        url: scenarios/README.md
-      - title: Identity & Verification
-        children:
-          - title: Government Digital Identity
-            url: scenarios/government-digital-identity-scenario.md
-          - title: Professional Identity
-            url: scenarios/professional-identity-scenario.md
-          - title: Age Verification
-            url: scenarios/age-verification-scenario.md
-          - title: Financial Services (KYC)
-            url: scenarios/financial-services-kyc-scenario.md
-      - title: Education & Credentials
-        children:
-          - title: Academic Credentials
-            url: scenarios/academic-credentials-scenario.md
-          - title: National Education Credentials (Algeria)
-            url: scenarios/national-education-credentials-algeria-scenario.md
-      - title: Cybersecurity & Access Control
-        children:
-          - title: Zero Trust Continuous Authentication
-            url: scenarios/zero-trust-authentication-scenario.md
-          - title: Security Clearance & Access Control
-            url: scenarios/security-clearance-access-control-scenario.md
-          - title: Biometric Verification
-            url: scenarios/biometric-verification-scenario.md
-          - title: Security Training & Certification
-            url: scenarios/security-training-certification-scenario.md
-          - title: Software Supply Chain Security
-            url: scenarios/software-supply-chain-security-scenario.md
-          - title: SOC2 Compliance
-            url: scenarios/soc2-compliance-scenario.md
-      - title: Healthcare
-        children:
-          - title: Healthcare Medical Records
-            url: scenarios/healthcare-medical-records-scenario.md
-          - title: Vaccination and Health Passports
-            url: scenarios/vaccination-health-passport-scenario.md
-      - title: Supply Chain & Provenance
-        children:
-          - title: Supply Chain Traceability
-            url: scenarios/supply-chain-traceability-scenario.md
-          - title: Supply Chain & EUDR Compliance
-            url: scenarios/supply-chain-eudr-compliance-scenario.md
-          - title: Digital Workflow & Provenance
-            url: scenarios/digital-workflow-provenance-scenario.md
-      - title: Geospatial & Location
-        children:
-          - title: Proof of Location
-            url: scenarios/proof-of-location-scenario.md
-          - title: Earth Observation
-            url: scenarios/earth-observation-scenario.md
-          - title: Spatial Web Authorization
-            url: scenarios/spatial-web-authorization-scenario.md
-      - title: Climate & Environment
-        children:
-          - title: Parametric Insurance with Earth Observation
-            url: scenarios/parametric-insurance-eo-scenario.md
-          - title: Carbon Markets & Digital MRV
-            url: scenarios/carbon-markets-dmrv-scenario.md
-      - title: Employment & Professional
-        children:
-          - title: Employee Onboarding
-            url: scenarios/employee-onboarding-scenario.md
-      - title: IoT & Devices
-        children:
-          - title: IoT Device Identity
-            url: scenarios/iot-device-identity-scenario.md
-          - title: IoT Sensor Data Provenance
-            url: scenarios/iot-sensor-data-provenance-scenario.md
-          - title: IoT Firmware Update Verification
-            url: scenarios/iot-firmware-update-verification-scenario.md
-          - title: IoT Device Ownership Transfer
-            url: scenarios/iot-device-ownership-transfer-scenario.md
-      - title: Insurance & Claims
-        children:
-          - title: Insurance Claims and Verification
-            url: scenarios/insurance-claims-scenario.md
-          - title: Parametric Insurance for Travel Disruptions
-            url: scenarios/parametric-insurance-travel-scenario.md
-      - title: Media & Content
-        children:
-          - title: News Industry
-            url: scenarios/news-industry-scenario.md
-          - title: Event Ticketing and Access Control
-            url: scenarios/event-ticketing-scenario.md
-      - title: Data Management
-        children:
-          - title: Data Catalog & DCAT
-            url: scenarios/data-catalog-dcat-scenario.md
-      - title: Trust & Reputation
-        children:
-          - title: Web of Trust
-            url: scenarios/web-of-trust-scenario.md
-
-  # ============================================
-  # PART 8: ADVANCED TOPICS
+  # PART 5: ADVANCED TOPICS
   # ============================================
   - title: Advanced Topics
     children:
@@ -399,7 +410,7 @@ nav:
         url: advanced/performance.md
 
   # ============================================
-  # PART 9: REFERENCE
+  # PART 6: REFERENCE
   # ============================================
   - title: Reference
     children:
@@ -455,27 +466,7 @@ nav:
             url: comparison/COMPLETE_COMPETITOR_ANALYSIS.md
 
   # ============================================
-  # PART 10: INTRODUCTION (Background Info)
-  # ============================================
-  - title: Introduction
-    children:
-      - title: Overview
-        url: introduction/README.md
-      - title: What is TrustWeave?
-        url: introduction/what-is-trustweave.md
-      - title: Executive Overview
-        url: introduction/executive-overview.md
-      - title: Key Features
-        url: introduction/key-features.md
-      - title: Use Cases
-        url: introduction/use-cases.md
-      - title: Architecture Overview
-        url: introduction/architecture-overview.md
-      - title: Web of Trust
-        url: introduction/web-of-trust.md
-
-  # ============================================
-  # PART 11: CONTRIBUTING
+  # PART 7: CONTRIBUTING
   # ============================================
   - title: Contributing
     children:
@@ -493,7 +484,7 @@ nav:
         url: contributing/creating-plugins.md
 
   # ============================================
-  # PART 12: RESOURCES
+  # PART 8: RESOURCES
   # ============================================
   - title: Resources
     children:

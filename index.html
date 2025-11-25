@@ -53,17 +53,19 @@
         }
 
         .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            display: flex;
+            align-items: center;
             text-decoration: none;
             cursor: pointer;
         }
         
-        .logo:hover {
+        .logo img {
+            height: 40px;
+            width: auto;
+            transition: opacity 0.3s;
+        }
+        
+        .logo:hover img {
             opacity: 0.8;
         }
 
@@ -423,7 +425,9 @@
     <!-- Navigation -->
     <nav>
         <div class="nav-container">
-            <a href="index.html" class="logo">TrustWeave</a>
+            <a href="#" class="logo">
+                <img src="docs/assets/images/trustweave-logo.jpg" alt="TrustWeave Logo">
+            </a>
             <div class="nav-links">
                 <a href="#features">Features</a>
                 <a href="#opensource">Open Source</a>

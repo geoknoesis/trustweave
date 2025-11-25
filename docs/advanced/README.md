@@ -1,5 +1,6 @@
 ---
 title: Advanced Topics
+nav_order: 8
 ---
 
 # Advanced Topics

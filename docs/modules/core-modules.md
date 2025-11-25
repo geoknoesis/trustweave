@@ -1,5 +1,6 @@
 ---
 title: Core Modules
+nav_order: 9
 ---
 
 # Core Modules

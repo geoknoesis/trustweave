@@ -1,5 +1,6 @@
 ---
 title: Contributing to TrustWeave
+nav_order: 11
 ---
 
 # Contributing to TrustWeave

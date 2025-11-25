@@ -1,5 +1,6 @@
 ---
 title: API Reference
+nav_order: 4
 ---
 
 # API Reference

@@ -1,5 +1,5 @@
 ---
-title: Atlas Parametric MGA: Quick Reference
+title: "Atlas Parametric MGA: Quick Reference"
 ---
 
 # Atlas Parametric MGA: Quick Reference

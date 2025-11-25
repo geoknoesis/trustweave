@@ -1,5 +1,5 @@
 ---
-title: TrustWeave vs. Other APIs: Comprehensive Comparison
+title: "TrustWeave vs. Other APIs: Comprehensive Comparison"
 ---
 
 # TrustWeave vs. Other APIs: Comprehensive Comparison

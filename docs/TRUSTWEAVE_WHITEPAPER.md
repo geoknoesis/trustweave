@@ -1,5 +1,5 @@
 ---
-title: TrustWeave SDK: Decentralized Trust Infrastructure
+title: "TrustWeave SDK: Decentralized Trust Infrastructure"
 ---
 
 # TrustWeave SDK: Decentralized Trust Infrastructure

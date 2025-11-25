@@ -1,5 +1,5 @@
 ---
-title: Smart Contract: Parametric Insurance Scenario
+title: "Smart Contract: Parametric Insurance Scenario"
 ---
 
 # Smart Contract: Parametric Insurance Scenario

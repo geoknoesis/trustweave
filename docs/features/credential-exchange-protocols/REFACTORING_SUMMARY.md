@@ -1,5 +1,5 @@
 ---
-title: Refactoring Summary: Reusable Components Extraction
+title: "Refactoring Summary: Reusable Components Extraction"
 ---
 
 # Refactoring Summary: Reusable Components Extraction

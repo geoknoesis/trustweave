@@ -1,5 +1,5 @@
 ---
-title: The Web of Trust: Foundation for Decentralized Trust
+title: "The Web of Trust: Foundation for Decentralized Trust"
 ---
 
 # The Web of Trust: Foundation for Decentralized Trust

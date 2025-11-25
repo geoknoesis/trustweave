@@ -1,5 +1,5 @@
 ---
-title: Implementation Summary: Persistent Storage & Secret Resolver
+title: "Implementation Summary: Persistent Storage & Secret Resolver"
 ---
 
 # Implementation Summary: Persistent Storage & Secret Resolver

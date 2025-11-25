@@ -1,5 +1,5 @@
 ---
-title: Atlas Parametric MGA: Architecture Overview with TrustWeave
+title: "Atlas Parametric MGA: Architecture Overview with TrustWeave"
 ---
 
 # Atlas Parametric MGA: Architecture Overview with TrustWeave

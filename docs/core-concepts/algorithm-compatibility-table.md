@@ -1,5 +1,5 @@
 ---
-title: Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault
+title: "Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault"
 ---
 
 # Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault

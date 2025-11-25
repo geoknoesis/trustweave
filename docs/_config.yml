@@ -38,6 +38,7 @@ exclude:
   - README.md
   - book.json
   - SUMMARY.md
+  - .internal
 
 # Just the Docs Theme Configuration
 just_the_docs:

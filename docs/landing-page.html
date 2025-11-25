@@ -53,20 +53,12 @@
         }
 
         .logo {
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        
-        .logo img {
-            height: 40px;
-            width: auto;
-            transition: opacity 0.3s;
-        }
-        
-        .logo:hover img {
-            opacity: 0.8;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .nav-links {
@@ -308,21 +300,6 @@
             display: block;
         }
 
-        .error-message {
-            display: none;
-            margin-top: 1rem;
-            padding: 1rem;
-            background: #fee;
-            color: #c33;
-            border-radius: 0.5rem;
-            border: 1px solid #fcc;
-        }
-
-        .waitlist-form button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
         /* Open Source Section */
         .opensource {
             padding: 6rem 2rem;
@@ -425,14 +402,11 @@
     <!-- Navigation -->
     <nav>
         <div class="nav-container">
-            <a href="#" class="logo">
-                <img src="assets/images/trustweave-logo.jpg" alt="TrustWeave Logo">
-            </a>
+            <div class="logo">TrustWeave</div>
             <div class="nav-links">
                 <a href="#features">Features</a>
                 <a href="#opensource">Open Source</a>
-                <a href="/trustweave/getting-started/quick-start.html">Documentation</a>
-                <a href="partnership.html">Partners</a>
+                <a href="/trustweave/partnership.html">Partners</a>
                 <a href="#waitlist">Waitlist</a>
                 <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" class="btn btn-outline">GitHub</a>
             </div>
@@ -445,7 +419,7 @@
             <h1>The Foundation for Decentralized Trust and Identity</h1>
             <p>A neutral, reusable trust and identity core library designed to be domain-agnostic, chain-agnostic, DID-method-agnostic, and KMS-agnostic.</p>
             <div class="hero-buttons">
-                <a href="/trustweave/getting-started/quick-start.html" class="btn btn-primary">View Documentation</a>
+                <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" class="btn btn-primary">Get Started (Open Source)</a>
                 <a href="#waitlist" class="btn btn-secondary">Join SaaS Waitlist</a>
             </div>
         </div>
@@ -598,12 +572,17 @@
                 <div class="opensource-card">
                     <h3>📚 Documentation</h3>
                     <p>Comprehensive guides, API references, and 25+ real-world scenarios</p>
-                    <a href="/trustweave/getting-started/quick-start.html" class="btn btn-primary">View Docs</a>
+                    <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" class="btn btn-primary">View Docs</a>
                 </div>
                 <div class="opensource-card">
                     <h3>💻 GitHub Repository</h3>
                     <p>Explore the codebase, contribute, and join the community</p>
                     <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" class="btn btn-primary">View on GitHub</a>
+                </div>
+                <div class="opensource-card">
+                    <h3>🚀 Quick Start</h3>
+                    <p>Get up and running in 5 minutes with our quick start guide</p>
+                    <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" class="btn btn-primary">Get Started</a>
                 </div>
             </div>
         </div>
@@ -615,24 +594,18 @@
             <div class="cta-box">
                 <h2>Join the TrustWeave SaaS Waitlist</h2>
                 <p>Be among the first to access our managed SaaS platform. Get notified when we launch!</p>
-                <form class="waitlist-form" id="waitlistForm" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+                <form class="waitlist-form" id="waitlistForm">
                     <input 
                         type="email" 
                         id="emailInput" 
-                        name="email"
                         placeholder="Enter your email address" 
                         required
                         aria-label="Email address"
                     >
-                    <input type="hidden" name="_subject" value="TrustWeave SaaS Waitlist Signup">
-                    <input type="hidden" name="_next" value="#waitlist">
-                    <button type="submit" class="btn btn-primary" id="submitButton">Join Waitlist</button>
+                    <button type="submit" class="btn btn-primary">Join Waitlist</button>
                 </form>
                 <div class="success-message" id="successMessage">
                     ✅ Thank you! We've added you to the waitlist. You'll receive an email confirmation shortly.
-                </div>
-                <div class="error-message" id="errorMessage" style="display: none; margin-top: 1rem; padding: 1rem; background: #fee; color: #c33; border-radius: 0.5rem; border: 1px solid #fcc;">
-                    ❌ Something went wrong. Please try again or contact us directly.
                 </div>
             </div>
         </div>
@@ -642,9 +615,9 @@
     <footer>
         <div class="footer-content">
             <div class="footer-links">
-                <a href="partnership.html">Partners</a>
+                <a href="/trustweave/partnership.html">Partners</a>
                 <a href="https://github.com/geoknoesis/TrustWeave" target="_blank">GitHub</a>
-                <a href="/trustweave/getting-started/quick-start.html">Documentation</a>
+                <a href="https://github.com/geoknoesis/TrustWeave/blob/main/docs/README.md" target="_blank">Documentation</a>
                 <a href="https://github.com/geoknoesis/TrustWeave/blob/main/LICENSE" target="_blank">License</a>
                 <a href="https://www.geoknoesis.com" target="_blank">Geoknoesis LLC</a>
             </div>
@@ -653,12 +626,10 @@
     </footer>
 
     <script>
-        // Waitlist form handling with Formspree integration
+        // Waitlist form handling
         const waitlistForm = document.getElementById('waitlistForm');
         const emailInput = document.getElementById('emailInput');
-        const submitButton = document.getElementById('submitButton');
         const successMessage = document.getElementById('successMessage');
-        const errorMessage = document.getElementById('errorMessage');
 
         waitlistForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -669,51 +640,36 @@
                 return;
             }
 
-            // Hide previous messages
-            successMessage.classList.remove('show');
-            errorMessage.style.display = 'none';
-            
-            // Disable submit button and show loading state
-            submitButton.disabled = true;
-            submitButton.textContent = 'Submitting...';
-
+            // Here you would typically send the email to your backend API
+            // For now, we'll just show a success message
+            // Example API call:
+            /*
             try {
-                const formData = new FormData(waitlistForm);
-                
-                const response = await fetch(waitlistForm.action, {
+                const response = await fetch('/api/waitlist', {
                     method: 'POST',
-                    body: formData,
                     headers: {
-                        'Accept': 'application/json'
-                    }
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
                 });
                 
                 if (response.ok) {
                     successMessage.classList.add('show');
                     emailInput.value = '';
-                    waitlistForm.reset();
-                    
-                    // Scroll to success message
-                    successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
-                    const data = await response.json();
-                    if (data.error) {
-                        errorMessage.textContent = '❌ ' + data.error;
-                    } else {
-                        errorMessage.textContent = '❌ Something went wrong. Please try again.';
-                    }
-                    errorMessage.style.display = 'block';
-                    errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    alert('Something went wrong. Please try again.');
                 }
             } catch (error) {
-                errorMessage.textContent = '❌ Network error. Please check your connection and try again.';
-                errorMessage.style.display = 'block';
-                errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            } finally {
-                // Re-enable submit button
-                submitButton.disabled = false;
-                submitButton.textContent = 'Join Waitlist';
+                alert('Network error. Please try again.');
             }
+            */
+
+            // Demo: Show success message
+            successMessage.classList.add('show');
+            emailInput.value = '';
+            
+            // Scroll to success message
+            successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         });
 
         // Smooth scrolling for anchor links

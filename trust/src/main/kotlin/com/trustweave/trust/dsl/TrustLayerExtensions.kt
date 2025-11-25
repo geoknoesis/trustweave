@@ -1,10 +1,22 @@
 package com.trustweave.trust.dsl
 
 import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.dsl.StoredCredential
 import com.trustweave.wallet.Wallet
-import com.trustweave.wallet.dsl.OrganizationResult
+import com.trustweave.trust.dsl.wallet.OrganizationResult
 import com.trustweave.trust.dsl.did.DidBuilder
+
+// TODO: StoredCredential needs to be defined in credential-dsl module
+// For now, using VerifiableCredential as a placeholder
+typealias StoredCredential = VerifiableCredential
+
+/**
+ * Extension function to store a credential in a wallet.
+ * Returns the credential itself as StoredCredential.
+ */
+suspend fun VerifiableCredential.storeIn(wallet: Wallet): StoredCredential {
+    wallet.store(this)
+    return this
+}
 
 /**
  * Trust Layer Convenience Extensions.
@@ -49,7 +61,7 @@ suspend fun TrustLayerConfig.createDidAndIssue(
     didBlock: DidBuilder.() -> Unit,
     credentialBlock: suspend (String) -> VerifiableCredential
 ): VerifiableCredential {
-    return dsl().createDidAndIssue(didBlock, credentialBlock)
+    return getDslContext().createDidAndIssue(didBlock, credentialBlock)
 }
 
 /**
@@ -78,7 +90,7 @@ suspend fun TrustLayerConfig.createDidIssueAndStore(
     credentialBlock: suspend (String) -> VerifiableCredential,
     wallet: Wallet
 ): StoredCredential {
-    return dsl().createDidIssueAndStore(didBlock, credentialBlock, wallet)
+    return getDslContext().createDidIssueAndStore(didBlock, credentialBlock, wallet)
 }
 
 /**
@@ -102,7 +114,9 @@ suspend fun TrustLayerContext.completeWorkflow(
     
     val organizationResult = organizeBlock?.invoke(stored)
     
-    val verificationResult = credential.verify(this)
+    val verificationResult = this.verify {
+        credential(credential)
+    }
     
     return WorkflowResult(
         did = did,
@@ -133,7 +147,7 @@ suspend fun TrustLayerConfig.completeWorkflow(
     wallet: Wallet,
     organizeBlock: (suspend (StoredCredential) -> OrganizationResult)? = null
 ): WorkflowResult {
-    return dsl().completeWorkflow(didBlock, credentialBlock, wallet, organizeBlock)
+    return getDslContext().completeWorkflow(didBlock, credentialBlock, wallet, organizeBlock)
 }
 
 

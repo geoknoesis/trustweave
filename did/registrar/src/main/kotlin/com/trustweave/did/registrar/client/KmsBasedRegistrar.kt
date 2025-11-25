@@ -70,13 +70,13 @@ class KmsBasedRegistrar(
         options: CreateDidOptions
     ): DidRegistrationResponse = withContext(Dispatchers.IO) {
         try {
-            // Validate key management mode
-            if (options.keyManagementMode == KeyManagementMode.EXTERNAL_SECRET) {
-                return DidRegistrationResponse(
-                    didState = DidState(
-                        state = OperationState.FAILED,
-                        did = null,
-                        didDocument = null,
+        // Validate key management mode
+        if (options.keyManagementMode == KeyManagementMode.EXTERNAL_SECRET) {
+            return@withContext DidRegistrationResponse(
+                didState = DidState(
+                    state = OperationState.FAILED,
+                    did = null,
+                    didDocument = null,
                         action = null,
                         reason = "External Secret Mode not supported by KmsBasedRegistrar. " +
                                 "Use a registrar that supports external wallet/KMS integration."
@@ -321,7 +321,7 @@ class KmsBasedRegistrar(
                             }
                         }
                     },
-                    publicKeyMultibase = keyHandle.publicKeyMultibase,
+                    privateKeyMultibase = keyHandle.publicKeyMultibase,
                     additionalProperties = mapOf("keyHandleId" to keyHandle.id)
                 )
             )

@@ -1,8 +1,8 @@
 package com.trustweave.credential.validation
 
 import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.core.util.DidValidator  // From :common module
 import com.trustweave.core.util.ValidationResult  // From :common module
+import com.trustweave.did.validation.DidValidator  // From :did:did-core module
 import kotlinx.serialization.json.JsonNull
 
 /**

@@ -146,7 +146,7 @@ class BlockchainUnsupportedOperationException(
  * @param cause The underlying exception
  */
 class ChainNotRegisteredException(
-    val chainId: String,
+    chainId: String,
     val availableChains: List<String>,
     cause: Throwable? = null
 ) : BlockchainException(

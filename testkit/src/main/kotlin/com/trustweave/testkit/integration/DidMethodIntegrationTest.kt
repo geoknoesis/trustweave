@@ -2,7 +2,7 @@ package com.trustweave.testkit.integration
 
 import com.trustweave.did.DidCreationOptions
 import com.trustweave.did.DidMethod
-import com.trustweave.did.VerificationMethodRef
+import com.trustweave.did.VerificationMethod
 import com.trustweave.did.didCreationOptions
 import com.trustweave.testkit.BaseIntegrationTest
 import kotlin.test.assertEquals
@@ -84,7 +84,7 @@ abstract class DidMethodIntegrationTest : BaseIntegrationTest() {
         
         val updated = method.updateDid(document.id) { doc ->
             doc.copy(
-                verificationMethod = doc.verificationMethod + VerificationMethodRef(
+                verificationMethod = doc.verificationMethod + VerificationMethod(
                     id = "${doc.id}#key-2",
                     type = "Ed25519VerificationKey2020",
                     controller = doc.id,

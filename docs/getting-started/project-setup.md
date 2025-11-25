@@ -93,7 +93,8 @@ TrustWeave/
 ├── did/                      # DID domain
 │   ├── did-core/             # Core DID abstraction (renamed from core)
 │   ├── registrar/            # DID Registrar implementation
-│   ├── registrar-server/     # Universal Registrar server
+│   ├── registrar-server-ktor/     # Universal Registrar server (Ktor)
+│   ├── registrar-server-spring/   # Universal Registrar server (Spring Boot)
 │   └── plugins/              # DID method implementations
 │       ├── key/              # did:key
 │       ├── web/              # did:web

@@ -1,9 +1,9 @@
 package com.trustweave.credential.verifier
 
 import com.trustweave.did.resolver.DidResolver
+import com.trustweave.did.VerificationMethod
 import com.trustweave.credential.models.Proof
 import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.did.VerificationMethodRef
 import com.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -121,7 +121,7 @@ class SignatureVerifier(
     /**
      * Resolve verification method from DID document.
      */
-    private suspend fun resolveVerificationMethod(verificationMethodId: String): VerificationMethodRef? {
+    private suspend fun resolveVerificationMethod(verificationMethodId: String): VerificationMethod? {
         System.err.println("[DEBUG resolveVerificationMethod] Resolving verification method: $verificationMethodId")
         // Extract DID from verification method ID
         val did = if (verificationMethodId.contains("#")) {
@@ -133,12 +133,12 @@ class SignatureVerifier(
         
         // Resolve DID document
         val resolutionResult = didResolver.resolve(did)
-        if (resolutionResult == null || resolutionResult.document == null) {
+        val document = resolutionResult?.document
+        if (document == null) {
             System.err.println("[DEBUG resolveVerificationMethod] Failed to resolve DID")
             return null
         }
         
-        val document = resolutionResult.document
         System.err.println("[DEBUG resolveVerificationMethod] Document resolved successfully")
         
         // Find verification method
@@ -193,7 +193,7 @@ class SignatureVerifier(
         try {
             val verificationMethod = (map["verificationMethod"] as? List<*>)?.mapNotNull { vmMap ->
                 val vm = vmMap as? Map<*, *> ?: return@mapNotNull null
-                com.trustweave.did.VerificationMethodRef(
+                VerificationMethod(
                     id = (vm["id"] as? String) ?: return@mapNotNull null,
                     type = (vm["type"] as? String) ?: return@mapNotNull null,
                     controller = (vm["controller"] as? String) ?: did,
@@ -225,7 +225,7 @@ class SignatureVerifier(
      * Extract public key from verification method.
      */
     private fun extractPublicKeyFromVerificationMethod(
-        verificationMethod: VerificationMethodRef
+        verificationMethod: VerificationMethod
     ): PublicKey? {
         System.err.println("[DEBUG extractPublicKeyFromVerificationMethod] verificationMethod: id=${verificationMethod.id}, type=${verificationMethod.type}, hasJwk=${verificationMethod.publicKeyJwk != null}, hasMultibase=${verificationMethod.publicKeyMultibase != null}")
         
@@ -509,7 +509,7 @@ class SignatureVerifier(
     private fun verifyEd25519Signature(
         data: ByteArray,
         signature: ByteArray,
-        verificationMethod: VerificationMethodRef
+        verificationMethod: VerificationMethod
     ): Boolean {
         try {
             System.err.println("[DEBUG verifyEd25519Signature] Attempting to extract public key...")
@@ -545,7 +545,7 @@ class SignatureVerifier(
     private fun verifyBbsSignature(
         data: ByteArray,
         signature: ByteArray,
-        verificationMethod: VerificationMethodRef
+        verificationMethod: VerificationMethod
     ): Boolean {
         try {
             // Try to use BBS+ library if available via reflection

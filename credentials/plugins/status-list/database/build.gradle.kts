@@ -8,6 +8,11 @@ dependencies {
     implementation(project(":credentials:credential-core"))
     // StatusListManagerFactory is in this module
 
+    // Kotlin Coroutines
+    implementation(libs.kotlinx.coroutines.core)
+    
+    // Kotlinx Serialization
+    implementation(libs.kotlinx.serialization.json)
     
     // JDBC drivers
     implementation("org.postgresql:postgresql:42.7.1")

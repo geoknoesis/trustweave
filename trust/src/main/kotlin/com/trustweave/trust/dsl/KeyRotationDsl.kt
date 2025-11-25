@@ -2,7 +2,7 @@ package com.trustweave.trust.dsl
 
 import com.trustweave.did.DidDocument
 import com.trustweave.did.DidMethod
-import com.trustweave.did.VerificationMethodRef
+import com.trustweave.did.VerificationMethod
 import com.trustweave.trust.dsl.did.DidDslProvider
 import com.trustweave.kms.services.KmsService
 import com.trustweave.kms.KeyManagementService
@@ -140,7 +140,7 @@ class KeyRotationBuilder(
             else -> "JsonWebKey2020"
         }
         
-        val newVm = VerificationMethodRef(
+        val newVm = VerificationMethod(
             id = newVmId,
             type = vmType,
             controller = targetDid,

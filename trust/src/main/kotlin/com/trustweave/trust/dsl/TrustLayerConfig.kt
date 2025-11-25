@@ -15,6 +15,9 @@ import com.trustweave.trust.services.TrustRegistryFactory
 import com.trustweave.revocation.services.StatusListManagerFactory
 import com.trustweave.credential.SchemaFormat
 import com.trustweave.kms.services.KmsService
+import com.trustweave.kms.services.KmsFactory
+import com.trustweave.did.services.DidMethodFactory
+import com.trustweave.wallet.services.WalletFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.runBlocking
@@ -282,7 +285,13 @@ class TrustLayerConfig private constructor(
             val resolvedWalletFactory = walletFactory ?: getDefaultWalletFactory()
             
             // Create service adapters (no reflection, direct instantiation)
-            val resolvedKmsService = com.trustweave.testkit.services.TestkitKmsService()
+            // Note: TestkitKmsService is only available when testkit is on classpath
+            val resolvedKmsService = try {
+                val serviceClass = Class.forName("com.trustweave.testkit.services.TestkitKmsService")
+                serviceClass.getDeclaredConstructor().newInstance() as? com.trustweave.kms.services.KmsService
+            } catch (e: Exception) {
+                null // Testkit not available
+            }
             
             val registriesSnapshot = TrustLayerRegistries(
                 didRegistry = registries.didRegistry.snapshot(),

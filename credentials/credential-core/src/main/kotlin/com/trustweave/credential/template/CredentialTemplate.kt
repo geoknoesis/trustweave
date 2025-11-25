@@ -1,5 +1,6 @@
 package com.trustweave.credential.template
 
+import com.trustweave.credential.SchemaFormat
 import com.trustweave.credential.models.VerifiableCredential
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject

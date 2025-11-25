@@ -53,7 +53,7 @@ class InMemoryTrustLayerIntegrationTest {
         // Step 4: Extract key ID from the issuer DID document
         // CRITICAL: The key used for signing MUST match what's in the DID document
         // This ensures proof verification succeeds because the DID document contains the correct verification method
-        val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid)?.document
+        val issuerDidDoc = trustLayer.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid)?.document
             ?: throw IllegalStateException("Failed to resolve issuer DID")
         
         val verificationMethod = issuerDidDoc.verificationMethod.firstOrNull()
@@ -167,7 +167,7 @@ class InMemoryTrustLayerIntegrationTest {
         }
         
         // Extract key ID (same pattern)
-        val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid)?.document
+        val issuerDidDoc = trustLayer.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid)?.document
             ?: throw IllegalStateException("Failed to resolve issuer DID")
         
         val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
@@ -246,7 +246,7 @@ class InMemoryTrustLayerIntegrationTest {
         }
         
         // Extract key ID (same pattern)
-        val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid)?.document
+        val issuerDidDoc = trustLayer.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid)?.document
             ?: throw IllegalStateException("Failed to resolve issuer DID")
         
         val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
@@ -323,12 +323,12 @@ class InMemoryTrustLayerIntegrationTest {
         }
         
         // Extract key IDs (same pattern for both issuer and holder)
-        val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid)?.document
+        val issuerDidDoc = trustLayer.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid)?.document
             ?: throw IllegalStateException("Failed to resolve issuer DID")
         val issuerKeyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
             ?: throw IllegalStateException("No verification method in issuer DID")
         
-        val holderDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(holderDid)?.document
+        val holderDidDoc = trustLayer.getDslContext().getConfig().registries.didRegistry.resolve(holderDid)?.document
             ?: throw IllegalStateException("Failed to resolve holder DID")
         val holderKeyId = holderDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
             ?: throw IllegalStateException("No verification method in holder DID")
@@ -375,7 +375,7 @@ class InMemoryTrustLayerIntegrationTest {
         
         // Get proof generator from trust layer's issuer to create PresentationService
         // This ensures the presentation can be signed with the holder's key
-        val issuer = trustLayer.dsl().getIssuer()
+        val issuer = trustLayer.getDslContext().getIssuer()
         val proofGeneratorField = issuer.javaClass.getDeclaredField("proofGenerator").apply { isAccessible = true }
         val proofGenerator = proofGeneratorField.get(issuer) as? com.trustweave.credential.proof.ProofGenerator
             ?: throw IllegalStateException("Could not get proof generator from issuer")
@@ -383,7 +383,7 @@ class InMemoryTrustLayerIntegrationTest {
         // Create PresentationService with proof generator from trust layer
         val presentationService = PresentationService(
             proofGenerator = proofGenerator,
-            proofRegistry = trustLayer.dsl().getConfig().registries.proofRegistry
+            proofRegistry = trustLayer.getDslContext().getConfig().registries.proofRegistry
         )
         
         // Create verifiable presentation using the service with proof generator
@@ -515,7 +515,7 @@ class InMemoryTrustLayerIntegrationTest {
         }
         
         // Extract key ID (same pattern)
-        val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid)?.document
+        val issuerDidDoc = trustLayer.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid)?.document
             ?: throw IllegalStateException("Failed to resolve issuer DID")
         
         val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
@@ -590,7 +590,7 @@ class InMemoryTrustLayerIntegrationTest {
         }
         
         // Extract key ID (same pattern)
-        val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid)?.document
+        val issuerDidDoc = trustLayer.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid)?.document
             ?: throw IllegalStateException("Failed to resolve issuer DID")
         
         val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")

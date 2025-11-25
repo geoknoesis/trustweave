@@ -10,7 +10,8 @@ TrustWeave is organised into small, composable modules. The list below explains 
 - **[trustweave-kms](trustweave-kms.md)** – Key management abstractions and helpers. Required whenever you integrate HSMs or cloud KMS backends.
 - **[trustweave-did](trustweave-did.md)** – DID and DID document management with pluggable DID methods. Enables DID creation/resolution across modules.
 - **[trustweave-did-registrar](trustweave-did-registrar.md)** – DID Registrar implementations for creating, updating, and deactivating DIDs through Universal Registrar services or local KMS.
-- **[trustweave-did-registrar-server](trustweave-did-registrar-server.md)** – Universal Registrar HTTP server implementation for hosting your own registrar service.
+- **[trustweave-did-registrar-server-ktor](trustweave-did-registrar-server.md)** – Universal Registrar HTTP server implementation (Ktor) for hosting your own registrar service.
+- **[trustweave-did-registrar-server-spring](trustweave-did-registrar-server-spring.md)** – Universal Registrar HTTP server implementation (Spring Boot) for hosting your own registrar service.
 - **[trustweave-anchor](trustweave-anchor.md)** – Blockchain anchoring abstraction with chain-agnostic interfaces. Use it to notarise digests on Algorand, Polygon, etc.
 - **[trustweave-contract](trustweave-contract.md)** – Smart Contract abstraction for executable agreements with verifiable credentials and blockchain anchoring.
 - **[trustweave-testkit](trustweave-testkit.md)** – In-memory mocks for every SPI. Import this in unit tests or quick-start prototypes.
@@ -23,7 +24,8 @@ trustweave-common (includes SPI interfaces, JSON utilities, plugin infrastructur
 trustweave-kms → trustweave-common
 trustweave-did → trustweave-common, trustweave-kms
 trustweave-did-registrar → trustweave-did, trustweave-kms
-trustweave-did-registrar-server → trustweave-did-registrar, trustweave-did
+trustweave-did-registrar-server-ktor → trustweave-did-registrar, trustweave-did
+trustweave-did-registrar-server-spring → trustweave-did-registrar, trustweave-did
 trustweave-anchor → trustweave-common
 trustweave-contract → trustweave-common, trustweave-anchor, trustweave-did
 trustweave-testkit → trustweave-common, trustweave-trust, trustweave-did, trustweave-kms, trustweave-anchor

@@ -10,6 +10,10 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":did:did-core"))
     
+    // Kotlinx dependencies for serialization and coroutines
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.coroutines.core)
+    
     testImplementation(project(":testkit"))
     testImplementation(project(":kms:kms-core"))
 }

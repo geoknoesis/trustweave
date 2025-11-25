@@ -135,6 +135,6 @@ suspend fun TrustLayerContext.trust(block: suspend TrustBuilder.() -> Unit) {
  * Extension function for direct trust operations on trust layer config.
  */
 suspend fun TrustLayerConfig.trust(block: suspend TrustBuilder.() -> Unit) {
-    dsl().trust(block)
+    getDslContext().trust(block)
 }
 

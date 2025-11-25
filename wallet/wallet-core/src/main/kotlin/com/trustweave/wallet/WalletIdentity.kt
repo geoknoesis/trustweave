@@ -2,14 +2,13 @@ package com.trustweave.wallet
 
 import com.trustweave.did.DidCreationOptions
 import com.trustweave.did.DidCreationOptionsBuilder
+import com.trustweave.did.DidDocument
 import com.trustweave.did.didCreationOptions
 
 /**
  * DID management capability for wallets.
  * 
  * Wallets can implement this to provide DID operations.
- * Note: DidDocument type is Any to avoid dependency on TrustWeave-did in TrustWeave-core.
- * In implementations, this should be com.trustweave.did.DidDocument.
  * 
  * **Example Usage**:
  * ```kotlin
@@ -78,7 +77,7 @@ interface DidManagement {
      * @param did DID string to resolve
      * @return DID Document, or null if resolution failed
      */
-    suspend fun resolveDid(did: String): Any? // DidDocument
+    suspend fun resolveDid(did: String): DidDocument?
 }
 
 /**

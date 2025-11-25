@@ -4,13 +4,16 @@ import com.trustweave.credential.PresentationOptions
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.models.VerifiablePresentation
 import com.trustweave.wallet.CredentialCollection
+import com.trustweave.wallet.CredentialFilter
 import com.trustweave.wallet.CredentialLifecycle
 import com.trustweave.wallet.CredentialMetadata
 import com.trustweave.wallet.CredentialOrganization
 import com.trustweave.wallet.CredentialPresentation
+import com.trustweave.wallet.CredentialQueryBuilder
 import com.trustweave.wallet.DidManagement
 import com.trustweave.wallet.Wallet
 import com.trustweave.did.DidCreationOptions
+import com.trustweave.did.DidDocument
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.time.Instant
@@ -86,7 +89,7 @@ class InMemoryWallet(
         return credentials[credentialId] ?: archivedCredentials[credentialId]
     }
     
-    override suspend fun list(filter: com.trustweave.credential.wallet.CredentialFilter?): List<VerifiableCredential> {
+    override suspend fun list(filter: CredentialFilter?): List<VerifiableCredential> {
         val allCredentials = credentials.values.toList()
         return if (filter == null) {
             allCredentials
@@ -128,8 +131,8 @@ class InMemoryWallet(
         return removed
     }
     
-    override suspend fun query(query: com.trustweave.credential.wallet.CredentialQueryBuilder.() -> Unit): List<VerifiableCredential> {
-        val builder = com.trustweave.credential.wallet.CredentialQueryBuilder()
+    override suspend fun query(query: CredentialQueryBuilder.() -> Unit): List<VerifiableCredential> {
+        val builder = CredentialQueryBuilder()
         builder.query()
         // Use reflection to call createPredicate() to work around caching issues
         val predicateMethod = builder::class.java.getMethod("createPredicate")
@@ -341,10 +344,16 @@ class InMemoryWallet(
         }
     }
     
-    override suspend fun resolveDid(did: String): Any? {
+    override suspend fun resolveDid(did: String): DidDocument? {
         // Simplified - return null for now, real implementation would resolve DID
         return if (managedDids.contains(did)) {
-            mapOf("id" to did) // Mock DID document
+            // Return a minimal mock DID document
+            com.trustweave.did.DidDocument(
+                id = did,
+                verificationMethod = emptyList(),
+                authentication = emptyList(),
+                assertionMethod = emptyList()
+            )
         } else {
             null
         }

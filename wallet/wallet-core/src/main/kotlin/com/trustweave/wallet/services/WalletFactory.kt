@@ -1,5 +1,7 @@
 package com.trustweave.wallet.services
 
+import com.trustweave.wallet.Wallet
+
 /**
  * Factory interface for creating Wallet instances.
  *
@@ -24,7 +26,7 @@ interface WalletFactory {
         walletDid: String? = null,
         holderDid: String? = null,
         options: WalletCreationOptions = WalletCreationOptions()
-    ): Any
+    ): Wallet
 
     /**
      * Creates an in-memory wallet instance (convenience method for testing).
@@ -34,6 +36,7 @@ interface WalletFactory {
      * @param walletId The wallet ID (optional, will be generated if not provided)
      * @param walletDid The wallet DID (optional, will be generated if not provided)
      * @param holderDid The holder DID (required)
+     * @param options Additional options for wallet creation
      * @return The wallet instance
      */
     suspend fun createInMemory(
@@ -41,7 +44,7 @@ interface WalletFactory {
         walletDid: String? = null,
         holderDid: String? = null,
         options: WalletCreationOptions = WalletCreationOptions()
-    ): Any {
+    ): Wallet {
         return create("inMemory", walletId, walletDid, holderDid, options)
     }
 }

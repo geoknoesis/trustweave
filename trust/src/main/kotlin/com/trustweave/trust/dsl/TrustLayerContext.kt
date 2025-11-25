@@ -2,13 +2,10 @@ package com.trustweave.trust.dsl
 
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.verifier.CredentialVerifier
-import com.trustweave.credential.dsl.CredentialDslProvider
-import com.trustweave.credential.dsl.IssuanceBuilder
-import com.trustweave.credential.dsl.VerificationBuilder
+import com.trustweave.trust.dsl.credential.*
 import com.trustweave.wallet.Wallet
-import com.trustweave.wallet.dsl.WalletBuilder
-import com.trustweave.wallet.dsl.WalletDslProvider
-import com.trustweave.trust.dsl.did.DidDslProvider
+import com.trustweave.trust.dsl.wallet.*
+import com.trustweave.trust.dsl.did.*
 import com.trustweave.did.resolver.DidResolver
 import com.trustweave.credential.anchor.CredentialAnchorService
 import com.trustweave.did.DidDocument
@@ -164,7 +161,7 @@ class TrustLayerContext(
      * Create a DID using the trust layer configuration.
      * Delegates to DidDslProvider extension function.
      */
-    suspend fun createDid(block: com.trustweave.did.dsl.DidBuilder.() -> Unit): String {
+    suspend fun createDid(block: DidBuilder.() -> Unit): String {
         return (this as DidDslProvider).createDid(block)
     }
     
@@ -172,30 +169,23 @@ class TrustLayerContext(
      * Update a DID document using the trust layer configuration.
      * Delegates to DidDslProvider extension function.
      */
-    suspend fun updateDid(block: com.trustweave.did.dsl.DidDocumentBuilder.() -> Unit): Any {
-        return (this as DidDslProvider).updateDid(block)
+    suspend fun updateDid(block: DidDocumentBuilder.() -> Unit): com.trustweave.did.DidDocument {
+        return (this as DidDslProvider).updateDid(block) as com.trustweave.did.DidDocument
     }
     
     /**
      * Verify a delegation chain using the trust layer configuration.
      * Delegates to DidDslProvider extension function.
      */
-    suspend fun delegate(block: suspend com.trustweave.did.dsl.DelegationBuilder.() -> Unit): com.trustweave.did.delegation.DelegationChainResult {
+    suspend fun delegate(block: suspend DelegationBuilder.() -> Unit): com.trustweave.did.verifier.DelegationChainResult {
         return (this as DidDslProvider).delegate(block)
-    }
-    
-    /**
-     * Get KMS service from trust layer.
-     */
-    fun getKmsService(): KmsService? {
-        return config.kmsService
     }
     
     /**
      * Get KMS from trust layer.
      */
     fun getKms(): com.trustweave.kms.KeyManagementService? {
-        return config.kms
+        return config.kms as? com.trustweave.kms.KeyManagementService
     }
     
     /**
@@ -212,8 +202,9 @@ class TrustLayerContext(
 
 /**
  * Extension function to get DSL operations from trust layer config.
+ * Must be defined before other extension functions that use it.
  */
-fun TrustLayerConfig.dsl(): TrustLayerContext {
+fun TrustLayerConfig.getDslContext(): TrustLayerContext {
     return TrustLayerContext(this)
 }
 
@@ -221,48 +212,48 @@ fun TrustLayerConfig.dsl(): TrustLayerContext {
  * Extension function for direct DSL operations on trust layer.
  */
 suspend fun TrustLayerConfig.issue(block: IssuanceBuilder.() -> Unit): VerifiableCredential {
-    return dsl().issue(block)
+    return this.getDslContext().issue(block)
 }
 
 /**
  * Extension function for direct verification on trust layer.
  */
 suspend fun TrustLayerConfig.verify(block: VerificationBuilder.() -> Unit): com.trustweave.credential.CredentialVerificationResult {
-    return dsl().verify(block)
+    return this.getDslContext().verify(block)
 }
 
 /**
  * Extension function for direct wallet creation on trust layer.
  */
 suspend fun TrustLayerConfig.wallet(block: WalletBuilder.() -> Unit): Wallet {
-    return dsl().wallet(block)
+    return this.getDslContext().wallet(block)
 }
 
 /**
  * Extension function for direct DID creation on trust layer.
  */
-suspend fun TrustLayerConfig.createDid(block: com.trustweave.did.dsl.DidBuilder.() -> Unit): String {
-    return dsl().createDid(block)
+suspend fun TrustLayerConfig.createDid(block: DidBuilder.() -> Unit): String {
+    return this.getDslContext().createDid(block)
 }
 
 /**
  * Extension function for direct DID document update on trust layer.
  */
-suspend fun TrustLayerConfig.updateDid(block: com.trustweave.did.dsl.DidDocumentBuilder.() -> Unit): Any {
-    return dsl().updateDid(block)
+suspend fun TrustLayerConfig.updateDid(block: DidDocumentBuilder.() -> Unit): com.trustweave.did.DidDocument {
+    return this.getDslContext().updateDid(block)
 }
 
 /**
  * Extension function for direct delegation on trust layer.
  */
-suspend fun TrustLayerConfig.delegate(block: suspend com.trustweave.did.dsl.DelegationBuilder.() -> Unit): com.trustweave.did.delegation.DelegationChainResult {
-    return dsl().delegate(block)
+suspend fun TrustLayerConfig.delegate(block: suspend DelegationBuilder.() -> Unit): com.trustweave.did.verifier.DelegationChainResult {
+    return this.getDslContext().delegate(block)
 }
 
 /**
  * Extension function for direct key rotation on trust layer.
  */
 suspend fun TrustLayerConfig.rotateKey(block: KeyRotationBuilder.() -> Unit): Any {
-    return dsl().rotateKey(block)
+    return this.getDslContext().rotateKey(block)
 }
 

@@ -1,8 +1,9 @@
 package com.trustweave.credential.proof
 
+import com.trustweave.did.DidDocument
+import com.trustweave.did.VerificationMethod
 import com.trustweave.did.resolver.DidResolver
-import com.trustweave.did.services.DidDocumentAccess
-import com.trustweave.did.services.VerificationMethodAccess
+import com.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -28,19 +29,13 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class ProofValidator(
-    private val didResolver: DidResolver,
-    private val documentAccess: DidDocumentAccess,
-    private val verificationMethodAccess: VerificationMethodAccess
+    private val didResolver: DidResolver
 ) {
 
     constructor(
-        resolveDid: suspend (String) -> com.trustweave.did.DidResolutionResult?,
-        documentAccess: DidDocumentAccess,
-        verificationMethodAccess: VerificationMethodAccess
+        resolveDid: suspend (String) -> DidResolutionResult?
     ) : this(
-        DidResolver { did -> resolveDid(did) },
-        documentAccess,
-        verificationMethodAccess
+        DidResolver { did -> resolveDid(did) }
     )
 
     /**
@@ -58,70 +53,55 @@ class ProofValidator(
     ): ProofPurposeValidationResult = withContext(Dispatchers.IO) {
         val errors = mutableListOf<String>()
         
-        // Services are required and provided via constructor
-        val docAccess = documentAccess
-        val vmAccess = verificationMethodAccess
-        
         // Resolve issuer DID document
         val resolutionResult = didResolver.resolve(issuerDid)
-        if (resolutionResult == null || resolutionResult.document == null) {
+        val document = resolutionResult?.document
+        if (document == null) {
             return@withContext ProofPurposeValidationResult(
                 valid = false,
                 errors = listOf("Failed to resolve issuer DID: $issuerDid")
             )
         }
         
-        val document = resolutionResult.document
-        
         // Normalize verification method reference
         val normalizedVmRef = normalizeVerificationMethodReference(verificationMethod, issuerDid)
         
         // Check if verification method exists in document
-        val verificationMethods = docAccess.getVerificationMethod(document)
+        val verificationMethods = document.verificationMethod
         
         // Check if VM exists in verificationMethod list
         val vmExistsInList = verificationMethods.any { vm ->
-            try {
-                val vmId = vmAccess.getId(vm)
-                vmId == normalizedVmRef || vmId == verificationMethod
-            } catch (e: Exception) {
-                false
-            }
+            vm.id == normalizedVmRef || vm.id == verificationMethod
         }
         
         // Check if proof purpose matches verification relationship
         val isValid = when (proofPurpose) {
             "assertionMethod" -> {
-                val assertionMethod = docAccess.getAssertionMethod(document)
-                assertionMethod.any { ref ->
+                document.assertionMethod.any { ref ->
                     ref == normalizedVmRef || ref == verificationMethod || 
                     ref == "#${verificationMethod.substringAfterLast("#")}"
                 }
             }
             "authentication" -> {
-                val authentication = docAccess.getAuthentication(document)
-                authentication.any { ref ->
+                document.authentication.any { ref ->
                     ref == normalizedVmRef || ref == verificationMethod ||
                     ref == "#${verificationMethod.substringAfterLast("#")}"
                 }
             }
             "keyAgreement" -> {
-                val keyAgreement = docAccess.getKeyAgreement(document)
-                keyAgreement.any { ref ->
+                document.keyAgreement.any { ref ->
                     ref == normalizedVmRef || ref == verificationMethod ||
                     ref == "#${verificationMethod.substringAfterLast("#")}"
                 }
             }
             "capabilityInvocation" -> {
-                val capabilityInvocation = docAccess.getCapabilityInvocation(document)
-                capabilityInvocation.any { ref ->
+                document.capabilityInvocation.any { ref ->
                     ref == normalizedVmRef || ref == verificationMethod ||
                     ref == "#${verificationMethod.substringAfterLast("#")}"
                 }
             }
             "capabilityDelegation" -> {
-                val capabilityDelegation = docAccess.getCapabilityDelegation(document)
-                capabilityDelegation.any { ref ->
+                document.capabilityDelegation.any { ref ->
                     ref == normalizedVmRef || ref == verificationMethod ||
                     ref == "#${verificationMethod.substringAfterLast("#")}"
                 }

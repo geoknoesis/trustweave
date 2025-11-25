@@ -1,10 +1,10 @@
-# trustweave-did-registrar-server
+# trustweave-did-registrar-server (Ktor)
 
-The `trustweave-did-registrar-server` module provides a Ktor-based HTTP server implementation of the Universal Registrar protocol, allowing you to host your own Universal Registrar service.
+The `trustweave-did-registrar-server-ktor` module provides a Ktor-based HTTP server implementation of the Universal Registrar protocol, allowing you to host your own Universal Registrar service.
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-did-registrar-server:1.0.0-SNAPSHOT")
+    implementation("com.trustweave.did:registrar-server-ktor:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-did-registrar:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
@@ -13,12 +13,16 @@ dependencies {
 
 **Result:** Gradle exposes a Universal Registrar server that implements the DID Registration specification endpoints, allowing clients to create, update, and deactivate DIDs through HTTP.
 
+> **Note:** For Spring Boot applications, use the `registrar-server-spring` module instead. See [trustweave-did-registrar-server-spring](trustweave-did-registrar-server-spring.md) for details.
+
 ## Overview
 
-The `trustweave-did-registrar-server` module provides:
+The `trustweave-did-registrar-server-ktor` module provides:
 
-- **Universal Registrar Server** – Ktor-based HTTP server implementing Universal Registrar protocol
-- **REST API Endpoints** – standard endpoints for DID operations (`POST /1.0/operations`, `GET /1.0/operations/{jobId}`)
+- **DID Registrar Server** – Ktor-based HTTP server implementing both Universal Registrar protocol and RESTful endpoints
+- **RESTful API Endpoints** – recommended endpoints for DID operations (`POST /1.0/dids`, `PUT /1.0/dids/{did}`, `DELETE /1.0/dids/{did}`, `GET /1.0/jobs/{jobId}`)
+- **Protocol Endpoints** – Universal Registrar protocol-compliant endpoints (`POST /1.0/operations`, `GET /1.0/operations/{jobId}`) for specification compliance
+- **Type-Safe DTOs** – request/response DTOs for type-safe API usage
 - **Job Storage** – interface and implementation for tracking long-running operations
 - **Spec Compliance** – full compliance with DID Registration specification
 - **Pluggable Backend** – works with any `DidRegistrar` implementation
@@ -27,9 +31,9 @@ The `trustweave-did-registrar-server` module provides:
 
 ```mermaid
 graph TB
-    subgraph "trustweave-did-registrar-server Module"
-        Server[UniversalRegistrarServer]
-        Routes[UniversalRegistrarRoutes]
+    subgraph "trustweave-did-registrar-server-ktor Module"
+        Server[DidRegistrarServer]
+        Routes[DidRegistrarRoutes]
         Storage[JobStorage Interface]
         InMemoryStorage[InMemoryJobStorage]
         DatabaseStorage[DatabaseJobStorage]
@@ -75,9 +79,9 @@ graph TB
 
 ## Key Components
 
-### UniversalRegistrarServer
+### DidRegistrarServer
 
-Main server class that configures and runs the Universal Registrar HTTP service:
+Main server class that configures and runs the DID Registrar HTTP service:
 
 ```kotlin
 import com.trustweave.did.registrar.server.*
@@ -89,7 +93,7 @@ val kms = InMemoryKeyManagementService()
 val registrar = KmsBasedRegistrar(kms)
 
 // Create and start server
-val server = UniversalRegistrarServer(
+val server = DidRegistrarServer(
     registrar = registrar,
     port = 8080,
     host = "0.0.0.0",
@@ -99,14 +103,21 @@ val server = UniversalRegistrarServer(
 server.start(wait = true)  // Block until server stops
 ```
 
-**What this does:** Provides a complete HTTP server implementation of the Universal Registrar protocol.
+**What this does:** Provides a complete HTTP server implementation with both RESTful and protocol-compliant endpoints.
 
-**Outcome:** Enables hosting your own Universal Registrar service that clients can use for DID operations.
+**Outcome:** Enables hosting your own DID Registrar service that clients can use for DID operations.
 
-### UniversalRegistrarRoutes
+### DidRegistrarRoutes
 
-Ktor routing configuration that implements the Universal Registrar endpoints:
+Ktor routing configuration that implements both RESTful and Universal Registrar protocol endpoints:
 
+**RESTful Endpoints (Recommended):**
+- `POST /1.0/dids` – Create DID
+- `PUT /1.0/dids/{did}` – Update DID
+- `DELETE /1.0/dids/{did}` – Deactivate DID
+- `GET /1.0/jobs/{jobId}` – Get job status
+
+**Protocol Endpoints (For Specification Compliance):**
 - `POST /1.0/operations` – Create, update, or deactivate DIDs
 - `GET /1.0/operations/{jobId}` – Get status of long-running operations
 
@@ -114,13 +125,13 @@ Ktor routing configuration that implements the Universal Registrar endpoints:
 import io.ktor.server.routing.*
 
 routing {
-    configureUniversalRegistrarRoutes(registrar, jobStorage)
+    configureDidRegistrarRoutes(registrar, jobStorage)
 }
 ```
 
-**What this does:** Configures HTTP routes according to the Universal Registrar protocol specification.
+**What this does:** Configures HTTP routes with both RESTful and protocol-compliant endpoints.
 
-**Outcome:** Provides standard-compliant endpoints that work with any Universal Registrar client.
+**Outcome:** Provides type-safe RESTful endpoints for new integrations and protocol-compliant endpoints for specification compliance.
 
 ### JobStorage
 
@@ -168,7 +179,7 @@ val jobStorage = DatabaseJobStorage(
 )
 
 // Use with server
-val server = UniversalRegistrarServer(
+val server = DidRegistrarServer(
     registrar = registrar,
     jobStorage = jobStorage
 )
@@ -199,12 +210,15 @@ CREATE INDEX idx_did_registration_jobs_created_at ON did_registration_jobs(creat
 
 ## API Endpoints
 
-### POST /1.0/operations
+### RESTful Endpoints (Recommended)
 
-Creates, updates, or deactivates a DID based on the request body.
+The following RESTful endpoints are recommended for new integrations. They provide type-safe request/response DTOs and follow RESTful conventions.
 
-#### Create Operation
+#### POST /1.0/dids
 
+Creates a new DID.
+
+**Request:**
 ```json
 {
   "method": "web",
@@ -228,8 +242,95 @@ Creates, updates, or deactivates a DID based on the request body.
 }
 ```
 
-#### Update Operation
+#### PUT /1.0/dids/{did}
 
+Updates an existing DID.
+
+**Request:**
+```json
+{
+  "didDocument": {
+    "id": "did:web:example.com",
+    "verificationMethod": [ /* ... */ ]
+  },
+  "options": {
+    "secret": { /* Authorization secrets */ }
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "jobId": "job-123",
+  "didState": {
+    "state": "finished",
+    "did": "did:web:example.com",
+    "didDocument": { /* Updated DID Document */ }
+  }
+}
+```
+
+#### DELETE /1.0/dids/{did}
+
+Deactivates a DID.
+
+**Request:**
+```json
+{
+  "options": {
+    "secret": { /* Authorization secrets */ }
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "jobId": "job-123",
+  "didState": {
+    "state": "finished",
+    "did": "did:web:example.com"
+  }
+}
+```
+
+#### GET /1.0/jobs/{jobId}
+
+Gets the status of a long-running operation.
+
+**Response:**
+```json
+{
+  "jobId": "job-123",
+  "didState": {
+    "state": "finished",
+    "did": "did:web:example.com",
+    "didDocument": { /* DID Document */ }
+  }
+}
+```
+
+### Universal Registrar Protocol Endpoints
+
+The following endpoints implement the Universal Registrar protocol specification. They are kept for specification compliance and backward compatibility. For new integrations, prefer the RESTful endpoints above.
+
+#### POST /1.0/operations
+
+Creates, updates, or deactivates a DID based on the request body.
+
+**Create Operation:**
+```json
+{
+  "method": "web",
+  "options": {
+    "keyManagementMode": "internal-secret",
+    "returnSecrets": true
+  }
+}
+```
+
+**Update Operation:**
 ```json
 {
   "did": "did:web:example.com",
@@ -240,8 +341,7 @@ Creates, updates, or deactivates a DID based on the request body.
 }
 ```
 
-#### Deactivate Operation
-
+**Deactivate Operation:**
 ```json
 {
   "did": "did:web:example.com",
@@ -252,7 +352,7 @@ Creates, updates, or deactivates a DID based on the request body.
 }
 ```
 
-### GET /1.0/operations/{jobId}
+#### GET /1.0/operations/{jobId}
 
 Gets the status of a long-running operation.
 
@@ -273,8 +373,8 @@ Gets the status of a long-running operation.
 ```mermaid
 sequenceDiagram
     participant Client
-    participant Server as UniversalRegistrarServer
-    participant Routes as UniversalRegistrarRoutes
+    participant Server as DidRegistrarServer
+    participant Routes as DidRegistrarRoutes
     participant Registrar as DidRegistrar
     participant Storage as JobStorage
     
@@ -313,7 +413,7 @@ fun main() {
     val registrar = KmsBasedRegistrar(kms)
     
     // Create and start server
-    val server = UniversalRegistrarServer(
+    val server = DidRegistrarServer(
         registrar = registrar,
         port = 8080
     )
@@ -343,7 +443,7 @@ val dataSource = HikariDataSource().apply {
 val jobStorage = DatabaseJobStorage(dataSource)
 
 // Use with server
-val server = UniversalRegistrarServer(
+val server = DidRegistrarServer(
     registrar = registrar,
     jobStorage = jobStorage
 )
@@ -384,7 +484,7 @@ class RedisJobStorage : JobStorage {
 }
 
 // Use custom storage
-val server = UniversalRegistrarServer(
+val server = DidRegistrarServer(
     registrar = registrar,
     jobStorage = RedisJobStorage()
 )
@@ -404,7 +504,7 @@ val upstreamRegistrar = DefaultUniversalRegistrar(
 )
 
 // Create server that uses upstream registrar
-val server = UniversalRegistrarServer(
+val server = DidRegistrarServer(
     registrar = upstreamRegistrar,
     port = 8080
 )
@@ -437,10 +537,15 @@ val response = client.createDid(
 
 ```mermaid
 graph TD
-    subgraph "did:registrar-server Package Structure"
+    subgraph "did:registrar-server-ktor Package Structure"
         A[com.trustweave.did.registrar.server]
-        A --> B[UniversalRegistrarServer.kt]
-        A --> C[UniversalRegistrarRoutes.kt]
+        A --> B[DidRegistrarServer.kt]
+        A --> C[DidRegistrarRoutes.kt]
+        A --> D[dto/]
+        D --> D1[CreateDidRequest.kt]
+        D --> D2[UpdateDidRequest.kt]
+        D --> D3[DeactivateDidRequest.kt]
+        D --> D4[ErrorResponse.kt]
         A --> D[JobStorage.kt]
         
         D --> D1[JobStorage Interface]
@@ -498,7 +603,7 @@ fun Application.module() {
     
     routing {
         authenticate {
-            configureUniversalRegistrarRoutes(registrar, jobStorage)
+            configureDidRegistrarRoutes(registrar, jobStorage)
         }
     }
 }

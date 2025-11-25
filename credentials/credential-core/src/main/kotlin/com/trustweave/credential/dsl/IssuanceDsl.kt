@@ -153,13 +153,14 @@ class IssuanceBuilder(
             additionalOptions = mapOf("verificationMethod" to verificationMethodId)
         )
         
-        // Issue credential
-        issuer.issue(
+        // Issue credential - use fully qualified method call to avoid ambiguity with extension function
+        val issuedCredential = (issuer as com.trustweave.credential.issuer.CredentialIssuer).issue(
             credential = credentialToIssue,
             issuerDid = issuer,
             keyId = key,
             options = options
         )
+        issuedCredential
 }
 
 /**

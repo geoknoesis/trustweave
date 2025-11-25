@@ -13,6 +13,12 @@ dependencies {
     implementation(project(":kms:kms-core"))         // KMS service interfaces
     compileOnly(project(":credentials:plugins:status-list:database"))  // StatusListManagerFactory (compileOnly to avoid circular dependency)
 
+    // Kotlin Coroutines
+    implementation(libs.kotlinx.coroutines.core)
+    
+    // Kotlinx Serialization
+    implementation(libs.kotlinx.serialization.json)
+
     testImplementation(project(":testkit"))
     testImplementation(project(":did:did-core"))
     testImplementation(project(":kms:kms-core"))

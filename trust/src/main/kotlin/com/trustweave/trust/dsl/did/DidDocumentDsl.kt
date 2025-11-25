@@ -2,8 +2,8 @@ package com.trustweave.trust.dsl.did
 
 import com.trustweave.did.DidDocument
 import com.trustweave.did.DidMethod
-import com.trustweave.did.Service
-import com.trustweave.did.VerificationMethodRef
+import com.trustweave.did.DidService
+import com.trustweave.did.VerificationMethod
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -176,7 +176,7 @@ class DidDocumentBuilder(
         
         // Create new verification method objects
         val newVmObjects = newVerificationMethods.map { vmData ->
-            VerificationMethodRef(
+            VerificationMethod(
                 id = vmData.id,
                 type = vmData.type,
                 controller = vmData.controller,
@@ -192,7 +192,7 @@ class DidDocumentBuilder(
         
         // Create new service objects
         val newServiceObjects = newServices.map { serviceData ->
-            Service(
+            DidService(
                 id = serviceData.id,
                 type = serviceData.type,
                 serviceEndpoint = serviceData.endpoint
@@ -203,21 +203,21 @@ class DidDocumentBuilder(
         val filteredAuth = currentDoc.authentication.filter { auth ->
             val authStr = auth.toString()
             !removedVerificationMethods.any { removed -> authStr.contains(removed) }
-        } + newVerificationMethods.map { it.id }
+        }.plus(newVerificationMethods.map { it.id })
         
         val filteredAssertion = currentDoc.assertionMethod.filter { assertion ->
             val assertionStr = assertion.toString()
             !removedVerificationMethods.any { removed -> assertionStr.contains(removed) }
-        } + newVerificationMethods.map { it.id }
+        }.plus(newVerificationMethods.map { it.id })
         
         // Update capability invocation and delegation
         val updatedCapabilityInvocation = currentDoc.capabilityInvocation
             .filter { !removedCapabilityInvocation.contains(it) }
-            + addedCapabilityInvocation
+            .plus(addedCapabilityInvocation)
         
         val updatedCapabilityDelegation = currentDoc.capabilityDelegation
             .filter { !removedCapabilityDelegation.contains(it) }
-            + addedCapabilityDelegation
+            .plus(addedCapabilityDelegation)
         
         // Use context from builder or keep current
         val updatedContext = contextValues ?: currentDoc.context

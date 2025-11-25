@@ -61,6 +61,16 @@
   - Multi-chain anchoring
   - Wallet organization patterns
 
+## User Experience (UX) Documentation
+
+- **[UX Documentation](ux/README.md)**: User experience guides for TrustWeave applications
+  - **[Trusted Domain UX Guide](ux/trusted-domain-ux-guide.md)**: Complete UX guide for creating, configuring, and using Trusted Domains
+    - Step-by-step user journeys from signup to credential management
+    - Detailed screen mockups and interaction flows
+    - Backend sequence diagrams showing system interactions
+    - Scenarios for DID creation, credential updates, and revocation
+    - Error handling and mobile considerations
+
 ## Use Case Scenarios
 
 See **[Scenarios Overview](scenarios/README.md)** for all available scenarios organized by category.

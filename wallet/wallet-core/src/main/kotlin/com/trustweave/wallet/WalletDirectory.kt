@@ -27,12 +27,11 @@ class WalletDirectory {
     /**
      * Find wallets by capability using type-safe checks.
      * 
-     * @param capability Feature name (e.g., "collections", "did-management")
-     * @return List of wallets that support the capability
+     * @return List of wallets that support the capability type T
      */
     inline fun <reified T : Any> findByCapability(): List<T> {
         @Suppress("UNCHECKED_CAST")
-        return wallets.values.filterIsInstance<T>()
+        return getAll().filter { it is T }.map { it as T }
     }
     
     fun findByCapability(feature: String): List<Wallet> {

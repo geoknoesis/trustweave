@@ -1,6 +1,7 @@
 package com.trustweave.testkit.did
 
 import com.trustweave.did.*
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.kms.KeyManagementService
 import java.time.Instant
 import java.util.*
@@ -27,7 +28,7 @@ class DidKeyMockMethod(
         
         val verificationMethodId = "$did#${keyHandle.id}"
         
-        val verificationMethod = VerificationMethodRef(
+        val verificationMethod = VerificationMethod(
             id = verificationMethodId,
             type = when (algorithm.uppercase()) {
                 "ED25519" -> "Ed25519VerificationKey2020"

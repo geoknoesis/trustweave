@@ -3,15 +3,15 @@ package com.trustweave.trust
 import com.trustweave.trust.dsl.*
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.CredentialVerificationResult
-import com.trustweave.credential.dsl.IssuanceBuilder
-import com.trustweave.credential.dsl.VerificationBuilder
+import com.trustweave.trust.dsl.credential.IssuanceBuilder
+import com.trustweave.trust.dsl.credential.VerificationBuilder
 import com.trustweave.wallet.Wallet
-import com.trustweave.wallet.dsl.WalletBuilder
+import com.trustweave.trust.dsl.wallet.WalletBuilder
 import com.trustweave.trust.dsl.did.DidBuilder
 import com.trustweave.trust.dsl.did.DidDocumentBuilder
 import com.trustweave.trust.dsl.did.DelegationBuilder
 import com.trustweave.trust.dsl.KeyRotationBuilder
-import com.trustweave.did.delegation.DelegationChainResult
+import com.trustweave.did.verifier.DelegationChainResult
 
 /**
  * Trust Layer - The main facade for trust layer operations.
@@ -82,6 +82,10 @@ class TrustLayer private constructor(
     private val config: TrustLayerConfig,
     private val context: TrustLayerContext
 ) {
+    /**
+     * Get the DSL context for advanced operations.
+     */
+    fun getDslContext(): TrustLayerContext = context
     /**
      * The underlying configuration.
      * 

@@ -154,6 +154,8 @@ $gitbook-code-bg: #f5f5f5;
     padding-right: 1rem;
     margin-top: 0 !important;
     overflow: visible !important;
+    height: auto !important;
+    min-height: auto !important;
     
     .site-title {
       padding-top: 0.5rem !important;
@@ -163,6 +165,9 @@ $gitbook-code-bg: #f5f5f5;
       overflow: visible !important;
       text-overflow: clip !important;
       white-space: normal !important;
+      height: auto !important;
+      max-height: none !important;
+      word-wrap: break-word !important;
     }
   }
   

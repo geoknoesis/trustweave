@@ -1,3 +1,7 @@
+---
+title: Testing Strategies
+---
+
 # Testing Strategies
 
 This guide explains testing strategies and best practices for TrustWeave applications and plugins.

@@ -1,5 +1,7 @@
 package com.trustweave.credential.didcomm.crypto
 
+import com.trustweave.credential.didcomm.exception.DidCommException
+
 import com.trustweave.credential.didcomm.models.DidCommEnvelope
 import com.trustweave.did.DidDocument
 import com.trustweave.kms.KeyManagementService
@@ -118,8 +120,11 @@ class DidCommCryptoProduction(
             // Convert packed message to envelope format
             parsePackedToEnvelope(packed.value)
         } catch (e: Exception) {
-            throw com.trustweave.credential.didcomm.exceptions.DidCommEncryptionException(
-                "Failed to encrypt message: ${e.message}", e
+            throw DidCommException.EncryptionFailed(
+                reason = e.message ?: "Unknown encryption error",
+                fromDid = fromDid,
+                toDid = toDid,
+                cause = e
             )
         }
     }
@@ -172,8 +177,10 @@ class DidCommCryptoProduction(
             
             messageJson
         } catch (e: Exception) {
-            throw com.trustweave.credential.didcomm.exceptions.DidCommDecryptionException(
-                "Failed to decrypt message: ${e.message}", e
+            throw DidCommException.DecryptionFailed(
+                reason = e.message ?: "Unknown decryption error",
+                messageId = null,
+                cause = e
             )
         }
     }

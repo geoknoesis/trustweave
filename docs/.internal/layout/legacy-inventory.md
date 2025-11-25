@@ -1,3 +1,7 @@
+---
+title: Legacy Cleanup Inventory
+---
+
 # Legacy Cleanup Inventory
 
 Last updated as part of the legacy removal effort.

@@ -1,3 +1,7 @@
+---
+title: Pull Request Process
+---
+
 # Pull Request Process
 
 This guide explains the pull request process for contributing to TrustWeave.

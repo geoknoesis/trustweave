@@ -1,3 +1,7 @@
+---
+title: Solana DID Integration
+---
+
 # Solana DID Integration
 
 > This guide covers the did:sol method integration for TrustWeave. The did:sol plugin provides Solana DID resolution with account-based storage on Solana blockchain.

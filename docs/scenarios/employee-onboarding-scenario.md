@@ -1,3 +1,7 @@
+---
+title: Employee Onboarding and Background Verification Scenario
+---
+
 # Employee Onboarding and Background Verification Scenario
 
 This guide demonstrates how to build a complete employee onboarding system using TrustWeave. You'll learn how employers can verify candidate credentials (education, certifications, work history), how background check providers can issue verification credentials, and how the entire onboarding process can be streamlined with verifiable credentials.

@@ -1,3 +1,7 @@
+---
+title: TrustWeave Governance as a Service: Requirements, User Scenarios, Architecture & UX Design
+---
+
 # TrustWeave Governance as a Service: Requirements, User Scenarios, Architecture & UX Design
 
 ## Executive Summary

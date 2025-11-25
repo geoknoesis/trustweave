@@ -1,3 +1,7 @@
+---
+title: IoT Device Ownership Transfer Scenario
+---
+
 # IoT Device Ownership Transfer Scenario
 
 This guide demonstrates how to build an IoT device ownership transfer system using TrustWeave. You'll learn how device owners can transfer ownership securely, how new owners can verify transfer authorization, and how previous owners can be revoked while maintaining a complete audit trail.

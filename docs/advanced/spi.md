@@ -1,3 +1,7 @@
+---
+title: Service Provider Interface (SPI)
+---
+
 # Service Provider Interface (SPI)
 
 This guide explains how TrustWeave uses the Java Service Provider Interface (SPI) for auto-discovery of plugins and adapters.

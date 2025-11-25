@@ -1,3 +1,7 @@
+---
+title: JWK DID Integration
+---
+
 # JWK DID Integration
 
 > This guide covers the did:jwk method integration for TrustWeave. The did:jwk plugin provides W3C-standard DID resolution using JSON Web Keys directly.

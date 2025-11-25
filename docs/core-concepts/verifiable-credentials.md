@@ -1,3 +1,7 @@
+---
+title: Verifiable Credentials (VCs)
+---
+
 # Verifiable Credentials (VCs)
 
 > TrustWeave expansions in this guide are authored by [Geoknoesis LLC](https://www.geoknoesis.com). They reflect Geoknoesis’ recommended patterns for W3C Verifiable Credentials on the JVM.

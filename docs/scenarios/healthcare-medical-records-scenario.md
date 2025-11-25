@@ -1,3 +1,7 @@
+---
+title: Healthcare & Medical Records Scenario
+---
+
 # Healthcare & Medical Records Scenario
 
 This guide demonstrates how to build a healthcare credential system using TrustWeave that enables patient privacy, secure medical record sharing, HIPAA compliance, and cross-provider interoperability.

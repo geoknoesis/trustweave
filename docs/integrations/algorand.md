@@ -1,3 +1,7 @@
+---
+title: Algorand Integration
+---
+
 # Algorand Integration
 
 > This guide covers the Algorand blockchain integration for TrustWeave. The Algorand plugin provides blockchain anchoring support for Algorand mainnet, testnet, and betanet chains.

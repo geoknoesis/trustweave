@@ -1,3 +1,7 @@
+---
+title: Key Rotation Strategies
+---
+
 # Key Rotation Strategies
 
 Rotating signing keys keeps verifiable credential ecosystems resilient: compromised keys can be retired, and auditors gain a clear timeline of which key was active when. TrustWeave treats key rotation as a collaboration between the KMS, DID registry, and credential services.

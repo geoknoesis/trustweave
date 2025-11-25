@@ -1,3 +1,7 @@
+---
+title: Academic Credentials Scenario
+---
+
 # Academic Credentials Scenario
 
 This guide walks you through building a complete academic credential system using TrustWeave. You'll learn how universities can issue verifiable diplomas, how students can store them in wallets, and how employers can verify credentials without contacting the university.

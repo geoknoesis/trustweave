@@ -1,3 +1,7 @@
+---
+title: Credential Exchange Protocols - Workflows
+---
+
 # Credential Exchange Protocols - Workflows
 
 Step-by-step guides for common credential exchange workflows.

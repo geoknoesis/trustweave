@@ -1,3 +1,7 @@
+---
+title: trustweave-did (Core Module)
+---
+
 # trustweave-did (Core Module)
 
 The `trustweave-did` module provides Decentralized Identifier (DID) and DID Document management with support for pluggable DID methods, DID resolution, and DID registration interfaces.

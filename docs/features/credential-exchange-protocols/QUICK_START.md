@@ -115,11 +115,24 @@ fun main() = runBlocking {
         println("   Credential ID: ${issue.credential.id}")
         println("   Protocol: ${issue.protocolName}")
         
-    } catch (e: IllegalArgumentException) {
-        println("❌ Invalid argument: ${e.message}")
-        e.printStackTrace()
-    } catch (e: UnsupportedOperationException) {
-        println("❌ Unsupported operation: ${e.message}")
+    } catch (e: ExchangeException) {
+        when (e) {
+            is ExchangeException.ProtocolNotRegistered -> {
+                println("❌ Protocol not registered: ${e.protocolName}")
+                println("   Available: ${e.availableProtocols}")
+            }
+            is ExchangeException.OperationNotSupported -> {
+                println("❌ Operation not supported: ${e.operation}")
+                println("   Supported: ${e.supportedOperations}")
+            }
+            is ExchangeException.MissingRequiredOption -> {
+                println("❌ Missing required option: ${e.optionName}")
+            }
+            else -> {
+                println("❌ Exchange error: ${e.message}")
+                println("   Error code: ${e.code}")
+            }
+        }
         e.printStackTrace()
     } catch (e: Exception) {
         println("❌ Unexpected error: ${e.message}")
@@ -364,8 +377,11 @@ try {
 ```
 
 **Common Errors:**
-- `IllegalArgumentException`: Protocol not registered or invalid argument
-- `UnsupportedOperationException`: Protocol doesn't support the operation
+- `ExchangeException.ProtocolNotRegistered`: Protocol not registered
+- `ExchangeException.OperationNotSupported`: Protocol doesn't support the operation
+- `ExchangeException.MissingRequiredOption`: Missing required option
+- `ExchangeException.InvalidRequest`: Invalid request field
+- Plugin-specific exceptions (e.g., `DidCommException`, `Oidc4VciException`, `ChapiException`)
 - Protocol-specific errors: See [Error Handling Guide](./ERROR_HANDLING.md)
 
 ---

@@ -47,10 +47,10 @@ object DidCommExamples {
         val didcomm = DidCommFactory.createInMemoryService(kms, resolveDid)
         
         // Step 1: Issuer creates credential offer
-        val preview = CredentialProtocol.CredentialPreview(
+        val preview = com.trustweave.credential.exchange.CredentialPreview(
             attributes = listOf(
-                CredentialProtocol.CredentialAttribute("name", "Alice"),
-                CredentialProtocol.CredentialAttribute("email", "alice@example.com")
+                com.trustweave.credential.exchange.CredentialAttribute("name", "Alice"),
+                com.trustweave.credential.exchange.CredentialAttribute("email", "alice@example.com")
             )
         )
         

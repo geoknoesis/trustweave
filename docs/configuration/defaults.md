@@ -1,3 +1,7 @@
+---
+title: Default Configuration
+---
+
 # Default Configuration
 
 This document explains the default configuration used by `TrustWeave.create()` and how to customize it.

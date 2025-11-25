@@ -1,3 +1,7 @@
+---
+title: JSON Canonicalization
+---
+
 # JSON Canonicalization
 
 Canonicalization ensures that logically equivalent JSON payloads produce identical byte representations. This is essential for hashing, signing, and anchoring: if two parties serialize the same credential differently, their digests (and therefore proofs) would diverge.

@@ -1,11 +1,13 @@
 package com.trustweave.credential.storage.database
 
 import com.trustweave.credential.storage.*
+import com.trustweave.credential.storage.encryption.EncryptedMessage
 import com.trustweave.credential.storage.encryption.MessageEncryption
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.*
+import java.sql.PreparedStatement
 import java.sql.*
 import java.util.Base64
 import javax.sql.DataSource
@@ -120,7 +122,7 @@ class PostgresMessageStorage<T : ProtocolMessage>(
                             val keyVersion = rs.getInt("key_version")
                             val iv = rs.getBytes("iv")
                             
-                            val encrypted = com.trustweave.credential.storage.encryption.EncryptedMessage(
+                            val encrypted = EncryptedMessage(
                                 keyVersion = keyVersion,
                                 encryptedData = encryptedData,
                                 iv = iv
@@ -313,10 +315,10 @@ class PostgresMessageStorage<T : ProtocolMessage>(
     // Helper methods
     
     private fun setMessageParameters(
-        stmt: java.sql.PreparedStatement,
+        stmt: PreparedStatement,
         message: T,
         messageJson: String,
-        encrypted: com.trustweave.credential.storage.encryption.EncryptedMessage?
+        encrypted: EncryptedMessage?
     ) {
         var index = 1
         stmt.setString(index++, message.messageId)
@@ -349,7 +351,7 @@ class PostgresMessageStorage<T : ProtocolMessage>(
                 val keyVersion = rs.getInt("key_version")
                 val iv = rs.getBytes("iv")
                 
-                val encrypted = com.trustweave.credential.storage.encryption.EncryptedMessage(
+                val encrypted = EncryptedMessage(
                     keyVersion = keyVersion,
                     encryptedData = encryptedData,
                     iv = iv

@@ -1,3 +1,7 @@
+---
+title: Creating TrustWeave Plugins
+---
+
 # Creating TrustWeave Plugins
 
 This guide explains how to create custom plugins for TrustWeave by implementing the various plugin interfaces.

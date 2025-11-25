@@ -1,3 +1,7 @@
+---
+title: Beginner Tutorial Series
+---
+
 # Beginner Tutorial Series
 
 A structured learning path for developers new to TrustWeave and decentralized identity. Each tutorial builds on the previous one, introducing concepts progressively.

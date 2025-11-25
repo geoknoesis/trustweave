@@ -1,3 +1,7 @@
+---
+title: Credential Exchange Protocols
+---
+
 # Credential Exchange Protocols
 
 Complete implementation of credential exchange protocols for TrustWeave, providing a unified interface for DIDComm V2, OIDC4VCI, and CHAPI.

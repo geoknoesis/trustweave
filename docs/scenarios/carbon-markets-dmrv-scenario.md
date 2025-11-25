@@ -1,3 +1,7 @@
+---
+title: Carbon Markets & Digital MRV (dMRV) with Earth Observation
+---
+
 # Carbon Markets & Digital MRV (dMRV) with Earth Observation
 
 This guide demonstrates how to build a Digital Measurement, Reporting, and Verification (dMRV) system for carbon markets using TrustWeave and Earth Observation data. You'll learn how to create verifiable credentials for carbon credits that prevent double counting and enable automated verification.

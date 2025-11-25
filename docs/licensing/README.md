@@ -1,3 +1,7 @@
+---
+title: Licensing Overview
+---
+
 # Licensing Overview
 
 TrustWeave is distributed under a dual-license model managed by [Geoknoesis LLC](https://www.geoknoesis.com). This structure keeps the toolkit accessible for learning and experimentation while providing commercial terms for production deployments.

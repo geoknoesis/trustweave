@@ -1,3 +1,7 @@
+---
+title: DIDComm V2 Plugin
+---
+
 # DIDComm V2 Plugin
 
 DIDComm V2 implementation for TrustWeave, providing secure, private, and decentralized messaging using Decentralized Identifiers (DIDs).

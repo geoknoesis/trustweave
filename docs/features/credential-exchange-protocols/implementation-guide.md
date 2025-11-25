@@ -1,3 +1,7 @@
+---
+title: Protocol Implementation Guide
+---
+
 # Protocol Implementation Guide
 
 Complete guide for implementing credential exchange protocols in TrustWeave.

@@ -1,3 +1,7 @@
+---
+title: Performance Considerations
+---
+
 # Performance Considerations
 
 This guide covers performance considerations and optimization strategies for TrustWeave applications.

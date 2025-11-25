@@ -1,3 +1,7 @@
+---
+title: Parametric Insurance MGA Implementation Guide with TrustWeave
+---
+
 # Parametric Insurance MGA Implementation Guide with TrustWeave
 
 > **Building "Atlas Parametric" - An EO-Driven Parametric Insurance MGA**

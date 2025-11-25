@@ -1,3 +1,7 @@
+---
+title: Google Cloud KMS Integration
+---
+
 # Google Cloud KMS Integration
 
 > This guide covers the Google Cloud Key Management Service (KMS) integration for TrustWeave. The Google Cloud KMS plugin provides production-ready key management with support for all Google Cloud KMS-compatible algorithms.

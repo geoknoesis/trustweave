@@ -1,3 +1,7 @@
+---
+title: trustweave-common Package Structure
+---
+
 # trustweave-common Package Structure
 
 The `trustweave-common` module is organized into logical packages for better code organization and discoverability.

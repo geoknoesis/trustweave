@@ -1,3 +1,7 @@
+---
+title: API Patterns and Best Practices
+---
+
 # API Patterns and Best Practices
 
 This guide explains the correct API patterns to use with TrustWeave and clarifies common misconceptions.

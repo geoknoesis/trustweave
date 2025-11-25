@@ -1,6 +1,8 @@
 package com.trustweave.credential.oidc4vci
 
+import com.trustweave.credential.exchange.exception.ExchangeException
 import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.oidc4vci.exception.Oidc4VciException
 import com.trustweave.credential.oidc4vci.models.*
 import com.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
@@ -116,13 +118,16 @@ class Oidc4VciService(
         authorizationCode: String? = null
     ): Oidc4VciCredentialRequest = withContext(Dispatchers.IO) {
         val offer = offers[offerId]
-            ?: throw IllegalArgumentException("Offer not found: $offerId")
+            ?: throw ExchangeException.OfferNotFound(offerId = offerId)
         
         // Fetch credential issuer metadata if not cached
         if (metadata == null) {
             metadata = fetchCredentialIssuerMetadata(offer.credentialIssuer)
         }
-        val issuerMetadata = metadata ?: throw IllegalStateException("Failed to fetch credential issuer metadata")
+        val issuerMetadata = metadata ?: throw Oidc4VciException.MetadataFetchFailed(
+            credentialIssuer = offer.credentialIssuer,
+            reason = "Metadata fetch returned null"
+        )
         
         val requestId = UUID.randomUUID().toString()
         
@@ -175,17 +180,23 @@ class Oidc4VciService(
         requestId: String
     ): Oidc4VciIssueResult = withContext(Dispatchers.IO) {
         val request = requests[requestId]
-            ?: throw IllegalArgumentException("Request not found: $requestId")
+            ?: throw ExchangeException.RequestNotFound(requestId = requestId)
         
         // Fetch metadata if not cached
         if (metadata == null) {
             metadata = fetchCredentialIssuerMetadata(request.credentialIssuer)
         }
-        val issuerMetadata = metadata ?: throw IllegalStateException("Failed to fetch credential issuer metadata")
+        val issuerMetadata = metadata ?: throw Oidc4VciException.MetadataFetchFailed(
+            credentialIssuer = request.credentialIssuer,
+            reason = "Metadata fetch returned null"
+        )
         
         // Get or obtain access token
         val accessToken = accessTokens[requestId] 
-            ?: throw IllegalStateException("Access token not available for request: $requestId")
+            ?: throw Oidc4VciException.TokenExchangeFailed(
+                reason = "Access token not available for request: $requestId",
+                credentialIssuer = request.credentialIssuer
+            )
         
         // Step 1: Create credential request with proof of possession
         val credentialRequest = createCredentialRequestPayload(
@@ -232,17 +243,27 @@ class Oidc4VciService(
         
         val response = httpClient.newCall(request).execute()
         val body = response.body?.string()
-            ?: throw IllegalStateException("Failed to exchange authorization code for token")
+            ?: throw Oidc4VciException.TokenExchangeFailed(
+                reason = "Empty response body",
+                credentialIssuer = tokenEndpoint
+            )
         
         if (!response.isSuccessful) {
-            throw IllegalStateException("Token exchange failed: $body")
+            throw Oidc4VciException.TokenExchangeFailed(
+                reason = "HTTP ${response.code}: $body",
+                credentialIssuer = tokenEndpoint,
+                cause = null
+            )
         }
         
         val json = Json { ignoreUnknownKeys = true }
         val tokenResponse = json.parseToJsonElement(body).jsonObject
         
         return tokenResponse["access_token"]?.jsonPrimitive?.content
-            ?: throw IllegalStateException("Missing access_token in token response")
+            ?: throw Oidc4VciException.TokenExchangeFailed(
+                reason = "Missing access_token in token response",
+                credentialIssuer = tokenEndpoint
+            )
     }
     
     /**
@@ -331,10 +352,16 @@ class Oidc4VciService(
         
         val response = httpClient.newCall(request).execute()
         val body = response.body?.string()
-            ?: throw IllegalStateException("Failed to request credential from issuer")
+            ?: throw Oidc4VciException.CredentialRequestFailed(
+                reason = "Empty response body",
+                credentialIssuer = credentialEndpoint
+            )
         
         if (!response.isSuccessful) {
-            throw IllegalStateException("Credential request failed: $body")
+            throw Oidc4VciException.CredentialRequestFailed(
+                reason = "HTTP ${response.code}: $body",
+                credentialIssuer = credentialEndpoint
+            )
         }
         
         val jsonParser = Json { ignoreUnknownKeys = true }
@@ -379,10 +406,16 @@ class Oidc4VciService(
         
         val response = httpClient.newCall(request).execute()
         val body = response.body?.string()
-            ?: throw IllegalStateException("Failed to fetch credential issuer metadata")
+        ?: throw Oidc4VciException.MetadataFetchFailed(
+            credentialIssuer = credentialIssuerUrl,
+            reason = "Empty response body"
+        )
         
         if (!response.isSuccessful) {
-            throw IllegalStateException("Failed to fetch metadata: HTTP ${response.code}")
+            throw Oidc4VciException.MetadataFetchFailed(
+                credentialIssuer = credentialIssuerUrl,
+                reason = "HTTP ${response.code}: $body"
+            )
         }
         
         val json = Json { ignoreUnknownKeys = true }

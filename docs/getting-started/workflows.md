@@ -1,3 +1,7 @@
+---
+title: Common Workflows
+---
+
 # Common Workflows
 
 This guide documents common workflows for using TrustWeave in real-world applications.

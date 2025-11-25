@@ -1,3 +1,7 @@
+---
+title: Base Blockchain Anchor Integration
+---
+
 # Base Blockchain Anchor Integration
 
 > This guide covers the Base (Coinbase L2) blockchain anchor client integration for TrustWeave. The Base adapter provides fast and low-cost anchoring with Ethereum security.

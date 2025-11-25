@@ -1,3 +1,7 @@
+---
+title: Supply Chain & Regulatory Compliance (EUDR) with Earth Observation
+---
+
 # Supply Chain & Regulatory Compliance (EUDR) with Earth Observation
 
 This guide demonstrates how to build a supply chain compliance system for the EU Deforestation Regulation (EUDR) using TrustWeave and Earth Observation data. You'll learn how to create verifiable credentials that prove geospatial non-deforestation for every shipment.

@@ -1,6 +1,7 @@
 package com.trustweave.credential.template
 
 import com.trustweave.credential.SchemaFormat
+import com.trustweave.credential.models.CredentialSchema
 import com.trustweave.credential.models.VerifiableCredential
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -131,7 +132,7 @@ class CredentialTemplateService {
             credentialSubject = subject,
             issuanceDate = java.time.format.DateTimeFormatter.ISO_INSTANT.format(java.time.Instant.now()),
             expirationDate = expirationDate,
-            credentialSchema = com.trustweave.credential.models.CredentialSchema(
+            credentialSchema = CredentialSchema(
                 id = template.schemaId,
                 type = "JsonSchemaValidator2018",
                 schemaFormat = SchemaFormat.JSON_SCHEMA

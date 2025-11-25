@@ -1,3 +1,7 @@
+---
+title: Introduction
+---
+
 # Introduction
 
 > TrustWeave is built and supported by [Geoknoesis LLC](https://www.geoknoesis.com), a standards-focused identity company. This introduction reflects Geoknoesis’ reference architecture for modern trust systems.

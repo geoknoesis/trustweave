@@ -1,3 +1,7 @@
+---
+title: Web of Trust Migration Guide
+---
+
 # Web of Trust Migration Guide
 
 This guide helps you migrate existing TrustWeave code to use the new web of trust features and updated DID Document structure.

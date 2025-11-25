@@ -1,8 +1,10 @@
 package com.trustweave.credential.dsl
 
 import com.trustweave.credential.CredentialIssuanceOptions
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.issuer.CredentialIssuer
 import com.trustweave.credential.models.CredentialStatus
+import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.revocation.StatusListManager
 import com.trustweave.credential.revocation.StatusPurpose
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -36,8 +38,8 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class IssuanceBuilder(
-    private val issuer: com.trustweave.credential.issuer.CredentialIssuer,
-    private val statusListManager: com.trustweave.credential.revocation.StatusListManager? = null,
+    private val issuer: CredentialIssuer,
+    private val statusListManager: StatusListManager? = null,
     private val defaultProofType: String = "Ed25519Signature2020"
 ) {
     private var credential: VerifiableCredential? = null
@@ -154,7 +156,7 @@ class IssuanceBuilder(
         )
         
         // Issue credential - use fully qualified method call to avoid ambiguity with extension function
-        val issuedCredential = (issuer as com.trustweave.credential.issuer.CredentialIssuer).issue(
+        val issuedCredential = issuer.issue(
             credential = credentialToIssue,
             issuerDid = issuer,
             keyId = key,

@@ -1,3 +1,7 @@
+---
+title: Use Cases
+---
+
 # Use Cases
 
 TrustWeave is designed to be domain-agnostic, making it suitable for a wide range of applications. Here are some common use cases:

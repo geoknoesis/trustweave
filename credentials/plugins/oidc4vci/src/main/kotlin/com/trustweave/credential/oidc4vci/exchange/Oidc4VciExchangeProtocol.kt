@@ -1,6 +1,7 @@
 package com.trustweave.credential.oidc4vci.exchange
 
 import com.trustweave.credential.exchange.*
+import com.trustweave.credential.exchange.exception.ExchangeException
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.oidc4vci.Oidc4VciService
 
@@ -53,7 +54,10 @@ class Oidc4VciExchangeProtocol(
             ?: request.credentialPreview.attributes.map { it.name }
         
         val credentialIssuer = request.options["credentialIssuer"] as? String
-            ?: throw IllegalArgumentException("Missing 'credentialIssuer' in options")
+            ?: throw ExchangeException.MissingRequiredOption(
+                optionName = "credentialIssuer",
+                protocolName = protocolName
+            )
         
         val grants = request.options["grants"] as? Map<String, Any?> ?: emptyMap()
         
@@ -115,16 +119,20 @@ class Oidc4VciExchangeProtocol(
     override suspend fun requestProof(
         request: ProofRequestRequest
     ): ProofRequestResponse {
-        throw UnsupportedOperationException(
-            "OIDC4VCI does not support proof requests. Use DIDComm or OIDC4VP instead."
+        throw ExchangeException.OperationNotSupported(
+            protocolName = protocolName,
+            operation = "REQUEST_PROOF",
+            supportedOperations = supportedOperations.map { it.name }
         )
     }
     
     override suspend fun presentProof(
         request: ProofPresentationRequest
     ): ProofPresentationResponse {
-        throw UnsupportedOperationException(
-            "OIDC4VCI does not support proof presentations. Use DIDComm or OIDC4VP instead."
+        throw ExchangeException.OperationNotSupported(
+            protocolName = protocolName,
+            operation = "PRESENT_PROOF",
+            supportedOperations = supportedOperations.map { it.name }
         )
     }
 }

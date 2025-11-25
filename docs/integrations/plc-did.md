@@ -1,3 +1,7 @@
+---
+title: PLC DID (did:plc) Integration
+---
+
 # PLC DID (did:plc) Integration
 
 > This guide covers the did:plc method integration for TrustWeave. The did:plc plugin provides Personal Linked Container (PLC) DID resolution for AT Protocol.

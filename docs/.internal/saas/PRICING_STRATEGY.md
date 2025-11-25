@@ -1,3 +1,7 @@
+---
+title: TrustWeave Cloud - Pricing Strategy
+---
+
 # TrustWeave Cloud - Pricing Strategy
 
 > **Strategic Pricing for SSI/DID Infrastructure as a Service**

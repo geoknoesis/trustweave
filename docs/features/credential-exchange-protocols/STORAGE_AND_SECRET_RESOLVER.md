@@ -1,3 +1,7 @@
+---
+title: Persistent Storage & Secret Resolver Implementation
+---
+
 # Persistent Storage & Secret Resolver Implementation
 
 ## Overview

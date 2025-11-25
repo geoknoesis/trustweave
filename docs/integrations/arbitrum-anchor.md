@@ -1,3 +1,7 @@
+---
+title: Arbitrum Blockchain Anchor Integration
+---
+
 # Arbitrum Blockchain Anchor Integration
 
 > This guide covers the Arbitrum blockchain anchor client integration for TrustWeave. The Arbitrum adapter provides the largest L2 by TVL with EVM compatibility.

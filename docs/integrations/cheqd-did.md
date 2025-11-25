@@ -1,3 +1,7 @@
+---
+title: Cheqd DID (did:cheqd) Integration
+---
+
 # Cheqd DID (did:cheqd) Integration
 
 > This guide covers the did:cheqd method integration for TrustWeave. The did:cheqd plugin provides Cheqd network DID resolution with payment-enabled features.

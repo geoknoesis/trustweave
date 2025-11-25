@@ -1,3 +1,7 @@
+---
+title: GitBook Configuration
+---
+
 # GitBook Configuration
 
 This documentation is structured for GitBook. Here's how to set it up and use it.

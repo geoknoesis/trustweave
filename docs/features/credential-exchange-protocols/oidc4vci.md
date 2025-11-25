@@ -1,3 +1,7 @@
+---
+title: OIDC4VCI Plugin
+---
+
 # OIDC4VCI Plugin
 
 OpenID Connect for Verifiable Credential Issuance (OIDC4VCI) implementation for TrustWeave.

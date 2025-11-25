@@ -1,3 +1,7 @@
+---
+title: Credential Service API Reference
+---
+
 # Credential Service API Reference
 
 This document describes the SPI surface that credential issuers/verifiers plug into and the typed options used to configure providers.

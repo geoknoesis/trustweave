@@ -1,3 +1,7 @@
+---
+title: UX Documentation
+---
+
 # UX Documentation
 
 This directory contains user experience (UX) documentation for TrustWeave applications and interfaces.

@@ -1,3 +1,7 @@
+---
+title: Proof of Location Scenario
+---
+
 # Proof of Location Scenario
 
 This guide demonstrates how to implement proof of location credentials using TrustWeave, inspired by decentralized geospatial web concepts. You'll learn how to create location-based verifiable credentials, anchor them to blockchains for tamper-proof verification, and build a system for geospatial data integrity.

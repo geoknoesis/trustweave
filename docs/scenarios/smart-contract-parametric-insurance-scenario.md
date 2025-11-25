@@ -1,3 +1,7 @@
+---
+title: Smart Contract: Parametric Insurance Scenario
+---
+
 # Smart Contract: Parametric Insurance Scenario
 
 > **Building Parametric Insurance with TrustWeave Smart Contracts**

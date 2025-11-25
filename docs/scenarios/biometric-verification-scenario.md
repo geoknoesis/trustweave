@@ -1,3 +1,7 @@
+---
+title: Biometric Verification Scenario
+---
+
 # Biometric Verification Scenario
 
 This guide demonstrates how to build a complete biometric verification system using TrustWeave. You'll learn how identity providers can issue biometric credentials, how individuals can store them in wallets, and how service providers can verify biometric data (fingerprints, face, voice) while maintaining privacy and security.

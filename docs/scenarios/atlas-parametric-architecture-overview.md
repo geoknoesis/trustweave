@@ -1,3 +1,7 @@
+---
+title: Atlas Parametric MGA: Architecture Overview with TrustWeave
+---
+
 # Atlas Parametric MGA: Architecture Overview with TrustWeave
 
 > **How TrustWeave Powers Your Parametric Insurance MGA**

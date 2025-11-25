@@ -1,3 +1,7 @@
+---
+title: Event Ticketing and Access Control Scenario
+---
+
 # Event Ticketing and Access Control Scenario
 
 This guide demonstrates how to build a complete event ticketing system using TrustWeave. You'll learn how event organizers can issue verifiable tickets, how attendees can store them in wallets, and how venues can verify tickets and control access while preventing fraud and scalping.

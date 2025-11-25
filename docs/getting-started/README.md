@@ -1,3 +1,7 @@
+---
+title: Getting Started
+---
+
 # Getting Started
 
 Welcome to TrustWeave! This section will help you get up and running quickly.

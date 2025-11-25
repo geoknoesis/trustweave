@@ -1,3 +1,7 @@
+---
+title: Wallet API Reference
+---
+
 # Wallet API Reference
 
 Complete API reference for TrustWeave's Wallet system.

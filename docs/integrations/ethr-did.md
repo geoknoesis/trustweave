@@ -1,3 +1,7 @@
+---
+title: Ethereum DID (did:ethr) Integration
+---
+
 # Ethereum DID (did:ethr) Integration
 
 > This guide covers the did:ethr method integration for TrustWeave. The did:ethr plugin provides Ethereum DID resolution with blockchain anchoring support.

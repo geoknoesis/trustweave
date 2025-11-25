@@ -1,3 +1,7 @@
+---
+title: AWS KMS Integration
+---
+
 # AWS KMS Integration
 
 > This guide covers the AWS Key Management Service (KMS) integration for TrustWeave. The AWS KMS plugin provides production-ready key management with FIPS 140-3 Level 3 compliance and support for all AWS KMS-compatible algorithms.

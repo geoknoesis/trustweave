@@ -1,3 +1,7 @@
+---
+title: TrustWeave vs. Competitors - Complete Analysis
+---
+
 # TrustWeave vs. Competitors - Complete Analysis
 
 > **Comprehensive comparison of TrustWeave with all relevant competitors and main players in the SSI/DID/VC ecosystem**

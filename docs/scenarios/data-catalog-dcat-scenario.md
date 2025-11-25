@@ -1,3 +1,7 @@
+---
+title: Data Catalog & DCAT Scenario
+---
+
 # Data Catalog & DCAT Scenario
 
 This guide demonstrates how to build a verifiable data catalog system using TrustWeave and DCAT (Data Catalog Vocabulary) for government agencies or enterprises. You'll learn how to create verifiable dataset descriptions, enable dataset discovery, track data lineage, and ensure data catalog integrity.

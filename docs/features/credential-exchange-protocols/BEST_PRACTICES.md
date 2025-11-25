@@ -1,3 +1,7 @@
+---
+title: Credential Exchange Protocols - Best Practices
+---
+
 # Credential Exchange Protocols - Best Practices
 
 Guidelines and best practices for using credential exchange protocols effectively and securely.

@@ -1,3 +1,7 @@
+---
+title: Partner Referral Agreement
+---
+
 # Partner Referral Agreement
 
 **TrustWeave Partner Program**

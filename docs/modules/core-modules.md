@@ -1,3 +1,7 @@
+---
+title: Core Modules
+---
+
 # Core Modules
 
 TrustWeave is organised into small, composable modules. The list below explains when to add each module and what responsibility it carries so you can mix and match only what you need in your build.

@@ -1,3 +1,7 @@
+---
+title: Wallets
+---
+
 # Wallets
 
 > Wallet guidance in TrustWeave is authored by [Geoknoesis LLC](https://www.geoknoesis.com). Geoknoesis designs the composable wallet model and offers commercial support for production deployments.

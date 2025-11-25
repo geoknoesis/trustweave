@@ -1,3 +1,7 @@
+---
+title: Key Features
+---
+
 # Key Features
 
 VeriCore provides a comprehensive set of features for building decentralized identity and trust systems.

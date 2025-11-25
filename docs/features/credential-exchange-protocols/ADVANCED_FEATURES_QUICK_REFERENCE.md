@@ -1,3 +1,7 @@
+---
+title: Advanced Features - Quick Reference
+---
+
 # Advanced Features - Quick Reference
 
 ## Implementation Priority

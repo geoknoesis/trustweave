@@ -1,3 +1,7 @@
+---
+title: Spatial Web Authorization Scenario
+---
+
 # Spatial Web Authorization Scenario
 
 This guide demonstrates how to build a decentralized Spatial Web system where entities (agents, activities, things, spatial features) are identified by DIDs, and agents require verifiable credentials to perform activities within spatial domains.

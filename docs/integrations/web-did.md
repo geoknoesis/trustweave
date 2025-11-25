@@ -1,3 +1,7 @@
+---
+title: Web DID Integration
+---
+
 # Web DID Integration
 
 > This guide covers the did:web method integration for TrustWeave. The did:web plugin provides W3C-compliant DID resolution from HTTPS endpoints.

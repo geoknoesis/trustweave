@@ -1,3 +1,7 @@
+---
+title: Development Setup
+---
+
 # Development Setup
 
 This guide explains how to set up your development environment for TrustWeave.

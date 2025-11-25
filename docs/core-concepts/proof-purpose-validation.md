@@ -1,3 +1,7 @@
+---
+title: Proof Purpose Validation
+---
+
 # Proof Purpose Validation
 
 ## Overview

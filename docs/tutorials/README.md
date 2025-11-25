@@ -1,3 +1,7 @@
+---
+title: Tutorials
+---
+
 # Tutorials
 
 The tutorials in this section walk through complete TrustWeave workflows, showing how typed options, DSLs, and Result-based responses fit together in runnable Kotlin.

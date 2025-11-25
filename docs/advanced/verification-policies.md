@@ -1,3 +1,7 @@
+---
+title: Verification Policies
+---
+
 # Verification Policies
 
 Verifiers often need more than a boolean “valid/invalid”. TrustWeave lets you layer policy checks—expiration, audience, revocation status, anchor validation—on top of signature verification.

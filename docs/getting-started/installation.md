@@ -1,3 +1,7 @@
+---
+title: Installation
+---
+
 # Installation
 
 Add TrustWeave to your Kotlin project using Gradle or Maven.

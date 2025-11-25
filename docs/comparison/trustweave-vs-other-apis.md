@@ -1,3 +1,7 @@
+---
+title: TrustWeave vs. Other APIs: Comprehensive Comparison
+---
+
 # TrustWeave vs. Other APIs: Comprehensive Comparison
 
 This document provides a detailed comparison of TrustWeave with other decentralized identity and verifiable credentials APIs, including WaltId and equivalent libraries in other programming languages.

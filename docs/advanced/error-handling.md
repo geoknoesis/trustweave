@@ -1,3 +1,7 @@
+---
+title: Error Handling
+---
+
 # Error Handling
 
 TrustWeave provides structured error handling with rich context for better debugging and error recovery.

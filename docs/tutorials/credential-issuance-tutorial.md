@@ -1,3 +1,7 @@
+---
+title: Credential Issuance Tutorial
+---
+
 # Credential Issuance Tutorial
 
 This tutorial provides a comprehensive guide to issuing verifiable credentials with TrustWeave. You'll learn how to issue credentials, verify them, and handle the complete credential lifecycle.

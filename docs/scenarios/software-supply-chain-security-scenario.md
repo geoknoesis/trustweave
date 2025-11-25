@@ -1,3 +1,7 @@
+---
+title: Software Supply Chain Security Scenario
+---
+
 # Software Supply Chain Security Scenario
 
 This guide demonstrates how to build a software supply chain security system using TrustWeave. You'll learn how software publishers can issue provenance credentials, how build systems can attest to software integrity, and how consumers can verify software authenticity to prevent supply chain attacks.

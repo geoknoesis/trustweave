@@ -1,3 +1,7 @@
+---
+title: ENS DID (did:ens) Integration
+---
+
 # ENS DID (did:ens) Integration
 
 > This guide covers the did:ens method integration for TrustWeave. The did:ens plugin provides human-readable DID resolution using Ethereum Name Service (ENS).

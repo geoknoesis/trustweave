@@ -1,3 +1,7 @@
+---
+title: Documentation Context Upgrade Plan
+---
+
 # Documentation Context Upgrade Plan
 
 This plan inventories every section in the TrustWeave documentation set and sketches how we will add contextual framing and per-snippet explanations. We will work area by area, updating code blocks with “What it does / Why it matters / Result” captions and introducing narrative glue where it is currently missing.

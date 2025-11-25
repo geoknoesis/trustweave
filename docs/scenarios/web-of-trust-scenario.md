@@ -1,3 +1,7 @@
+---
+title: Web of Trust Scenario
+---
+
 # Web of Trust Scenario
 
 This document provides a complete walkthrough of using TrustWeave's web of trust features, including trust registries, delegation chains, and proof purpose validation.

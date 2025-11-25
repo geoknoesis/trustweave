@@ -1,3 +1,7 @@
+---
+title: Trust Registry
+---
+
 # Trust Registry
 
 ## Overview

@@ -1,3 +1,7 @@
+---
+title: Insurance Claims and Verification Scenario
+---
+
 # Insurance Claims and Verification Scenario
 
 This guide demonstrates how to build a complete insurance claims verification system using TrustWeave. You'll learn how insurance companies can issue claim credentials, how service providers (repair shops, medical facilities) can issue verification credentials, and how the entire claims process can be streamlined with verifiable credentials while preventing fraud.

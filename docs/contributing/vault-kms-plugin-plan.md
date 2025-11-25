@@ -1,3 +1,7 @@
+---
+title: HashiCorp Vault KMS Plugin Implementation Plan
+---
+
 # HashiCorp Vault KMS Plugin Implementation Plan
 
 ## Overview

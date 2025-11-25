@@ -1,3 +1,7 @@
+---
+title: Code Example Style Guide
+---
+
 # Code Example Style Guide
 
 This guide establishes standards for code examples in TrustWeave documentation to ensure consistency, clarity, and correctness.

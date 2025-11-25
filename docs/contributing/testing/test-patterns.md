@@ -1,3 +1,7 @@
+---
+title: Test Patterns
+---
+
 # Test Patterns
 
 Common test patterns and examples for TrustWeave.

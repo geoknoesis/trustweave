@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrustWeave - The Foundation for Decentralized Trust and Identity</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #7c3aed;
+            --accent: #10b981;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --bg: #ffffff;
+            --bg-light: #f9fafb;
+            --border: #e5e7eb;
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-top: 80px;
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            text-align: center;
+        }
+
+        .hero-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            margin-bottom: 2.5rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 6rem 2rem;
+            background: var(--bg);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 1.125rem;
+            margin-bottom: 4rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            background: white;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: var(--text);
+        }
+
+        .feature-card p {
+            color: var(--text-light);
+        }
+
+        /* CTA Sections */
+        .cta-section {
+            padding: 6rem 2rem;
+            background: var(--bg-light);
+        }
+
+        .cta-container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .cta-box {
+            background: white;
+            padding: 3rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .cta-box h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-box p {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            font-size: 1.125rem;
+        }
+
+        /* Waitlist Form */
+        .waitlist-form {
+            display: flex;
+            gap: 1rem;
+            max-width: 500px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+
+        .waitlist-form input {
+            flex: 1;
+            min-width: 250px;
+            padding: 0.875rem 1.25rem;
+            border: 2px solid var(--border);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .waitlist-form input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .waitlist-form button {
+            padding: 0.875rem 2rem;
+            white-space: nowrap;
+        }
+
+        .success-message {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #d1fae5;
+            color: #065f46;
+            border-radius: 0.5rem;
+            border: 1px solid #10b981;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .error-message {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #fee;
+            color: #c33;
+            border-radius: 0.5rem;
+            border: 1px solid #fcc;
+        }
+
+        .waitlist-form button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Open Source Section */
+        .opensource {
+            padding: 6rem 2rem;
+            background: var(--bg);
+        }
+
+        .opensource-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .opensource-card {
+            padding: 2.5rem;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);
+            border: 1px solid var(--border);
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .opensource-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .opensource-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .opensource-card p {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--text);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-text {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.125rem;
+            }
+
+            .nav-links {
+                gap: 1rem;
+            }
+
+            .waitlist-form {
+                flex-direction: column;
+            }
+
+            .waitlist-form input,
+            .waitlist-form button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">TrustWeave</div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#opensource">Open Source</a>
+                <a href="getting-started/quick-start.html">Documentation</a>
+                <a href="partnership.html">Partners</a>
+                <a href="#waitlist">Waitlist</a>
+                <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" class="btn btn-outline">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <h1>The Foundation for Decentralized Trust and Identity</h1>
+            <p>A neutral, reusable trust and identity core library designed to be domain-agnostic, chain-agnostic, DID-method-agnostic, and KMS-agnostic.</p>
+            <div class="hero-buttons">
+                <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" class="btn btn-primary">Get Started (Open Source)</a>
+                <a href="#waitlist" class="btn btn-secondary">Join SaaS Waitlist</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Simple Explanation Section -->
+    <section class="simple-explanation" style="padding: 6rem 2rem; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">
+        <div class="container">
+            <div style="max-width: 900px; margin: 0 auto; text-align: center;">
+                <h2 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--text);">
+                    TrustWeave Explained Simply
+                </h2>
+                <p style="font-size: 1.125rem; color: var(--text-light); margin-bottom: 3rem;">
+                    Sometimes the best way to understand something is to explain it like you're talking to a 5-year-old
+                </p>
+                
+                <div style="background: white; border-radius: 1.5rem; padding: 3rem; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); text-align: left; max-width: 800px; margin: 0 auto;">
+                    <div style="font-size: 3rem; text-align: center; margin-bottom: 1.5rem;">🤖</div>
+                    
+                    <p style="font-size: 1.25rem; color: var(--text); margin-bottom: 2rem; line-height: 1.8; text-align: center; font-weight: 600;">
+                        <strong>TrustWeave is like a helper robot that checks if things are real and who people say they are.</strong>
+                    </p>
+
+                    <div style="margin-top: 2.5rem;">
+                        <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--primary); display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-size: 1.75rem;">✨</span>
+                            What it does:
+                        </h3>
+                        
+                        <div style="display: grid; gap: 1.5rem;">
+                            <div style="display: flex; gap: 1rem; align-items: start;">
+                                <div style="font-size: 1.5rem; flex-shrink: 0;">📜</div>
+                                <div>
+                                    <strong style="color: var(--text); font-size: 1.125rem;">Makes digital report cards and ID cards</strong>
+                                    <p style="color: var(--text-light); margin-top: 0.5rem; line-height: 1.6;">
+                                        Like a report card that proves you finished school, or an ID that proves who you are. These are special digital cards that are hard to fake!
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 1rem; align-items: start;">
+                                <div style="font-size: 1.5rem; flex-shrink: 0;">🔍</div>
+                                <div>
+                                    <strong style="color: var(--text); font-size: 1.125rem;">Checks if things are real</strong>
+                                    <p style="color: var(--text-light); margin-top: 0.5rem; line-height: 1.6;">
+                                        Like a robot that looks at a card and says "Yes, this is real!" or "No, this is fake!"
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 1rem; align-items: start;">
+                                <div style="font-size: 1.5rem; flex-shrink: 0;">🧩</div>
+                                <div>
+                                    <strong style="color: var(--text); font-size: 1.125rem;">Works with different toys</strong>
+                                    <p style="color: var(--text-light); margin-top: 0.5rem; line-height: 1.6;">
+                                        Like a toy that can use different batteries. It doesn't care which system you use - it works with many!
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 1rem; align-items: start;">
+                                <div style="font-size: 1.5rem; flex-shrink: 0;">📝</div>
+                                <div>
+                                    <strong style="color: var(--text); font-size: 1.125rem;">Writes things in a special notebook that can't be erased</strong>
+                                    <p style="color: var(--text-light); margin-top: 0.5rem; line-height: 1.6;">
+                                        Like writing in a magic notebook that saves what you wrote forever. This helps prove something happened and can't be changed later!
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 3rem; padding-top: 2rem; border-top: 2px solid var(--border);">
+                        <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--primary); display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-size: 1.75rem;">💡</span>
+                            Why it's useful:
+                        </h3>
+                        <ul style="list-style: none; padding: 0; display: grid; gap: 1rem;">
+                            <li style="display: flex; align-items: start; gap: 0.75rem; color: var(--text-light); line-height: 1.6;">
+                                <span style="color: var(--accent); font-weight: bold; font-size: 1.25rem; flex-shrink: 0;">✓</span>
+                                <span><strong style="color: var(--text);">Proves you are you</strong> without needing one big boss to check everything</span>
+                            </li>
+                            <li style="display: flex; align-items: start; gap: 0.75rem; color: var(--text-light); line-height: 1.6;">
+                                <span style="color: var(--accent); font-weight: bold; font-size: 1.25rem; flex-shrink: 0;">✓</span>
+                                <span><strong style="color: var(--text);">Keeps your information safe</strong> so only you control it</span>
+                            </li>
+                            <li style="display: flex; align-items: start; gap: 0.75rem; color: var(--text-light); line-height: 1.6;">
+                                <span style="color: var(--accent); font-weight: bold; font-size: 1.25rem; flex-shrink: 0;">✓</span>
+                                <span><strong style="color: var(--text);">Works everywhere</strong> like a universal helper that fits different places</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div style="margin-top: 2.5rem; padding: 1.5rem; background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%); border-radius: 1rem; text-align: center;">
+                        <p style="font-size: 1.125rem; color: var(--text); font-style: italic; margin: 0; line-height: 1.6;">
+                            <strong>In simple words:</strong> TrustWeave is a helper that makes sure people and things are real, and it works with lots of different systems - like a universal helper robot! 🤖✨
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <h2 class="section-title">Why TrustWeave?</h2>
+            <p class="section-subtitle">Production-ready Kotlin library for building decentralized identity and trust systems</p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Domain-Agnostic</h3>
+                    <p>Works for any use case - education, healthcare, IoT, supply chain, and more</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔗</div>
+                    <h3>Chain-Agnostic</h3>
+                    <p>Supports any blockchain via pluggable adapters</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🆔</div>
+                    <h3>DID-Method-Agnostic</h3>
+                    <p>Works with any DID method (did:key, did:web, did:ion, etc.)</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <h3>KMS-Agnostic</h3>
+                    <p>Supports any Key Management Service</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Type-Safe</h3>
+                    <p>Leverages Kotlin's type system for compile-time safety</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Coroutine-Based</h3>
+                    <p>Built for modern async/await patterns</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Open Source Section -->
+    <section class="opensource" id="opensource">
+        <div class="container">
+            <h2 class="section-title">Get Started with Open Source</h2>
+            <p class="section-subtitle">TrustWeave is available as an open source library. Start building today!</p>
+            <div class="opensource-grid">
+                <div class="opensource-card">
+                    <h3>📚 Documentation</h3>
+                    <p>Comprehensive guides, API references, and 25+ real-world scenarios</p>
+                    <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" class="btn btn-primary">View Docs</a>
+                </div>
+                <div class="opensource-card">
+                    <h3>💻 GitHub Repository</h3>
+                    <p>Explore the codebase, contribute, and join the community</p>
+                    <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" class="btn btn-primary">View on GitHub</a>
+                </div>
+                <div class="opensource-card">
+                    <h3>🚀 Quick Start</h3>
+                    <p>Get up and running in 5 minutes with our quick start guide</p>
+                    <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" class="btn btn-primary">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SaaS Waitlist Section -->
+    <section class="cta-section" id="waitlist">
+        <div class="cta-container">
+            <div class="cta-box">
+                <h2>Join the TrustWeave SaaS Waitlist</h2>
+                <p>Be among the first to access our managed SaaS platform. Get notified when we launch!</p>
+                <form class="waitlist-form" id="waitlistForm" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+                    <input 
+                        type="email" 
+                        id="emailInput" 
+                        name="email"
+                        placeholder="Enter your email address" 
+                        required
+                        aria-label="Email address"
+                    >
+                    <input type="hidden" name="_subject" value="TrustWeave SaaS Waitlist Signup">
+                    <input type="hidden" name="_next" value="#waitlist">
+                    <button type="submit" class="btn btn-primary" id="submitButton">Join Waitlist</button>
+                </form>
+                <div class="success-message" id="successMessage">
+                    ✅ Thank you! We've added you to the waitlist. You'll receive an email confirmation shortly.
+                </div>
+                <div class="error-message" id="errorMessage" style="display: none; margin-top: 1rem; padding: 1rem; background: #fee; color: #c33; border-radius: 0.5rem; border: 1px solid #fcc;">
+                    ❌ Something went wrong. Please try again or contact us directly.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="partnership.html">Partners</a>
+                <a href="https://github.com/geoknoesis/TrustWeave" target="_blank">GitHub</a>
+                <a href="getting-started/quick-start.html">Documentation</a>
+                <a href="https://github.com/geoknoesis/TrustWeave/blob/main/LICENSE" target="_blank">License</a>
+                <a href="https://www.geoknoesis.com" target="_blank">Geoknoesis LLC</a>
+            </div>
+            <p class="footer-text">Made with ❤️ by Geoknoesis LLC</p>
+        </div>
+    </footer>
+
+    <script>
+        // Waitlist form handling with Formspree integration
+        const waitlistForm = document.getElementById('waitlistForm');
+        const emailInput = document.getElementById('emailInput');
+        const submitButton = document.getElementById('submitButton');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+
+        waitlistForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = emailInput.value.trim();
+            
+            if (!email) {
+                return;
+            }
+
+            // Hide previous messages
+            successMessage.classList.remove('show');
+            errorMessage.style.display = 'none';
+            
+            // Disable submit button and show loading state
+            submitButton.disabled = true;
+            submitButton.textContent = 'Submitting...';
+
+            try {
+                const formData = new FormData(waitlistForm);
+                
+                const response = await fetch(waitlistForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    successMessage.classList.add('show');
+                    emailInput.value = '';
+                    waitlistForm.reset();
+                    
+                    // Scroll to success message
+                    successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    const data = await response.json();
+                    if (data.error) {
+                        errorMessage.textContent = '❌ ' + data.error;
+                    } else {
+                        errorMessage.textContent = '❌ Something went wrong. Please try again.';
+                    }
+                    errorMessage.style.display = 'block';
+                    errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            } catch (error) {
+                errorMessage.textContent = '❌ Network error. Please check your connection and try again.';
+                errorMessage.style.display = 'block';
+                errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } finally {
+                // Re-enable submit button
+                submitButton.disabled = false;
+                submitButton.textContent = 'Join Waitlist';
+            }
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

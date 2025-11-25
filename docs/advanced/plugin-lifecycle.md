@@ -1,3 +1,7 @@
+---
+title: Plugin Lifecycle Management
+---
+
 # Plugin Lifecycle Management
 
 TrustWeave provides lifecycle management for plugins that implement the `PluginLifecycle` interface.

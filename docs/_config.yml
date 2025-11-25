@@ -1,0 +1,329 @@
+# Jekyll Configuration for TrustWeave Documentation
+# Migrated from GitBook to GitHub Pages
+
+title: TrustWeave Developer Documentation
+description: Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin
+author: GeoKnoesis
+version: 1.0.0-SNAPSHOT
+
+# GitHub Pages Configuration
+# For project sites: baseurl should be "/repository-name"
+# For user/org sites: baseurl should be ""
+baseurl: "/trustweave"
+url: "https://geoknoesis.github.io"
+
+# Jekyll Settings
+markdown: kramdown
+highlighter: rouge
+permalink: pretty
+
+# Theme: Just the Docs (GitBook-like appearance)
+theme: just-the-docs
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-mermaid
+
+# Exclude files from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - .git
+  - .gitignore
+  - README.md
+  - book.json
+  - SUMMARY.md
+
+# Just the Docs Theme Configuration
+just_the_docs:
+  # Main navigation
+  nav_external_links:
+    - title: GitHub
+      url: https://github.com/geoknoesis/TrustWeave
+      target: _blank
+    - title: Geoknoesis LLC
+      url: https://www.geoknoesis.com
+      target: _blank
+
+  # Search
+  search_enabled: true
+  search:
+    button: true
+
+  # Heading anchor links
+  heading_anchors: true
+
+  # Color scheme (GitBook-like)
+  color_scheme: light
+
+  # Auxiliary links (footer)
+  aux_links:
+    GitHub:
+      - "https://github.com/geoknoesis/TrustWeave"
+    License:
+      - "https://github.com/geoknoesis/TrustWeave/blob/main/LICENSE"
+    Geoknoesis LLC:
+      - "https://www.geoknoesis.com"
+
+  # Footer content
+  footer_content: "Made with ❤️ by Geoknoesis LLC"
+
+# Navigation structure (converted from SUMMARY.md)
+nav:
+  - title: Introduction
+    children:
+      - title: Overview
+        url: introduction/README.md
+      - title: Executive Overview
+        url: introduction/executive-overview.md
+      - title: What is TrustWeave?
+        url: introduction/what-is-trustweave.md
+      - title: Key Features
+        url: introduction/key-features.md
+      - title: Use Cases
+        url: introduction/use-cases.md
+      - title: Architecture Overview
+        url: introduction/architecture-overview.md
+
+  - title: Getting Started
+    children:
+      - title: Overview
+        url: getting-started/README.md
+      - title: Installation
+        url: getting-started/installation.md
+      - title: Quick Start
+        url: getting-started/quick-start.md
+      - title: Your First Application
+        url: getting-started/your-first-application.md
+      - title: Project Setup
+        url: getting-started/project-setup.md
+
+  - title: Use Case Scenarios
+    children:
+      - title: Overview
+        url: scenarios/README.md
+      - title: Cybersecurity & Access Control
+        children:
+          - title: Zero Trust Continuous Authentication
+            url: scenarios/zero-trust-authentication-scenario.md
+          - title: Security Clearance & Access Control
+            url: scenarios/security-clearance-access-control-scenario.md
+          - title: Biometric Verification
+            url: scenarios/biometric-verification-scenario.md
+          - title: Security Training & Certification
+            url: scenarios/security-training-certification-scenario.md
+          - title: Software Supply Chain Security
+            url: scenarios/software-supply-chain-security-scenario.md
+          - title: SOC2 Compliance
+            url: scenarios/soc2-compliance-scenario.md
+      - title: Identity & Verification
+        children:
+          - title: Government Digital Identity
+            url: scenarios/government-digital-identity-scenario.md
+          - title: Professional Identity
+            url: scenarios/professional-identity-scenario.md
+          - title: Age Verification
+            url: scenarios/age-verification-scenario.md
+          - title: Financial Services (KYC)
+            url: scenarios/financial-services-kyc-scenario.md
+      - title: Education & Credentials
+        children:
+          - title: Academic Credentials
+            url: scenarios/academic-credentials-scenario.md
+          - title: National Education Credentials Algeria
+            url: scenarios/national-education-credentials-algeria-scenario.md
+      - title: Employment & Professional
+        children:
+          - title: Employee Onboarding
+            url: scenarios/employee-onboarding-scenario.md
+      - title: Healthcare
+        children:
+          - title: Healthcare Medical Records
+            url: scenarios/healthcare-medical-records-scenario.md
+          - title: Vaccination and Health Passports
+            url: scenarios/vaccination-health-passport-scenario.md
+      - title: Supply Chain & Provenance
+        children:
+          - title: Supply Chain Traceability
+            url: scenarios/supply-chain-traceability-scenario.md
+          - title: Supply Chain & EUDR Compliance
+            url: scenarios/supply-chain-eudr-compliance-scenario.md
+          - title: Digital Workflow & Provenance
+            url: scenarios/digital-workflow-provenance-scenario.md
+      - title: Geospatial & Location
+        children:
+          - title: Proof of Location
+            url: scenarios/proof-of-location-scenario.md
+          - title: Earth Observation
+            url: scenarios/earth-observation-scenario.md
+          - title: Spatial Web Authorization
+            url: scenarios/spatial-web-authorization-scenario.md
+      - title: Earth Observation & Climate
+        children:
+          - title: Parametric Insurance with Earth Observation
+            url: scenarios/parametric-insurance-eo-scenario.md
+          - title: Carbon Markets & Digital MRV
+            url: scenarios/carbon-markets-dmrv-scenario.md
+      - title: Media & Content
+        children:
+          - title: News Industry
+            url: scenarios/news-industry-scenario.md
+          - title: Event Ticketing and Access Control
+            url: scenarios/event-ticketing-scenario.md
+      - title: Data Management
+        children:
+          - title: Data Catalog & DCAT
+            url: scenarios/data-catalog-dcat-scenario.md
+      - title: IoT & Devices
+        children:
+          - title: IoT Device Identity
+            url: scenarios/iot-device-identity-scenario.md
+          - title: IoT Sensor Data Provenance
+            url: scenarios/iot-sensor-data-provenance-scenario.md
+          - title: IoT Firmware Update Verification
+            url: scenarios/iot-firmware-update-verification-scenario.md
+          - title: IoT Device Ownership Transfer
+            url: scenarios/iot-device-ownership-transfer-scenario.md
+      - title: Trust & Reputation
+        children:
+          - title: Web of Trust
+            url: scenarios/web-of-trust-scenario.md
+      - title: Insurance & Claims
+        children:
+          - title: Insurance Claims and Verification
+            url: scenarios/insurance-claims-scenario.md
+          - title: Parametric Insurance for Travel Disruptions
+            url: scenarios/parametric-insurance-travel-scenario.md
+
+  - title: Core Concepts
+    children:
+      - title: Overview
+        url: core-concepts/README.md
+      - title: Decentralized Identifiers (DIDs)
+        url: core-concepts/dids.md
+      - title: Verifiable Credentials
+        url: core-concepts/verifiable-credentials.md
+      - title: Wallets
+        url: core-concepts/wallets.md
+      - title: Blockchain Anchoring
+        url: core-concepts/blockchain-anchoring.md
+      - title: Key Management
+        url: core-concepts/key-management.md
+      - title: JSON Canonicalization
+        url: core-concepts/json-canonicalization.md
+
+  - title: Core Modules
+    children:
+      - title: Overview
+        url: modules/core-modules.md
+      - title: SPI Interfaces
+        url: modules/trustweave-spi.md
+      - title: trustweave-trust
+        url: modules/trustweave-trust.md
+      - title: trustweave-common
+        url: modules/trustweave-common.md
+      - title: trustweave-json
+        url: modules/trustweave-json.md
+      - title: trustweave-kms
+        url: modules/trustweave-kms.md
+      - title: trustweave-did
+        url: modules/trustweave-did.md
+      - title: trustweave-did-registrar
+        url: modules/trustweave-did-registrar.md
+      - title: trustweave-did-registrar-server
+        url: modules/trustweave-did-registrar-server.md
+      - title: trustweave-anchor
+        url: modules/trustweave-anchor.md
+      - title: trustweave-testkit
+        url: modules/trustweave-testkit.md
+
+  - title: Integration Modules
+    children:
+      - title: Overview
+        url: integrations/README.md
+      - title: walt.id Integration
+        url: integrations/waltid.md
+      - title: GoDiddy Integration
+        url: integrations/godiddy.md
+      - title: Algorand Integration
+        url: integrations/algorand.md
+
+  - title: API Reference
+    children:
+      - title: Overview
+        url: api-reference/README.md
+      - title: Core API
+        url: api-reference/core-api.md
+      - title: Wallet API
+        url: api-reference/wallet-api.md
+      - title: Credential Service API
+        url: api-reference/credential-service-api.md
+
+  - title: Tutorials
+    children:
+      - title: Overview
+        url: tutorials/README.md
+      - title: Wallet API Tutorial
+        url: tutorials/wallet-api-tutorial.md
+      - title: DID Operations Tutorial
+        url: tutorials/did-operations-tutorial.md
+      - title: Credential Issuance Tutorial
+        url: tutorials/credential-issuance-tutorial.md
+
+  - title: Advanced Topics
+    children:
+      - title: Overview
+        url: advanced/README.md
+      - title: Key Rotation
+        url: advanced/key-rotation.md
+      - title: Verification Policies
+        url: advanced/verification-policies.md
+      - title: Service Provider Interface (SPI)
+        url: advanced/spi.md
+      - title: Creating Custom Adapters
+        url: advanced/custom-adapters.md
+      - title: Error Handling
+        url: advanced/error-handling.md
+      - title: Plugin Lifecycle
+        url: advanced/plugin-lifecycle.md
+      - title: Testing Strategies
+        url: advanced/testing-strategies.md
+      - title: Performance Considerations
+        url: advanced/performance.md
+
+  - title: Contributing
+    children:
+      - title: Overview
+        url: contributing/README.md
+      - title: Development Setup
+        url: contributing/development-setup.md
+      - title: Code Style
+        url: contributing/code-style.md
+      - title: Testing Guidelines
+        url: contributing/testing-guidelines.md
+      - title: Pull Request Process
+        url: contributing/pull-request-process.md
+      - title: Creating Plugins
+        url: contributing/creating-plugins.md
+
+  - title: FAQ
+    url: faq.md
+
+# Kramdown settings for markdown processing
+kramdown:
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    block:
+      line_numbers: true
+    span:
+      line_numbers: false
+
+# Mermaid diagram configuration
+mermaid:
+  theme: default
+

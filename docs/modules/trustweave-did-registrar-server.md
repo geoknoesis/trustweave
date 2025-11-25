@@ -1,3 +1,7 @@
+---
+title: trustweave-did-registrar-server (Ktor)
+---
+
 # trustweave-did-registrar-server (Ktor)
 
 The `trustweave-did-registrar-server-ktor` module provides a Ktor-based HTTP server implementation of the Universal Registrar protocol, allowing you to host your own Universal Registrar service.

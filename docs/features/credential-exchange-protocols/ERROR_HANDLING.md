@@ -1,32 +1,99 @@
+---
+title: Credential Exchange Protocols - Error Handling
+---
+
 # Credential Exchange Protocols - Error Handling
 
 Complete guide to error handling for credential exchange protocols.
 
 ## Overview
 
-All credential exchange operations can throw exceptions. This guide documents all possible errors and how to handle them.
+All credential exchange operations throw structured exceptions from the `ExchangeException` hierarchy. These exceptions extend `TrustWeaveException` and provide:
+
+- **Structured error codes** for programmatic handling
+- **Rich context** with relevant information
+- **Type-safe error handling** with sealed classes
+- **Consistent error format** across all TrustWeave modules
+
+## Exception Hierarchy
+
+All exchange-related exceptions extend `ExchangeException`, which extends `TrustWeaveException`. Plugin-specific exceptions are located in their respective plugin modules:
+
+```kotlin
+import com.trustweave.credential.exchange.exception.ExchangeException
+import com.trustweave.credential.didcomm.exception.DidCommException
+import com.trustweave.credential.oidc4vci.exception.Oidc4VciException
+import com.trustweave.credential.chapi.exception.ChapiException
+
+try {
+    val offer = registry.offerCredential("didcomm", request)
+} catch (e: ExchangeException) {
+    when (e) {
+        is ExchangeException.ProtocolNotRegistered -> {
+            println("Protocol: ${e.protocolName}")
+            println("Available: ${e.availableProtocols}")
+        }
+        is ExchangeException.OperationNotSupported -> {
+            println("Operation: ${e.operation}")
+            println("Supported: ${e.supportedOperations}")
+        }
+        // Plugin-specific exceptions also extend ExchangeException
+        is DidCommException.EncryptionFailed -> {
+            println("DIDComm encryption failed: ${e.reason}")
+        }
+        is Oidc4VciException.HttpRequestFailed -> {
+            println("OIDC4VCI HTTP request failed: ${e.statusCode}")
+        }
+        is ChapiException.BrowserNotAvailable -> {
+            println("CHAPI requires browser: ${e.reason}")
+        }
+        // ... handle other exceptions
+    }
+}
+```
+
+### Exception Module Structure
+
+- **Core exceptions** (`ExchangeException`): Located in `credentials/credential-core`
+  - Registry errors
+  - Request validation errors
+  - Resource not found errors
+  - Generic/unknown errors
+
+- **Plugin-specific exceptions**: Located in their respective plugin modules
+  - `DidCommException`: `credentials/plugins/didcomm`
+  - `Oidc4VciException`: `credentials/plugins/oidc4vci`
+  - `ChapiException`: `credentials/plugins/chapi`
+
+All plugin exceptions extend `ExchangeException`, ensuring consistent error handling across all protocols.
 
 ## Error Types
 
 ### Registry Errors
 
-#### IllegalArgumentException: Protocol Not Registered
+#### ExchangeException.ProtocolNotRegistered
 
 **When it occurs:**
 - Calling any registry method with an unregistered protocol name
 
-**Error message:**
-```
-Protocol 'didcomm' not registered. Available: []
-```
+**Error code:** `PROTOCOL_NOT_REGISTERED`
+
+**Properties:**
+- `protocolName: String` - The requested protocol name
+- `availableProtocols: List<String>` - List of available protocol names
 
 **Code example:**
 ```kotlin
 try {
     val offer = registry.offerCredential("didcomm", request)
-} catch (e: IllegalArgumentException) {
-    println("Error: ${e.message}")
-    // Output: Protocol 'didcomm' not registered. Available: []
+} catch (e: ExchangeException.ProtocolNotRegistered) {
+    println("Error code: ${e.code}")
+    println("Protocol: ${e.protocolName}")
+    println("Available: ${e.availableProtocols}")
+    // Output:
+    // Error code: PROTOCOL_NOT_REGISTERED
+    // Protocol: didcomm
+    // Available: []
 }
 ```
 
@@ -66,23 +133,421 @@ try {
 
 ---
 
-#### UnsupportedOperationException: Operation Not Supported
+### Request Validation Errors
+
+#### ExchangeException.MissingRequiredOption
+
+**When it occurs:**
+- A required option is missing from the request
+
+**Error code:** `MISSING_REQUIRED_OPTION`
+
+**Properties:**
+- `optionName: String` - The name of the missing option
+- `protocolName: String?` - The protocol name (if applicable)
+
+**Code example:**
+```kotlin
+try {
+    val request = CredentialOfferRequest(
+        issuerDid = "did:key:issuer",
+        holderDid = "did:key:holder",
+        credentialPreview = preview,
+        options = emptyMap() // Missing 'fromKeyId' and 'toKeyId'
+    )
+    val offer = registry.offerCredential("didcomm", request)
+} catch (e: ExchangeException.MissingRequiredOption) {
+    println("Error code: ${e.code}")
+    println("Missing option: ${e.optionName}")
+    println("Protocol: ${e.protocolName}")
+    // Output:
+    // Error code: MISSING_REQUIRED_OPTION
+    // Missing option: fromKeyId
+    // Protocol: didcomm
+}
+```
+
+**Solutions:**
+1. **Add the missing option:**
+   ```kotlin
+   val request = CredentialOfferRequest(
+       issuerDid = "did:key:issuer",
+       holderDid = "did:key:holder",
+       credentialPreview = preview,
+       options = mapOf(
+           "fromKeyId" to "did:key:issuer#key-1",
+           "toKeyId" to "did:key:holder#key-1"
+       )
+   )
+   ```
+
+2. **Check protocol requirements:**
+   - DIDComm requires: `fromKeyId`, `toKeyId`
+   - OIDC4VCI requires: `credentialIssuer`
+
+---
+
+#### ExchangeException.OfferNotFound
+
+**When it occurs:**
+- Requesting a credential using a non-existent offer ID
+
+**Error code:** `OFFER_NOT_FOUND`
+
+**Properties:**
+- `offerId: String` - The offer ID that was not found
+
+**Code example:**
+```kotlin
+try {
+    val request = CredentialRequestRequest(
+        holderDid = "did:key:holder",
+        offerId = "non-existent-offer-id"
+    )
+    val response = registry.requestCredential("didcomm", request)
+} catch (e: ExchangeException.OfferNotFound) {
+    println("Error code: ${e.code}")
+    println("Offer ID: ${e.offerId}")
+    // Output:
+    // Error code: OFFER_NOT_FOUND
+    // Offer ID: non-existent-offer-id
+}
+```
+
+**Solutions:**
+1. **Use a valid offer ID:**
+   ```kotlin
+   // First create an offer
+   val offer = registry.offerCredential("didcomm", offerRequest)
+   
+   // Then use the offer ID
+   val request = CredentialRequestRequest(
+       holderDid = "did:key:holder",
+       offerId = offer.offerId // Use the actual offer ID
+   )
+   ```
+
+2. **Store offer IDs:**
+   - Store offer IDs when creating offers
+   - Use a database or cache to track offers
+
+---
+
+#### ExchangeException.RequestNotFound
+
+**When it occurs:**
+- Issuing a credential using a non-existent request ID
+
+**Error code:** `REQUEST_NOT_FOUND`
+
+**Properties:**
+- `requestId: String` - The request ID that was not found
+
+**Code example:**
+```kotlin
+try {
+    val request = CredentialIssueRequest(
+        issuerDid = "did:key:issuer",
+        holderDid = "did:key:holder",
+        credential = credential,
+        requestId = "non-existent-request-id"
+    )
+    val response = registry.issueCredential("didcomm", request)
+} catch (e: ExchangeException.RequestNotFound) {
+    println("Error code: ${e.code}")
+    println("Request ID: ${e.requestId}")
+}
+```
+
+---
+
+### DIDComm-Specific Errors
+
+DIDComm-specific exceptions are located in the `didcomm` plugin module and extend `ExchangeException`:
+
+```kotlin
+import com.trustweave.credential.didcomm.exception.DidCommException
+```
+
+#### DidCommException.EncryptionFailed
+
+**When it occurs:**
+- DIDComm message encryption fails
+
+**Error code:** `DIDCOMM_ENCRYPTION_FAILED`
+
+**Properties:**
+- `reason: String` - The reason encryption failed
+- `fromDid: String?` - The sender DID (if available)
+- `toDid: String?` - The recipient DID (if available)
+- `cause: Throwable?` - The underlying exception
+
+**Code example:**
+```kotlin
+import com.trustweave.credential.didcomm.exception.DidCommException
+
+try {
+    val offer = registry.offerCredential("didcomm", request)
+} catch (e: DidCommException.EncryptionFailed) {
+    println("Error code: ${e.code}")
+    println("Reason: ${e.reason}")
+    println("From: ${e.fromDid}")
+    println("To: ${e.toDid}")
+    println("Cause: ${e.cause?.message}")
+}
+```
+
+**Common causes:**
+- Missing or invalid keys
+- Key resolution failure
+- Cryptographic operation failure
+
+**Solutions:**
+1. **Verify keys exist:**
+   ```kotlin
+   val fromKey = kms.getPublicKey(fromKeyId)
+   val toKey = kms.getPublicKey(toKeyId)
+   ```
+
+2. **Check DID resolution:**
+   ```kotlin
+   val fromDoc = resolveDid(fromDid)
+   val toDoc = resolveDid(toDid)
+   ```
+
+---
+
+#### DidCommException.DecryptionFailed
+
+**When it occurs:**
+- DIDComm message decryption fails
+
+**Error code:** `DIDCOMM_DECRYPTION_FAILED`
+
+**Properties:**
+- `reason: String` - The reason decryption failed
+- `messageId: String?` - The message ID (if available)
+- `cause: Throwable?` - The underlying exception
+
+**Code example:**
+```kotlin
+import com.trustweave.credential.didcomm.exception.DidCommException
+
+try {
+    val message = didCommService.unpack(encryptedMessage)
+} catch (e: DidCommException.DecryptionFailed) {
+    println("Error code: ${e.code}")
+    println("Reason: ${e.reason}")
+    println("Message ID: ${e.messageId}")
+}
+```
+
+---
+
+#### DidCommException.PackingFailed
+
+**When it occurs:**
+- DIDComm message packing fails
+
+**Error code:** `DIDCOMM_PACKING_FAILED`
+
+**Properties:**
+- `reason: String` - The reason packing failed
+- `messageId: String?` - The message ID (if available)
+- `cause: Throwable?` - The underlying exception
+
+---
+
+#### DidCommException.UnpackingFailed
+
+**When it occurs:**
+- DIDComm message unpacking fails
+
+**Error code:** `DIDCOMM_UNPACKING_FAILED`
+
+**Properties:**
+- `reason: String` - The reason unpacking failed
+- `messageId: String?` - The message ID (if available)
+- `cause: Throwable?` - The underlying exception
+
+---
+
+#### DidCommException.ProtocolError
+
+**When it occurs:**
+- DIDComm protocol error occurs
+
+**Error code:** `DIDCOMM_PROTOCOL_ERROR`
+
+**Properties:**
+- `reason: String` - The reason for the error
+- `field: String?` - The field that caused the error (if applicable)
+- `cause: Throwable?` - The underlying exception
+
+---
+
+### OIDC4VCI-Specific Errors
+
+OIDC4VCI-specific exceptions are located in the `oidc4vci` plugin module and extend `ExchangeException`:
+
+```kotlin
+import com.trustweave.credential.oidc4vci.exception.Oidc4VciException
+```
+
+#### Oidc4VciException.HttpRequestFailed
+
+**When it occurs:**
+- OIDC4VCI HTTP request fails
+
+**Error code:** `OIDC4VCI_HTTP_REQUEST_FAILED`
+
+**Properties:**
+- `url: String` - The URL that was requested
+- `statusCode: Int?` - The HTTP status code (if available)
+- `reason: String` - The reason the request failed
+- `cause: Throwable?` - The underlying exception
+
+**Code example:**
+```kotlin
+import com.trustweave.credential.oidc4vci.exception.Oidc4VciException
+
+try {
+    val offer = registry.offerCredential("oidc4vci", request)
+} catch (e: Oidc4VciException.HttpRequestFailed) {
+    println("Error code: ${e.code}")
+    println("URL: ${e.url}")
+    println("Status: ${e.statusCode}")
+    println("Reason: ${e.reason}")
+}
+```
+
+**Common causes:**
+- Network connectivity issues
+- Invalid credential issuer URL
+- Server errors (5xx)
+- Client errors (4xx)
+
+**Solutions:**
+1. **Check network connectivity:**
+   ```kotlin
+   // Verify URL is reachable
+   val response = httpClient.newCall(Request.Builder().url(url).build()).execute()
+   ```
+
+2. **Verify credential issuer URL:**
+   ```kotlin
+   val metadata = oidc4vciService.fetchCredentialIssuerMetadata(credentialIssuerUrl)
+   ```
+
+---
+
+#### Oidc4VciException.TokenExchangeFailed
+
+**When it occurs:**
+- OIDC4VCI token exchange fails
+
+**Error code:** `OIDC4VCI_TOKEN_EXCHANGE_FAILED`
+
+**Properties:**
+- `reason: String` - The reason token exchange failed
+- `credentialIssuer: String?` - The credential issuer URL (if available)
+- `cause: Throwable?` - The underlying exception
+
+**Code example:**
+```kotlin
+import com.trustweave.credential.oidc4vci.exception.Oidc4VciException
+
+try {
+    val token = oidc4vciService.exchangeToken(authorizationCode)
+} catch (e: Oidc4VciException.TokenExchangeFailed) {
+    println("Error code: ${e.code}")
+    println("Reason: ${e.reason}")
+    println("Issuer: ${e.credentialIssuer}")
+}
+```
+
+---
+
+#### Oidc4VciException.MetadataFetchFailed
+
+**When it occurs:**
+- OIDC4VCI metadata fetch fails
+
+**Error code:** `OIDC4VCI_METADATA_FETCH_FAILED`
+
+**Properties:**
+- `credentialIssuer: String` - The credential issuer URL
+- `reason: String` - The reason metadata fetch failed
+- `cause: Throwable?` - The underlying exception
+
+**Code example:**
+```kotlin
+import com.trustweave.credential.oidc4vci.exception.Oidc4VciException
+
+try {
+    val metadata = oidc4vciService.fetchCredentialIssuerMetadata(issuerUrl)
+} catch (e: Oidc4VciException.MetadataFetchFailed) {
+    println("Error code: ${e.code}")
+    println("Issuer: ${e.credentialIssuer}")
+    println("Reason: ${e.reason}")
+}
+```
+
+---
+
+#### Oidc4VciException.CredentialRequestFailed
+
+**When it occurs:**
+- OIDC4VCI credential request fails
+
+**Error code:** `OIDC4VCI_CREDENTIAL_REQUEST_FAILED`
+
+**Properties:**
+- `reason: String` - The reason credential request failed
+- `credentialIssuer: String?` - The credential issuer URL (if available)
+- `cause: Throwable?` - The underlying exception
+
+**Code example:**
+```kotlin
+import com.trustweave.credential.oidc4vci.exception.Oidc4VciException
+
+try {
+    val credential = oidc4vciService.requestCredential(accessToken, credentialOffer)
+} catch (e: Oidc4VciException.CredentialRequestFailed) {
+    println("Error code: ${e.code}")
+    println("Reason: ${e.reason}")
+    println("Issuer: ${e.credentialIssuer}")
+}
+```
+
+---
+
+#### ExchangeException.OperationNotSupported
 
 **When it occurs:**
 - Protocol doesn't support the requested operation
 
-**Error message:**
-```
-Protocol 'oidc4vci' does not support REQUEST_PROOF operation
-```
+**Error code:** `OPERATION_NOT_SUPPORTED`
+
+**Properties:**
+- `protocolName: String` - The protocol name
+- `operation: String` - The requested operation
+- `supportedOperations: List<String>` - List of supported operations
 
 **Code example:**
 ```kotlin
 try {
     val proofRequest = registry.requestProof("oidc4vci", request)
-} catch (e: UnsupportedOperationException) {
-    println("Error: ${e.message}")
-    // Output: Protocol 'oidc4vci' does not support REQUEST_PROOF operation
+} catch (e: ExchangeException.OperationNotSupported) {
+    println("Error code: ${e.code}")
+    println("Protocol: ${e.protocolName}")
+    println("Operation: ${e.operation}")
+    println("Supported: ${e.supportedOperations}")
+    // Output:
+    // Error code: OPERATION_NOT_SUPPORTED
+    // Protocol: oidc4vci
+    // Operation: REQUEST_PROOF
+    // Supported: [OFFER_CREDENTIAL, REQUEST_CREDENTIAL, ISSUE_CREDENTIAL]
 }
 ```
 
@@ -471,27 +936,37 @@ val offer = registry.offerCredential("didcomm", request)
 ### Pattern 2: Try-Catch with Specific Handling
 
 ```kotlin
+import com.trustweave.credential.exchange.exception.ExchangeException
+import com.trustweave.credential.didcomm.exception.DidCommException
+
 try {
     val offer = registry.offerCredential("didcomm", request)
     println("Offer created: ${offer.offerId}")
-} catch (e: IllegalArgumentException) {
-    when {
-        e.message?.contains("not registered") == true -> {
-            println("Protocol not registered. Register it first.")
-            registry.register(DidCommExchangeProtocol(didCommService))
-            // Retry
-            val offer = registry.offerCredential("didcomm", request)
-        }
-        e.message?.contains("Missing required option") == true -> {
-            println("Missing required option. Check options map.")
-        }
-        else -> {
-            println("Invalid argument: ${e.message}")
-        }
-    }
-} catch (e: UnsupportedOperationException) {
+} catch (e: ExchangeException.ProtocolNotRegistered) {
+    println("Protocol not registered. Register it first.")
+    registry.register(DidCommExchangeProtocol(didCommService))
+    // Retry
+    val offer = registry.offerCredential("didcomm", request)
+} catch (e: ExchangeException.MissingRequiredOption) {
+    println("Missing required option: ${e.optionName}")
+    println("Protocol: ${e.protocolName}")
+} catch (e: ExchangeException.OperationNotSupported) {
     println("Operation not supported. Use different protocol or operation.")
-} catch (e: Exception) {
+    println("Supported operations: ${e.supportedOperations}")
+} catch (e: DidCommException) {
+    when (e) {
+        is DidCommException.EncryptionFailed -> {
+            println("DIDComm encryption failed: ${e.reason}")
+        }
+        is DidCommException.DecryptionFailed -> {
+            println("DIDComm decryption failed: ${e.reason}")
+        }
+        // ... handle other DIDComm exceptions
+    }
+} catch (e: ExchangeException) {
+    println("Exchange error: ${e.message}")
+    println("Error code: ${e.code}")
+} catch (e: Throwable) {
     println("Unexpected error: ${e.message}")
     e.printStackTrace()
 }
@@ -588,7 +1063,7 @@ val offer = registry.offerCredential("didcomm", request)
 **Problem:**
 ```kotlin
 val registry = CredentialExchangeProtocolRegistry()
-val offer = registry.offerCredential("didcomm", request)  // Throws IllegalArgumentException
+val offer = registry.offerCredential("didcomm", request)  // Throws ExchangeException.MissingRequiredOption
 ```
 
 **Solution:**
@@ -613,7 +1088,7 @@ val offer = registry.offerCredential(
         credentialPreview = preview,
         options = emptyMap()  // Missing fromKeyId and toKeyId
     )
-)  // Throws IllegalArgumentException
+)  // Throws ExchangeException.MissingRequiredOption
 ```
 
 **Solution:**
@@ -638,7 +1113,7 @@ val offer = registry.offerCredential(
 
 **Problem:**
 ```kotlin
-val proofRequest = registry.requestProof("oidc4vci", request)  // Throws UnsupportedOperationException
+val proofRequest = registry.requestProof("oidc4vci", request)  // Throws ExchangeException.OperationNotSupported
 ```
 
 **Solution:**
@@ -651,6 +1126,72 @@ if (protocol?.supportedOperations?.contains(ExchangeOperation.REQUEST_PROOF) == 
     // Use different protocol
     val proofRequest = registry.requestProof("didcomm", request)
 }
+```
+
+---
+
+## Error Recovery Utilities
+
+The `ExchangeExceptionRecovery` object provides comprehensive error recovery utilities:
+
+### Automatic Retry with Exponential Backoff
+
+```kotlin
+import com.trustweave.credential.exchange.exception.retryExchangeOperation
+
+// Automatically retries on transient errors
+val offer = retryExchangeOperation(maxRetries = 3) {
+    registry.offerCredential("didcomm", request)
+}
+```
+
+### Error Classification
+
+```kotlin
+import com.trustweave.credential.exchange.exception.ExchangeExceptionRecovery
+
+val exception: ExchangeException = // ... get exception
+
+// Check if error is retryable
+if (ExchangeExceptionRecovery.isRetryable(exception)) {
+    // Retry the operation
+}
+
+// Check if error is transient
+if (ExchangeExceptionRecovery.isTransient(exception)) {
+    // Error might resolve on its own
+}
+```
+
+### User-Friendly Error Messages
+
+```kotlin
+val message = ExchangeExceptionRecovery.getUserFriendlyMessage(exception)
+println(message) // Displays user-friendly error message
+```
+
+### Alternative Protocol Fallback
+
+```kotlin
+val result = ExchangeExceptionRecovery.tryAlternativeProtocol(
+    exception = exception,
+    availableProtocols = listOf("oidc4vci", "chapi")
+) { protocol ->
+    registry.offerCredential(protocol, request)
+}
+```
+
+### Companion Object Helpers
+
+```kotlin
+import com.trustweave.credential.exchange.exception.ExchangeException
+
+// Use companion object for convenience
+if (ExchangeException.isRetryable(exception)) {
+    // Retry logic
+}
+
+val message = ExchangeException.getUserFriendlyMessage(exception)
 ```
 
 ---
@@ -743,7 +1284,7 @@ suspend fun offerCredentialWithAutoRegister(
 
 5. **Provide helpful error messages:**
    ```kotlin
-   catch (e: IllegalArgumentException) {
+   catch (e: ExchangeException) {
        logger.error("Invalid argument: ${e.message}")
        // Provide user-friendly message
    }

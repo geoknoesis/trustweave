@@ -1,3 +1,7 @@
+---
+title: Security Best Practices
+---
+
 # Security Best Practices
 
 This guide covers security best practices for using TrustWeave in production environments.

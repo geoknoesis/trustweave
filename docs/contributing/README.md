@@ -1,3 +1,7 @@
+---
+title: Contributing to TrustWeave
+---
+
 # Contributing to TrustWeave
 
 TrustWeave's documentation and code are authored and maintained by **Geoknoesis LLC**, and community contributions are welcome. Use this guide as your checklist when filing issues or opening pull requests—every section explains the intent so that newcomers can match the house style quickly.

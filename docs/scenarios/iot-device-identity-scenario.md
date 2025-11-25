@@ -1,3 +1,7 @@
+---
+title: IoT & Device Identity Scenario
+---
+
 # IoT & Device Identity Scenario
 
 This guide demonstrates how to build an IoT device identity system using TrustWeave that enables device authentication, secure device-to-device communication, device attestation, and network authorization.

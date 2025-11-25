@@ -1,3 +1,7 @@
+---
+title: Refactoring Summary: Reusable Components Extraction
+---
+
 # Refactoring Summary: Reusable Components Extraction
 
 ## Overview

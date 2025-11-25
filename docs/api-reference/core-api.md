@@ -1,3 +1,7 @@
+---
+title: Core API Reference
+---
+
 # Core API Reference
 
 Complete API reference for TrustWeave's TrustLayer API.

@@ -1,3 +1,7 @@
+---
+title: Parametric Insurance for Travel Disruptions
+---
+
 # Parametric Insurance for Travel Disruptions
 
 This guide demonstrates how to build a parametric travel insurance system using TrustWeave, similar to Chubb Travel Pro. You'll learn how to create verifiable credentials for travel disruption data (flight delays, weather events, baggage tracking) that trigger automatic insurance payouts, solving the "Oracle Problem" by enabling standardized, multi-provider data ecosystems for travel insurance.

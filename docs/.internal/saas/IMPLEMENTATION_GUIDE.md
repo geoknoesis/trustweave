@@ -1,3 +1,7 @@
+---
+title: TrustWeave Cloud - Implementation Guide
+---
+
 # TrustWeave Cloud - Implementation Guide
 
 > **Practical code and setup instructions for building TrustWeave Cloud SaaS**

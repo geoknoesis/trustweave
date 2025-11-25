@@ -1,3 +1,7 @@
+---
+title: TrustWeave Funding Support Plan
+---
+
 # TrustWeave Funding Support Plan
 
 > **Created:** 2025  

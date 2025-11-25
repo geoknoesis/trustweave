@@ -1,3 +1,7 @@
+---
+title: TrustWeave Mental Model
+---
+
 # TrustWeave Mental Model
 
 Understanding how TrustWeave works at a conceptual level will help you use it effectively and confidently.

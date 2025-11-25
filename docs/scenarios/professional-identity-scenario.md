@@ -1,3 +1,7 @@
+---
+title: Professional Identity Wallet Scenario
+---
+
 # Professional Identity Wallet Scenario
 
 This guide demonstrates how professionals can build a comprehensive digital identity wallet using TrustWeave. You'll learn how to manage multiple credentials (education, work experience, certifications), organize them effectively, and create targeted presentations for different purposes.

@@ -1,3 +1,7 @@
+---
+title: Blockchain-Anchored Revocation
+---
+
 # Blockchain-Anchored Revocation
 
 TrustWeave provides a sophisticated revocation management system that combines fast off-chain status lists with tamper-proof blockchain anchoring. This hybrid approach gives you the performance of off-chain storage with the immutability guarantees of blockchain.

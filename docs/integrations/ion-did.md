@@ -1,3 +1,7 @@
+---
+title: ION DID Integration
+---
+
 # ION DID Integration
 
 > This guide covers the did:ion method integration for TrustWeave. The did:ion plugin provides Microsoft ION (Identity Overlay Network) DID resolution using the Sidetree protocol.

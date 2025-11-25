@@ -1,3 +1,7 @@
+---
+title: Official DID Registration Specification Support
+---
+
 # Official DID Registration Specification Support
 
 This document explains how Trustweave implements support for the official [DID Registration specification](https://identity.foundation/did-registration/) format.

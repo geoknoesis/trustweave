@@ -5,6 +5,7 @@ import com.trustweave.credential.didcomm.models.DidCommMessage
 import com.trustweave.credential.didcomm.protocol.CredentialProtocol
 import com.trustweave.credential.didcomm.protocol.ProofProtocol
 import com.trustweave.credential.exchange.*
+import com.trustweave.credential.exchange.exception.ExchangeException
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.models.VerifiablePresentation
 
@@ -51,9 +52,15 @@ class DidCommExchangeProtocol(
         )
         
         val fromKeyId = request.options["fromKeyId"] as? String
-            ?: throw IllegalArgumentException("Missing 'fromKeyId' in options")
+            ?: throw ExchangeException.MissingRequiredOption(
+                optionName = "fromKeyId",
+                protocolName = protocolName
+            )
         val toKeyId = request.options["toKeyId"] as? String
-            ?: throw IllegalArgumentException("Missing 'toKeyId' in options")
+            ?: throw ExchangeException.MissingRequiredOption(
+                optionName = "toKeyId",
+                protocolName = protocolName
+            )
         
         val messageId = didCommService.sendMessage(
             message = message,
@@ -76,7 +83,7 @@ class DidCommExchangeProtocol(
     ): CredentialRequestResponse {
         // Get the offer message to extract thread ID
         val offerMessage = didCommService.getMessage(request.offerId)
-            ?: throw IllegalArgumentException("Offer not found: ${request.offerId}")
+            ?: throw ExchangeException.OfferNotFound(offerId = request.offerId)
         
         val message = CredentialProtocol.createCredentialRequest(
             fromDid = request.holderDid,
@@ -85,9 +92,15 @@ class DidCommExchangeProtocol(
         )
         
         val fromKeyId = request.options["fromKeyId"] as? String
-            ?: throw IllegalArgumentException("Missing 'fromKeyId' in options")
+            ?: throw ExchangeException.MissingRequiredOption(
+                optionName = "fromKeyId",
+                protocolName = protocolName
+            )
         val toKeyId = request.options["toKeyId"] as? String
-            ?: throw IllegalArgumentException("Missing 'toKeyId' in options")
+            ?: throw ExchangeException.MissingRequiredOption(
+                optionName = "toKeyId",
+                protocolName = protocolName
+            )
         
         val messageId = didCommService.sendMessage(
             message = message,
@@ -110,7 +123,7 @@ class DidCommExchangeProtocol(
     ): CredentialIssueResponse {
         // Get the request message to extract thread ID
         val requestMessage = didCommService.getMessage(request.requestId)
-            ?: throw IllegalArgumentException("Request not found: ${request.requestId}")
+            ?: throw ExchangeException.RequestNotFound(requestId = request.requestId)
         
         val message = CredentialProtocol.createCredentialIssue(
             fromDid = request.issuerDid,
@@ -120,9 +133,15 @@ class DidCommExchangeProtocol(
         )
         
         val fromKeyId = request.options["fromKeyId"] as? String
-            ?: throw IllegalArgumentException("Missing 'fromKeyId' in options")
+            ?: throw ExchangeException.MissingRequiredOption(
+                optionName = "fromKeyId",
+                protocolName = protocolName
+            )
         val toKeyId = request.options["toKeyId"] as? String
-            ?: throw IllegalArgumentException("Missing 'toKeyId' in options")
+            ?: throw ExchangeException.MissingRequiredOption(
+                optionName = "toKeyId",
+                protocolName = protocolName
+            )
         
         val messageId = didCommService.sendMessage(
             message = message,
@@ -186,9 +205,15 @@ class DidCommExchangeProtocol(
         )
         
         val fromKeyId = request.options["fromKeyId"] as? String
-            ?: throw IllegalArgumentException("Missing 'fromKeyId' in options")
+            ?: throw ExchangeException.MissingRequiredOption(
+                optionName = "fromKeyId",
+                protocolName = protocolName
+            )
         val toKeyId = request.options["toKeyId"] as? String
-            ?: throw IllegalArgumentException("Missing 'toKeyId' in options")
+            ?: throw ExchangeException.MissingRequiredOption(
+                optionName = "toKeyId",
+                protocolName = protocolName
+            )
         
         val messageId = didCommService.sendMessage(
             message = message,
@@ -211,7 +236,7 @@ class DidCommExchangeProtocol(
     ): ProofPresentationResponse {
         // Get the proof request message to extract thread ID
         val proofRequestMessage = didCommService.getMessage(request.requestId)
-            ?: throw IllegalArgumentException("Proof request not found: ${request.requestId}")
+            ?: throw ExchangeException.ProofRequestNotFound(requestId = request.requestId)
         
         val message = ProofProtocol.createProofPresentation(
             fromDid = request.proverDid,
@@ -221,9 +246,15 @@ class DidCommExchangeProtocol(
         )
         
         val fromKeyId = request.options["fromKeyId"] as? String
-            ?: throw IllegalArgumentException("Missing 'fromKeyId' in options")
+            ?: throw ExchangeException.MissingRequiredOption(
+                optionName = "fromKeyId",
+                protocolName = protocolName
+            )
         val toKeyId = request.options["toKeyId"] as? String
-            ?: throw IllegalArgumentException("Missing 'toKeyId' in options")
+            ?: throw ExchangeException.MissingRequiredOption(
+                optionName = "toKeyId",
+                protocolName = protocolName
+            )
         
         val messageId = didCommService.sendMessage(
             message = message,

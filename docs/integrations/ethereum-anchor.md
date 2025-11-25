@@ -1,3 +1,7 @@
+---
+title: Ethereum Blockchain Anchor Integration
+---
+
 # Ethereum Blockchain Anchor Integration
 
 > This guide covers the Ethereum mainnet blockchain anchor client integration for TrustWeave. The Ethereum adapter provides production-ready anchoring for Ethereum mainnet and Sepolia testnet.

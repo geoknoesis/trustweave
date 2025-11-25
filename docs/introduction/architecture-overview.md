@@ -1,3 +1,7 @@
+---
+title: Architecture Overview
+---
+
 # Architecture Overview
 
 TrustWeave follows a modular, pluggable architecture that enables flexibility and extensibility. This page ties the high-level mental model—DIDs, credentials, proofs, anchoring—into the modules you will touch as you build a trust layer.

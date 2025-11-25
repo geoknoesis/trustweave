@@ -1,3 +1,7 @@
+---
+title: TrustWeave Features
+---
+
 # TrustWeave Features
 
 This directory contains documentation for all TrustWeave features and plugins.

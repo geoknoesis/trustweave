@@ -1,10 +1,11 @@
 package com.trustweave.credential.verifier
 
-import com.trustweave.did.resolver.DidResolver
-import com.trustweave.did.VerificationMethod
 import com.trustweave.credential.models.Proof
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.core.util.DigestUtils
+import com.trustweave.did.DidDocument
+import com.trustweave.did.VerificationMethod
+import com.trustweave.did.resolver.DidResolver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -189,7 +190,7 @@ class SignatureVerifier(
     /**
      * Convert map to DidDocument (for JSON-based resolvers).
      */
-    private fun convertMapToDidDocument(map: Map<*, *>, did: String): com.trustweave.did.DidDocument? {
+    private fun convertMapToDidDocument(map: Map<*, *>, did: String): DidDocument? {
         try {
             val verificationMethod = (map["verificationMethod"] as? List<*>)?.mapNotNull { vmMap ->
                 val vm = vmMap as? Map<*, *> ?: return@mapNotNull null
@@ -210,7 +211,7 @@ class SignatureVerifier(
                 ?: (map["assertionMethod"] as? String)?.let { listOf(it) }
                 ?: emptyList()
             
-            return com.trustweave.did.DidDocument(
+            return DidDocument(
                 id = did,
                 verificationMethod = verificationMethod,
                 authentication = authentication,

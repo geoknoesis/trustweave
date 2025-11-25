@@ -1,3 +1,7 @@
+---
+title: TrustWeave
+---
+
 # TrustWeave
 
 <div align="center">

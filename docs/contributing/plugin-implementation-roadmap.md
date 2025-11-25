@@ -1,3 +1,7 @@
+---
+title: TrustWeave Plugin Implementation Roadmap
+---
+
 # TrustWeave Plugin Implementation Roadmap
 
 This document outlines the comprehensive roadmap for implementing all important plugins for TrustWeave, organized by priority and category.

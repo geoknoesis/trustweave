@@ -1,3 +1,7 @@
+---
+title: trustweave-testkit
+---
+
 # trustweave-testkit
 
 The `trustweave-testkit` module provides in-memory test implementations and utilities for all TrustWeave service interfaces. This module is essential for testing and prototyping without external dependencies.

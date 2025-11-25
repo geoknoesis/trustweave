@@ -1,3 +1,7 @@
+---
+title: TrustWeave Use Case Scenarios
+---
+
 # TrustWeave Use Case Scenarios
 
 > **Version:** 1.0.0-SNAPSHOT  

@@ -1,3 +1,7 @@
+---
+title: Missing Workflows Analysis - TrustWeave SaaS UX Guide
+---
+
 # Missing Workflows Analysis - TrustWeave SaaS UX Guide
 
 ## Overview

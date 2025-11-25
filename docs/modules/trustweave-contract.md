@@ -1,3 +1,7 @@
+---
+title: trustweave-contract Module
+---
+
 # trustweave-contract Module
 
 > **Version:** 1.0.0-SNAPSHOT  

@@ -1,3 +1,7 @@
+---
+title: trustweave-common
+---
+
 # trustweave-common
 
 The `trustweave-common` module provides **domain-agnostic core infrastructure** for TrustWeave:

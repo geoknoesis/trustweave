@@ -1,3 +1,7 @@
+---
+title: JSON Utilities
+---
+
 # JSON Utilities
 
 JSON canonicalization and digest computation utilities are part of the `trustweave-common` module.

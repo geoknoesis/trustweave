@@ -1,3 +1,7 @@
+---
+title: SOC2 Compliance with TrustWeave
+---
+
 # SOC2 Compliance with TrustWeave
 
 This guide demonstrates how to build a SOC2 Type II compliant system using TrustWeave. You'll learn how to create immutable audit trails, implement access control with verifiable credentials, manage keys securely, and automate compliance reporting.

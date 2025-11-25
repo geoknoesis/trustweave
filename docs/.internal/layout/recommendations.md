@@ -1,3 +1,7 @@
+---
+title: Proposed Layout Improvements
+---
+
 # Proposed Layout Improvements
 
 ## 1. Module-Level Adjustments

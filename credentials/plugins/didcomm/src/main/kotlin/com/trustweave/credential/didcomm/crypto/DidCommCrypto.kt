@@ -1,5 +1,7 @@
 package com.trustweave.credential.didcomm.crypto
 
+import com.trustweave.credential.didcomm.exception.DidCommException
+
 import com.trustweave.credential.didcomm.models.DidCommEnvelope
 import com.trustweave.credential.didcomm.models.DidCommProtectedHeaders
 import com.trustweave.credential.didcomm.models.DidCommRecipient
@@ -141,7 +143,12 @@ class DidCommCrypto(
                 tag = Base64.getUrlEncoder().withoutPadding().encodeToString(tag)
             )
         } catch (e: Exception) {
-            throw com.trustweave.credential.didcomm.exceptions.DidCommEncryptionException("Failed to encrypt message: ${e.message}", e)
+            throw DidCommException.EncryptionFailed(
+                reason = e.message ?: "Unknown encryption error",
+                fromDid = fromDid,
+                toDid = toDid,
+                cause = e
+            )
         }
     }
 
@@ -219,7 +226,11 @@ class DidCommCrypto(
             // Parse and return JSON
             Json.parseToJsonElement(String(plaintext, Charsets.UTF_8)).jsonObject
         } catch (e: Exception) {
-            throw com.trustweave.credential.didcomm.exceptions.DidCommDecryptionException("Failed to decrypt message: ${e.message}", e)
+            throw DidCommException.DecryptionFailed(
+                reason = e.message ?: "Unknown decryption error",
+                messageId = null,
+                cause = e
+            )
         }
     }
 

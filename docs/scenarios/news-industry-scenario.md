@@ -1,3 +1,7 @@
+---
+title: News Industry & Content Provenance Scenario
+---
+
 # News Industry & Content Provenance Scenario
 
 This guide demonstrates how to build a news content provenance system using TrustWeave to track and verify the authenticity, authorship, and processing history of news articles, images, and multimedia content.

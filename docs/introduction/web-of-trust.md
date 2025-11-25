@@ -1,3 +1,7 @@
+---
+title: The Web of Trust: Foundation for Decentralized Trust
+---
+
 # The Web of Trust: Foundation for Decentralized Trust
 
 > TrustWeave is built and supported by [Geoknoesis LLC](https://www.geoknoesis.com), a standards-focused identity company. This introduction reflects Geoknoesis' vision for building a thriving, interoperable trust ecosystem based on open standards.

@@ -1,3 +1,7 @@
+---
+title: Module Rename Guide
+---
+
 # Module Rename Guide
 
 ## Overview

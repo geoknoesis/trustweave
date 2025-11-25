@@ -1,3 +1,7 @@
+---
+title: Government & Digital Identity Scenario
+---
+
 # Government & Digital Identity Scenario
 
 This guide demonstrates how to build a government digital identity system using TrustWeave that enables citizen identity wallets, government-issued credentials, document verification, and cross-border identity verification.

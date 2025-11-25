@@ -1,3 +1,7 @@
+---
+title: Supported Plugins
+---
+
 # Supported Plugins
 
 > Comprehensive listing of all supported TrustWeave plugins organized by category. Each plugin includes links to detailed integration guides.

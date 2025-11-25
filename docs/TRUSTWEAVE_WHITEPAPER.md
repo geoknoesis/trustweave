@@ -1,3 +1,7 @@
+---
+title: TrustWeave SDK: Decentralized Trust Infrastructure
+---
+
 # TrustWeave SDK: Decentralized Trust Infrastructure
 ## White Paper v1.0
 

@@ -1,3 +1,7 @@
+---
+title: Integration Testing Best Practices
+---
+
 # Integration Testing Best Practices
 
 This guide covers best practices for writing integration tests in TrustWeave.

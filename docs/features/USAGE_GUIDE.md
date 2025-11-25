@@ -1,3 +1,7 @@
+---
+title: Features Usage Guide
+---
+
 # Features Usage Guide
 
 This guide explains how to use TrustWeave's feature plugins.

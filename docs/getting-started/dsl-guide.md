@@ -1,3 +1,7 @@
+---
+title: TrustWeave DSL Guide
+---
+
 # TrustWeave DSL Guide
 
 ## Overview

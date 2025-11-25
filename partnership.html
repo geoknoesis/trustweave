@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partner Program - TrustWeave</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #7c3aed;
+            --accent: #10b981;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --bg: #ffffff;
+            --bg-light: #f9fafb;
+            --border: #e5e7eb;
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-top: 80px;
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            text-align: center;
+        }
+
+        .hero-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            margin-bottom: 2.5rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Section Styles */
+        .section {
+            padding: 6rem 2rem;
+        }
+
+        .section-alt {
+            background: var(--bg-light);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 1.125rem;
+            margin-bottom: 4rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Tier Cards */
+        .tiers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .tier-card {
+            padding: 2.5rem;
+            border-radius: 1rem;
+            border: 2px solid var(--border);
+            background: white;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .tier-card.featured {
+            border-color: var(--primary);
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.15);
+        }
+
+        .tier-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .tier-badge {
+            position: absolute;
+            top: -12px;
+            right: 2rem;
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .tier-card h3 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .tier-card .tier-requirements {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .tier-card .commission-rate {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .tier-card .commission-label {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+        }
+
+        .tier-benefits {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .tier-benefits li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: start;
+            gap: 0.75rem;
+        }
+
+        .tier-benefits li:last-child {
+            border-bottom: none;
+        }
+
+        .tier-benefits li::before {
+            content: "✓";
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-size: 1.125rem;
+        }
+
+        /* Process Steps */
+        .process-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .process-step {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 auto 1.5rem;
+        }
+
+        .process-step h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .process-step p {
+            color: var(--text-light);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 6rem 2rem;
+            background: var(--gradient);
+            color: white;
+            text-align: center;
+        }
+
+        .cta-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.25rem;
+            margin-bottom: 2.5rem;
+            opacity: 0.95;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--text);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-text {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.25rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .tiers-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="landing-page.html" class="logo">TrustWeave</a>
+            <div class="nav-links">
+                <a href="landing-page.html">Home</a>
+                <a href="landing-page.html#features">Features</a>
+                <a href="landing-page.html#opensource">Open Source</a>
+                <a href="partnership.html" style="color: var(--primary);">Partners</a>
+                <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" class="btn btn-secondary">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <h1>TrustWeave Partner Program</h1>
+            <p>Monetize your network while helping enterprises adopt decentralized identity and trust infrastructure. Join our partner ecosystem and earn competitive commissions.</p>
+            <div class="hero-buttons">
+                <a href="#apply" class="btn btn-primary">Become a Partner</a>
+                <a href="docs/PARTNER_PROGRAM.md" target="_blank" class="btn btn-secondary">View Program Details</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Partner Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Why Partner with TrustWeave?</h2>
+            <p class="section-subtitle">Join a growing ecosystem and earn competitive compensation for introducing commercial customers</p>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">88.2%</div>
+                    <div class="stat-label">Market CAGR</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">15-25%</div>
+                    <div class="stat-label">Commission Rates</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">$25K+</div>
+                    <div class="stat-label">Minimum Deal Size</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">30 Days</div>
+                    <div class="stat-label">Payment Terms</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Partner Tiers Section -->
+    <section class="section section-alt">
+        <div class="container">
+            <h2 class="section-title">Partner Tiers & Benefits</h2>
+            <p class="section-subtitle">Choose the tier that matches your referral volume and unlock increasing benefits</p>
+            <div class="tiers-grid">
+                <!-- Bronze Tier -->
+                <div class="tier-card">
+                    <h3>Bronze</h3>
+                    <p class="tier-requirements">1-2 qualified deals per year</p>
+                    <div class="commission-rate">15%</div>
+                    <div class="commission-label">First-year commission</div>
+                    <ul class="tier-benefits">
+                        <li>15% commission on commercial licenses</li>
+                        <li>10% commission on professional services</li>
+                        <li>Partner portal access</li>
+                        <li>Marketing materials and resources</li>
+                        <li>Deal registration and tracking</li>
+                    </ul>
+                </div>
+
+                <!-- Silver Tier -->
+                <div class="tier-card featured">
+                    <div class="tier-badge">POPULAR</div>
+                    <h3>Silver</h3>
+                    <p class="tier-requirements">3-5 qualified deals per year</p>
+                    <div class="commission-rate">20%</div>
+                    <div class="commission-label">First-year commission</div>
+                    <ul class="tier-benefits">
+                        <li>20% commission on commercial licenses</li>
+                        <li>15% commission on professional services</li>
+                        <li>5% recurring commission (2 years)</li>
+                        <li>All Bronze benefits</li>
+                        <li>Dedicated partner manager</li>
+                        <li>Co-marketing opportunities</li>
+                        <li>Priority deal support</li>
+                        <li>$2,500 bonus for deals over $50K</li>
+                    </ul>
+                </div>
+
+                <!-- Gold Tier -->
+                <div class="tier-card">
+                    <h3>Gold</h3>
+                    <p class="tier-requirements">6+ deals or $500K+ annual revenue</p>
+                    <div class="commission-rate">25%</div>
+                    <div class="commission-label">First-year commission</div>
+                    <ul class="tier-benefits">
+                        <li>25% commission on commercial licenses</li>
+                        <li>20% commission on professional services</li>
+                        <li>10% recurring commission (3 years)</li>
+                        <li>All Silver benefits</li>
+                        <li>Executive sponsorship</li>
+                        <li>Custom partner agreements</li>
+                        <li>Joint go-to-market opportunities</li>
+                        <li>Partner summit invitations</li>
+                        <li>$5,000 bonus for deals over $100K</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">How It Works</h2>
+            <p class="section-subtitle">Simple process to start earning commissions</p>
+            <div class="process-steps">
+                <div class="process-step">
+                    <div class="step-number">1</div>
+                    <h3>Apply</h3>
+                    <p>Submit your partner application with information about your network and expected deal volume</p>
+                </div>
+                <div class="process-step">
+                    <div class="step-number">2</div>
+                    <h3>Get Approved</h3>
+                    <p>We review your application and onboard you with access to partner resources and training</p>
+                </div>
+                <div class="process-step">
+                    <div class="step-number">3</div>
+                    <h3>Register Deals</h3>
+                    <p>Register potential customers through the partner portal before the first business discussion</p>
+                </div>
+                <div class="process-step">
+                    <div class="step-number">4</div>
+                    <h3>Earn Commissions</h3>
+                    <p>Receive competitive commissions when deals close, paid within 30 days of customer payment</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- What You Can Refer Section -->
+    <section class="section section-alt">
+        <div class="container">
+            <h2 class="section-title">What You Can Refer</h2>
+            <p class="section-subtitle">Multiple revenue streams for partners</p>
+            <div class="tiers-grid">
+                <div class="tier-card">
+                    <h3>Commercial Licensing</h3>
+                    <p class="tier-requirements">Enterprise licenses for production use</p>
+                    <ul class="tier-benefits">
+                        <li>Multi-year agreements available</li>
+                        <li>Custom licensing for large deployments</li>
+                        <li>Commission on all committed years</li>
+                        <li>Recurring commissions on renewals</li>
+                    </ul>
+                </div>
+                <div class="tier-card">
+                    <h3>Professional Services</h3>
+                    <p class="tier-requirements">Implementation and consulting services</p>
+                    <ul class="tier-benefits">
+                        <li>Implementation consulting</li>
+                        <li>Custom plugin development</li>
+                        <li>Training workshops</li>
+                        <li>Architecture reviews</li>
+                        <li>Support contracts</li>
+                    </ul>
+                </div>
+                <div class="tier-card">
+                    <h3>Target Customers</h3>
+                    <p class="tier-requirements">Ideal customer profiles</p>
+                    <ul class="tier-benefits">
+                        <li>Enterprises building SSI systems</li>
+                        <li>SaaS companies embedding TrustWeave</li>
+                        <li>Government agencies</li>
+                        <li>Healthcare organizations</li>
+                        <li>Financial institutions</li>
+                        <li>Insurance companies</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" id="apply">
+        <div class="cta-container">
+            <h2>Ready to Become a Partner?</h2>
+            <p>Join the TrustWeave Partner Program and start monetizing your network today. Open to all qualified organizations, consultants, and individuals.</p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem;">
+                <a href="mailto:partners@geoknoesis.com?subject=Partner Program Application" class="btn btn-primary" style="background: white; color: var(--primary);">Apply Now</a>
+                <a href="docs/PARTNER_PROGRAM.md" target="_blank" class="btn btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border-color: white;">View Full Program Guide</a>
+            </div>
+            <p style="margin-top: 2rem; font-size: 1rem; opacity: 0.9;">
+                Questions? Contact us at <a href="mailto:partners@geoknoesis.com" style="color: white; text-decoration: underline;">partners@geoknoesis.com</a>
+            </p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="landing-page.html">Home</a>
+                <a href="partnership.html">Partners</a>
+                <a href="https://github.com/geoknoesis/TrustWeave" target="_blank">GitHub</a>
+                <a href="https://github.com/geoknoesis/TrustWeave/blob/main/docs/README.md" target="_blank">Documentation</a>
+                <a href="https://github.com/geoknoesis/TrustWeave/blob/main/LICENSE" target="_blank">License</a>
+                <a href="https://www.geoknoesis.com" target="_blank">Geoknoesis LLC</a>
+            </div>
+            <p class="footer-text">Made with ❤️ by Geoknoesis LLC</p>
+        </div>
+    </footer>
+</body>
+</html>
+

@@ -1,3 +1,7 @@
+---
+title: DID Method Registration - Quick Reference
+---
+
 # DID Method Registration - Quick Reference
 
 ## JSON Structure → DidMethod Implementation

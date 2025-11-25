@@ -1,3 +1,7 @@
+---
+title: IoT Firmware Update Verification Scenario
+---
+
 # IoT Firmware Update Verification Scenario
 
 This guide demonstrates how to build an IoT firmware update verification system using TrustWeave. You'll learn how manufacturers can issue firmware attestation credentials, how update servers can authorize updates, and how devices can verify firmware authenticity before installation.

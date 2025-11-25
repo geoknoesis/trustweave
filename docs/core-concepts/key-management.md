@@ -1,3 +1,7 @@
+---
+title: Key Management
+---
+
 # Key Management
 
 > This guide is curated by [Geoknoesis LLC](https://www.geoknoesis.com). It outlines how TrustWeave treats key custody across decentralized identity workflows.

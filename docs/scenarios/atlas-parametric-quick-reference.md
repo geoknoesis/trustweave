@@ -1,3 +1,7 @@
+---
+title: Atlas Parametric MGA: Quick Reference
+---
+
 # Atlas Parametric MGA: Quick Reference
 
 > **How to Build Your Parametric Insurance MGA with TrustWeave**

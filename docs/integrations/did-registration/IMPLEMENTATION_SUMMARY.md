@@ -1,3 +1,7 @@
+---
+title: DID Registration Specification Implementation
+---
+
 # DID Registration Specification Implementation
 
 ## Overview

@@ -1,3 +1,7 @@
+---
+title: Trusted Domain UX Guide - Complete User Experience Documentation
+---
+
 # Trusted Domain UX Guide - Complete User Experience Documentation
 
 ## Table of Contents

@@ -1,3 +1,7 @@
+---
+title: Digital Workflow & Provenance Scenario
+---
+
 # Digital Workflow & Provenance Scenario
 
 This guide demonstrates how to build a digital workflow provenance system using TrustWeave and PROV-O (Provenance Ontology) to track and verify the provenance of digital information through processing workflows, transformations, and data lineage.

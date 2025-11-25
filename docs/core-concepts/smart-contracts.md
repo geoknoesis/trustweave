@@ -1,3 +1,7 @@
+---
+title: Smart Contracts
+---
+
 # Smart Contracts
 
 > TrustWeave Smart Contracts provide a domain-agnostic abstraction for executable agreements with verifiable credentials and blockchain anchoring support.

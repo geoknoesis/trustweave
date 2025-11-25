@@ -1,3 +1,7 @@
+---
+title: Migration Guides
+---
+
 # Migration Guides
 
 This section provides migration guides for upgrading between TrustWeave versions and understanding deprecation policies.

@@ -1,3 +1,7 @@
+---
+title: Credential Exchange Protocols - Documentation Review Re-evaluation
+---
+
 # Credential Exchange Protocols - Documentation Review Re-evaluation
 
 Re-evaluation of the credential exchange protocols documentation after implementing Priority 1 improvements.

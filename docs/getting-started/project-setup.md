@@ -1,3 +1,7 @@
+---
+title: Project Setup
+---
+
 # Project Setup
 
 Set up your development environment for working with TrustWeave.

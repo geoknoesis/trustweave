@@ -1,3 +1,7 @@
+---
+title: DID Method Registration JSON Specification
+---
+
 # DID Method Registration JSON Specification
 
 This document explains how JSON registration files following the **official DID Registration specification** (https://identity.foundation/did-registration/) are used to create `DidMethod` implementations in Trustweave.

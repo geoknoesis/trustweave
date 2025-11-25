@@ -1,3 +1,7 @@
+---
+title: GoDiddy Integration
+---
+
 # GoDiddy Integration
 
 > This guide covers the GoDiddy integration for TrustWeave. The GoDiddy plugin provides HTTP integration with GoDiddy services, including Universal Resolver, Registrar, Issuer, and Verifier, supporting 20+ DID methods.

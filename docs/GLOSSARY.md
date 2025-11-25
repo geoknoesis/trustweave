@@ -1,3 +1,7 @@
+---
+title: TrustWeave Glossary
+---
+
 # TrustWeave Glossary
 
 Standard terminology used throughout TrustWeave documentation.

@@ -1,3 +1,7 @@
+---
+title: Advanced Features Implementation Plan
+---
+
 # Advanced Features Implementation Plan
 
 ## Overview

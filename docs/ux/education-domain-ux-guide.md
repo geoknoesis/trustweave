@@ -1,3 +1,7 @@
+---
+title: Education Domain UX Guide - User Experience Documentation for Educational Use Cases
+---
+
 # Education Domain UX Guide - User Experience Documentation for Educational Use Cases
 
 ## Table of Contents

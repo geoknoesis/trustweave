@@ -1,3 +1,7 @@
+---
+title: Smart Contract API Reference
+---
+
 # Smart Contract API Reference
 
 > Complete API reference for TrustWeave Smart Contract operations

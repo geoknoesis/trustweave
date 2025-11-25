@@ -1,3 +1,7 @@
+---
+title: Security Clearance & Access Control Scenario
+---
+
 # Security Clearance & Access Control Scenario
 
 This guide demonstrates how to build a security clearance and access control system using TrustWeave. You'll learn how security authorities can issue clearance credentials, how individuals can store them in wallets, and how systems can verify clearances without exposing full identity or clearance details.

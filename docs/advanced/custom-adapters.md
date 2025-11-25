@@ -1,3 +1,7 @@
+---
+title: Creating Custom Adapters
+---
+
 # Creating Custom Adapters
 
 This guide explains how to create custom adapters for TrustWeave by implementing the service interfaces.

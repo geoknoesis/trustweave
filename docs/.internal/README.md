@@ -1,3 +1,7 @@
+---
+title: Internal Documentation
+---
+
 # Internal Documentation
 
 This folder contains internal documentation that is **not intended for public consumption**. These documents are for development, planning, and internal use only.

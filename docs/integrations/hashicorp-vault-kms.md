@@ -1,3 +1,7 @@
+---
+title: HashiCorp Vault KMS Integration
+---
+
 # HashiCorp Vault KMS Integration
 
 > This guide covers the HashiCorp Vault Key Management Service (KMS) integration for TrustWeave. The Vault KMS plugin provides production-ready key management using Vault's Transit secrets engine with support for all Vault Transit-compatible algorithms.

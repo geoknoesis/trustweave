@@ -1,3 +1,7 @@
+---
+title: Credential Exchange Protocols - API Reference
+---
+
 # Credential Exchange Protocols - API Reference
 
 Complete API reference for the credential exchange protocol abstraction layer.
@@ -43,11 +47,13 @@ interface CredentialExchangeProtocol {
 
 | Method | Description | Throws |
 |--------|-------------|--------|
-| `offerCredential()` | Creates a credential offer | `IllegalArgumentException`, protocol-specific errors |
-| `requestCredential()` | Requests a credential | `IllegalArgumentException`, protocol-specific errors |
-| `issueCredential()` | Issues a credential | `IllegalArgumentException`, protocol-specific errors |
-| `requestProof()` | Requests a proof presentation | `UnsupportedOperationException`, protocol-specific errors |
-| `presentProof()` | Presents a proof | `UnsupportedOperationException`, protocol-specific errors |
+| `offerCredential()` | Creates a credential offer | `ExchangeException`, protocol-specific errors |
+| `requestCredential()` | Requests a credential | `ExchangeException`, protocol-specific errors |
+| `issueCredential()` | Issues a credential | `ExchangeException`, protocol-specific errors |
+| `requestProof()` | Requests a proof presentation | `ExchangeException`, protocol-specific errors |
+| `presentProof()` | Presents a proof | `ExchangeException`, protocol-specific errors |
+
+**Note:** All exceptions extend `ExchangeException`, which extends `TrustWeaveException`. Plugin-specific exceptions (e.g., `DidCommException`, `Oidc4VciException`, `ChapiException`) are located in their respective plugin modules. See [Error Handling Guide](./ERROR_HANDLING.md) for complete exception reference.
 
 ---
 
@@ -564,9 +570,11 @@ suspend fun offerCredential(
 - `CredentialOfferResponse`: Offer response
 
 **Throws:**
-- `IllegalArgumentException`: If protocol not registered
-- `UnsupportedOperationException`: If protocol doesn't support OFFER_CREDENTIAL
-- Protocol-specific errors
+- `ExchangeException.ProtocolNotRegistered`: If protocol not registered
+- `ExchangeException.OperationNotSupported`: If protocol doesn't support OFFER_CREDENTIAL
+- `ExchangeException.MissingRequiredOption`: If required options are missing
+- `ExchangeException.InvalidRequest`: If request is invalid
+- Protocol-specific errors (e.g., `DidCommException`, `Oidc4VciException`, `ChapiException`)
 
 **Example:**
 ```kotlin
@@ -597,9 +605,11 @@ suspend fun requestCredential(
 - `CredentialRequestResponse`: Request response
 
 **Throws:**
-- `IllegalArgumentException`: If protocol not registered
-- `UnsupportedOperationException`: If protocol doesn't support REQUEST_CREDENTIAL
-- Protocol-specific errors
+- `ExchangeException.ProtocolNotRegistered`: If protocol not registered
+- `ExchangeException.OperationNotSupported`: If protocol doesn't support REQUEST_CREDENTIAL
+- `ExchangeException.MissingRequiredOption`: If required options are missing
+- `ExchangeException.OfferNotFound`: If offer ID not found
+- Protocol-specific errors (e.g., `DidCommException`, `Oidc4VciException`, `ChapiException`)
 
 ---
 
@@ -622,9 +632,11 @@ suspend fun issueCredential(
 - `CredentialIssueResponse`: Issue response
 
 **Throws:**
-- `IllegalArgumentException`: If protocol not registered
-- `UnsupportedOperationException`: If protocol doesn't support ISSUE_CREDENTIAL
-- Protocol-specific errors
+- `ExchangeException.ProtocolNotRegistered`: If protocol not registered
+- `ExchangeException.OperationNotSupported`: If protocol doesn't support ISSUE_CREDENTIAL
+- `ExchangeException.MissingRequiredOption`: If required options are missing
+- `ExchangeException.RequestNotFound`: If request ID not found
+- Protocol-specific errors (e.g., `DidCommException`, `Oidc4VciException`, `ChapiException`)
 
 ---
 
@@ -647,9 +659,10 @@ suspend fun requestProof(
 - `ProofRequestResponse`: Proof request response
 
 **Throws:**
-- `IllegalArgumentException`: If protocol not registered
-- `UnsupportedOperationException`: If protocol doesn't support REQUEST_PROOF
-- Protocol-specific errors
+- `ExchangeException.ProtocolNotRegistered`: If protocol not registered
+- `ExchangeException.OperationNotSupported`: If protocol doesn't support REQUEST_PROOF
+- `ExchangeException.MissingRequiredOption`: If required options are missing
+- Protocol-specific errors (e.g., `DidCommException`, `Oidc4VciException`, `ChapiException`)
 
 ---
 
@@ -672,9 +685,11 @@ suspend fun presentProof(
 - `ProofPresentationResponse`: Presentation response
 
 **Throws:**
-- `IllegalArgumentException`: If protocol not registered
-- `UnsupportedOperationException`: If protocol doesn't support PRESENT_PROOF
-- Protocol-specific errors
+- `ExchangeException.ProtocolNotRegistered`: If protocol not registered
+- `ExchangeException.OperationNotSupported`: If protocol doesn't support PRESENT_PROOF
+- `ExchangeException.MissingRequiredOption`: If required options are missing
+- `ExchangeException.ProofRequestNotFound`: If proof request ID not found
+- Protocol-specific errors (e.g., `DidCommException`, `Oidc4VciException`, `ChapiException`)
 
 ---
 
@@ -759,45 +774,115 @@ options = emptyMap()  // CHAPI doesn't require options
 
 ## Error Reference
 
-### IllegalArgumentException
+All credential exchange operations throw structured exceptions from the `ExchangeException` hierarchy. These exceptions extend `TrustWeaveException` and provide structured error codes and context.
+
+### Core ExchangeException Types
+
+#### ExchangeException.ProtocolNotRegistered
 
 **When it occurs:**
-- Protocol not registered
-- Invalid argument format
-- Missing required options
+- Protocol not registered in the registry
 
-**Error message format:**
+**Error code:** `PROTOCOL_NOT_REGISTERED`
+
+**Properties:**
+- `protocolName: String` - The requested protocol name
+- `availableProtocols: List<String>` - List of available protocol names
+
+**Example:**
+```kotlin
+try {
+    val offer = registry.offerCredential("didcomm", request)
+} catch (e: ExchangeException.ProtocolNotRegistered) {
+    println("Protocol: ${e.protocolName}")
+    println("Available: ${e.availableProtocols}")
+}
 ```
-Protocol '<name>' not registered. Available: [<names>]
-```
 
-**Solutions:**
-1. Register the protocol before use
-2. Check available protocols: `registry.getAllProtocolNames()`
-3. Verify argument format matches requirements
-
----
-
-### UnsupportedOperationException
+#### ExchangeException.OperationNotSupported
 
 **When it occurs:**
 - Protocol doesn't support the requested operation
 
-**Error message format:**
+**Error code:** `OPERATION_NOT_SUPPORTED`
+
+**Properties:**
+- `protocolName: String` - The protocol name
+- `operation: String` - The requested operation
+- `supportedOperations: List<String>` - List of supported operations
+
+**Example:**
+```kotlin
+try {
+    val proofRequest = registry.requestProof("oidc4vci", request)
+} catch (e: ExchangeException.OperationNotSupported) {
+    println("Protocol: ${e.protocolName}")
+    println("Operation: ${e.operation}")
+    println("Supported: ${e.supportedOperations}")
+}
 ```
-Protocol '<name>' does not support <OPERATION> operation
-```
 
-**Solutions:**
-1. Check supported operations: `protocol.supportedOperations`
-2. Use a different protocol that supports the operation
-3. Use a different operation that the protocol supports
+#### ExchangeException.MissingRequiredOption
 
----
+**When it occurs:**
+- Missing required option in request
 
-### Protocol-Specific Errors
+**Error code:** `MISSING_REQUIRED_OPTION`
 
-See [Error Handling Guide](./ERROR_HANDLING.md) for protocol-specific errors.
+**Properties:**
+- `optionName: String` - The name of the missing option
+- `protocolName: String?` - The protocol name (if applicable)
+
+#### ExchangeException.InvalidRequest
+
+**When it occurs:**
+- Invalid request field or parameter
+
+**Error code:** `INVALID_REQUEST`
+
+**Properties:**
+- `field: String` - The name of the invalid field
+- `reason: String` - The reason the field is invalid
+- `protocolName: String?` - The protocol name (if applicable)
+- `cause: Throwable?` - The underlying exception
+
+#### ExchangeException.OfferNotFound / RequestNotFound / ProofRequestNotFound / MessageNotFound
+
+**When it occurs:**
+- Resource (offer, request, proof request, message) not found
+
+**Error codes:** `OFFER_NOT_FOUND`, `REQUEST_NOT_FOUND`, `PROOF_REQUEST_NOT_FOUND`, `MESSAGE_NOT_FOUND`
+
+#### ExchangeException.Unknown
+
+**When it occurs:**
+- Unknown or unexpected error
+
+**Error code:** `EXCHANGE_UNKNOWN_ERROR`
+
+**Properties:**
+- `reason: String` - The reason for the error
+- `errorType: String?` - The type of the original error (if available)
+- `cause: Throwable?` - The underlying exception
+
+### Plugin-Specific Exceptions
+
+Plugin-specific exceptions are located in their respective plugin modules:
+
+- **DIDComm**: `com.trustweave.credential.didcomm.exception.DidCommException`
+  - `EncryptionFailed`, `DecryptionFailed`, `PackingFailed`, `UnpackingFailed`, `ProtocolError`
+
+- **OIDC4VCI**: `com.trustweave.credential.oidc4vci.exception.Oidc4VciException`
+  - `HttpRequestFailed`, `TokenExchangeFailed`, `MetadataFetchFailed`, `CredentialRequestFailed`
+
+- **CHAPI**: `com.trustweave.credential.chapi.exception.ChapiException`
+  - `BrowserNotAvailable`
+
+All plugin exceptions extend `ExchangeException`, ensuring consistent error handling.
+
+### Complete Error Reference
+
+See [Error Handling Guide](./ERROR_HANDLING.md) for complete exception reference, code examples, solutions, and best practices.
 
 ---
 

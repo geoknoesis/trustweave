@@ -1,3 +1,7 @@
+---
+title: Phase 2 & 3 Implementation Summary
+---
+
 # Phase 2 & 3 Implementation Summary
 
 Summary of Priority 2 and Priority 3 improvements implemented for credential exchange protocols documentation.

@@ -1,3 +1,7 @@
+---
+title: IDE Setup Guide
+---
+
 # IDE Setup Guide
 
 This guide helps you set up your development environment for working with TrustWeave.

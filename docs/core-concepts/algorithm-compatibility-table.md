@@ -1,3 +1,7 @@
+---
+title: Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault
+---
+
 # Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault
 
 This document provides a comprehensive comparison of cryptographic algorithms supported by Decentralized Identifiers (DIDs), Verifiable Credentials (VCs), AWS Key Management Service (KMS), and Azure Key Vault.

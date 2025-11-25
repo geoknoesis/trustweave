@@ -1,3 +1,7 @@
+---
+title: trustweave-anchor
+---
+
 # trustweave-anchor
 
 The `trustweave-anchor` module provides blockchain anchoring abstraction with chain-agnostic interfaces for notarizing data on various blockchains.

@@ -1,3 +1,7 @@
+---
+title: CHAPI Plugin
+---
+
 # CHAPI Plugin
 
 Credential Handler API (CHAPI) implementation for TrustWeave.

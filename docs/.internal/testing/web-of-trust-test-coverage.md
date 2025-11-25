@@ -1,3 +1,7 @@
+---
+title: Test Coverage Summary - Web of Trust Implementation
+---
+
 # Test Coverage Summary - Web of Trust Implementation
 
 ## Overview

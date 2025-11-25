@@ -1,3 +1,7 @@
+---
+title: TrustWeave Cloud API - Complete Reference
+---
+
 # TrustWeave Cloud API - Complete Reference
 
 > **Complete API documentation for TrustWeave Cloud SaaS platform using API_KEY authentication**

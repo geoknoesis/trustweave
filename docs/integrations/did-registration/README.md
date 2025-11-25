@@ -1,3 +1,7 @@
+---
+title: DID Method Registration via JSON
+---
+
 # DID Method Registration via JSON
 
 This package provides support for registering DID methods using JSON files that follow the [DID Registration specification](https://identity.foundation/did-registration/). This makes it easy to add support for new DID methods without writing code.

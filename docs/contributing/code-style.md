@@ -1,3 +1,7 @@
+---
+title: Code Style
+---
+
 # Code Style
 
 This guide outlines the coding conventions and style guidelines for TrustWeave.

@@ -1,3 +1,7 @@
+---
+title: Blockchain Anchoring
+---
+
 # Blockchain Anchoring
 
 Anchoring creates an immutable audit trail for important events or payloads by writing a compact reference to a blockchain. TrustWeave standardises the experience so you can leverage tamper evidence without becoming a chain expert.

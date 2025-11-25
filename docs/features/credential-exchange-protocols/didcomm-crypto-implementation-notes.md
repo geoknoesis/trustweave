@@ -1,3 +1,7 @@
+---
+title: DIDComm Crypto Implementation Notes
+---
+
 # DIDComm Crypto Implementation Notes
 
 ## Current Status: Placeholder Implementation

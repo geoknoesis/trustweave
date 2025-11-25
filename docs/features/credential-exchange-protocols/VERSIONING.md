@@ -1,3 +1,7 @@
+---
+title: Credential Exchange Protocols - Versioning
+---
+
 # Credential Exchange Protocols - Versioning
 
 Version information, deprecation notices, and migration guides for credential exchange protocols.

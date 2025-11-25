@@ -1,3 +1,7 @@
+---
+title: SPI Interfaces
+---
+
 # SPI Interfaces
 
 The SPI (Service Provider Interface) interfaces are shared service and plugin abstractions that

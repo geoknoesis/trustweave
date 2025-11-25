@@ -1,3 +1,7 @@
+---
+title: Plugin Implementation Status
+---
+
 # Plugin Implementation Status
 
 This document tracks the implementation status of all plugins identified in the roadmap.

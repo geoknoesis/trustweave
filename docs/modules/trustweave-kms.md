@@ -1,3 +1,7 @@
+---
+title: trustweave-kms
+---
+
 # trustweave-kms
 
 The `trustweave-kms` module provides the key management service abstraction used throughout TrustWeave. This module defines the interface for key generation, signing, and management operations.

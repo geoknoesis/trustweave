@@ -1,3 +1,7 @@
+---
+title: IoT Sensor Data Provenance & Integrity Scenario
+---
+
 # IoT Sensor Data Provenance & Integrity Scenario
 
 This guide demonstrates how to build an IoT sensor data provenance and integrity system using TrustWeave. You'll learn how sensor manufacturers can issue sensor attestation credentials, how sensors can create data attestation credentials, and how data consumers can verify sensor data authenticity and integrity.

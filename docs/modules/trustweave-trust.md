@@ -1,3 +1,7 @@
+---
+title: trustweave-trust
+---
+
 # trustweave-trust
 
 The `trustweave-trust` module provides the trust-layer building blocks that sit

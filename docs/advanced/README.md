@@ -1,3 +1,7 @@
+---
+title: Advanced Topics
+---
+
 # Advanced Topics
 
 This section is aimed at teams who are moving past the quick starts and now need to harden production deployments. Each guide assumes you already understand the core DID / credential lifecycle and want to fine-tune behaviour through typed options, SPI hooks, or operational playbooks.

@@ -1,3 +1,7 @@
+---
+title: Supply Chain & Traceability Scenario
+---
+
 # Supply Chain & Traceability Scenario
 
 This guide demonstrates how to build a supply chain traceability system using TrustWeave that enables multi-party credentials, provenance tracking, product authenticity verification, and immutable chain of custody records.

@@ -1,3 +1,7 @@
+---
+title: Your First Application
+---
+
 # Your First Application
 
 Build a complete TrustWeave application that demonstrates the full workflow: creating DIDs, computing digests, and anchoring to blockchains.

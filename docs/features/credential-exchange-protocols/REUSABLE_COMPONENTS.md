@@ -1,3 +1,7 @@
+---
+title: Reusable Components Across Protocols
+---
+
 # Reusable Components Across Protocols
 
 ## Overview

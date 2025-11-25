@@ -1,3 +1,7 @@
+---
+title: Plugin Credential Handling for Tests
+---
+
 # Plugin Credential Handling for Tests
 
 This guide explains how TrustWeave handles tests that require external credentials, tokens, or API keys for plugins.

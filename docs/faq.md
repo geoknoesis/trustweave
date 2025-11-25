@@ -1,3 +1,7 @@
+---
+title: Frequently Asked Questions
+---
+
 # Frequently Asked Questions
 
 TrustWeave is produced by **Geoknoesis LLC** ([www.geoknoesis.com](https://www.geoknoesis.com)). This FAQ highlights the questions developers ask most often when wiring the SDK into real systems.

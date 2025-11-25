@@ -1,3 +1,7 @@
+---
+title: Key DID Integration
+---
+
 # Key DID Integration
 
 > This guide covers the native did:key method integration for TrustWeave. The did:key plugin provides the most widely-used DID method with zero external dependencies.

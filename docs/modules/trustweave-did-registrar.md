@@ -1,3 +1,7 @@
+---
+title: trustweave-did-registrar
+---
+
 # trustweave-did-registrar
 
 The `trustweave-did-registrar` module provides implementations of the `DidRegistrar` interface for creating, updating, and deactivating DIDs according to the [DID Registration specification](https://identity.foundation/did-registration/).

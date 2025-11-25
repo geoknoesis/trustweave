@@ -1,3 +1,7 @@
+---
+title: Peer DID Integration
+---
+
 # Peer DID Integration
 
 > This guide covers the did:peer method integration for TrustWeave. The did:peer plugin provides peer-to-peer DIDs without external registries or blockchains.

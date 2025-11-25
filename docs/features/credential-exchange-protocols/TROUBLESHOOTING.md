@@ -1,3 +1,7 @@
+---
+title: Credential Exchange Protocols - Troubleshooting
+---
+
 # Credential Exchange Protocols - Troubleshooting
 
 Common issues and solutions when working with credential exchange protocols.
@@ -8,11 +12,13 @@ Common issues and solutions when working with credential exchange protocols.
 
 **Error:**
 ```
-IllegalArgumentException: Protocol 'didcomm' not registered. Available: []
+ExchangeException.ProtocolNotRegistered: Protocol 'didcomm' not registered. Available: []
 ```
 
+**Error code:** `PROTOCOL_NOT_REGISTERED`
+
 **Symptoms:**
-- Calling `offerCredential()` throws `IllegalArgumentException`
+- Calling `offerCredential()` throws `ExchangeException.ProtocolNotRegistered`
 - `registry.getAllProtocolNames()` returns empty list
 
 **Solutions:**
@@ -50,8 +56,10 @@ IllegalArgumentException: Protocol 'didcomm' not registered. Available: []
 
 **Error:**
 ```
-IllegalArgumentException: Missing required option: fromKeyId
+ExchangeException.MissingRequiredOption: Missing required option 'fromKeyId' for protocol 'didcomm'
 ```
+
+**Error code:** `MISSING_REQUIRED_OPTION`
 
 **Symptoms:**
 - DIDComm operations fail with missing option error
@@ -89,11 +97,13 @@ IllegalArgumentException: Missing required option: fromKeyId
 
 **Error:**
 ```
-UnsupportedOperationException: Protocol 'oidc4vci' does not support REQUEST_PROOF operation
+ExchangeException.OperationNotSupported: Protocol 'oidc4vci' does not support operation 'REQUEST_PROOF'. Supported: [OFFER_CREDENTIAL, REQUEST_CREDENTIAL, ISSUE_CREDENTIAL]
 ```
 
+**Error code:** `OPERATION_NOT_SUPPORTED`
+
 **Symptoms:**
-- Calling `requestProof()` throws `UnsupportedOperationException`
+- Calling `requestProof()` throws `ExchangeException.OperationNotSupported`
 - Protocol doesn't support the requested operation
 
 **Solutions:**
@@ -124,7 +134,7 @@ UnsupportedOperationException: Protocol 'oidc4vci' does not support REQUEST_PROO
 **Prevention:**
 - Check `protocol.supportedOperations` before calling methods
 - Use protocol comparison table to choose the right protocol
-- Handle `UnsupportedOperationException` gracefully
+- Handle `ExchangeException.OperationNotSupported` gracefully
 
 ---
 

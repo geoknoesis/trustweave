@@ -1,3 +1,7 @@
+---
+title: Advanced Features Implementation Summary
+---
+
 # Advanced Features Implementation Summary
 
 ## Overview

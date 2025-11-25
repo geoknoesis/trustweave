@@ -1,5 +1,7 @@
 package com.trustweave.credential.exchange
 
+import com.trustweave.credential.exchange.exception.ExchangeException
+import com.trustweave.credential.exchange.exception.toExchangeException
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -72,17 +74,27 @@ class CredentialExchangeProtocolRegistry(
         request: CredentialOfferRequest
     ): CredentialOfferResponse {
         val protocol = protocols[protocolName]
-            ?: throw IllegalArgumentException(
-                "Protocol '$protocolName' not registered. Available: ${protocols.keys.joinToString()}"
+            ?: throw ExchangeException.ProtocolNotRegistered(
+                protocolName = protocolName,
+                availableProtocols = protocols.keys.toList()
             )
         
         if (!protocol.supportedOperations.contains(ExchangeOperation.OFFER_CREDENTIAL)) {
-            throw UnsupportedOperationException(
-                "Protocol '$protocolName' does not support OFFER_CREDENTIAL operation"
+            throw ExchangeException.OperationNotSupported(
+                protocolName = protocolName,
+                operation = "OFFER_CREDENTIAL",
+                supportedOperations = protocol.supportedOperations.map { it.name }
             )
         }
         
-        return protocol.offerCredential(request)
+        return try {
+            protocol.offerCredential(request)
+        } catch (e: ExchangeException) {
+            throw e  // Re-throw exchange exceptions as-is
+        } catch (e: Throwable) {
+            // Convert unexpected errors to ExchangeException
+            throw e.toExchangeException()
+        }
     }
     
     /**
@@ -93,17 +105,27 @@ class CredentialExchangeProtocolRegistry(
         request: CredentialRequestRequest
     ): CredentialRequestResponse {
         val protocol = protocols[protocolName]
-            ?: throw IllegalArgumentException(
-                "Protocol '$protocolName' not registered. Available: ${protocols.keys.joinToString()}"
+            ?: throw ExchangeException.ProtocolNotRegistered(
+                protocolName = protocolName,
+                availableProtocols = protocols.keys.toList()
             )
         
         if (!protocol.supportedOperations.contains(ExchangeOperation.REQUEST_CREDENTIAL)) {
-            throw UnsupportedOperationException(
-                "Protocol '$protocolName' does not support REQUEST_CREDENTIAL operation"
+            throw ExchangeException.OperationNotSupported(
+                protocolName = protocolName,
+                operation = "REQUEST_CREDENTIAL",
+                supportedOperations = protocol.supportedOperations.map { it.name }
             )
         }
         
-        return protocol.requestCredential(request)
+        return try {
+            protocol.requestCredential(request)
+        } catch (e: ExchangeException) {
+            throw e  // Re-throw exchange exceptions as-is
+        } catch (e: Throwable) {
+            // Convert unexpected errors to ExchangeException
+            throw e.toExchangeException()
+        }
     }
     
     /**
@@ -114,17 +136,27 @@ class CredentialExchangeProtocolRegistry(
         request: CredentialIssueRequest
     ): CredentialIssueResponse {
         val protocol = protocols[protocolName]
-            ?: throw IllegalArgumentException(
-                "Protocol '$protocolName' not registered. Available: ${protocols.keys.joinToString()}"
+            ?: throw ExchangeException.ProtocolNotRegistered(
+                protocolName = protocolName,
+                availableProtocols = protocols.keys.toList()
             )
         
         if (!protocol.supportedOperations.contains(ExchangeOperation.ISSUE_CREDENTIAL)) {
-            throw UnsupportedOperationException(
-                "Protocol '$protocolName' does not support ISSUE_CREDENTIAL operation"
+            throw ExchangeException.OperationNotSupported(
+                protocolName = protocolName,
+                operation = "ISSUE_CREDENTIAL",
+                supportedOperations = protocol.supportedOperations.map { it.name }
             )
         }
         
-        return protocol.issueCredential(request)
+        return try {
+            protocol.issueCredential(request)
+        } catch (e: ExchangeException) {
+            throw e  // Re-throw exchange exceptions as-is
+        } catch (e: Throwable) {
+            // Convert unexpected errors to ExchangeException
+            throw e.toExchangeException()
+        }
     }
     
     /**
@@ -135,17 +167,27 @@ class CredentialExchangeProtocolRegistry(
         request: ProofRequestRequest
     ): ProofRequestResponse {
         val protocol = protocols[protocolName]
-            ?: throw IllegalArgumentException(
-                "Protocol '$protocolName' not registered. Available: ${protocols.keys.joinToString()}"
+            ?: throw ExchangeException.ProtocolNotRegistered(
+                protocolName = protocolName,
+                availableProtocols = protocols.keys.toList()
             )
         
         if (!protocol.supportedOperations.contains(ExchangeOperation.REQUEST_PROOF)) {
-            throw UnsupportedOperationException(
-                "Protocol '$protocolName' does not support REQUEST_PROOF operation"
+            throw ExchangeException.OperationNotSupported(
+                protocolName = protocolName,
+                operation = "REQUEST_PROOF",
+                supportedOperations = protocol.supportedOperations.map { it.name }
             )
         }
         
-        return protocol.requestProof(request)
+        return try {
+            protocol.requestProof(request)
+        } catch (e: ExchangeException) {
+            throw e  // Re-throw exchange exceptions as-is
+        } catch (e: Throwable) {
+            // Convert unexpected errors to ExchangeException
+            throw e.toExchangeException()
+        }
     }
     
     /**
@@ -156,17 +198,27 @@ class CredentialExchangeProtocolRegistry(
         request: ProofPresentationRequest
     ): ProofPresentationResponse {
         val protocol = protocols[protocolName]
-            ?: throw IllegalArgumentException(
-                "Protocol '$protocolName' not registered. Available: ${protocols.keys.joinToString()}"
+            ?: throw ExchangeException.ProtocolNotRegistered(
+                protocolName = protocolName,
+                availableProtocols = protocols.keys.toList()
             )
         
         if (!protocol.supportedOperations.contains(ExchangeOperation.PRESENT_PROOF)) {
-            throw UnsupportedOperationException(
-                "Protocol '$protocolName' does not support PRESENT_PROOF operation"
+            throw ExchangeException.OperationNotSupported(
+                protocolName = protocolName,
+                operation = "PRESENT_PROOF",
+                supportedOperations = protocol.supportedOperations.map { it.name }
             )
         }
         
-        return protocol.presentProof(request)
+        return try {
+            protocol.presentProof(request)
+        } catch (e: ExchangeException) {
+            throw e  // Re-throw exchange exceptions as-is
+        } catch (e: Throwable) {
+            // Convert unexpected errors to ExchangeException
+            throw e.toExchangeException()
+        }
     }
     
     /**

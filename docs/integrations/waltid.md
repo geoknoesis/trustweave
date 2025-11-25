@@ -1,3 +1,7 @@
+---
+title: walt.id Integration
+---
+
 # walt.id Integration
 
 > This guide covers the walt.id integration for TrustWeave. The walt.id plugin provides walt.id-based KMS and DID methods with SPI-based discovery, supporting did:key and did:web methods.

@@ -1,3 +1,7 @@
+---
+title: DIDComm V2 Integration Guide
+---
+
 # DIDComm V2 Integration Guide
 
 ## Overview

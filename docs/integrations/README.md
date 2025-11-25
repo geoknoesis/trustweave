@@ -1,3 +1,7 @@
+---
+title: Integration Modules
+---
+
 # Integration Modules
 
 TrustWeave ships optional integration modules that plug providers into the SPI

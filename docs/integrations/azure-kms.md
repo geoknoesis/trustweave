@@ -1,3 +1,7 @@
+---
+title: Azure Key Vault Integration
+---
+
 # Azure Key Vault Integration
 
 > This guide covers the Azure Key Vault integration for TrustWeave. The Azure Key Vault plugin provides production-ready key management with support for Azure Key Vault-compatible algorithms.

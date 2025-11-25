@@ -1,3 +1,7 @@
+---
+title: Guide UX du Domaine Éducation - Documentation d'Expérience Utilisateur pour les Cas d'Usage Éducatifs
+---
+
 # Guide UX du Domaine Éducation - Documentation d'Expérience Utilisateur pour les Cas d'Usage Éducatifs
 
 ## Table des Matières

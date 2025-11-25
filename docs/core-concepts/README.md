@@ -1,3 +1,7 @@
+---
+title: Core Concepts
+---
+
 # Core Concepts
 
 Welcome to TrustWeave's core concepts! This section introduces the fundamental building blocks of decentralized identity and trust systems.

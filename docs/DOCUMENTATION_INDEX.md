@@ -1,3 +1,7 @@
+---
+title: TrustWeave Documentation Index
+---
+
 # TrustWeave Documentation Index
 
 > TrustWeave is developed and maintained by [Geoknoesis LLC](https://www.geoknoesis.com).
@@ -304,7 +308,6 @@ See [CHANGELOG.md](../CHANGELOG.md) for detailed migration guides:
   - Commission structure and remuneration details
   - Deal qualification criteria and registration process
   - Partner resources, training, and support
-  - Special benefits for Entrepreneurs' Organization (EO) members
   - Application process and partner agreement details
 - **[Partner Referral Agreement Template](PARTNER_REFERRAL_AGREEMENT_TEMPLATE.md)**: Legal template for partner referral agreements
   - Complete agreement terms and conditions

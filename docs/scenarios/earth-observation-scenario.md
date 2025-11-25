@@ -1,3 +1,7 @@
+---
+title: Earth Observation Scenario
+---
+
 # Earth Observation Scenario
 
 This guide walks you through building a complete Earth Observation (EO) data integrity verification system using TrustWeave. You'll learn how to create DIDs, compute digests, build integrity chains, and anchor data to blockchains.

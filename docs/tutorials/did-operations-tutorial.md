@@ -1,3 +1,7 @@
+---
+title: DID Operations Tutorial
+---
+
 # DID Operations Tutorial
 
 This tutorial provides a comprehensive guide to performing DID operations with TrustWeave. You'll learn how to create, resolve, update, and deactivate DIDs using various DID methods.

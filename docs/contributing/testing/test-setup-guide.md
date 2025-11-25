@@ -1,3 +1,7 @@
+---
+title: Test Setup Guide
+---
+
 # Test Setup Guide
 
 This guide explains how to set up the test environment for TrustWeave development.

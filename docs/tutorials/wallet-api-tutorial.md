@@ -1,3 +1,7 @@
+---
+title: Wallet API Tutorial
+---
+
 # Wallet API Tutorial
 
 This tutorial provides a comprehensive guide to using TrustWeave's Wallet API. You'll learn how to create wallets, store credentials, organize them, and create presentations.

@@ -1,3 +1,7 @@
+---
+title: Security Training & Certification Verification Scenario
+---
+
 # Security Training & Certification Verification Scenario
 
 This guide demonstrates how to build a security training and certification verification system using TrustWeave. You'll learn how training providers can issue training and certification credentials, how individuals can store them in wallets, and how employers can verify security qualifications without manual checks.

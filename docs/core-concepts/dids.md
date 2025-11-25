@@ -1,3 +1,7 @@
+---
+title: Decentralized Identifiers (DIDs)
+---
+
 # Decentralized Identifiers (DIDs)
 
 > TrustWeave is created and supported by [Geoknoesis LLC](https://www.geoknoesis.com). The project reflects Geoknoesis’ reference architecture for decentralized trust.

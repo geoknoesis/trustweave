@@ -1,3 +1,7 @@
+---
+title: SOC2 Compliance Blueprint with TrustWeave
+---
+
 # SOC2 Compliance Blueprint with TrustWeave
 
 This blueprint provides a comprehensive guide for implementing a SOC2 Type II compliant system using TrustWeave. It covers architecture, controls, implementation patterns, and verification procedures.

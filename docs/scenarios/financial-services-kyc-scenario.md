@@ -1,3 +1,7 @@
+---
+title: Financial Services & KYC/AML Scenario
+---
+
 # Financial Services & KYC/AML Scenario
 
 This guide demonstrates how to build a financial services identity verification system using TrustWeave that enables reusable KYC credentials, compliance verification, cross-institution sharing, and regulatory anchoring.

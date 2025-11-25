@@ -188,19 +188,4 @@ object CredentialProtocol {
     }
 }
 
-/**
- * Credential preview for offer messages.
- * 
- * @deprecated Use com.trustweave.credential.exchange.CredentialPreview instead
- */
-@Deprecated("Use com.trustweave.credential.exchange.CredentialPreview", ReplaceWith("com.trustweave.credential.exchange.CredentialPreview"))
-typealias CredentialPreview = com.trustweave.credential.exchange.CredentialPreview
-
-/**
- * Credential attribute in preview.
- * 
- * @deprecated Use com.trustweave.credential.exchange.CredentialAttribute instead
- */
-@Deprecated("Use com.trustweave.credential.exchange.CredentialAttribute", ReplaceWith("com.trustweave.credential.exchange.CredentialAttribute"))
-typealias CredentialAttribute = com.trustweave.credential.exchange.CredentialAttribute
 

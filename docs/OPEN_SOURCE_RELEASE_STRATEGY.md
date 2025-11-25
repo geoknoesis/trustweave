@@ -1,3 +1,7 @@
+---
+title: TrustWeave Open Source Release Strategy
+---
+
 # TrustWeave Open Source Release Strategy
 
 > **Comprehensive plan for launching TrustWeave as an open source project**

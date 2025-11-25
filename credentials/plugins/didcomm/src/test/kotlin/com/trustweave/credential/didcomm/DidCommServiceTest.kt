@@ -34,13 +34,13 @@ class DidCommServiceTest {
     
     @Test
     fun testCredentialOfferCreation() = runBlocking {
-        val preview = CredentialProtocol.CredentialPreview(
+        val preview = com.trustweave.credential.exchange.CredentialPreview(
             attributes = listOf(
-                CredentialProtocol.CredentialAttribute(
+                com.trustweave.credential.exchange.CredentialAttribute(
                     name = "name",
                     value = "Alice"
                 ),
-                CredentialProtocol.CredentialAttribute(
+                com.trustweave.credential.exchange.CredentialAttribute(
                     name = "email",
                     value = "alice@example.com"
                 )

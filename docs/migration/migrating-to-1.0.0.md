@@ -1,3 +1,7 @@
+---
+title: Migrating to TrustWeave 1.0.0
+---
+
 # Migrating to TrustWeave 1.0.0
 
 This guide helps you migrate from earlier versions of TrustWeave to version 1.0.0.

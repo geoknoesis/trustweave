@@ -1,3 +1,7 @@
+---
+title: Writing Tests Guide
+---
+
 # Writing Tests Guide
 
 This guide explains how to write tests for TrustWeave plugins and components.

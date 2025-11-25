@@ -1,3 +1,7 @@
+---
+title: Zero Trust Continuous Authentication Scenario
+---
+
 # Zero Trust Continuous Authentication Scenario
 
 This guide demonstrates how to build a Zero Trust continuous authentication system using TrustWeave. You'll learn how authentication authorities can issue short-lived authentication credentials, how users can store them in wallets, and how systems can continuously verify authentication without traditional session-based access.

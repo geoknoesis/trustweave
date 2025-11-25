@@ -2,6 +2,7 @@ package com.trustweave.credential.chapi.exchange
 
 import com.trustweave.credential.chapi.ChapiService
 import com.trustweave.credential.exchange.*
+import com.trustweave.credential.exchange.exception.ExchangeException
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.models.VerifiablePresentation
 
@@ -67,9 +68,10 @@ class ChapiExchangeProtocol(
     override suspend fun requestCredential(
         request: CredentialRequestRequest
     ): CredentialRequestResponse {
-        throw UnsupportedOperationException(
-            "CHAPI does not support credential requests in this way. " +
-            "Use wallet.get() to request credentials from the user."
+        throw ExchangeException.OperationNotSupported(
+            protocolName = protocolName,
+            operation = "REQUEST_CREDENTIAL",
+            supportedOperations = supportedOperations.map { it.name }
         )
     }
     

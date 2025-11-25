@@ -1,3 +1,7 @@
+---
+title: What is TrustWeave?
+---
+
 # What is TrustWeave?
 
 > **Version:** 1.0.0-SNAPSHOT  

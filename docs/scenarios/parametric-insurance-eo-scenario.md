@@ -1,3 +1,7 @@
+---
+title: Parametric Insurance with Earth Observation Data
+---
+
 # Parametric Insurance with Earth Observation Data
 
 This guide demonstrates how to build a parametric insurance system using TrustWeave and Earth Observation (EO) data. You'll learn how to create verifiable credentials for EO data that trigger insurance payouts, solving the "Oracle Problem" by enabling standardized, multi-provider data ecosystems.

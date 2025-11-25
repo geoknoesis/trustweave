@@ -1,3 +1,7 @@
+---
+title: Quick Start
+---
+
 # Quick Start
 
 Get started with TrustWeave in 5 minutes! This guide will walk you through creating your first TrustWeave application.

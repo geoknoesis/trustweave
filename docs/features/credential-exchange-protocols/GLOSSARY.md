@@ -1,3 +1,7 @@
+---
+title: Credential Exchange Protocols - Glossary
+---
+
 # Credential Exchange Protocols - Glossary
 
 Complete glossary of terms and concepts used in credential exchange protocols.

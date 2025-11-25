@@ -1,3 +1,7 @@
+---
+title: Evaluation Engines
+---
+
 # Evaluation Engines
 
 > TrustWeave Evaluation Engines provide a pluggable, tamper-proof system for evaluating contract conditions with cryptographic integrity verification.

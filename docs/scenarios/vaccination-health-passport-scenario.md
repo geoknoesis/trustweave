@@ -1,3 +1,7 @@
+---
+title: Vaccination and Health Passport Scenario
+---
+
 # Vaccination and Health Passport Scenario
 
 This guide demonstrates how to build a complete vaccination and health passport system using TrustWeave. You'll learn how healthcare providers can issue vaccination credentials, how individuals can store them in wallets, and how verifiers (airlines, venues, employers) can verify vaccination status while preserving privacy.

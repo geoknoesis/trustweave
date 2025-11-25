@@ -1,3 +1,7 @@
+---
+title: National Education Credentials Scenario (AlgeroPass)
+---
+
 # National Education Credentials Scenario (AlgeroPass)
 
 This guide demonstrates how to build a national-level education credential system using TrustWeave, specifically designed for Algeria's AlgeroPass initiative. You'll learn how a national education authority can issue verifiable credentials to students, enable cross-institution verification, and provide a unified credential system across the entire country.

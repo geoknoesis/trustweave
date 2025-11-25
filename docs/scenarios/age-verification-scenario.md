@@ -1,3 +1,7 @@
+---
+title: Age Verification Scenario
+---
+
 # Age Verification Scenario
 
 This guide demonstrates how to build a privacy-preserving age verification system using TrustWeave. You'll learn how identity providers can issue age credentials, how individuals can store them in wallets, and how service providers can verify age without seeing personal information or full identity details.

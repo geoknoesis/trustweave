@@ -1,3 +1,7 @@
+---
+title: Trust Layer Test Templates
+---
+
 # Trust Layer Test Templates
 
 This guide explains how to use the comprehensive in-memory test templates for trust layer integration tests.

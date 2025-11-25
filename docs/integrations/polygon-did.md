@@ -1,3 +1,7 @@
+---
+title: Polygon DID Integration
+---
+
 # Polygon DID Integration
 
 > This guide covers the did:polygon method integration for TrustWeave. The did:polygon plugin provides Polygon DID resolution with blockchain anchoring support, reusing the Ethereum DID pattern for EVM compatibility.

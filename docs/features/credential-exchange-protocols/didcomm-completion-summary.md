@@ -1,3 +1,7 @@
+---
+title: DIDComm V2 Implementation - Completion Summary
+---
+
 # DIDComm V2 Implementation - Completion Summary
 
 ## ✅ Implementation Complete

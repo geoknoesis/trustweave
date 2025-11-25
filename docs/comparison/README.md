@@ -1,3 +1,7 @@
+---
+title: Comparison Documentation
+---
+
 # Comparison Documentation
 
 This directory contains comparison documents that help you understand how TrustWeave compares to other decentralized identity and verifiable credentials APIs and libraries.

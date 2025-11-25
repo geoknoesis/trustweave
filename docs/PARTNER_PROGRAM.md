@@ -1,3 +1,7 @@
+---
+title: TrustWeave Partner Program
+---
+
 # TrustWeave Partner Program
 
 > **Empowering Partners to Build the Future of Decentralized Trust**
@@ -17,7 +21,7 @@ The TrustWeave Partner Program enables organizations and individuals to monetize
 - **Multiple Revenue Streams**: Commercial licensing, professional services, and future SaaS
 - **Competitive Compensation**: Industry-leading commission structure
 - **Growing Ecosystem**: Join a community building the foundation for decentralized trust
-- **EO Community Focus**: Special benefits for Entrepreneurs' Organization members
+- **Open to All**: Partner program welcomes organizations, consultants, and individuals from all communities
 
 ---
 
@@ -119,14 +123,14 @@ Partners can refer customers for:
 - Multi-year contract bonus: $2,500 per additional year
 - Payment within 30 days of customer payment
 
-### EO Community Special Benefits
+### Special Partner Benefits
 
-Entrepreneurs' Organization members receive:
-- **Fast-track onboarding** (24-hour approval)
-- **Enhanced commission** (+2% on all tiers)
-- **EO-exclusive events** and webinars
-- **Co-marketing opportunities** with other EO members
-- **Referral network access** to other EO partner programs
+Qualified partners may receive:
+- **Fast-track onboarding** for established organizations (24-hour approval available)
+- **Enhanced commission** opportunities for high-performing partners
+- **Exclusive events** and webinars
+- **Co-marketing opportunities** with TrustWeave
+- **Referral network access** to partner ecosystem
 
 ---
 
@@ -273,7 +277,7 @@ All partners receive access to:
    - Expected deal volume
 
 2. **Review**: Geoknoesis reviews application (typically 48-72 hours)
-   - EO members: 24-hour fast-track review
+   - Fast-track review (24 hours) available for established organizations
 
 3. **Onboarding**: Approved partners receive:
    - Partner agreement for signature
@@ -340,7 +344,7 @@ Partners must:
 
 ### Example Partner Success
 
-**Partner Profile**: EO member, technology consultant  
+**Partner Profile**: Technology consultant with enterprise network  
 **Deal**: $150,000 ARR commercial license + $50,000 professional services  
 **Timeline**: 4 months from introduction to close  
 **Commission**: $45,000 (first year) + $5,000 (renewal year 1) + $2,500 (deal size bonus)  
@@ -358,8 +362,8 @@ A: Once approved and onboarded, you can register deals immediately. Typical sale
 **Q: Do I need to be technical to be a partner?**  
 A: No. While technical knowledge helps, we provide all necessary training and sales support.
 
-**Q: Can I partner if I'm not in the EO community?**  
-A: Yes! The program is open to all qualified partners. EO members receive additional benefits.
+**Q: Who can become a partner?**  
+A: The program is open to all qualified organizations, consultants, and individuals. We welcome partners from all communities and industries.
 
 **Q: What if I'm already working with a competitor?**  
 A: We allow non-exclusive partnerships, but please disclose any potential conflicts.

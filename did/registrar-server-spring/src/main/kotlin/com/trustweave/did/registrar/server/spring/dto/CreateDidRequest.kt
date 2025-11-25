@@ -32,3 +32,4 @@ data class CreateDidRequest(
     val options: CreateDidOptions = CreateDidOptions()
 )
 
+

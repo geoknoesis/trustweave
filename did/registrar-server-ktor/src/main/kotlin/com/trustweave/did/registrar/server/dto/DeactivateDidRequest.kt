@@ -25,3 +25,4 @@ data class DeactivateDidRequest(
     val options: DeactivateDidOptions? = null
 )
 
+

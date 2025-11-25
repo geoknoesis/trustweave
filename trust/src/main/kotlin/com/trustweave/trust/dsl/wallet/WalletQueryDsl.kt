@@ -153,3 +153,4 @@ suspend fun Wallet.queryEnhanced(block: EnhancedQueryBuilder.() -> Unit): List<V
     return builder.execute()
 }
 
+

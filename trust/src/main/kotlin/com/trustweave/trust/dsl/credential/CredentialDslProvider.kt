@@ -35,3 +35,4 @@ interface CredentialDslProvider {
     fun getDefaultProofType(): String
 }
 
+

@@ -23,7 +23,10 @@ class GodiddyDidMethod(
 
     override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
         if (registrar == null) {
-            throw TrustWeaveException("Universal Registrar not available. Cannot create DID with method $method")
+            throw com.trustweave.did.exception.DidException.DidMethodNotRegistered(
+                method = method,
+                availableMethods = emptyList()
+            )
         }
         registrar.createDid(method, options)
     }
@@ -37,13 +40,19 @@ class GodiddyDidMethod(
         updater: (DidDocument) -> DidDocument
     ): DidDocument = withContext(Dispatchers.IO) {
         if (registrar == null) {
-            throw TrustWeaveException("Universal Registrar not available. Cannot update DID $did")
+            throw com.trustweave.did.exception.DidException.DidMethodNotRegistered(
+                method = method,
+                availableMethods = emptyList()
+            )
         }
         
         // First resolve the current document
         val resolutionResult = resolver.resolveDid(did)
         val currentDocument = resolutionResult.document
-            ?: throw TrustWeaveException("DID not found: $did")
+            ?: throw com.trustweave.did.exception.DidException.DidNotFound(
+                did = did,
+                availableMethods = emptyList()
+            )
         
         // Apply the updater function
         val updatedDocument = updater(currentDocument)
@@ -54,7 +63,10 @@ class GodiddyDidMethod(
 
     override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
         if (registrar == null) {
-            throw TrustWeaveException("Universal Registrar not available. Cannot deactivate DID $did")
+            throw com.trustweave.did.exception.DidException.DidMethodNotRegistered(
+                method = method,
+                availableMethods = emptyList()
+            )
         }
         registrar.deactivateDid(did)
     }

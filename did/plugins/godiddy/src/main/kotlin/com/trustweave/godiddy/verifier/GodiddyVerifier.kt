@@ -64,7 +64,12 @@ class GodiddyVerifier(
                 checks = response.checks
             )
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to verify credential: ${e.message}", e)
+            throw com.trustweave.credential.exception.CredentialException.CredentialInvalid(
+                reason = "Verification failed: ${e.message ?: "Unknown error"}",
+                credentialId = null,
+                field = null,
+                cause = e
+            )
         }
     }
     

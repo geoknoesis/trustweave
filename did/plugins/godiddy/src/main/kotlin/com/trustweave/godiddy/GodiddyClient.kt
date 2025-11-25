@@ -43,7 +43,11 @@ class GodiddyClient(
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             }
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to GET $path: ${e.message}", e)
+            throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                message = "Failed to GET $path: ${e.message ?: "Unknown error"}",
+                context = mapOf("path" to path, "method" to "GET"),
+                cause = e
+            )
         }
     }
 
@@ -63,7 +67,11 @@ class GodiddyClient(
                     setBody(body)
                 }.body()
             } catch (e: Exception) {
-                throw TrustWeaveException("Failed to POST $path: ${e.message}", e)
+                throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                    message = "Failed to POST $path: ${e.message ?: "Unknown error"}",
+                    context = mapOf("path" to path, "method" to "POST"),
+                    cause = e
+                )
             }
         }
     }

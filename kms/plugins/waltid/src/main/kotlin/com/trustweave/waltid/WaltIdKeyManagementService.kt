@@ -4,7 +4,7 @@ import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyHandle
 import com.trustweave.kms.KeyManagementService
-import com.trustweave.kms.KeyNotFoundException
+import com.trustweave.kms.exception.KmsException
 import com.trustweave.kms.UnsupportedAlgorithmException
 import com.trustweave.kms.spi.KeyManagementServiceProvider
 import kotlinx.coroutines.Dispatchers
@@ -82,12 +82,19 @@ class WaltIdKeyManagementService(
             keyStore[keyId] = handle
             handle
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to generate key: ${e.message}", e)
+            throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                message = "Failed to generate key: ${e.message ?: "Unknown error"}",
+                context = mapOf("keyId" to keyId, "algorithm" to (algorithm?.name ?: "unknown")),
+                cause = e
+            )
         }
     }
 
     override suspend fun getPublicKey(keyId: String): KeyHandle = withContext(Dispatchers.IO) {
-        keyStore[keyId] ?: throw KeyNotFoundException("Key not found: $keyId")
+        keyStore[keyId] ?: throw KmsException.KeyNotFound(
+            keyId = keyId,
+            keyType = null
+        )
     }
 
     override suspend fun sign(
@@ -104,7 +111,11 @@ class WaltIdKeyManagementService(
             // In real implementation, use walt.id signing
             ByteArray(64) // Placeholder signature
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to sign data: ${e.message}", e)
+            throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                message = "Failed to sign data: ${e.message ?: "Unknown error"}",
+                context = mapOf("keyId" to keyId, "algorithm" to (algorithm?.name ?: "unknown")),
+                cause = e
+            )
         }
     }
 

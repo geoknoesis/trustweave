@@ -46,8 +46,9 @@ class JobTracker(
             
             // If no jobId, cannot poll
             val jobId = response.jobId
-                ?: throw TrustWeaveException(
-                    "Cannot wait for completion: operation is not complete but no jobId provided"
+                ?: throw com.trustweave.core.exception.TrustWeaveException.InvalidState(
+                    message = "Cannot wait for completion: operation is not complete but no jobId provided",
+                    context = mapOf("operation" to "waitForCompletion")
                 )
             
             // Poll until complete
@@ -65,8 +66,9 @@ class JobTracker(
             }
             
             if (!currentResponse.isComplete()) {
-                throw TrustWeaveException(
-                    "Operation did not complete within ${maxAttempts * pollInterval}ms"
+                throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                    message = "Operation did not complete within ${maxAttempts * pollInterval}ms",
+                    context = mapOf("maxAttempts" to maxAttempts, "pollInterval" to pollInterval)
                 )
             }
             
@@ -74,7 +76,10 @@ class JobTracker(
             if (currentResponse.didState.state == OperationState.FAILED) {
                 val errorMsg = currentResponse.didState.action?.description
                     ?: "Operation failed"
-                throw TrustWeaveException(errorMsg)
+                throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                    message = errorMsg,
+                    context = mapOf("operation" to "waitForCompletion", "state" to "FAILED")
+                )
             }
             
             currentResponse
@@ -93,9 +98,9 @@ class JobTracker(
     private suspend fun getOperationStatus(jobId: String): DidRegistrationResponse {
         // TODO: This should be part of the DidRegistrar interface
         // For now, throw an error indicating this feature is not yet supported
-        throw TrustWeaveException(
-            "Job status polling not yet implemented. " +
-            "The registrar must support getOperationStatus(jobId) for this to work."
+        throw com.trustweave.core.exception.TrustWeaveException.InvalidOperation(
+            message = "Job status polling not yet implemented. The registrar must support getOperationStatus(jobId) for this to work.",
+            context = mapOf("jobId" to jobId, "operation" to "getOperationStatus")
         )
     }
 }

@@ -48,14 +48,20 @@ Configure `CredentialVerificationOptions` (see [Verification Policies](advanced/
 
 ## How do I handle errors in TrustWeave?
 
-Most TrustWeave operations throw `TrustWeaveError` exceptions on failure. Some operations (like contract operations) return `Result<T>` directly:
+All `TrustLayer` methods throw `TrustWeaveError` exceptions on failure. Always wrap operations in try-catch blocks:
 
 ```kotlin
-import com.trustweave.core.*
+import com.trustweave.trust.TrustLayer
+import com.trustweave.core.TrustWeaveError
+
+val trustLayer = TrustLayer.build {
+    keys { provider("inMemory"); algorithm("Ed25519") }
+    did { method("key") { algorithm("Ed25519") } }
+}
 
 try {
-    val did = trustweave.dids.create()
-    println("Created: ${did.id}")
+    val did = trustLayer.createDid { method("key") }
+    println("Created: $did")
 } catch (error: TrustWeaveError) {
     when (error) {
         is TrustWeaveError.DidMethodNotRegistered -> {
@@ -67,7 +73,9 @@ try {
 }
 ```
 
-See [Error Handling](advanced/error-handling.md) for detailed error handling patterns and validation utilities.
+**Note:** Some lower-level APIs return `Result<T>` directly. Check the method signature for each operation.
+
+See [Error Handling](advanced/error-handling.md) for detailed error handling patterns and [API Patterns](getting-started/api-patterns.md) for correct API usage.
 
 ## Where do I log issues or request features?
 

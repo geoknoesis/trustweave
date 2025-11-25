@@ -3,7 +3,7 @@ package com.trustweave.services
 import com.trustweave.TrustWeaveContext
 import com.trustweave.core.*
 import com.trustweave.did.DidCreationOptions
-import com.trustweave.did.exception.DidError
+import com.trustweave.did.exception.DidException
 import com.trustweave.did.validation.DidValidator
 import com.trustweave.did.DidCreationOptionsBuilder
 import com.trustweave.did.DidDocument
@@ -47,7 +47,7 @@ class DidService(
      * @param method DID method name (default: "key")
      * @param options DID creation options
      * @return The created DID document
-     * @throws DidError.DidMethodNotRegistered if method is not registered
+     * @throws DidException.DidMethodNotRegistered if method is not registered
      */
     suspend fun create(
         method: String = "key",
@@ -55,14 +55,14 @@ class DidService(
     ): DidDocument {
         val availableMethods = context.getAvailableDidMethods()
         if (method !in availableMethods) {
-            throw DidError.DidMethodNotRegistered(
+            throw DidException.DidMethodNotRegistered(
                 method = method,
                 availableMethods = availableMethods
             )
         }
         
         val didMethod = context.getDidMethod(method)
-            ?: throw DidError.DidMethodNotRegistered(
+            ?: throw DidException.DidMethodNotRegistered(
                 method = method,
                 availableMethods = availableMethods
             )
@@ -93,14 +93,14 @@ class DidService(
      * 
      * @param did The DID string to resolve
      * @return Resolution result containing the document and metadata
-     * @throws DidError.InvalidDidFormat if DID format is invalid
-     * @throws DidError.DidMethodNotRegistered if method is not registered
+     * @throws DidException.InvalidDidFormat if DID format is invalid
+     * @throws DidException.DidMethodNotRegistered if method is not registered
      */
     suspend fun resolve(did: String): DidResolutionResult {
         // Validate DID format
         DidValidator.validateFormat(did).let {
             if (!it.isValid()) {
-                throw DidError.InvalidDidFormat(
+                throw DidException.InvalidDidFormat(
                     did = did,
                     reason = it.errorMessage() ?: "Invalid DID format"
                 )
@@ -111,7 +111,7 @@ class DidService(
         val availableMethods = context.getAvailableDidMethods()
         DidValidator.validateMethod(did, availableMethods).let {
             if (!it.isValid()) {
-                throw DidError.DidMethodNotRegistered(
+                throw DidException.DidMethodNotRegistered(
                     method = DidValidator.extractMethod(did) ?: "unknown",
                     availableMethods = availableMethods
                 )
@@ -140,8 +140,8 @@ class DidService(
      * @param did The DID to update
      * @param updater Function that transforms the current document to the new document
      * @return The updated DID document
-     * @throws DidError.InvalidDidFormat if DID format is invalid
-     * @throws DidError.DidMethodNotRegistered if method is not registered
+     * @throws DidException.InvalidDidFormat if DID format is invalid
+     * @throws DidException.DidMethodNotRegistered if method is not registered
      */
     suspend fun update(
         did: String,
@@ -151,7 +151,7 @@ class DidService(
         
         DidValidator.validateFormat(did).let {
             if (!it.isValid()) {
-                throw DidError.InvalidDidFormat(
+                throw DidException.InvalidDidFormat(
                     did = did,
                     reason = it.errorMessage() ?: "Invalid DID format"
                 )
@@ -159,13 +159,13 @@ class DidService(
         }
         
         val methodName = DidValidator.extractMethod(did)
-            ?: throw DidError.InvalidDidFormat(
+            ?: throw DidException.InvalidDidFormat(
                 did = did,
                 reason = "Failed to extract method from DID"
             )
         
         val method = context.didRegistry.get(methodName)
-            ?: throw DidError.DidMethodNotRegistered(
+            ?: throw DidException.DidMethodNotRegistered(
                 method = methodName,
                 availableMethods = context.didRegistry.getAllMethodNames()
             )
@@ -186,15 +186,15 @@ class DidService(
      * 
      * @param did The DID to deactivate
      * @return true if deactivated, false otherwise
-     * @throws DidError.InvalidDidFormat if DID format is invalid
-     * @throws DidError.DidMethodNotRegistered if method is not registered
+     * @throws DidException.InvalidDidFormat if DID format is invalid
+     * @throws DidException.DidMethodNotRegistered if method is not registered
      */
     suspend fun deactivate(did: String): Boolean {
         require(did.isNotBlank()) { "DID is required" }
         
         DidValidator.validateFormat(did).let {
             if (!it.isValid()) {
-                throw DidError.InvalidDidFormat(
+                throw DidException.InvalidDidFormat(
                     did = did,
                     reason = it.errorMessage() ?: "Invalid DID format"
                 )
@@ -202,13 +202,13 @@ class DidService(
         }
         
         val methodName = DidValidator.extractMethod(did)
-            ?: throw DidError.InvalidDidFormat(
+            ?: throw DidException.InvalidDidFormat(
                 did = did,
                 reason = "Failed to extract method from DID"
             )
         
         val method = context.didRegistry.get(methodName)
-            ?: throw DidError.DidMethodNotRegistered(
+            ?: throw DidException.DidMethodNotRegistered(
                 method = methodName,
                 availableMethods = context.didRegistry.getAllMethodNames()
             )

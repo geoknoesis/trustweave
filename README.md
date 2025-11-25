@@ -1038,9 +1038,32 @@ See [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md) for commercial license terms.
 - **Enterprise deployment** → Purchase Commercial License
 - **Unsure?** → Contact us at licensing@geoknoesis.com
 
+## Funding & Support
+
+TrustWeave is an open-source project built and maintained by [Geoknoesis LLC](https://www.geoknoesis.com). If you find TrustWeave useful, please consider supporting its development:
+
+- **GitHub Sponsors** - Support us directly on GitHub (click the "Sponsor" button)
+- **Open Collective** - Transparent financial management for organizations
+- **Buy Me a Coffee** - Simple one-time donations
+- **Commercial Licensing** - For enterprise use, see [Commercial License](LICENSE-COMMERCIAL.md)
+
+Your support helps us:
+- Continue core feature development
+- Maintain and improve documentation
+- Support the community
+- Keep TrustWeave free and open source
+
+For detailed information about funding options, see [Funding Plan](docs/FUNDING_PLAN.md).
+
+## Security
+
+Security vulnerabilities should be reported privately. See [SECURITY.md](SECURITY.md) for our security policy and reporting guidelines.
+
+**Report security issues to:** security@geoknoesis.com
+
 ## Contributing
 
-[Contributing guidelines]
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute to TrustWeave.
 
 ## Changelog
 

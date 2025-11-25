@@ -1,6 +1,6 @@
 package com.trustweave.core.plugin
 
-import com.trustweave.core.exception.TrustWeaveError
+import com.trustweave.core.exception.TrustWeaveException
 
 /**
  * Provider chain with fallback support.
@@ -38,13 +38,13 @@ class ProviderChain<T>(
      * Execute an operation across the provider chain.
      *
      * Tries each provider in order until one succeeds.
-     * If all providers fail, throws a TrustWeaveError.AllProvidersFailed
+     * If all providers fail, throws a TrustWeaveException.AllProvidersFailed
      * with details about all attempted providers and their errors.
      *
      * @param operation Operation to execute on each provider
      * @return Result from the first successful provider
-     * @throws TrustWeaveError.AllProvidersFailed if all providers fail
-     * @throws TrustWeaveError.InvalidState if no providers are selected
+     * @throws TrustWeaveException.AllProvidersFailed if all providers fail
+     * @throws TrustWeaveException.InvalidState if no providers are selected
      */
     suspend fun <R> execute(operation: suspend (T) -> R): R {
         var lastException: Throwable? = null
@@ -90,13 +90,13 @@ class ProviderChain<T>(
         }
 
         if (attemptCount == 0) {
-            throw TrustWeaveError.InvalidState(
+            throw TrustWeaveException.InvalidState(
                 message = "No providers were selected by the selector function. " +
                     "At least one provider must be available for execution."
             )
         }
 
-        throw TrustWeaveError.AllProvidersFailed(
+        throw TrustWeaveException.AllProvidersFailed(
             attemptedProviders = attemptedProviders,
             providerErrors = providerErrors,
             lastException = lastException
@@ -172,7 +172,7 @@ inline fun <reified T> createProviderChain(
     // Error handling: Fail fast if no providers found at all.
     // This prevents creating an invalid chain that would fail on first use.
     if (found.isEmpty()) {
-        throw TrustWeaveError.NoProvidersFound(
+        throw TrustWeaveException.NoProvidersFound(
             pluginIds = pluginIds,
             availablePlugins = registry.getAllPlugins().map { it.id }
         )
@@ -182,7 +182,7 @@ inline fun <reified T> createProviderChain(
     // This ensures that the chain contains exactly the requested providers,
     // maintaining predictable behavior and preventing partial configurations.
     if (missingIds.isNotEmpty()) {
-        throw TrustWeaveError.PartialProvidersFound(
+        throw TrustWeaveException.PartialProvidersFound(
             requestedIds = pluginIds,
             foundIds = foundIds,
             missingIds = missingIds

@@ -1,6 +1,6 @@
 package com.trustweave.core.util
 
-import com.trustweave.core.exception.TrustWeaveError
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.*
 import java.security.MessageDigest
@@ -117,7 +117,7 @@ object DigestUtils {
      * 
      * @param jsonString The JSON string to canonicalize
      * @return The canonical JSON string
-     * @throws TrustWeaveError.InvalidJson if the input is not valid JSON
+     * @throws TrustWeaveException.InvalidJson if the input is not valid JSON
      */
     fun canonicalizeJson(jsonString: String): String {
         require(jsonString.isNotBlank()) { "JSON string cannot be blank" }
@@ -125,13 +125,13 @@ object DigestUtils {
             val element = Json.parseToJsonElement(jsonString)
             canonicalizeJson(element)
         } catch (e: SerializationException) {
-            throw TrustWeaveError.InvalidJson(
+            throw TrustWeaveException.InvalidJson(
                 jsonString = jsonString,
                 parseError = e.message ?: "Parse error",
                 position = null
             )
         } catch (e: Exception) {
-            throw TrustWeaveError.InvalidJson(
+            throw TrustWeaveException.InvalidJson(
                 jsonString = jsonString,
                 parseError = e.message ?: "Unknown error",
                 position = null
@@ -155,7 +155,7 @@ object DigestUtils {
         return try {
             json.encodeToString(JsonElement.serializer(), sorted)
         } catch (e: Exception) {
-            throw TrustWeaveError.JsonEncodeFailed(
+            throw TrustWeaveException.JsonEncodeFailed(
                 element = element.toString().take(200),
                 reason = e.message ?: "Unknown encoding error"
             )
@@ -274,13 +274,13 @@ object DigestUtils {
         } catch (e: java.security.NoSuchAlgorithmException) {
             // SHA-256 should always be available in standard JVMs, but handle gracefully
             // for environments with restricted security providers.
-            throw TrustWeaveError.DigestFailed(
+            throw TrustWeaveException.DigestFailed(
                 algorithm = "SHA-256",
                 reason = "Algorithm not available: ${e.message}"
             )
         } catch (e: Exception) {
-            // Catch any other encoding/digest errors and wrap in TrustWeaveError
-            throw TrustWeaveError.EncodeFailed(
+            // Catch any other encoding/digest errors and wrap in TrustWeaveException
+            throw TrustWeaveException.EncodeFailed(
                 operation = "base58-encoding",
                 reason = e.message ?: "Unknown encoding error"
             )

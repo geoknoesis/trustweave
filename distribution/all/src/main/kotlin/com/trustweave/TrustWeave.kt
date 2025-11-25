@@ -11,7 +11,7 @@ import com.trustweave.credential.proof.ProofGenerator
 import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.did.DidMethod
 import com.trustweave.did.resolver.DidResolutionResult
-import com.trustweave.did.exception.DidError
+import com.trustweave.did.exception.DidException
 import com.trustweave.kms.KeyManagementService
 import com.trustweave.services.*
 import com.trustweave.wallet.services.WalletFactory
@@ -323,7 +323,7 @@ class TrustWeaveContext private constructor(
             did.substringBefore(":")
         }
         val method = didRegistry.get(methodName)
-            ?: throw DidError.DidMethodNotRegistered(
+            ?: throw DidException.DidMethodNotRegistered(
                 method = methodName,
                 availableMethods = didRegistry.getAllMethodNames()
             )

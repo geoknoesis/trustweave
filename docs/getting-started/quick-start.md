@@ -8,143 +8,186 @@ Get started with TrustWeave in 5 minutes! This guide will walk you through creat
 
 ## Complete Runnable Example
 
-Here's a complete, copy-paste ready example that demonstrates the full TrustWeave workflow. This example uses `getOrThrow()` for simplicity in quick-start scenarios. For production code, see the [Production Pattern](#production-pattern-with-error-handling) section below.
+Here's a complete, copy-paste ready example that demonstrates the full TrustWeave workflow with proper error handling. This example uses try-catch blocks for error handling, which is the recommended pattern for all TrustLayer operations.
 
-> **Note:** This example uses `getOrThrow()` which is acceptable for quick starts, tests, and prototypes. For production code, always use `fold()` for explicit error handling. See [Error Handling Patterns](#error-handling-patterns) below.
+> **Note:** All `TrustLayer` methods throw `TrustWeaveError` exceptions on failure. Always wrap operations in try-catch blocks for production code. See [Error Handling Patterns](#error-handling-patterns) below for details.
 
 ```kotlin
 package com.example.TrustWeave.quickstart
 
-import com.trustweave.TrustWeave
-import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.trust.TrustLayer
 import com.trustweave.core.util.DigestUtils
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.core.TrustWeaveError
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
-    // Step 1: Create TrustWeave instance with defaults
-    val TrustWeave = TrustWeave.create()
-
-    // Step 2: Compute a digest (demonstrates canonicalization)
-    val credentialSubject = buildJsonObject {
-        put("id", "did:key:holder-placeholder")
-        put("name", "Alice Example")
-        put("role", "Site Reliability Engineer")
-    }
-    val digest = DigestUtils.sha256DigestMultibase(credentialSubject)
-    println("Canonical credential-subject digest: $digest")
-
-    // Step 3: Create an issuer DID
-    // Note: getOrThrow() is used here for quick-start simplicity
-    // In production, use fold() for error handling (see below)
-    val issuerDocument = TrustWeave.dids.create()
-    val issuerDid = issuerDocument.id
-    val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method generated for $issuerDid")
-    println("Issuer DID: $issuerDid (keyId=$issuerKeyId)")
-
-    // Step 4: Issue a verifiable credential
-    val credential = TrustWeave.credentials.issue(
-        issuer = issuerDid,
-        subject = credentialSubject,
-        config = IssuanceConfig(
-            proofType = ProofType.Ed25519Signature2020,
-            keyId = issuerKeyId,
-            issuerDid = issuerDid
-        ),
-        types = listOf("VerifiableCredential", "QuickStartCredential")
-    )
-    println("Issued credential id: ${credential.id}")
-
-    // Step 5: Verify the credential
-    val verification = TrustWeave.credentials.verify(credential)
-    if (verification.valid) {
-        println(
-            "Verification succeeded (proof=${verification.proofValid}, " +
-            "issuer=${verification.issuerValid}, revocation=${verification.notRevoked})"
-        )
-        if (verification.warnings.isNotEmpty()) {
-            println("Warnings: ${verification.warnings}")
+    try {
+        // Step 1: Create TrustLayer instance with defaults
+        val trustLayer = TrustLayer.build {
+            keys {
+                provider("inMemory")
+                algorithm("Ed25519")
+            }
+            did {
+                method("key") {
+                    algorithm("Ed25519")
+                }
+            }
         }
-    } else {
-        println("Verification returned errors: ${verification.errors}")
-    }
-    )
 
-    // Step 6: Anchor credential to blockchain (optional)
-    val anchorRegistry = BlockchainAnchorRegistry().apply {
-        register("inmemory:anchor", InMemoryBlockchainAnchorClient("inmemory:anchor"))
-    }
-    val anchorClient = requireNotNull(anchorRegistry.get("inmemory:anchor")) {
-        "inmemory anchor client not registered"
-    }
+        // Step 2: Compute a digest (demonstrates canonicalization)
+        val credentialSubject = buildJsonObject {
+            put("id", "did:key:holder-placeholder")
+            put("name", "Alice Example")
+            put("role", "Site Reliability Engineer")
+        }
+        val digest = DigestUtils.sha256DigestMultibase(credentialSubject)
+        println("Canonical credential-subject digest: $digest")
 
-    runCatching {
-        val payload = Json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
-        val anchorResult = anchorClient.writePayload(payload)
-        println("Anchored credential on ${anchorResult.ref.chainId}: ${anchorResult.ref.txHash}")
-    }.onFailure { error ->
-        println("Anchoring failed: ${error.message}")
+        // Step 3: Create an issuer DID
+        val issuerDid = trustLayer.createDid {
+            method("key")
+            algorithm("Ed25519")
+        }
+        val issuerKeyId = "$issuerDid#key-1"
+        println("Issuer DID: $issuerDid (keyId=$issuerKeyId)")
+
+        // Step 4: Issue a verifiable credential
+        val credential = trustLayer.issue {
+            credential {
+                type("VerifiableCredential", "QuickStartCredential")
+                issuer(issuerDid)
+                subject {
+                    id("did:key:holder-placeholder")
+                    claim("name", "Alice Example")
+                    claim("role", "Site Reliability Engineer")
+                }
+            }
+            by(issuerDid = issuerDid, keyId = issuerKeyId)
+        }
+        println("Issued credential id: ${credential.id}")
+
+        // Step 5: Verify the credential
+        val verification = trustLayer.verify {
+            credential(credential)
+        }
+        if (verification.valid) {
+            println(
+                "Verification succeeded (proof=${verification.proofValid}, " +
+                "issuer=${verification.issuerValid}, revocation=${verification.notRevoked})"
+            )
+            if (verification.warnings.isNotEmpty()) {
+                println("Warnings: ${verification.warnings}")
+            }
+        } else {
+            println("Verification returned errors: ${verification.errors}")
+        }
+
+        // Step 6: Create a wallet and store the credential
+        val wallet = trustLayer.wallet {
+            holder("did:key:holder-placeholder")
+        }
+        val credentialId = wallet.store(credential)
+        println("✅ Stored credential: $credentialId")
+    } catch (error: TrustWeaveError) {
+        when (error) {
+            is TrustWeaveError.DidMethodNotRegistered -> {
+                println("❌ DID method not registered: ${error.method}")
+                println("Available methods: ${error.availableMethods}")
+            }
+            is TrustWeaveError.CredentialInvalid -> {
+                println("❌ Credential invalid: ${error.reason}")
+            }
+            else -> {
+                println("❌ Error: ${error.message}")
+            }
+        }
+    } catch (error: Exception) {
+        println("❌ Unexpected error: ${error.message}")
+        error.printStackTrace()
     }
 }
 ```
 
-### Production Pattern with Error Handling
+### Simplified Example (Testing Only)
 
-For production code, always use `fold()` for explicit error handling:
+For quick testing and prototypes, you can use a simplified version without detailed error handling. **Do not use this in production:**
 
 ```kotlin
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    val trustLayer = TrustLayer.build {
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
+    
+    // Operations will throw exceptions on failure
+    val did = trustLayer.createDid { method("key") }
+    val credential = trustLayer.issue { ... }
+    // ... rest of code
+}
+```
 
-    // Production pattern: Use fold() for all operations
-    val issuerDocument = Result.success(TrustWeave.dids.create()).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            when (error) {
-                is TrustWeaveError.DidMethodNotRegistered -> {
-                    println("❌ DID method not registered: ${error.method}")
-                    println("   Available methods: ${error.availableMethods}")
-                }
-                else -> {
-                    println("❌ Failed to create DID: ${error.message}")
+**Why not in production?** Exceptions will crash your application. Always use try-catch in production code.
+
+### Production Pattern with Error Handling
+
+The example above already shows the production pattern. Here's an enhanced version with more detailed error handling:
+
+```kotlin
+fun main() = runBlocking {
+    val trustLayer = TrustLayer.build {
+        keys {
+            provider("inMemory")
+            algorithm("Ed25519")
+        }
+        did {
+            method("key") {
+                algorithm("Ed25519")
+            }
+        }
+    }
+
+    // Production pattern: Use try-catch for all operations
+    val issuerDid = try {
+        trustLayer.createDid {
+            method("key")
+            algorithm("Ed25519")
+        }
+    } catch (error: IllegalStateException) {
+        println("❌ Failed to create DID: ${error.message}")
+        return@runBlocking
+    } catch (error: Exception) {
+        println("❌ Unexpected error: ${error.message}")
+        return@runBlocking
+    }
+    
+    val issuerKeyId = "$issuerDid#key-1"
+    
+    val credential = try {
+        trustLayer.issue {
+            credential {
+                type("VerifiableCredential", "QuickStartCredential")
+                issuer(issuerDid)
+                subject {
+                    id("did:key:holder")
+                    claim("name", "Alice")
                 }
             }
-            return@runBlocking
+            by(issuerDid = issuerDid, keyId = issuerKeyId)
         }
-    )
-    
-    val issuerDid = issuerDocument.id
-    val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
-    
-    val credential = TrustWeave.credentials.issue(
-        issuerDid = issuerDid,
-        issuerKeyId = issuerKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", "did:key:holder")
-            put("name", "Alice")
-        },
-        types = listOf("VerifiableCredential", "QuickStartCredential")
-    ).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            when (error) {
-                is TrustWeaveError.CredentialIssuanceFailed -> {
-                    println("❌ Credential issuance failed: ${error.reason}")
-                }
-                else -> {
-                    println("❌ Failed to issue credential: ${error.message}")
-                }
+    } catch (error: Exception) {
+        when (error) {
+            is IllegalStateException -> {
+                println("❌ Credential issuance failed: ${error.message}")
             }
-            return@runBlocking
+            else -> {
+                println("❌ Failed to issue credential: ${error.message}")
+            }
         }
-    )
+        return@runBlocking
+    }
     
     println("✅ Credential issued: ${credential.id}")
 }
@@ -199,15 +242,26 @@ TrustWeave promotes a “batteries included” experience for newcomers. The mon
 **How simple:** One helper call, no manual canonicalisation.
 
 ```kotlin
-import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustLayer
 import com.trustweave.core.util.DigestUtils
+import com.trustweave.core.TrustWeaveError
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
-    // Create TrustWeave with sensible defaults (in-memory KMS, did:key method)
-    val TrustWeave = TrustWeave.create()
+    // Create TrustLayer with sensible defaults (in-memory KMS, did:key method)
+    val trustLayer = TrustLayer.build {
+        keys {
+            provider("inMemory")
+            algorithm("Ed25519")
+        }
+        did {
+            method("key") {
+                algorithm("Ed25519")
+            }
+        }
+    }
 
     // Build credential subject payload
     val credentialSubject = buildJsonObject {
@@ -243,16 +297,17 @@ Everything in TrustWeave assumes deterministic canonicalization, so the very fir
 
 ```kotlin
 // Simple: use defaults (did:key method, ED25519 algorithm)
-val issuerDocument = TrustWeave.dids.create()
-val issuerDid = issuerDocument.id
-val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.id
-    ?: error("No verification method generated")
+val issuerDid = trustLayer.createDid {
+    method("key")
+    algorithm("Ed25519")
+}
+val issuerKeyId = "$issuerDid#key-1"
 println("Issuer DID: $issuerDid (keyId=$issuerKeyId)")
 
 // Advanced: customize with builder
-val customDid = TrustWeave.dids.create("key") {
-    algorithm = com.trustweave.did.DidCreationOptions.KeyAlgorithm.ED25519
-    purpose(com.trustweave.did.DidCreationOptions.KeyPurpose.AUTHENTICATION)
+val customDid = trustLayer.createDid {
+    method("key")
+    algorithm("Ed25519")
 }
 ```
 
@@ -274,24 +329,19 @@ Typed builders (`DidCreationOptions`) are a core design choice: they prevent mis
 **How simple:** Provide the issuer DID/key and credential subject JSON; the API handles proof generation and validation.
 
 ```kotlin
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-
 // Issue credential using the issuer DID and key ID from Step 3
-val credential = TrustWeave.credentials.issue(
-    issuer = issuerDid,
-    subject = buildJsonObject {
-        put("id", "did:key:holder-placeholder")
-        put("name", "Alice Example")
-        put("role", "Site Reliability Engineer")
-    },
-    config = IssuanceConfig(
-        proofType = ProofType.Ed25519Signature2020,
-        keyId = issuerKeyId,  // From issuerDocument.verificationMethod
-        issuerDid = issuerDid
-    ),
-    types = listOf("VerifiableCredential", "QuickStartCredential")
-)
+val credential = trustLayer.issue {
+    credential {
+        type("VerifiableCredential", "QuickStartCredential")
+        issuer(issuerDid)
+        subject {
+            id("did:key:holder-placeholder")
+            claim("name", "Alice Example")
+            claim("role", "Site Reliability Engineer")
+        }
+    }
+    by(issuerDid = issuerDid, keyId = issuerKeyId)
+}
 
 println("Issued credential id: ${credential.id}")
 ```
@@ -318,11 +368,10 @@ Facades embrace TrustWeave's "everything returns `Result<T>`" philosophy. By for
 **How simple:** One call returns a structured result with validation details.
 
 ```kotlin
-import com.trustweave.core.exception.*
-import com.trustweave.core.util.*
-
 // Verify credential
-val verification = TrustWeave.credentials.verify(credential)
+val verification = trustLayer.verify {
+    credential(credential)
+}
 if (verification.valid) {
     println(
         "Verification succeeded (proof=${verification.proofValid}, " +
@@ -351,28 +400,13 @@ You get a `CredentialVerificationResult` with `valid`, `proofValid`, `issuerVali
 **How simple:** Register client, serialize credential, write to chain.
 
 ```kotlin
-import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.encodeToJsonElement
-
-// Register in-memory blockchain client (for testing)
-val anchorRegistry = BlockchainAnchorRegistry().apply {
-    register("inmemory:anchor", InMemoryBlockchainAnchorClient("inmemory:anchor"))
-}
-val anchorClient = requireNotNull(anchorRegistry.get("inmemory:anchor")) {
-    "inmemory anchor client not registered"
+// Create wallet and store credential
+val wallet = trustLayer.wallet {
+    holder("did:key:holder-placeholder")
 }
 
-// Anchor the credential
-runCatching {
-    val payload = Json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
-    val anchorResult = anchorClient.writePayload(payload)
-    println("Anchored credential on ${anchorResult.ref.chainId}: ${anchorResult.ref.txHash}")
-}.onFailure { error ->
-    println("Anchoring failed: ${error.message}")
-}
+val credentialId = wallet.store(credential)
+println("✅ Stored credential: $credentialId")
 ```
 
 **What this does**  
@@ -402,9 +436,9 @@ Use `getOrThrow()` **only** for:
 
 ```kotlin
 // ⚠️ Simple usage (throws on error) - Testing/Prototyping Only
-// For production, always use fold() instead
-val did = TrustWeave.dids.create()
-val credential = TrustWeave.credentials.issue(...)
+// For production, always use try-catch instead
+val did = trustLayer.createDid { method("key") }
+val credential = trustLayer.issue { ... }
 ```
 
 **Why not in production?** `getOrThrow()` throws exceptions that can crash your application. Production code should handle errors gracefully.
@@ -420,33 +454,19 @@ Use `fold()` **always** for:
 
 ```kotlin
 // ✅ Production pattern with specific error handling
-val did = TrustWeave.dids.create()
-// Note: dids.create() returns DidDocument directly (not Result)
-// For error handling, wrap in try-catch or use extension functions
 try {
-    processDid(did)
-} catch (e: TrustWeaveError.DidMethodNotRegistered) {
-    // Handle error
-}
-    onFailure = { error ->
-        // Handle specific errors
-        when (error) {
-            is TrustWeaveError.DidMethodNotRegistered -> {
-                logger.warn("DID method not registered: ${error.method}")
-                logger.info("Available methods: ${error.availableMethods}")
-                // Register method and retry, or use fallback
-            }
-            is TrustWeaveError.InvalidDidFormat -> {
-                logger.error("Invalid DID format: ${error.reason}")
-                // Show format requirements to user
-            }
-            else -> {
-                logger.error("Unexpected error: ${error.message}", error)
-                // Handle generic error
-            }
-        }
+    val did = trustLayer.createDid {
+        method("key")
+        algorithm("Ed25519")
     }
-)
+    processDid(did)
+} catch (error: IllegalStateException) {
+    logger.warn("DID creation failed: ${error.message}")
+    // Handle error - method not registered, configuration issue, etc.
+} catch (error: Exception) {
+    logger.error("Unexpected error: ${error.message}", error)
+    // Handle generic error
+}
 ```
 
 **Why use `fold()`?** It forces explicit error handling, prevents crashes, and provides structured error information for recovery.
@@ -456,36 +476,19 @@ try {
 TrustWeave provides structured error handling with `Result<T>` and `TrustWeaveError` types:
 
 ```kotlin
-import com.trustweave.core.exception.*
-import com.trustweave.core.util.*
-
 // Verify credential with error handling
-val verification = TrustWeave.credentials.verify(credential)
-if (verification.valid) {
-    println("Credential is valid")
-} else {
-    println("Credential invalid: ${verification.errors.joinToString()}")
-    verification.warnings.forEach { println("Warning: $it") }
-}
-
-// Anchoring with error handling
 try {
-    val anchor = TrustWeave.blockchains.anchor(
-        data = data,
-        serializer = serializer,
-        chainId = "algorand:testnet"
-    )
-    println("Anchored at: ${anchor.ref.txHash}")
-} catch (error: TrustWeaveError) {
-    when (error) {
-        is TrustWeaveError.ChainNotRegistered -> {
-            println("Chain not registered: ${error.chainId}")
-            println("Available chains: ${error.availableChains}")
-        }
-        else -> {
-            println("Anchoring error: ${error.message}")
-        }
+    val verification = trustLayer.verify {
+        credential(credential)
     }
+    if (verification.valid) {
+        println("Credential is valid")
+    } else {
+        println("Credential invalid: ${verification.errors.joinToString()}")
+        verification.warnings.forEach { println("Warning: $it") }
+    }
+} catch (error: Exception) {
+    println("Verification error: ${error.message}")
 }
 ```
 
@@ -493,17 +496,12 @@ For simple cases, you can use `getOrThrow()`:
 
 ```kotlin
 // Simple usage
-val verification = TrustWeave.credentials.verify(credential)
+val verification = trustLayer.verify {
+    credential(credential)
+}
 if (verification.valid) {
     println("Credential is valid")
 }
-
-// Or use getOrThrowError for TrustWeaveError
-val anchor = TrustWeave.blockchains.anchor(
-    data = data,
-    serializer = serializer,
-    chainId = chainId
-)
 ```
 
 **Best Practice:** In production code, prefer `fold()` for explicit error handling. Use `getOrThrow()` for quick prototypes and tests.

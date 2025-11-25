@@ -2,6 +2,8 @@
 
 Welcome to TrustWeave's core concepts! This section introduces the fundamental building blocks of decentralized identity and trust systems.
 
+> **New to TrustWeave?** Start with the [Mental Model](../introduction/mental-model.md) guide to understand how TrustWeave works at a conceptual level before diving into specific concepts.
+
 ## What You'll Learn
 
 - **Decentralized Identifiers (DIDs)** - How to create and manage decentralized identities
@@ -22,6 +24,7 @@ Welcome to TrustWeave's core concepts! This section introduces the fundamental b
 7. [Key Management](key-management.md) - Understanding key management systems
 8. [Algorithm Compatibility Table](algorithm-compatibility-table.md) - Algorithm support in DIDs, VCs, AWS KMS, and Azure Key Vault
 9. [JSON Canonicalization](json-canonicalization.md) - Understanding data integrity
+10. [Credential Exchange Protocols](credential-exchange-protocols.md) - Protocol abstraction layer for credential exchange (DIDComm, OIDC4VCI, CHAPI)
 
 ## Quick Overview
 

@@ -125,12 +125,16 @@ abstract class AbstractWebDidMethod(
                 if (response.code == 404) {
                     throw NotFoundException("DID document not found at: $url")
                 }
-                throw TrustWeaveException(
-                    "Failed to resolve DID document: HTTP ${response.code} ${response.message}"
+                throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                    message = "Failed to resolve DID document: HTTP ${response.code} ${response.message}",
+                    context = mapOf("statusCode" to response.code, "url" to url, "method" to method)
                 )
             }
 
-            val body = response.body ?: throw TrustWeaveException("Empty response body")
+            val body = response.body ?: throw com.trustweave.core.exception.TrustWeaveException.InvalidJson(
+                parseError = "Empty response body",
+                jsonString = null
+            )
             val jsonString = body.string()
             
             // Parse JSON to DidDocument
@@ -139,8 +143,9 @@ abstract class AbstractWebDidMethod(
 
             // Validate that document ID matches DID
             if (document.id != did) {
-                throw TrustWeaveException(
-                    "Document ID mismatch: expected $did, got ${document.id}"
+                throw com.trustweave.did.exception.DidException.InvalidDidFormat(
+                    did = document.id,
+                    reason = "Document ID mismatch: expected $did, got ${document.id}"
                 )
             }
 
@@ -164,14 +169,16 @@ abstract class AbstractWebDidMethod(
                 )
             }
 
-            throw TrustWeaveException(
-                "Failed to resolve DID from HTTP endpoint: ${e.message}",
-                e
+            throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                message = "Failed to resolve DID from HTTP endpoint: ${e.message ?: "Unknown error"}",
+                context = mapOf("did" to did, "method" to method, "url" to url),
+                cause = e
             )
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to resolve DID document: ${e.message}",
-                e
+            throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                message = "Failed to resolve DID document: ${e.message ?: "Unknown error"}",
+                context = mapOf("did" to did, "method" to method),
+                cause = e
             )
         }
     }
@@ -203,9 +210,10 @@ abstract class AbstractWebDidMethod(
 
                 success
             } catch (e: Exception) {
-                throw TrustWeaveException(
-                    "Failed to update DID document on HTTP endpoint: ${e.message}",
-                    e
+                throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                    message = "Failed to update DID document on HTTP endpoint: ${e.message ?: "Unknown error"}",
+                    context = mapOf("did" to did, "method" to method),
+                    cause = e
                 )
             }
         }
@@ -238,9 +246,10 @@ abstract class AbstractWebDidMethod(
 
             success
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to deactivate DID document on HTTP endpoint: ${e.message}",
-                e
+            throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                message = "Failed to deactivate DID document on HTTP endpoint: ${e.message ?: "Unknown error"}",
+                context = mapOf("did" to did, "method" to method),
+                cause = e
             )
         }
     }

@@ -27,9 +27,10 @@ TrustWeave provides a comprehensive set of features for building verifiable cred
 ### Communication & Exchange
 - **QR Code Generation**: Credential sharing via QR codes
 - **Notifications**: Push notifications and webhooks
-- **OIDC4VCI**: OpenID Connect for Verifiable Credential Issuance
-- **DIDComm v2**: Credential exchange protocol
-- **CHAPI**: Credential Handler API support
+- **[Credential Exchange Protocols](./credential-exchange-protocols/README.md)**: Protocol abstraction layer for credential exchange
+  - **DIDComm V2**: Secure, private, decentralized messaging
+  - **OIDC4VCI**: OpenID Connect for Verifiable Credential Issuance
+  - **CHAPI**: Credential Handler API for browser-based wallet interactions
 
 ### Advanced Features
 - **Multi-Party Issuance**: Collaborative credential issuance

@@ -164,6 +164,14 @@ class UnsupportedAlgorithmException(
 
 /**
  * Exception thrown when a requested key is not found.
+ * 
+ * @deprecated Use KmsException.KeyNotFound instead
  */
-class KeyNotFoundException(message: String, cause: Throwable? = null) : Exception(message, cause)
+@Deprecated("Use KmsException.KeyNotFound instead", ReplaceWith("KmsException.KeyNotFound(keyId, keyType)"))
+class KeyNotFoundException(message: String, cause: Throwable? = null) : Exception(message, cause) {
+    constructor(keyId: String, keyType: String? = null) : this(
+        message = "Key not found: $keyId",
+        cause = null
+    )
+}
 

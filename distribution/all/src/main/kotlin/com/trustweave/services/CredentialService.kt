@@ -4,9 +4,9 @@ import com.trustweave.TrustWeaveContext
 import com.trustweave.core.*
 import com.trustweave.core.util.ValidationResult
 import com.trustweave.did.util.normalizeKeyId
-import com.trustweave.did.exception.DidError
+import com.trustweave.did.exception.DidException
 import com.trustweave.did.validation.DidValidator
-import com.trustweave.credential.exception.CredentialError
+import com.trustweave.credential.exception.CredentialException
 import com.trustweave.credential.proof.ProofType
 import com.trustweave.credential.*
 import com.trustweave.credential.models.VerifiableCredential
@@ -81,7 +81,7 @@ class CredentialService(
         // Validate issuer DID format
         DidValidator.validateFormat(issuer).let {
             if (!it.isValid()) {
-                throw DidError.InvalidDidFormat(
+                throw DidException.InvalidDidFormat(
                     did = issuer,
                     reason = it.errorMessage() ?: "Invalid issuer DID format"
                 )
@@ -92,7 +92,7 @@ class CredentialService(
         val availableMethods = context.getAvailableDidMethods()
         DidValidator.validateMethod(issuer, availableMethods).let {
             if (!it.isValid()) {
-                throw DidError.DidMethodNotRegistered(
+                throw DidException.DidMethodNotRegistered(
                     method = DidValidator.extractMethod(issuer) ?: "unknown",
                     availableMethods = availableMethods
                 )
@@ -126,7 +126,7 @@ class CredentialService(
         // Validate credential structure
         CredentialValidator.validateStructure(credential).let {
             if (!it.isValid()) {
-                throw CredentialError.CredentialInvalid(
+                throw CredentialException.CredentialInvalid(
                     reason = it.errorMessage() ?: "Invalid credential structure",
                     credentialId = credentialId,
                     field = (it as? ValidationResult.Invalid)?.field

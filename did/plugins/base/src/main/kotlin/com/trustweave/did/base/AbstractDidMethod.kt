@@ -67,7 +67,10 @@ abstract class AbstractDidMethod(
         validateDidFormat(did)
         
         val current = documents[did]
-            ?: throw TrustWeaveException("DID not found: $did")
+            ?: throw com.trustweave.did.exception.DidException.DidNotFound(
+                did = did,
+                availableMethods = listOf(method)
+            )
         
         val updated = updater(current)
         

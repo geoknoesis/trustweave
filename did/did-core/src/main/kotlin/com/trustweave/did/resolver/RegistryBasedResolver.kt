@@ -2,7 +2,7 @@ package com.trustweave.did.resolver
 
 import com.trustweave.did.Did
 import com.trustweave.did.DidMethod
-import com.trustweave.did.exception.DidError
+import com.trustweave.did.exception.DidException
 import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.did.validation.DidValidator
 
@@ -70,8 +70,8 @@ class RegistryBasedResolver(
                     "did" to did
                 )
             )
-        } catch (e: DidError) {
-            // Convert DidError to resolution result
+        } catch (e: DidException) {
+            // Convert DidException to resolution result
             val errorMetadata = mutableMapOf<String, Any?>(
                 "error" to e.code,
                 "errorMessage" to (e.message ?: "Unknown error"),

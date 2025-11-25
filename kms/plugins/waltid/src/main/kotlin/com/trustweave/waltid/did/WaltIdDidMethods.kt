@@ -147,7 +147,11 @@ class WaltIdKeyMethod(
             documents[did] = document
             document
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to create did:key: ${e.message}", e)
+            throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                message = "Failed to create did:key: ${e.message ?: "Unknown error"}",
+                context = mapOf("method" to "key"),
+                cause = e
+            )
         }
     }
 
@@ -172,7 +176,11 @@ class WaltIdKeyMethod(
                 )
             )
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to resolve did:key: ${e.message}", e)
+            throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                message = "Failed to resolve did:key: ${e.message ?: "Unknown error"}",
+                context = mapOf("method" to "key", "did" to did),
+                cause = e
+            )
         }
     }
 }
@@ -219,7 +227,11 @@ class WaltIdWebMethod(
             documents[did] = document
             document
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to create did:web: ${e.message}", e)
+            throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                message = "Failed to create did:web: ${e.message ?: "Unknown error"}",
+                context = mapOf("method" to "web"),
+                cause = e
+            )
         }
     }
 
@@ -243,7 +255,11 @@ class WaltIdWebMethod(
                 )
             )
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to resolve did:web: ${e.message}", e)
+            throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                message = "Failed to resolve did:web: ${e.message ?: "Unknown error"}",
+                context = mapOf("method" to "web", "did" to did),
+                cause = e
+            )
         }
     }
 }

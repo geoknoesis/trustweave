@@ -39,37 +39,56 @@ TrustWeave is a **production-ready Kotlin library** for building decentralized i
 Get started with TrustWeave in **30 seconds**:
 
 ```kotlin
-import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustLayer
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
-    // Create TrustWeave instance
-    val TrustWeave = TrustWeave.create()
+    // Create TrustLayer instance
+    val trustLayer = TrustLayer.build {
+        keys {
+            provider("inMemory")
+            algorithm("Ed25519")
+        }
+        did {
+            method("key") {
+                algorithm("Ed25519")
+            }
+        }
+    }
     
     // Create a Decentralized Identifier (DID)
-    val did = TrustWeave.createDid().getOrThrow()
-    println("Created DID: ${did.id}")
+    val issuerDid = trustLayer.createDid {
+        method("key")
+        algorithm("Ed25519")
+    }
+    println("Created DID: $issuerDid")
     
     // Issue a verifiable credential
-    val credential = TrustWeave.issueCredential(
-        issuerDid = did.id,
-        issuerKeyId = did.verificationMethod.firstOrNull()?.id ?: error("No key found"),
-        credentialSubject = buildJsonObject {
-            put("id", "did:example:alice")
-            put("name", "Alice")
-            put("email", "alice@example.com")
-        },
-        types = listOf("VerifiableCredential", "PersonCredential")
-    ).getOrThrow()
+    val credential = trustLayer.issue {
+        credential {
+            type("VerifiableCredential", "PersonCredential")
+            issuer(issuerDid)
+            subject {
+                id("did:example:alice")
+                claim("name", "Alice")
+                claim("email", "alice@example.com")
+            }
+        }
+        by(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
+    }
     
     // Verify the credential
-    val verification = TrustWeave.verifyCredential(credential).getOrThrow()
+    val verification = trustLayer.verify {
+        credential(credential)
+    }
     println("Credential valid: ${verification.valid}")
     
     // Create a wallet and store the credential
-    val wallet = TrustWeave.createWallet(holderDid = "did:example:alice").getOrThrow()
+    val wallet = trustLayer.wallet {
+        holder("did:example:alice")
+    }
     val credentialId = wallet.store(credential)
     println("✅ Stored credential: $credentialId")
 }
@@ -175,6 +194,12 @@ TrustWeave is built on a modular, pluggable architecture:
 
 Installation, quick start guide, and common patterns
 
+- [Quick Start](getting-started/quick-start.md) - Get up and running in 5 minutes
+- [API Patterns](getting-started/api-patterns.md) - Correct API usage patterns
+- [Mental Model](introduction/mental-model.md) - Understanding TrustWeave architecture
+- [Production Deployment](getting-started/production-deployment.md) - Production best practices
+- [Common Workflows](getting-started/workflows.md) - Real-world workflow examples
+
 ### 📖 [Core Concepts](core-concepts/README.md)
 
 DIDs, Verifiable Credentials, Wallets, and Blockchain Anchoring
@@ -215,40 +240,51 @@ Each scenario includes:
 
 ```kotlin
 // Academic Credentials
-val degree = TrustWeave.issueCredential(
-    issuerDid = universityDid,
-    credentialSubject = buildJsonObject {
-        put("id", studentDid)
-        put("degree", "Bachelor of Science")
-        put("major", "Computer Science")
-    },
-    types = listOf("VerifiableCredential", "DegreeCredential")
-).getOrThrow()
+val degree = trustLayer.issue {
+    credential {
+        type("VerifiableCredential", "DegreeCredential")
+        issuer(universityDid)
+        subject {
+            id(studentDid)
+            claim("degree", "Bachelor of Science")
+            claim("major", "Computer Science")
+        }
+    }
+    by(issuerDid = universityDid, keyId = "$universityDid#key-1")
+}
 
 // Age Verification (Privacy-Preserving)
-val ageCredential = TrustWeave.issueCredential(
-    issuerDid = identityProviderDid,
-    credentialSubject = buildJsonObject {
-        put("id", individualDid)
-        put("ageVerification", buildJsonObject {
-            put("age", 25)
-            put("minimumAge", 18)
-            // No personal details exposed!
-        })
+val ageCredential = trustLayer.issue {
+    credential {
+        type("VerifiableCredential", "AgeVerificationCredential")
+        issuer(identityProviderDid)
+        subject {
+            id(individualDid)
+            "ageVerification" {
+                "age" to 25
+                "minimumAge" to 18
+                // No personal details exposed!
+            }
+        }
     }
-).getOrThrow()
+    by(issuerDid = identityProviderDid, keyId = "$identityProviderDid#key-1")
+}
 
 // Internet of Things (IoT) Sensor Data Provenance
-val sensorData = TrustWeave.issueCredential(
-    issuerDid = sensorDid,
-    credentialSubject = buildJsonObject {
-        put("sensorData", buildJsonObject {
-            put("dataDigest", dataDigest)
-            put("timestamp", Instant.now().toString())
-            put("calibrationStatus", "Valid")
-        })
+val sensorData = trustLayer.issue {
+    credential {
+        type("VerifiableCredential", "SensorDataCredential")
+        issuer(sensorDid)
+        subject {
+            "sensorData" {
+                "dataDigest" to dataDigest
+                "timestamp" to Instant.now().toString()
+                "calibrationStatus" to "Valid"
+            }
+        }
     }
-).getOrThrow()
+    by(issuerDid = sensorDid, keyId = "$sensorDid#key-1")
+}
 ```
 
 [🚀 Explore All Scenarios →](scenarios/README.md)
@@ -262,13 +298,15 @@ TrustWeave is designed for developer happiness:
 ### Type-Safe Configuration
 
 ```kotlin
-val TrustWeave = TrustWeave.create {
-    didMethod("key") {
-        algorithm = DidCreationOptions.KeyAlgorithm.ED25519
+val trustLayer = TrustLayer.build {
+    keys {
+        provider("inMemory")
+        algorithm("Ed25519")
     }
-    walletFactory {
-        enableOrganization = true
-        enablePresentation = true
+    did {
+        method("key") {
+            algorithm("Ed25519")
+        }
     }
 }
 ```
@@ -276,28 +314,29 @@ val TrustWeave = TrustWeave.create {
 ### Predictable Error Handling
 
 ```kotlin
-val result = TrustWeave.createDid()
-result.fold(
-    onSuccess = { did -> println("Created: ${did.id}") },
-    onFailure = { error -> 
-        when (error) {
-            is TrustWeaveError.DidMethodNotRegistered -> 
-                println("Method not registered: ${error.method}")
-            else -> println("Error: ${error.message}")
-        }
+try {
+    val did = trustLayer.createDid {
+        method("key")
+        algorithm("Ed25519")
     }
-)
+    println("Created: $did")
+} catch (error: Exception) {
+    when (error) {
+        is IllegalStateException -> 
+            println("Error: ${error.message}")
+        else -> println("Error: ${error.message}")
+    }
+}
 ```
 
 ### Composable DSLs
 
 ```kotlin
-val wallet = TrustWeave.createWallet(holderDid = userDid) {
-    label = "My Wallet"
-    enableOrganization = true
-    enablePresentation = true
-    property("autoUnlock", true)
-}.getOrThrow()
+val wallet = trustLayer.wallet {
+    holder(userDid)
+    enableOrganization()
+    enablePresentation()
+}
 ```
 
 ---

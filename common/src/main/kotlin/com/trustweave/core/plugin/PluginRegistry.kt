@@ -1,6 +1,6 @@
 package com.trustweave.core.plugin
 
-import com.trustweave.core.exception.TrustWeaveError
+import com.trustweave.core.exception.TrustWeaveException
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -15,8 +15,8 @@ interface PluginRegistry {
      *
      * @param metadata Plugin metadata describing capabilities
      * @param instance Plugin instance
-     * @throws com.trustweave.core.exception.TrustWeaveError.BlankPluginId if plugin ID is blank
-     * @throws com.trustweave.core.exception.TrustWeaveError.PluginAlreadyRegistered if plugin is already registered
+     * @throws com.trustweave.core.exception.TrustWeaveException.BlankPluginId if plugin ID is blank
+     * @throws com.trustweave.core.exception.TrustWeaveException.PluginAlreadyRegistered if plugin is already registered
      */
     fun register(metadata: PluginMetadata, instance: Any)
 
@@ -151,7 +151,7 @@ class DefaultPluginRegistry : PluginRegistry {
 
     override fun register(metadata: PluginMetadata, instance: Any) {
         if (metadata.id.isBlank()) {
-            throw TrustWeaveError.BlankPluginId()
+            throw TrustWeaveException.BlankPluginId()
         }
         
         // Synchronization is required to ensure atomicity across both maps.
@@ -164,7 +164,7 @@ class DefaultPluginRegistry : PluginRegistry {
             // This provides atomic check-and-set semantics.
             val existing = plugins.putIfAbsent(metadata.id, metadata)
             if (existing != null) {
-                throw TrustWeaveError.PluginAlreadyRegistered(
+                throw TrustWeaveException.PluginAlreadyRegistered(
                     pluginId = metadata.id,
                     existingPlugin = existing.name
                 )

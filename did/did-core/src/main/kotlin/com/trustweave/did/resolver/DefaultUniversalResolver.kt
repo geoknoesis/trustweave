@@ -106,11 +106,25 @@ class DefaultUniversalResolver(
                     )
                 }
                 else -> {
-                    throw RuntimeException("Failed to resolve DID $did: HTTP ${response.statusCode()}")
+                    throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                        message = "Failed to resolve DID $did: HTTP ${response.statusCode()}",
+                        context = mapOf(
+                            "did" to did,
+                            "statusCode" to response.statusCode(),
+                            "provider" to protocolAdapter.providerName
+                        )
+                    )
                 }
             }
         } catch (e: Exception) {
-            throw RuntimeException("Failed to resolve DID $did: ${e.message}", e)
+            throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                message = "Failed to resolve DID $did: ${e.message ?: "Unknown error"}",
+                context = mapOf(
+                    "did" to did,
+                    "provider" to protocolAdapter.providerName
+                ),
+                cause = e
+            )
         }
     }
     
@@ -158,7 +172,10 @@ class DefaultUniversalResolver(
      */
     private fun parseDidDocumentFromJson(json: JsonObject): DidDocument {
         val id = json["id"]?.jsonPrimitive?.content 
-            ?: throw IllegalArgumentException("DID document missing 'id' field")
+            ?: throw com.trustweave.did.exception.DidException.InvalidDidFormat(
+                did = "unknown",
+                reason = "DID document missing 'id' field"
+            )
         
         // Extract @context (can be string or array in JSON-LD)
         val context = when {

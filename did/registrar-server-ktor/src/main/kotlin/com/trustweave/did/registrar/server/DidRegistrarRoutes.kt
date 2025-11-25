@@ -70,7 +70,10 @@ fun Routing.configureDidRegistrarRoutes(
     put("/1.0/dids/{did}") {
         try {
             val did = call.parameters["did"]
-                ?: throw TrustWeaveException("Missing did parameter")
+                ?: throw com.trustweave.core.exception.TrustWeaveException.InvalidOperation(
+                    message = "Missing did parameter",
+                    context = mapOf("parameter" to "did")
+                )
             val request = call.receive<UpdateDidRequest>()
             val response = handleUpdateOperation(registrar, did, request.didDocument, request.options ?: UpdateDidOptions(), jobStorage)
             call.respond(HttpStatusCode.OK, response)
@@ -95,7 +98,10 @@ fun Routing.configureDidRegistrarRoutes(
     delete("/1.0/dids/{did}") {
         try {
             val did = call.parameters["did"]
-                ?: throw TrustWeaveException("Missing did parameter")
+                ?: throw com.trustweave.core.exception.TrustWeaveException.InvalidOperation(
+                    message = "Missing did parameter",
+                    context = mapOf("parameter" to "did")
+                )
             val request = call.receiveNullable<DeactivateDidRequest>()
             val response = handleDeactivateOperation(registrar, did, request?.options ?: DeactivateDidOptions(), jobStorage)
             call.respond(HttpStatusCode.OK, response)
@@ -120,9 +126,14 @@ fun Routing.configureDidRegistrarRoutes(
     get("/1.0/jobs/{jobId}") {
         try {
             val jobId = call.parameters["jobId"]
-                ?: throw TrustWeaveException("Missing jobId parameter")
+                ?: throw com.trustweave.core.exception.TrustWeaveException.InvalidOperation(
+                    message = "Missing jobId parameter",
+                    context = mapOf("parameter" to "jobId")
+                )
             val response = jobStorage.get(jobId)
-                ?: throw TrustWeaveException("Job not found: $jobId")
+                ?: throw com.trustweave.core.exception.TrustWeaveException.NotFound(
+                    resource = "job:$jobId"
+                )
             call.respond(HttpStatusCode.OK, response)
         } catch (e: TrustWeaveException) {
             call.respond(

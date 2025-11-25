@@ -459,12 +459,25 @@ See [Step 3: Validate Inputs Before Operations](#step-3-validate-inputs-before-o
 - Use local DID resolvers when possible
 
 ```kotlin
-// Cache resolved DIDs
-val didCache = mutableMapOf<String, DidDocument>()
+import com.trustweave.trust.TrustLayer
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
+import java.util.concurrent.TimeUnit
 
-suspend fun resolveDidCached(did: String): DidDocument? {
-    return didCache.getOrPut(did) {
-        TrustWeave.dids.resolve(did).document
+// Cache resolved DIDs
+val didCache: Cache<String, DidDocument> = Caffeine.newBuilder()
+    .maximumSize(10_000)
+    .expireAfterWrite(1, TimeUnit.HOURS)
+    .build()
+
+suspend fun resolveDidCached(
+    trustLayer: TrustLayer,
+    did: String
+): DidDocument? {
+    return didCache.get(did) {
+        val context = trustLayer.getDslContext()
+        val resolver = context.getDidResolver()
+        resolver?.resolve(did)?.document
     }
 }
 ```
@@ -477,6 +490,157 @@ suspend fun resolveDidCached(did: String): DidDocument? {
 - Use persistent wallet providers instead of in-memory
 - Archive old credentials
 - Implement pagination for credential queries
+
+```kotlin
+// Use persistent storage instead of in-memory
+val wallet = trustLayer.wallet {
+    holder(holderDid)
+    // Use database storage
+    storageProvider("database")
+    storagePath("wallets/${holderDid}")
+}
+
+// Implement pagination
+val credentials = wallet.list(offset = 0, limit = 100)
+```
+
+### Slow Credential Issuance
+
+**Issue:** Credential issuance is slow
+
+**Solutions:**
+- Use faster cryptographic algorithms (Ed25519 vs RSA)
+- Cache issuer DID documents
+- Use connection pooling for KMS operations
+- Batch operations when possible
+
+```kotlin
+// Batch credential issuance
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+
+suspend fun issueMultipleCredentials(
+    trustLayer: TrustLayer,
+    requests: List<CredentialRequest>
+): List<VerifiableCredential> {
+    return requests.map { request ->
+        async {
+            trustLayer.issue {
+                credential {
+                    type("VerifiableCredential", request.type)
+                    issuer(request.issuerDid)
+                    subject {
+                        id(request.holderDid)
+                        request.claims.forEach { (key, value) ->
+                            claim(key, value)
+                        }
+                    }
+                }
+                by(issuerDid = request.issuerDid, keyId = request.keyId)
+            }
+        }
+    }.awaitAll()
+}
+```
+
+### High CPU Usage
+
+**Issue:** High CPU usage during operations
+
+**Solutions:**
+- Use hardware acceleration for cryptographic operations
+- Implement request throttling
+- Use async operations to avoid blocking
+- Profile and optimize hot paths
+
+## Concurrency Issues
+
+### Race Conditions
+
+**Issue:** Concurrent operations causing inconsistent state
+
+**Solutions:**
+- Use thread-safe data structures
+- Implement proper locking for shared state
+- Use coroutine-safe operations
+
+```kotlin
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+
+class ThreadSafeCredentialStore {
+    private val mutex = Mutex()
+    private val credentials = mutableMapOf<String, VerifiableCredential>()
+    
+    suspend fun store(id: String, credential: VerifiableCredential) {
+        mutex.withLock {
+            credentials[id] = credential
+        }
+    }
+    
+    suspend fun get(id: String): VerifiableCredential? {
+        return mutex.withLock {
+            credentials[id]
+        }
+    }
+}
+```
+
+### Deadlocks
+
+**Issue:** Operations hanging due to deadlocks
+
+**Solutions:**
+- Avoid nested locks
+- Use timeout for operations
+- Use non-blocking operations
+
+```kotlin
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.TimeoutCancellationException
+
+suspend fun operationWithTimeout(
+    trustLayer: TrustLayer,
+    timeoutMillis: Long = 5000
+) {
+    try {
+        withTimeout(timeoutMillis) {
+            val did = trustLayer.createDid { method("key") }
+            // ... operation
+        }
+    } catch (e: TimeoutCancellationException) {
+        logger.error("Operation timed out after ${timeoutMillis}ms")
+        throw TrustWeaveError.Unknown(
+            code = "OPERATION_TIMEOUT",
+            message = "Operation timed out",
+            context = emptyMap(),
+            cause = e
+        )
+    }
+}
+```
+
+### Resource Exhaustion
+
+**Issue:** Running out of connections, memory, or threads
+
+**Solutions:**
+- Implement connection pooling
+- Set resource limits
+- Use backpressure mechanisms
+- Monitor resource usage
+
+```kotlin
+// Configure connection pool
+val dataSource = HikariDataSource().apply {
+    jdbcUrl = "jdbc:postgresql://db.example.com/trustweave"
+    maximumPoolSize = 20  // Limit connections
+    minimumIdle = 5
+    connectionTimeout = 30000
+    idleTimeout = 600000
+    maxLifetime = 1800000
+}
+```
 
 ## Environment-Specific Issues
 

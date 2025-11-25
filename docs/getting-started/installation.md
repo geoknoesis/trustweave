@@ -24,13 +24,26 @@ Before installing TrustWeave, ensure you have:
 After installation, verify your setup by running a simple test:
 
 ```kotlin
-import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustLayer
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
-    val did = TrustWeave.dids.create()
-    println("✅ TrustWeave is working! Created DID: ${did.id}")
+    val trustLayer = TrustLayer.build {
+        keys {
+            provider("inMemory")
+            algorithm("Ed25519")
+        }
+        did {
+            method("key") {
+                algorithm("Ed25519")
+            }
+        }
+    }
+    val did = trustLayer.createDid {
+        method("key")
+        algorithm("Ed25519")
+    }
+    println("✅ TrustWeave is working! Created DID: $did")
 }
 ```
 

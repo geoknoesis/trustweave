@@ -297,6 +297,22 @@ See [CHANGELOG.md](../CHANGELOG.md) for detailed migration guides:
 - TrustWeave is dual-licensed. Non-commercial and educational users can rely on the open source license; commercial deployments require a Geoknoesis commercial agreement.
 - Full details: [Licensing Overview](licensing/README.md)
 
+## Business & Partnerships
+
+- **[Partner Program](PARTNER_PROGRAM.md)**: Comprehensive partner program guide for organizations and individuals interested in referring commercial customers
+  - Partner tiers and benefits (Bronze, Silver, Gold)
+  - Commission structure and remuneration details
+  - Deal qualification criteria and registration process
+  - Partner resources, training, and support
+  - Special benefits for Entrepreneurs' Organization (EO) members
+  - Application process and partner agreement details
+- **[Partner Referral Agreement Template](PARTNER_REFERRAL_AGREEMENT_TEMPLATE.md)**: Legal template for partner referral agreements
+  - Complete agreement terms and conditions
+  - Commission structure and payment terms
+  - Confidentiality and non-compete provisions
+  - Dispute resolution and termination clauses
+  - **Note:** Template for reference only - all agreements must be executed through Geoknoesis LLC's legal process
+
 ## FAQ
 
 - [Frequently Asked Questions](faq.md) collects quick answers about samples, licensing, custom integrations, and policy enforcement.

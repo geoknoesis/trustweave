@@ -36,7 +36,10 @@ object IntegrityVerifier {
         
         // Read anchor from blockchain
         val client = registry.get(anchorRef.chainId)
-            ?: throw TrustWeaveException("No blockchain client registered for chain: ${anchorRef.chainId}")
+            ?: throw com.trustweave.anchor.exceptions.BlockchainException.ChainNotRegistered(
+                chainId = anchorRef.chainId,
+                availableChains = registry.keys.toList()
+            )
         
         val anchorResult = client.readPayload(anchorRef)
         val anchoredPayload = anchorResult.payload.jsonObject
@@ -44,7 +47,11 @@ object IntegrityVerifier {
         // Extract digest from anchored payload (could be "digestMultibase" or "vcDigest")
         val anchoredDigest = anchoredPayload["digestMultibase"]?.jsonPrimitive?.content
             ?: anchoredPayload["vcDigest"]?.jsonPrimitive?.content
-            ?: throw TrustWeaveException("Anchored payload does not contain digestMultibase or vcDigest")
+            ?: throw com.trustweave.core.exception.TrustWeaveException.ValidationFailed(
+                field = "anchoredPayload",
+                reason = "Anchored payload does not contain digestMultibase or vcDigest",
+                value = anchoredPayload.toString()
+            )
         
         computedDigest == anchoredDigest
     }

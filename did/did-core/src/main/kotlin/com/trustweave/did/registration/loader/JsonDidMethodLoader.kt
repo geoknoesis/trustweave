@@ -72,9 +72,9 @@ class JsonDidMethodLoader {
         if (registryEntry != null) {
             // Map from official registry format to DidMethod
             return RegistryEntryMapper.mapToDidMethod(registryEntry)
-                ?: throw IllegalArgumentException(
-                    "Cannot create DidMethod from registry entry: " +
-                    "no implementation with driverUrl found for method '${registryEntry.name}'"
+                ?: throw com.trustweave.core.exception.TrustWeaveException.InvalidOperation(
+                    message = "Cannot create DidMethod from registry entry: no implementation with driverUrl found for method '${registryEntry.name}'",
+                    context = mapOf("method" to registryEntry.name)
                 )
         }
         
@@ -82,10 +82,10 @@ class JsonDidMethodLoader {
         val spec = try {
             DidRegistrationSpecParser.parse(jsonString)
         } catch (e: Exception) {
-            throw IllegalArgumentException(
-                "Failed to parse DID registration JSON. " +
-                "Expected either official registry format or legacy Trustweave format: ${e.message}",
-                e
+            throw com.trustweave.core.exception.TrustWeaveException.InvalidJson(
+                parseError = "Failed to parse DID registration JSON. Expected either official registry format or legacy Trustweave format: ${e.message ?: "Unknown error"}",
+                jsonString = jsonString,
+                cause = e
             )
         }
         
@@ -326,26 +326,32 @@ class JsonDidMethodLoader {
      */
     private fun createMethodFromSpec(spec: DidRegistrationSpec): DidMethod {
         val driver = spec.driver
-            ?: throw IllegalArgumentException("Driver configuration is required")
+            ?: throw com.trustweave.core.exception.TrustWeaveException.InvalidState(
+                message = "Driver configuration is required",
+                context = mapOf("method" to spec.name)
+            )
         
         return when (driver.type) {
             "universal-resolver" -> {
                 HttpDidMethod(spec)
             }
             "native" -> {
-                throw IllegalArgumentException(
-                    "Native driver type requires a custom implementation. " +
-                    "Use DidMethodProvider SPI for native implementations."
+                throw com.trustweave.core.exception.TrustWeaveException.InvalidOperation(
+                    message = "Native driver type requires a custom implementation. Use DidMethodProvider SPI for native implementations.",
+                    context = mapOf("driverType" to driver.type, "method" to spec.name)
                 )
             }
             "custom" -> {
-                throw IllegalArgumentException(
-                    "Custom driver type requires additional configuration. " +
-                    "Use DidMethodProvider SPI for custom implementations."
+                throw com.trustweave.core.exception.TrustWeaveException.InvalidOperation(
+                    message = "Custom driver type requires additional configuration. Use DidMethodProvider SPI for custom implementations.",
+                    context = mapOf("driverType" to driver.type, "method" to spec.name)
                 )
             }
             else -> {
-                throw IllegalArgumentException("Unsupported driver type: ${driver.type}")
+                throw com.trustweave.core.exception.TrustWeaveException.InvalidOperation(
+                    message = "Unsupported driver type: ${driver.type}",
+                    context = mapOf("driverType" to driver.type, "method" to spec.name, "supportedTypes" to listOf("universal-resolver", "native", "custom"))
+                )
             }
         }
     }

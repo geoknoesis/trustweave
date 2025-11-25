@@ -88,7 +88,11 @@ class GodiddyRegistrar(
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to create DID with method $method: ${e.message}", e)
+            throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                message = "Failed to create DID with method $method: ${e.message ?: "Unknown error"}",
+                context = mapOf("method" to method),
+                cause = e
+            )
         }
     }
     
@@ -160,7 +164,11 @@ class GodiddyRegistrar(
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to update DID $did: ${e.message}", e)
+            throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                message = "Failed to update DID $did: ${e.message ?: "Unknown error"}",
+                context = mapOf("did" to did),
+                cause = e
+            )
         }
     }
     
@@ -222,7 +230,11 @@ class GodiddyRegistrar(
                 didState = didState
             )
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to deactivate DID $did: ${e.message}", e)
+            throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                message = "Failed to deactivate DID $did: ${e.message ?: "Unknown error"}",
+                context = mapOf("did" to did),
+                cause = e
+            )
         }
     }
     

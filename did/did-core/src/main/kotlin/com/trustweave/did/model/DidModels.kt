@@ -35,7 +35,10 @@ data class Did(
          */
         fun parse(didString: String): Did {
             if (!didString.startsWith("did:")) {
-                throw IllegalArgumentException("Invalid DID format: must start with 'did:'")
+                throw com.trustweave.did.exception.DidException.InvalidDidFormat(
+                    did = didString,
+                    reason = "Invalid DID format: must start with 'did:'"
+                )
             }
             
             // Remove fragment if present (everything after #)
@@ -44,7 +47,10 @@ data class Did(
             // Split by : to get method and id
             val parts = withoutFragment.substring(4).split(":", limit = 2)
             if (parts.size != 2) {
-                throw IllegalArgumentException("Invalid DID format: expected 'did:method:id'")
+                throw com.trustweave.did.exception.DidException.InvalidDidFormat(
+                    did = didString,
+                    reason = "Invalid DID format: expected 'did:method:id'"
+                )
             }
             
             // Extract method and id (id may contain path like /path/to/resource)

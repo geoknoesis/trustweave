@@ -1,6 +1,6 @@
 package com.trustweave.core.util
 
-import com.trustweave.core.exception.TrustWeaveError
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -16,13 +16,13 @@ class ResultExtensionsTest {
         val result: Result<String> = Result.failure(originalError)
         
         val transformed = result.mapError { 
-            TrustWeaveError.InvalidOperation(message = "Transformed: ${it.message}")
+            TrustWeaveException.InvalidOperation(message = "Transformed: ${it.message}")
         }
         
         assertTrue(transformed.isFailure)
         val error = transformed.exceptionOrNull()
         assertNotNull(error)
-        assertTrue(error is TrustWeaveError.InvalidOperation)
+        assertTrue(error is TrustWeaveException.InvalidOperation)
         assertEquals("Transformed: Original error", error.message)
     }
 
@@ -31,7 +31,7 @@ class ResultExtensionsTest {
         val result: Result<String> = Result.success("success")
         
         val transformed = result.mapError { 
-            TrustWeaveError.Unknown(message = "Should not be called")
+            TrustWeaveException.Unknown(message = "Should not be called")
         }
         
         assertTrue(transformed.isSuccess)
@@ -39,22 +39,22 @@ class ResultExtensionsTest {
     }
 
     @Test
-    fun `test getOrThrowError throws TrustWeaveError on failure`() {
+    fun `test getOrThrowException throws TrustWeaveException on failure`() {
         val result: Result<String> = Result.failure(IllegalArgumentException("Test error"))
         
-        val exception = assertFailsWith<TrustWeaveError> {
-            result.getOrThrowError()
+        val exception = assertFailsWith<TrustWeaveException> {
+            result.getOrThrowException()
         }
         
-        assertTrue(exception is TrustWeaveError.InvalidOperation)
+        assertTrue(exception is TrustWeaveException.InvalidOperation)
         assertEquals("INVALID_ARGUMENT", exception.code)
     }
 
     @Test
-    fun `test getOrThrowError returns value on success`() {
+    fun `test getOrThrowException returns value on success`() {
         val result: Result<String> = Result.success("value")
         
-        val value = result.getOrThrowError()
+        val value = result.getOrThrowException()
         
         assertEquals("value", value)
     }
@@ -218,7 +218,7 @@ class ResultExtensionsTest {
     }
 
     @Test
-    fun `test trustweaveCatching converts exceptions to TrustWeaveError`() = runBlocking {
+    fun `test trustweaveCatching converts exceptions to TrustWeaveException`() = runBlocking {
         val result = trustweaveCatching {
             throw IllegalArgumentException("Test error")
         }
@@ -226,7 +226,7 @@ class ResultExtensionsTest {
         assertTrue(result.isFailure)
         val error = result.exceptionOrNull()
         assertNotNull(error)
-        assertTrue(error is TrustWeaveError.InvalidOperation)
+        assertTrue(error is TrustWeaveException.InvalidOperation)
         assertEquals("INVALID_ARGUMENT", error.code)
     }
 
@@ -241,8 +241,8 @@ class ResultExtensionsTest {
     }
 
     @Test
-    fun `test trustweaveCatching preserves TrustWeaveError`() = runBlocking {
-        val originalError = TrustWeaveError.ValidationFailed(
+    fun `test trustweaveCatching preserves TrustWeaveException`() = runBlocking {
+        val originalError = TrustWeaveException.ValidationFailed(
             field = "test",
             reason = "Invalid",
             value = null

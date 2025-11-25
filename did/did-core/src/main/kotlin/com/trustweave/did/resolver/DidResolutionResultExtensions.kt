@@ -1,7 +1,7 @@
 package com.trustweave.did.resolver
 
 import com.trustweave.did.DidDocument
-import com.trustweave.did.exception.DidError
+import com.trustweave.did.exception.DidException
 
 /**
  * Extension functions for [DidResolutionResult] to improve ergonomics.
@@ -37,11 +37,11 @@ val DidResolutionResult.errorMessage: String?
 /**
  * Requires that the resolution result contains a document.
  * 
- * @throws DidError.DidNotFound if document is null
+ * @throws DidException.DidNotFound if document is null
  * @return The resolved DID document
  */
 fun DidResolutionResult.requireDocument(): DidDocument {
-    return document ?: throw DidError.DidNotFound(
+    return document ?: throw DidException.DidNotFound(
         did = resolutionMetadata["did"] as? String ?: "unknown",
         availableMethods = (resolutionMetadata["availableMethods"] as? List<*>)?.mapNotNull { it.toString() } ?: emptyList()
     )

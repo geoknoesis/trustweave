@@ -129,8 +129,9 @@ class DefaultUniversalRegistrar(
         
         // If no jobId, cannot poll
         val jobId = response.jobId
-                ?: throw TrustWeaveException(
-                "Cannot wait for completion: operation is not complete but no jobId provided"
+                ?: throw com.trustweave.core.exception.TrustWeaveException.InvalidState(
+                message = "Cannot wait for completion: operation is not complete but no jobId provided",
+                context = mapOf("operation" to "waitForCompletion")
             )
         
         // Poll until complete
@@ -144,8 +145,9 @@ class DefaultUniversalRegistrar(
         }
         
         if (!currentResponse.isComplete()) {
-            throw TrustWeaveException(
-                "Operation did not complete within ${maxPollAttempts * pollInterval}ms"
+            throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                message = "Operation did not complete within ${maxPollAttempts * pollInterval}ms",
+                context = mapOf("jobId" to jobId, "maxPollAttempts" to maxPollAttempts, "pollInterval" to pollInterval)
             )
         }
         

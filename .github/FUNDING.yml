@@ -1,0 +1,63 @@
+# Funding Configuration for TrustWeave
+# 
+# This file enables the "Sponsor" button on GitHub to support TrustWeave development.
+# See docs/FUNDING_PLAN.md for detailed funding strategy and setup instructions.
+#
+# To enable a platform, uncomment the relevant line and replace the placeholder with your actual username/organization name.
+# You can enable multiple platforms - they will all appear in the GitHub Sponsors dropdown.
+
+# GitHub Sponsors - Native GitHub integration (recommended)
+# Supports up to 4 GitHub usernames/organizations
+# Example: github: ['geoknoesis', 'trustweave']
+github: # Replace with GitHub Sponsors-enabled username(s), e.g., ['geoknoesis']
+
+# Patreon - Recurring subscription platform
+# Example: patreon: trustweave
+patreon: # Replace with Patreon username
+
+# Open Collective - Transparent financial management (recommended for organizations)
+# Example: open_collective: trustweave
+open_collective: # Replace with Open Collective organization name
+
+# Ko-fi - Simple donation platform
+# Example: ko_fi: trustweave
+ko_fi: # Replace with Ko-fi username
+
+# Tidelift - Commercial support for open source
+# Format: platform-name/package-name
+# Example: tidelift: npm/trustweave
+tidelift: # Replace with Tidelift platform-name/package-name, e.g., npm/trustweave
+
+# Community Bridge - Linux Foundation funding platform
+# Example: community_bridge: trustweave
+community_bridge: # Replace with Community Bridge project-name
+
+# Liberapay - Recurring donation platform
+# Example: liberapay: trustweave
+liberapay: # Replace with Liberapay username
+
+# IssueHunt - Bug bounty and funding platform
+# Example: issuehunt: trustweave
+issuehunt: # Replace with IssueHunt username
+
+# LFX Crowdfunding - Linux Foundation crowdfunding
+# Example: lfx_crowdfunding: trustweave
+lfx_crowdfunding: # Replace with LFX Crowdfunding project-name
+
+# Polar - Modern funding platform for open source
+# Example: polar: trustweave
+polar: # Replace with Polar username
+
+# Buy Me a Coffee - Simple one-time donations (recommended)
+# Example: buy_me_a_coffee: trustweave
+buy_me_a_coffee: # Replace with Buy Me a Coffee username
+
+# thanks.dev - Developer appreciation platform
+# Example: thanks_dev: trustweave
+thanks_dev: # Replace with thanks.dev username
+
+# Custom URLs - Link to your own funding pages (recommended for commercial licensing)
+# Supports up to 4 custom URLs
+# Example: custom: ['https://geoknoesis.com/licensing', 'https://geoknoesis.com/support']
+custom: # Replace with custom sponsorship URLs, e.g., ['https://geoknoesis.com/licensing']
+

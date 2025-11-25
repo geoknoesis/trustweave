@@ -85,9 +85,10 @@ class KeyDidMethod(
         } catch (e: IllegalArgumentException) {
             throw e
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to create did:key: ${e.message}",
-                e
+            throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                message = "Failed to create did:key: ${e.message ?: "Unknown error"}",
+                context = mapOf("method" to "key"),
+                cause = e
             )
         }
     }
@@ -178,7 +179,11 @@ class KeyDidMethod(
                     if (x != null) {
                         java.util.Base64.getUrlDecoder().decode(x)
                     } else {
-                        throw TrustWeaveException("Missing 'x' field in Ed25519 JWK")
+                        throw com.trustweave.core.exception.TrustWeaveException.ValidationFailed(
+                            field = "jwk.x",
+                            reason = "Missing 'x' field in Ed25519 JWK",
+                            value = null
+                        )
                     }
                 }
                 "SECP256K1", "P-256", "P-384", "P-521" -> {
@@ -188,14 +193,25 @@ class KeyDidMethod(
                         val yBytes = java.util.Base64.getUrlDecoder().decode(y)
                         byteArrayOf(0x04) + xBytes + yBytes // 0x04 = uncompressed point
                     } else {
-                        throw TrustWeaveException("Missing 'x' or 'y' field in EC JWK")
+                        throw com.trustweave.core.exception.TrustWeaveException.ValidationFailed(
+                            field = "jwk.x/y",
+                            reason = "Missing 'x' or 'y' field in EC JWK",
+                            value = null
+                        )
                     }
                 }
-                else -> throw TrustWeaveException("Unsupported algorithm for public key extraction: $algorithm")
+                else -> throw com.trustweave.core.exception.TrustWeaveException.UnsupportedAlgorithm(
+                    algorithm = algorithm,
+                    supportedAlgorithms = listOf("ED25519", "SECP256K1", "P-256", "P-384", "P-521")
+                )
             }
         }
         
-        throw TrustWeaveException("KeyHandle must have either publicKeyMultibase or publicKeyJwk")
+        throw com.trustweave.core.exception.TrustWeaveException.ValidationFailed(
+            field = "keyHandle",
+            reason = "KeyHandle must have either publicKeyMultibase or publicKeyJwk",
+            value = null
+        )
     }
 
     /**

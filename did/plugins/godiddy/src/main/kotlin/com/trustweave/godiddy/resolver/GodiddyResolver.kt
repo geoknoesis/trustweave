@@ -55,7 +55,10 @@ class GodiddyResolver(
             }
             
             if (!status.isSuccess()) {
-                throw TrustWeaveException("Failed to resolve DID $did: HTTP $status")
+                throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                    message = "Failed to resolve DID $did: HTTP $status",
+                    context = mapOf("did" to did, "status" to status.toString(), "provider" to "godiddy")
+                )
             }
             
             val jsonResponse: JsonObject = response.body()
@@ -86,7 +89,11 @@ class GodiddyResolver(
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to resolve DID $did: ${e.message}", e)
+            throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                message = "Failed to resolve DID $did: ${e.message ?: "Unknown error"}",
+                context = mapOf("did" to did, "provider" to "godiddy"),
+                cause = e
+            )
         }
     }
     
@@ -96,7 +103,10 @@ class GodiddyResolver(
     private fun convertToDidDocument(json: JsonObject): DidDocument {
         // This is a simplified conversion - in practice, you'd need full JSON-LD parsing
         // For now, we'll extract basic fields
-        val id = json["id"]?.jsonPrimitive?.content ?: throw TrustWeaveException("DID document missing 'id' field")
+        val id = json["id"]?.jsonPrimitive?.content ?: throw com.trustweave.did.exception.DidException.InvalidDidFormat(
+            did = "unknown",
+            reason = "DID document missing 'id' field"
+        )
         
         // Extract @context (can be string or array in JSON-LD)
         val context = when {

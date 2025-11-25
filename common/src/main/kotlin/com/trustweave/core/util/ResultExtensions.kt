@@ -1,6 +1,6 @@
 package com.trustweave.core.util
 
-import com.trustweave.core.exception.toTrustWeaveError
+import com.trustweave.core.exception.toTrustWeaveException
 
 /**
  * Extension functions for Result<T> to improve error handling.
@@ -21,14 +21,14 @@ inline fun <T> Result<T>.mapError(transform: (Throwable) -> Throwable): Result<T
 }
 
 /**
- * Gets the result value or throws a TrustWeaveError.
+ * Gets the result value or throws a TrustWeaveException.
  * 
  * @return The result value
- * @throws TrustWeaveError if the result is a failure
+ * @throws TrustWeaveException if the result is a failure
  */
-fun <T> Result<T>.getOrThrowError(): T {
+fun <T> Result<T>.getOrThrowException(): T {
     return getOrElse { throwable ->
-        throw throwable.toTrustWeaveError()
+        throw throwable.toTrustWeaveException()
     }
 }
 
@@ -81,7 +81,7 @@ suspend fun <T, R> List<T>.mapSequential(
 }
 
 /**
- * Executes a suspend block and automatically converts any exceptions to TrustWeaveError.
+ * Executes a suspend block and automatically converts any exceptions to TrustWeaveException.
  * 
  * This is a convenience function that combines `runCatching` with automatic error conversion,
  * reducing boilerplate in API methods.
@@ -94,17 +94,17 @@ suspend fun <T, R> List<T>.mapSequential(
  * }
  * ```
  * 
- * **Note:** The error conversion transforms any `Throwable` to a `TrustWeaveError` (which extends
- * `TrustWeaveException` and thus `Throwable`), so the type system allows this transformation.
+ * **Note:** The error conversion transforms any `Throwable` to a `TrustWeaveException`,
+ * so the type system allows this transformation.
  * 
  * @param block The suspend block to execute
- * @return Result with the block result or a TrustWeaveError
+ * @return Result with the block result or a TrustWeaveException
  */
 suspend inline fun <T> trustweaveCatching(
     crossinline block: suspend () -> T
 ): Result<T> = runCatching {
     block()
-}.mapError { it.toTrustWeaveError() }
+}.mapError { it.toTrustWeaveException() }
 
 /**
  * Utility functions for TrustWeave operations.

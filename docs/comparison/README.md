@@ -4,7 +4,9 @@ This directory contains comparison documents that help you understand how TrustW
 
 ## Available Comparisons
 
-- **[TrustWeave vs. Other APIs](trustweave-vs-other-apis.md)** - Comprehensive comparison of TrustWeave with WaltId, Veramo, didkit, did-jwt, and other equivalent libraries in different programming languages.
+- **[Complete Competitor Analysis](COMPLETE_COMPETITOR_ANALYSIS.md)** - Comprehensive comparison with all major competitors including 25+ open-source SDKs, commercial platforms, and blockchain networks. Includes detailed feature matrices and competitive positioning.
+
+- **[TrustWeave vs. Other APIs](trustweave-vs-other-apis.md)** - Detailed technical comparison of TrustWeave with WaltId, Veramo, didkit, did-jwt, and other equivalent libraries in different programming languages.
 
 ## Quick Reference
 

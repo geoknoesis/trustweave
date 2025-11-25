@@ -2,7 +2,7 @@ package com.trustweave.did.registry
 
 import com.trustweave.did.Did
 import com.trustweave.did.DidMethod
-import com.trustweave.did.exception.DidError
+import com.trustweave.did.exception.DidException
 import com.trustweave.did.resolver.DidResolutionResult
 import java.util.concurrent.ConcurrentHashMap
 
@@ -34,7 +34,7 @@ class DefaultDidMethodRegistry : DidMethodRegistry {
     override suspend fun resolve(did: String): DidResolutionResult {
         val parsed = Did.parse(did)
         val method = get(parsed.method)
-            ?: throw DidError.DidMethodNotRegistered(
+            ?: throw DidException.DidMethodNotRegistered(
                 method = parsed.method,
                 availableMethods = getAllMethodNames()
             )

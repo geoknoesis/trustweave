@@ -149,7 +149,9 @@ class DidRegistrarController(
     fun getJobStatus(@PathVariable jobId: String): ResponseEntity<Any> {
         return try {
             val response = service.getJobStatus(jobId)
-                ?: throw TrustWeaveException("Job not found: $jobId")
+                ?: throw com.trustweave.core.exception.TrustWeaveException.NotFound(
+                    resource = "job:$jobId"
+                )
             ResponseEntity.ok(response)
         } catch (e: TrustWeaveException) {
             ResponseEntity.status(HttpStatus.NOT_FOUND)

@@ -96,8 +96,9 @@ class StandardUniversalRegistrarAdapter : UniversalRegistrarProtocolAdapter {
                 parseRegistrationResponse(response.body())
             }
             else -> {
-                throw TrustWeaveException(
-                    "Failed to create DID: HTTP ${response.statusCode()}: ${response.body()}"
+                throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                    message = "Failed to create DID: HTTP ${response.statusCode()}: ${response.body()}",
+                    context = mapOf("statusCode" to response.statusCode(), "operation" to "create")
                 )
             }
         }
@@ -143,8 +144,9 @@ class StandardUniversalRegistrarAdapter : UniversalRegistrarProtocolAdapter {
                 parseRegistrationResponse(response.body())
             }
             else -> {
-                throw TrustWeaveException(
-                    "Failed to update DID: HTTP ${response.statusCode()}: ${response.body()}"
+                throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                    message = "Failed to update DID: HTTP ${response.statusCode()}: ${response.body()}",
+                    context = mapOf("statusCode" to response.statusCode(), "operation" to "update")
                 )
             }
         }
@@ -187,8 +189,9 @@ class StandardUniversalRegistrarAdapter : UniversalRegistrarProtocolAdapter {
                 parseRegistrationResponse(response.body())
             }
             else -> {
-                throw TrustWeaveException(
-                    "Failed to deactivate DID: HTTP ${response.statusCode()}: ${response.body()}"
+                throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                    message = "Failed to deactivate DID: HTTP ${response.statusCode()}: ${response.body()}",
+                    context = mapOf("statusCode" to response.statusCode(), "operation" to "deactivate")
                 )
             }
         }
@@ -215,8 +218,9 @@ class StandardUniversalRegistrarAdapter : UniversalRegistrarProtocolAdapter {
                 parseRegistrationResponse(response.body())
             }
             else -> {
-                throw TrustWeaveException(
-                    "Failed to get operation status: HTTP ${response.statusCode()}: ${response.body()}"
+                throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+                    message = "Failed to get operation status: HTTP ${response.statusCode()}: ${response.body()}",
+                    context = mapOf("statusCode" to response.statusCode(), "operation" to "getStatus", "jobId" to jobId)
                 )
             }
         }
@@ -228,14 +232,20 @@ class StandardUniversalRegistrarAdapter : UniversalRegistrarProtocolAdapter {
         
         val jobId = jsonObject["jobId"]?.jsonPrimitive?.content
         val didStateJson = jsonObject["didState"]?.jsonObject
-            ?: throw TrustWeaveException("Missing didState in response")
+            ?: throw com.trustweave.core.exception.TrustWeaveException.InvalidJson(
+                parseError = "Missing didState in response",
+                jsonString = jsonString
+            )
         
         val state = when (val stateStr = didStateJson["state"]?.jsonPrimitive?.content?.uppercase()) {
             "FINISHED" -> OperationState.FINISHED
             "FAILED" -> OperationState.FAILED
             "ACTION" -> OperationState.ACTION
             "WAIT" -> OperationState.WAIT
-            else -> throw TrustWeaveException("Invalid state: $stateStr")
+            else -> throw com.trustweave.core.exception.TrustWeaveException.InvalidState(
+                message = "Invalid state: $stateStr",
+                context = mapOf("state" to (stateStr ?: "null"))
+            )
         }
         
         val did = didStateJson["did"]?.jsonPrimitive?.content
@@ -398,7 +408,10 @@ class StandardUniversalRegistrarAdapter : UniversalRegistrarProtocolAdapter {
     }
     
     private fun parseDidDocumentFromJson(json: JsonObject): DidDocument {
-        val id = json["id"]?.jsonPrimitive?.content ?: throw IllegalArgumentException("Missing DID id")
+        val id = json["id"]?.jsonPrimitive?.content ?: throw com.trustweave.did.exception.DidException.InvalidDidFormat(
+            did = "unknown",
+            reason = "Missing DID id in document"
+        )
         
         val context = when {
             json["@context"] != null -> {

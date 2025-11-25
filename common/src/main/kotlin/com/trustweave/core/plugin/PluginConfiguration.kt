@@ -1,6 +1,6 @@
 package com.trustweave.core.plugin
 
-import com.trustweave.core.exception.TrustWeaveError
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -154,22 +154,22 @@ object PluginConfigurationLoader {
      *
      * @param path File path
      * @return Plugin configuration
-     * @throws TrustWeaveError.InvalidConfigFormat if path is blank
-     * @throws TrustWeaveError.ConfigNotFound if file doesn't exist
-     * @throws TrustWeaveError.ConfigReadFailed if file cannot be read
+     * @throws TrustWeaveException.InvalidConfigFormat if path is blank
+     * @throws TrustWeaveException.ConfigNotFound if file doesn't exist
+     * @throws TrustWeaveException.ConfigReadFailed if file cannot be read
      */
     fun loadFromFile(path: String): PluginConfiguration {
         if (path.isBlank()) {
-            throw TrustWeaveError.InvalidConfigFormat(
+            throw TrustWeaveException.InvalidConfigFormat(
                 parseError = "File path cannot be blank"
             )
         }
         val file = File(path)
         if (!file.exists()) {
-            throw TrustWeaveError.ConfigNotFound(path = path)
+            throw TrustWeaveException.ConfigNotFound(path = path)
         }
         if (!file.canRead()) {
-            throw TrustWeaveError.ConfigReadFailed(
+            throw TrustWeaveException.ConfigReadFailed(
                 path = path,
                 reason = "File is not readable"
             )
@@ -178,10 +178,10 @@ object PluginConfigurationLoader {
         return try {
             val content = file.readText()
             loadFromJson(content)
-        } catch (e: TrustWeaveError) {
+        } catch (e: TrustWeaveException) {
             throw e
         } catch (e: Exception) {
-            throw TrustWeaveError.ConfigReadFailed(
+            throw TrustWeaveException.ConfigReadFailed(
                 path = path,
                 reason = e.message ?: "Failed to read file"
             )
@@ -193,27 +193,27 @@ object PluginConfigurationLoader {
      *
      * @param resource Resource path (e.g., "TrustWeave-plugins.json")
      * @return Plugin configuration
-     * @throws TrustWeaveError.InvalidConfigFormat if resource path is blank
-     * @throws TrustWeaveError.ConfigNotFound if resource doesn't exist
-     * @throws TrustWeaveError.ConfigReadFailed if resource cannot be read
+     * @throws TrustWeaveException.InvalidConfigFormat if resource path is blank
+     * @throws TrustWeaveException.ConfigNotFound if resource doesn't exist
+     * @throws TrustWeaveException.ConfigReadFailed if resource cannot be read
      */
     fun loadFromResource(resource: String): PluginConfiguration {
         if (resource.isBlank()) {
-            throw TrustWeaveError.InvalidConfigFormat(
+            throw TrustWeaveException.InvalidConfigFormat(
                 parseError = "Resource path cannot be blank"
             )
         }
         val inputStream = PluginConfigurationLoader::class.java.classLoader
             .getResourceAsStream(resource)
-            ?: throw TrustWeaveError.ConfigNotFound(path = resource)
+            ?: throw TrustWeaveException.ConfigNotFound(path = resource)
 
         return try {
             val content = inputStream.bufferedReader().use { it.readText() }
             loadFromJson(content)
-        } catch (e: TrustWeaveError) {
+        } catch (e: TrustWeaveException) {
             throw e
         } catch (e: Exception) {
-            throw TrustWeaveError.ConfigReadFailed(
+            throw TrustWeaveException.ConfigReadFailed(
                 path = resource,
                 reason = e.message ?: "Failed to read resource"
             )
@@ -230,13 +230,13 @@ object PluginConfigurationLoader {
                return try {
                    json.decodeFromString(serializer<PluginConfiguration>(), jsonString)
         } catch (e: SerializationException) {
-            throw TrustWeaveError.InvalidConfigFormat(
+            throw TrustWeaveException.InvalidConfigFormat(
                 jsonString = jsonString,
                 parseError = e.message ?: "JSON parsing error",
                 field = null
             )
         } catch (e: Exception) {
-            throw TrustWeaveError.InvalidConfigFormat(
+            throw TrustWeaveException.InvalidConfigFormat(
                 jsonString = jsonString,
                 parseError = e.message ?: "Unknown parsing error",
                 field = null

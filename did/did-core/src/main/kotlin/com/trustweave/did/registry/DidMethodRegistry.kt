@@ -31,7 +31,7 @@ interface DidMethodRegistry {
      * 
      * @param did The DID string to resolve
      * @return DidResolutionResult
-     * @throws DidError.DidMethodNotRegistered if the method is not registered
+     * @throws DidException.DidMethodNotRegistered if the method is not registered
      */
     suspend fun resolve(did: String): DidResolutionResult
     

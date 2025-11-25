@@ -20,8 +20,8 @@ This guide explains how to set up your development environment for TrustWeave.
 ## Cloning the Repository
 
 ```bash
-git clone https://github.com/geoknoesis/TrustWeave.git
-cd TrustWeave
+git clone https://github.com/geoknoesis/trustweave.git
+cd trustweave
 ```
 
 ## Building the Project

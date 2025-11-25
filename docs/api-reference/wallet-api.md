@@ -1,5 +1,7 @@
 ---
 title: Wallet API Reference
+nav_order: 3
+parent: API Reference
 ---
 
 # Wallet API Reference

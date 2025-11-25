@@ -23,9 +23,9 @@ Add the did:sol module to your dependencies:
 ```kotlin
 dependencies {
     implementation("com.trustweave.did:sol:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
     
     // HTTP client for Solana RPC

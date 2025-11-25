@@ -30,11 +30,11 @@ Add the did:jwk module to your dependencies:
 ```kotlin
 dependencies {
     implementation("com.trustweave.did:jwk:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
     
     // JSON processing (included automatically)
     implementation("org.jose4j:jose4j:0.9.5")

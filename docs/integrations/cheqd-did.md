@@ -22,10 +22,10 @@ Add the did:cheqd module to your dependencies:
 ```kotlin
 dependencies {
     implementation("com.trustweave.did:cheqd:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-core:1.0.0-SNAPSHOT")
     
     // HTTP client for Cheqd network integration
     implementation("com.squareup.okhttp3:okhttp:4.12.0")

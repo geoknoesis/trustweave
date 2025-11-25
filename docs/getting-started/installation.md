@@ -60,14 +60,14 @@ Add TrustWeave dependencies to your `build.gradle.kts`. This brings in the core 
 ```kotlin
 dependencies {
     // Core modules (required)
-    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-kms:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
     
     // Test kit (for testing)
-    testImplementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
+    testImplementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
     
     // Optional: Integration modules (using hierarchical group IDs)
     implementation("com.trustweave.kms:waltid:1.0.0-SNAPSHOT")
@@ -92,14 +92,14 @@ Add TrustWeave dependencies to your `build.gradle`. Use this variant if your pro
 ```groovy
 dependencies {
     // Core modules (required)
-    implementation 'com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT'
-    implementation 'com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT'
-    implementation 'com.trustweave:TrustWeave-kms:1.0.0-SNAPSHOT'
-    implementation 'com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT'
-    implementation 'com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT'
+    implementation 'com.trustweave:trustweave-core:1.0.0-SNAPSHOT'
+    implementation 'com.trustweave:trustweave-json:1.0.0-SNAPSHOT'
+    implementation 'com.trustweave:trustweave-kms:1.0.0-SNAPSHOT'
+    implementation 'com.trustweave:trustweave-did:1.0.0-SNAPSHOT'
+    implementation 'com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT'
     
     // Test kit (for testing)
-    testImplementation 'com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT'
+    testImplementation 'com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT'
     
     // Optional: Integration modules (using hierarchical group IDs)
     implementation 'com.trustweave.kms:waltid:1.0.0-SNAPSHOT'
@@ -162,11 +162,11 @@ For a minimal demo you can stick to a subset of modules. This keeps the footprin
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-json:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
-    testImplementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    testImplementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
 }
 ```
 

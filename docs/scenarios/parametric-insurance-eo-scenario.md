@@ -107,10 +107,10 @@ Parametric insurance needs:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
     
     // Test kit for in-memory implementations
-    testImplementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")
+    testImplementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
     
     // Optional: Algorand adapter for real blockchain anchoring
     implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")

@@ -30,9 +30,9 @@ Add the did:key module to your dependencies:
 ```kotlin
 dependencies {
     implementation("com.trustweave.did:key:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-did:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-kms:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
     
     // Multibase encoding (included automatically)

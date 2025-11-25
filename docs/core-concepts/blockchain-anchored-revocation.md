@@ -83,10 +83,10 @@ Determines when status lists should be anchored to blockchain.
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-anchor:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
     // Add blockchain anchor client for your chain
-    implementation("com.trustweave:TrustWeave-anchor-algorand:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-anchor-algorand:1.0.0-SNAPSHOT")
 }
 ```
 

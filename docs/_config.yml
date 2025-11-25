@@ -202,121 +202,9 @@ nav:
       - title: Wallet API
         url: tutorials/wallet-api-tutorial.md
       - title: Use Case Scenarios
-        children:
-          - title: Overview
-            url: scenarios/README.md
-          - title: Identity & Verification
-            children:
-              - title: Government Digital Identity
-                url: scenarios/government-digital-identity-scenario.md
-              - title: Professional Identity
-                url: scenarios/professional-identity-scenario.md
-              - title: Age Verification
-                url: scenarios/age-verification-scenario.md
-              - title: Financial Services (KYC)
-                url: scenarios/financial-services-kyc-scenario.md
-          - title: Education & Credentials
-            children:
-              - title: Academic Credentials
-                url: scenarios/academic-credentials-scenario.md
-              - title: National Education Credentials (Algeria)
-                url: scenarios/national-education-credentials-algeria-scenario.md
-          - title: Cybersecurity & Access Control
-            children:
-              - title: Zero Trust Continuous Authentication
-                url: scenarios/zero-trust-authentication-scenario.md
-              - title: Security Clearance & Access Control
-                url: scenarios/security-clearance-access-control-scenario.md
-              - title: Biometric Verification
-                url: scenarios/biometric-verification-scenario.md
-              - title: Security Training & Certification
-                url: scenarios/security-training-certification-scenario.md
-              - title: Software Supply Chain Security
-                url: scenarios/software-supply-chain-security-scenario.md
-              - title: SOC2 Compliance
-                url: scenarios/soc2-compliance-scenario.md
-          - title: Healthcare
-            children:
-              - title: Healthcare Medical Records
-                url: scenarios/healthcare-medical-records-scenario.md
-              - title: Vaccination and Health Passports
-                url: scenarios/vaccination-health-passport-scenario.md
-          - title: Supply Chain & Provenance
-            children:
-              - title: Supply Chain Traceability
-                url: scenarios/supply-chain-traceability-scenario.md
-              - title: Supply Chain & EUDR Compliance
-                url: scenarios/supply-chain-eudr-compliance-scenario.md
-              - title: Digital Workflow & Provenance
-                url: scenarios/digital-workflow-provenance-scenario.md
-          - title: Geospatial & Location
-            children:
-              - title: Proof of Location
-                url: scenarios/proof-of-location-scenario.md
-              - title: Earth Observation
-                url: scenarios/earth-observation-scenario.md
-              - title: Spatial Web Authorization
-                url: scenarios/spatial-web-authorization-scenario.md
-          - title: Climate & Environment
-            children:
-              - title: Parametric Insurance with Earth Observation
-                url: scenarios/parametric-insurance-eo-scenario.md
-              - title: Carbon Markets & Digital MRV
-                url: scenarios/carbon-markets-dmrv-scenario.md
-          - title: Employment & Professional
-            children:
-              - title: Employee Onboarding
-                url: scenarios/employee-onboarding-scenario.md
-          - title: IoT & Devices
-            children:
-              - title: IoT Device Identity
-                url: scenarios/iot-device-identity-scenario.md
-              - title: IoT Sensor Data Provenance
-                url: scenarios/iot-sensor-data-provenance-scenario.md
-              - title: IoT Firmware Update Verification
-                url: scenarios/iot-firmware-update-verification-scenario.md
-              - title: IoT Device Ownership Transfer
-                url: scenarios/iot-device-ownership-transfer-scenario.md
-          - title: Insurance & Claims
-            children:
-              - title: Insurance Claims and Verification
-                url: scenarios/insurance-claims-scenario.md
-              - title: Parametric Insurance for Travel Disruptions
-                url: scenarios/parametric-insurance-travel-scenario.md
-          - title: Media & Content
-            children:
-              - title: News Industry
-                url: scenarios/news-industry-scenario.md
-              - title: Event Ticketing and Access Control
-                url: scenarios/event-ticketing-scenario.md
-          - title: Data Management
-            children:
-              - title: Data Catalog & DCAT
-                url: scenarios/data-catalog-dcat-scenario.md
-          - title: Trust & Reputation
-            children:
-              - title: Web of Trust
-                url: scenarios/web-of-trust-scenario.md
+        url: scenarios/README.md
       - title: Credential Exchange Protocols
-        children:
-          - title: Overview
-            url: features/credential-exchange-protocols/README.md
-          - title: DIDComm
-            url: features/credential-exchange-protocols/didcomm.md
-          - title: OIDC4VCI
-            url: features/credential-exchange-protocols/oidc4vci.md
-          - title: CHAPI
-            url: features/credential-exchange-protocols/chapi.md
-          - title: Quick Start
-            url: features/credential-exchange-protocols/QUICK_START.md
-          - title: API Reference
-            url: features/credential-exchange-protocols/API_REFERENCE.md
-          - title: Examples
-            url: features/credential-exchange-protocols/EXAMPLES.md
-          - title: Best Practices
-            url: features/credential-exchange-protocols/BEST_PRACTICES.md
-          - title: Troubleshooting
-            url: features/credential-exchange-protocols/TROUBLESHOOTING.md
+        url: features/credential-exchange-protocols/README.md
 
   # ============================================
   # PART 4: API REFERENCE
@@ -346,57 +234,13 @@ nav:
       - title: Overview
         url: integrations/README.md
       - title: DID Methods
-        children:
-          - title: Key DID
-            url: integrations/key-did.md
-          - title: Peer DID
-            url: integrations/peer-did.md
-          - title: Web DID
-            url: integrations/web-did.md
-          - title: JWK DID
-            url: integrations/jwk-did.md
-          - title: ION DID
-            url: integrations/ion-did.md
-          - title: eTHR DID
-            url: integrations/ethr-did.md
-          - title: ENS DID
-            url: integrations/ens-did.md
-          - title: Polygon DID
-            url: integrations/polygon-did.md
-          - title: Sol DID
-            url: integrations/sol-did.md
-          - title: PLC DID
-            url: integrations/plc-did.md
-          - title: Cheqd DID
-            url: integrations/cheqd-did.md
-          - title: DID Registration
-            url: integrations/did-registration/README.md
+        url: integrations/README.md#did-methods
       - title: Key Management Systems (KMS)
-        children:
-          - title: AWS KMS
-            url: integrations/aws-kms.md
-          - title: Azure Key Vault
-            url: integrations/azure-kms.md
-          - title: Google Cloud KMS
-            url: integrations/google-kms.md
-          - title: HashiCorp Vault
-            url: integrations/hashicorp-vault-kms.md
+        url: integrations/README.md#key-management-systems-kms
       - title: Blockchain Anchoring
-        children:
-          - title: Algorand
-            url: integrations/algorand.md
-          - title: Ethereum
-            url: integrations/ethereum-anchor.md
-          - title: Arbitrum
-            url: integrations/arbitrum-anchor.md
-          - title: Base
-            url: integrations/base-anchor.md
+        url: integrations/README.md#blockchain-anchoring
       - title: Third-Party Services
-        children:
-          - title: walt.id
-            url: integrations/waltid.md
-          - title: GoDiddy
-            url: integrations/godiddy.md
+        url: integrations/README.md#third-party-services
 
   # ============================================
   # PART 6: ADVANCED TOPICS
@@ -432,55 +276,17 @@ nav:
     has_children: true
     children:
       - title: Core Modules
-        children:
-          - title: Overview
-            url: modules/core-modules.md
-          - title: SPI Interfaces
-            url: modules/trustweave-spi.md
-          - title: trustweave-trust
-            url: modules/trustweave-trust.md
-          - title: trustweave-common
-            url: modules/trustweave-common.md
-          - title: trustweave-json
-            url: modules/trustweave-json.md
-          - title: trustweave-kms
-            url: modules/trustweave-kms.md
-          - title: trustweave-did
-            url: modules/trustweave-did.md
-          - title: trustweave-did-registrar
-            url: modules/trustweave-did-registrar.md
-          - title: trustweave-did-registrar-server
-            url: modules/trustweave-did-registrar-server.md
-          - title: trustweave-anchor
-            url: modules/trustweave-anchor.md
-          - title: trustweave-contract
-            url: modules/trustweave-contract.md
-          - title: trustweave-testkit
-            url: modules/trustweave-testkit.md
+        url: modules/core-modules.md
       - title: Configuration
-        children:
-          - title: Overview
-            url: configuration/README.md
-          - title: Defaults
-            url: configuration/defaults.md
+        url: configuration/README.md
       - title: Migration Guides
-        children:
-          - title: Overview
-            url: migration/README.md
-          - title: Migrating to 1.0.0
-            url: migration/migrating-to-1.0.0.md
+        url: migration/README.md
       - title: Security
         url: security/README.md
       - title: Licensing
         url: licensing/README.md
       - title: Comparison
-        children:
-          - title: Overview
-            url: comparison/README.md
-          - title: TrustWeave vs Other APIs
-            url: comparison/trustweave-vs-other-apis.md
-          - title: Competitor Analysis
-            url: comparison/COMPLETE_COMPETITOR_ANALYSIS.md
+        url: comparison/README.md
 
   # ============================================
   # PART 8: CONTRIBUTING

@@ -146,6 +146,6 @@ val credential = registry.issue(
 
 ## Related samples
 
-- [`QuickStartSample`](../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/quickstart/QuickStartSample.kt) demonstrates issuance, verification, and anchoring using the default in-memory provider chain.
-- Scenario examples in `TrustWeave-examples` showcase custom providers (HTTP issuers, GoDiddy integrations).
+- [`QuickStartSample`](https://github.com/geoknoesis/TrustWeave/blob/main/distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/quickstart/QuickStartSample.kt) demonstrates issuance, verification, and anchoring using the default in-memory provider chain.
+- Scenario examples in [`TrustWeave-examples`](https://github.com/geoknoesis/TrustWeave/tree/main/distribution/TrustWeave-examples) showcase custom providers (HTTP issuers, GoDiddy integrations).
 

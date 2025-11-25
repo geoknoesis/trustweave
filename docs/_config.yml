@@ -16,6 +16,17 @@ url: "https://geoknoesis.github.io"
 markdown: kramdown
 highlighter: rouge
 permalink: pretty
+defaults:
+  - scope:
+      path: ""
+      type: pages
+    values:
+      layout: default
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: default
 
 # Theme: Just the Docs (GitBook-like appearance)
 theme: just-the-docs
@@ -74,6 +85,10 @@ just_the_docs:
 
   # Footer content
   footer_content: "Made with ❤️ by Geoknoesis LLC"
+  
+  # Ensure navigation is always visible
+  nav_fold: false
+  nav_sticky: true
 
 # Navigation structure (converted from SUMMARY.md)
 nav:

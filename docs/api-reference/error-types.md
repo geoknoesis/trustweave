@@ -230,9 +230,49 @@ try {
 ```kotlin
 import com.trustweave.anchor.exceptions.BlockchainException
 import com.trustweave.core.exception.TrustWeaveException
+import kotlinx.serialization.Serializable
 
+@Serializable
+data class MyData(val id: String, val value: String)
+
+// Example using TrustWeave facade (if available)
+// val result = trustweave.blockchains.anchor(
+//     data = MyData("123", "test"),
+//     serializer = MyData.serializer(),
+//     chainId = "algorand:testnet"
+// )
+// result.fold(
+//     onSuccess = { anchor -> println("Anchored: ${anchor.ref.txHash}") },
+//     onFailure = { error ->
+//         when (error) {
+//             is BlockchainException.ChainNotRegistered -> {
+//                 println("Chain not registered: ${error.chainId}")
+//                 println("Available: ${error.availableChains}")
+//             }
+//             is BlockchainException.TransactionFailed -> {
+//                 println("Transaction failed: ${error.reason}")
+//                 if (error.txHash != null) {
+//                     println("Transaction hash: ${error.txHash}")
+//                 }
+//             }
+//             is BlockchainException.ConnectionFailed -> {
+//                 println("Connection failed: ${error.reason}")
+//             }
+//             else -> {
+//                 println("Error: ${error.message}")
+//             }
+//         }
+//     }
+// )
+
+// Example using exception-based API
 try {
-    val anchor = trustLayer.anchor { ... }
+    // Note: Actual anchoring API may vary - check blockchain anchoring documentation
+    // This example shows error handling pattern
+    throw BlockchainException.ChainNotRegistered(
+        chainId = "algorand:testnet",
+        availableChains = listOf("polygon:testnet")
+    )
 } catch (error: TrustWeaveException) {
     when (error) {
         is BlockchainException.ChainNotRegistered -> {

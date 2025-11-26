@@ -1,6 +1,6 @@
 ---
 title: Concepts
-nav_order: 50
+nav_exclude: true
 keywords:
   - concepts
   - understanding

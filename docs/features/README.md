@@ -1,6 +1,6 @@
 ---
 title: TrustWeave Features
-nav_order: 3
+nav_exclude: true
 ---
 
 # TrustWeave Features

@@ -1,6 +1,7 @@
 ---
 title: Core Modules
-nav_order: 9
+nav_order: 1
+parent: Reference
 ---
 
 # Core Modules

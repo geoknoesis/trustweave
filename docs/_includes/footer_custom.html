@@ -1,0 +1,24 @@
+<!-- Hidden template for footer injection -->
+<div id="footer-template" style="display: none;">
+  {% include site-footer.html %}
+</div>
+<script>
+  // Move footer from template to body bottom and make it full width
+  document.addEventListener('DOMContentLoaded', function() {
+    const template = document.getElementById('footer-template');
+    if (template) {
+      const footer = template.querySelector('.site-footer');
+      if (footer) {
+        // Move footer to body level (outside of any containers)
+        document.body.appendChild(footer);
+        template.remove();
+        
+        // Ensure footer spans full width by removing any parent constraints
+        footer.style.position = 'relative';
+        footer.style.width = '100vw';
+        footer.style.marginLeft = 'calc(-50vw + 50%)';
+        footer.style.marginRight = 'calc(-50vw + 50%)';
+      }
+    }
+  });
+</script>

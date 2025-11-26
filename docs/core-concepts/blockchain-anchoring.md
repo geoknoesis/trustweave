@@ -192,16 +192,16 @@ println("Stored mediaType=${stored?.mediaType} payload=${stored?.payload}")
 ## Next Steps
 
 **Ready to use Blockchain Anchoring?**
-- [Quick Start – Step 5](../getting-started/quick-start.html#step-5-verify-and-optionally-anchor) - Anchor your first credential
-- [Core API Reference – Blockchain Operations](../api-reference/core-api.html#blockchain-anchoring) - Complete API documentation
-- [TrustWeave Anchor Module](../modules/trustweave-anchor.html) - Implementation details
+- [Quick Start – Step 5](../getting-started/quick-start.md#step-5-verify-and-optionally-anchor) - Anchor your first credential
+- [Core API Reference – Blockchain Operations](../api-reference/core-api.md#blockchain-anchoring) - Complete API documentation
+- [TrustWeave Anchor Module](../modules/trustweave-anchor.md) - Implementation details
 
 **Want to learn more?**
-- [Verifiable Credentials](verifiable-credentials.html) - Issue and verify credentials
-- [Blockchain-Anchored Revocation](blockchain-anchored-revocation.html) - Revocation with blockchain anchoring
-- [Smart Contracts](smart-contracts.html) - Executable agreements with anchoring
+- [Verifiable Credentials](verifiable-credentials.md) - Issue and verify credentials
+- [Blockchain-Anchored Revocation](blockchain-anchored-revocation.md) - Revocation with blockchain anchoring
+- [Smart Contracts](smart-contracts.md) - Executable agreements with anchoring
 
 **Explore integrations:**
-- [Blockchain Integrations](../integrations/README.html#blockchain-anchoring) - Algorand, Polygon, Ethereum, and more
-- [Use Case Scenarios](../scenarios/README.html) - Real-world anchoring examples
+- [Blockchain Integrations](../integrations/README.md#blockchain-anchoring) - Algorand, Polygon, Ethereum, and more
+- [Use Case Scenarios](../scenarios/README.md) - Real-world anchoring examples
 

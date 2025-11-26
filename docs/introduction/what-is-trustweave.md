@@ -60,12 +60,12 @@ Traditional identity and trust systems are often tightly coupled to specific tec
 ## Next Steps
 
 **New to TrustWeave?**
-- [Key Features](key-features.html) - Explore the main capabilities
-- [Use Cases](use-cases.html) - See how TrustWeave is used in practice
-- [Architecture Overview](architecture-overview.html) - Understand the modular design
-- [Mental Model](mental-model.html) - Core concepts and how they fit together
+- [Key Features](key-features.md) - Explore the main capabilities
+- [Use Cases](use-cases.md) - See how TrustWeave is used in practice
+- [Architecture Overview](architecture-overview.md) - Understand the modular design
+- [Mental Model](mental-model.md) - Core concepts and how they fit together
 
 **Ready to get started?**
-- [Getting Started](../getting-started/README.html) - Installation and quick start
-- [Quick Start](../getting-started/quick-start.html) - Create your first credential in 5 minutes
+- [Getting Started](../getting-started/README.md) - Installation and quick start
+- [Quick Start](../getting-started/quick-start.md) - Create your first credential in 5 minutes
 

@@ -393,17 +393,17 @@ ContractParties(
 ## Next Steps
 
 **Ready to use Smart Contracts?**
-- [Smart Contract API Reference](../api-reference/smart-contract-api.html) - Complete API documentation
-- [Parametric Insurance Scenario](../scenarios/smart-contract-parametric-insurance-scenario.html) - Complete parametric insurance example
-- [Parametric Insurance MGA Implementation Guide](../scenarios/parametric-insurance-mga-implementation-guide.html) - Advanced implementation guide
+- [Smart Contract API Reference](../api-reference/smart-contract-api.md) - Complete API documentation
+- [Parametric Insurance Scenario](../scenarios/smart-contract-parametric-insurance-scenario.md) - Complete parametric insurance example
+- [Parametric Insurance MGA Implementation Guide](../scenarios/parametric-insurance-mga-implementation-guide.md) - Advanced implementation guide
 
 **Want to learn more?**
-- [Verifiable Credentials](verifiable-credentials.html) - Understand credential issuance and verification
-- [Blockchain Anchoring](blockchain-anchoring.html) - Learn about anchoring concepts
-- [DIDs](dids.html) - Understand DID management
-- [Evaluation Engines](evaluation-engines.html) - Pluggable condition evaluation with tamper protection
+- [Verifiable Credentials](verifiable-credentials.md) - Understand credential issuance and verification
+- [Blockchain Anchoring](blockchain-anchoring.md) - Learn about anchoring concepts
+- [DIDs](dids.md) - Understand DID management
+- [Evaluation Engines](evaluation-engines.md) - Pluggable condition evaluation with tamper protection
 
 **Explore related concepts:**
-- [Core API Reference](../api-reference/core-api.html) - Complete API documentation
-- [Use Case Scenarios](../scenarios/README.html) - More real-world examples
+- [Core API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Use Case Scenarios](../scenarios/README.md) - More real-world examples
 

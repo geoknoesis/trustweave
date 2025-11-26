@@ -1,5 +1,6 @@
 ---
 title: Delegation
+nav_exclude: true
 ---
 
 # Delegation

@@ -1,5 +1,6 @@
 ---
 title: Comparison Documentation
+nav_exclude: true
 ---
 
 # Comparison Documentation

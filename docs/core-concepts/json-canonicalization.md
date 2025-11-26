@@ -1,5 +1,6 @@
 ---
 title: JSON Canonicalization
+nav_exclude: true
 ---
 
 # JSON Canonicalization

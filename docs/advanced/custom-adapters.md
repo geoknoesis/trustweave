@@ -1,5 +1,6 @@
 ---
 title: Creating Custom Adapters
+nav_exclude: true
 ---
 
 # Creating Custom Adapters

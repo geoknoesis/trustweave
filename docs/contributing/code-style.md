@@ -1,5 +1,6 @@
 ---
 title: Code Style
+nav_exclude: true
 ---
 
 # Code Style

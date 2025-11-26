@@ -1,5 +1,6 @@
 ---
 title: Development Setup
+nav_exclude: true
 ---
 
 # Development Setup

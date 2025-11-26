@@ -1,5 +1,6 @@
 ---
 title: Proof Purpose Validation
+nav_exclude: true
 ---
 
 # Proof Purpose Validation

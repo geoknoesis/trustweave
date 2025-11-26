@@ -1,5 +1,6 @@
 ---
 title: Plugin Lifecycle Management
+nav_exclude: true
 ---
 
 # Plugin Lifecycle Management

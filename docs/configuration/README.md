@@ -1,5 +1,6 @@
 ---
 title: Configuration Reference
+nav_exclude: true
 ---
 
 # Configuration Reference

@@ -1,5 +1,6 @@
 ---
 title: Security Best Practices
+nav_exclude: true
 ---
 
 # Security Best Practices

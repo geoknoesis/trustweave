@@ -1,5 +1,6 @@
 ---
 title: Testing Strategies
+nav_exclude: true
 ---
 
 # Testing Strategies

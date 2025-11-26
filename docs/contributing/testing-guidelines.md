@@ -1,5 +1,6 @@
 ---
 title: Testing Guidelines
+nav_exclude: true
 ---
 
 # Testing Guidelines

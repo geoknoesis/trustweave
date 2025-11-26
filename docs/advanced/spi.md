@@ -1,5 +1,6 @@
 ---
 title: Service Provider Interface (SPI)
+nav_exclude: true
 ---
 
 # Service Provider Interface (SPI)

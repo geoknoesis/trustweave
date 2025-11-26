@@ -1,5 +1,6 @@
 ---
 title: Verification Policies
+nav_exclude: true
 ---
 
 # Verification Policies

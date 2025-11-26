@@ -1,5 +1,6 @@
 ---
 title: Protocol Abstraction Layer
+nav_exclude: true
 ---
 
 # Protocol Abstraction Layer

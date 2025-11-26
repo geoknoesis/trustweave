@@ -1,5 +1,6 @@
 ---
 title: Performance Considerations
+nav_exclude: true
 ---
 
 # Performance Considerations

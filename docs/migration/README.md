@@ -1,5 +1,6 @@
 ---
 title: Migration Guides
+nav_exclude: true
 ---
 
 # Migration Guides

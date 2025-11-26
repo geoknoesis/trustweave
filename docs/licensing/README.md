@@ -1,5 +1,6 @@
 ---
 title: Licensing Overview
+nav_exclude: true
 ---
 
 # Licensing Overview

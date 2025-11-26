@@ -528,14 +528,6 @@ nav:
     children:
       - title: Overview
         url: integrations/README.md
-      - title: DID Methods
-        url: integrations/README.md#did-methods
-      - title: Key Management Systems (KMS)
-        url: integrations/README.md#key-management-systems-kms
-      - title: Blockchain Anchoring
-        url: integrations/README.md#blockchain-anchoring
-      - title: Third-Party Services
-        url: integrations/README.md#third-party-services
 
   # ============================================
   # PART 6: ADVANCED TOPICS

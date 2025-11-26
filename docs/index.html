@@ -503,11 +503,12 @@ layout: null
     <nav>
         <div class="nav-container">
             <a href="{{ site.baseurl }}/" class="logo">
-                <img src="assets/images/trustweave-logo.jpg" alt="TrustWeave Logo">
+                <img src="{{ site.baseurl }}/assets/images/trustweave-logo.jpg" alt="TrustWeave Logo">
             </a>
             <div class="nav-links">
                 <a href="{{ site.baseurl }}/">Home</a>
                 <a href="{{ site.baseurl }}/#features">Features</a>
+                <a href="{{ site.baseurl }}/use-scenarios.html">Use Scenarios</a>
                 <a href="{{ site.baseurl }}/partnership.html">Partners</a>
                 <a href="{{ site.baseurl }}/about.html">About</a>
                 <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" class="github-icon" title="GitHub">
@@ -660,98 +661,16 @@ layout: null
                     </p>
                 </div>
 
-                <!-- What This Means -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-                    <div style="background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%); padding: 2rem; border-radius: 1rem; border: 1px solid var(--border);">
-                        <h3 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text);">👨‍💻 For Developers</h3>
-                        <ul style="list-style: none; padding: 0; color: var(--text-light); line-height: 2;">
-                            <li>✅ Build faster: Focus on your business logic</li>
-                            <li>✅ Sleep better: No more "what if we need to switch?" anxiety</li>
-                            <li>✅ Test easier: Swap production with test implementations instantly</li>
-                        </ul>
-                    </div>
-                    <div style="background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%); padding: 2rem; border-radius: 1rem; border: 1px solid var(--border);">
-                        <h3 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text);">🏢 For Organizations</h3>
-                        <ul style="list-style: none; padding: 0; color: var(--text-light); line-height: 2;">
-                            <li>✅ Reduce risk: Never locked into a single vendor</li>
-                            <li>✅ Save money: Switch when costs change, not when contracts expire</li>
-                            <li>✅ Move faster: Deploy to new chains or regions without rewrites</li>
-                        </ul>
-                    </div>
-                    <div style="background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%); padding: 2rem; border-radius: 1rem; border: 1px solid var(--border);">
-                        <h3 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text);">🔮 For the Future</h3>
-                        <ul style="list-style: none; padding: 0; color: var(--text-light); line-height: 2;">
-                            <li>✅ Stay current: Adopt new technologies as they emerge</li>
-                            <li>✅ Stay flexible: Adapt to changing requirements without technical debt</li>
-                            <li>✅ Stay competitive: Use the best tool for each job</li>
-                        </ul>
-                    </div>
+                <!-- CTA to Use Scenarios -->
+                <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%); border-radius: 1rem;">
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--text);">See TrustWeave in Action</h3>
+                    <p style="color: var(--text-light); margin-bottom: 1.5rem;">Explore 25+ real-world use case scenarios with complete, runnable examples</p>
+                    <a href="{{ site.baseurl }}/use-scenarios.html" class="btn btn-primary">View All Use Scenarios →</a>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Problem-Solution Section -->
-    <section class="features" style="background: var(--bg-light); padding: 6rem 2rem;">
-        <div class="container">
-            <h2 class="section-title">The Problem You're Solving</h2>
-            <div style="max-width: 900px; margin: 0 auto;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-top: 3rem;">
-                    <div style="background: white; padding: 2rem; border-radius: 1rem; border: 2px solid #fee; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                        <h3 style="color: #dc2626; margin-bottom: 1rem; font-size: 1.25rem;">❌ Vendor Lock-In Costs You</h3>
-                        <ul style="list-style: none; padding: 0; color: var(--text-light); line-height: 1.8;">
-                            <li style="margin-bottom: 0.5rem;">• Switching blockchains? Rewrite your code</li>
-                            <li style="margin-bottom: 0.5rem;">• Changing DID methods? Start over</li>
-                            <li style="margin-bottom: 0.5rem;">• Need different KMS? Rebuild from scratch</li>
-                        </ul>
-                    </div>
-                    <div style="background: white; padding: 2rem; border-radius: 1rem; border: 2px solid #d1fae5; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                        <h3 style="color: var(--accent); margin-bottom: 1rem; font-size: 1.25rem;">✅ TrustWeave Solves This</h3>
-                        <ul style="list-style: none; padding: 0; color: var(--text-light); line-height: 1.8;">
-                            <li style="margin-bottom: 0.5rem;">• Write once, deploy anywhere</li>
-                            <li style="margin-bottom: 0.5rem;">• Switch technologies with configuration</li>
-                            <li style="margin-bottom: 0.5rem;">• Future-proof your infrastructure</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Use Cases Quick Wins -->
-    <section class="features" style="padding: 6rem 2rem; background: var(--bg);">
-        <div class="container">
-            <h2 class="section-title">TrustWeave Powers Real-World Applications</h2>
-            <p class="section-subtitle">Production-ready use cases across multiple industries</p>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 3rem;">
-                <div style="background: white; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border);">
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎓</div>
-                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Academic Credentials</h3>
-                    <p style="color: var(--text-light); font-size: 0.9rem;">Universities issue verifiable diplomas</p>
-                </div>
-                <div style="background: white; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border);">
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🏥</div>
-                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Healthcare Records</h3>
-                    <p style="color: var(--text-light); font-size: 0.9rem;">HIPAA-compliant patient data verification</p>
-                </div>
-                <div style="background: white; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border);">
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📦</div>
-                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Supply Chain</h3>
-                    <p style="color: var(--text-light); font-size: 0.9rem;">Track products from source to consumer</p>
-                </div>
-                <div style="background: white; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border);">
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔌</div>
-                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">IoT Devices</h3>
-                    <p style="color: var(--text-light); font-size: 0.9rem;">Secure device identity and firmware verification</p>
-                </div>
-                <div style="background: white; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border);">
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🛰️</div>
-                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Earth Observation</h3>
-                    <p style="color: var(--text-light); font-size: 0.9rem;">Verify satellite data provenance</p>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- Features Section -->
     <section class="features" id="features">

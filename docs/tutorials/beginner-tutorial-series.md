@@ -1,5 +1,6 @@
 ---
 title: Beginner Tutorial Series
+nav_exclude: true
 ---
 
 # Beginner Tutorial Series

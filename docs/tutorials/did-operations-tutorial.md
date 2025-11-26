@@ -1,5 +1,6 @@
 ---
 title: DID Operations Tutorial
+nav_exclude: true
 ---
 
 # DID Operations Tutorial

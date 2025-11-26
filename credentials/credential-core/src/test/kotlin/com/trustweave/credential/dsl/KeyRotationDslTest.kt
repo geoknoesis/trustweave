@@ -1,6 +1,8 @@
 package com.trustweave.credential.dsl
 
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.trust.dsl.TrustWeaveConfig
+import com.trustweave.trust.dsl.trustWeave
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -11,14 +13,14 @@ import kotlin.test.*
  */
 class KeyRotationDslTest {
     
-    private lateinit var trustLayer: TrustLayerConfig
+    private lateinit var trustWeave: TrustWeaveConfig
     private lateinit var kms: InMemoryKeyManagementService
     
     @BeforeEach
     fun setup() = runBlocking {
         kms = InMemoryKeyManagementService()
         
-        trustLayer = trustLayer {
+        trustWeave = trustWeave {
             keys {
                 custom(kms as Any)
             }
@@ -33,13 +35,13 @@ class KeyRotationDslTest {
     @Test
     fun `test rotateKey`() = runBlocking {
         // Create initial DID
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
         
         // Rotate key
-        val updatedDoc = trustLayer.rotateKey {
+        val updatedDoc = trustWeave.rotateKey {
             did(did)
             algorithm("Ed25519")
         }
@@ -50,7 +52,7 @@ class KeyRotationDslTest {
     @Test
     fun `test rotateKey without DID throws exception`() = runBlocking {
         assertFailsWith<IllegalStateException> {
-            trustLayer.rotateKey {
+            trustWeave.rotateKey {
                 algorithm("Ed25519")
             }
         }
@@ -58,12 +60,12 @@ class KeyRotationDslTest {
     
     @Test
     fun `test rotateKey with removeOldKey`() = runBlocking {
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
         
-        val updatedDoc = trustLayer.rotateKey {
+        val updatedDoc = trustWeave.rotateKey {
             did(did)
             algorithm("Ed25519")
             removeOldKey("key-1")
@@ -74,12 +76,12 @@ class KeyRotationDslTest {
     
     @Test
     fun `test rotateKey auto-detects method from DID`() = runBlocking {
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
         
-        val updatedDoc = trustLayer.rotateKey {
+        val updatedDoc = trustWeave.rotateKey {
             did(did)
             // Method should be auto-detected
             algorithm("Ed25519")
@@ -90,13 +92,13 @@ class KeyRotationDslTest {
     
     @Test
     fun `test rotateKey with unconfigured method throws exception`() = runBlocking {
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
         
         assertFailsWith<IllegalStateException> {
-            trustLayer.rotateKey {
+            trustWeave.rotateKey {
                 did(did)
                 method("web") // Not configured
                 algorithm("Ed25519")
@@ -105,13 +107,13 @@ class KeyRotationDslTest {
     }
     
     @Test
-    fun `test rotateKey via TrustLayerContext`() = runBlocking {
-        val did = trustLayer.createDid {
+    fun `test rotateKey via TrustWeaveContext`() = runBlocking {
+        val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
         
-        val context = trustLayer.dsl()
+        val context = trustWeave.getDslContext()
         val updatedDoc = context.rotateKey {
             did(did)
             algorithm("Ed25519")
@@ -122,12 +124,12 @@ class KeyRotationDslTest {
     
     @Test
     fun `test rotateKey with multiple old keys`() = runBlocking {
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
         
-        val updatedDoc = trustLayer.rotateKey {
+        val updatedDoc = trustWeave.rotateKey {
             did(did)
             algorithm("Ed25519")
             removeOldKey("key-1")

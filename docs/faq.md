@@ -60,23 +60,23 @@ Configure `CredentialVerificationOptions` (see [Verification Policies](advanced/
 
 ## How do I handle errors in TrustWeave?
 
-All `TrustLayer` methods throw `TrustWeaveError` exceptions on failure. Always wrap operations in try-catch blocks:
+All `TrustWeave` methods throw `TrustWeaveException` exceptions on failure. Always wrap operations in try-catch blocks:
 
 ```kotlin
-import com.trustweave.trust.TrustLayer
-import com.trustweave.core.TrustWeaveError
+import com.trustweave.trust.TrustWeave
+import com.trustweave.core.exception.TrustWeaveException
 
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     keys { provider("inMemory"); algorithm("Ed25519") }
     did { method("key") { algorithm("Ed25519") } }
 }
 
 try {
-    val did = trustLayer.createDid { method("key") }
+    val did = trustWeave.createDid { method("key") }
     println("Created: $did")
-} catch (error: TrustWeaveError) {
+} catch (error: TrustWeaveException) {
     when (error) {
-        is TrustWeaveError.DidMethodNotRegistered -> {
+        is DidException.DidMethodNotRegistered -> {
             println("Method not registered: ${error.method}")
             println("Available methods: ${error.availableMethods}")
         }

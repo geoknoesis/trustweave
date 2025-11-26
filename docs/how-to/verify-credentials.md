@@ -1,6 +1,6 @@
 ---
 title: Verify Credentials
-nav_order: 3
+nav_order: 5
 parent: How-To Guides
 keywords:
   - verify
@@ -20,14 +20,15 @@ This guide shows you how to verify verifiable credentials with TrustWeave. You'l
 Here's a complete example that verifies a credential:
 
 ```kotlin
-import com.trustweave.trust.TrustLayer
-import com.trustweave.core.TrustWeaveError
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.types.VerificationResult
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     try {
-        // Create TrustLayer instance
-        val trustLayer = TrustLayer.build {
+        // Create TrustWeave instance
+        val trustWeave = TrustWeave.build {
             keys {
                 provider("inMemory")
                 algorithm("Ed25519")
@@ -42,24 +43,38 @@ fun main() = runBlocking {
         // Assume you have a credential from issuance
         val credential = // ... credential from issuer ...
 
-        // Verify credential
-        val verification = trustLayer.verify {
+        // Verify credential with exhaustive error handling
+        val result = trustWeave.verify {
             credential(credential)
+            checkRevocation()
+            checkExpiration()
         }
 
-        if (verification.valid) {
-            println("✅ Credential is valid")
-            println("   Proof valid: ${verification.proofValid}")
-            println("   Issuer valid: ${verification.issuerValid}")
-            println("   Not expired: ${verification.notExpired}")
-            println("   Not revoked: ${verification.notRevoked}")
-            
-            if (verification.warnings.isNotEmpty()) {
-                println("   Warnings: ${verification.warnings.joinToString()}")
+        when (result) {
+            is VerificationResult.Valid -> {
+                println("✅ Credential is valid: ${result.credential.id}")
+                if (result.warnings.isNotEmpty()) {
+                    println("   Warnings: ${result.warnings.joinToString()}")
+                }
             }
-        } else {
-            println("❌ Credential invalid")
-            println("   Errors: ${verification.errors.joinToString()}")
+            is VerificationResult.Invalid.Expired -> {
+                println("❌ Credential expired at ${result.expiredAt}")
+            }
+            is VerificationResult.Invalid.Revoked -> {
+                println("❌ Credential revoked")
+            }
+            is VerificationResult.Invalid.InvalidProof -> {
+                println("❌ Invalid proof: ${result.reason}")
+            }
+            is VerificationResult.Invalid.UntrustedIssuer -> {
+                println("❌ Untrusted issuer: ${result.issuer}")
+            }
+            is VerificationResult.Invalid.SchemaValidationFailed -> {
+                println("❌ Schema validation failed: ${result.errors.joinToString()}")
+            }
+            else -> {
+                println("❌ Verification failed")
+            }
         }
     } catch (error: TrustWeaveError) {
         println("❌ Verification error: ${error.message}")
@@ -69,11 +84,7 @@ fun main() = runBlocking {
 
 **Expected Output:**
 ```
-✅ Credential is valid
-   Proof valid: true
-   Issuer valid: true
-   Not expired: true
-   Not revoked: true
+✅ Credential is valid: https://example.edu/credentials/123
 ```
 
 ## Step-by-Step Guide
@@ -321,7 +332,7 @@ Handle verification errors gracefully:
 
 ```kotlin
 val verification = try {
-    trustLayer.verify {
+        trustWeave.verify {
         credential(credential)
     }
 } catch (error: TrustWeaveError) {

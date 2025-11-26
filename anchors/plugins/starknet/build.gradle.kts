@@ -6,6 +6,7 @@ plugins {
 group = "com.trustweave.chains"
 dependencies {
     implementation(project(":anchors:anchor-core"))
+    implementation(project(":common"))
     implementation(project(":credentials:credential-core"))
     
     // HTTP client for StarkNet RPC API
@@ -17,6 +18,7 @@ dependencies {
     
     // JSON serialization
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
     // Test dependencies
     testImplementation(project(":testkit"))

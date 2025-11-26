@@ -2,6 +2,8 @@ package com.trustweave.credential.dsl
 
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.trust.dsl.TrustWeaveConfig
+import com.trustweave.trust.dsl.trustWeave
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -14,13 +16,13 @@ import kotlin.test.*
  */
 class VerificationBuilderBranchCoverageTest {
 
-    private lateinit var trustLayer: TrustLayerConfig
+    private lateinit var trustWeave: TrustWeaveConfig
     private lateinit var kms: InMemoryKeyManagementService
 
     @BeforeEach
     fun setUp() = runBlocking {
         kms = InMemoryKeyManagementService()
-        trustLayer = trustLayer {
+        trustWeave = trustWeave {
             keys {
                 custom(kms as Any)
             }
@@ -39,7 +41,7 @@ class VerificationBuilderBranchCoverageTest {
     @Test
     fun `test branch credential required error`() = runBlocking {
         assertFailsWith<IllegalStateException> {
-            trustLayer.verify {
+            trustWeave.verify {
                 // Missing credential
                 checkRevocation()
             }
@@ -57,7 +59,7 @@ class VerificationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
         }
         
@@ -77,7 +79,7 @@ class VerificationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             // checkRevocation defaults to true
         }
@@ -96,7 +98,7 @@ class VerificationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             checkRevocation()
         }
@@ -115,7 +117,7 @@ class VerificationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             skipRevocationCheck()
         }
@@ -134,7 +136,7 @@ class VerificationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             checkRevocation()
             skipRevocationCheck() // Last call wins
@@ -156,7 +158,7 @@ class VerificationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             // checkExpiration defaults to true
         }
@@ -175,7 +177,7 @@ class VerificationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             checkExpiration()
         }
@@ -194,7 +196,7 @@ class VerificationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             skipExpirationCheck()
         }
@@ -213,7 +215,7 @@ class VerificationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             checkExpiration()
             skipExpirationCheck() // Last call wins
@@ -235,7 +237,7 @@ class VerificationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             // Schema validation defaults to false
         }
@@ -254,7 +256,7 @@ class VerificationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             validateSchema("https://example.com/schemas/person.json")
         }
@@ -273,7 +275,7 @@ class VerificationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             validateSchema("https://example.com/schemas/person.json")
             skipSchemaValidation()
@@ -293,7 +295,7 @@ class VerificationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             validateSchema("https://example.com/schemas/person.json")
         }
@@ -314,7 +316,7 @@ class VerificationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             // Anchor verification defaults to false
         }
@@ -324,7 +326,7 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch anchor verification enabled without chain ID`() = runBlocking {
-        val trustLayerWithAnchor = trustLayer {
+        val trustWeaveWithAnchor = trustWeave {
             keys {
                 custom(kms as Any)
             }
@@ -361,7 +363,7 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch anchor verification enabled with explicit chain ID`() = runBlocking {
-        val trustLayerWithAnchor = trustLayer {
+        val trustWeaveWithAnchor = trustWeave {
             keys {
                 custom(kms as Any)
             }
@@ -397,7 +399,7 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch anchor verification error when no chain ID`() = runBlocking {
-        val trustLayerNoAnchor = trustLayer {
+        val trustWeaveNoAnchor = trustWeave {
             keys {
                 custom(kms as Any)
             }
@@ -432,7 +434,7 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch all verification options enabled`() = runBlocking {
-        val trustLayerWithAnchor = trustLayer {
+        val trustWeaveWithAnchor = trustWeave {
             keys {
                 custom(kms as Any)
             }
@@ -481,7 +483,7 @@ class VerificationBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             skipRevocationCheck()
             skipExpirationCheck()

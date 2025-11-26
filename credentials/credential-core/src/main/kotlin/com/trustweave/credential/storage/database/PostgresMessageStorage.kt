@@ -280,7 +280,7 @@ class PostgresMessageStorage<T : ProtocolMessage>(
         // To change encryption, create a new storage instance
     }
     
-    override suspend fun markAsArchived(messageIds: List<String>, archiveId: String) = withContext(Dispatchers.IO) {
+    override suspend fun markAsArchived(messageIds: List<String>, archiveId: String): Unit = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             conn.prepareStatement("""
                 UPDATE $tableName
@@ -342,7 +342,7 @@ class PostgresMessageStorage<T : ProtocolMessage>(
         }
     }
     
-    private fun deserializeMessage(rs: ResultSet): T? {
+    private suspend fun deserializeMessage(rs: ResultSet): T? {
         return try {
             val isEncrypted = rs.getBoolean("is_encrypted")
             

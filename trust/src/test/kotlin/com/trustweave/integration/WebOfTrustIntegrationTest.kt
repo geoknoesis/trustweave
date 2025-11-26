@@ -1,6 +1,6 @@
 package com.trustweave.integration
 
-import com.trustweave.credential.dsl.*
+import com.trustweave.trust.dsl.*
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
@@ -21,7 +21,7 @@ class WebOfTrustIntegrationTest {
         val kms = InMemoryKeyManagementService()
         val kmsRef = kms
         
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys {
                 custom(kmsRef)
                 signer { data, keyId -> kmsRef.sign(keyId, data) }
@@ -41,7 +41,7 @@ class WebOfTrustIntegrationTest {
         }
         
         // Add trust anchor
-        trustLayer.trust {
+        trustWeave.trust {
             addAnchor(issuerDid) {
                 credentialTypes("TestCredential")
             }
@@ -86,7 +86,7 @@ class WebOfTrustIntegrationTest {
     
     @Test
     fun `test delegation chain with credential issuance`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
         }
@@ -107,7 +107,7 @@ class WebOfTrustIntegrationTest {
         }
         
         // Set up delegation
-        trustLayer.updateDid {
+        trustWeave.updateDid {
             did(delegatorDid)
             method(DidMethods.KEY)
             addCapabilityDelegation("$delegateDid#key-1")
@@ -141,7 +141,7 @@ class WebOfTrustIntegrationTest {
     
     @Test
     fun `test trust path discovery with multiple anchors`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -162,7 +162,7 @@ class WebOfTrustIntegrationTest {
             algorithm(KeyAlgorithms.ED25519)
         }
         
-        trustLayer.trust {
+        trustWeave.trust {
             addAnchor(anchor1) {}
             addAnchor(anchor2) {}
             addAnchor(anchor3) {}
@@ -181,7 +181,7 @@ class WebOfTrustIntegrationTest {
     
     @Test
     fun `test proof purpose validation in credential verification`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
         }
@@ -197,7 +197,7 @@ class WebOfTrustIntegrationTest {
         }
         
         // Update issuer DID to have assertionMethod
-        trustLayer.updateDid {
+        trustWeave.updateDid {
             did(issuerDid)
             method(DidMethods.KEY)
             addKey {

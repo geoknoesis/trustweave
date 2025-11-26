@@ -1,6 +1,6 @@
 package com.trustweave.integration
 
-import com.trustweave.credential.dsl.*
+import com.trustweave.trust.dsl.*
 import com.trustweave.credential.presentation.PresentationService
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.annotations.RequiresPlugin
@@ -29,8 +29,8 @@ class InMemoryTrustLayerIntegrationTest {
         // Step 1: Setup in-memory KMS
         val kms = InMemoryKeyManagementService()
         
-        // Step 2: Configure trust layer with in-memory components
-        val trustLayer = trustLayer {
+        // Step 2: Configure TrustWeave with in-memory components
+        val trustWeave = trustWeave {
             keys {
                 custom(kms)
                 signer { data, keyId -> kms.sign(keyId, data) }
@@ -40,12 +40,12 @@ class InMemoryTrustLayerIntegrationTest {
         }
         
         // Step 3: Create DIDs (this generates keys and stores DID documents)
-        val issuerDid = trustLayer.createDid {
+        val issuerDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
         
-        val holderDid = trustLayer.createDid {
+        val holderDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
@@ -53,7 +53,7 @@ class InMemoryTrustLayerIntegrationTest {
         // Step 4: Extract key ID from the issuer DID document
         // CRITICAL: The key used for signing MUST match what's in the DID document
         // This ensures proof verification succeeds because the DID document contains the correct verification method
-        val issuerDidDoc = trustLayer.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid)?.document
+        val issuerDidDoc = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid)?.document
             ?: throw IllegalStateException("Failed to resolve issuer DID")
         
         val verificationMethod = issuerDidDoc.verificationMethod.firstOrNull()
@@ -66,7 +66,7 @@ class InMemoryTrustLayerIntegrationTest {
         // which matches the format in the DID document, ensuring proof verification succeeds
         
         // Step 5: Configure trust registry (if needed)
-        trustLayer.trust {
+        trustWeave.trust {
             addAnchor(issuerDid) {
                 credentialTypes("TestCredential", "EducationCredential")
             }
@@ -117,7 +117,7 @@ class InMemoryTrustLayerIntegrationTest {
         // This test will be automatically skipped if AWS credentials or Ethereum RPC URL are not available
         // Use this pattern for tests requiring external services
         
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys { provider("aws-kms") } // Requires AWS credentials (see AwsKeyManagementServiceProvider)
             did { method("ethr") {} } // Requires ETHEREUM_RPC_URL (see EthrDidMethodProvider)
             trust { provider("inMemory") }
@@ -146,7 +146,7 @@ class InMemoryTrustLayerIntegrationTest {
     fun `test credential revocation workflow template`() = runBlocking {
         val kms = InMemoryKeyManagementService()
         
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys {
                 custom(kms)
                 signer { data, keyId -> kms.sign(keyId, data) }
@@ -226,7 +226,7 @@ class InMemoryTrustLayerIntegrationTest {
     fun `test wallet storage workflow template`() = runBlocking {
         val kms = InMemoryKeyManagementService()
         
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys {
                 custom(kms)
                 signer { data, keyId -> kms.sign(keyId, data) }
@@ -303,7 +303,7 @@ class InMemoryTrustLayerIntegrationTest {
     fun `test verifiable presentation workflow template`() = runBlocking {
         val kms = InMemoryKeyManagementService()
         
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys {
                 custom(kms)
                 signer { data, keyId -> kms.sign(keyId, data) }
@@ -413,7 +413,7 @@ class InMemoryTrustLayerIntegrationTest {
     fun `test DID update workflow template`() = runBlocking {
         val kms = InMemoryKeyManagementService()
         
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys {
                 custom(kms)
                 signer { data, keyId -> kms.sign(keyId, data) }
@@ -436,7 +436,7 @@ class InMemoryTrustLayerIntegrationTest {
         val newKey = kms.generateKey("Ed25519")
         
         // Update DID to add additional verification method
-        trustLayer.updateDid {
+        trustWeave.updateDid {
             did(issuerDid)
             method(DidMethods.KEY)
             addKey {
@@ -487,7 +487,7 @@ class InMemoryTrustLayerIntegrationTest {
     fun `test blockchain anchoring workflow template`() = runBlocking {
         val kms = InMemoryKeyManagementService()
         
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys {
                 custom(kms)
                 signer { data, keyId -> kms.sign(keyId, data) }
@@ -562,7 +562,7 @@ class InMemoryTrustLayerIntegrationTest {
     fun `test smart contract workflow template`() = runBlocking {
         val kms = InMemoryKeyManagementService()
         
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys {
                 custom(kms)
                 signer { data, keyId -> kms.sign(keyId, data) }

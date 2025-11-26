@@ -3,6 +3,8 @@ package com.trustweave.credential.dsl
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.testkit.credential.InMemoryWallet
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.trust.dsl.TrustWeaveConfig
+import com.trustweave.trust.dsl.trustWeave
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -15,7 +17,7 @@ import kotlin.test.*
  */
 class TrustLayerExtensionsTest {
     
-    private lateinit var trustLayer: TrustLayerConfig
+    private lateinit var trustWeave: TrustWeaveConfig
     private lateinit var wallet: InMemoryWallet
     
     @BeforeEach
@@ -26,7 +28,7 @@ class TrustLayerExtensionsTest {
             holderDid = "did:key:holder"
         )
         
-        trustLayer = trustLayer {
+        trustWeave = trustWeave {
             keys {
                 custom(kms as Any)
             }
@@ -40,7 +42,7 @@ class TrustLayerExtensionsTest {
     
     @Test
     fun `test createDidAndIssue`() = runBlocking {
-        val credential = trustLayer.createDidAndIssue(
+        val credential = trustWeave.createDidAndIssue(
             didBlock = {
                 method("key")
                 algorithm("Ed25519")
@@ -62,7 +64,7 @@ class TrustLayerExtensionsTest {
     
     @Test
     fun `test createDidIssueAndStore`() = runBlocking {
-        val stored = trustLayer.createDidIssueAndStore(
+        val stored = trustWeave.createDidIssueAndStore(
             didBlock = {
                 method("key")
                 algorithm("Ed25519")
@@ -87,7 +89,7 @@ class TrustLayerExtensionsTest {
     
     @Test
     fun `test completeWorkflow`() = runBlocking {
-        val result = trustLayer.completeWorkflow(
+        val result = trustWeave.completeWorkflow(
             didBlock = {
                 method("key")
                 algorithm("Ed25519")
@@ -119,7 +121,7 @@ class TrustLayerExtensionsTest {
     
     @Test
     fun `test completeWorkflow without organization`() = runBlocking {
-        val result = trustLayer.completeWorkflow(
+        val result = trustWeave.completeWorkflow(
             didBlock = {
                 method("key")
                 algorithm("Ed25519")
@@ -142,8 +144,8 @@ class TrustLayerExtensionsTest {
     }
     
     @Test
-    fun `test createDidAndIssue via TrustLayerContext`() = runBlocking {
-        val context = trustLayer.dsl()
+    fun `test createDidAndIssue via TrustWeaveContext`() = runBlocking {
+        val context = trustWeave.getDslContext()
         val credential = context.createDidAndIssue(
             didBlock = {
                 method("key")
@@ -165,8 +167,8 @@ class TrustLayerExtensionsTest {
     }
     
     @Test
-    fun `test createDidIssueAndStore via TrustLayerContext`() = runBlocking {
-        val context = trustLayer.dsl()
+    fun `test createDidIssueAndStore via TrustWeaveContext`() = runBlocking {
+        val context = trustWeave.getDslContext()
         val stored = context.createDidIssueAndStore(
             didBlock = {
                 method("key")

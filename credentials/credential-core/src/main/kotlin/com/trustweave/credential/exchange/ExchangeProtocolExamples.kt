@@ -1,11 +1,13 @@
 package com.trustweave.credential.exchange
 
-import com.trustweave.credential.didcomm.DidCommFactory
-import com.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol
+// Note: This file contains examples that require plugin dependencies
+// Commented out plugin-specific imports as they're not available in core module
+// import com.trustweave.credential.didcomm.DidCommFactory
+// import com.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.did.DidDocument
-import com.trustweave.kms.KeyManagementService
-import com.trustweave.testkit.InMemoryKeyManagementService
+// import com.trustweave.kms.KeyManagementService
+// import com.trustweave.testkit.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -17,6 +19,9 @@ object ExchangeProtocolExamples {
      * Example: Using protocol abstraction with multiple protocols.
      */
     fun multiProtocolExample() = runBlocking {
+        // This example requires plugin dependencies that are not available in core module
+        // Uncomment and add plugin dependencies to use
+        /*
         val kms = InMemoryKeyManagementService()
         val resolveDid: suspend (String) -> DidDocument? = { did ->
             // Mock DID resolution
@@ -56,12 +61,15 @@ object ExchangeProtocolExamples {
         
         println("Created offer with protocol: ${offer.protocolName}")
         println("Offer ID: ${offer.offerId}")
+        */
     }
     
     /**
      * Example: Switching between protocols.
      */
     fun protocolSwitchingExample() = runBlocking {
+        // This example requires plugin dependencies that are not available in core module
+        /*
         val kms = InMemoryKeyManagementService()
         val resolveDid: suspend (String) -> DidDocument? = { did ->
             DidDocument(id = did, verificationMethod = emptyList())
@@ -96,20 +104,25 @@ object ExchangeProtocolExamples {
         // )
         
         println("Protocol: ${didCommOffer.protocolName}")
+        */
     }
     
     /**
      * Example: Complete credential exchange flow.
      */
     fun completeExchangeFlowExample() = runBlocking {
+        // This example requires plugin dependencies that are not available in core module
+        // Uncomment and add plugin dependencies to use
+        /*
         val kms = InMemoryKeyManagementService()
         val resolveDid: suspend (String) -> DidDocument? = { did ->
             DidDocument(id = did, verificationMethod = emptyList())
         }
         
         val registry = CredentialExchangeProtocolRegistry()
-        val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
-        registry.register(DidCommExchangeProtocol(didCommService))
+        // Note: DidCommExchangeProtocol is plugin-specific and not available in core module
+        // val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
+        // registry.register(DidCommExchangeProtocol(didCommService))
         
         val issuerDid = "did:key:issuer"
         val holderDid = "did:key:holder"
@@ -152,9 +165,9 @@ object ExchangeProtocolExamples {
             type = listOf("VerifiableCredential", "PersonCredential"),
             issuer = issuerDid,
             credentialSubject = kotlinx.serialization.json.buildJsonObject {
-                put("id", holderDid)
-                put("name", "Alice")
-                put("email", "alice@example.com")
+                put("id", kotlinx.serialization.json.JsonPrimitive(holderDid))
+                put("name", kotlinx.serialization.json.JsonPrimitive("Alice"))
+                put("email", kotlinx.serialization.json.JsonPrimitive("alice@example.com"))
             },
             issuanceDate = java.time.Instant.now().toString()
         )
@@ -175,6 +188,7 @@ object ExchangeProtocolExamples {
         
         println("Issued credential: ${issue.credential.id}")
         println("Protocol: ${issue.protocolName}")
+        */
     }
 }
 

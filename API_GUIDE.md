@@ -9,18 +9,69 @@ TrustWeave provides multiple APIs for different use cases. This guide helps you 
 **Use when:** You want the simplest, most intuitive API
 
 ```kotlin
-val TrustWeave = trustweave.create()
+// Create TrustWeave instance with configuration
+val trustWeave = TrustWeave.build {
+    keys {
+        provider("inMemory")
+        algorithm("Ed25519")
+    }
+    did {
+        method("key") {
+            algorithm("Ed25519")
+        }
+    }
+}
 
-// Simple usage with error handling
-val didResult = trustweave.createDid()
-didResult.fold(
-    onSuccess = { did -> println("Created: ${did.id}") },
-    onFailure = { error -> println("Error: ${error.message}") }
-)
+// Simple usage with domain-specific error handling
+import com.trustweave.did.exception.DidException
+import com.trustweave.did.exception.DidException.DidMethodNotRegistered
+import com.trustweave.credential.exception.CredentialException
+import com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed
+import com.trustweave.trust.types.IssuerIdentity
+import com.trustweave.core.exception.TrustWeaveException
 
-// Or use getOrThrow for simple cases
-val did = trustweave.createDid().getOrThrow()
-val credential = trustweave.issueCredential(...).getOrThrow()
+try {
+    val did = trustWeave.createDid {
+        method("key")
+        algorithm("Ed25519")
+    }
+    println("Created: $did")
+    
+    val credential = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "ExampleCredential")
+            issuer(did)
+            subject {
+                id("did:key:holder")
+                claim("name", "Alice")
+            }
+        }
+        signedBy(IssuerIdentity.from(did, "$did#key-1"))
+    }
+    println("Issued credential: ${credential.id}")
+} catch (error: DidException) {
+    when (error) {
+        is DidMethodNotRegistered -> {
+            println("❌ DID method not registered: ${error.method}")
+        }
+        else -> {
+            println("❌ DID error: ${error.message}")
+        }
+    }
+} catch (error: CredentialException) {
+    when (error) {
+        is CredentialIssuanceFailed -> {
+            println("❌ Credential issuance failed: ${error.reason}")
+        }
+        else -> {
+            println("❌ Credential error: ${error.message}")
+        }
+    }
+} catch (error: TrustWeaveException) {
+    println("❌ TrustWeave error [${error.code}]: ${error.message}")
+} catch (error: Exception) {
+    println("❌ Unexpected error: ${error.message}")
+}
 ```
 
 **Pros:** Simple, type-safe, sensible defaults, consistent error handling  
@@ -63,13 +114,28 @@ val doc = didMethod.createDid(options)
 **Use when:** Building complex trust layer configurations
 
 ```kotlin
-val trustLayer = trustLayer {
-    keys { provider("inMemory") }
-    did { method("key") }
+val trustWeave = TrustWeave.build {
+    keys {
+        provider("inMemory")
+        algorithm("Ed25519")
+    }
+    did {
+        method("key") {
+            algorithm("Ed25519")
+        }
+    }
+    anchor {
+        chain("algorand:testnet") {
+            provider("algorand")
+        }
+    }
+    trust {
+        provider("inMemory")
+    }
 }
 ```
 
-**Pros:** Declarative, readable configuration  
+**Pros:** Declarative, readable configuration, type-safe  
 **Cons:** Learning curve for DSL syntax
 
 ## Typed Configuration Building Blocks
@@ -84,36 +150,31 @@ Every builder lives in a public package, so the same typed DSL is available whet
 
 ## Error Handling
 
-All TrustWeave facade operations return `Result<T>` for predictable error handling:
-
-```kotlin
-val result = trustweave.createDid()
-result.fold(
-    onSuccess = { did -> 
-        println("Created: ${did.id}")
-    },
-    onFailure = { error ->
-        when (error) {
-            is TrustWeaveError.DidMethodNotRegistered -> {
-                println("Method not registered: ${error.method}")
-            }
-            else -> {
-                println("Error: ${error.message}")
-            }
-        }
-    }
-)
-```
-
-Or use `getOrThrow()` for simple cases where you want exceptions:
+All TrustWeave facade operations throw exceptions on failure. Always use try-catch blocks:
 
 ```kotlin
 try {
-    val did = trustweave.createDid().getOrThrow()
-} catch (e: TrustWeaveException) {
-    // Handle error
+    val did = trustWeave.createDid {
+        method("key")
+        algorithm("Ed25519")
+    }
+    println("Created: $did")
+} catch (error: IllegalStateException) {
+    // Handle configuration or state errors
+    println("DID creation failed: ${error.message}")
+} catch (error: IllegalArgumentException) {
+    // Handle invalid parameters
+    println("Invalid parameter: ${error.message}")
+} catch (error: Exception) {
+    // Handle other errors
+    println("Unexpected error: ${error.message}")
 }
 ```
+
+**Exception Types:**
+- `IllegalStateException`: Configuration errors, missing services, invalid state
+- `IllegalArgumentException`: Invalid parameters, malformed input
+- Domain-specific exceptions: DID, credential, or wallet-specific errors
 
 ## Next Steps
 

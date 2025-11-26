@@ -1,6 +1,7 @@
 package com.trustweave.did
 
 import kotlin.test.*
+import com.trustweave.did.exception.DidException.InvalidDidFormat
 
 /**
  * Comprehensive branch coverage tests for Did.parse() method.
@@ -18,21 +19,21 @@ class DidParseBranchCoverageTest {
 
     @Test
     fun `test branch parse does not start with did prefix`() {
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<InvalidDidFormat> {
             Did.parse("web:example.com")
         }
     }
 
     @Test
     fun `test branch parse with empty string`() {
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<InvalidDidFormat> {
             Did.parse("")
         }
     }
 
     @Test
     fun `test branch parse with only did prefix`() {
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<InvalidDidFormat> {
             Did.parse("did:")
         }
     }
@@ -55,7 +56,7 @@ class DidParseBranchCoverageTest {
 
     @Test
     fun `test branch parse with single colon after did`() {
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<InvalidDidFormat> {
             Did.parse("did:web")
         }
     }

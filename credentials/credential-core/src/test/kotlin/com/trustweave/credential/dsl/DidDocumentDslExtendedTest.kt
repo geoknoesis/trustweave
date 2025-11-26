@@ -15,17 +15,17 @@ class DidDocumentDslExtendedTest {
     @Test
     fun `test add capability invocation via DSL`() = runBlocking {
         val kms = InMemoryKeyManagementService()
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys { custom(kms) }
             did { method(DidMethods.KEY) {} }
         }
         
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
         
-        val updatedDoc = trustLayer.updateDid {
+        val updatedDoc = trustWeave.updateDid {
             did(did)
             method(DidMethods.KEY)
             addCapabilityInvocation("$did#key-1")
@@ -37,17 +37,17 @@ class DidDocumentDslExtendedTest {
     @Test
     fun `test add capability delegation via DSL`() = runBlocking {
         val kms = InMemoryKeyManagementService()
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys { custom(kms) }
             did { method(DidMethods.KEY) {} }
         }
         
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
         
-        val updatedDoc = trustLayer.updateDid {
+        val updatedDoc = trustWeave.updateDid {
             did(did)
             method(DidMethods.KEY)
             addCapabilityDelegation("$did#key-1")
@@ -59,17 +59,17 @@ class DidDocumentDslExtendedTest {
     @Test
     fun `test set context via DSL`() = runBlocking {
         val kms = InMemoryKeyManagementService()
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys { custom(kms) }
             did { method(DidMethods.KEY) {} }
         }
         
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
         
-        val updatedDoc = trustLayer.updateDid {
+        val updatedDoc = trustWeave.updateDid {
             did(did)
             method(DidMethods.KEY)
             context("https://www.w3.org/ns/did/v1", "https://example.com/context/v1")
@@ -81,24 +81,24 @@ class DidDocumentDslExtendedTest {
     @Test
     fun `test remove capability invocation via DSL`() = runBlocking {
         val kms = InMemoryKeyManagementService()
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys { custom(kms) }
             did { method(DidMethods.KEY) {} }
         }
         
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
         
         // First add, then remove
-        trustLayer.updateDid {
+        trustWeave.updateDid {
             did(did)
             method(DidMethods.KEY)
             addCapabilityInvocation("$did#key-1")
         }
         
-        val updatedDoc = trustLayer.updateDid {
+        val updatedDoc = trustWeave.updateDid {
             did(did)
             method(DidMethods.KEY)
             removeCapabilityInvocation("$did#key-1")
@@ -110,17 +110,17 @@ class DidDocumentDslExtendedTest {
     @Test
     fun `test full DID document update with all new fields`() = runBlocking {
         val kms = InMemoryKeyManagementService()
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys { custom(kms) }
             did { method(DidMethods.KEY) {} }
         }
         
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
         
-        val updatedDoc = trustLayer.updateDid {
+        val updatedDoc = trustWeave.updateDid {
             did(did)
             method(DidMethods.KEY)
             addKey {

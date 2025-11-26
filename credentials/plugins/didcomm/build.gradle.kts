@@ -34,6 +34,8 @@ dependencies {
     // MongoDB support (optional, for NoSQL storage)
     // Uncomment when using MongoDB storage:
     // implementation("org.mongodb:mongodb-driver-kotlin-coroutine:4.11.0")
+    // For compilation only (Document class reference):
+    compileOnly("org.mongodb:bson:4.11.0")
     
     // Test dependencies
     testImplementation(project(":testkit"))

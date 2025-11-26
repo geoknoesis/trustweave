@@ -32,7 +32,7 @@ The web of trust scenario demonstrates how to:
 ### Step 1: Configure Trust Layer with Trust Registry
 
 ```kotlin
-import com.trustweave.credential.dsl.*
+import com.trustweave.trust.dsl.*
 import java.time.Instant
 import kotlinx.coroutines.runBlocking
 

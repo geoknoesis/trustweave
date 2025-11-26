@@ -573,7 +573,7 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in How-To Guides category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
-      </button><a href="/trustweave/how-to/README/" class="nav-list-link">How-To Guides</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/how-to/create-dids/" class="nav-list-link">Create and Manage DIDs</a></li><li class="nav-list-item"><a href="/trustweave/how-to/issue-credentials/" class="nav-list-link">Issue Credentials</a></li><li class="nav-list-item"><a href="/trustweave/how-to/verify-credentials/" class="nav-list-link">Verify Credentials</a></li><li class="nav-list-item"><a href="/trustweave/how-to/manage-wallets/" class="nav-list-link">Manage Wallets</a></li><li class="nav-list-item"><a href="/trustweave/how-to/blockchain-anchoring/" class="nav-list-link">Anchor to Blockchain</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+      </button><a href="/trustweave/how-to/README/" class="nav-list-link">How-To Guides</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/how-to/use-trustweave-facade/" class="nav-list-link">Use TrustWeave Facade for Quick Setup</a></li><li class="nav-list-item"><a href="/trustweave/how-to/configure-trustlayer/" class="nav-list-link">Configure TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/how-to/create-dids/" class="nav-list-link">Create and Manage DIDs</a></li><li class="nav-list-item"><a href="/trustweave/how-to/issue-credentials/" class="nav-list-link">Issue Credentials</a></li><li class="nav-list-item"><a href="/trustweave/how-to/verify-credentials/" class="nav-list-link">Verify Credentials</a></li><li class="nav-list-item"><a href="/trustweave/how-to/manage-wallets/" class="nav-list-link">Manage Wallets</a></li><li class="nav-list-item"><a href="/trustweave/how-to/blockchain-anchoring/" class="nav-list-link">Anchor to Blockchain</a></li><li class="nav-list-item"><a href="/trustweave/how-to/multi-chain-anchoring/" class="nav-list-link">Multi-Chain Anchoring Patterns</a></li><li class="nav-list-item"><a href="/trustweave/how-to/exchange-credentials/" class="nav-list-link">Exchange Credentials with Multiple Protocols</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
@@ -648,7 +648,7 @@
 
 <p>TrustWeave is built on a <strong>layered architecture</strong> with clear separation between:</p>
 <ul>
-  <li><strong>Facade Layer</strong> (<code class="language-plaintext highlighter-rouge">TrustLayer</code>) - High-level, developer-friendly API</li>
+  <li><strong>Facade Layer</strong> (<code class="language-plaintext highlighter-rouge">TrustWeave</code>) - High-level, developer-friendly API</li>
   <li><strong>Service Layer</strong> - Domain-specific services (DID, Credential, Wallet, etc.)</li>
   <li><strong>Plugin Layer</strong> - Pluggable implementations (DID methods, KMS, blockchains)</li>
 </ul>
@@ -688,12 +688,12 @@
 └──────────────┬──────────────────────────┘
                │
 ┌──────────────▼──────────────────────────┐
-│         TrustLayer (Facade)             │
+│         TrustWeave (Facade)             │
 │  - createDid(), issue(), verify(), etc. │
 └──────────────┬──────────────────────────┘
                │
 ┌──────────────▼──────────────────────────┐
-│      TrustLayerContext (Orchestrator)   │
+│      TrustWeaveContext (Orchestrator)   │
 │  - Coordinates services                 │
 │  - Manages DSL builders                 │
 └──────────────┬──────────────────────────┘
@@ -722,16 +722,16 @@
   
 </h2>
     
-<h3 id="1-trustlayer-main-entry-point">
+<h3 id="1-trustweave-main-entry-point">
   
   
-    <a href="#1-trustlayer-main-entry-point" class="anchor-heading" aria-labelledby="1-trustlayer-main-entry-point"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. TrustLayer (Main Entry Point)
+    <a href="#1-trustweave-main-entry-point" class="anchor-heading" aria-labelledby="1-trustweave-main-entry-point"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. TrustWeave (Main Entry Point)
   
   
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">TrustLayer</code> is the <strong>primary facade</strong> for all operations. It provides:</p>
+<p><code class="language-plaintext highlighter-rouge">TrustWeave</code> is the <strong>primary facade</strong> for all operations. It provides:</p>
 <ul>
   <li>Type-safe DSL builders for configuration and operations</li>
   <li>Unified error handling (exceptions)</li>
@@ -758,36 +758,36 @@
 10
 11
 12
-</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">trustLayer</span> <span class="p">=</span> <span class="nc">TrustLayer</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
     <span class="nf">keys</span> <span class="p">{</span> <span class="nf">provider</span><span class="p">(</span><span class="s">"inMemory"</span><span class="p">);</span> <span class="nf">algorithm</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span> <span class="p">}</span>
     <span class="nf">did</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">{</span> <span class="nf">algorithm</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span> <span class="p">}</span> <span class="p">}</span>
 <span class="p">}</span>
 
 <span class="c1">// All operations throw exceptions</span>
 <span class="k">try</span> <span class="p">{</span>
-    <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">}</span>
-    <span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
-<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">TrustWeaveError</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">}</span>
+    <span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">TrustWeaveException</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// Handle error</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
-<h3 id="2-trustlayercontext-internal-orchestrator">
+<h3 id="2-trustweavecontext-internal-orchestrator">
   
   
-    <a href="#2-trustlayercontext-internal-orchestrator" class="anchor-heading" aria-labelledby="2-trustlayercontext-internal-orchestrator"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. TrustLayerContext (Internal Orchestrator)
+    <a href="#2-trustweavecontext-internal-orchestrator" class="anchor-heading" aria-labelledby="2-trustweavecontext-internal-orchestrator"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. TrustWeaveContext (Internal Orchestrator)
   
   
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">TrustLayerContext</code> coordinates between services. You rarely interact with it directly, but it:</p>
+<p><code class="language-plaintext highlighter-rouge">TrustWeaveContext</code> coordinates between services. You rarely interact with it directly, but it:</p>
 <ul>
   <li>Manages DSL builders</li>
   <li>Routes operations to appropriate services</li>
   <li>Handles service lifecycle</li>
 </ul>
 
-<p><strong>Access:</strong> Use <code class="language-plaintext highlighter-rouge">trustLayer.getDslContext()</code> only when you need advanced operations.</p>
+<p><strong>Access:</strong> Use <code class="language-plaintext highlighter-rouge">trustWeave.getDslContext()</code> only when you need advanced operations.</p>
 <h3 id="3-services-domain-logic">
   
   
@@ -805,7 +805,7 @@
   <li><strong>Trust Registry</strong>: Manages trust anchors</li>
 </ul>
 
-<p>Services are <strong>configured</strong> during <code class="language-plaintext highlighter-rouge">TrustLayer.build { }</code> and <strong>used</strong> via <code class="language-plaintext highlighter-rouge">TrustLayer</code> methods.</p>
+<p>Services are <strong>configured</strong> during <code class="language-plaintext highlighter-rouge">TrustWeave.build { }</code> and <strong>used</strong> via <code class="language-plaintext highlighter-rouge">TrustWeave</code> methods.</p>
 <h3 id="4-plugins-implementations">
   
   
@@ -856,11 +856,11 @@
 14
 15
 16
-</pre></td><td class="rouge-code"><pre>1. Application calls: trustLayer.issue { ... }
+</pre></td><td class="rouge-code"><pre>1. Application calls: trustWeave.issue { ... }
    │
-2. TrustLayer delegates to TrustLayerContext
+2. TrustWeave delegates to TrustWeaveContext
    │
-3. TrustLayerContext orchestrates:
+3. TrustWeaveContext orchestrates:
    │
    ├─► DID Service: Resolve issuer DID
    │   └─► DID Method Plugin: Fetch DID document
@@ -900,9 +900,9 @@
 16
 17
 18
-</pre></td><td class="rouge-code"><pre>1. Application calls: trustLayer.verify { credential(...) }
+</pre></td><td class="rouge-code"><pre>1. Application calls: trustWeave.verify { credential(...) }
    │
-2. TrustLayerContext orchestrates:
+2. TrustWeaveContext orchestrates:
    │
    ├─► Credential Service: Validate structure
    │
@@ -959,7 +959,7 @@
 27
 28
 29
-</pre></td><td class="rouge-code"><pre><span class="nc">TrustLayer</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
+</pre></td><td class="rouge-code"><pre><span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
     <span class="c1">// Configure KMS</span>
     <span class="nf">keys</span> <span class="p">{</span>
         <span class="nf">provider</span><span class="p">(</span><span class="s">"inMemory"</span><span class="p">)</span>  <span class="c1">// Select KMS plugin</span>
@@ -1015,7 +1015,7 @@
 </h3>
     
 
-<p>All <code class="language-plaintext highlighter-rouge">TrustLayer</code> methods throw <code class="language-plaintext highlighter-rouge">TrustWeaveError</code> exceptions:</p>
+<p>All <code class="language-plaintext highlighter-rouge">TrustWeave</code> methods throw exceptions:</p>
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1029,17 +1029,33 @@
 10
 11
 12
-</pre></td><td class="rouge-code"><pre><span class="k">try</span> <span class="p">{</span>
-    <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">}</span>
-<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">TrustWeaveError</span><span class="p">)</span> <span class="p">{</span>
+13
+14
+15
+16
+17
+18
+19
+20
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException</span>
+<span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException.DidMethodNotRegistered</span>
+<span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
+
+<span class="k">try</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">}</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">DidException</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">when</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">is</span> <span class="nc">TrustWeaveError</span><span class="p">.</span><span class="nc">DidMethodNotRegistered</span> <span class="p">-&gt;</span> <span class="p">{</span>
-            <span class="c1">// Handle specific error</span>
+        <span class="k">is</span> <span class="nc">DidMethodNotRegistered</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="c1">// Handle method not registered</span>
         <span class="p">}</span>
         <span class="k">else</span> <span class="p">-&gt;</span> <span class="p">{</span>
-            <span class="c1">// Handle generic error</span>
+            <span class="c1">// Handle other DID errors</span>
         <span class="p">}</span>
     <span class="p">}</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">TrustWeaveException</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Handle TrustWeave errors with error codes</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">Exception</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Handle other errors</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
@@ -1156,11 +1172,11 @@
 5
 6
 </pre></td><td class="rouge-code"><pre><span class="c1">// 1. Create and configure</span>
-<span class="kd">val</span> <span class="py">trustLayer</span> <span class="p">=</span> <span class="nc">TrustLayer</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
+<span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
 
 <span class="c1">// 2. Use</span>
-<span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
-<span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
+<span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
+<span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="pattern-2-error-handling">
   
@@ -1181,15 +1197,21 @@
 8
 9
 10
-</pre></td><td class="rouge-code"><pre><span class="k">try</span> <span class="p">{</span>
-    <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">operation</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
+11
+12
+13
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException</span>
+<span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
+
+<span class="k">try</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">operation</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
     <span class="c1">// Use result</span>
-<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">TrustWeaveError</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// Handle error based on type</span>
-    <span class="k">when</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">is</span> <span class="nc">TrustWeaveError</span><span class="p">.</span><span class="nc">SpecificError</span> <span class="p">-&gt;</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
-        <span class="k">else</span> <span class="p">-&gt;</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
-    <span class="p">}</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">DidException</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Handle DID-specific errors</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">TrustWeaveException</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Handle TrustWeave errors with error codes</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">Exception</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Handle other errors</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="pattern-3-service-composition">
@@ -1215,17 +1237,17 @@
 12
 13
 </pre></td><td class="rouge-code"><pre><span class="c1">// Create DIDs</span>
-<span class="kd">val</span> <span class="py">issuerDid</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
-<span class="kd">val</span> <span class="py">holderDid</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
+<span class="kd">val</span> <span class="py">issuerDid</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
+<span class="kd">val</span> <span class="py">holderDid</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
 
 <span class="c1">// Issue credential</span>
-<span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span>
+<span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span>
     <span class="nf">credential</span> <span class="p">{</span> <span class="nf">issuer</span><span class="p">(</span><span class="n">issuerDid</span><span class="p">);</span> <span class="nf">subject</span> <span class="p">{</span> <span class="nf">id</span><span class="p">(</span><span class="n">holderDid</span><span class="p">)</span> <span class="p">}</span> <span class="p">}</span>
     <span class="k">by</span><span class="p">(</span><span class="n">issuerDid</span> <span class="p">=</span> <span class="n">issuerDid</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">=</span> <span class="s">"$issuerDid#key-1"</span><span class="p">)</span>
 <span class="p">}</span>
 
 <span class="c1">// Store in wallet</span>
-<span class="kd">val</span> <span class="py">wallet</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">wallet</span> <span class="p">{</span> <span class="nf">holder</span><span class="p">(</span><span class="n">holderDid</span><span class="p">)</span> <span class="p">}</span>
+<span class="kd">val</span> <span class="py">wallet</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">wallet</span> <span class="p">{</span> <span class="nf">holder</span><span class="p">(</span><span class="n">holderDid</span><span class="p">)</span> <span class="p">}</span>
 <span class="n">wallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="next-steps">
@@ -1292,7 +1314,67 @@
         footer.style.width = '100vw';
         footer.style.marginLeft = 'calc(-50vw + 50%)';
         footer.style.marginRight = 'calc(-50vw + 50%)';
+        footer.style.marginTop = 'auto'; // Push to bottom in flexbox layout
+        footer.style.zIndex = '0'; // Below search overlay
       }
+    }
+    
+    // Function to update footer visibility based on search state
+    function updateFooterVisibility() {
+      const footer = document.querySelector('.site-footer');
+      const htmlElement = document.documentElement;
+      
+      if (footer && htmlElement) {
+        const isSearchActive = htmlElement.classList.contains('search-active');
+        if (isSearchActive) {
+          // Hide footer when search is active - use multiple methods to ensure it's hidden
+          footer.style.display = 'none';
+          footer.style.visibility = 'hidden';
+          footer.style.opacity = '0';
+          footer.style.zIndex = '-999';
+          footer.style.pointerEvents = 'none';
+        } else {
+          // Show footer when search is not active
+          footer.style.display = 'block';
+          footer.style.visibility = 'visible';
+          footer.style.opacity = '1';
+          footer.style.marginTop = 'auto';
+          footer.style.position = 'relative';
+          footer.style.zIndex = '-1';
+          footer.style.pointerEvents = 'auto';
+        }
+      }
+    }
+    
+    // Monitor search state and hide/show footer appropriately
+    const observer = new MutationObserver(function(mutations) {
+      updateFooterVisibility();
+    });
+    
+    // Also listen for input events on search input as a backup
+    // This ensures footer is hidden immediately when user starts typing
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      // Use requestAnimationFrame for better performance
+      const handleSearchChange = function() {
+        requestAnimationFrame(updateFooterVisibility);
+      };
+      
+      searchInput.addEventListener('input', handleSearchChange);
+      searchInput.addEventListener('focus', handleSearchChange);
+      searchInput.addEventListener('keydown', handleSearchChange);
+    }
+    
+    // Observe documentElement (html) for class changes (like search-active)
+    // The search script adds 'search-active' to documentElement, not body
+    if (document.documentElement) {
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+      
+      // Initial check
+      updateFooterVisibility();
     }
   });
 </script>

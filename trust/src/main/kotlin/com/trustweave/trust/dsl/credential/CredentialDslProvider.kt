@@ -3,6 +3,7 @@ package com.trustweave.trust.dsl.credential
 import com.trustweave.credential.issuer.CredentialIssuer
 import com.trustweave.credential.verifier.CredentialVerifier
 import com.trustweave.credential.revocation.StatusListManager
+import com.trustweave.trust.types.ProofType
 
 /**
  * Credential DSL Provider Interface.
@@ -31,8 +32,11 @@ interface CredentialDslProvider {
     
     /**
      * Get the default proof type.
+     * 
+     * Returns a type-safe ProofType instead of a string to prevent errors
+     * and improve API safety.
      */
-    fun getDefaultProofType(): String
+    fun getDefaultProofType(): ProofType
 }
 
 

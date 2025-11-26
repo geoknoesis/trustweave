@@ -71,7 +71,7 @@ fun main() = runBlocking {
 ### Trust Layer DSL
 
 ```kotlin
-import com.trustweave.credential.dsl.trustLayer
+import com.trustweave.trust.dsl.trustLayer
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {

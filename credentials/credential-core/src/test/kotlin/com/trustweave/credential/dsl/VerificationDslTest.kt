@@ -2,6 +2,8 @@ package com.trustweave.credential.dsl
 
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.trust.dsl.TrustWeaveConfig
+import com.trustweave.trust.dsl.trustWeave
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -13,7 +15,7 @@ import kotlin.test.*
  */
 class VerificationDslTest {
 
-    private lateinit var trustLayer: TrustLayerConfig
+    private lateinit var trustWeave: TrustWeaveConfig
     private lateinit var kms: InMemoryKeyManagementService
 
     @BeforeEach
@@ -23,7 +25,7 @@ class VerificationDslTest {
         // Capture KMS reference for closure
         val kmsRef = kms
         
-        trustLayer = trustLayer {
+        trustWeave = trustWeave {
             keys {
                 custom(kmsRef as Any)
                 // Provide signer function directly to avoid reflection
@@ -52,7 +54,7 @@ class VerificationDslTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
         }
         
@@ -71,7 +73,7 @@ class VerificationDslTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             checkRevocation()
         }
@@ -92,7 +94,7 @@ class VerificationDslTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             skipRevocationCheck()
         }
@@ -112,7 +114,7 @@ class VerificationDslTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             checkExpiration()
         }
@@ -132,7 +134,7 @@ class VerificationDslTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             skipExpirationCheck()
         }
@@ -152,7 +154,7 @@ class VerificationDslTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             validateSchema("https://example.com/schemas/person.json")
         }
@@ -172,7 +174,7 @@ class VerificationDslTest {
             issued(Instant.now())
         }
         
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             verifyAnchor("algorand:testnet")
         }
@@ -184,7 +186,7 @@ class VerificationDslTest {
     @Test
     fun `test verification requires credential`() = runBlocking {
         assertFailsWith<IllegalStateException> {
-            trustLayer.verify {
+            trustWeave.verify {
                 // Missing credential
                 checkRevocation()
             }

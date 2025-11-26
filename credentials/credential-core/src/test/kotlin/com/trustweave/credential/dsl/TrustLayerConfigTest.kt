@@ -1,24 +1,26 @@
 package com.trustweave.credential.dsl
 
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.trust.dsl.TrustWeaveConfig
+import com.trustweave.trust.dsl.trustWeave
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.*
 
 /**
- * Tests for TrustLayerConfig DSL.
+ * Tests for TrustWeaveConfig DSL.
  */
 class TrustLayerConfigTest {
 
     @BeforeEach
     fun setUp() {
-        // No global registries to clear; each test builds a fresh TrustLayerConfig.
+        // No global registries to clear; each test builds a fresh TrustWeaveConfig.
     }
 
     @Test
     fun `test trust layer configuration with inMemory KMS`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys {
                 provider("inMemory")
                 algorithm("Ed25519")
@@ -42,20 +44,20 @@ class TrustLayerConfigTest {
             }
         }
         
-        assertNotNull(trustLayer)
-        assertEquals("default", trustLayer.name)
-        assertNotNull(trustLayer.kms)
-        assertTrue(trustLayer.didMethods.isNotEmpty())
-        assertTrue(trustLayer.anchorClients.isNotEmpty())
-        assertEquals("Ed25519Signature2020", trustLayer.credentialConfig.defaultProofType)
-        assertFalse(trustLayer.credentialConfig.autoAnchor)
+        assertNotNull(trustWeave)
+        assertEquals("default", trustWeave.name)
+        assertNotNull(trustWeave.kms)
+        assertTrue(trustWeave.didMethods.isNotEmpty())
+        assertTrue(trustWeave.anchorClients.isNotEmpty())
+        assertEquals("Ed25519Signature2020", trustWeave.credentialConfig.defaultProofType)
+        assertFalse(trustWeave.credentialConfig.autoAnchor)
     }
 
     @Test
     fun `test trust layer configuration with custom KMS`() = runBlocking {
         // For custom KMS without signer function, use provider("inMemory") instead
         // This test verifies that custom KMS can be set, but signer must be provided
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys {
                 provider("inMemory")
             }
@@ -68,12 +70,12 @@ class TrustLayerConfigTest {
         }
         
         assertNotNull(trustLayer)
-        assertNotNull(trustLayer.kms)
+        assertNotNull(trustWeave.kms)
     }
 
     @Test
     fun `test trust layer configuration with multiple DID methods`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys {
                 provider("inMemory")
             }
@@ -91,12 +93,12 @@ class TrustLayerConfigTest {
             }
         }
         
-        assertTrue(trustLayer.didMethods.containsKey("key"))
+        assertTrue(trustWeave.didMethods.containsKey("key"))
     }
 
     @Test
     fun `test trust layer configuration with multiple anchor chains`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys {
                 provider("inMemory")
             }
@@ -117,13 +119,13 @@ class TrustLayerConfigTest {
             }
         }
         
-        assertTrue(trustLayer.anchorClients.containsKey("algorand:testnet"))
-        assertTrue(trustLayer.anchorClients.containsKey("algorand:mainnet"))
+        assertTrue(trustWeave.anchorClients.containsKey("algorand:testnet"))
+        assertTrue(trustWeave.anchorClients.containsKey("algorand:mainnet"))
     }
 
     @Test
     fun `test trust layer configuration with named layer`() = runBlocking {
-        val trustLayer = trustLayer("production") {
+        val trustWeave = trustWeave("production") {
             keys {
                 provider("inMemory")
             }
@@ -135,12 +137,12 @@ class TrustLayerConfigTest {
             }
         }
         
-        assertEquals("production", trustLayer.name)
+        assertEquals("production", trustWeave.name)
     }
 
     @Test
     fun `test trust layer credential config defaults`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys {
                 provider("inMemory")
             }
@@ -152,14 +154,14 @@ class TrustLayerConfigTest {
             }
         }
         
-        assertEquals("Ed25519Signature2020", trustLayer.credentialConfig.defaultProofType)
-        assertFalse(trustLayer.credentialConfig.autoAnchor)
-        assertNull(trustLayer.credentialConfig.defaultChain)
+        assertEquals("Ed25519Signature2020", trustWeave.credentialConfig.defaultProofType)
+        assertFalse(trustWeave.credentialConfig.autoAnchor)
+        assertNull(trustWeave.credentialConfig.defaultChain)
     }
 
     @Test
     fun `test trust layer credential config custom values`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys {
                 provider("inMemory")
             }
@@ -177,14 +179,14 @@ class TrustLayerConfigTest {
             }
         }
         
-        assertEquals("Ed25519Signature2020", trustLayer.credentialConfig.defaultProofType)
-        assertTrue(trustLayer.credentialConfig.autoAnchor)
-        assertEquals("algorand:testnet", trustLayer.credentialConfig.defaultChain)
+        assertEquals("Ed25519Signature2020", trustWeave.credentialConfig.defaultProofType)
+        assertTrue(trustWeave.credentialConfig.autoAnchor)
+        assertEquals("algorand:testnet", trustWeave.credentialConfig.defaultChain)
     }
 
     @Test
     fun `test trust layer context provides access to components`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys {
                 provider("inMemory")
             }
@@ -196,7 +198,7 @@ class TrustLayerConfigTest {
             }
         }
         
-        val context = trustLayer.dsl()
+        val context = trustWeave.getDslContext()
         assertNotNull(context.getKms())
         assertNotNull(context.getDidMethod("key"))
         assertNotNull(context.getIssuer())

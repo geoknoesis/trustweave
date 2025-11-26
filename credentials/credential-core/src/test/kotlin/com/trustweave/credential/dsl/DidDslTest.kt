@@ -21,14 +21,14 @@ import kotlin.test.*
  */
 class DidDslTest {
     
-    private lateinit var trustLayer: TrustLayerConfig
+    private lateinit var trustWeave: TrustWeaveConfig
     private lateinit var kms: InMemoryKeyManagementService
     
     @BeforeEach
     fun setup() = runBlocking {
         kms = InMemoryKeyManagementService()
         val kmsInstance = kms
-        trustLayer = trustLayer {
+        trustWeave = trustWeave {
             keys {
                 custom(kmsInstance)
             }
@@ -42,7 +42,7 @@ class DidDslTest {
     
     @Test
     fun `test createDid with method and algorithm`() = runBlocking {
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
@@ -54,7 +54,7 @@ class DidDslTest {
     @Test
     fun `test createDid without method throws exception`() = runBlocking {
         assertFailsWith<IllegalStateException> {
-            trustLayer.createDid {
+            trustWeave.createDid {
                 algorithm("Ed25519")
             }
         }
@@ -63,7 +63,7 @@ class DidDslTest {
     @Test
     fun `test createDid with unconfigured method throws exception`() = runBlocking {
         assertFailsWith<IllegalStateException> {
-            trustLayer.createDid {
+            trustWeave.createDid {
                 method("web")
                 algorithm("Ed25519")
             }
@@ -72,7 +72,7 @@ class DidDslTest {
     
     @Test
     fun `test createDid with custom options`() = runBlocking {
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
             option("custom", "value")
@@ -83,8 +83,8 @@ class DidDslTest {
     }
     
     @Test
-    fun `test createDid via TrustLayerContext`() = runBlocking {
-        val context = trustLayer.dsl()
+    fun `test createDid via TrustWeaveContext`() = runBlocking {
+        val context = trustWeave.getDslContext()
         val did = context.createDid {
             method("key")
             algorithm("Ed25519")
@@ -96,14 +96,14 @@ class DidDslTest {
     
     @Test
     fun `test createDid with different algorithms`() = runBlocking {
-        val did1 = trustLayer.createDid {
+        val did1 = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
         
         // Create second DID - even with same algorithm, should produce different DID
         // since it generates a new key
-        val did2 = trustLayer.createDid {
+        val did2 = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
@@ -115,7 +115,7 @@ class DidDslTest {
     
     @Test
     fun `test createDid extracts DID from document`() = runBlocking {
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }

@@ -1,6 +1,6 @@
 package com.trustweave.examples.delegation
 
-import com.trustweave.credential.dsl.*
+import com.trustweave.trust.dsl.*
 import com.trustweave.credential.models.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
@@ -24,7 +24,7 @@ fun main() = runBlocking {
     
     // Step 1: Configure Trust Layer
     println("Step 1: Setting up trust layer...")
-    val trustLayer = trustLayer {
+    val trustWeave = trustWeave {
         keys {
             provider("inMemory")
             algorithm(KeyAlgorithms.ED25519)
@@ -72,7 +72,7 @@ fun main() = runBlocking {
     println("Step 3: Setting up delegation chain...")
     
     // CEO delegates to HR Director
-    trustLayer.updateDid {
+        trustWeave.updateDid {
         did(ceoDid)
         method(DidMethods.KEY)
         addCapabilityDelegation("$hrDirectorDid#key-1")
@@ -80,7 +80,7 @@ fun main() = runBlocking {
     println("✓ CEO delegated capability to HR Director")
     
     // HR Director delegates to HR Manager
-    trustLayer.updateDid {
+        trustWeave.updateDid {
         did(hrDirectorDid)
         method(DidMethods.KEY)
         addCapabilityDelegation("$hrManagerDid#key-1")
@@ -171,7 +171,7 @@ fun main() = runBlocking {
     
     // Step 8: Demonstrate capability invocation
     println("Step 8: Demonstrating capability invocation...")
-    trustLayer.updateDid {
+        trustWeave.updateDid {
         did(employeeDid)
         method(DidMethods.KEY)
         addCapabilityInvocation("$employeeDid#key-1")

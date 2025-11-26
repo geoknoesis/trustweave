@@ -12,7 +12,7 @@ keywords:
 
 # API Quick Reference
 
-Quick lookup table of all TrustLayer API methods organized by category.
+Quick lookup table of all TrustWeave API methods organized by category.
 
 ## DIDs
 
@@ -65,15 +65,21 @@ Quick lookup table of all TrustLayer API methods organized by category.
 
 **Create DID:**
 ```kotlin
-val did = trustLayer.createDid {
+import com.trustweave.trust.types.Did
+
+val did: Did = trustWeave.createDid {
     method("key")
     algorithm("Ed25519")
 }
+// Access DID string value: did.value
 ```
 
 **Resolve DID:**
 ```kotlin
-val document = trustLayer.resolveDid("did:key:example")
+import com.trustweave.trust.types.Did
+
+val did = Did("did:key:example")
+val document = trustWeave.context.resolveDid(did)
 ```
 
 **Update DID:**
@@ -93,7 +99,11 @@ val deactivated = trustLayer.deactivateDid("did:key:example")
 
 **Issue Credential:**
 ```kotlin
-val credential = trustLayer.issue {
+import com.trustweave.trust.types.IssuerIdentity
+
+val issuerIdentity = IssuerIdentity.from(issuerDid, keyId)
+
+val credential = trustWeave.issue {
     credential {
         type("VerifiableCredential", "PersonCredential")
         issuer(issuerDid)
@@ -102,14 +112,22 @@ val credential = trustLayer.issue {
             claim("name", "Alice")
         }
     }
-    by(issuerDid = issuerDid, keyId = keyId)
+    signedBy(issuerIdentity)
 }
 ```
 
 **Verify Credential:**
 ```kotlin
-val verification = trustLayer.verify {
+import com.trustweave.trust.types.VerificationResult
+
+val result: VerificationResult = trustWeave.verify {
     credential(credential)
+}
+
+when (result) {
+    is VerificationResult.Valid -> println("Valid!")
+    is VerificationResult.Invalid.Expired -> println("Expired")
+    // ... exhaustive error handling
 }
 ```
 

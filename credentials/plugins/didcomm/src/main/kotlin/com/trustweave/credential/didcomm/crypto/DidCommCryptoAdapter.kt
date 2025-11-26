@@ -31,7 +31,7 @@ class DidCommCryptoAdapter(
      * 
      * Uses production crypto if available and enabled, otherwise uses placeholder.
      */
-    suspend fun encrypt(
+    override suspend fun encrypt(
         message: JsonObject,
         fromDid: String,
         fromKeyId: String,
@@ -55,7 +55,7 @@ class DidCommCryptoAdapter(
     /**
      * Decrypts an encrypted envelope.
      */
-    suspend fun decrypt(
+    override suspend fun decrypt(
         envelope: DidCommEnvelope,
         recipientDid: String,
         recipientKeyId: String,

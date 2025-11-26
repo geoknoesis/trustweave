@@ -1,6 +1,6 @@
 package com.trustweave.examples.professional
 
-import com.trustweave.credential.dsl.*
+import com.trustweave.trust.dsl.*
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.presentation.PresentationService
 import com.trustweave.credential.proof.Ed25519ProofGenerator
@@ -25,7 +25,7 @@ fun main() = runBlocking {
         )
     )
     
-    val trustLayer = trustLayer {
+    val trustWeave = trustWeave {
         keys {
             custom(kmsRef)
             // Provide signer function directly to avoid reflection issues
@@ -274,20 +274,20 @@ fun main() = runBlocking {
     // Step 7: Query credentials using enhanced query DSL
     println("\nStep 7: Querying credentials...")
     
-    // Find all active certifications using enhanced query
-    val activeCerts = wallet.queryEnhanced {
-        byType("CertificationCredential")
+    // Find all active certifications using query
+    val activeCerts = wallet.query {
+        type("CertificationCredential")
         notExpired()
         valid()
-        byTag("active")
+        tag("active")
     }
     println("Active certifications: ${activeCerts.size}")
     
     // Find cloud-related credentials by tag and collection
     if (certificationsCollectionId != null) {
-        val cloudCredentials = wallet.queryEnhanced {
-            byTag("cloud")
-            byCollection(certificationsCollectionId)
+        val cloudCredentials = wallet.query {
+            tag("cloud")
+            collection(certificationsCollectionId)
         }
         println("Cloud-related credentials: ${cloudCredentials.size}")
     }
@@ -323,8 +323,8 @@ fun main() = runBlocking {
     println("Job application presentation created with ${jobApplicationPresentation.verifiableCredential.size} credentials")
     
     // Presentation for professional profile using query-based presentation
-    val profileCredentials = wallet.queryEnhanced {
-        byTypes("MasterDegreeCredential", "EmploymentCredential", "CertificationCredential")
+    val profileCredentials = wallet.query {
+        types("MasterDegreeCredential", "EmploymentCredential", "CertificationCredential")
         valid()
     }
     val profilePresentation = presentation(presentationService) {
@@ -338,7 +338,7 @@ fun main() = runBlocking {
     // Step 8.5: Demonstrate key rotation
     println("\nStep 8.5: Demonstrating key rotation...")
     try {
-        trustLayer.rotateKey {
+        trustWeave.rotateKey {
             did(professionalDid)
             algorithm(KeyAlgorithms.ED25519)
         }
@@ -350,7 +350,7 @@ fun main() = runBlocking {
     // Step 8.6: Demonstrate DID document updates
     println("\nStep 8.6: Demonstrating DID document updates...")
     try {
-        trustLayer.updateDid {
+        trustWeave.updateDid {
             did(professionalDid)
             method(DidMethods.KEY)
             addService {

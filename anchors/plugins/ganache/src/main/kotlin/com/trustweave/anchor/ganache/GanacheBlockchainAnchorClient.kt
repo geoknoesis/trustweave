@@ -1,10 +1,9 @@
 package com.trustweave.anchor.ganache
 
 import com.trustweave.anchor.*
-import com.trustweave.anchor.exceptions.BlockchainConfigurationException
-import com.trustweave.anchor.exceptions.BlockchainTransactionException
+import com.trustweave.anchor.exceptions.BlockchainException
 import com.trustweave.anchor.options.GanacheOptions
-import com.trustweave.core.exception.NotFoundException
+
 import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.serialization.json.*
 import org.web3j.protocol.Web3j
@@ -73,21 +72,20 @@ class GanacheBlockchainAnchorClient(
 
         // Initialize transaction manager - private key is required
         val privateKeyHex = options["privateKey"] as? String
-            ?: throw BlockchainConfigurationException(
-                message = "privateKey is required for GanacheBlockchainAnchorClient",
+            ?: throw BlockchainException.ConfigurationFailed(
                 chainId = chainId,
-                configKey = "privateKey"
+                configKey = "privateKey",
+                reason = "privateKey is required for GanacheBlockchainAnchorClient"
             )
         
         credentials = try {
             org.web3j.crypto.Credentials.create(privateKeyHex.removePrefix("0x"))
         } catch (e: Exception) {
-            throw BlockchainConfigurationException(
-                message = "Invalid private key format: ${e.message}",
+            throw BlockchainException.ConfigurationFailed(
                 chainId = chainId,
                 configKey = "privateKey",
-                cause = e
-            )
+                reason = "Invalid private key format: ${e.message ?: "Unknown error"}"
+            ).apply { initCause(e) }
         }
         
         val chainIdNum = chainId.substringAfter(":").toLongOrNull() ?: 1337L
@@ -164,12 +162,11 @@ class GanacheBlockchainAnchorClient(
         val ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send()
         if (ethSendTransaction.hasError()) {
             val error = ethSendTransaction.error
-            throw BlockchainTransactionException(
-                message = "Transaction failed: ${error?.message ?: "Unknown error"}",
+            throw BlockchainException.TransactionFailed(
+                reason = "Transaction failed: ${error?.message ?: "Unknown error"}",
                 chainId = chainId,
                 txHash = null,
-                operation = "submitTransaction",
-                cause = null
+                operation = "submitTransaction"
             )
         }
 
@@ -179,16 +176,16 @@ class GanacheBlockchainAnchorClient(
     private suspend fun readTransactionFromBlockchainImpl(txHash: String): AnchorResult {
         val ethGetTransactionReceipt = web3j.ethGetTransactionReceipt(txHash).send()
         if (!ethGetTransactionReceipt.transactionReceipt.isPresent) {
-            throw NotFoundException("Transaction receipt not found: $txHash")
+            throw TrustWeaveException.NotFound(resource = "Transaction receipt not found: $txHash")
         }
 
         val receipt = ethGetTransactionReceipt.transactionReceipt.get()
         val tx = web3j.ethGetTransactionByHash(txHash).send().transaction.orElse(null)
-            ?: throw NotFoundException("Transaction not found: $txHash")
+            ?: throw TrustWeaveException.NotFound(resource = "Transaction not found: $txHash")
 
         val input = tx.input
         if (input == null || input.isEmpty() || input == "0x") {
-            throw NotFoundException("Transaction data not found: $txHash")
+            throw TrustWeaveException.NotFound(resource = "Transaction data not found: $txHash")
         }
 
         val dataBytes = org.web3j.utils.Numeric.hexStringToByteArray(input)

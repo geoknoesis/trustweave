@@ -179,7 +179,7 @@ import com.trustweave.did.exception.DidException
 import com.trustweave.core.exception.TrustWeaveException
 
 try {
-    val did = trustLayer.createDid { method("key") }
+    val did = trustWeave.createDid { method("key") }
 } catch (error: TrustWeaveException) {
     when (error) {
         is DidException.DidMethodNotRegistered -> {
@@ -206,7 +206,7 @@ import com.trustweave.credential.exception.CredentialException
 import com.trustweave.core.exception.TrustWeaveException
 
 try {
-    val credential = trustLayer.issue { ... }
+    val credential = trustWeave.issue { ... }
 } catch (error: TrustWeaveException) {
     when (error) {
         is CredentialException.CredentialInvalid -> {
@@ -235,44 +235,43 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class MyData(val id: String, val value: String)
 
-// Example using TrustWeave facade (if available)
-// val result = trustweave.blockchains.anchor(
-//     data = MyData("123", "test"),
-//     serializer = MyData.serializer(),
-//     chainId = "algorand:testnet"
-// )
-// result.fold(
-//     onSuccess = { anchor -> println("Anchored: ${anchor.ref.txHash}") },
-//     onFailure = { error ->
-//         when (error) {
-//             is BlockchainException.ChainNotRegistered -> {
-//                 println("Chain not registered: ${error.chainId}")
-//                 println("Available: ${error.availableChains}")
-//             }
-//             is BlockchainException.TransactionFailed -> {
-//                 println("Transaction failed: ${error.reason}")
-//                 if (error.txHash != null) {
-//                     println("Transaction hash: ${error.txHash}")
-//                 }
-//             }
-//             is BlockchainException.ConnectionFailed -> {
-//                 println("Connection failed: ${error.reason}")
-//             }
-//             else -> {
-//                 println("Error: ${error.message}")
-//             }
-//         }
-//     }
-// )
+// Example: Using Result-based API (TrustWeave facade)
+val result = trustweave.blockchains.anchor(
+    data = MyData("123", "test"),
+    serializer = MyData.serializer(),
+    chainId = "algorand:testnet"
+)
+result.fold(
+    onSuccess = { anchor -> 
+        println("Anchored: ${anchor.ref.txHash}")
+    },
+    onFailure = { error ->
+        when (error) {
+            is BlockchainException.ChainNotRegistered -> {
+                println("Chain not registered: ${error.chainId}")
+                println("Available: ${error.availableChains}")
+            }
+            is BlockchainException.TransactionFailed -> {
+                println("Transaction failed: ${error.reason}")
+                if (error.txHash != null) {
+                    println("Transaction hash: ${error.txHash}")
+                }
+            }
+            is BlockchainException.ConnectionFailed -> {
+                println("Connection failed: ${error.reason}")
+            }
+            else -> {
+                println("Error: ${error.message}")
+            }
+        }
+    }
+)
 
-// Example using exception-based API
+// Example: Using exception-based API (if available)
 try {
-    // Note: Actual anchoring API may vary - check blockchain anchoring documentation
-    // This example shows error handling pattern
-    throw BlockchainException.ChainNotRegistered(
-        chainId = "algorand:testnet",
-        availableChains = listOf("polygon:testnet")
-    )
+    // Note: Check actual API documentation for exact method signature
+    // This shows the error handling pattern
+    val anchorResult = someBlockchainService.anchor(data, chainId)
 } catch (error: TrustWeaveException) {
     when (error) {
         is BlockchainException.ChainNotRegistered -> {
@@ -302,7 +301,7 @@ import com.trustweave.wallet.exception.WalletException
 import com.trustweave.core.exception.TrustWeaveException
 
 try {
-    val wallet = trustLayer.wallet { ... }
+    val wallet = trustWeave.wallet { ... }
 } catch (error: TrustWeaveException) {
     when (error) {
         is WalletException.WalletCreationFailed -> {

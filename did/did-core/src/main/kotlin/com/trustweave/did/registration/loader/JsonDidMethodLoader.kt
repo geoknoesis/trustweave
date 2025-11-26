@@ -84,9 +84,8 @@ class JsonDidMethodLoader {
         } catch (e: Exception) {
             throw com.trustweave.core.exception.TrustWeaveException.InvalidJson(
                 parseError = "Failed to parse DID registration JSON. Expected either official registry format or legacy Trustweave format: ${e.message ?: "Unknown error"}",
-                jsonString = jsonString,
-                cause = e
-            )
+                jsonString = jsonString
+            ).apply { initCause(e) }
         }
         
         return createMethodFromSpec(spec)

@@ -16,7 +16,101 @@ TrustWeave provides structured error handling with rich context for better debug
 
 ## Overview
 
-All TrustWeave API operations return `Result<T>`, which provides a consistent way to handle both success and failure cases. Errors are automatically converted to `TrustWeaveException` types with structured context.
+**Important:** The `TrustWeave` facade methods throw exceptions on failure, not `Result<T>`. All `TrustWeave` methods are suspend functions that throw exceptions when operations fail.
+
+**Exception-Based Error Handling:**
+- All `TrustWeave` facade methods throw domain-specific exceptions
+- Use try-catch blocks for error handling
+- Domain-specific exceptions: `DidException`, `CredentialException`, `WalletException`, etc.
+- All exceptions extend `TrustWeaveException` with error codes and context
+
+**Result-Based Error Handling:**
+- Some lower-level service APIs may return `Result<T>` for functional composition
+- These are typically internal APIs or service interfaces
+- The `TrustWeave` facade converts these to exceptions for simpler usage
+
+## TrustWeave Facade Error Handling
+
+The `TrustWeave` facade methods throw exceptions on failure. Always use try-catch blocks:
+
+```kotlin
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.types.IssuerIdentity
+import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.did.exception.DidException
+import com.trustweave.did.exception.DidException.DidMethodNotRegistered
+import com.trustweave.did.exception.DidException.DidNotFound
+import com.trustweave.credential.exception.CredentialException
+import com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed
+import kotlinx.coroutines.runBlocking
+
+fun main() = runBlocking {
+    val trustWeave = TrustWeave.build {
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
+    
+    try {
+        val did = trustWeave.createDid {
+            method("key")
+            algorithm("Ed25519")
+        }
+        println("Created DID: $did")
+        
+        val credential = trustWeave.issue {
+            credential {
+                type("VerifiableCredential", "ExampleCredential")
+                issuer(did)
+                subject {
+                    id("did:key:holder")
+                    claim("name", "Alice")
+                }
+            }
+            signedBy(IssuerIdentity.from(did, "$did#key-1"))
+        }
+        println("Issued credential: ${credential.id}")
+    } catch (error: DidException) {
+        when (error) {
+            is DidMethodNotRegistered -> {
+                println("❌ DID method not registered: ${error.method}")
+                println("Available methods: ${error.availableMethods}")
+            }
+            is DidNotFound -> {
+                println("❌ DID not found: ${error.did}")
+            }
+            else -> {
+                println("❌ DID error: ${error.message}")
+            }
+        }
+    } catch (error: CredentialException) {
+        when (error) {
+            is CredentialIssuanceFailed -> {
+                println("❌ Credential issuance failed: ${error.reason}")
+                error.issuerDid?.let { println("   Issuer DID: $it") }
+            }
+            else -> {
+                println("❌ Credential error: ${error.message}")
+            }
+        }
+    } catch (error: TrustWeaveException) {
+        // Handle other TrustWeave exceptions
+        println("❌ TrustWeave error [${error.code}]: ${error.message}")
+        if (error.context.isNotEmpty()) {
+            println("   Context: ${error.context}")
+        }
+    } catch (error: Exception) {
+        // Fallback for unexpected errors
+        println("❌ Unexpected error: ${error.message}")
+        error.printStackTrace()
+    }
+}
+```
+
+**Domain-Specific Exception Types:**
+- `DidException`: DID-related errors (DidMethodNotRegistered, DidNotFound, InvalidDidFormat)
+- `CredentialException`: Credential-related errors (CredentialInvalid, CredentialIssuanceFailed)
+- `WalletException`: Wallet-related errors (WalletCreationFailed)
+- `TrustWeaveException`: Base exception with error codes and context
 
 ## Error Types
 
@@ -67,43 +161,52 @@ TrustWeave uses a sealed hierarchy of error types that extend `TrustWeaveExcepti
 
 ```kotlin
 import com.trustweave.did.exception.DidException
+import com.trustweave.did.exception.DidException.DidMethodNotRegistered
+import com.trustweave.did.exception.DidException.DidNotFound
+import com.trustweave.did.exception.DidException.InvalidDidFormat
 
-// DID not found
-DidException.DidNotFound(
-    did = "did:key:z6Mk...",
-    availableMethods = listOf("key", "web")
-)
-
-// DID method not registered
-DidException.DidMethodNotRegistered(
-    method = "web",
-    availableMethods = listOf("key")
-)
-
-// Invalid DID format
-DidException.InvalidDidFormat(
-    did = "invalid-did",
-    reason = "DID must match format: did:<method>:<identifier>"
-)
+// Handle DID errors with short imports
+try {
+    val did = trustWeave.createDid { method("key") }
+} catch (error: DidException) {
+    when (error) {
+        is DidMethodNotRegistered -> {
+            println("Method not registered: ${error.method}")
+            println("Available: ${error.availableMethods}")
+        }
+        is DidNotFound -> {
+            println("DID not found: ${error.did}")
+        }
+        is InvalidDidFormat -> {
+            println("Invalid format: ${error.reason}")
+        }
+    }
+}
 ```
 
 ### Credential-Related Errors (in `trustweave-credentials` module)
 
 ```kotlin
 import com.trustweave.credential.exception.CredentialException
+import com.trustweave.credential.exception.CredentialException.CredentialInvalid
+import com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed
 
-// Credential validation failed
-CredentialException.CredentialInvalid(
-    reason = "Credential issuer is required",
-    credentialId = "urn:uuid:123",
-    field = "issuer"
-)
-
-// Credential issuance failed
-CredentialException.CredentialIssuanceFailed(
-    reason = "Failed to sign credential",
-    issuerDid = "did:key:issuer"
-)
+// Handle credential errors with short imports
+try {
+    val credential = trustWeave.issue { ... }
+} catch (error: CredentialException) {
+    when (error) {
+        is CredentialInvalid -> {
+            println("Credential invalid: ${error.reason}")
+            error.credentialId?.let { println("Credential ID: $it") }
+            error.field?.let { println("Field: $it") }
+        }
+        is CredentialIssuanceFailed -> {
+            println("Issuance failed: ${error.reason}")
+            error.issuerDid?.let { println("Issuer: $it") }
+        }
+    }
+}
 ```
 
 ### Blockchain-Related Errors (in `trustweave-anchor` module)
@@ -137,13 +240,20 @@ BlockchainException.ConnectionFailed(
 
 ```kotlin
 import com.trustweave.wallet.exception.WalletException
+import com.trustweave.wallet.exception.WalletException.WalletCreationFailed
 
-// Wallet creation failed
-WalletException.WalletCreationFailed(
-    reason = "Provider not found",
-    provider = "database",
-    walletId = "wallet-123"
-)
+// Handle wallet errors with short imports
+try {
+    val wallet = trustWeave.wallet { holder("did:key:holder") }
+} catch (error: WalletException) {
+    when (error) {
+        is WalletCreationFailed -> {
+            println("Wallet creation failed: ${error.reason}")
+            error.provider?.let { println("Provider: $it") }
+            error.walletId?.let { println("Wallet ID: $it") }
+        }
+    }
+}
 ```
 
 ### Plugin-Related Errors

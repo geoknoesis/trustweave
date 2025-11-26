@@ -4,6 +4,8 @@ import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.schema.SchemaRegistry
 import com.trustweave.credential.SchemaFormat
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.trust.dsl.TrustWeaveConfig
+import com.trustweave.trust.dsl.trustWeave
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -16,12 +18,12 @@ import kotlin.test.*
  */
 class SchemaDslTest {
     
-    private lateinit var trustLayer: TrustLayerConfig
+    private lateinit var trustWeave: TrustWeaveConfig
     
     @BeforeEach
     fun setup() = runBlocking {
         val kms = InMemoryKeyManagementService()
-        trustLayer = trustLayer {
+        trustWeave = trustWeave {
             keys {
                 custom(kms as Any)
             }
@@ -44,7 +46,7 @@ class SchemaDslTest {
     fun `test register JSON schema`() = runBlocking {
         val schemaId = "https://example.com/schemas/person"
         
-        val result = trustLayer.registerSchema {
+        val result = trustWeave.registerSchema {
             id(schemaId)
             type(SchemaValidatorTypes.JSON_SCHEMA)
             jsonSchema {
@@ -67,7 +69,7 @@ class SchemaDslTest {
     fun `test register SHACL schema`() = runBlocking {
         val schemaId = "https://example.com/schemas/person-shacl"
         
-        val result = trustLayer.registerSchema {
+        val result = trustWeave.registerSchema {
             id(schemaId)
             type(SchemaValidatorTypes.SHACL)
             shacl {
@@ -83,7 +85,7 @@ class SchemaDslTest {
     @Test
     fun `test register schema without id throws exception`() = runBlocking {
         assertFailsWith<IllegalStateException> {
-            trustLayer.registerSchema {
+            trustWeave.registerSchema {
                 type(SchemaValidatorTypes.JSON_SCHEMA)
                 jsonSchema {
                     put("type", "object")
@@ -95,7 +97,7 @@ class SchemaDslTest {
     @Test
     fun `test register schema without definition throws exception`() = runBlocking {
         assertFailsWith<IllegalStateException> {
-            trustLayer.registerSchema {
+            trustWeave.registerSchema {
                 id("https://example.com/schemas/test")
                 type(SchemaValidatorTypes.JSON_SCHEMA)
             }
@@ -107,7 +109,7 @@ class SchemaDslTest {
         val schemaId = "https://example.com/schemas/person"
         
         // Register schema
-        trustLayer.registerSchema {
+        trustWeave.registerSchema {
             id(schemaId)
             type(SchemaValidatorTypes.JSON_SCHEMA)
             jsonSchema {
@@ -134,7 +136,7 @@ class SchemaDslTest {
         
         // Note: Actual validation requires a registered validator
         // This test verifies the DSL structure works
-        val schema = trustLayer.schema(schemaId)
+        val schema = trustWeave.schema(schemaId)
         assertNotNull(schema)
     }
     
@@ -157,7 +159,7 @@ class SchemaDslTest {
     fun `test schema builder with format override`() = runBlocking {
         val schemaId = "https://example.com/schemas/test"
         
-        val result = trustLayer.registerSchema {
+        val result = trustWeave.registerSchema {
             id(schemaId)
             format(SchemaFormat.SHACL)
             shacl {
@@ -179,7 +181,7 @@ class SchemaDslTest {
             })
         }
         
-        val result = trustLayer.registerSchema {
+        val result = trustWeave.registerSchema {
             id(schemaId)
             type(SchemaValidatorTypes.JSON_SCHEMA)
             definition(definition)
@@ -200,7 +202,7 @@ class SchemaDslTest {
         )
         
         assertFailsWith<IllegalArgumentException> {
-            trustLayer.schema("https://example.com/schemas/nonexistent").validate(credential)
+            trustWeave.schema("https://example.com/schemas/nonexistent").validate(credential)
         }
     }
 }

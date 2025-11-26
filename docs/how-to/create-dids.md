@@ -1,6 +1,6 @@
 ---
 title: Create and Manage DIDs
-nav_order: 1
+nav_order: 3
 parent: How-To Guides
 keywords:
   - dids
@@ -21,14 +21,15 @@ This guide shows you how to create, resolve, update, and deactivate Decentralize
 Here's a complete example that creates a DID, extracts the key ID, and uses it:
 
 ```kotlin
-import com.trustweave.trust.TrustLayer
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.types.Did
 import com.trustweave.core.TrustWeaveError
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     try {
-        // Create TrustLayer instance
-        val trustLayer = TrustLayer.build {
+        // Create TrustWeave instance
+        val trustWeave = TrustWeave.build {
             keys {
                 provider("inMemory")
                 algorithm("Ed25519")
@@ -40,16 +41,16 @@ fun main() = runBlocking {
             }
         }
 
-        // Create a DID
-        val issuerDid = trustLayer.createDid {
+        // Create a DID (returns type-safe Did)
+        val issuerDid: Did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
         
-        // Extract key ID for signing
-        val issuerKeyId = "$issuerDid#key-1"
+        // Extract key ID for signing (use .value to get string)
+        val issuerKeyId = "${issuerDid.value}#key-1"
         
-        println("Created DID: $issuerDid")
+        println("Created DID: ${issuerDid.value}")
         println("Key ID: $issuerKeyId")
     } catch (error: TrustWeaveError) {
         when (error) {
@@ -71,14 +72,16 @@ Created DID: did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK
 Key ID: did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#key-1
 ```
 
+**Note:** `createDid()` returns a type-safe `Did` object. Access the string value using `.value` property.
+
 ## Step-by-Step Guide
 
-### Step 1: Configure TrustLayer
+### Step 1: Configure TrustWeave
 
-First, create a `TrustLayer` instance with DID method support:
+First, create a `TrustWeave` instance with DID method support:
 
 ```kotlin
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     keys {
         provider("inMemory")  // For testing; use production KMS in production
         algorithm("Ed25519")
@@ -158,7 +161,7 @@ Handle errors gracefully:
 
 ```kotlin
 val did = try {
-    trustLayer.createDid {
+        trustWeave.createDid {
         method("key")
         algorithm("Ed25519")
     }

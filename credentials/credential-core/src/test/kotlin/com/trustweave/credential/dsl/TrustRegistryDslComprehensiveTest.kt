@@ -19,35 +19,35 @@ class TrustRegistryDslComprehensiveTest {
     
     @Test
     fun `test trust registry configuration in trust layer`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
         }
         
-        val registry = trustLayer.dsl().getTrustRegistry()
+        val registry = trustWeave.getDslContext().getTrustRegistry()
         assertNotNull(registry)
     }
     
     @Test
     fun `test add multiple trust anchors with different credential types`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
         }
         
-        val universityDid = trustLayer.createDid {
+        val universityDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
         
-        val companyDid = trustLayer.createDid {
+        val companyDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
         
-        trustLayer.trust {
+        trustWeave.trust {
             addAnchor(universityDid) {
                 credentialTypes("EducationCredential", "DegreeCredential")
             }
@@ -67,7 +67,7 @@ class TrustRegistryDslComprehensiveTest {
     
     @Test
     fun `test trust path discovery with multiple anchors`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -88,12 +88,12 @@ class TrustRegistryDslComprehensiveTest {
             algorithm(KeyAlgorithms.ED25519)
         }
         
-        trustLayer.trust {
+        trustWeave.trust {
             addAnchor(anchor1) {}
             addAnchor(anchor2) {}
             addAnchor(anchor3) {}
             
-            val registry = trustLayer.dsl().getTrustRegistry() as? com.trustweave.testkit.trust.InMemoryTrustRegistry
+            val registry = trustWeave.getDslContext().getTrustRegistry() as? com.trustweave.testkit.trust.InMemoryTrustRegistry
             registry?.addTrustRelationship(anchor1, anchor2)
             registry?.addTrustRelationship(anchor2, anchor3)
             
@@ -108,7 +108,7 @@ class TrustRegistryDslComprehensiveTest {
     
     @Test
     fun `test get trusted issuers with filtering`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -129,7 +129,7 @@ class TrustRegistryDslComprehensiveTest {
             algorithm(KeyAlgorithms.ED25519)
         }
         
-        trustLayer.trust {
+        trustWeave.trust {
             addAnchor(eduIssuer1) {
                 credentialTypes("EducationCredential")
             }
@@ -158,18 +158,18 @@ class TrustRegistryDslComprehensiveTest {
     
     @Test
     fun `test remove trust anchor via DSL`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
         }
         
-        val issuerDid = trustLayer.createDid {
+        val issuerDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
         
-        trustLayer.trust {
+        trustWeave.trust {
             addAnchor(issuerDid) {
                 credentialTypes("TestCredential")
             }
@@ -188,7 +188,7 @@ class TrustRegistryDslComprehensiveTest {
         val kms = InMemoryKeyManagementService()
         val kmsRef = kms
         
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys {
                 custom(kmsRef)
                 signer { data, keyId -> kmsRef.sign(keyId, data) }
@@ -197,17 +197,17 @@ class TrustRegistryDslComprehensiveTest {
             trust { provider("inMemory") }
         }
         
-        val issuerDid = trustLayer.createDid {
+        val issuerDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
         
-        val holderDid = trustLayer.createDid {
+        val holderDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
         
-        trustLayer.trust {
+        trustWeave.trust {
             addAnchor(issuerDid) {
                 credentialTypes("TestCredential")
             }
@@ -215,7 +215,7 @@ class TrustRegistryDslComprehensiveTest {
         
         // Extract key ID from the DID document created during createDid()
         // This ensures the signing key matches what's in the DID document
-        val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid)?.document
+        val issuerDidDoc = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid)?.document
             ?: throw IllegalStateException("Failed to resolve issuer DID")
         
         val verificationMethod = issuerDidDoc.verificationMethod.firstOrNull()
@@ -226,7 +226,7 @@ class TrustRegistryDslComprehensiveTest {
         
         // Issue credential using the key ID from the DID document
         // The IssuanceDsl will construct verificationMethodId as "$issuerDid#$keyId" which matches the DID document
-        val credential = trustLayer.issue {
+        val credential = trustWeave.issue {
             credential {
                 id("https://example.com/credential-1")
                 type("TestCredential")

@@ -7,10 +7,9 @@ import com.algorand.algosdk.v2.client.common.AlgodClient
 import com.algorand.algosdk.v2.client.model.PendingTransactionResponse
 import com.algorand.algosdk.v2.client.model.TransactionResponse
 import com.trustweave.anchor.*
-import com.trustweave.anchor.exceptions.BlockchainConnectionException
-import com.trustweave.anchor.exceptions.BlockchainTransactionException
+import com.trustweave.anchor.exceptions.BlockchainException
 import com.trustweave.anchor.options.AlgorandOptions
-import com.trustweave.core.exception.NotFoundException
+
 import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.serialization.json.*
 import java.nio.charset.StandardCharsets
@@ -135,11 +134,10 @@ class AlgorandBlockchainAnchorClient(
         val response = try {
             algodClient.RawTransaction().rawtxn(txBytes).execute()
         } catch (e: Exception) {
-            throw BlockchainTransactionException(
-                message = "Failed to submit transaction to Algorand: ${e.message}",
+            throw BlockchainException.TransactionFailed(
+                reason = "Failed to submit transaction to Algorand: ${e.message ?: "Unknown error"}",
                 chainId = chainId,
-                operation = "submitTransaction",
-                cause = e
+                operation = "submitTransaction"
             )
         }
         
@@ -163,8 +161,8 @@ class AlgorandBlockchainAnchorClient(
             }
         } catch (e: Exception) {
             null
-        } ?: throw BlockchainTransactionException(
-            message = "Failed to get transaction ID from Algorand response",
+        } ?: throw BlockchainException.TransactionFailed(
+            reason = "Failed to get transaction ID from Algorand response",
             chainId = chainId,
             operation = "submitTransaction"
         )
@@ -174,7 +172,7 @@ class AlgorandBlockchainAnchorClient(
 
     private suspend fun readTransactionFromBlockchainImpl(txHash: String): AnchorResult {
         val txInfo = algodClient.PendingTransactionInformation(txHash).execute().body()
-            ?: throw NotFoundException("Transaction not found: $txHash")
+            ?: throw TrustWeaveException.NotFound(resource = "Transaction not found: $txHash")
         
         // Use proper SDK API methods instead of reflection
         val transaction: TransactionResponse? = try {
@@ -187,7 +185,7 @@ class AlgorandBlockchainAnchorClient(
         }
         
         if (transaction == null) {
-            throw NotFoundException("Transaction not found: $txHash")
+            throw TrustWeaveException.NotFound(resource = "Transaction not found: $txHash")
         }
         
         // Extract note from transaction
@@ -209,7 +207,9 @@ class AlgorandBlockchainAnchorClient(
         }
         
         if (note == null) {
-            throw NotFoundException("Transaction note not found: $txHash. Transaction may not contain note data.")
+            throw TrustWeaveException.NotFound(
+                resource = "Transaction note not found: $txHash. Transaction may not contain note data."
+            )
         }
         
         val payloadJson = String(note, StandardCharsets.UTF_8)

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.*
 import java.time.Instant
 import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.did.exception.DidException.InvalidDidFormat
 
 /**
  * Branch coverage tests for Did models.
@@ -25,14 +26,14 @@ class DidModelsBranchCoverageTest {
 
     @Test
     fun `test Did parse throws when not starting with did prefix`() {
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<InvalidDidFormat> {
             Did.parse("not-a-did")
         }
     }
 
     @Test
     fun `test Did parse throws when missing method`() {
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<InvalidDidFormat> {
             Did.parse("did:")
         }
     }

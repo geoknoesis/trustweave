@@ -1,6 +1,6 @@
 package com.trustweave.examples.comprehensive
 
-import com.trustweave.credential.dsl.*
+import com.trustweave.trust.dsl.*
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.wallet.CredentialOrganization
 import kotlinx.coroutines.runBlocking
@@ -28,7 +28,7 @@ fun main() = runBlocking {
     // STEP 1: Configure Complete Trust Layer
     // ============================================
     println("Step 1: Configuring complete trust layer...")
-    val trustLayer = trustLayer {
+    val trustWeave = trustWeave {
         keys {
             provider("inMemory")
             algorithm(KeyAlgorithms.ED25519)
@@ -78,7 +78,7 @@ fun main() = runBlocking {
     println("Step 3: Registering schemas...")
     
     // Register JSON Schema
-    trustLayer.registerSchema {
+        trustWeave.registerSchema {
         id("https://example.com/schemas/degree")
         type(SchemaValidatorTypes.JSON_SCHEMA)
         jsonSchema {
@@ -99,7 +99,7 @@ fun main() = runBlocking {
     println("✓ JSON Schema registered")
     
     // Register SHACL Schema
-    trustLayer.registerSchema {
+        trustWeave.registerSchema {
         id("https://example.com/schemas/degree-shacl")
         type(SchemaValidatorTypes.SHACL)
         shacl {
@@ -188,10 +188,10 @@ fun main() = runBlocking {
     // STEP 8: Query Credentials
     // ============================================
     println("Step 8: Querying credentials...")
-    val educationCreds = wallet.queryEnhanced {
-        byType(CredentialTypes.EDUCATION)
+    val educationCreds = wallet.query {
+        type(CredentialTypes.EDUCATION)
         valid()
-        byTag("education")
+        tag("education")
     }
     println("✓ Found ${educationCreds.size} education credential(s)\n")
     

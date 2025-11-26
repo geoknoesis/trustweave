@@ -5,6 +5,8 @@ import com.trustweave.did.DidDocument
 import com.trustweave.kms.KeyHandle
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.trust.dsl.TrustWeaveConfig
+import com.trustweave.trust.dsl.trustWeave
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -17,7 +19,7 @@ import kotlin.test.*
  */
 class IssuanceBuilderBranchCoverageTest {
 
-    private lateinit var trustLayer: TrustLayerConfig
+    private lateinit var trustWeave: TrustWeaveConfig
     private lateinit var kms: InMemoryKeyManagementService
 
     @BeforeEach
@@ -28,7 +30,7 @@ class IssuanceBuilderBranchCoverageTest {
         // Capture KMS reference for closure
         val kmsRef = kms
         
-        trustLayer = trustLayer {
+        trustWeave = trustWeave {
             keys {
                 custom(kmsRef as Any) // Cast to Any for DSL
                 // Provide signer function directly to avoid reflection
@@ -51,7 +53,7 @@ class IssuanceBuilderBranchCoverageTest {
     @Test
     fun `test branch credential required error`() = runBlocking {
         assertFailsWith<IllegalStateException> {
-            trustLayer.issue {
+            trustWeave.issue {
                 // Missing credential
                 by(issuerDid = "did:key:issuer", keyId = "key-1")
             }
@@ -64,7 +66,7 @@ class IssuanceBuilderBranchCoverageTest {
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
         
-        val issuedCredential = trustLayer.issue {
+        val issuedCredential = trustWeave.issue {
             credential {
                 type("PersonCredential")
                 issuer(issuerDidDoc.id)
@@ -94,7 +96,7 @@ class IssuanceBuilderBranchCoverageTest {
             issued(Instant.now())
         }
         
-        val issuedCredential = trustLayer.issue {
+        val issuedCredential = trustWeave.issue {
             credential(preBuiltCredential)
             by(issuerDid = issuerDidDoc.id, keyId = issuerKey.id)
         }
@@ -107,7 +109,7 @@ class IssuanceBuilderBranchCoverageTest {
     @Test
     fun `test branch issuer DID required error`() = runBlocking {
         assertFailsWith<IllegalStateException> {
-            trustLayer.issue {
+            trustWeave.issue {
                 credential {
                     type("PersonCredential")
                     issuer("did:key:issuer")
@@ -127,7 +129,7 @@ class IssuanceBuilderBranchCoverageTest {
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
         
-        val issuedCredential = trustLayer.issue {
+        val issuedCredential = trustWeave.issue {
             credential {
                 type("PersonCredential")
                 issuer(issuerDidDoc.id)
@@ -150,7 +152,7 @@ class IssuanceBuilderBranchCoverageTest {
         val issuerDidDoc: DidDocument = didMethod.createDid()
         
         assertFailsWith<IllegalStateException> {
-            trustLayer.issue {
+            trustWeave.issue {
                 credential {
                     type("PersonCredential")
                     issuer(issuerDidDoc.id)
@@ -172,7 +174,7 @@ class IssuanceBuilderBranchCoverageTest {
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
         
-        val issuedCredential = trustLayer.issue {
+        val issuedCredential = trustWeave.issue {
             credential {
                 type("PersonCredential")
                 issuer(issuerDidDoc.id)
@@ -195,7 +197,7 @@ class IssuanceBuilderBranchCoverageTest {
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
         
-        val issuedCredential = trustLayer.issue {
+        val issuedCredential = trustWeave.issue {
             credential {
                 type("PersonCredential")
                 issuer(issuerDidDoc.id)
@@ -220,7 +222,7 @@ class IssuanceBuilderBranchCoverageTest {
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
         
-        val issuedCredential = trustLayer.issue {
+        val issuedCredential = trustWeave.issue {
             credential {
                 type("PersonCredential")
                 issuer(issuerDidDoc.id)
@@ -243,7 +245,7 @@ class IssuanceBuilderBranchCoverageTest {
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
         
-        val issuedCredential = trustLayer.issue {
+        val issuedCredential = trustWeave.issue {
             credential {
                 type("PersonCredential")
                 issuer(issuerDidDoc.id)
@@ -266,7 +268,7 @@ class IssuanceBuilderBranchCoverageTest {
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
         
-        val issuedCredential = trustLayer.issue {
+        val issuedCredential = trustWeave.issue {
             credential {
                 type("PersonCredential")
                 issuer(issuerDidDoc.id)
@@ -293,7 +295,7 @@ class IssuanceBuilderBranchCoverageTest {
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
         
-        val issuedCredential = trustLayer.issue {
+        val issuedCredential = trustWeave.issue {
             credential {
                 type("PersonCredential")
                 issuer(issuerDidDoc.id)

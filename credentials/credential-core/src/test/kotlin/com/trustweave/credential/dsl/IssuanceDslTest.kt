@@ -5,6 +5,8 @@ import com.trustweave.did.DidDocument
 import com.trustweave.kms.KeyHandle
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.trust.dsl.TrustWeaveConfig
+import com.trustweave.trust.dsl.trustWeave
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -16,7 +18,7 @@ import kotlin.test.*
  */
 class IssuanceDslTest {
 
-    private lateinit var trustLayer: TrustLayerConfig
+    private lateinit var trustWeave: TrustWeaveConfig
     private lateinit var kms: InMemoryKeyManagementService
 
     @BeforeEach
@@ -27,7 +29,7 @@ class IssuanceDslTest {
         // Capture KMS reference for closure
         val kmsRef = kms
         
-        trustLayer = trustLayer {
+        trustWeave = trustWeave {
             keys {
                 custom(kmsRef as Any)
                 // Provide signer function directly to avoid reflection
@@ -55,7 +57,7 @@ class IssuanceDslTest {
         val issuerDidDoc: DidDocument = didMethod.createDid()
         val issuerDidId = issuerDidDoc.id
         
-        val issuedCredential = trustLayer.issue {
+        val issuedCredential = trustWeave.issue {
             credential {
                 type("PersonCredential")
                 issuer(issuerDidId)
@@ -92,7 +94,7 @@ class IssuanceDslTest {
             issued(Instant.now())
         }
         
-        val issuedCredential = trustLayer.issue {
+        val issuedCredential = trustWeave.issue {
             credential(credential)
             by(issuerDid = issuerDidId, keyId = issuerKey.id)
         }
@@ -108,7 +110,7 @@ class IssuanceDslTest {
         val issuerDidDoc: DidDocument = didMethod.createDid()
         val issuerDidId = issuerDidDoc.id
         
-        val issuedCredential = trustLayer.issue {
+        val issuedCredential = trustWeave.issue {
             credential {
                 type("PersonCredential")
                 issuer(issuerDidId)
@@ -132,7 +134,7 @@ class IssuanceDslTest {
         val issuerDidDoc: DidDocument = didMethod.createDid()
         val issuerDidId = issuerDidDoc.id
         
-        val issuedCredential = trustLayer.issue {
+        val issuedCredential = trustWeave.issue {
             credential {
                 type("PersonCredential")
                 issuer(issuerDidId)
@@ -159,7 +161,7 @@ class IssuanceDslTest {
         val issuerDidId = issuerDidDoc.id
         
         assertFailsWith<IllegalStateException> {
-            trustLayer.issue {
+            trustWeave.issue {
                 // Missing credential
                 by(issuerDid = issuerDidId, keyId = issuerKey.id)
             }
@@ -169,7 +171,7 @@ class IssuanceDslTest {
     @Test
     fun `test issuance requires issuer DID and key ID`() = runBlocking {
         assertFailsWith<IllegalStateException> {
-            trustLayer.issue {
+            trustWeave.issue {
                 credential {
                     type("PersonCredential")
                     issuer("did:key:issuer")

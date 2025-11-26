@@ -4,6 +4,8 @@ import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.revocation.InMemoryStatusListManager
 import com.trustweave.credential.revocation.StatusPurpose
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.trust.dsl.TrustWeaveConfig
+import com.trustweave.trust.dsl.trustWeave
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -16,7 +18,7 @@ import kotlin.test.*
  */
 class RevocationDslTest {
     
-    private lateinit var trustLayer: TrustLayerConfig
+    private lateinit var trustWeave: TrustWeaveConfig
     private lateinit var statusListManager: InMemoryStatusListManager
     
     @BeforeEach
@@ -24,7 +26,7 @@ class RevocationDslTest {
         val kms = InMemoryKeyManagementService()
         statusListManager = InMemoryStatusListManager()
         
-        trustLayer = trustLayer {
+        trustWeave = trustWeave {
             keys {
                 custom(kms)
             }
@@ -39,14 +41,14 @@ class RevocationDslTest {
         }
         
         // Manually set status list manager in context for testing
-        // In real usage, this would be configured via TrustLayerConfig
+        // In real usage, this would be configured via TrustWeaveConfig
     }
     
     @Test
     fun `test createStatusList`() = runBlocking {
         val issuerDid = "did:key:issuer"
         
-        val statusList = trustLayer.revocation {
+        val statusList = trustWeave.revocation {
             forIssuer(issuerDid)
             purpose(StatusPurpose.REVOCATION)
         }.createStatusList()
@@ -59,7 +61,7 @@ class RevocationDslTest {
     @Test
     fun `test createStatusList without issuer throws exception`() = runBlocking {
         assertFailsWith<IllegalStateException> {
-            trustLayer.revocation {
+            trustWeave.revocation {
                 purpose(StatusPurpose.REVOCATION)
             }.createStatusList()
         }
@@ -70,12 +72,12 @@ class RevocationDslTest {
         val issuerDid = "did:key:issuer"
         val credentialId = "cred-123"
         
-        val statusList = trustLayer.revocation {
+        val statusList = trustWeave.revocation {
             forIssuer(issuerDid)
             purpose(StatusPurpose.REVOCATION)
         }.createStatusList()
         
-        val revoked = trustLayer.revoke {
+        val revoked = trustWeave.revoke {
             credential(credentialId)
             statusList(statusList.id)
         }
@@ -86,7 +88,7 @@ class RevocationDslTest {
     @Test
     fun `test revoke credential without credentialId throws exception`() = runBlocking {
         assertFailsWith<IllegalStateException> {
-            trustLayer.revoke {
+            trustWeave.revoke {
                 statusList("list-id")
             }
         }
@@ -97,12 +99,12 @@ class RevocationDslTest {
         val issuerDid = "did:key:issuer"
         val credentialId = "cred-123"
         
-        val statusList = trustLayer.revocation {
+        val statusList = trustWeave.revocation {
             forIssuer(issuerDid)
             purpose(StatusPurpose.REVOCATION)
         }.createStatusList()
         
-        trustLayer.revoke {
+        trustWeave.revoke {
             credential(credentialId)
             statusList(statusList.id)
         }
@@ -134,7 +136,7 @@ class RevocationDslTest {
         val issuerDid = "did:key:issuer"
         val credentialId = "cred-123"
         
-        val statusList = trustLayer.revocation {
+        val statusList = trustWeave.revocation {
             forIssuer(issuerDid)
             purpose(StatusPurpose.SUSPENSION)
         }.createStatusList()
@@ -168,7 +170,7 @@ class RevocationDslTest {
     fun `test createStatusList with custom size`() = runBlocking {
         val issuerDid = "did:key:issuer"
         
-        val statusList = trustLayer.revocation {
+        val statusList = trustWeave.revocation {
             forIssuer(issuerDid)
             purpose(StatusPurpose.REVOCATION)
             size(65536)
@@ -181,7 +183,7 @@ class RevocationDslTest {
     @Test
     fun `test revoke credential without statusListId throws exception`() = runBlocking {
         assertFailsWith<IllegalStateException> {
-            trustLayer.revoke {
+            trustWeave.revoke {
                 credential("cred-123")
             }
         }
@@ -190,7 +192,7 @@ class RevocationDslTest {
     @Test
     fun `test getStatusList without statusListId throws exception`() = runBlocking {
         assertFailsWith<IllegalStateException> {
-            trustLayer.revocation { }.getStatusList()
+            trustWeave.revocation { }.getStatusList()
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.trustweave.credential.crypto.secret
 
-import org.didcommx.didcomm.secret.Secret
+// Note: Secret is from didcommx plugin, which may not be available in core module
+// import org.didcommx.didcomm.secret.Secret
 
 /**
  * Local key store interface for storing cryptographic secrets.
@@ -23,7 +24,7 @@ interface LocalKeyStore {
      * @param keyId Key identifier
      * @return Secret, or null if not found
      */
-    suspend fun get(keyId: String): Secret?
+    suspend fun get(keyId: String): Any? // Secret from didcommx plugin
     
     /**
      * Stores a secret.
@@ -31,7 +32,7 @@ interface LocalKeyStore {
      * @param keyId Key identifier
      * @param secret Secret to store
      */
-    suspend fun store(keyId: String, secret: Secret)
+    suspend fun store(keyId: String, secret: Any) // Secret from didcommx plugin
     
     /**
      * Deletes a secret.

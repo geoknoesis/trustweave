@@ -573,7 +573,7 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in How-To Guides category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
-      </button><a href="/trustweave/how-to/README/" class="nav-list-link">How-To Guides</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/how-to/create-dids/" class="nav-list-link">Create and Manage DIDs</a></li><li class="nav-list-item"><a href="/trustweave/how-to/issue-credentials/" class="nav-list-link">Issue Credentials</a></li><li class="nav-list-item"><a href="/trustweave/how-to/verify-credentials/" class="nav-list-link">Verify Credentials</a></li><li class="nav-list-item"><a href="/trustweave/how-to/manage-wallets/" class="nav-list-link">Manage Wallets</a></li><li class="nav-list-item"><a href="/trustweave/how-to/blockchain-anchoring/" class="nav-list-link">Anchor to Blockchain</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+      </button><a href="/trustweave/how-to/README/" class="nav-list-link">How-To Guides</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/how-to/use-trustweave-facade/" class="nav-list-link">Use TrustWeave Facade for Quick Setup</a></li><li class="nav-list-item"><a href="/trustweave/how-to/configure-trustlayer/" class="nav-list-link">Configure TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/how-to/create-dids/" class="nav-list-link">Create and Manage DIDs</a></li><li class="nav-list-item"><a href="/trustweave/how-to/issue-credentials/" class="nav-list-link">Issue Credentials</a></li><li class="nav-list-item"><a href="/trustweave/how-to/verify-credentials/" class="nav-list-link">Verify Credentials</a></li><li class="nav-list-item"><a href="/trustweave/how-to/manage-wallets/" class="nav-list-link">Manage Wallets</a></li><li class="nav-list-item"><a href="/trustweave/how-to/blockchain-anchoring/" class="nav-list-link">Anchor to Blockchain</a></li><li class="nav-list-item"><a href="/trustweave/how-to/multi-chain-anchoring/" class="nav-list-link">Multi-Chain Anchoring Patterns</a></li><li class="nav-list-item"><a href="/trustweave/how-to/exchange-credentials/" class="nav-list-link">Exchange Credentials with Multiple Protocols</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
@@ -1230,7 +1230,7 @@
 <span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
 
 <span class="k">try</span> <span class="p">{</span>
-    <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">}</span>
+    <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">}</span>
 <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">TrustWeaveException</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">when</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">is</span> <span class="nc">DidException</span><span class="p">.</span><span class="nc">DidMethodNotRegistered</span> <span class="p">-&gt;</span> <span class="p">{</span>
@@ -1283,7 +1283,7 @@
 <span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
 
 <span class="k">try</span> <span class="p">{</span>
-    <span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
+    <span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
 <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">TrustWeaveException</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">when</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">is</span> <span class="nc">CredentialException</span><span class="p">.</span><span class="nc">CredentialInvalid</span> <span class="p">-&gt;</span> <span class="p">{</span>
@@ -1374,7 +1374,6 @@
 62
 63
 64
-65
 </pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.anchor.exceptions.BlockchainException</span>
 <span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.Serializable</span>
@@ -1382,44 +1381,43 @@
 <span class="nd">@Serializable</span>
 <span class="kd">data class</span> <span class="nc">MyData</span><span class="p">(</span><span class="kd">val</span> <span class="py">id</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span> <span class="kd">val</span> <span class="py">value</span><span class="p">:</span> <span class="nc">String</span><span class="p">)</span>
 
-<span class="c1">// Example using TrustWeave facade (if available)</span>
-<span class="c1">// val result = trustweave.blockchains.anchor(</span>
-<span class="c1">//     data = MyData("123", "test"),</span>
-<span class="c1">//     serializer = MyData.serializer(),</span>
-<span class="c1">//     chainId = "algorand:testnet"</span>
-<span class="c1">// )</span>
-<span class="c1">// result.fold(</span>
-<span class="c1">//     onSuccess = { anchor -&gt; println("Anchored: ${anchor.ref.txHash}") },</span>
-<span class="c1">//     onFailure = { error -&gt;</span>
-<span class="c1">//         when (error) {</span>
-<span class="c1">//             is BlockchainException.ChainNotRegistered -&gt; {</span>
-<span class="c1">//                 println("Chain not registered: ${error.chainId}")</span>
-<span class="c1">//                 println("Available: ${error.availableChains}")</span>
-<span class="c1">//             }</span>
-<span class="c1">//             is BlockchainException.TransactionFailed -&gt; {</span>
-<span class="c1">//                 println("Transaction failed: ${error.reason}")</span>
-<span class="c1">//                 if (error.txHash != null) {</span>
-<span class="c1">//                     println("Transaction hash: ${error.txHash}")</span>
-<span class="c1">//                 }</span>
-<span class="c1">//             }</span>
-<span class="c1">//             is BlockchainException.ConnectionFailed -&gt; {</span>
-<span class="c1">//                 println("Connection failed: ${error.reason}")</span>
-<span class="c1">//             }</span>
-<span class="c1">//             else -&gt; {</span>
-<span class="c1">//                 println("Error: ${error.message}")</span>
-<span class="c1">//             }</span>
-<span class="c1">//         }</span>
-<span class="c1">//     }</span>
-<span class="c1">// )</span>
+<span class="c1">// Example: Using Result-based API (TrustWeave facade)</span>
+<span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">trustweave</span><span class="p">.</span><span class="n">blockchains</span><span class="p">.</span><span class="nf">anchor</span><span class="p">(</span>
+    <span class="n">data</span> <span class="p">=</span> <span class="nc">MyData</span><span class="p">(</span><span class="s">"123"</span><span class="p">,</span> <span class="s">"test"</span><span class="p">),</span>
+    <span class="n">serializer</span> <span class="p">=</span> <span class="nc">MyData</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
+    <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span>
+<span class="p">)</span>
+<span class="n">result</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
+    <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">anchor</span> <span class="p">-&gt;</span> 
+        <span class="nf">println</span><span class="p">(</span><span class="s">"Anchored: ${anchor.ref.txHash}"</span><span class="p">)</span>
+    <span class="p">},</span>
+    <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
+        <span class="k">when</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">is</span> <span class="nc">BlockchainException</span><span class="p">.</span><span class="nc">ChainNotRegistered</span> <span class="p">-&gt;</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Chain not registered: ${error.chainId}"</span><span class="p">)</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Available: ${error.availableChains}"</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="k">is</span> <span class="nc">BlockchainException</span><span class="p">.</span><span class="nc">TransactionFailed</span> <span class="p">-&gt;</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Transaction failed: ${error.reason}"</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">error</span><span class="p">.</span><span class="n">txHash</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nf">println</span><span class="p">(</span><span class="s">"Transaction hash: ${error.txHash}"</span><span class="p">)</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+            <span class="k">is</span> <span class="nc">BlockchainException</span><span class="p">.</span><span class="nc">ConnectionFailed</span> <span class="p">-&gt;</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Connection failed: ${error.reason}"</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="k">else</span> <span class="p">-&gt;</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Error: ${error.message}"</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span>
 
-<span class="c1">// Example using exception-based API</span>
+<span class="c1">// Example: Using exception-based API (if available)</span>
 <span class="k">try</span> <span class="p">{</span>
-    <span class="c1">// Note: Actual anchoring API may vary - check blockchain anchoring documentation</span>
-    <span class="c1">// This example shows error handling pattern</span>
-    <span class="k">throw</span> <span class="nc">BlockchainException</span><span class="p">.</span><span class="nc">ChainNotRegistered</span><span class="p">(</span>
-        <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span><span class="p">,</span>
-        <span class="n">availableChains</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"polygon:testnet"</span><span class="p">)</span>
-    <span class="p">)</span>
+    <span class="c1">// Note: Check actual API documentation for exact method signature</span>
+    <span class="c1">// This shows the error handling pattern</span>
+    <span class="kd">val</span> <span class="py">anchorResult</span> <span class="p">=</span> <span class="n">someBlockchainService</span><span class="p">.</span><span class="nf">anchor</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">chainId</span><span class="p">)</span>
 <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">TrustWeaveException</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">when</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">is</span> <span class="nc">BlockchainException</span><span class="p">.</span><span class="nc">ChainNotRegistered</span> <span class="p">-&gt;</span> <span class="p">{</span>
@@ -1470,7 +1468,7 @@
 <span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
 
 <span class="k">try</span> <span class="p">{</span>
-    <span class="kd">val</span> <span class="py">wallet</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">wallet</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
+    <span class="kd">val</span> <span class="py">wallet</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">wallet</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
 <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">TrustWeaveException</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">when</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">is</span> <span class="nc">WalletException</span><span class="p">.</span><span class="nc">WalletCreationFailed</span> <span class="p">-&gt;</span> <span class="p">{</span>
@@ -1765,7 +1763,67 @@
         footer.style.width = '100vw';
         footer.style.marginLeft = 'calc(-50vw + 50%)';
         footer.style.marginRight = 'calc(-50vw + 50%)';
+        footer.style.marginTop = 'auto'; // Push to bottom in flexbox layout
+        footer.style.zIndex = '0'; // Below search overlay
       }
+    }
+    
+    // Function to update footer visibility based on search state
+    function updateFooterVisibility() {
+      const footer = document.querySelector('.site-footer');
+      const htmlElement = document.documentElement;
+      
+      if (footer && htmlElement) {
+        const isSearchActive = htmlElement.classList.contains('search-active');
+        if (isSearchActive) {
+          // Hide footer when search is active - use multiple methods to ensure it's hidden
+          footer.style.display = 'none';
+          footer.style.visibility = 'hidden';
+          footer.style.opacity = '0';
+          footer.style.zIndex = '-999';
+          footer.style.pointerEvents = 'none';
+        } else {
+          // Show footer when search is not active
+          footer.style.display = 'block';
+          footer.style.visibility = 'visible';
+          footer.style.opacity = '1';
+          footer.style.marginTop = 'auto';
+          footer.style.position = 'relative';
+          footer.style.zIndex = '-1';
+          footer.style.pointerEvents = 'auto';
+        }
+      }
+    }
+    
+    // Monitor search state and hide/show footer appropriately
+    const observer = new MutationObserver(function(mutations) {
+      updateFooterVisibility();
+    });
+    
+    // Also listen for input events on search input as a backup
+    // This ensures footer is hidden immediately when user starts typing
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      // Use requestAnimationFrame for better performance
+      const handleSearchChange = function() {
+        requestAnimationFrame(updateFooterVisibility);
+      };
+      
+      searchInput.addEventListener('input', handleSearchChange);
+      searchInput.addEventListener('focus', handleSearchChange);
+      searchInput.addEventListener('keydown', handleSearchChange);
+    }
+    
+    // Observe documentElement (html) for class changes (like search-active)
+    // The search script adds 'search-active' to documentElement, not body
+    if (document.documentElement) {
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+      
+      // Initial check
+      updateFooterVisibility();
     }
   });
 </script>

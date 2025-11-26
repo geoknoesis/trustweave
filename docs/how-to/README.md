@@ -34,11 +34,15 @@ How-To Guides are practical, step-by-step instructions for completing specific t
 
 These guides cover the essential operations you'll use in most TrustWeave applications:
 
+- **[Use TrustWeave Facade](use-trustweave-facade.md)** - Quick setup with sensible defaults (start here!)
+- **[Configure TrustWeave](configure-trustlayer.md)** - Declarative DSL configuration
 - **[Create and Manage DIDs](create-dids.md)** - Create, resolve, update, and deactivate DIDs
 - **[Issue Credentials](issue-credentials.md)** - Issue verifiable credentials with proofs
 - **[Verify Credentials](verify-credentials.md)** - Verify credentials and check validity
 - **[Manage Wallets](manage-wallets.md)** - Store, organize, and present credentials
 - **[Anchor to Blockchain](blockchain-anchoring.md)** - Anchor data for tamper evidence
+- **[Multi-Chain Anchoring](multi-chain-anchoring.md)** - Anchor to multiple blockchains for redundancy
+- **[Exchange Credentials](exchange-credentials.md)** - Exchange credentials using multiple protocols (DIDComm, OIDC4VCI, CHAPI)
 - **[Handle Errors](../advanced/error-handling.md)** - Error handling patterns and best practices
 
 ### Advanced Tasks
@@ -63,10 +67,12 @@ Connect TrustWeave to external services:
 
 **New to TrustWeave?** Start with these guides in order:
 
-1. [Create and Manage DIDs](create-dids.md) - Learn how to create identities
-2. [Issue Credentials](issue-credentials.md) - Issue your first credential
-3. [Verify Credentials](verify-credentials.md) - Verify credentials
-4. [Manage Wallets](manage-wallets.md) - Store and organize credentials
+1. **[Use TrustWeave Facade](use-trustweave-facade.md)** - Quick setup and your first credential (3 lines!)
+2. **[Configure TrustWeave](configure-trustlayer.md)** - Learn declarative configuration
+3. **[Create and Manage DIDs](create-dids.md)** - Learn how to create identities
+4. **[Issue Credentials](issue-credentials.md)** - Issue your first credential
+5. **[Verify Credentials](verify-credentials.md)** - Verify credentials
+6. **[Manage Wallets](manage-wallets.md)** - Store and organize credentials
 
 **Already familiar?** Jump to the guide for your specific task.
 
@@ -74,11 +80,16 @@ Connect TrustWeave to external services:
 
 Each how-to guide follows this structure:
 
-1. **Quick Example** - A complete, runnable example you can copy and run
-2. **Step-by-Step Guide** - Detailed instructions with explanations
-3. **Common Patterns** - Real-world usage patterns
-4. **Error Handling** - How to handle errors for this task
-5. **Related Resources** - Links to concepts, API reference, and scenarios
+1. **Prerequisites** - What you need before starting
+2. **Expected Outcome** - What you'll achieve
+3. **Quick Example** - A complete, runnable example you can copy and run
+4. **Step-by-Step Guide** - Detailed instructions with step markers and code at each step
+5. **Common Patterns** - Real-world usage patterns
+6. **Error Handling** - How to handle errors for this task
+7. **Next Steps** - What to learn next
+8. **Related Resources** - Links to concepts, API reference, and scenarios
+
+**Note:** Guides include code snippets at the right steps (not dumped at the end), and workflow diagrams where multiple components interact.
 
 ## Related Documentation
 
@@ -90,6 +101,8 @@ Each how-to guide follows this structure:
 ## Next Steps
 
 **Ready to start?**
+- [Use TrustWeave Facade](use-trustweave-facade.md) - Quickest way to get started (3 lines!)
+- [Configure TrustWeave](configure-trustlayer.md) - Learn declarative configuration
 - [Create and Manage DIDs](create-dids.md) - Your first task
 - [Issue Credentials](issue-credentials.md) - Issue your first credential
 

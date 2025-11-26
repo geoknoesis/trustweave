@@ -15,13 +15,13 @@ keywords:
 
 # Core API Reference
 
-Complete API reference for TrustWeave's TrustLayer API.
+Complete API reference for TrustWeave's TrustWeave API.
 
 > **Version:** 1.0.0-SNAPSHOT  
 > **Kotlin:** 2.2.0+ | **Java:** 21+  
 > See [CHANGELOG.md](../../CHANGELOG.md) for version history and migration guides.
 >
-> **Note:** This API reference documents the `TrustLayer` API, which is the primary interface for trust and identity operations in TrustWeave. The TrustLayer provides a DSL-based API for creating DIDs, issuing credentials, managing wallets, and more.
+> **Note:** This API reference documents the `TrustWeave` API, which is the primary interface for trust and identity operations in TrustWeave. The TrustWeave provides a DSL-based API for creating DIDs, issuing credentials, managing wallets, and more.
 
 ```kotlin
 dependencies {
@@ -31,13 +31,13 @@ dependencies {
 
 ## Overview
 
-The TrustLayer provides a unified, DSL-based API for decentralized identity and trust operations. The API uses suspend functions and DSL builders for type-safe, fluent operations.
+The TrustWeave provides a unified, DSL-based API for decentralized identity and trust operations. The API uses suspend functions and DSL builders for type-safe, fluent operations.
 
 **Key Concepts:**
-- **TrustLayer**: The main entry point for trust and identity operations
+- **TrustWeave**: The main entry point for trust and identity operations
 - **DSL Builders**: Fluent builders for configuring and performing operations (e.g., `issue { }`, `createDid { }`)
-- **Configuration**: Configure KMS, DID methods, anchors, and more using the `TrustLayer.build { }` DSL
-- **Context**: The `TrustLayerContext` provides access to underlying services when needed
+- **Configuration**: Configure KMS, DID methods, anchors, and more using the `TrustWeave.build { }` DSL
+- **Context**: The `TrustWeaveContext` provides access to underlying services when needed
 
 **Main Operations:**
 - **`issue { }`**: Issue verifiable credentials using DSL
@@ -52,35 +52,35 @@ The TrustLayer provides a unified, DSL-based API for decentralized identity and 
 
 | Operation | Method | Returns |
 |-----------|--------|---------|
-| Create TrustLayer | `TrustLayer.build { }` | `TrustLayer` |
-| Create DID | `trustLayer.createDid { }` | `String` (DID) |
-| Update DID | `trustLayer.updateDid { }` | `DidDocument` |
-| Delegate DID | `trustLayer.delegate { }` | `DelegationChainResult` |
-| Rotate Key | `trustLayer.rotateKey { }` | `Any` |
-| Issue Credential | `trustLayer.issue { }` | `VerifiableCredential` |
-| Verify Credential | `trustLayer.verify { }` | `CredentialVerificationResult` |
-| Create Wallet | `trustLayer.wallet { }` | `Wallet` |
-| Trust Operations (DSL) | `trustLayer.trust { }` | `Unit` |
-| Add Trust Anchor | `trustLayer.addTrustAnchor(did) { }` | `Boolean` |
-| Remove Trust Anchor | `trustLayer.removeTrustAnchor(did)` | `Boolean` |
-| Is Trusted Issuer | `trustLayer.isTrustedIssuer(did, type?)` | `Boolean` |
-| Get Trust Path | `trustLayer.getTrustPath(fromDid, toDid)` | `TrustPathResult?` |
-| Get Trusted Issuers | `trustLayer.getTrustedIssuers(type?)` | `List<String>` |
-| Get DSL Context | `trustLayer.getDslContext()` | `TrustLayerContext` |
-| Get Configuration | `trustLayer.configuration` | `TrustLayerConfig` |
-| Create from Config | `TrustLayer.from(config)` | `TrustLayer` |
+| Create TrustWeave | `TrustWeave.build { }` | `TrustWeave` |
+| Create DID | `trustWeave.createDid { }` | `String` (DID) |
+| Update DID | `trustWeave.updateDid { }` | `DidDocument` |
+| Delegate DID | `trustWeave.delegate { }` | `DelegationChainResult` |
+| Rotate Key | `trustWeave.rotateKey { }` | `Any` |
+| Issue Credential | `trustWeave.issue { }` | `VerifiableCredential` |
+| Verify Credential | `trustWeave.verify { }` | `CredentialVerificationResult` |
+| Create Wallet | `trustWeave.wallet { }` | `Wallet` |
+| Trust Operations (DSL) | `trustWeave.trust { }` | `Unit` |
+| Add Trust Anchor | `trustWeave.addTrustAnchor(did) { }` | `Boolean` |
+| Remove Trust Anchor | `trustWeave.removeTrustAnchor(did)` | `Boolean` |
+| Is Trusted Issuer | `trustWeave.isTrustedIssuer(did, type?)` | `Boolean` |
+| Get Trust Path | `trustWeave.getTrustPath(fromDid, toDid)` | `TrustPathResult?` |
+| Get Trusted Issuers | `trustWeave.getTrustedIssuers(type?)` | `List<String>` |
+| Get DSL Context | `trustWeave.getDslContext()` | `TrustWeaveContext` |
+| Get Configuration | `trustWeave.configuration` | `TrustWeaveConfig` |
+| Create from Config | `TrustWeave.from(config)` | `TrustWeave` |
 
-## TrustLayer Class
+## TrustWeave Class
 
-### Creating TrustLayer Instances
+### Creating TrustWeave Instances
 
 ```kotlin
-import com.trustweave.trust.TrustLayer
+import com.trustweave.trust.TrustWeave
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     // Create with defaults (in-memory KMS, did:key method)
-    val trustLayer = TrustLayer.build {
+    val trustWeave = TrustWeave.build {
         keys {
             provider("inMemory")
             algorithm("Ed25519")
@@ -93,7 +93,7 @@ fun main() = runBlocking {
     }
     
     // Create with custom configuration
-    val trustLayer = TrustLayer.build {
+    val trustWeave = TrustWeave.build {
         keys {
             provider("inMemory")
             algorithm("Ed25519")
@@ -120,7 +120,7 @@ fun main() = runBlocking {
 
 ### Main Operations
 
-The TrustLayer provides DSL-based operations:
+The TrustWeave provides DSL-based operations:
 
 - **`issue { }`**: Issue verifiable credentials
 - **`verify { }`**: Verify verifiable credentials
@@ -143,19 +143,19 @@ The TrustLayer provides DSL-based operations:
 val trustLayer = TrustLayer.build { ... }
 
 // Create DID
-val did = trustLayer.createDid {
+val did = trustWeave.createDid {
     method("key")
     algorithm("Ed25519")
 }
 
 // Issue credential
-val credential = trustLayer.issue {
+val credential = trustWeave.issue {
     credential { ... }
     by(issuerDid = did, keyId = "$did#key-1")
 }
 
 // Create wallet
-val wallet = trustLayer.wallet {
+val wallet = trustWeave.wallet {
     holder("did:key:holder")
 }
 ```
@@ -178,7 +178,7 @@ suspend fun create(
 ): DidDocument
 ```
 
-**Access via:** `trustLayer.createDid { }`
+**Access via:** `trustWeave.createDid { }`
 
 **Parameters:**
 
@@ -233,7 +233,7 @@ suspend fun create(
 **Example:**
 ```kotlin
 // Simple usage (uses defaults: did:key, ED25519)
-val did = trustLayer.createDid {
+val did = trustWeave.createDid {
     method("key")
     algorithm("Ed25519")
 }
@@ -246,7 +246,7 @@ val webDid = trustLayer.createDid {
 
 // With error handling
 try {
-    val did = trustLayer.createDid {
+    val did = trustWeave.createDid {
         method("key")
         algorithm("Ed25519")
     }
@@ -500,7 +500,7 @@ The DSL builder provides a fluent API for configuring the credential:
 **Example:**
 ```kotlin
 // Simple usage
-val credential = trustLayer.issue {
+val credential = trustWeave.issue {
     credential {
         type("VerifiableCredential", "PersonCredential")
         issuer("did:key:issuer")
@@ -514,7 +514,7 @@ val credential = trustLayer.issue {
 
 // With error handling
 try {
-    val credential = trustLayer.issue {
+    val credential = trustWeave.issue {
         credential {
             type("VerifiableCredential", "PersonCredential")
             issuer(issuerDid)
@@ -1213,14 +1213,14 @@ The DSL builder provides a fluent API for configuring the wallet:
 **Example:**
 ```kotlin
 // Simple usage (in-memory, for testing)
-val wallet = trustLayer.wallet {
+val wallet = trustWeave.wallet {
     holder("did:key:holder")
 }
 println("Created wallet: ${wallet.walletId}")
 println("Holder: ${wallet.holderDid}")
 
 // With organization and presentation enabled
-val wallet = trustLayer.wallet {
+val wallet = trustWeave.wallet {
     holder("did:key:holder")
     id("my-wallet-id")
     enableOrganization()
@@ -1680,20 +1680,20 @@ All operations can return errors of type `TrustWeaveError`. See [Error Handling]
 
 **Example:**
 ```kotlin
-import com.trustweave.trust.TrustLayer
+import com.trustweave.trust.TrustWeave
 import com.trustweave.core.TrustWeaveError
 
 try {
-    val trustLayer = TrustLayer.build { ... }
-    val did = trustLayer.createDid {
+    val trustWeave = TrustWeave.build { ... }
+    val did = trustWeave.createDid {
         method("key")
         algorithm("Ed25519")
     }
-    val credential = trustLayer.issue {
+    val credential = trustWeave.issue {
         credential { ... }
         by(issuerDid = did, keyId = "$did#key-1")
     }
-    val wallet = trustLayer.wallet {
+    val wallet = trustWeave.wallet {
         holder(did)
     }
 } catch (error: TrustWeaveError) {
@@ -1751,7 +1751,7 @@ result.fold(
 DID methods are registered during `TrustLayer` creation using the DSL:
 
 ```kotlin
-import com.trustweave.trust.TrustLayer
+import com.trustweave.trust.TrustWeave
 
 val trustLayer = TrustLayer.build {
     keys {

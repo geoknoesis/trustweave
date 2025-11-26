@@ -3,6 +3,8 @@ package com.trustweave.credential.dsl
 import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.trust.dsl.TrustWeaveConfig
+import com.trustweave.trust.dsl.trustWeave
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -13,7 +15,7 @@ import kotlin.test.*
  */
 class DidDocumentDslTest {
     
-    private lateinit var trustLayer: TrustLayerConfig
+    private lateinit var trustWeave: TrustWeaveConfig
     private lateinit var kms: InMemoryKeyManagementService
     private lateinit var didMethod: DidKeyMockMethod
     private lateinit var didRegistry: DidMethodRegistry
@@ -25,7 +27,7 @@ class DidDocumentDslTest {
         didRegistry = DidMethodRegistry()
         didRegistry.register(didMethod)
         
-        trustLayer = trustLayer {
+        trustWeave = trustWeave {
             keys {
                 custom(kms as Any)
             }
@@ -39,14 +41,14 @@ class DidDocumentDslTest {
     
     @Test
     fun `test updateDid add key`() = runBlocking {
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
         
         val keyHandle = kms.generateKey("Ed25519")
         
-        val updatedDoc = trustLayer.updateDid {
+        val updatedDoc = trustWeave.updateDid {
             did(did)
             addKey {
                 type("Ed25519VerificationKey2020")
@@ -59,12 +61,12 @@ class DidDocumentDslTest {
     
     @Test
     fun `test updateDid add service`() = runBlocking {
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
         
-        val updatedDoc = trustLayer.updateDid {
+        val updatedDoc = trustWeave.updateDid {
             did(did)
             addService {
                 id("$did#service-1")
@@ -78,12 +80,12 @@ class DidDocumentDslTest {
     
     @Test
     fun `test updateDid remove key`() = runBlocking {
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
         
-        val updatedDoc = trustLayer.updateDid {
+        val updatedDoc = trustWeave.updateDid {
             did(did)
             removeKey("$did#key-1")
         }
@@ -93,13 +95,13 @@ class DidDocumentDslTest {
     
     @Test
     fun `test updateDid remove service`() = runBlocking {
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
         
         // First add a service
-        trustLayer.updateDid {
+        trustWeave.updateDid {
             did(did)
             addService {
                 id("$did#service-1")
@@ -109,7 +111,7 @@ class DidDocumentDslTest {
         }
         
         // Then remove it
-        val updatedDoc = trustLayer.updateDid {
+        val updatedDoc = trustWeave.updateDid {
             did(did)
             removeService("$did#service-1")
         }
@@ -120,7 +122,7 @@ class DidDocumentDslTest {
     @Test
     fun `test updateDid without DID throws exception`() = runBlocking {
         assertFailsWith<IllegalStateException> {
-            trustLayer.updateDid {
+            trustWeave.updateDid {
                 addKey {
                     type("Ed25519VerificationKey2020")
                 }
@@ -130,13 +132,13 @@ class DidDocumentDslTest {
     
     @Test
     fun `test updateDid add service without required fields throws exception`() = runBlocking {
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
         
         assertFailsWith<IllegalStateException> {
-            trustLayer.updateDid {
+            trustWeave.updateDid {
                 did(did)
                 addService {
                     // Missing required fields
@@ -147,12 +149,12 @@ class DidDocumentDslTest {
     
     @Test
     fun `test updateDid add key with multibase`() = runBlocking {
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
         
-        val updatedDoc = trustLayer.updateDid {
+        val updatedDoc = trustWeave.updateDid {
             did(did)
             addKey {
                 type("Ed25519VerificationKey2020")
@@ -165,7 +167,7 @@ class DidDocumentDslTest {
     
     @Test
     fun `test updateDid add multiple keys and services`() = runBlocking {
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
@@ -173,7 +175,7 @@ class DidDocumentDslTest {
         val keyHandle1 = kms.generateKey("Ed25519")
         val keyHandle2 = kms.generateKey("Ed25519")
         
-        val updatedDoc = trustLayer.updateDid {
+        val updatedDoc = trustWeave.updateDid {
             did(did)
             addKey {
                 type("Ed25519VerificationKey2020")
@@ -200,12 +202,12 @@ class DidDocumentDslTest {
     
     @Test
     fun `test updateDid auto-detects method from DID`() = runBlocking {
-        val did = trustLayer.createDid {
+        val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
         
-        val updatedDoc = trustLayer.updateDid {
+        val updatedDoc = trustWeave.updateDid {
             did(did)
             // Method should be auto-detected
             addService {
@@ -219,13 +221,13 @@ class DidDocumentDslTest {
     }
     
     @Test
-    fun `test updateDid via TrustLayerContext`() = runBlocking {
-        val did = trustLayer.createDid {
+    fun `test updateDid via TrustWeaveContext`() = runBlocking {
+        val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
         
-        val context = trustLayer.dsl()
+        val context = trustWeave.getDslContext()
         val updatedDoc = context.updateDid {
             did(did)
             addService {

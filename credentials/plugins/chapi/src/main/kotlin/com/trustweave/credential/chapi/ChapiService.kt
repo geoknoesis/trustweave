@@ -63,10 +63,13 @@ class ChapiService {
         // Format: https://w3c.github.io/webappsec-credential-management/#credential
         val chapiMessage = buildJsonObject {
             put("@context", JsonArray(listOf(
-                "https://www.w3.org/2018/credentials/v1",
-                "https://w3id.org/credential-handler/v1"
+                JsonPrimitive("https://www.w3.org/2018/credentials/v1"),
+                JsonPrimitive("https://w3id.org/credential-handler/v1")
             )))
-            put("type", JsonArray(listOf("VerifiableCredential", "CredentialOffer")))
+            put("type", JsonArray(listOf(
+                JsonPrimitive("VerifiableCredential"),
+                JsonPrimitive("CredentialOffer")
+            )))
             put("credentialPreview", buildJsonObject {
                 put("@type", "https://didcomm.org/issue-credential/3.0/credential-preview")
                 put("attributes", JsonArray(
@@ -119,10 +122,10 @@ class ChapiService {
         
         val chapiMessage = buildJsonObject {
             put("@context", JsonArray(listOf(
-                "https://www.w3.org/2018/credentials/v1",
-                "https://w3id.org/credential-handler/v1"
+                JsonPrimitive("https://www.w3.org/2018/credentials/v1"),
+                JsonPrimitive("https://w3id.org/credential-handler/v1")
             )))
-            put("type", JsonArray(listOf("VerifiableCredential")))
+            put("type", JsonArray(listOf(JsonPrimitive("VerifiableCredential"))))
             put("credential", credentialJson)
         }
         
@@ -154,10 +157,10 @@ class ChapiService {
         // Create CHAPI-compatible proof request
         val chapiMessage = buildJsonObject {
             put("@context", JsonArray(listOf(
-                "https://www.w3.org/2018/credentials/v1",
-                "https://w3id.org/credential-handler/v1"
+                JsonPrimitive("https://www.w3.org/2018/credentials/v1"),
+                JsonPrimitive("https://w3id.org/credential-handler/v1")
             )))
-            put("type", JsonArray(listOf("VerifiablePresentationRequest")))
+            put("type", JsonArray(listOf(JsonPrimitive("VerifiablePresentationRequest"))))
             put("verifier", verifierDid)
             put("requestedAttributes", JsonObject(
                 requestedAttributes.mapValues { (_, attr) ->
@@ -231,10 +234,10 @@ class ChapiService {
         
         val chapiMessage = buildJsonObject {
             put("@context", JsonArray(listOf(
-                "https://www.w3.org/2018/credentials/v1",
-                "https://w3id.org/credential-handler/v1"
+                JsonPrimitive("https://www.w3.org/2018/credentials/v1"),
+                JsonPrimitive("https://w3id.org/credential-handler/v1")
             )))
-            put("type", JsonArray(listOf("VerifiablePresentation")))
+            put("type", JsonArray(listOf(JsonPrimitive("VerifiablePresentation"))))
             put("presentation", presentationJson)
             put("verifier", verifierDid)
         }

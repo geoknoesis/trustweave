@@ -18,7 +18,7 @@ class TrustDslTest {
     
     @Test
     fun `test trust layer configuration with trust registry`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys {
                 provider("inMemory")
                 algorithm(KeyAlgorithms.ED25519)
@@ -35,19 +35,19 @@ class TrustDslTest {
             }
         }
         
-        val registry = trustLayer.dsl().getTrustRegistry()
+        val registry = trustWeave.getDslContext().getTrustRegistry()
         assertNotNull(registry)
     }
     
     @Test
     fun `test add anchor via DSL`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
         }
         
-        trustLayer.trust {
+        trustWeave.trust {
             val added = addAnchor("did:key:university") {
                 credentialTypes("EducationCredential")
                 description("Trusted university")
@@ -59,13 +59,13 @@ class TrustDslTest {
     
     @Test
     fun `test check trust via DSL`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
         }
         
-        trustLayer.trust {
+        trustWeave.trust {
             addAnchor("did:key:university") {
                 credentialTypes("EducationCredential")
             }
@@ -80,7 +80,7 @@ class TrustDslTest {
     
     @Test
     fun `test get trust path via DSL`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -89,12 +89,12 @@ class TrustDslTest {
         val anchor1 = "did:key:anchor1"
         val anchor2 = "did:key:anchor2"
         
-        trustLayer.trust {
+        trustWeave.trust {
             addAnchor(anchor1) {}
             addAnchor(anchor2) {}
             
             // Get registry to add relationship
-            val registry = trustLayer.dsl().getTrustRegistry() as? InMemoryTrustRegistry
+            val registry = trustWeave.getDslContext().getTrustRegistry() as? InMemoryTrustRegistry
             registry?.addTrustRelationship(anchor1, anchor2)
             
             val path = getTrustPath(anchor1, anchor2)
@@ -105,13 +105,13 @@ class TrustDslTest {
     
     @Test
     fun `test get trusted issuers via DSL`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
         }
         
-        trustLayer.trust {
+        trustWeave.trust {
             addAnchor("did:key:university") {
                 credentialTypes("EducationCredential")
             }
@@ -127,13 +127,13 @@ class TrustDslTest {
     
     @Test
     fun `test remove anchor via DSL`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeave = trustWeave {
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
         }
         
-        trustLayer.trust {
+        trustWeave.trust {
             addAnchor("did:key:university") {}
             assertTrue(isTrusted("did:key:university", null))
             

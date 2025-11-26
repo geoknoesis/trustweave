@@ -8,6 +8,9 @@ import com.trustweave.did.DidCreationOptions
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.did.registry.DefaultDidMethodRegistry
+import com.trustweave.did.exception.DidException
+import com.trustweave.did.exception.DidException.InvalidDidFormat
+import com.trustweave.did.exception.DidException.DidMethodNotRegistered
 
 class DidTest {
 
@@ -33,7 +36,7 @@ class DidTest {
 
     @Test
     fun `Did parse should throw for invalid format`() {
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<InvalidDidFormat> {
             Did.parse("not-a-did")
         }
     }
@@ -85,7 +88,7 @@ class DidRegistryTest {
 
     @Test
     fun `test resolve fails when method not registered`() = runBlocking {
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<DidMethodNotRegistered> {
             registry.resolve("did:nonexistent:123")
         }
     }
@@ -108,7 +111,7 @@ class DidRegistryTest {
         val method = createMockDidMethod("test")
         registry.register(method)
         
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<InvalidDidFormat> {
             registry.resolve("invalid-did")
         }
     }

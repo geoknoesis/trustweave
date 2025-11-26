@@ -1,10 +1,11 @@
 package com.trustweave.anchor.base
 
 import com.trustweave.anchor.*
-import com.trustweave.anchor.exceptions.BlockchainTransactionException
-import com.trustweave.core.exception.NotFoundException
+import com.trustweave.anchor.exceptions.BlockchainException
 import com.trustweave.core.exception.TrustWeaveException
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.parseToJsonElement
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.http.HttpService
 import org.web3j.tx.RawTransactionManager
@@ -144,14 +145,13 @@ class BaseBlockchainAnchorClient(
         val ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send()
         if (ethSendTransaction.hasError()) {
             val error = ethSendTransaction.error
-            throw BlockchainTransactionException(
-                message = "Transaction failed: ${error?.message ?: "Unknown error"}",
+            throw BlockchainException.TransactionFailed(
                 chainId = chainId,
                 txHash = null,
                 operation = "submitTransaction",
                 payloadSize = data.size.toLong(),
                 gasUsed = transaction.gasLimit?.toLong(),
-                cause = null
+                reason = "Transaction failed: ${error?.message ?: "Unknown error"}"
             )
         }
 
@@ -161,21 +161,27 @@ class BaseBlockchainAnchorClient(
     private suspend fun readTransactionFromBlockchainImpl(txHash: String): AnchorResult {
         val ethGetTransactionReceipt = web3j.ethGetTransactionReceipt(txHash).send()
         if (!ethGetTransactionReceipt.transactionReceipt.isPresent) {
-            throw NotFoundException("Transaction receipt not found: $txHash")
+            throw TrustWeaveException.NotFound(
+                resource = "Transaction receipt $txHash"
+            )
         }
 
         val receipt = ethGetTransactionReceipt.transactionReceipt.get()
         val tx = web3j.ethGetTransactionByHash(txHash).send().transaction.orElse(null)
-            ?: throw NotFoundException("Transaction not found: $txHash")
+            ?: throw TrustWeaveException.NotFound(
+                resource = "Transaction $txHash"
+            )
 
         val input = tx.input
         if (input == null || input.isEmpty() || input == "0x") {
-            throw NotFoundException("Transaction data not found: $txHash")
+            throw TrustWeaveException.NotFound(
+                resource = "Transaction data for $txHash"
+            )
         }
 
         val dataBytes = org.web3j.utils.Numeric.hexStringToByteArray(input)
         val payloadJson = String(dataBytes, StandardCharsets.UTF_8)
-        val payload = Json.parseToJsonElement(payloadJson)
+        val payload: JsonElement = Json.parseToJsonElement(payloadJson)
         
         val blockNumber = try {
             receipt.blockNumber?.toLong()

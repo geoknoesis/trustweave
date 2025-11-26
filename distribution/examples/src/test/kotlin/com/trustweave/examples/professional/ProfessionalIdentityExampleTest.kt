@@ -239,7 +239,7 @@ class ProfessionalIdentityExampleTest {
 
         // Query by type
         val certifications = wallet.query {
-            byType("CertificationCredential")
+            type("CertificationCredential")
         }
         assertEquals(1, certifications.size)
         assertTrue(certifications.first().type.contains("CertificationCredential"))
@@ -389,7 +389,7 @@ class ProfessionalIdentityExampleTest {
 
         // Query active certifications
         val activeCerts = wallet.query {
-            byType("CertificationCredential")
+            type("CertificationCredential")
             notExpired()
         }
         assertEquals(1, activeCerts.size)

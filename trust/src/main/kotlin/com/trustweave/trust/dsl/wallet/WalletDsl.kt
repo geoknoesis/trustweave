@@ -107,7 +107,7 @@ class WalletBuilder(
         val walletFactory = dslProvider.getWalletFactory()
             ?: throw IllegalStateException(
                 "WalletFactory not available. " +
-                "Ensure TrustWeave-testkit is on classpath or provide a wallet factory via TrustLayerConfig."
+                "Ensure TrustWeave-testkit is on classpath or provide a wallet factory via TrustWeaveConfig."
             )
         
         return@withContext walletFactory.create(

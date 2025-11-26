@@ -18,7 +18,67 @@
         footer.style.width = '100vw';
         footer.style.marginLeft = 'calc(-50vw + 50%)';
         footer.style.marginRight = 'calc(-50vw + 50%)';
+        footer.style.marginTop = 'auto'; // Push to bottom in flexbox layout
+        footer.style.zIndex = '0'; // Below search overlay
       }
+    }
+    
+    // Function to update footer visibility based on search state
+    function updateFooterVisibility() {
+      const footer = document.querySelector('.site-footer');
+      const htmlElement = document.documentElement;
+      
+      if (footer && htmlElement) {
+        const isSearchActive = htmlElement.classList.contains('search-active');
+        if (isSearchActive) {
+          // Hide footer when search is active - use multiple methods to ensure it's hidden
+          footer.style.display = 'none';
+          footer.style.visibility = 'hidden';
+          footer.style.opacity = '0';
+          footer.style.zIndex = '-999';
+          footer.style.pointerEvents = 'none';
+        } else {
+          // Show footer when search is not active
+          footer.style.display = 'block';
+          footer.style.visibility = 'visible';
+          footer.style.opacity = '1';
+          footer.style.marginTop = 'auto';
+          footer.style.position = 'relative';
+          footer.style.zIndex = '-1';
+          footer.style.pointerEvents = 'auto';
+        }
+      }
+    }
+    
+    // Monitor search state and hide/show footer appropriately
+    const observer = new MutationObserver(function(mutations) {
+      updateFooterVisibility();
+    });
+    
+    // Also listen for input events on search input as a backup
+    // This ensures footer is hidden immediately when user starts typing
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      // Use requestAnimationFrame for better performance
+      const handleSearchChange = function() {
+        requestAnimationFrame(updateFooterVisibility);
+      };
+      
+      searchInput.addEventListener('input', handleSearchChange);
+      searchInput.addEventListener('focus', handleSearchChange);
+      searchInput.addEventListener('keydown', handleSearchChange);
+    }
+    
+    // Observe documentElement (html) for class changes (like search-active)
+    // The search script adds 'search-active' to documentElement, not body
+    if (document.documentElement) {
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+      
+      // Initial check
+      updateFooterVisibility();
     }
   });
 </script>

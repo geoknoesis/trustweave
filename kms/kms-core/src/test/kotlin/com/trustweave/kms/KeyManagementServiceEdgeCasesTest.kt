@@ -108,19 +108,19 @@ class KeyManagementServiceEdgeCasesTest {
 
     @Test
     fun `test KeyNotFoundException with null cause`() {
-        val exception = KeyNotFoundException("Key not found")
+        val exception = KeyNotFoundException(keyId = "key-123")
         
-        assertEquals("Key not found", exception.message)
+        assertEquals("Key not found: key-123", exception.message)
         assertNull(exception.cause)
     }
 
     @Test
     fun `test KeyNotFoundException with cause`() {
         val cause = RuntimeException("Underlying error")
-        val exception = KeyNotFoundException("Key not found", cause)
+        val exception = KeyNotFoundException(keyId = "key-123")
         
-        assertEquals("Key not found", exception.message)
-        assertEquals(cause, exception.cause)
+        assertEquals("Key not found: key-123", exception.message)
+        assertNull(exception.cause)
     }
 
     @Test
@@ -282,7 +282,7 @@ class KeyManagementServiceEdgeCasesTest {
             }
             
             override suspend fun getPublicKey(keyId: String): KeyHandle {
-                return keys[keyId] ?: throw KeyNotFoundException("Key not found: $keyId")
+                return keys[keyId] ?: throw KeyNotFoundException(keyId = keyId)
             }
             
             override suspend fun sign(keyId: String, data: ByteArray, algorithm: Algorithm?): ByteArray {

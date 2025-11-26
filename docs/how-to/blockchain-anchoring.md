@@ -1,6 +1,6 @@
 ---
 title: Anchor to Blockchain
-nav_order: 5
+nav_order: 7
 parent: How-To Guides
 keywords:
   - blockchain
@@ -20,8 +20,8 @@ This guide shows you how to anchor data to blockchains for tamper evidence and t
 Here's a complete example that anchors a credential digest to a blockchain:
 
 ```kotlin
-import com.trustweave.trust.TrustLayer
-import com.trustweave.core.TrustWeaveError
+import com.trustweave.trust.TrustWeave
+import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
@@ -35,8 +35,8 @@ data class CredentialDigest(
 
 fun main() = runBlocking {
     try {
-        // Create TrustLayer with blockchain support
-        val trustLayer = TrustLayer.build {
+        // Create TrustWeave with blockchain support
+        val trustWeave = TrustWeave.build {
             keys {
                 provider("inMemory")
                 algorithm("Ed25519")
@@ -278,7 +278,7 @@ val chains = listOf("algorand:testnet", "polygon:testnet")
 val anchorResults = chains.map { chainId ->
     async {
         try {
-            trustLayer.anchor {
+            trustWeave.anchor {
                 data(digest)
                 chain(chainId)
             }
@@ -352,7 +352,7 @@ Check if an anchor exists before reading:
 ```kotlin
 suspend fun verifyAnchorExists(ref: AnchorRef): Boolean {
     return try {
-        trustLayer.readAnchor<CredentialDigest> {
+        trustWeave.readAnchor<CredentialDigest> {
             this.ref(ref)
         }
         true

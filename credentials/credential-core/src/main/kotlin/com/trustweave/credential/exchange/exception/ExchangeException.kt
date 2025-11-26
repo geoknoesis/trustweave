@@ -30,7 +30,7 @@ import java.util.concurrent.TimeoutException
  * }
  * ```
  */
-sealed class ExchangeException(
+open class ExchangeException(
     override val code: String,
     override val message: String,
     override val context: Map<String, Any?> = emptyMap(),

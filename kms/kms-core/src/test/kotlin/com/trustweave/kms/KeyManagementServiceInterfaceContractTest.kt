@@ -188,7 +188,7 @@ class KeyManagementServiceInterfaceContractTest {
             }
             
             override suspend fun getPublicKey(keyId: String): KeyHandle {
-                return keys[keyId] ?: throw KeyNotFoundException("Key not found: $keyId")
+                return keys[keyId] ?: throw KeyNotFoundException(keyId = keyId)
             }
             
             override suspend fun sign(

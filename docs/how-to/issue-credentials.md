@@ -1,6 +1,6 @@
 ---
 title: Issue Credentials
-nav_order: 2
+nav_order: 4
 parent: How-To Guides
 keywords:
   - issue
@@ -20,16 +20,16 @@ This guide shows you how to issue verifiable credentials with TrustWeave. You'll
 Here's a complete example that issues a credential:
 
 ```kotlin
-import com.trustweave.trust.TrustLayer
-import com.trustweave.core.TrustWeaveError
+import com.trustweave.trust.TrustWeave
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
     try {
-        // Create TrustLayer instance
-        val trustLayer = TrustLayer.build {
+        // Create TrustWeave instance
+        val trustWeave = TrustWeave.build {
             keys {
                 provider("inMemory")
                 algorithm("Ed25519")
@@ -253,13 +253,17 @@ The proof type is automatically selected based on the key algorithm. For Ed25519
 Issue credentials for multiple subjects:
 
 ```kotlin
+import com.trustweave.trust.types.IssuerIdentity
+
 val subjects = listOf(
     mapOf("id" to "did:key:alice", "name" to "Alice", "role" to "Engineer"),
     mapOf("id" to "did:key:bob", "name" to "Bob", "role" to "Manager")
 )
 
+val issuerIdentity = IssuerIdentity.from(issuerDid, issuerKeyId)
+
 val credentials = subjects.map { subjectData ->
-    trustLayer.issue {
+    trustWeave.issue {
         credential {
             type("VerifiableCredential", "EmployeeCredential")
             issuer(issuerDid)
@@ -270,7 +274,7 @@ val credentials = subjects.map { subjectData ->
                 }
             }
         }
-        by(issuerDid = issuerDid, keyId = issuerKeyId)
+        signedBy(issuerIdentity)
     }
 }
 ```
@@ -280,8 +284,12 @@ val credentials = subjects.map { subjectData ->
 Handle errors gracefully:
 
 ```kotlin
+import com.trustweave.trust.types.IssuerIdentity
+
+val issuerIdentity = IssuerIdentity.from(issuerDid, issuerKeyId)
+
 val credential = try {
-    trustLayer.issue {
+    trustWeave.issue {
         credential {
             type("VerifiableCredential", "PersonCredential")
             issuer(issuerDid)
@@ -290,7 +298,7 @@ val credential = try {
                 claim("name", "Alice")
             }
         }
-        by(issuerDid = issuerDid, keyId = issuerKeyId)
+        signedBy(issuerIdentity)
     }
 } catch (error: TrustWeaveError) {
     when (error) {

@@ -6,6 +6,7 @@ plugins {
 group = "com.trustweave"
 dependencies {
     implementation(kotlin("reflect"))
+    implementation(project(":common"))
     implementation(project(":credentials:credential-core"))
     implementation(project(":anchors:anchor-core"))
     implementation(project(":did:did-core"))

@@ -19,7 +19,7 @@ Understanding how TrustWeave works at a conceptual level will help you use it ef
 ## Overview
 
 TrustWeave is built on a **layered architecture** with clear separation between:
-- **Facade Layer** (`TrustLayer`) - High-level, developer-friendly API
+- **Facade Layer** (`TrustWeave`) - High-level, developer-friendly API
 - **Service Layer** - Domain-specific services (DID, Credential, Wallet, etc.)
 - **Plugin Layer** - Pluggable implementations (DID methods, KMS, blockchains)
 
@@ -29,12 +29,12 @@ TrustWeave is built on a **layered architecture** with clear separation between:
 └──────────────┬──────────────────────────┘
                │
 ┌──────────────▼──────────────────────────┐
-│         TrustLayer (Facade)             │
+│         TrustWeave (Facade)             │
 │  - createDid(), issue(), verify(), etc. │
 └──────────────┬──────────────────────────┘
                │
 ┌──────────────▼──────────────────────────┐
-│      TrustLayerContext (Orchestrator)   │
+│      TrustWeaveContext (Orchestrator)   │
 │  - Coordinates services                 │
 │  - Manages DSL builders                 │
 └──────────────┬──────────────────────────┘
@@ -58,9 +58,9 @@ TrustWeave is built on a **layered architecture** with clear separation between:
 
 ## Core Components
 
-### 1. TrustLayer (Main Entry Point)
+### 1. TrustWeave (Main Entry Point)
 
-`TrustLayer` is the **primary facade** for all operations. It provides:
+`TrustWeave` is the **primary facade** for all operations. It provides:
 - Type-safe DSL builders for configuration and operations
 - Unified error handling (exceptions)
 - Simplified API that hides complexity
@@ -72,28 +72,28 @@ TrustWeave is built on a **layered architecture** with clear separation between:
 
 **Example:**
 ```kotlin
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     keys { provider("inMemory"); algorithm("Ed25519") }
     did { method("key") { algorithm("Ed25519") } }
 }
 
 // All operations throw exceptions
 try {
-    val did = trustLayer.createDid { method("key") }
-    val credential = trustLayer.issue { ... }
-} catch (error: TrustWeaveError) {
+    val did = trustWeave.createDid { method("key") }
+    val credential = trustWeave.issue { ... }
+} catch (error: TrustWeaveException) {
     // Handle error
 }
 ```
 
-### 2. TrustLayerContext (Internal Orchestrator)
+### 2. TrustWeaveContext (Internal Orchestrator)
 
-`TrustLayerContext` coordinates between services. You rarely interact with it directly, but it:
+`TrustWeaveContext` coordinates between services. You rarely interact with it directly, but it:
 - Manages DSL builders
 - Routes operations to appropriate services
 - Handles service lifecycle
 
-**Access:** Use `trustLayer.getDslContext()` only when you need advanced operations.
+**Access:** Use `trustWeave.getDslContext()` only when you need advanced operations.
 
 ### 3. Services (Domain Logic)
 
@@ -103,7 +103,7 @@ Services implement domain-specific logic:
 - **Wallet Service**: Manages credential storage
 - **Trust Registry**: Manages trust anchors
 
-Services are **configured** during `TrustLayer.build { }` and **used** via `TrustLayer` methods.
+Services are **configured** during `TrustWeave.build { }` and **used** via `TrustWeave` methods.
 
 ### 4. Plugins (Implementations)
 
@@ -119,11 +119,11 @@ Plugins are **registered** during configuration and **selected** via provider na
 ### Credential Issuance Flow
 
 ```
-1. Application calls: trustLayer.issue { ... }
+1. Application calls: trustWeave.issue { ... }
    │
-2. TrustLayer delegates to TrustLayerContext
+2. TrustWeave delegates to TrustWeaveContext
    │
-3. TrustLayerContext orchestrates:
+3. TrustWeaveContext orchestrates:
    │
    ├─► DID Service: Resolve issuer DID
    │   └─► DID Method Plugin: Fetch DID document
@@ -140,9 +140,9 @@ Plugins are **registered** during configuration and **selected** via provider na
 ### Credential Verification Flow
 
 ```
-1. Application calls: trustLayer.verify { credential(...) }
+1. Application calls: trustWeave.verify { credential(...) }
    │
-2. TrustLayerContext orchestrates:
+2. TrustWeaveContext orchestrates:
    │
    ├─► Credential Service: Validate structure
    │
@@ -165,7 +165,7 @@ Plugins are **registered** during configuration and **selected** via provider na
 TrustWeave uses a **builder pattern** for configuration:
 
 ```kotlin
-TrustLayer.build {
+TrustWeave.build {
     // Configure KMS
     keys {
         provider("inMemory")  // Select KMS plugin
@@ -207,20 +207,28 @@ TrustWeave uses **two error handling patterns**:
 
 ### 1. Exception-Based (TrustLayer Methods)
 
-All `TrustLayer` methods throw `TrustWeaveError` exceptions:
+All `TrustWeave` methods throw exceptions:
 
 ```kotlin
+import com.trustweave.did.exception.DidException
+import com.trustweave.did.exception.DidException.DidMethodNotRegistered
+import com.trustweave.core.exception.TrustWeaveException
+
 try {
-    val did = trustLayer.createDid { method("key") }
-} catch (error: TrustWeaveError) {
+    val did = trustWeave.createDid { method("key") }
+} catch (error: DidException) {
     when (error) {
-        is TrustWeaveError.DidMethodNotRegistered -> {
-            // Handle specific error
+        is DidMethodNotRegistered -> {
+            // Handle method not registered
         }
         else -> {
-            // Handle generic error
+            // Handle other DID errors
         }
     }
+} catch (error: TrustWeaveException) {
+    // Handle TrustWeave errors with error codes
+} catch (error: Exception) {
+    // Handle other errors
 }
 ```
 
@@ -272,25 +280,28 @@ result.fold(
 
 ```kotlin
 // 1. Create and configure
-val trustLayer = TrustLayer.build { ... }
+val trustWeave = TrustWeave.build { ... }
 
 // 2. Use
-val did = trustLayer.createDid { ... }
-val credential = trustLayer.issue { ... }
+val did = trustWeave.createDid { ... }
+val credential = trustWeave.issue { ... }
 ```
 
 ### Pattern 2: Error Handling
 
 ```kotlin
+import com.trustweave.did.exception.DidException
+import com.trustweave.core.exception.TrustWeaveException
+
 try {
-    val result = trustLayer.operation { ... }
+    val result = trustWeave.operation { ... }
     // Use result
-} catch (error: TrustWeaveError) {
-    // Handle error based on type
-    when (error) {
-        is TrustWeaveError.SpecificError -> { ... }
-        else -> { ... }
-    }
+} catch (error: DidException) {
+    // Handle DID-specific errors
+} catch (error: TrustWeaveException) {
+    // Handle TrustWeave errors with error codes
+} catch (error: Exception) {
+    // Handle other errors
 }
 ```
 
@@ -298,17 +309,17 @@ try {
 
 ```kotlin
 // Create DIDs
-val issuerDid = trustLayer.createDid { ... }
-val holderDid = trustLayer.createDid { ... }
+val issuerDid = trustWeave.createDid { ... }
+val holderDid = trustWeave.createDid { ... }
 
 // Issue credential
-val credential = trustLayer.issue {
+val credential = trustWeave.issue {
     credential { issuer(issuerDid); subject { id(holderDid) } }
     by(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
 }
 
 // Store in wallet
-val wallet = trustLayer.wallet { holder(holderDid) }
+val wallet = trustWeave.wallet { holder(holderDid) }
 wallet.store(credential)
 ```
 

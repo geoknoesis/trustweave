@@ -1,8 +1,8 @@
 package com.trustweave.anchor.bitcoin
 
 import com.trustweave.anchor.*
-import com.trustweave.anchor.exceptions.BlockchainTransactionException
-import com.trustweave.core.exception.NotFoundException
+import com.trustweave.anchor.exceptions.BlockchainException
+
 import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -104,13 +104,12 @@ class BitcoinBlockchainAnchorClient(
     ): String = withContext(Dispatchers.IO) {
         // Bitcoin OP_RETURN has 80-byte limit
         if (payloadBytes.size > OP_RETURN_MAX_SIZE) {
-            throw BlockchainTransactionException(
-                message = "Payload size (${payloadBytes.size} bytes) exceeds Bitcoin OP_RETURN limit ($OP_RETURN_MAX_SIZE bytes). Consider using hash-based anchoring.",
+            throw BlockchainException.TransactionFailed(
+                reason = "Payload size (${payloadBytes.size} bytes) exceeds Bitcoin OP_RETURN limit ($OP_RETURN_MAX_SIZE bytes). Consider using hash-based anchoring.",
                 chainId = chainId,
                 txHash = null,
                 operation = "submitTransaction",
-                payloadSize = payloadBytes.size.toLong(),
-                cause = null
+                payloadSize = payloadBytes.size.toLong()
             )
         }
         
@@ -128,13 +127,12 @@ class BitcoinBlockchainAnchorClient(
         // Get unspent outputs
         val utxos = getUnspentOutputs()
         if (utxos.isEmpty()) {
-            throw BlockchainTransactionException(
-                message = "No unspent outputs available for transaction",
+            throw BlockchainException.TransactionFailed(
+                reason = "No unspent outputs available for transaction",
                 chainId = chainId,
                 txHash = null,
                 operation = "submitTransaction",
-                payloadSize = payloadBytes.size.toLong(),
-                cause = null
+                payloadSize = payloadBytes.size.toLong()
             )
         }
         
@@ -171,12 +169,12 @@ class BitcoinBlockchainAnchorClient(
         // Extract signed transaction hex
         val signedTxJson = Json.parseToJsonElement(signedTx).jsonObject
         val signedTxHex = signedTxJson["hex"]?.jsonPrimitive?.content
-            ?: throw TrustWeaveException("Failed to sign transaction")
+            ?: throw TrustWeaveException.Unknown(message = "Failed to sign transaction")
         
         // Check if transaction is complete
         val complete = signedTxJson["complete"]?.jsonPrimitive?.boolean ?: false
         if (!complete) {
-            throw TrustWeaveException("Transaction signing incomplete")
+            throw TrustWeaveException.Unknown(message = "Transaction signing incomplete")
         }
         
         // Broadcast transaction
@@ -208,7 +206,7 @@ class BitcoinBlockchainAnchorClient(
         }
         
         if (opReturnData == null) {
-            throw NotFoundException("OP_RETURN data not found in transaction: $txHash")
+            throw TrustWeaveException.NotFound(resource = "OP_RETURN data not found in transaction: $txHash")
         }
         
         // Parse payload JSON
@@ -320,17 +318,17 @@ class BitcoinBlockchainAnchorClient(
         val responseBody = response.body?.string()
         
         if (!response.isSuccessful) {
-            throw TrustWeaveException("Bitcoin RPC call failed: ${response.code} - ${response.message}")
+            throw TrustWeaveException.Unknown(message = "Bitcoin RPC call failed: ${response.code} - ${response.message}")
         }
         
         val jsonResponse = Json.parseToJsonElement(responseBody ?: "{}").jsonObject
         val error = jsonResponse["error"]
         if (error != null && error !is JsonNull) {
-            throw TrustWeaveException("Bitcoin RPC error: ${error.jsonObject["message"]?.jsonPrimitive?.content}")
+            throw TrustWeaveException.Unknown(message = "Bitcoin RPC error: ${error.jsonObject["message"]?.jsonPrimitive?.content ?: "Unknown error"}")
         }
         
         jsonResponse["result"]?.jsonPrimitive?.content
-            ?: throw TrustWeaveException("No result in Bitcoin RPC response")
+            ?: throw TrustWeaveException.Unknown(message = "No result in Bitcoin RPC response")
     }
     
     /**

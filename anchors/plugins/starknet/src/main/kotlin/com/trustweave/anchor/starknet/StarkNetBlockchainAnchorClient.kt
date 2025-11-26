@@ -1,8 +1,8 @@
 package com.trustweave.anchor.starknet
 
 import com.trustweave.anchor.*
-import com.trustweave.anchor.exceptions.BlockchainTransactionException
-import com.trustweave.core.exception.NotFoundException
+import com.trustweave.anchor.exceptions.BlockchainException
+
 import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.serialization.json.*
 
@@ -73,8 +73,8 @@ class StarkNetBlockchainAnchorClient(
         // 3. Sign and submit transaction
         // 4. Return transaction hash
         
-        throw TrustWeaveException(
-            "StarkNet blockchain anchoring requires StarkNet SDK and Cairo contract. " +
+        throw TrustWeaveException.Unknown(
+            message = "StarkNet blockchain anchoring requires StarkNet SDK and Cairo contract. " +
             "Structure is ready for implementation."
         )
     }
@@ -87,8 +87,8 @@ class StarkNetBlockchainAnchorClient(
         // 3. Read data from contract storage
         // 4. Parse and return AnchorResult
         
-        throw TrustWeaveException(
-            "StarkNet blockchain reading requires StarkNet SDK. " +
+        throw TrustWeaveException.Unknown(
+            message = "StarkNet blockchain reading requires StarkNet SDK. " +
             "Structure is ready for implementation."
         )
     }

@@ -5,9 +5,11 @@ plugins {
 
 group = "com.trustweave.chains"
 dependencies {
+    implementation(project(":common"))
     implementation(project(":credentials:credential-core"))
     implementation(project(":anchors:anchor-core"))
     implementation("org.web3j:core:5.0.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
     // Test dependencies
     testImplementation(project(":testkit"))

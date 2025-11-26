@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.*
 import java.time.Instant
 import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.did.exception.DidException.InvalidDidFormat
 
 /**
  * Comprehensive tests for Did models and DidRegistry.
@@ -31,14 +32,14 @@ class DidModelsTest {
 
     @Test
     fun `test Did parse fails without did prefix`() {
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<InvalidDidFormat> {
             Did.parse("web:example.com")
         }
     }
 
     @Test
     fun `test Did parse fails with invalid format`() {
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<InvalidDidFormat> {
             Did.parse("did:web")
         }
     }

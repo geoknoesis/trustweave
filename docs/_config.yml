@@ -184,6 +184,14 @@ defaults:
     values:
       nav_exclude: false
   - scope:
+      path: "how-to/use-trustweave-facade.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "how-to/configure-trustlayer.md"
+    values:
+      nav_exclude: false
+  - scope:
       path: "how-to/create-dids.md"
     values:
       nav_exclude: false
@@ -201,6 +209,14 @@ defaults:
       nav_exclude: false
   - scope:
       path: "how-to/blockchain-anchoring.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "how-to/multi-chain-anchoring.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "how-to/exchange-credentials.md"
     values:
       nav_exclude: false
   - scope:

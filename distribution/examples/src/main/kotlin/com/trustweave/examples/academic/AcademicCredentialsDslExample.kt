@@ -1,6 +1,6 @@
 package com.trustweave.examples.academic
 
-import com.trustweave.credential.dsl.*
+import com.trustweave.trust.dsl.*
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.wallet.CredentialOrganization
 import com.trustweave.testkit.did.DidKeyMockMethod
@@ -24,7 +24,7 @@ fun main() = runBlocking {
     
     // Step 1: Configure Trust Layer
     println("Step 1: Configuring trust layer...")
-    val trustLayer = trustLayer {
+    val trustWeave = trustWeave {
         keys {
             provider("inMemory")
             algorithm(KeyAlgorithms.ED25519)
@@ -148,8 +148,8 @@ fun main() = runBlocking {
     
     // Step 7: Query credentials using enhanced query DSL
     println("\nStep 7: Querying credentials...")
-    val degrees = studentWallet.queryEnhanced {
-        byType("DegreeCredential")
+    val degrees = studentWallet.query {
+        type("DegreeCredential")
         valid()
     }
     println("Found ${degrees.size} valid degree credentials")
@@ -214,7 +214,7 @@ fun main() = runBlocking {
     // Step 12: Demonstrate DID document updates with new fields
     println("\nStep 12: Demonstrating DID document updates...")
     try {
-        trustLayer.updateDid {
+        trustWeave.updateDid {
             did(universityDid)
             method(DidMethods.KEY)
             addCapabilityDelegation("$universityDid#key-1")

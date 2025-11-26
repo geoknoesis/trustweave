@@ -35,7 +35,7 @@ The trust layer configuration is the foundation of the DSL. It centralizes the s
 ### Basic Configuration
 
 ```kotlin
-import com.trustweave.credential.dsl.*
+import com.trustweave.trust.dsl.*
 
 val trustLayer = trustLayer {
     keys {
@@ -56,7 +56,7 @@ val trustLayer = trustLayer {
     }
     
     credentials {
-        defaultProofType("Ed25519Signature2020")
+        defaultProofType(ProofType.Ed25519Signature2020)
         autoAnchor(false)
     }
     
@@ -133,6 +133,9 @@ val credential = credential {
 Issue credentials with automatic proof generation:
 
 ```kotlin
+import com.trustweave.trust.types.IssuerIdentity
+import com.trustweave.trust.types.ProofType
+
 val issuedCredential = trustLayer.issue {
     credential {
         type("DegreeCredential")
@@ -145,20 +148,140 @@ val issuedCredential = trustLayer.issue {
         }
         issued(Instant.now())
     }
-    by(issuerDid = "did:key:university", keyId = "key-1")
-    withProof("Ed25519Signature2020")
+    signedBy(IssuerIdentity.from("did:key:university", "key-1"))
+    withProof(ProofType.Ed25519Signature2020)
     challenge("challenge-123")
     domain("example.com")
     anchor()  // Automatically anchor if autoAnchor is enabled
 }
 ```
 
-**Outcome:** Returns a signed credential (`Result<VerifiableCredential>`) with optional anchoring and proof configuration baked in.
+**Outcome:** Returns a signed credential (`VerifiableCredential`) with optional anchoring and proof configuration baked in.
 
 ### Issuance Builder Methods
 
-- `credential { }`: Build credential inline or use pre-built credential
-- `by(issuerDid: String, keyId: String)`: Specify issuer and key
-- `withProof(String)`: Set proof type (defaults to trust layer default)
-- `challenge(String)`: Set proof challenge
-- `
+- `credential { }`: Build credential inline using CredentialBuilder DSL
+- `credential(VerifiableCredential)`: Use a pre-built credential
+- `signedBy(IssuerIdentity)`: Specify issuer identity with type-safe DID and key ID (required)
+- `withProof(ProofType)`: Set proof type (defaults to trust layer default)
+- `challenge(String)`: Set proof challenge for verification
+- `domain(String)`: Set proof domain for verification
+- `withRevocation()`: Enable automatic revocation support (creates status list if needed)
+
+**Example:**
+```kotlin
+import com.trustweave.trust.types.IssuerIdentity
+import com.trustweave.trust.types.ProofType
+
+val issuedCredential = trustWeave.issue {
+    credential {
+        type("DegreeCredential")
+        issuer("did:key:university")
+        subject {
+            id("did:key:student")
+            "degree" {
+                "type" to "BachelorDegree"
+                "name" to "Bachelor of Science"
+            }
+        }
+        issued(Instant.now())
+        withRevocation() // Auto-creates status list if needed
+    }
+    signedBy(IssuerIdentity.from("did:key:university", "key-1"))
+    withProof(ProofType.Ed25519Signature2020)
+    challenge("challenge-123")
+    domain("example.com")
+}
+```
+
+## Verification DSL
+
+Verify credentials with exhaustive error handling using sealed result types:
+
+```kotlin
+import com.trustweave.trust.types.VerificationResult
+
+val result = trustWeave.verify {
+    credential(credential)
+    checkRevocation() // Check revocation status
+    checkExpiration() // Check expiration
+}
+
+// Exhaustive error handling with sealed result type
+when (result) {
+    is VerificationResult.Valid -> {
+        println("✅ Credential is valid: ${result.credential.id}")
+        if (result.warnings.isNotEmpty()) {
+            println("   Warnings: ${result.warnings.joinToString()}")
+        }
+    }
+    is VerificationResult.Invalid.Expired -> {
+        println("❌ Credential expired at ${result.expiredAt}")
+    }
+    is VerificationResult.Invalid.Revoked -> {
+        println("❌ Credential revoked")
+    }
+    is VerificationResult.Invalid.InvalidProof -> {
+        println("❌ Invalid proof: ${result.reason}")
+    }
+    is VerificationResult.Invalid.UntrustedIssuer -> {
+        println("❌ Untrusted issuer: ${result.issuer}")
+    }
+    is VerificationResult.Invalid.SchemaValidationFailed -> {
+        println("❌ Schema validation failed: ${result.errors.joinToString()}")
+    }
+    // ... other error cases handled exhaustively
+}
+```
+
+### Verification Builder Methods
+
+- `credential(VerifiableCredential)`: Set credential to verify (required)
+- `checkRevocation()`: Enable revocation checking
+- `skipRevocationCheck()`: Disable revocation checking
+- `checkExpiration()`: Enable expiration checking
+- `skipExpirationCheck()`: Disable expiration checking
+- `validateSchema(String)`: Enable schema validation
+- `validateProofPurpose()`: Enable proof purpose validation
+
+## Wallet DSL
+
+Create and manage wallets:
+
+```kotlin
+val wallet = trustWeave.wallet {
+    holder("did:key:holder")
+    // Additional wallet configuration
+}
+
+// Store credentials
+val credentialId = wallet.store(credential)
+
+// Query credentials
+val credentials = wallet.query {
+    byType("EducationCredential")
+    valid(true)
+}
+```
+
+## Trust Registry DSL
+
+Manage trust anchors:
+
+```kotlin
+trustWeave.trust {
+    addAnchor("did:key:university") {
+        credentialTypes("EducationCredential")
+        description("Trusted university")
+    }
+    
+    val isTrusted = isTrusted("did:key:university", "EducationCredential")
+    val path = getTrustPath("did:key:verifier", "did:key:issuer")
+}
+```
+
+## Next Steps
+
+- [Quick Start](quick-start.md) - Get started with a complete example
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Core Concepts](../core-concepts/README.md) - Deep dives into DIDs, VCs, etc.

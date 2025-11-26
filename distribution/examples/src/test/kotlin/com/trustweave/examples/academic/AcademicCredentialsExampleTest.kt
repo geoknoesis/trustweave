@@ -328,7 +328,7 @@ class AcademicCredentialsExampleTest {
 
         // Query by type
         val degrees = studentWallet.query {
-            byType("DegreeCredential")
+            type("DegreeCredential")
             valid()
         }
         assertEquals(1, degrees.size)

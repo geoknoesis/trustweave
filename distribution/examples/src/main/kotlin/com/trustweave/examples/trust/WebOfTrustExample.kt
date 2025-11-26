@@ -1,6 +1,6 @@
 package com.trustweave.examples.trust
 
-import com.trustweave.credential.dsl.*
+import com.trustweave.trust.dsl.*
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.wallet.CredentialOrganization
 import com.trustweave.testkit.did.DidKeyMockMethod
@@ -28,7 +28,7 @@ fun main() = runBlocking {
     
     // Step 1: Configure Trust Layer with Trust Registry
     println("Step 1: Setting up trust layer with trust registry...")
-    val trustLayer = trustLayer {
+    val trustWeave = trustWeave {
         keys {
             provider("inMemory")
             algorithm(KeyAlgorithms.ED25519)
@@ -93,7 +93,7 @@ fun main() = runBlocking {
     
     // Step 3: Set up trust anchors
     println("Step 3: Setting up trust anchors...")
-    trustLayer.trust {
+        trustWeave.trust {
         // Add university as trusted anchor for education credentials
         addAnchor(universityDid) {
             credentialTypes("EducationCredential", "DegreeCredential")
@@ -114,7 +114,7 @@ fun main() = runBlocking {
     println("Step 4: Setting up capability delegation...")
     
     // Update company DID document to delegate capability to HR department
-    trustLayer.updateDid {
+        trustWeave.updateDid {
         did(companyDid)
         method(DidMethods.KEY)
         addCapabilityDelegation("$hrDeptDid#key-1")
@@ -211,7 +211,7 @@ fun main() = runBlocking {
     
     // Step 7: Find trust paths
     println("Step 7: Finding trust paths...")
-    trustLayer.trust {
+        trustWeave.trust {
         val trustPath = getTrustPath(verifierDid, universityDid)
         if (trustPath != null) {
             println("Trust path from verifier to university:")
@@ -236,7 +236,7 @@ fun main() = runBlocking {
     
     // Step 8: Demonstrate DID document updates with new fields
     println("Step 8: Updating DID document with capability relationships...")
-    trustLayer.updateDid {
+        trustWeave.updateDid {
         did(studentDid)
         method(DidMethods.KEY)
         addCapabilityInvocation("$studentDid#key-1")
@@ -246,7 +246,7 @@ fun main() = runBlocking {
     
     // Step 9: Get trusted issuers
     println("Step 9: Getting trusted issuers...")
-    trustLayer.trust {
+        trustWeave.trust {
         val trustedForEducation = getTrustedIssuers("EducationCredential")
         println("Trusted issuers for EducationCredential:")
         trustedForEducation.forEach { println("  - $it") }

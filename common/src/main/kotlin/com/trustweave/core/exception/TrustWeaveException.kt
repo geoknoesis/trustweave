@@ -9,7 +9,7 @@ package com.trustweave.core.exception
  * 
  * This sealed class ensures exhaustive handling in when expressions.
  */
-sealed class TrustWeaveException(
+open class TrustWeaveException(
     open val code: String,
     override val message: String,
     open val context: Map<String, Any?> = emptyMap(),

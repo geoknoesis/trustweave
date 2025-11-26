@@ -37,18 +37,19 @@ class KeyManagementServiceTest {
 
     @Test
     fun `test KeyNotFoundException`() {
-        val exception = KeyNotFoundException("Key not found: key-123")
+        val exception = KeyNotFoundException(keyId = "key-123")
         
         assertEquals("Key not found: key-123", exception.message)
         assertNull(exception.cause)
     }
 
     @Test
-    fun `test KeyNotFoundException with cause`() {
-        val cause = RuntimeException("Underlying error")
-        val exception = KeyNotFoundException("Key not found", cause)
+    fun `test KeyNotFoundException with keyType`() {
+        val exception = KeyNotFoundException(keyId = "key-123", keyType = "Ed25519")
         
-        assertEquals(cause, exception.cause)
+        assertEquals("Key not found: key-123", exception.message)
+        assertEquals("key-123", exception.keyId)
+        assertEquals("Ed25519", exception.keyType)
     }
 
     @Test
@@ -70,11 +71,11 @@ class KeyManagementServiceTest {
             }
             
             override suspend fun getPublicKey(keyId: String): KeyHandle {
-                return keys[keyId] ?: throw KeyNotFoundException("Key not found: $keyId")
+                return keys[keyId] ?: throw KeyNotFoundException(keyId = keyId)
             }
             
             override suspend fun sign(keyId: String, data: ByteArray, algorithm: Algorithm?): ByteArray {
-                keys[keyId] ?: throw KeyNotFoundException("Key not found: $keyId")
+                keys[keyId] ?: throw KeyNotFoundException(keyId = keyId)
                 return ByteArray(64) // Mock signature
             }
             
@@ -104,7 +105,7 @@ class KeyManagementServiceTest {
             }
             
             override suspend fun generateKey(algorithm: Algorithm, options: Map<String, Any?>) = TODO()
-            override suspend fun getPublicKey(keyId: String) = throw KeyNotFoundException("Key not found: $keyId")
+            override suspend fun getPublicKey(keyId: String) = throw KeyNotFoundException(keyId = keyId)
             override suspend fun sign(keyId: String, data: ByteArray, algorithm: Algorithm?) = TODO()
             override suspend fun deleteKey(keyId: String) = TODO()
         }

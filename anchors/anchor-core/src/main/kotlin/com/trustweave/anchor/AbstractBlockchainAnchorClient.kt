@@ -1,8 +1,7 @@
 package com.trustweave.anchor
 
-import com.trustweave.anchor.exceptions.BlockchainTransactionException
-import com.trustweave.core.exception.NotFoundException
-import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.anchor.exceptions.BlockchainException
+import com.trustweave.core.exception.TrustWeaveException as CoreTrustWeaveException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -57,7 +56,7 @@ abstract class AbstractBlockchainAnchorClient(
      * 
      * @param txHash The transaction hash
      * @return The AnchorResult containing the payload
-     * @throws NotFoundException if transaction is not found
+     * @throws TrustWeaveException.NotFound if transaction is not found
      * @throws TrustWeaveException if reading fails
      */
     protected abstract suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult
@@ -134,16 +133,15 @@ abstract class AbstractBlockchainAnchorClient(
                 mediaType = mediaType,
                 timestamp = System.currentTimeMillis() / 1000
             )
-        } catch (e: TrustWeaveException) {
+        } catch (e: CoreTrustWeaveException) {
             throw e
         } catch (e: Exception) {
-            throw BlockchainTransactionException(
-                message = "Failed to anchor payload to ${getBlockchainName()}: ${e.message}",
+            throw BlockchainException.TransactionFailed(
                 chainId = chainId,
                 operation = "writePayload",
                 payloadSize = payloadBytes.size.toLong(),
-                cause = e
-            )
+                reason = "Failed to anchor payload to ${getBlockchainName()}: ${e.message ?: "Unknown error"}"
+            ).apply { initCause(e) }
         }
     }
 
@@ -154,33 +152,33 @@ abstract class AbstractBlockchainAnchorClient(
             // Try to read from blockchain first, fallback to storage
             val result = try {
                 readTransactionFromBlockchain(ref.txHash)
-            } catch (e: NotFoundException) {
+            } catch (e: CoreTrustWeaveException.NotFound) {
                 // Fallback to in-memory storage
-                storage[ref.txHash] ?: throw NotFoundException("Transaction not found: ${ref.txHash}")
+                storage[ref.txHash] ?: throw CoreTrustWeaveException.NotFound(
+                    resource = "Transaction ${ref.txHash}"
+                )
             } catch (e: Exception) {
                 // Try storage fallback for other exceptions too
-                storage[ref.txHash] ?: throw BlockchainTransactionException(
-                    message = "Failed to read payload from ${getBlockchainName()}: ${e.message}",
-                    chainId = chainId,
-                    txHash = ref.txHash,
-                    operation = "readPayload",
-                    cause = e
-                )
-            }
-            
-            result
-        } catch (e: NotFoundException) {
-            throw e
-        } catch (e: TrustWeaveException) {
-            throw e
-        } catch (e: Exception) {
-            throw BlockchainTransactionException(
-                message = "Failed to read payload from ${getBlockchainName()}: ${e.message}",
+                storage[ref.txHash] ?: throw BlockchainException.TransactionFailed(
                 chainId = chainId,
                 txHash = ref.txHash,
                 operation = "readPayload",
-                cause = e
-            )
+                reason = "Failed to read payload from ${getBlockchainName()}: ${e.message ?: "Unknown error"}"
+            ).apply { initCause(e) }
+            }
+            
+            result
+        } catch (e: CoreTrustWeaveException.NotFound) {
+            throw e
+        } catch (e: CoreTrustWeaveException) {
+            throw e
+        } catch (e: Exception) {
+            throw BlockchainException.TransactionFailed(
+                chainId = chainId,
+                txHash = ref.txHash,
+                operation = "readPayload",
+                reason = "Failed to read payload from ${getBlockchainName()}: ${e.message ?: "Unknown error"}"
+            ).apply { initCause(e) }
         }
     }
 

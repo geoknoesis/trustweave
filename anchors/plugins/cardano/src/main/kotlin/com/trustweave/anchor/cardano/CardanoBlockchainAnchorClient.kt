@@ -1,8 +1,8 @@
 package com.trustweave.anchor.cardano
 
 import com.trustweave.anchor.*
-import com.trustweave.anchor.exceptions.BlockchainTransactionException
-import com.trustweave.core.exception.NotFoundException
+import com.trustweave.anchor.exceptions.BlockchainException
+
 import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.serialization.json.*
 
@@ -70,13 +70,12 @@ class CardanoBlockchainAnchorClient(
     ): String {
         // Cardano metadata limit is 16KB per transaction
         if (payloadBytes.size > 16 * 1024) {
-            throw BlockchainTransactionException(
-                message = "Payload size (${payloadBytes.size} bytes) exceeds Cardano metadata limit (16KB). Consider using hash-based anchoring.",
+            throw BlockchainException.TransactionFailed(
+                reason = "Payload size (${payloadBytes.size} bytes) exceeds Cardano metadata limit (16KB). Consider using hash-based anchoring.",
                 chainId = chainId,
                 txHash = null,
                 operation = "submitTransaction",
-                payloadSize = payloadBytes.size.toLong(),
-                cause = null
+                payloadSize = payloadBytes.size.toLong()
             )
         }
         
@@ -88,8 +87,8 @@ class CardanoBlockchainAnchorClient(
         // 4. Submit transaction
         // 5. Return transaction hash
         
-        throw TrustWeaveException(
-            "Cardano blockchain anchoring requires Cardano SDK and node access. " +
+        throw TrustWeaveException.Unknown(
+            message = "Cardano blockchain anchoring requires Cardano SDK and node access. " +
             "Structure is ready for implementation."
         )
     }
@@ -102,8 +101,8 @@ class CardanoBlockchainAnchorClient(
         // 3. Extract metadata from transaction
         // 4. Parse and return AnchorResult
         
-        throw TrustWeaveException(
-            "Cardano blockchain reading requires Cardano SDK. " +
+        throw TrustWeaveException.Unknown(
+            message = "Cardano blockchain reading requires Cardano SDK. " +
             "Structure is ready for implementation."
         )
     }

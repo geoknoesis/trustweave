@@ -11,7 +11,7 @@ import java.time.Instant
 import kotlin.test.*
 
 /**
- * Comprehensive branch coverage tests for TrustLayerConfig DSL.
+ * Comprehensive branch coverage tests for TrustWeaveConfig DSL.
  * Tests all conditional branches, error paths, and edge cases.
  */
 class TrustLayerConfigBranchCoverageTest {
@@ -27,7 +27,7 @@ class TrustLayerConfigBranchCoverageTest {
     fun `test branch custom KMS takes precedence over provider`() = runBlocking {
         val customKms = InMemoryKeyManagementService()
         
-        val trustLayer = trustLayer {
+        val trustWeaveConfig = trustWeave {
             keys {
                 provider("waltid") // This should be ignored
                 custom(customKms)
@@ -37,12 +37,12 @@ class TrustLayerConfigBranchCoverageTest {
             }
         }
         
-        assertSame(customKms, trustLayer.kms)
+        assertSame(customKms, trustWeaveConfig.kms)
     }
 
     @Test
     fun `test branch KMS provider resolution with inMemory`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeaveConfig = trustWeave {
             keys {
                 provider("inMemory")
                 algorithm("Ed25519")
@@ -52,14 +52,14 @@ class TrustLayerConfigBranchCoverageTest {
             }
         }
         
-        assertNotNull(trustLayer.kms)
+        assertNotNull(trustWeaveConfig.kms)
     }
 
     @Test
     fun `test branch KMS provider resolution with SPI provider`() = runBlocking {
         // This tests the SPI resolution path (may fail if provider not available)
         try {
-            val trustLayer = trustLayer {
+            val trustWeaveConfig = trustWeave {
                 keys {
                     provider("waltid")
                     algorithm("Ed25519")
@@ -68,7 +68,7 @@ class TrustLayerConfigBranchCoverageTest {
                     method("key") {}
                 }
             }
-            assertNotNull(trustLayer.kms)
+            assertNotNull(trustWeaveConfig.kms)
         } catch (e: IllegalStateException) {
             // Provider not available - expected in test environment
             assertTrue(e.message?.contains("not found") == true)
@@ -77,7 +77,7 @@ class TrustLayerConfigBranchCoverageTest {
 
     @Test
     fun `test branch KMS default algorithm when not specified`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeaveConfig = trustWeave {
             keys {
                 provider("inMemory")
                 // No algorithm specified - should default to Ed25519
@@ -87,7 +87,7 @@ class TrustLayerConfigBranchCoverageTest {
             }
         }
         
-        assertNotNull(trustLayer.kms)
+        assertNotNull(trustWeaveConfig.kms)
     }
 
     @Test
@@ -121,7 +121,7 @@ class TrustLayerConfigBranchCoverageTest {
     @Test
     fun `test branch DID method resolution with testkit key method`() = runBlocking {
         val kms = InMemoryKeyManagementService()
-        val trustLayer = trustLayer {
+        val trustWeaveConfig = trustWeave {
             keys {
                 custom(kms as Any)
             }
@@ -132,14 +132,14 @@ class TrustLayerConfigBranchCoverageTest {
             }
         }
         
-        assertTrue(trustLayer.didMethods.containsKey("key"))
+        assertTrue(trustWeaveConfig.didMethods.containsKey("key"))
     }
 
     @Test
     fun `test branch DID method resolution with SPI provider waltid`() = runBlocking {
         val kms = InMemoryKeyManagementService()
         try {
-            val trustLayer = trustLayer {
+            val trustWeaveConfig = trustWeave {
                 keys {
                     custom(kms as Any)
                 }
@@ -149,7 +149,7 @@ class TrustLayerConfigBranchCoverageTest {
                     }
                 }
             }
-            assertTrue(trustLayer.didMethods.containsKey("waltid"))
+            assertTrue(trustWeaveConfig.didMethods.containsKey("waltid"))
         } catch (e: IllegalStateException) {
             // Provider not available - expected
             assertTrue(e.message?.contains("not found") == true)
@@ -160,7 +160,7 @@ class TrustLayerConfigBranchCoverageTest {
     fun `test branch DID method resolution with SPI provider godiddy`() = runBlocking {
         val kms = InMemoryKeyManagementService()
         try {
-            val trustLayer = trustLayer {
+            val trustWeaveConfig = trustWeave {
                 keys {
                     custom(kms as Any)
                 }
@@ -170,7 +170,7 @@ class TrustLayerConfigBranchCoverageTest {
                     }
                 }
             }
-            assertTrue(trustLayer.didMethods.containsKey("godiddy"))
+            assertTrue(trustWeaveConfig.didMethods.containsKey("godiddy"))
         } catch (e: IllegalStateException) {
             // Provider not available - expected
             assertTrue(e.message?.contains("not found") == true)
@@ -195,7 +195,7 @@ class TrustLayerConfigBranchCoverageTest {
     @Test
     fun `test branch multiple DID methods registration`() = runBlocking {
         val kms = InMemoryKeyManagementService()
-        val trustLayer = trustLayer {
+        val trustWeaveConfig = trustWeave {
             keys {
                 custom(kms as Any)
             }
@@ -207,15 +207,15 @@ class TrustLayerConfigBranchCoverageTest {
             }
         }
         
-        assertEquals(1, trustLayer.didMethods.size)
-        assertTrue(trustLayer.didMethods.containsKey("key"))
+        assertEquals(1, trustWeaveConfig.didMethods.size)
+        assertTrue(trustWeaveConfig.didMethods.containsKey("key"))
     }
 
     // ========== Anchor Client Resolution Branches ==========
 
     @Test
     fun `test branch anchor client resolution with inMemory`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeaveConfig = trustWeave {
             keys {
                 provider("inMemory")
             }
@@ -229,12 +229,12 @@ class TrustLayerConfigBranchCoverageTest {
             }
         }
         
-        assertTrue(trustLayer.anchorClients.containsKey("algorand:testnet"))
+        assertTrue(trustWeaveConfig.anchorClients.containsKey("algorand:testnet"))
     }
 
     @Test
     fun `test branch anchor client resolution with inMemory and contract`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeaveConfig = trustWeave {
             keys {
                 provider("inMemory")
             }
@@ -248,13 +248,13 @@ class TrustLayerConfigBranchCoverageTest {
             }
         }
         
-        assertTrue(trustLayer.anchorClients.containsKey("algorand:testnet"))
+        assertTrue(trustWeaveConfig.anchorClients.containsKey("algorand:testnet"))
     }
 
     @Test
     fun `test branch anchor client resolution with SPI provider`() = runBlocking {
         try {
-            val trustLayer = trustLayer {
+            val trustWeaveConfig = trustWeave {
                 keys {
                     provider("inMemory")
                 }
@@ -270,7 +270,7 @@ class TrustLayerConfigBranchCoverageTest {
                     }
                 }
             }
-            assertTrue(trustLayer.anchorClients.containsKey("algorand:testnet"))
+            assertTrue(trustWeaveConfig.anchorClients.containsKey("algorand:testnet"))
         } catch (e: IllegalStateException) {
             // Provider not available - expected
             assertTrue(e.message?.contains("not found") == true)
@@ -317,7 +317,7 @@ class TrustLayerConfigBranchCoverageTest {
 
     @Test
     fun `test branch multiple anchor chains`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeaveConfig = trustWeave {
             keys {
                 provider("inMemory")
             }
@@ -335,15 +335,15 @@ class TrustLayerConfigBranchCoverageTest {
         }
         
         assertEquals(2, trustLayer.anchorClients.size)
-        assertTrue(trustLayer.anchorClients.containsKey("algorand:testnet"))
-        assertTrue(trustLayer.anchorClients.containsKey("polygon:testnet"))
+        assertTrue(trustWeaveConfig.anchorClients.containsKey("algorand:testnet"))
+        assertTrue(trustWeaveConfig.anchorClients.containsKey("polygon:testnet"))
     }
 
     // ========== Credential Config Branches ==========
 
     @Test
     fun `test branch credential config with defaults`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeaveConfig = trustWeave {
             keys {
                 provider("inMemory")
             }
@@ -352,14 +352,14 @@ class TrustLayerConfigBranchCoverageTest {
             }
         }
         
-        assertEquals("Ed25519Signature2020", trustLayer.credentialConfig.defaultProofType)
-        assertFalse(trustLayer.credentialConfig.autoAnchor)
-        assertNull(trustLayer.credentialConfig.defaultChain)
+        assertEquals("Ed25519Signature2020", trustWeaveConfig.credentialConfig.defaultProofType)
+        assertFalse(trustWeaveConfig.credentialConfig.autoAnchor)
+        assertNull(trustWeaveConfig.credentialConfig.defaultChain)
     }
 
     @Test
     fun `test branch credential config with custom values`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeaveConfig = trustWeave {
             keys {
                 provider("inMemory")
             }
@@ -385,7 +385,7 @@ class TrustLayerConfigBranchCoverageTest {
 
     @Test
     fun `test branch credential config partial override`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeaveConfig = trustWeave {
             keys {
                 provider("inMemory")
             }
@@ -421,7 +421,7 @@ class TrustLayerConfigBranchCoverageTest {
 
     @Test
     fun `test branch default named trust layer`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeaveConfig = trustWeave {
             keys {
                 provider("inMemory")
             }
@@ -437,7 +437,7 @@ class TrustLayerConfigBranchCoverageTest {
 
     @Test
     fun `test branch proof generator creation with KMS`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeaveConfig = trustWeave {
             keys {
                 provider("inMemory")
             }
@@ -452,7 +452,7 @@ class TrustLayerConfigBranchCoverageTest {
     @Test
     fun `test branch proof generator uses signer function when provided`() = runBlocking {
         var signerCalled = false
-        val trustLayer = trustLayer {
+        val trustWeaveConfig = trustWeave {
             keys {
                 provider("inMemory")
                 signer { data, keyId ->
@@ -487,7 +487,7 @@ class TrustLayerConfigBranchCoverageTest {
 
     @Test
     fun `test branch handles DID registry registration`() = runBlocking {
-        val trustLayer = trustLayer {
+        val trustWeaveConfig = trustWeave {
             keys {
                 provider("inMemory")
             }
@@ -497,13 +497,13 @@ class TrustLayerConfigBranchCoverageTest {
         }
  
         assertNotNull(trustLayer)
-        assertTrue(trustLayer.didMethods.containsKey("key"))
+        assertTrue(trustWeaveConfig.didMethods.containsKey("key"))
     }
 
     @Test
     fun `test branch error when blockchain registry not available`() = runBlocking {
         // This tests the exception handling when BlockchainRegistry is not available
-        val trustLayer = trustLayer {
+        val trustWeaveConfig = trustWeave {
             keys {
                 provider("inMemory")
             }
@@ -518,7 +518,7 @@ class TrustLayerConfigBranchCoverageTest {
         }
         
         assertNotNull(trustLayer)
-        assertTrue(trustLayer.anchorClients.containsKey("algorand:testnet"))
+        assertTrue(trustWeaveConfig.anchorClients.containsKey("algorand:testnet"))
     }
 }
 

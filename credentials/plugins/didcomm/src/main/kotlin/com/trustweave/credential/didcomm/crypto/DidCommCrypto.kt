@@ -60,7 +60,7 @@ class DidCommCrypto(
      * @param toKeyId Recipient key ID for key agreement (from their DID document)
      * @return Encrypted envelope
      */
-    suspend fun encrypt(
+    override suspend fun encrypt(
         message: JsonObject,
         fromDid: String,
         fromKeyId: String,
@@ -121,9 +121,9 @@ class DidCommCrypto(
             
             // Build recipient header with ephemeral public key
             val epkJson = buildJsonObject {
-                put("kty", ephemeralKeyPair.publicJwk["kty"])
-                put("crv", ephemeralKeyPair.publicJwk["crv"])
-                put("x", ephemeralKeyPair.publicJwk["x"])
+                ephemeralKeyPair.publicJwk["kty"]?.let { put("kty", it) }
+                ephemeralKeyPair.publicJwk["crv"]?.let { put("crv", it) }
+                ephemeralKeyPair.publicJwk["x"]?.let { put("x", it) }
                 ephemeralKeyPair.publicJwk["y"]?.let { put("y", it) }
             }
             
@@ -161,7 +161,7 @@ class DidCommCrypto(
      * @param senderDid Sender DID (for verification)
      * @return Decrypted message JSON
      */
-    suspend fun decrypt(
+    override suspend fun decrypt(
         envelope: DidCommEnvelope,
         recipientDid: String,
         recipientKeyId: String,

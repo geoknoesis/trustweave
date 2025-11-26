@@ -1,6 +1,6 @@
 package com.trustweave.examples.academic
 
-import com.trustweave.credential.dsl.*
+import com.trustweave.trust.dsl.*
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.wallet.CredentialOrganization
 import com.trustweave.testkit.did.DidKeyMockMethod
@@ -14,7 +14,7 @@ fun main() = runBlocking {
     
     // Step 1: Configure Trust Layer
     println("Step 1: Configuring trust layer...")
-    val trustLayer = trustLayer {
+    val trustWeave = trustWeave {
         keys {
             provider("inMemory")
             algorithm("Ed25519")
@@ -113,7 +113,7 @@ fun main() = runBlocking {
     // Step 7: Query credentials
     println("\nStep 7: Querying credentials...")
     val degrees = studentWallet.query {
-        byType("DegreeCredential")
+        type("DegreeCredential")
         valid()
     }
     println("Found ${degrees.size} valid degree credentials")

@@ -390,7 +390,7 @@ directory.clear()
 The Trust Layer DSL exposes a `wallet { ... }` builder backed by `WalletCreationOptionsBuilder`:
 
 ```kotlin
-val wallet = trustLayer.wallet {
+val wallet = trustWeave.wallet {
     id("my-wallet")
     holder("did:key:holder")
     enableOrganization()

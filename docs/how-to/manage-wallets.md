@@ -1,6 +1,6 @@
 ---
 title: Manage Wallets
-nav_order: 4
+nav_order: 6
 parent: How-To Guides
 keywords:
   - wallet
@@ -21,14 +21,14 @@ This guide shows you how to create wallets, store credentials, organize them wit
 Here's a complete example that creates a wallet, stores a credential, and organizes it:
 
 ```kotlin
-import com.trustweave.trust.TrustLayer
-import com.trustweave.core.TrustWeaveError
+import com.trustweave.trust.TrustWeave
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     try {
-        // Create TrustLayer instance
-        val trustLayer = TrustLayer.build {
+        // Create TrustWeave instance
+        val trustWeave = TrustWeave.build {
             keys {
                 provider("inMemory")
                 algorithm("Ed25519")

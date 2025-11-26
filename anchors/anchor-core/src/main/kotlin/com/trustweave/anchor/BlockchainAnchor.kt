@@ -1,6 +1,6 @@
 package com.trustweave.anchor
 
-import com.trustweave.core.exception.NotFoundException
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.serialization.json.JsonElement
 
 /**
@@ -57,7 +57,7 @@ interface BlockchainAnchorClient {
      *
      * @param ref The anchor reference
      * @return An AnchorResult containing the payload and metadata
-     * @throws NotFoundException if the anchor reference does not exist
+     * @throws TrustWeaveException.NotFound if the anchor reference does not exist
      */
     suspend fun readPayload(ref: AnchorRef): AnchorResult
 }

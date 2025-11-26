@@ -1,0 +1,1618 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+
+    .site-nav > ul.nav-list:first-child > li > a,
+    
+    .site-nav > ul.nav-list:first-child > li > ul > li:not(:nth-child(3)) > a,
+    .site-nav > ul.nav-list:first-child > li > ul > li > ul > li a {
+      background-image: none;
+    }
+
+    .site-nav > ul.nav-list:not(:first-child) a,
+    .site-nav li.external a {
+      background-image: none;
+    }
+
+    .site-nav > ul.nav-list:first-child > li:nth-child(10) > ul > li:nth-child(3) > a {
+      font-weight: 600;
+      text-decoration: none;
+    }.site-nav > ul.nav-list:first-child > li:nth-child(10) > button svg,
+    .site-nav > ul.nav-list:first-child > li:nth-child(10) > ul > li:nth-child(3) > button svg {
+      transform: rotate(-90deg);
+    }.site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(10) > ul.nav-list,
+    .site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(10) > ul.nav-list > li.nav-list-item:nth-child(3) > ul.nav-list {
+      display: block;
+    }
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Verify Credentials | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Verify Credentials" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="https://geoknoesis.github.io/trustweave/how-to/verify-credentials/" />
+<meta property="og:url" content="https://geoknoesis.github.io/trustweave/how-to/verify-credentials/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Verify Credentials" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"Verify Credentials","url":"https://geoknoesis.github.io/trustweave/how-to/verify-credentials/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  <!-- Main Navigation Styles - Consistent across all pages -->
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1e40af;
+    --secondary: #7c3aed;
+    --accent: #10b981;
+    --text: #1f2937;
+    --text-light: #6b7280;
+    --bg: #ffffff;
+    --bg-light: #f9fafb;
+    --border: #e5e7eb;
+    --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .main-nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    z-index: 1000;
+    padding: 0.5rem 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  .main-nav .nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .main-nav .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    transition: opacity 0.3s;
+  }
+
+  .main-nav .logo-img {
+    height: 120px;
+    width: auto;
+    transition: opacity 0.3s;
+    display: block;
+  }
+
+  .main-nav .logo-img:not([src]),
+  .main-nav .logo-img[src=""],
+  .main-nav .logo-img[src*="undefined"] {
+    display: none;
+  }
+
+
+  .main-nav .logo:hover {
+    opacity: 0.8;
+  }
+
+  .main-nav .logo:hover .logo-img {
+    opacity: 0.8;
+  }
+  
+  .main-nav .nav-links {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+  }
+  
+  .main-nav .nav-links .nav-link {
+    text-decoration: none;
+    color: var(--text);
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.5rem 0;
+    transition: color 0.3s;
+    position: relative;
+    white-space: nowrap;
+  }
+  
+  .main-nav .nav-links .nav-link:hover {
+    color: var(--primary);
+  }
+
+  .main-nav .nav-links .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--primary);
+    transition: width 0.3s ease;
+  }
+
+  .main-nav .nav-links .nav-link:hover::after,
+  .main-nav .nav-links .nav-link.active::after {
+    width: 100%;
+  }
+
+  .main-nav .nav-links .nav-link.active {
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  /* GitHub icon button */
+  .main-nav .nav-links .github-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 0.5rem;
+    transition: all 0.3s;
+    padding: 0.5rem;
+    color: var(--text);
+    text-decoration: none;
+    margin-left: 0.5rem;
+  }
+
+  .main-nav .nav-links .github-icon:hover {
+    background: var(--bg-light);
+    transform: translateY(-2px);
+    color: var(--primary);
+  }
+
+  .main-nav .nav-links .github-icon svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Mobile menu toggle */
+  .menu-toggle {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    gap: 5px;
+    padding: 0.5rem;
+    z-index: 1001;
+  }
+
+  .menu-toggle span {
+    width: 25px;
+    height: 3px;
+    background: var(--text);
+    transition: all 0.3s;
+    border-radius: 2px;
+  }
+
+  .menu-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(8px, 8px);
+  }
+
+  .menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .menu-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
+  }
+
+  /* Footer styles */
+  .site-footer {
+    background: var(--text);
+    color: white;
+    padding: 3rem 2rem;
+    text-align: center;
+    margin-top: 4rem;
+  }
+
+  .site-footer .footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .site-footer .footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .site-footer .footer-links a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+
+  .site-footer .footer-links a:hover {
+    color: white;
+  }
+
+  .site-footer .footer-text {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.875rem;
+  }
+
+  /* Adjust content for fixed nav */
+  body {
+    padding-top: 160px;
+  }
+
+  /* Just the Docs theme adjustments */
+  .site-header {
+    margin-top: 0 !important;
+  }
+
+  /* Mobile responsive */
+  @media (max-width: 968px) {
+    .menu-toggle {
+      display: flex;
+    }
+
+    .main-nav .nav-links {
+      position: fixed;
+      top: 160px;
+      left: 0;
+      right: 0;
+      background: white;
+      flex-direction: column;
+      padding: 2rem;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-100%);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      gap: 1.5rem;
+      align-items: flex-start;
+      max-height: calc(100vh - 160px);
+      overflow-y: auto;
+    }
+
+    .main-nav .nav-links.active {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .main-nav .nav-links .nav-link {
+      width: 100%;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .main-nav .nav-links .nav-link::after {
+      display: none;
+    }
+
+    .main-nav .nav-links .github-icon {
+      width: 100%;
+      justify-content: flex-start;
+      margin-left: 0;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .main-nav .logo-img {
+      height: 120px;
+    }
+
+    .site-footer .footer-links {
+      flex-direction: column;
+      gap: 1rem;
+    }
+  }
+
+  /* Tablet adjustments */
+  @media (max-width: 968px) and (min-width: 769px) {
+    .main-nav .nav-links {
+      gap: 1rem;
+    }
+
+    .main-nav .nav-links .nav-link {
+      font-size: 0.9rem;
+    }
+  }
+</style>
+
+<style>
+  body { padding-top: 160px !important; }
+  .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
+  #header-template { display: none; }
+  
+  /* Ensure footer spans full width and breaks out of containers */
+  .site-footer {
+    position: relative !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+    margin-right: calc(-50vw + 50%) !important;
+    left: 0 !important;
+    right: 0 !important;
+    clear: both !important;
+    z-index: 100 !important;
+    box-sizing: border-box !important;
+  }
+</style>
+<!-- Hidden template for header injection -->
+<div id="header-template" style="display: none;">
+  <!-- Site Header - Consistent across all pages -->
+<nav class="main-nav">
+    <div class="nav-container">
+        <a href="/trustweave/" class="logo">
+            <img src="/trustweave/assets/images/trustweave-logo.jpg" alt="TrustWeave Logo" class="logo-img">
+        </a>
+        <div class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="nav-links" id="navLinks">
+            <a href="/trustweave/" class="nav-link">Home</a>
+            <a href="/trustweave/#features" class="nav-link">Features</a>
+            <a href="/trustweave/use-scenarios/" class="nav-link">Use Scenarios</a>
+            <a href="/trustweave/getting-started/README/" class="nav-link">Docs</a>
+            <a href="/trustweave/partnership/" class="nav-link">Partners</a>
+            <a href="/trustweave/about/" class="nav-link">About</a>
+            <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" rel="noopener noreferrer" class="github-icon" title="View on GitHub" aria-label="GitHub Repository">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Mobile menu toggle and active page highlighting
+    (function() {
+        const menuToggle = document.getElementById('menuToggle');
+        const navLinks = document.getElementById('navLinks');
+        
+        // Mobile menu toggle
+        if (menuToggle && navLinks) {
+            menuToggle.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+                menuToggle.classList.toggle('active');
+            });
+            
+            // Close menu when clicking on a link
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.addEventListener('click', () => {
+                    navLinks.classList.remove('active');
+                    menuToggle.classList.remove('active');
+                });
+            });
+            
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
+                    navLinks.classList.remove('active');
+                    menuToggle.classList.remove('active');
+                }
+            });
+        }
+
+        // Highlight active page
+        const currentPath = window.location.pathname;
+        const navLinksList = document.querySelectorAll('.nav-links .nav-link');
+        
+        navLinksList.forEach(link => {
+            try {
+                const linkUrl = new URL(link.href, window.location.origin);
+                const linkPath = linkUrl.pathname;
+                const baseUrl = '/trustweave' || '';
+                
+                // Normalize paths
+                let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
+                let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
+                
+                // Handle index pages
+                if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
+                if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
+                
+                // Check if current path matches link path
+                if (cleanCurrentPath === cleanLinkPath) {
+                    link.classList.add('active');
+                } else if (cleanLinkPath !== '/' && cleanCurrentPath.startsWith(cleanLinkPath + '/')) {
+                    // Handle sub-pages (e.g., /introduction/ matches /introduction/README/)
+                    link.classList.add('active');
+                }
+            } catch (e) {
+                // Fallback for relative URLs or errors
+                const href = link.getAttribute('href');
+                if (href && (currentPath.includes(href) || (href === '/' && currentPath.endsWith('index.html')))) {
+                    link.classList.add('active');
+                }
+            }
+        });
+    })();
+</script>
+
+
+</div>
+<script>
+  // Move header from template to body top
+  document.addEventListener('DOMContentLoaded', function() {
+    const template = document.getElementById('header-template');
+    if (template) {
+      const header = template.querySelector('.main-nav');
+      if (header) {
+        document.body.insertBefore(header, document.body.firstChild);
+        template.remove();
+      }
+    }
+  });
+</script>
+
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in How-To Guides category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/how-to/README/" class="nav-list-link">How-To Guides</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/how-to/create-dids/" class="nav-list-link">Create and Manage DIDs</a></li><li class="nav-list-item"><a href="/trustweave/how-to/issue-credentials/" class="nav-list-link">Issue Credentials</a></li><li class="nav-list-item"><a href="/trustweave/how-to/verify-credentials/" class="nav-list-link">Verify Credentials</a></li><li class="nav-list-item"><a href="/trustweave/how-to/manage-wallets/" class="nav-list-link">Manage Wallets</a></li><li class="nav-list-item"><a href="/trustweave/how-to/blockchain-anchoring/" class="nav-list-link">Anchor to Blockchain</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/concepts/README/" class="nav-list-link">Concepts</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/quick-reference/" class="nav-list-link">Quick Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/error-types/" class="nav-list-link">Error Types</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/data-types/" class="nav-list-link">Data Types</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      <nav aria-label="Breadcrumb" class="breadcrumb-nav">
+  <ol class="breadcrumb-nav-list">
+    <li class="breadcrumb-nav-list-item"><a href="/trustweave/how-to/README/">How-To Guides</a></li>
+    <li class="breadcrumb-nav-list-item"><span>Verify Credentials</span></li>
+  </ol>
+</nav>
+
+
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="verify-credentials">
+  
+  
+    <a href="#verify-credentials" class="anchor-heading" aria-labelledby="verify-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Verify Credentials
+  
+  
+</h1>
+    
+
+<p>This guide shows you how to verify verifiable credentials with TrustWeave. You’ll learn how to check proof validity, issuer resolution, expiration, and revocation status.</p>
+<h2 id="quick-example">
+  
+  
+    <a href="#quick-example" class="anchor-heading" aria-labelledby="quick-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Quick Example
+  
+  
+</h2>
+    
+
+<p>Here’s a complete example that verifies a credential:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.TrustLayer</span>
+<span class="k">import</span> <span class="nn">com.trustweave.core.TrustWeaveError</span>
+<span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
+
+<span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
+    <span class="k">try</span> <span class="p">{</span>
+        <span class="c1">// Create TrustLayer instance</span>
+        <span class="kd">val</span> <span class="py">trustLayer</span> <span class="p">=</span> <span class="nc">TrustLayer</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
+            <span class="nf">keys</span> <span class="p">{</span>
+                <span class="nf">provider</span><span class="p">(</span><span class="s">"inMemory"</span><span class="p">)</span>
+                <span class="nf">algorithm</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="nf">did</span> <span class="p">{</span>
+                <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nf">algorithm</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="c1">// Assume you have a credential from issuance</span>
+        <span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="c1">// ... credential from issuer ...</span>
+
+        <span class="c1">// Verify credential</span>
+        <span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+            <span class="nf">credential</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Credential is valid"</span><span class="p">)</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"   Proof valid: ${verification.proofValid}"</span><span class="p">)</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"   Issuer valid: ${verification.issuerValid}"</span><span class="p">)</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"   Not expired: ${verification.notExpired}"</span><span class="p">)</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"   Not revoked: ${verification.notRevoked}"</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="n">verification</span><span class="p">.</span><span class="n">warnings</span><span class="p">.</span><span class="nf">isNotEmpty</span><span class="p">())</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"   Warnings: ${verification.warnings.joinToString()}"</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Credential invalid"</span><span class="p">)</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"   Errors: ${verification.errors.joinToString()}"</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">TrustWeaveError</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Verification error: ${error.message}"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Expected Output:</strong></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td><td class="rouge-code"><pre>✅ Credential is valid
+   Proof valid: true
+   Issuer valid: true
+   Not expired: true
+   Not revoked: true
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-by-step-guide">
+  
+  
+    <a href="#step-by-step-guide" class="anchor-heading" aria-labelledby="step-by-step-guide"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step-by-Step Guide
+  
+  
+</h2>
+    
+<h3 id="step-1-get-the-credential">
+  
+  
+    <a href="#step-1-get-the-credential" class="anchor-heading" aria-labelledby="step-1-get-the-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Get the Credential
+  
+  
+</h3>
+    
+
+<p>Obtain the credential to verify (from holder, storage, or network):</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">credential</span><span class="p">:</span> <span class="nc">VerifiableCredential</span> <span class="p">=</span> <span class="c1">// ... get credential ...</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="step-2-verify-the-credential">
+  
+  
+    <a href="#step-2-verify-the-credential" class="anchor-heading" aria-labelledby="step-2-verify-the-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Verify the Credential
+  
+  
+</h3>
+    
+
+<p>Use the <code class="language-plaintext highlighter-rouge">verify</code> DSL to verify the credential:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+    <span class="nf">credential</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="step-3-check-verification-result">
+  
+  
+    <a href="#step-3-check-verification-result" class="anchor-heading" aria-labelledby="step-3-check-verification-result"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Check Verification Result
+  
+  
+</h3>
+    
+
+<p>Examine the verification result:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="k">if</span> <span class="p">(</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Credential passed all checks</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Credential is valid"</span><span class="p">)</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="c1">// Credential failed one or more checks</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Credential invalid: ${verification.errors}"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="step-4-handle-warnings">
+  
+  
+    <a href="#step-4-handle-warnings" class="anchor-heading" aria-labelledby="step-4-handle-warnings"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Handle Warnings
+  
+  
+</h3>
+    
+
+<p>Check for warnings even if verification passed:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td><td class="rouge-code"><pre><span class="k">if</span> <span class="p">(</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span> <span class="p">&amp;&amp;</span> <span class="n">verification</span><span class="p">.</span><span class="n">warnings</span><span class="p">.</span><span class="nf">isNotEmpty</span><span class="p">())</span> <span class="p">{</span>
+    <span class="n">verification</span><span class="p">.</span><span class="n">warnings</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="n">warning</span> <span class="p">-&gt;</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"Warning: $warning"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="verification-checks-explained">
+  
+  
+    <a href="#verification-checks-explained" class="anchor-heading" aria-labelledby="verification-checks-explained"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Verification Checks Explained
+  
+  
+</h2>
+    
+
+<p>TrustWeave performs multiple checks during verification:</p>
+<h3 id="1-proof-validation">
+  
+  
+    <a href="#1-proof-validation" class="anchor-heading" aria-labelledby="1-proof-validation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Proof Validation
+  
+  
+</h3>
+    
+
+<p>Checks that the cryptographic proof (signature) is valid:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td><td class="rouge-code"><pre><span class="k">if</span> <span class="p">(</span><span class="n">verification</span><span class="p">.</span><span class="n">proofValid</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Proof signature is valid"</span><span class="p">)</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Proof signature is invalid"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>What it checks:</strong></p>
+<ul>
+  <li>Signature matches the credential content</li>
+  <li>Signature was created with a key from the issuer’s DID document</li>
+  <li>Proof type is supported</li>
+</ul>
+<h3 id="2-issuer-validation">
+  
+  
+    <a href="#2-issuer-validation" class="anchor-heading" aria-labelledby="2-issuer-validation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Issuer Validation
+  
+  
+</h3>
+    
+
+<p>Checks that the issuer DID can be resolved:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td><td class="rouge-code"><pre><span class="k">if</span> <span class="p">(</span><span class="n">verification</span><span class="p">.</span><span class="n">issuerValid</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Issuer DID resolved successfully"</span><span class="p">)</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Issuer DID resolution failed"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>What it checks:</strong></p>
+<ul>
+  <li>Issuer DID format is valid</li>
+  <li>DID method is registered</li>
+  <li>DID document can be retrieved</li>
+  <li>Issuer DID document contains the verification method used in proof</li>
+</ul>
+<h3 id="3-expiration-check">
+  
+  
+    <a href="#3-expiration-check" class="anchor-heading" aria-labelledby="3-expiration-check"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Expiration Check
+  
+  
+</h3>
+    
+
+<p>Checks if the credential has expired:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td><td class="rouge-code"><pre><span class="k">if</span> <span class="p">(</span><span class="n">verification</span><span class="p">.</span><span class="n">notExpired</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Credential has not expired"</span><span class="p">)</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Credential has expired"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>What it checks:</strong></p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">expirationDate</code> field exists</li>
+  <li>Current time is before expiration date</li>
+</ul>
+<h3 id="4-revocation-check">
+  
+  
+    <a href="#4-revocation-check" class="anchor-heading" aria-labelledby="4-revocation-check"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Revocation Check
+  
+  
+</h3>
+    
+
+<p>Checks if the credential has been revoked:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td><td class="rouge-code"><pre><span class="k">if</span> <span class="p">(</span><span class="n">verification</span><span class="p">.</span><span class="n">notRevoked</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Credential is not revoked"</span><span class="p">)</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Credential has been revoked"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>What it checks:</strong></p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">credentialStatus</code> field exists</li>
+  <li>Status list is accessible</li>
+  <li>Credential index in status list is not set (not revoked)</li>
+</ul>
+<h2 id="verification-policies">
+  
+  
+    <a href="#verification-policies" class="anchor-heading" aria-labelledby="verification-policies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Verification Policies
+  
+  
+</h2>
+    
+
+<p>Configure verification behavior using verification options:</p>
+<h3 id="basic-verification">
+  
+  
+    <a href="#basic-verification" class="anchor-heading" aria-labelledby="basic-verification"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Basic Verification
+  
+  
+</h3>
+    
+
+<p>Default verification checks all aspects:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+    <span class="nf">credential</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
+    <span class="c1">// All checks enabled by default</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="custom-verification-configuration">
+  
+  
+    <a href="#custom-verification-configuration" class="anchor-heading" aria-labelledby="custom-verification-configuration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Custom Verification Configuration
+  
+  
+</h3>
+    
+
+<p>Control which checks are performed:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+    <span class="nf">credential</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
+    <span class="nf">checkExpiration</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>      <span class="c1">// Check expiration (default: true)</span>
+    <span class="nf">checkRevocation</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>      <span class="c1">// Check revocation (default: true)</span>
+    <span class="nf">checkTrust</span><span class="p">(</span><span class="k">false</span><span class="p">)</span>          <span class="c1">// Check trust registry (default: false)</span>
+    <span class="nf">expectedAudience</span><span class="p">(</span><span class="k">null</span><span class="p">)</span>     <span class="c1">// Expected audience DID (default: null)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="skip-expiration-check">
+  
+  
+    <a href="#skip-expiration-check" class="anchor-heading" aria-labelledby="skip-expiration-check"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Skip Expiration Check
+  
+  
+</h3>
+    
+
+<p>For credentials without expiration or when expiration doesn’t matter:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+    <span class="nf">credential</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
+    <span class="nf">checkExpiration</span><span class="p">(</span><span class="k">false</span><span class="p">)</span>  <span class="c1">// Skip expiration check</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="skip-revocation-check">
+  
+  
+    <a href="#skip-revocation-check" class="anchor-heading" aria-labelledby="skip-revocation-check"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Skip Revocation Check
+  
+  
+</h3>
+    
+
+<p>For credentials without revocation status or when revocation doesn’t matter:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+    <span class="nf">credential</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
+    <span class="nf">checkRevocation</span><span class="p">(</span><span class="k">false</span><span class="p">)</span>  <span class="c1">// Skip revocation check</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="trust-registry-verification">
+  
+  
+    <a href="#trust-registry-verification" class="anchor-heading" aria-labelledby="trust-registry-verification"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Trust Registry Verification
+  
+  
+</h3>
+    
+
+<p>Verify that the issuer is in the trust registry:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+    <span class="nf">credential</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
+    <span class="nf">checkTrust</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>  <span class="c1">// Verify issuer is trusted</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Note:</strong> Requires trust registry to be configured in TrustLayer.</p>
+<h2 id="common-patterns">
+  
+  
+    <a href="#common-patterns" class="anchor-heading" aria-labelledby="common-patterns"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Common Patterns
+  
+  
+</h2>
+    
+<h3 id="pattern-1-verify-with-detailed-results">
+  
+  
+    <a href="#pattern-1-verify-with-detailed-results" class="anchor-heading" aria-labelledby="pattern-1-verify-with-detailed-results"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Pattern 1: Verify with Detailed Results
+  
+  
+</h3>
+    
+
+<p>Get detailed information about each check:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+    <span class="nf">credential</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="nf">println</span><span class="p">(</span><span class="s">"Overall valid: ${verification.valid}"</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"Proof valid: ${verification.proofValid}"</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"Issuer valid: ${verification.issuerValid}"</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"Not expired: ${verification.notExpired}"</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"Not revoked: ${verification.notRevoked}"</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">verification</span><span class="p">.</span><span class="n">errors</span><span class="p">.</span><span class="nf">isNotEmpty</span><span class="p">())</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Errors:"</span><span class="p">)</span>
+    <span class="n">verification</span><span class="p">.</span><span class="n">errors</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"  - $error"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">verification</span><span class="p">.</span><span class="n">warnings</span><span class="p">.</span><span class="nf">isNotEmpty</span><span class="p">())</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Warnings:"</span><span class="p">)</span>
+    <span class="n">verification</span><span class="p">.</span><span class="n">warnings</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="n">warning</span> <span class="p">-&gt;</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"  - $warning"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="pattern-2-verify-multiple-credentials">
+  
+  
+    <a href="#pattern-2-verify-multiple-credentials" class="anchor-heading" aria-labelledby="pattern-2-verify-multiple-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Pattern 2: Verify Multiple Credentials
+  
+  
+</h3>
+    
+
+<p>Verify a batch of credentials:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">credentials</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span> <span class="p">=</span> <span class="c1">// ... get credentials ...</span>
+
+<span class="kd">val</span> <span class="py">results</span> <span class="p">=</span> <span class="n">credentials</span><span class="p">.</span><span class="nf">map</span> <span class="p">{</span> <span class="n">cred</span> <span class="p">-&gt;</span>
+    <span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+        <span class="nf">credential</span><span class="p">(</span><span class="n">cred</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="n">cred</span><span class="p">.</span><span class="n">id</span> <span class="n">to</span> <span class="n">verification</span>
+<span class="p">}</span>
+
+<span class="kd">val</span> <span class="py">valid</span> <span class="p">=</span> <span class="n">results</span><span class="p">.</span><span class="nf">filter</span> <span class="p">{</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">verification</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="n">verification</span><span class="p">.</span><span class="n">valid</span> <span class="p">}</span>
+<span class="kd">val</span> <span class="py">invalid</span> <span class="p">=</span> <span class="n">results</span><span class="p">.</span><span class="nf">filter</span> <span class="p">{</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">verification</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="p">!</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span> <span class="p">}</span>
+
+<span class="nf">println</span><span class="p">(</span><span class="s">"Valid: ${valid.size}/${results.size}"</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"Invalid: ${invalid.size}/${results.size}"</span><span class="p">)</span>
+
+<span class="n">invalid</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="p">(</span><span class="n">credId</span><span class="p">,</span> <span class="n">verification</span><span class="p">)</span> <span class="p">-&gt;</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Credential $credId failed: ${verification.errors.joinToString()}"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="pattern-3-verify-with-error-handling">
+  
+  
+    <a href="#pattern-3-verify-with-error-handling" class="anchor-heading" aria-labelledby="pattern-3-verify-with-error-handling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Pattern 3: Verify with Error Handling
+  
+  
+</h3>
+    
+
+<p>Handle verification errors gracefully:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="k">try</span> <span class="p">{</span>
+    <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+        <span class="nf">credential</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">TrustWeaveError</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">when</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">is</span> <span class="nc">TrustWeaveError</span><span class="p">.</span><span class="nc">CredentialInvalid</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"Credential structure invalid: ${error.reason}"</span><span class="p">)</span>
+            <span class="k">return</span><span class="nd">@runBlocking</span>
+        <span class="p">}</span>
+        <span class="k">is</span> <span class="nc">TrustWeaveError</span><span class="p">.</span><span class="nc">DidMethodNotRegistered</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"Issuer DID method not registered: ${error.method}"</span><span class="p">)</span>
+            <span class="k">return</span><span class="nd">@runBlocking</span>
+        <span class="p">}</span>
+        <span class="k">else</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"Verification error: ${error.message}"</span><span class="p">)</span>
+            <span class="k">return</span><span class="nd">@runBlocking</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="pattern-4-conditional-verification">
+  
+  
+    <a href="#pattern-4-conditional-verification" class="anchor-heading" aria-labelledby="pattern-4-conditional-verification"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Pattern 4: Conditional Verification
+  
+  
+</h3>
+    
+
+<p>Verify with different policies based on context:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+</pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">verifyCredential</span><span class="p">(</span>
+    <span class="n">credential</span><span class="p">:</span> <span class="nc">VerifiableCredential</span><span class="p">,</span>
+    <span class="n">strict</span><span class="p">:</span> <span class="nc">Boolean</span> <span class="p">=</span> <span class="k">false</span>
+<span class="p">):</span> <span class="nc">CredentialVerificationResult</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+        <span class="nf">credential</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
+        <span class="nf">checkExpiration</span><span class="p">(</span><span class="n">strict</span><span class="p">)</span>      <span class="c1">// Only check expiration if strict</span>
+        <span class="nf">checkRevocation</span><span class="p">(</span><span class="n">strict</span><span class="p">)</span>      <span class="c1">// Only check revocation if strict</span>
+        <span class="nf">checkTrust</span><span class="p">(</span><span class="n">strict</span><span class="p">)</span>            <span class="c1">// Only check trust if strict</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// For production: strict verification</span>
+<span class="kd">val</span> <span class="py">productionResult</span> <span class="p">=</span> <span class="nf">verifyCredential</span><span class="p">(</span><span class="n">credential</span><span class="p">,</span> <span class="n">strict</span> <span class="p">=</span> <span class="k">true</span><span class="p">)</span>
+
+<span class="c1">// For testing: lenient verification</span>
+<span class="kd">val</span> <span class="py">testResult</span> <span class="p">=</span> <span class="nf">verifyCredential</span><span class="p">(</span><span class="n">credential</span><span class="p">,</span> <span class="n">strict</span> <span class="p">=</span> <span class="k">false</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="error-handling">
+  
+  
+    <a href="#error-handling" class="anchor-heading" aria-labelledby="error-handling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Error Handling
+  
+  
+</h2>
+    
+
+<p>Verification can fail in several ways:</p>
+<h3 id="verification-result-errors">
+  
+  
+    <a href="#verification-result-errors" class="anchor-heading" aria-labelledby="verification-result-errors"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Verification Result Errors
+  
+  
+</h3>
+    
+
+<p>The verification result contains errors if checks fail:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+    <span class="nf">credential</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">if</span> <span class="p">(!</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">verification</span><span class="p">.</span><span class="n">errors</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
+        <span class="k">when</span> <span class="p">{</span>
+            <span class="n">error</span><span class="p">.</span><span class="nf">contains</span><span class="p">(</span><span class="s">"proof"</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Proof validation failed"</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="n">error</span><span class="p">.</span><span class="nf">contains</span><span class="p">(</span><span class="s">"issuer"</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Issuer validation failed"</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="n">error</span><span class="p">.</span><span class="nf">contains</span><span class="p">(</span><span class="s">"expired"</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Credential expired"</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="n">error</span><span class="p">.</span><span class="nf">contains</span><span class="p">(</span><span class="s">"revoked"</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Credential revoked"</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="k">else</span> <span class="p">-&gt;</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Verification error: $error"</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="exception-handling">
+  
+  
+    <a href="#exception-handling" class="anchor-heading" aria-labelledby="exception-handling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Exception Handling
+  
+  
+</h3>
+    
+
+<p>Verification can throw exceptions for structural issues:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+</pre></td><td class="rouge-code"><pre><span class="k">try</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+        <span class="nf">credential</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="c1">// Use verification result</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">TrustWeaveError</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">when</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">is</span> <span class="nc">TrustWeaveError</span><span class="p">.</span><span class="nc">CredentialInvalid</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"Credential structure invalid: ${error.reason}"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">error</span><span class="p">.</span><span class="n">field</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Field: ${error.field}"</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">is</span> <span class="nc">TrustWeaveError</span><span class="p">.</span><span class="nc">DidMethodNotRegistered</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"Issuer DID method not registered: ${error.method}"</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="k">is</span> <span class="nc">TrustWeaveError</span><span class="p">.</span><span class="nc">DidNotFound</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"Issuer DID not found: ${error.did}"</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="k">else</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"Error: ${error.message}"</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="verification-result-structure">
+  
+  
+    <a href="#verification-result-structure" class="anchor-heading" aria-labelledby="verification-result-structure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Verification Result Structure
+  
+  
+</h2>
+    
+
+<p>The <code class="language-plaintext highlighter-rouge">CredentialVerificationResult</code> contains:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="rouge-code"><pre><span class="kd">data class</span> <span class="nc">CredentialVerificationResult</span><span class="p">(</span>
+    <span class="kd">val</span> <span class="py">valid</span><span class="p">:</span> <span class="nc">Boolean</span><span class="p">,</span>              <span class="c1">// Overall validity (all checks passed)</span>
+    <span class="kd">val</span> <span class="py">proofValid</span><span class="p">:</span> <span class="nc">Boolean</span><span class="p">,</span>          <span class="c1">// Proof signature is valid</span>
+    <span class="kd">val</span> <span class="py">issuerValid</span><span class="p">:</span> <span class="nc">Boolean</span><span class="p">,</span>         <span class="c1">// Issuer DID resolved successfully</span>
+    <span class="kd">val</span> <span class="py">notExpired</span><span class="p">:</span> <span class="nc">Boolean</span><span class="p">,</span>          <span class="c1">// Credential has not expired</span>
+    <span class="kd">val</span> <span class="py">notRevoked</span><span class="p">:</span> <span class="nc">Boolean</span><span class="p">,</span>          <span class="c1">// Credential is not revoked</span>
+    <span class="kd">val</span> <span class="py">errors</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">&gt;,</span>        <span class="c1">// List of error messages</span>
+    <span class="kd">val</span> <span class="py">warnings</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">&gt;</span>       <span class="c1">// List of warnings</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="api-reference">
+  
+  
+    <a href="#api-reference" class="anchor-heading" aria-labelledby="api-reference"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> API Reference
+  
+  
+</h2>
+    
+
+<p>For complete API documentation, see:</p>
+<ul>
+  <li><strong><a href="/trustweave/api-reference/core-api/#verify">Core API - verify()</a></strong> - Complete parameter reference</li>
+  <li><strong><a href="/trustweave/advanced/verification-policies/">Verification Policies</a></strong> - Advanced verification configuration</li>
+</ul>
+<h2 id="related-concepts">
+  
+  
+    <a href="#related-concepts" class="anchor-heading" aria-labelledby="related-concepts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Concepts
+  
+  
+</h2>
+    
+
+<ul>
+  <li><strong><a href="/trustweave/core-concepts/verifiable-credentials/">Verifiable Credentials</a></strong> - Understanding credentials</li>
+  <li><strong><a href="/trustweave/core-concepts/blockchain-anchored-revocation/">Blockchain-Anchored Revocation</a></strong> - Understanding revocation</li>
+  <li><strong><a href="/trustweave/core-concepts/trust-registry/">Trust Registry</a></strong> - Understanding trust relationships</li>
+</ul>
+<h2 id="related-how-to-guides">
+  
+  
+    <a href="#related-how-to-guides" class="anchor-heading" aria-labelledby="related-how-to-guides"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related How-To Guides
+  
+  
+</h2>
+    
+
+<ul>
+  <li><strong><a href="/trustweave/how-to/issue-credentials/">Issue Credentials</a></strong> - Issue credentials to verify</li>
+  <li><strong><a href="/trustweave/advanced/error-handling/">Handle Errors</a></strong> - Error handling patterns</li>
+</ul>
+<h2 id="next-steps">
+  
+  
+    <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
+  
+  
+</h2>
+    
+
+<p><strong>Ready to issue credentials?</strong></p>
+<ul>
+  <li><a href="/trustweave/how-to/issue-credentials/">Issue Credentials</a> - Issue credentials that can be verified</li>
+</ul>
+
+<p><strong>Want to configure verification?</strong></p>
+<ul>
+  <li><a href="/trustweave/advanced/verification-policies/">Verification Policies</a> - Advanced verification configuration</li>
+</ul>
+
+<p><strong>Want to learn more?</strong></p>
+<ul>
+  <li><a href="/trustweave/core-concepts/verifiable-credentials/">Verifiable Credentials Concept</a> - Deep dive into credentials</li>
+  <li><a href="/trustweave/tutorials/credential-issuance-tutorial/">Credential Issuance Tutorial</a> - Comprehensive tutorial</li>
+</ul>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+  <hr>
+  <footer>
+    
+
+    <!-- Hidden template for footer injection -->
+<div id="footer-template" style="display: none;">
+  <!-- Site Footer - Consistent across all pages -->
+<footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-links">
+            <a href="/trustweave/">Home</a>
+            <a href="/trustweave/getting-started/README/">Documentation</a>
+            <a href="https://github.com/geoknoesis/TrustWeave" target="_blank">GitHub</a>
+            <a href="/trustweave/partnership/">Partners</a>
+            <a href="https://github.com/geoknoesis/TrustWeave/blob/main/docs/README.md" target="_blank">Docs</a>
+            <a href="https://github.com/geoknoesis/TrustWeave/blob/main/LICENSE" target="_blank">License</a>
+            <a href="https://www.geoknoesis.com" target="_blank">Geoknoesis LLC</a>
+        </div>
+        <p class="footer-text">Made with ❤️ by Geoknoesis LLC</p>
+    </div>
+</footer>
+
+
+</div>
+<script>
+  // Move footer from template to body bottom and make it full width
+  document.addEventListener('DOMContentLoaded', function() {
+    const template = document.getElementById('footer-template');
+    if (template) {
+      const footer = template.querySelector('.site-footer');
+      if (footer) {
+        // Move footer to body level (outside of any containers)
+        document.body.appendChild(footer);
+        template.remove();
+        
+        // Ensure footer spans full width by removing any parent constraints
+        footer.style.position = 'relative';
+        footer.style.width = '100vw';
+        footer.style.marginLeft = 'calc(-50vw + 50%)';
+        footer.style.marginRight = 'calc(-50vw + 50%)';
+      }
+    }
+  });
+</script>
+
+
+    
+  </footer>
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

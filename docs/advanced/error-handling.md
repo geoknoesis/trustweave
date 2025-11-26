@@ -16,7 +16,7 @@ TrustWeave provides structured error handling with rich context for better debug
 
 ## Overview
 
-All TrustWeave API operations return `Result<T>`, which provides a consistent way to handle both success and failure cases. Errors are automatically converted to `TrustWeaveError` types with structured context.
+All TrustWeave API operations return `Result<T>`, which provides a consistent way to handle both success and failure cases. Errors are automatically converted to `TrustWeaveException` types with structured context.
 
 ## Error Types
 
@@ -66,22 +66,22 @@ TrustWeave uses a sealed hierarchy of error types that extend `TrustWeaveExcepti
 ### DID-Related Errors (in `trustweave-did` module)
 
 ```kotlin
-import com.trustweave.did.exception.DidError
+import com.trustweave.did.exception.DidException
 
 // DID not found
-DidError.DidNotFound(
+DidException.DidNotFound(
     did = "did:key:z6Mk...",
     availableMethods = listOf("key", "web")
 )
 
 // DID method not registered
-DidError.DidMethodNotRegistered(
+DidException.DidMethodNotRegistered(
     method = "web",
     availableMethods = listOf("key")
 )
 
 // Invalid DID format
-DidError.InvalidDidFormat(
+DidException.InvalidDidFormat(
     did = "invalid-did",
     reason = "DID must match format: did:<method>:<identifier>"
 )
@@ -90,17 +90,17 @@ DidError.InvalidDidFormat(
 ### Credential-Related Errors (in `trustweave-credentials` module)
 
 ```kotlin
-import com.trustweave.credential.exception.CredentialError
+import com.trustweave.credential.exception.CredentialException
 
 // Credential validation failed
-CredentialError.CredentialInvalid(
+CredentialException.CredentialInvalid(
     reason = "Credential issuer is required",
     credentialId = "urn:uuid:123",
     field = "issuer"
 )
 
 // Credential issuance failed
-CredentialError.CredentialIssuanceFailed(
+CredentialException.CredentialIssuanceFailed(
     reason = "Failed to sign credential",
     issuerDid = "did:key:issuer"
 )
@@ -109,22 +109,37 @@ CredentialError.CredentialIssuanceFailed(
 ### Blockchain-Related Errors (in `trustweave-anchor` module)
 
 ```kotlin
-import com.trustweave.anchor.exceptions.BlockchainError
+import com.trustweave.anchor.exceptions.BlockchainException
 
 // Chain not registered
-BlockchainError.ChainNotRegistered(
+BlockchainException.ChainNotRegistered(
     chainId = "ethereum:mainnet",
     availableChains = listOf("algorand:testnet", "polygon:testnet")
+)
+
+// Transaction failed
+BlockchainException.TransactionFailed(
+    chainId = "algorand:testnet",
+    txHash = "ABC123...",
+    operation = "anchor",
+    reason = "Insufficient funds"
+)
+
+// Connection failed
+BlockchainException.ConnectionFailed(
+    chainId = "ethereum:mainnet",
+    endpoint = "https://rpc.example.com",
+    reason = "Connection timeout"
 )
 ```
 
 ### Wallet-Related Errors (in `trustweave-wallet` module)
 
 ```kotlin
-import com.trustweave.wallet.exception.WalletError
+import com.trustweave.wallet.exception.WalletException
 
 // Wallet creation failed
-WalletError.WalletCreationFailed(
+WalletException.WalletCreationFailed(
     reason = "Provider not found",
     provider = "database",
     walletId = "wallet-123"
@@ -134,23 +149,25 @@ WalletError.WalletCreationFailed(
 ### Plugin-Related Errors
 
 ```kotlin
+import com.trustweave.core.exception.TrustWeaveException
+
 // Blank plugin ID
-TrustWeaveError.BlankPluginId()
+TrustWeaveException.BlankPluginId()
 
 // Plugin already registered
-TrustWeaveError.PluginAlreadyRegistered(
+TrustWeaveException.PluginAlreadyRegistered(
     pluginId = "waltid-credential",
     existingPlugin = "walt.id Credential Service"
 )
 
 // Plugin not found
-TrustWeaveError.PluginNotFound(
+TrustWeaveException.PluginNotFound(
     pluginId = "waltid-credential",
     pluginType = "credential-service"
 )
 
 // Plugin initialization failed
-TrustWeaveError.PluginInitializationFailed(
+TrustWeaveException.PluginInitializationFailed(
     pluginId = "waltid-credential",
     reason = "Configuration missing"
 )
@@ -159,21 +176,23 @@ TrustWeaveError.PluginInitializationFailed(
 ### Provider Chain Errors
 
 ```kotlin
+import com.trustweave.core.exception.TrustWeaveException
+
 // No providers found
-TrustWeaveError.NoProvidersFound(
+TrustWeaveException.NoProvidersFound(
     pluginIds = listOf("provider1", "provider2"),
     availablePlugins = listOf("provider3", "provider4")
 )
 
 // Partial providers found
-TrustWeaveError.PartialProvidersFound(
+TrustWeaveException.PartialProvidersFound(
     requestedIds = listOf("provider1", "provider2", "provider3"),
     foundIds = listOf("provider1", "provider2"),
     missingIds = listOf("provider3")
 )
 
 // All providers failed
-TrustWeaveError.AllProvidersFailed(
+TrustWeaveException.AllProvidersFailed(
     attemptedProviders = listOf("provider1", "provider2"),
     providerErrors = mapOf(
         "provider1" to "Connection timeout",
@@ -186,19 +205,21 @@ TrustWeaveError.AllProvidersFailed(
 ### Configuration Errors
 
 ```kotlin
+import com.trustweave.core.exception.TrustWeaveException
+
 // Configuration file not found
-TrustWeaveError.ConfigNotFound(
+TrustWeaveException.ConfigNotFound(
     path = "/path/to/config.json"
 )
 
 // Configuration read failed
-TrustWeaveError.ConfigReadFailed(
+TrustWeaveException.ConfigReadFailed(
     path = "/path/to/config.json",
     reason = "Permission denied"
 )
 
 // Invalid configuration format
-TrustWeaveError.InvalidConfigFormat(
+TrustWeaveException.InvalidConfigFormat(
     jsonString = "{ invalid json }",
     parseError = "Expected ',' or '}'",
     field = "plugins"
@@ -208,27 +229,29 @@ TrustWeaveError.InvalidConfigFormat(
 ### JSON/Digest Errors
 
 ```kotlin
+import com.trustweave.core.exception.TrustWeaveException
+
 // Invalid JSON
-TrustWeaveError.InvalidJson(
+TrustWeaveException.InvalidJson(
     jsonString = "{ invalid }",
     parseError = "Expected ',' or '}'",
     position = "line 1, column 10"
 )
 
 // JSON encoding failed
-TrustWeaveError.JsonEncodeFailed(
+TrustWeaveException.JsonEncodeFailed(
     element = "{ large object }",
     reason = "Circular reference detected"
 )
 
 // Digest computation failed
-TrustWeaveError.DigestFailed(
+TrustWeaveException.DigestFailed(
     algorithm = "SHA-256",
     reason = "Algorithm not available"
 )
 
 // Encoding failed
-TrustWeaveError.EncodeFailed(
+TrustWeaveException.EncodeFailed(
     operation = "base58-encoding",
     reason = "Invalid byte array"
 )
@@ -237,8 +260,10 @@ TrustWeaveError.EncodeFailed(
 ### Validation Errors
 
 ```kotlin
+import com.trustweave.core.exception.TrustWeaveException
+
 // Validation failed
-TrustWeaveError.ValidationFailed(
+TrustWeaveException.ValidationFailed(
     field = "issuer",
     reason = "Invalid DID format",
     value = "invalid-did"
@@ -248,8 +273,10 @@ TrustWeaveError.ValidationFailed(
 ### Generic Errors
 
 ```kotlin
+import com.trustweave.core.exception.TrustWeaveException
+
 // Invalid operation
-TrustWeaveError.InvalidOperation(
+TrustWeaveException.InvalidOperation(
     code = "INVALID_OPERATION",
     message = "Operation not allowed in current state",
     context = mapOf("operation" to "createDid", "state" to "stopped"),
@@ -257,15 +284,23 @@ TrustWeaveError.InvalidOperation(
 )
 
 // Invalid state
-TrustWeaveError.InvalidState(
+TrustWeaveException.InvalidState(
     code = "INVALID_STATE",
     message = "TrustWeave not initialized",
     context = emptyMap(),
     cause = null
 )
 
+// Resource not found
+TrustWeaveException.NotFound(
+    resource = "did:key:z6Mk...",
+    message = "Resource not found: did:key:z6Mk...",
+    context = emptyMap(),
+    cause = null
+)
+
 // Unknown error (catch-all)
-TrustWeaveError.Unknown(
+TrustWeaveException.Unknown(
     code = "UNKNOWN_ERROR",
     message = "Unexpected error occurred",
     context = emptyMap(),
@@ -354,11 +389,11 @@ result.fold(
         
         // Use context for better error handling
         when (error) {
-            is TrustWeaveError.DidMethodNotRegistered -> {
+            is DidException.DidMethodNotRegistered -> {
                 logger.info("Available methods: ${error.availableMethods}")
                 // Suggest alternatives to user
             }
-            is TrustWeaveError.ChainNotRegistered -> {
+            is BlockchainException.ChainNotRegistered -> {
                 logger.info("Available chains: ${error.availableChains}")
                 // Suggest fallback chains
             }
@@ -423,7 +458,7 @@ val validation = DidValidator.validateFormat(userInputDid)
 if (!validation.isValid()) {
     val error = validation as ValidationResult.Invalid
     return Result.failure(
-        TrustWeaveError.InvalidDidFormat(
+        DidException.InvalidDidFormat(
             did = userInputDid,
             reason = error.message
         )
@@ -453,18 +488,18 @@ result.fold(
 result.fold(
     onFailure = { error ->
         when (error) {
-            is TrustWeaveError.DidMethodNotRegistered -> {
+            is DidException.DidMethodNotRegistered -> {
                 // Specific handling for method not registered
                 logger.warn("Method not registered: ${error.method}")
                 logger.info("Available methods: ${error.availableMethods}")
                 // Register method or suggest alternatives
             }
-            is TrustWeaveError.InvalidDidFormat -> {
+            is DidException.InvalidDidFormat -> {
                 // Specific handling for invalid format
                 logger.error("Invalid DID format: ${error.reason}")
                 // Show format requirements to user
             }
-            is TrustWeaveError.CredentialInvalid -> {
+            is CredentialException.CredentialInvalid -> {
                 // Specific handling for invalid credential
                 logger.error("Credential invalid: ${error.reason}")
                 logger.debug("Field: ${error.field}")
@@ -501,7 +536,7 @@ result.fold(
     },
     onFailure = { error ->
         when (error) {
-            is TrustWeaveError.DidMethodNotRegistered -> {
+            is DidException.DidMethodNotRegistered -> {
                 println("Method not registered: ${error.method}")
                 println("Available methods: ${error.availableMethods}")
             }
@@ -523,7 +558,7 @@ result.fold(
 val did = TrustWeave.dids.create()
 
 // For better error messages, use getOrThrowError
-val did = TrustWeave.dids.create() // Throws TrustWeaveError on failure
+val did = TrustWeave.dids.create() // Throws TrustWeaveException on failure
 ```
 
 ### Error Context
@@ -536,7 +571,7 @@ result.fold(
     onSuccess = { anchor -> println("Anchored: ${anchor.ref.txHash}") },
     onFailure = { error ->
         when (error) {
-            is TrustWeaveError.ChainNotRegistered -> {
+            is BlockchainException.ChainNotRegistered -> {
                 println("Chain ID: ${error.chainId}")
                 println("Available chains: ${error.availableChains}")
                 println("Context: ${error.context}")
@@ -549,16 +584,16 @@ result.fold(
 
 ### Converting Exceptions to Errors
 
-TrustWeave automatically converts exceptions to `TrustWeaveError`:
+TrustWeave automatically converts exceptions to `TrustWeaveException`:
 
 ```kotlin
-import com.trustweave.core.toTrustWeaveError
+import com.trustweave.core.toTrustWeaveException
 
 try {
     // Some operation that might throw
     val result = someOperation()
 } catch (e: Exception) {
-    val error = e.toTrustWeaveError()
+    val error = e.toTrustWeaveException()
     println("Error code: ${error.code}")
     println("Context: ${error.context}")
 }
@@ -576,7 +611,7 @@ Transform errors in a Result:
 val did = TrustWeave.dids.create()
 // Note: dids.create() returns DidDocument directly, not Result
 // For error handling, wrap in try-catch
-    .mapError { it.toTrustWeaveError() }
+    .mapError { it.toTrustWeaveException() }
 ```
 
 ### combine
@@ -725,11 +760,11 @@ result.fold(
     onSuccess = { /* success */ },
     onFailure = { error ->
         when (error) {
-            is TrustWeaveError.DidMethodNotRegistered -> {
+            is DidException.DidMethodNotRegistered -> {
                 // Suggest available methods
                 println("Method 'web' not available. Try: ${error.availableMethods}")
             }
-            is TrustWeaveError.InvalidDidFormat -> {
+            is DidException.InvalidDidFormat -> {
                 // Show format requirements
                 println("Invalid format: ${error.reason}")
             }
@@ -749,7 +784,7 @@ result.fold(
 val did = "did:key:z6Mk..."
 val validation = DidValidator.validateFormat(did)
 if (!validation.isValid()) {
-    return Result.failure(TrustWeaveError.InvalidDidFormat(did, validation.errorMessage() ?: ""))
+    return Result.failure(DidException.InvalidDidFormat(did, validation.errorMessage() ?: ""))
 }
 
 val resolution = TrustWeave.dids.resolve(did)
@@ -784,7 +819,7 @@ TrustWeave.initialize().fold(
     onSuccess = { println("Plugins initialized") },
     onFailure = { error ->
         when (error) {
-            is TrustWeaveError.PluginInitializationFailed -> {
+            is TrustWeaveException.PluginInitializationFailed -> {
                 println("Plugin ${error.pluginId} failed to initialize: ${error.reason}")
             }
             else -> println("Error: ${error.message}")
@@ -842,7 +877,7 @@ didResult.fold(
     },
     onFailure = { error ->
         when (error) {
-            is TrustWeaveError.DidMethodNotRegistered -> {
+            is DidException.DidMethodNotRegistered -> {
                 println("Method not registered: ${error.method}")
             }
             else -> println("Error: ${error.message}")
@@ -860,6 +895,9 @@ For transient errors (network issues, temporary unavailability), implement retry
 ```kotlin
 import kotlinx.coroutines.delay
 import kotlin.random.Random
+import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.did.exception.DidException
+import com.trustweave.credential.exception.CredentialException
 
 suspend fun <T> retryWithBackoff(
     maxRetries: Int = 3,
@@ -869,7 +907,7 @@ suspend fun <T> retryWithBackoff(
     operation: suspend () -> Result<T>
 ): Result<T> {
     var delay = initialDelay.toDouble()
-    var lastError: TrustWeaveError? = null
+    var lastError: TrustWeaveException? = null
     
     repeat(maxRetries) { attempt ->
         val result = operation()
@@ -881,9 +919,9 @@ suspend fun <T> retryWithBackoff(
                 
                 // Don't retry on certain errors
                 when (error) {
-                    is TrustWeaveError.InvalidDidFormat,
-                    is TrustWeaveError.CredentialInvalid,
-                    is TrustWeaveError.ValidationFailed -> {
+                    is DidException.InvalidDidFormat,
+                    is CredentialException.CredentialInvalid,
+                    is TrustWeaveException.ValidationFailed -> {
                         return result // Don't retry validation errors
                     }
                     else -> {
@@ -899,7 +937,7 @@ suspend fun <T> retryWithBackoff(
         )
     }
     
-    return Result.failure(lastError ?: TrustWeaveError.Unknown(
+    return Result.failure(lastError ?: TrustWeaveException.Unknown(
         code = "RETRY_EXHAUSTED",
         message = "Operation failed after $maxRetries retries",
         context = emptyMap(),
@@ -941,7 +979,7 @@ suspend fun resolveDidWithFallback(
         }
     }
     
-    return Result.failure(TrustWeaveError.DidNotFound(
+    return Result.failure(DidException.DidNotFound(
         did = did,
         availableMethods = TrustWeave.getAvailableDidMethods()
     ))
@@ -963,7 +1001,7 @@ suspend fun createDidWithAutoRegistration(
         onSuccess = { did -> Result.success(did) },
         onFailure = { error ->
             when (error) {
-                is TrustWeaveError.DidMethodNotRegistered -> {
+                is DidException.DidMethodNotRegistered -> {
                     // Try to find and register the method
                     val methodClass = findDidMethodClass(method)
                     if (methodClass != null) {
@@ -1029,7 +1067,7 @@ class CircuitBreaker(
                     state = CircuitState.HALF_OPEN
                     halfOpenSuccessCount = 0
                 } else {
-                    return Result.failure(TrustWeaveError.InvalidState(
+                    return Result.failure(TrustWeaveException.InvalidState(
                         code = "CIRCUIT_OPEN",
                         message = "Circuit breaker is open",
                         context = mapOf("timeout" to timeout.toString()),
@@ -1115,7 +1153,7 @@ suspend fun batchResolveDids(
     dids: List<String>
 ): Result<Map<String, DidResolutionResult>> {
     val results = mutableMapOf<String, DidResolutionResult>()
-    val errors = mutableListOf<TrustWeaveError>()
+    val errors = mutableListOf<TrustWeaveException>()
     
     dids.forEach { did ->
         val resolution = TrustWeave.dids.resolve(did)
@@ -1128,7 +1166,7 @@ suspend fun batchResolveDids(
     return if (errors.isEmpty() || results.isNotEmpty()) {
         Result.success(results)
     } else {
-        Result.failure(TrustWeaveError.Unknown(
+        Result.failure(TrustWeaveException.Unknown(
             code = "BATCH_FAILED",
             message = "All operations failed: ${errors.size} errors",
             context = mapOf("errors" to errors.map { it.code }.joinToString()),
@@ -1155,7 +1193,7 @@ suspend fun <T> withTimeoutOrError(
             operation()
         }
     } catch (e: TimeoutCancellationException) {
-        Result.failure(TrustWeaveError.Unknown(
+        Result.failure(TrustWeaveException.Unknown(
             code = "OPERATION_TIMEOUT",
             message = "Operation timed out after ${timeoutMillis}ms",
             context = mapOf("timeout" to timeoutMillis.toString()),

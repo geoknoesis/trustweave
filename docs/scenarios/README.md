@@ -1,6 +1,6 @@
 ---
 title: Use Case Scenarios
-nav_exclude: true
+nav_order: 40
 keywords:
   - scenarios
   - use cases
@@ -27,6 +27,16 @@ Each scenario provides a complete, runnable example showing how to use TrustWeav
 3. **Credential Operations** – Issue, store, and verify credentials
 4. **Advanced Features** – Wallet organization, presentations, blockchain anchoring
 5. **Verification** – Complete verification workflows
+
+## Popular Scenarios
+
+Get started quickly with these commonly used scenarios:
+
+- **[Academic Credentials](academic-credentials-scenario.md)** ⭐ - University credential issuance and verification
+- **[Employee Onboarding](employee-onboarding-scenario.md)** ⭐ - Complete employee onboarding system
+- **[Healthcare Medical Records](healthcare-medical-records-scenario.md)** ⭐ - Patient credential workflows
+- **[Financial Services (KYC)](financial-services-kyc-scenario.md)** ⭐ - KYC/AML compliance workflows
+- **[Government Digital ID](government-digital-identity-scenario.md)** ⭐ - Government-issued digital identity
 
 ## Available Scenarios
 

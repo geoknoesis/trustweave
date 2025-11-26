@@ -1,6 +1,6 @@
 ---
 title: Smart Contract API Reference
-nav_order: 5
+nav_order: 7
 parent: API Reference
 ---
 

@@ -201,6 +201,10 @@ println("Stored mediaType=${stored?.mediaType} payload=${stored?.payload}")
 - [Blockchain-Anchored Revocation](blockchain-anchored-revocation.md) - Revocation with blockchain anchoring
 - [Smart Contracts](smart-contracts.md) - Executable agreements with anchoring
 
+## Related How-To Guides
+
+- **[Anchor to Blockchain](../how-to/blockchain-anchoring.md)** - Step-by-step guide for anchoring data to blockchains
+
 **Explore integrations:**
 - [Blockchain Integrations](../integrations/README.md#blockchain-anchoring) - Algorand, Polygon, Ethereum, and more
 - [Use Case Scenarios](../scenarios/README.md) - Real-world anchoring examples

@@ -1,6 +1,6 @@
 ---
 title: Getting Started
-nav_order: 1
+nav_order: 10
 keywords:
   - getting started
   - installation
@@ -65,4 +65,7 @@ Let's get started!
 **Looking for examples?**
 - [Use Case Scenarios](../scenarios/README.md) - 25+ real-world examples
 - [Tutorials](../tutorials/README.md) - Step-by-step guides
+
+**Need to complete a specific task?**
+- [How-To Guides](../how-to/README.md) - Task-oriented guides for common operations
 

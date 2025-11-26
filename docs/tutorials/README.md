@@ -1,6 +1,12 @@
 ---
 title: Tutorials
-nav_order: 3
+nav_order: 20
+keywords:
+  - tutorials
+  - step-by-step
+  - learning path
+  - beginner
+  - advanced
 ---
 
 # Tutorials
@@ -125,6 +131,9 @@ Start with [Beginner Tutorial Series](beginner-tutorial-series.md) and complete 
 - [Core Concepts](../core-concepts/README.md) - Deep dives into DIDs, credentials, wallets
 - [API Reference](../api-reference/README.md) - Complete API documentation
 - [Advanced Topics](../advanced/README.md) - Key rotation, verification policies, custom adapters
+
+**Need to complete a specific task?**
+- [How-To Guides](../how-to/README.md) - Task-oriented guides for common operations
 
 **Production deployment?**
 - [Production Deployment](../getting-started/production-deployment.md) - Best practices

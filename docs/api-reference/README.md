@@ -1,6 +1,12 @@
 ---
 title: API Reference
-nav_order: 4
+nav_order: 60
+keywords:
+  - api reference
+  - api
+  - methods
+  - functions
+  - documentation
 ---
 
 # API Reference

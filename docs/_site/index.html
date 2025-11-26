@@ -286,18 +286,18 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrustWeave - Build Trusted Domains Without Vendor Lock-In | Open Source</title>
-    <meta name="description" content="Build trusted domains without vendor lock-in. Switch blockchains, DID methods, or KMS providers with configuration, not code rewrites. Free & open source.">
+    <title>TrustWeave - Build Decentralized Trust Domains Without Vendor Lock-In | Open Source</title>
+    <meta name="description" content="Build decentralized trust domains without vendor lock-in. Switch blockchains, DID methods, or KMS providers with configuration, not code rewrites. Free & open source.">
     <meta name="keywords" content="decentralized identity, verifiable credentials, DID, blockchain identity, Kotlin SDK, open source identity, chain-agnostic, KMS-agnostic">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="TrustWeave - Build Trusted Domains Without Vendor Lock-In">
+    <meta property="og:title" content="TrustWeave - Build Decentralized Trust Domains Without Vendor Lock-In">
     <meta property="og:description" content="Switch technologies anytime. No code rewrites. Never locked in. The only SDK that gives you true freedom.">
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="TrustWeave - Build Trusted Domains Without Vendor Lock-In">
+    <meta name="twitter:title" content="TrustWeave - Build Decentralized Trust Domains Without Vendor Lock-In">
     <meta name="twitter:description" content="Switch technologies anytime. No code rewrites. Never locked in. Free & open source.">
     <style>
         * {
@@ -632,7 +632,7 @@
             <a href="/trustweave/" class="nav-link">Home</a>
             <a href="/trustweave/#features" class="nav-link">Features</a>
             <a href="/trustweave/use-scenarios/" class="nav-link">Use Scenarios</a>
-            <a href="/trustweave/introduction/README/" class="nav-link">Docs</a>
+            <a href="/trustweave/getting-started/README/" class="nav-link">Docs</a>
             <a href="/trustweave/partnership/" class="nav-link">Partners</a>
             <a href="/trustweave/about/" class="nav-link">About</a>
             <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" rel="noopener noreferrer" class="github-icon" title="View on GitHub" aria-label="GitHub Repository">
@@ -714,7 +714,7 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-container">
-            <h1>Build Trusted Domains Without Vendor Lock-In</h1>
+            <h1>Build Decentralized Trust Domains Without Vendor Lock-In</h1>
             <p>Write once. Switch blockchains, DID methods, or KMS providers with configuration—not code rewrites. Never locked in. Always future-proof.</p>
             
             <!-- Quality Indicators -->
@@ -737,7 +737,7 @@
                 <a href="/trustweave/getting-started/quick-start/" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
                     🚀 Start Building Free (Open Source)
                 </a>
-                <a href="/trustweave/introduction/README/" class="btn btn-secondary" style="font-size: 1rem; padding: 1rem 1.5rem;">
+                <a href="/trustweave/getting-started/README/" class="btn btn-secondary" style="font-size: 1rem; padding: 1rem 1.5rem;">
                     📚 Documentation
                 </a>
             </div>
@@ -808,45 +808,6 @@
                     </div>
                 </div>
 
-                <!-- Real Example -->
-                <div style="background: white; padding: 3rem; border-radius: 1.5rem; box-shadow: 0 8px 24px rgba(0,0,0,0.1); margin-bottom: 4rem;">
-                    <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem; color: var(--text); text-align: center;">
-                        Real Example: The Difference
-                    </h2>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; margin-top: 2rem;">
-                        <div>
-                            <h3 style="color: #dc2626; margin-bottom: 1rem; font-size: 1.25rem;">❌ Before TrustWeave</h3>
-                            <div style="background: #fef2f2; padding: 1.5rem; border-radius: 0.75rem; font-family: 'Courier New', monospace; font-size: 0.85rem; line-height: 1.6; overflow-x: auto;">
-                                <div style="color: #dc2626; margin-bottom: 0.5rem;">// You're locked into Ethereum</div>
-                                <div style="color: var(--text);">val ethereumClient = EthereumClient(...)</div>
-                                <div style="color: var(--text);">val credential = issueCredential(</div>
-                                <div style="color: var(--text); margin-left: 1rem;">ethereumClient, ...)</div>
-                                <div style="margin-top: 1rem; color: #dc2626;">// Need Algorand? Rewrite everything:</div>
-                                <div style="color: var(--text);">val algorandClient = AlgorandClient(...)</div>
-                                <div style="color: var(--text);">val credential = issueCredentialAlgorand(</div>
-                                <div style="color: var(--text); margin-left: 1rem;">algorandClient, ...) // Different API!</div>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 style="color: var(--accent); margin-bottom: 1rem; font-size: 1.25rem;">✅ With TrustWeave</h3>
-                            <div style="background: #d1fae5; padding: 1.5rem; border-radius: 0.75rem; font-family: 'Courier New', monospace; font-size: 0.85rem; line-height: 1.6; overflow-x: auto;">
-                                <div style="color: var(--accent); margin-bottom: 0.5rem;">// Your code stays the same</div>
-                                <div style="color: var(--text);">val credential = trustLayer.issueCredential(...)</div>
-                                <div style="margin-top: 1rem; color: var(--accent);">// Switch blockchains? Change config:</div>
-                                <div style="color: var(--text);">val trustLayer = trustLayer {</div>
-                                <div style="color: var(--text); margin-left: 1rem;">blockchains {</div>
-                                <div style="color: var(--text); margin-left: 2rem;">"algorand:mainnet" to algorandClient</div>
-                                <div style="color: var(--accent); margin-left: 2rem; font-size: 0.8rem;">// Just this line changes</div>
-                                <div style="color: var(--text); margin-left: 1rem;">}</div>
-                                <div style="color: var(--text);">}</div>
-                                <div style="margin-top: 0.5rem; color: var(--accent); font-size: 0.8rem;">// Everything else works exactly the same</div>
-                            </div>
-                        </div>
-                    </div>
-                    <p style="text-align: center; margin-top: 2rem; font-size: 1.125rem; color: var(--text); font-weight: 600;">
-                        Same code. Different technology. Zero rewrites.
-                    </p>
-                </div>
             </div>
         </div>
     </section>
@@ -925,7 +886,7 @@
             <p>Free. Open Source. No strings attached.</p>
             <div class="cta-buttons">
                 <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" class="btn btn-primary">Get Started on GitHub</a>
-                <a href="/trustweave/introduction/README/" class="btn btn-secondary">View Documentation</a>
+                <a href="/trustweave/getting-started/README/" class="btn btn-secondary">View Documentation</a>
             </div>
             <p class="cta-note">Get started in 5 minutes with our quick start guide</p>
             
@@ -950,9 +911,9 @@
     <div class="footer-content">
         <div class="footer-links">
             <a href="/trustweave/">Home</a>
-            <a href="/trustweave/introduction/">Documentation</a>
+            <a href="/trustweave/getting-started/README/">Documentation</a>
             <a href="https://github.com/geoknoesis/TrustWeave" target="_blank">GitHub</a>
-            <a href="/trustweave/partnership.html">Partners</a>
+            <a href="/trustweave/partnership/">Partners</a>
             <a href="https://github.com/geoknoesis/TrustWeave/blob/main/docs/README.md" target="_blank">Docs</a>
             <a href="https://github.com/geoknoesis/TrustWeave/blob/main/LICENSE" target="_blank">License</a>
             <a href="https://www.geoknoesis.com" target="_blank">Geoknoesis LLC</a>

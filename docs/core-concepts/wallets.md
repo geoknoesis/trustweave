@@ -281,8 +281,13 @@ if (wallet is CredentialPresentation) {
 5. **Verify credentials** before storing them
 6. **Monitor wallet statistics** to track credential health
 
+## Related How-To Guides
+
+- **[Manage Wallets](../how-to/manage-wallets.md)** - Step-by-step guide for creating wallets, storing credentials, organizing them, and creating presentations
+
 ## Next Steps
 
+- [Manage Wallets](../how-to/manage-wallets.md) - Step-by-step guide
 - Check out the [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) for hands-on examples
 - Explore the [Wallet API Reference](../api-reference/wallet-api.md)
 - Learn about [DIDs](dids.md) and [Verifiable Credentials](verifiable-credentials.md)

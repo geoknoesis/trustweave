@@ -104,29 +104,22 @@ Verification resolves the issuer DID document, checks the signature suites, and 
 - **Error handling** – credential operations throw `TrustWeaveError` exceptions directly. Use `try-catch` blocks for error handling. See [Error Handling](../advanced/error-handling.md).
 - **Input validation** – TrustWeave automatically validates credential structure, issuer DID format, and method registration before issuance.
 
-## See also
+## Related How-To Guides
 
-- [Credential Service API](../api-reference/credential-service-api.md) for parameter details and SPI guidance.  
-- [Quick Start – Step 4 & 5](../getting-started/quick-start.md#step-4-issue-a-credential-and-store-it) for a runnable walkthrough.  
-- [Wallets](wallets.md) for storage and presentation.  
-- [Architecture Overview](../introduction/architecture-overview.md) for the credential flow diagram.
-# Verifiable Credentials (VCs)
-
-> TrustWeave and this guide are maintained by [Geoknoesis LLC](https://www.geoknoesis.com). Geoknoesis provides both the open source toolkit and the commercial support offerings referenced below.
-
-## What is a Verifiable Credential?
-
-A **Verifiable Credential (VC)** is a tamper-evident credential that follows the W3C Verifiable Credentials Data Model 1.1. It enables you to make claims about yourself or others in a way that is cryptographically verifiable.
+- **[Issue Credentials](../how-to/issue-credentials.md)** - Step-by-step guide for issuing verifiable credentials
+- **[Verify Credentials](../how-to/verify-credentials.md)** - Step-by-step guide for verifying credentials
 
 ## VC Structure
 
 A Verifiable Credential contains:
 
-1. **Metadata**: Issuer, issuance date, expiration, etc.
-2. **Credential Subject**: The claims (the actual data)
-3. **Proof**: Cryptographic proof of who issued it
-4. **Schema**: Optional schema for validation
-5. **Status**: Optional revocation status
+A Verifiable Credential contains:
+
+1. **Metadata** – issuer, issuance/expiration dates, schema references
+2. **Credential Subject** – the claims being asserted (`name`, `degree`, `license`, etc.)
+3. **Proof** – cryptographic signature binding the issuer to the credential content
+4. **Schema** – optional schema for validation
+5. **Status** – optional revocation status
 
 ### Example VC
 
@@ -348,9 +341,24 @@ Some proof types (like BBS+) support zero-knowledge proofs, allowing you to prov
 4. **Use selective disclosure** to minimize data exposure
 5. **Store credentials securely** in a wallet
 
+## See also
+
+- [Credential Service API](../api-reference/credential-service-api.md) for parameter details and SPI guidance
+- [Quick Start – Step 4 & 5](../getting-started/quick-start.md#step-4-issue-a-credential-and-store-it) for a runnable walkthrough
+- [Wallets](wallets.md) for storage and presentation
+- [Architecture Overview](../introduction/architecture-overview.md) for the credential flow diagram
+
 ## Next Steps
 
-- Learn about [Wallets](wallets.md) for managing credentials
-- Explore the [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md)
-- Check out the [Credential Service API Reference](../api-reference/credential-service-api.md) and [Core API Reference](../api-reference/core-api.md)
+**Ready to use credentials?**
+- [Issue Credentials](../how-to/issue-credentials.md) - Step-by-step guide
+- [Verify Credentials](../how-to/verify-credentials.md) - Step-by-step guide
+- [Quick Start – Step 4 & 5](../getting-started/quick-start.md#step-4-issue-a-credential-and-store-it) - Create your first credential
+
+**Want to learn more?**
+- [Wallets](wallets.md) - Managing credentials
+- [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) - Hands-on wallet examples
+- [Credential Service API Reference](../api-reference/credential-service-api.md) - Complete API documentation
+- [Core API Reference](../api-reference/core-api.md) - TrustLayer API
+
 

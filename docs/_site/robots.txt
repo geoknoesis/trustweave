@@ -1,1 +1,1 @@
-Sitemap: http://localhost:4000/trustweave/sitemap.xml
+Sitemap: https://geoknoesis.github.io/trustweave/sitemap.xml

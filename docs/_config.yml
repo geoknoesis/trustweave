@@ -179,6 +179,50 @@ defaults:
       path: "faq.md"
     values:
       nav_exclude: false
+  - scope:
+      path: "how-to/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "how-to/create-dids.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "how-to/issue-credentials.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "how-to/verify-credentials.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "how-to/manage-wallets.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "how-to/blockchain-anchoring.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "concepts/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "reference/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "api-reference/quick-reference.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "api-reference/error-types.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "api-reference/data-types.md"
+    values:
+      nav_exclude: false
 
 # Theme: Just the Docs (GitBook-like appearance)
 theme: just-the-docs
@@ -247,157 +291,9 @@ just_the_docs:
   nav_fold: false
   nav_sticky: true
 
-# Navigation structure - Organized by logical learning path
-nav:
-  # ============================================
-  # PART 0: INTRODUCTION (First - foundational content)
-  # ============================================
-  - title: Introduction
-    nav_order: 0
-    has_children: true
-    children:
-      - title: Overview
-        url: introduction/README.md
-      - title: What is TrustWeave?
-        url: introduction/what-is-trustweave.md
-      - title: Executive Overview
-        url: introduction/executive-overview.md
-      - title: Key Features
-        url: introduction/key-features.md
-      - title: Use Cases
-        url: introduction/use-cases.md
-      - title: Architecture Overview
-        url: introduction/architecture-overview.md
-      - title: Mental Model
-        url: introduction/mental-model.md
-      - title: Web of Trust
-        url: introduction/web-of-trust.md
-
-  # ============================================
-  # PART 1: GETTING STARTED
-  # ============================================
-  - title: Getting Started
-    nav_order: 1
-    has_children: true
-    children:
-      - title: Overview
-        url: getting-started/README.md
-      - title: Installation
-        url: getting-started/installation.md
-      - title: Quick Start
-        url: getting-started/quick-start.md
-      - title: Your First Application
-        url: getting-started/your-first-application.md
-      - title: Project Setup
-        url: getting-started/project-setup.md
-      - title: IDE Setup
-        url: getting-started/ide-setup.md
-      - title: Common Patterns
-        url: getting-started/common-patterns.md
-      - title: API Patterns
-        url: getting-started/api-patterns.md
-      - title: Workflows
-        url: getting-started/workflows.md
-      - title: DSL Guide
-        url: getting-started/dsl-guide.md
-      - title: Troubleshooting
-        url: getting-started/troubleshooting.md
-      - title: Production Deployment
-        url: getting-started/production-deployment.md
-
-  # ============================================
-  # PART 2: CORE CONCEPTS
-  # ============================================
-  - title: Core Concepts
-    nav_order: 2
-    has_children: true
-    children:
-      - title: Overview
-        url: core-concepts/README.md
-      - title: Decentralized Identifiers (DIDs)
-        url: core-concepts/dids.md
-      - title: Verifiable Credentials
-        url: core-concepts/verifiable-credentials.md
-      - title: Wallets
-        url: core-concepts/wallets.md
-      - title: Blockchain Anchoring
-        url: core-concepts/blockchain-anchoring.md
-      - title: Smart Contracts
-        url: core-concepts/smart-contracts.md
-      - title: Key Management
-        url: core-concepts/key-management.md
-
-  # ============================================
-  # PART 3: TUTORIALS & EXAMPLES
-  # ============================================
-  - title: Tutorials & Examples
-    nav_order: 3
-    has_children: true
-    children:
-      - title: Overview
-        url: tutorials/README.md
-
-  # ============================================
-  # PART 4: API REFERENCE
-  # ============================================
-  - title: API Reference
-    nav_order: 4
-    has_children: true
-    children:
-      - title: Overview
-        url: api-reference/README.md
-      - title: Core API
-        url: api-reference/core-api.md
-      - title: Wallet API
-        url: api-reference/wallet-api.md
-      - title: Credential Service API
-        url: api-reference/credential-service-api.md
-      - title: Smart Contract API
-        url: api-reference/smart-contract-api.md
-
-  # ============================================
-  # PART 5: INTEGRATIONS
-  # ============================================
-  - title: Integrations
-    nav_order: 5
-    has_children: true
-    children:
-      - title: Overview
-        url: integrations/README.md
-
-  # ============================================
-  # PART 6: ADVANCED TOPICS
-  # ============================================
-  - title: Advanced Topics
-    nav_order: 6
-    has_children: true
-    children:
-      - title: Overview
-        url: advanced/README.md
-      - title: Error Handling
-        url: advanced/error-handling.md
-
-  # ============================================
-  # PART 7: REFERENCE
-  # ============================================
-  - title: Reference
-    nav_order: 7
-    has_children: true
-    children:
-      - title: Core Modules
-        url: modules/core-modules.md
-      - title: FAQ
-        url: faq.md
-
-  # ============================================
-  # PART 8: CONTRIBUTING
-  # ============================================
-  - title: Contributing
-    nav_order: 8
-    has_children: true
-    children:
-      - title: Overview
-        url: contributing/README.md
+# Navigation structure - Just the Docs uses front matter (nav_order, parent) in each file
+# Navigation is automatically built from front matter in each markdown file
+# The nav: section has been removed as it's not used by Just the Docs theme
 
 # Kramdown settings for markdown processing
 kramdown:

@@ -1,0 +1,1376 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+    .site-nav ul li a {
+      background-image: none;
+    }
+
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Security Clearance &amp; Access Control Scenario | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Security Clearance &amp; Access Control Scenario" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://localhost:4000/trustweave/scenarios/security-clearance-access-control-scenario/" />
+<meta property="og:url" content="http://localhost:4000/trustweave/scenarios/security-clearance-access-control-scenario/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Security Clearance &amp; Access Control Scenario" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"Security Clearance &amp; Access Control Scenario","url":"http://localhost:4000/trustweave/scenarios/security-clearance-access-control-scenario/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/beginner-tutorial-series/" class="nav-list-link">Beginner Tutorial Series</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchored-revocation/" class="nav-list-link">Blockchain-Anchored Revocation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/code-style/" class="nav-list-link">Code Style</a></li><li class="nav-list-item"><a href="/trustweave/comparison/README/" class="nav-list-link">Comparison Documentation</a></li><li class="nav-list-item"><a href="/trustweave/configuration/README/" class="nav-list-link">Configuration Reference</a></li><li class="nav-list-item"><a href="/trustweave/advanced/custom-adapters/" class="nav-list-link">Creating Custom Adapters</a></li><li class="nav-list-item"><a href="/trustweave/contributing/creating-plugins/" class="nav-list-link">Creating TrustWeave Plugins</a></li><li class="nav-list-item"><a href="/trustweave/features/credential-exchange-protocols/README/" class="nav-list-link">Credential Exchange Protocols</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/credential-issuance-tutorial/" class="nav-list-link">Credential Issuance Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/algorithm-compatibility-table/" class="nav-list-link">Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/did-operations-tutorial/" class="nav-list-link">DID Operations Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/delegation/" class="nav-list-link">Delegation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/development-setup/" class="nav-list-link">Development Setup</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/evaluation-engines/" class="nav-list-link">Evaluation Engines</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/json-canonicalization/" class="nav-list-link">JSON Canonicalization</a></li><li class="nav-list-item"><a href="/trustweave/advanced/key-rotation/" class="nav-list-link">Key Rotation Strategies</a></li><li class="nav-list-item"><a href="/trustweave/licensing/README/" class="nav-list-link">Licensing Overview</a></li><li class="nav-list-item"><a href="/trustweave/migration/README/" class="nav-list-link">Migration Guides</a></li><li class="nav-list-item"><a href="/trustweave/advanced/performance/" class="nav-list-link">Performance Considerations</a></li><li class="nav-list-item"><a href="/trustweave/advanced/plugin-lifecycle/" class="nav-list-link">Plugin Lifecycle Management</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/proof-purpose-validation/" class="nav-list-link">Proof Purpose Validation</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/credential-exchange-protocols/" class="nav-list-link">Protocol Abstraction Layer</a></li><li class="nav-list-item"><a href="/trustweave/contributing/pull-request-process/" class="nav-list-link">Pull Request Process</a></li><li class="nav-list-item"><a href="/trustweave/security/README/" class="nav-list-link">Security Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/advanced/spi/" class="nav-list-link">Service Provider Interface (SPI)</a></li><li class="nav-list-item"><a href="/trustweave/plugins/" class="nav-list-link">Supported Plugins</a></li><li class="nav-list-item"><a href="/trustweave/contributing/testing-guidelines/" class="nav-list-link">Testing Guidelines</a></li><li class="nav-list-item"><a href="/trustweave/advanced/testing-strategies/" class="nav-list-link">Testing Strategies</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/trust-registry/" class="nav-list-link">Trust Registry</a></li><li class="nav-list-item"><a href="/trustweave/GLOSSARY/" class="nav-list-link">TrustWeave Glossary</a></li><li class="nav-list-item"><a href="/trustweave/TRUSTWEAVE_WHITEPAPER/" class="nav-list-link">TrustWeave SDK: Decentralized Trust Infrastructure</a></li><li class="nav-list-item"><a href="/trustweave/scenarios/README/" class="nav-list-link">Use Case Scenarios</a></li><li class="nav-list-item"><a href="/trustweave/advanced/verification-policies/" class="nav-list-link">Verification Policies</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/wallet-api-tutorial/" class="nav-list-link">Wallet API Tutorial</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="security-clearance--access-control-scenario">
+  
+  
+    <a href="#security-clearance--access-control-scenario" class="anchor-heading" aria-labelledby="security-clearance--access-control-scenario"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Security Clearance &amp; Access Control Scenario
+  
+  
+</h1>
+    
+
+<p>This guide demonstrates how to build a security clearance and access control system using TrustWeave. You’ll learn how security authorities can issue clearance credentials, how individuals can store them in wallets, and how systems can verify clearances without exposing full identity or clearance details.</p>
+<h2 id="what-youll-build">
+  
+  
+    <a href="#what-youll-build" class="anchor-heading" aria-labelledby="what-youll-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Build
+  
+  
+</h2>
+    
+
+<p>By the end of this tutorial, you’ll have:</p>
+
+<ul>
+  <li>✅ Created DIDs for security authority (issuer) and cleared personnel (holder)</li>
+  <li>✅ Issued Verifiable Credentials for security clearances (Top Secret, Secret, Confidential)</li>
+  <li>✅ Stored clearance credentials in wallet</li>
+  <li>✅ Implemented multi-level access control</li>
+  <li>✅ Created privacy-preserving clearance presentations</li>
+  <li>✅ Verified clearances without revealing full identity</li>
+  <li>✅ Implemented clearance expiration and revocation</li>
+  <li>✅ Demonstrated selective disclosure for privacy</li>
+</ul>
+<h2 id="big-picture--significance">
+  
+  
+    <a href="#big-picture--significance" class="anchor-heading" aria-labelledby="big-picture--significance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Big Picture &amp; Significance
+  
+  
+</h2>
+    
+<h3 id="the-security-clearance-challenge">
+  
+  
+    <a href="#the-security-clearance-challenge" class="anchor-heading" aria-labelledby="the-security-clearance-challenge"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Security Clearance Challenge
+  
+  
+</h3>
+    
+
+<p>Security clearances are required for access to classified information and sensitive systems, but traditional methods compromise privacy by requiring full identity disclosure. Verifiable credentials enable clearance verification without revealing unnecessary personal information.</p>
+
+<p><strong>Industry Context:</strong></p>
+<ul>
+  <li><strong>Government Requirement</strong>: Security clearances required for classified access</li>
+  <li><strong>Privacy Concerns</strong>: Personnel don’t want to share full identity</li>
+  <li><strong>Compliance</strong>: NIST, FISMA, and other regulations require privacy</li>
+  <li><strong>User Experience</strong>: Complex verification frustrates users</li>
+  <li><strong>Security Risk</strong>: Centralized clearance databases are targets</li>
+</ul>
+
+<p><strong>Why This Matters:</strong></p>
+<ol>
+  <li><strong>Privacy</strong>: Verify clearance without revealing identity</li>
+  <li><strong>Compliance</strong>: Meet privacy regulations (NIST, FISMA)</li>
+  <li><strong>Security</strong>: Cryptographic proof prevents clearance fraud</li>
+  <li><strong>User Experience</strong>: Simple, fast verification</li>
+  <li><strong>Selective Disclosure</strong>: Share only clearance level, not other information</li>
+  <li><strong>Portability</strong>: Clearance credentials work across systems</li>
+</ol>
+<h3 id="the-security-clearance-problem">
+  
+  
+    <a href="#the-security-clearance-problem" class="anchor-heading" aria-labelledby="the-security-clearance-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Security Clearance Problem
+  
+  
+</h3>
+    
+
+<p>Traditional clearance verification faces critical issues:</p>
+<ul>
+  <li><strong>Privacy Violation</strong>: Requires full identity disclosure</li>
+  <li><strong>Fraud Vulnerability</strong>: Fake clearances are possible</li>
+  <li><strong>Not Portable</strong>: Clearance proof tied to specific systems</li>
+  <li><strong>Compliance Risk</strong>: May violate privacy regulations</li>
+  <li><strong>User Friction</strong>: Complex verification processes</li>
+  <li><strong>Data Collection</strong>: Systems collect unnecessary personal data</li>
+</ul>
+<h2 id="value-proposition">
+  
+  
+    <a href="#value-proposition" class="anchor-heading" aria-labelledby="value-proposition"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Value Proposition
+  
+  
+</h2>
+    
+<h3 id="problems-solved">
+  
+  
+    <a href="#problems-solved" class="anchor-heading" aria-labelledby="problems-solved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Problems Solved
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>Privacy-Preserving</strong>: Verify clearance without revealing identity</li>
+  <li><strong>Fraud Prevention</strong>: Cryptographic proof prevents fake clearances</li>
+  <li><strong>Compliance</strong>: Automated compliance with privacy regulations</li>
+  <li><strong>Selective Disclosure</strong>: Share only clearance level</li>
+  <li><strong>Portability</strong>: Clearance credentials work across systems</li>
+  <li><strong>User Control</strong>: Individuals control their clearance data</li>
+  <li><strong>Efficiency</strong>: Instant verification process</li>
+</ol>
+<h3 id="business-benefits">
+  
+  
+    <a href="#business-benefits" class="anchor-heading" aria-labelledby="business-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Business Benefits
+  
+  
+</h3>
+    
+
+<p><strong>For System Administrators:</strong></p>
+<ul>
+  <li><strong>Compliance</strong>: Automated compliance with clearance regulations</li>
+  <li><strong>Privacy</strong>: Reduced liability for data collection</li>
+  <li><strong>Trust</strong>: Cryptographic proof of clearance</li>
+  <li><strong>Efficiency</strong>: Streamlined verification process</li>
+  <li><strong>User Experience</strong>: Improved user satisfaction</li>
+</ul>
+
+<p><strong>For Cleared Personnel:</strong></p>
+<ul>
+  <li><strong>Privacy</strong>: Control what information is shared</li>
+  <li><strong>Security</strong>: Cryptographic protection of clearance data</li>
+  <li><strong>Convenience</strong>: Access systems without full identity disclosure</li>
+  <li><strong>Portability</strong>: Clearance credentials work everywhere</li>
+  <li><strong>Control</strong>: Own and control clearance verification data</li>
+</ul>
+
+<p><strong>For Security Authorities:</strong></p>
+<ul>
+  <li><strong>Efficiency</strong>: Automated credential issuance</li>
+  <li><strong>Compliance</strong>: Meet privacy regulations</li>
+  <li><strong>Trust</strong>: Enhanced trust through verifiable credentials</li>
+  <li><strong>Scalability</strong>: Handle more verifications</li>
+</ul>
+<h3 id="roi-considerations">
+  
+  
+    <a href="#roi-considerations" class="anchor-heading" aria-labelledby="roi-considerations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ROI Considerations
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Privacy Compliance</strong>: Automated NIST/FISMA compliance</li>
+  <li><strong>Fraud Prevention</strong>: Eliminates fake clearance fraud</li>
+  <li><strong>Verification Speed</strong>: 100x faster than manual verification</li>
+  <li><strong>Cost Reduction</strong>: 80-90% reduction in verification costs</li>
+  <li><strong>User Experience</strong>: Improved user satisfaction</li>
+</ul>
+<h2 id="understanding-the-problem">
+  
+  
+    <a href="#understanding-the-problem" class="anchor-heading" aria-labelledby="understanding-the-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Understanding the Problem
+  
+  
+</h2>
+    
+
+<p>Traditional clearance verification has several problems:</p>
+
+<ol>
+  <li><strong>Privacy violation</strong>: Requires full identity disclosure</li>
+  <li><strong>Fraud is possible</strong>: Fake clearances can be created</li>
+  <li><strong>Not portable</strong>: Clearance proof tied to specific systems</li>
+  <li><strong>Compliance risk</strong>: May violate privacy regulations</li>
+  <li><strong>User friction</strong>: Complex verification processes</li>
+</ol>
+
+<p>TrustWeave solves this by enabling:</p>
+
+<ul>
+  <li><strong>Privacy-preserving</strong>: Selective disclosure shows only clearance level</li>
+  <li><strong>Cryptographic proof</strong>: Tamper-proof clearance credentials</li>
+  <li><strong>Self-sovereign</strong>: Individuals control their clearance data</li>
+  <li><strong>Portable</strong>: Clearance credentials work across systems</li>
+  <li><strong>Compliant</strong>: Automated compliance with regulations</li>
+</ul>
+<h2 id="how-it-works-the-security-clearance-flow">
+  
+  
+    <a href="#how-it-works-the-security-clearance-flow" class="anchor-heading" aria-labelledby="how-it-works-the-security-clearance-flow"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How It Works: The Security Clearance Flow
+  
+  
+</h2>
+    
+
+<pre><code class="language-mermaid">flowchart TD
+    A["Security Authority&lt;br/&gt;Verifies Personnel&lt;br/&gt;Issues Clearance Credential"] --&gt;|issues| B["Security Clearance Credential&lt;br/&gt;Personnel DID&lt;br/&gt;Clearance Level&lt;br/&gt;Cryptographic Proof"]
+    B --&gt;|stored in| C["Personnel Wallet&lt;br/&gt;Stores clearance credential&lt;br/&gt;Maintains privacy&lt;br/&gt;Controls disclosure"]
+    C --&gt;|presents| D["Classified System&lt;br/&gt;Top Secret, Secret, Confidential&lt;br/&gt;Verifies clearance only&lt;br/&gt;No identity revealed"]
+    
+    style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
+    style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style D fill:#c2185b,stroke:#880e4f,stroke-width:2px,color:#fff
+</code></pre>
+<h2 id="prerequisites">
+  
+  
+    <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
+  
+  
+</h2>
+    
+
+<ul>
+  <li>Java 21+</li>
+  <li>Kotlin 2.2.0+</li>
+  <li>Gradle 8.5+</li>
+  <li>Basic understanding of Kotlin and coroutines</li>
+</ul>
+<h2 id="step-1-add-dependencies">
+  
+  
+    <a href="#step-1-add-dependencies" class="anchor-heading" aria-labelledby="step-1-add-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Add Dependencies
+  
+  
+</h2>
+    
+
+<p>Add TrustWeave dependencies to your <code class="language-plaintext highlighter-rouge">build.gradle.kts</code>:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
+    <span class="c1">// Core TrustWeave modules</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-all:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    
+    <span class="c1">// Kotlinx Serialization</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
+    
+    <span class="c1">// Coroutines</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-2-complete-runnable-example">
+  
+  
+    <a href="#step-2-complete-runnable-example" class="anchor-heading" aria-labelledby="step-2-complete-runnable-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Complete Runnable Example
+  
+  
+</h2>
+    
+
+<p>Here’s the full security clearance and access control flow using the TrustWeave facade API:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+</pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.example.security.clearance</span>
+
+<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.PresentationOptions</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.wallet.Wallet</span>
+<span class="k">import</span> <span class="nn">com.trustweave.spi.services.WalletCreationOptionsBuilder</span>
+<span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
+<span class="k">import</span> <span class="nn">java.time.Instant</span>
+<span class="k">import</span> <span class="nn">java.time.temporal.ChronoUnit</span>
+
+<span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Security Clearance &amp; Access Control Scenario - Complete End-to-End Example"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+    
+    <span class="c1">// Step 1: Create TrustWeave instance</span>
+    <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ TrustWeave initialized"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 2: Create DIDs for security authority, personnel, and classified systems</span>
+    <span class="kd">val</span> <span class="py">securityAuthorityDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">securityAuthorityDid</span> <span class="p">=</span> <span class="n">securityAuthorityDidDoc</span><span class="p">.</span><span class="n">id</span>
+    <span class="kd">val</span> <span class="py">securityAuthorityKeyId</span> <span class="p">=</span> <span class="n">securityAuthorityDidDoc</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
+        <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">personnel1DidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">personnel1Did</span> <span class="p">=</span> <span class="n">personnel1DidDoc</span><span class="p">.</span><span class="n">id</span>
+    
+    <span class="kd">val</span> <span class="py">personnel2DidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">personnel2Did</span> <span class="p">=</span> <span class="n">personnel2DidDoc</span><span class="p">.</span><span class="n">id</span>
+    
+    <span class="kd">val</span> <span class="py">topSecretSystemDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">topSecretSystemDid</span> <span class="p">=</span> <span class="n">topSecretSystemDidDoc</span><span class="p">.</span><span class="n">id</span>
+    
+    <span class="kd">val</span> <span class="py">secretSystemDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">secretSystemDid</span> <span class="p">=</span> <span class="n">secretSystemDidDoc</span><span class="p">.</span><span class="n">id</span>
+    
+    <span class="kd">val</span> <span class="py">confidentialSystemDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">confidentialSystemDid</span> <span class="p">=</span> <span class="n">confidentialSystemDidDoc</span><span class="p">.</span><span class="n">id</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Security Authority DID: $securityAuthorityDid"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Personnel 1 DID: $personnel1Did"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Personnel 2 DID: $personnel2Did"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Top Secret System DID: $topSecretSystemDid"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Secret System DID: $secretSystemDid"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Confidential System DID: $confidentialSystemDid"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 3: Issue Top Secret clearance for Personnel 1</span>
+    <span class="kd">val</span> <span class="py">topSecretClearance</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">securityAuthorityDid</span><span class="p">,</span>
+        <span class="n">issuerKeyId</span> <span class="p">=</span> <span class="n">securityAuthorityKeyId</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="n">personnel1Did</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"securityClearance"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"clearanceLevel"</span><span class="p">,</span> <span class="s">"Top Secret"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"clearanceType"</span><span class="p">,</span> <span class="s">"TS/SCI"</span><span class="p">)</span> <span class="c1">// Top Secret/Sensitive Compartmented Information</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"clearanceGranted"</span><span class="p">,</span> <span class="k">true</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"grantDate"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"investigationType"</span><span class="p">,</span> <span class="s">"SSBI"</span><span class="p">)</span> <span class="c1">// Single Scope Background Investigation</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"investigationDate"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">minus</span><span class="p">(</span><span class="mi">365</span><span class="p">,</span> <span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">DAYS</span><span class="p">).</span><span class="nf">toString</span><span class="p">())</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"polygraphRequired"</span><span class="p">,</span> <span class="k">true</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"polygraphDate"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">minus</span><span class="p">(</span><span class="mi">180</span><span class="p">,</span> <span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">DAYS</span><span class="p">).</span><span class="nf">toString</span><span class="p">())</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"authority"</span><span class="p">,</span> <span class="s">"Department of Defense"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"clearanceNumber"</span><span class="p">,</span> <span class="s">"TS-2024-001234"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"compartments"</span><span class="p">,</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"HCS"</span><span class="p">,</span> <span class="s">"TK"</span><span class="p">,</span> <span class="s">"SI"</span><span class="p">))</span> <span class="c1">// Compartments</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"needToKnow"</span><span class="p">,</span> <span class="k">true</span><span class="p">)</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"SecurityClearanceCredential"</span><span class="p">,</span> <span class="s">"TopSecretClearance"</span><span class="p">),</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">plus</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">YEARS</span><span class="p">).</span><span class="nf">toString</span><span class="p">()</span>
+    <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ Top Secret clearance credential issued: ${topSecretClearance.id}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Clearance Level: Top Secret/SCI"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Personnel: ${personnel1Did.take(20)}..."</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Note: Full identity NOT included for privacy"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 4: Issue Secret clearance for Personnel 2</span>
+    <span class="kd">val</span> <span class="py">secretClearance</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">securityAuthorityDid</span><span class="p">,</span>
+        <span class="n">issuerKeyId</span> <span class="p">=</span> <span class="n">securityAuthorityKeyId</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="n">personnel2Did</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"securityClearance"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"clearanceLevel"</span><span class="p">,</span> <span class="s">"Secret"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"clearanceType"</span><span class="p">,</span> <span class="s">"Secret"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"clearanceGranted"</span><span class="p">,</span> <span class="k">true</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"grantDate"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"investigationType"</span><span class="p">,</span> <span class="s">"NACLC"</span><span class="p">)</span> <span class="c1">// National Agency Check with Law and Credit</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"investigationDate"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">minus</span><span class="p">(</span><span class="mi">180</span><span class="p">,</span> <span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">DAYS</span><span class="p">).</span><span class="nf">toString</span><span class="p">())</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"polygraphRequired"</span><span class="p">,</span> <span class="k">false</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"authority"</span><span class="p">,</span> <span class="s">"Department of Defense"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"clearanceNumber"</span><span class="p">,</span> <span class="s">"S-2024-005678"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"compartments"</span><span class="p">,</span> <span class="n">emptyList</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">&gt;())</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"needToKnow"</span><span class="p">,</span> <span class="k">true</span><span class="p">)</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"SecurityClearanceCredential"</span><span class="p">,</span> <span class="s">"SecretClearance"</span><span class="p">),</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">plus</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">YEARS</span><span class="p">).</span><span class="nf">toString</span><span class="p">()</span>
+    <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Secret clearance credential issued: ${secretClearance.id}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Clearance Level: Secret"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Personnel: ${personnel2Did.take(20)}..."</span><span class="p">)</span>
+    
+    <span class="c1">// Step 5: Create personnel wallets and store clearance credentials</span>
+    <span class="kd">val</span> <span class="py">personnel1Wallet</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">createWallet</span><span class="p">(</span>
+        <span class="n">holderDid</span> <span class="p">=</span> <span class="n">personnel1Did</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">WalletCreationOptionsBuilder</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
+            <span class="n">enableOrganization</span> <span class="p">=</span> <span class="k">true</span>
+            <span class="n">enablePresentation</span> <span class="p">=</span> <span class="k">true</span>
+        <span class="p">}.</span><span class="nf">build</span><span class="p">()</span>
+    <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    
+    <span class="kd">val</span> <span class="py">personnel2Wallet</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">createWallet</span><span class="p">(</span>
+        <span class="n">holderDid</span> <span class="p">=</span> <span class="n">personnel2Did</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">WalletCreationOptionsBuilder</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
+            <span class="n">enableOrganization</span> <span class="p">=</span> <span class="k">true</span>
+            <span class="n">enablePresentation</span> <span class="p">=</span> <span class="k">true</span>
+        <span class="p">}.</span><span class="nf">build</span><span class="p">()</span>
+    <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    
+    <span class="kd">val</span> <span class="py">topSecretCredentialId</span> <span class="p">=</span> <span class="n">personnel1Wallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">topSecretClearance</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">secretCredentialId</span> <span class="p">=</span> <span class="n">personnel2Wallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">secretClearance</span><span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ Clearance credentials stored in wallets"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 6: Organize credentials</span>
+    <span class="n">personnel1Wallet</span><span class="p">.</span><span class="nf">withOrganization</span> <span class="p">{</span> <span class="n">org</span> <span class="p">-&gt;</span>
+        <span class="kd">val</span> <span class="py">clearanceCollectionId</span> <span class="p">=</span> <span class="n">org</span><span class="p">.</span><span class="nf">createCollection</span><span class="p">(</span><span class="s">"Security Clearances"</span><span class="p">,</span> <span class="s">"Security clearance credentials"</span><span class="p">)</span>
+        <span class="n">org</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">topSecretCredentialId</span><span class="p">,</span> <span class="n">clearanceCollectionId</span><span class="p">)</span>
+        <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">topSecretCredentialId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"clearance"</span><span class="p">,</span> <span class="s">"top-secret"</span><span class="p">,</span> <span class="s">"ts-sci"</span><span class="p">,</span> <span class="s">"classified"</span><span class="p">,</span> <span class="s">"high-security"</span><span class="p">))</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Personnel 1 clearance organized"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="n">personnel2Wallet</span><span class="p">.</span><span class="nf">withOrganization</span> <span class="p">{</span> <span class="n">org</span> <span class="p">-&gt;</span>
+        <span class="kd">val</span> <span class="py">clearanceCollectionId</span> <span class="p">=</span> <span class="n">org</span><span class="p">.</span><span class="nf">createCollection</span><span class="p">(</span><span class="s">"Security Clearances"</span><span class="p">,</span> <span class="s">"Security clearance credentials"</span><span class="p">)</span>
+        <span class="n">org</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">secretCredentialId</span><span class="p">,</span> <span class="n">clearanceCollectionId</span><span class="p">)</span>
+        <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">secretCredentialId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"clearance"</span><span class="p">,</span> <span class="s">"secret"</span><span class="p">,</span> <span class="s">"classified"</span><span class="p">,</span> <span class="s">"security"</span><span class="p">))</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Personnel 2 clearance organized"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Step 7: Top Secret system access control</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔐 Top Secret System Access Control:"</span><span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">topSecretVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">topSecretClearance</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">topSecretVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">val</span> <span class="py">credentialSubject</span> <span class="p">=</span> <span class="n">topSecretClearance</span><span class="p">.</span><span class="n">credentialSubject</span>
+        <span class="kd">val</span> <span class="py">securityClearance</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"securityClearance"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
+        <span class="kd">val</span> <span class="py">clearanceLevel</span> <span class="p">=</span> <span class="n">securityClearance</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"clearanceLevel"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
+        <span class="kd">val</span> <span class="py">clearanceType</span> <span class="p">=</span> <span class="n">securityClearance</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"clearanceType"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
+        <span class="kd">val</span> <span class="py">needToKnow</span> <span class="p">=</span> <span class="n">securityClearance</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"needToKnow"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toBoolean</span><span class="p">()</span> <span class="o">?:</span> <span class="k">false</span>
+        
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Clearance Credential: VALID"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Clearance Level: $clearanceLevel"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Clearance Type: $clearanceType"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Need to Know: $needToKnow"</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">clearanceLevel</span> <span class="p">==</span> <span class="s">"Top Secret"</span> <span class="p">&amp;&amp;</span> <span class="n">needToKnow</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Clearance requirement MET"</span><span class="p">)</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Need to know verified"</span><span class="p">)</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Access GRANTED to Top Secret system"</span><span class="p">)</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Clearance requirement NOT MET"</span><span class="p">)</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Access DENIED"</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Clearance Credential: INVALID"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Access DENIED"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Step 8: Secret system access control</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔐 Secret System Access Control:"</span><span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">secretVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">secretClearance</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">secretVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">val</span> <span class="py">credentialSubject</span> <span class="p">=</span> <span class="n">secretClearance</span><span class="p">.</span><span class="n">credentialSubject</span>
+        <span class="kd">val</span> <span class="py">securityClearance</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"securityClearance"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
+        <span class="kd">val</span> <span class="py">clearanceLevel</span> <span class="p">=</span> <span class="n">securityClearance</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"clearanceLevel"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
+        <span class="kd">val</span> <span class="py">needToKnow</span> <span class="p">=</span> <span class="n">securityClearance</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"needToKnow"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toBoolean</span><span class="p">()</span> <span class="o">?:</span> <span class="k">false</span>
+        
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Clearance Credential: VALID"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Clearance Level: $clearanceLevel"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Need to Know: $needToKnow"</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">((</span><span class="n">clearanceLevel</span> <span class="p">==</span> <span class="s">"Secret"</span> <span class="p">||</span> <span class="n">clearanceLevel</span> <span class="p">==</span> <span class="s">"Top Secret"</span><span class="p">)</span> <span class="p">&amp;&amp;</span> <span class="n">needToKnow</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Clearance requirement MET"</span><span class="p">)</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Access GRANTED to Secret system"</span><span class="p">)</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Clearance requirement NOT MET"</span><span class="p">)</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Access DENIED"</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Clearance Credential: INVALID"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Access DENIED"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Step 9: Confidential system access control</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔐 Confidential System Access Control:"</span><span class="p">)</span>
+    
+    <span class="c1">// Personnel 2 attempts to access Confidential system (lower clearance)</span>
+    <span class="kd">val</span> <span class="py">confidentialVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">secretClearance</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">confidentialVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">val</span> <span class="py">credentialSubject</span> <span class="p">=</span> <span class="n">secretClearance</span><span class="p">.</span><span class="n">credentialSubject</span>
+        <span class="kd">val</span> <span class="py">securityClearance</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"securityClearance"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
+        <span class="kd">val</span> <span class="py">clearanceLevel</span> <span class="p">=</span> <span class="n">securityClearance</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"clearanceLevel"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
+        
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Clearance Credential: VALID"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Clearance Level: $clearanceLevel"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Required Level: Confidential (or higher)"</span><span class="p">)</span>
+        
+        <span class="c1">// Secret clearance is higher than Confidential, so access is granted</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">clearanceLevel</span> <span class="p">==</span> <span class="s">"Secret"</span> <span class="p">||</span> <span class="n">clearanceLevel</span> <span class="p">==</span> <span class="s">"Top Secret"</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Clearance requirement MET (higher clearance accepted)"</span><span class="p">)</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Access GRANTED to Confidential system"</span><span class="p">)</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">clearanceLevel</span> <span class="p">==</span> <span class="s">"Confidential"</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Clearance requirement MET"</span><span class="p">)</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Access GRANTED to Confidential system"</span><span class="p">)</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Clearance requirement NOT MET"</span><span class="p">)</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Access DENIED"</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Clearance Credential: INVALID"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Access DENIED"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Step 10: Multi-level access control demonstration</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔐 Multi-Level Access Control Demonstration:"</span><span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">clearanceLevels</span> <span class="p">=</span> <span class="nf">mapOf</span><span class="p">(</span>
+        <span class="s">"Top Secret"</span> <span class="n">to</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="s">"Secret"</span> <span class="n">to</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="s">"Confidential"</span> <span class="n">to</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s">"Unclassified"</span> <span class="n">to</span> <span class="mi">1</span>
+    <span class="p">)</span>
+    
+    <span class="k">fun</span> <span class="nf">hasRequiredClearance</span><span class="p">(</span><span class="n">personnelClearance</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span> <span class="n">requiredClearance</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">Boolean</span> <span class="p">{</span>
+        <span class="kd">val</span> <span class="py">personnelLevel</span> <span class="p">=</span> <span class="n">clearanceLevels</span><span class="p">[</span><span class="n">personnelClearance</span><span class="p">]</span> <span class="o">?:</span> <span class="mi">0</span>
+        <span class="kd">val</span> <span class="py">requiredLevel</span> <span class="p">=</span> <span class="n">clearanceLevels</span><span class="p">[</span><span class="n">requiredClearance</span><span class="p">]</span> <span class="o">?:</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">personnelLevel</span> <span class="p">&gt;=</span> <span class="n">requiredLevel</span>
+    <span class="p">}</span>
+    
+    <span class="kd">val</span> <span class="py">testCases</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span>
+        <span class="nc">Triple</span><span class="p">(</span><span class="s">"Top Secret"</span><span class="p">,</span> <span class="s">"Top Secret"</span><span class="p">,</span> <span class="k">true</span><span class="p">),</span>
+        <span class="nc">Triple</span><span class="p">(</span><span class="s">"Top Secret"</span><span class="p">,</span> <span class="s">"Secret"</span><span class="p">,</span> <span class="k">true</span><span class="p">),</span>
+        <span class="nc">Triple</span><span class="p">(</span><span class="s">"Top Secret"</span><span class="p">,</span> <span class="s">"Confidential"</span><span class="p">,</span> <span class="k">true</span><span class="p">),</span>
+        <span class="nc">Triple</span><span class="p">(</span><span class="s">"Secret"</span><span class="p">,</span> <span class="s">"Secret"</span><span class="p">,</span> <span class="k">true</span><span class="p">),</span>
+        <span class="nc">Triple</span><span class="p">(</span><span class="s">"Secret"</span><span class="p">,</span> <span class="s">"Confidential"</span><span class="p">,</span> <span class="k">true</span><span class="p">),</span>
+        <span class="nc">Triple</span><span class="p">(</span><span class="s">"Secret"</span><span class="p">,</span> <span class="s">"Top Secret"</span><span class="p">,</span> <span class="k">false</span><span class="p">),</span>
+        <span class="nc">Triple</span><span class="p">(</span><span class="s">"Confidential"</span><span class="p">,</span> <span class="s">"Top Secret"</span><span class="p">,</span> <span class="k">false</span><span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="n">testCases</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="p">(</span><span class="n">personnel</span><span class="p">,</span> <span class="n">required</span><span class="p">,</span> <span class="n">expected</span><span class="p">)</span> <span class="p">-&gt;</span>
+        <span class="kd">val</span> <span class="py">hasAccess</span> <span class="p">=</span> <span class="nf">hasRequiredClearance</span><span class="p">(</span><span class="n">personnel</span><span class="p">,</span> <span class="n">required</span><span class="p">)</span>
+        <span class="kd">val</span> <span class="py">status</span> <span class="p">=</span> <span class="k">if</span> <span class="p">(</span><span class="n">hasAccess</span> <span class="p">==</span> <span class="n">expected</span><span class="p">)</span> <span class="s">"✅"</span> <span class="k">else</span> <span class="s">"❌"</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   $status Personnel: $personnel, Required: $required, Access: $hasAccess"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Step 11: Create privacy-preserving clearance presentation</span>
+    <span class="kd">val</span> <span class="py">clearancePresentation</span> <span class="p">=</span> <span class="n">personnel1Wallet</span><span class="p">.</span><span class="nf">withPresentation</span> <span class="p">{</span> <span class="n">pres</span> <span class="p">-&gt;</span>
+        <span class="n">pres</span><span class="p">.</span><span class="nf">createPresentation</span><span class="p">(</span>
+            <span class="n">credentialIds</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="n">topSecretCredentialId</span><span class="p">),</span>
+            <span class="n">holderDid</span> <span class="p">=</span> <span class="n">personnel1Did</span><span class="p">,</span>
+            <span class="n">options</span> <span class="p">=</span> <span class="nc">PresentationOptions</span><span class="p">(</span>
+                <span class="n">holderDid</span> <span class="p">=</span> <span class="n">personnel1Did</span><span class="p">,</span>
+                <span class="n">challenge</span> <span class="p">=</span> <span class="s">"clearance-verification-${System.currentTimeMillis()}"</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">}</span> <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"Presentation capability not available"</span><span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ Privacy-preserving clearance presentation created"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Holder: ${clearancePresentation.holder}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Credentials: ${clearancePresentation.verifiableCredential.size}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Note: Only clearance level shared, no personal details"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 12: Demonstrate privacy - verify no personal information is exposed</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔒 Privacy Verification:"</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">presentationCredential</span> <span class="p">=</span> <span class="n">clearancePresentation</span><span class="p">.</span><span class="n">verifiableCredential</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">presentationCredential</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">val</span> <span class="py">subject</span> <span class="p">=</span> <span class="n">presentationCredential</span><span class="p">.</span><span class="n">credentialSubject</span>
+        <span class="kd">val</span> <span class="py">hasFullName</span> <span class="p">=</span> <span class="n">subject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">.</span><span class="nf">containsKey</span><span class="p">(</span><span class="s">"fullName"</span><span class="p">)</span>
+        <span class="kd">val</span> <span class="py">hasSSN</span> <span class="p">=</span> <span class="n">subject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">.</span><span class="nf">containsKey</span><span class="p">(</span><span class="s">"ssn"</span><span class="p">)</span>
+        <span class="kd">val</span> <span class="py">hasAddress</span> <span class="p">=</span> <span class="n">subject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">.</span><span class="nf">containsKey</span><span class="p">(</span><span class="s">"address"</span><span class="p">)</span>
+        <span class="kd">val</span> <span class="py">hasClearanceLevel</span> <span class="p">=</span> <span class="n">subject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">.</span><span class="nf">containsKey</span><span class="p">(</span><span class="s">"securityClearance"</span><span class="p">)</span>
+        
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Full Name exposed: $hasFullName ❌"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   SSN exposed: $hasSSN ❌"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Address exposed: $hasAddress ❌"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Clearance level only: $hasClearanceLevel ✅"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Privacy preserved - only clearance information shared"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Step 13: Display wallet statistics</span>
+    <span class="kd">val</span> <span class="py">stats1</span> <span class="p">=</span> <span class="n">personnel1Wallet</span><span class="p">.</span><span class="nf">getStatistics</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">stats2</span> <span class="p">=</span> <span class="n">personnel2Wallet</span><span class="p">.</span><span class="nf">getStatistics</span><span class="p">()</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n📊 Personnel 1 Wallet Statistics:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Total credentials: ${stats1.totalCredentials}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Valid credentials: ${stats1.validCredentials}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Collections: ${stats1.collectionsCount}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Tags: ${stats1.tagsCount}"</span><span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n📊 Personnel 2 Wallet Statistics:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Total credentials: ${stats2.totalCredentials}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Valid credentials: ${stats2.validCredentials}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Collections: ${stats2.collectionsCount}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Tags: ${stats2.tagsCount}"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 14: Summary</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n"</span> <span class="p">+</span> <span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ SECURITY CLEARANCE &amp; ACCESS CONTROL SYSTEM COMPLETE"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Clearance credentials issued and stored"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Multi-level access control implemented"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Privacy-preserving verification implemented"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Selective disclosure for privacy"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   No personal information exposed"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Expected Output:</strong></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+</pre></td><td class="rouge-code"><pre>======================================================================
+Security Clearance &amp; Access Control Scenario - Complete End-to-End Example
+======================================================================
+
+✅ TrustWeave initialized
+✅ Security Authority DID: did:key:z6Mk...
+✅ Personnel 1 DID: did:key:z6Mk...
+✅ Personnel 2 DID: did:key:z6Mk...
+✅ Top Secret System DID: did:key:z6Mk...
+✅ Secret System DID: did:key:z6Mk...
+✅ Confidential System DID: did:key:z6Mk...
+
+✅ Top Secret clearance credential issued: urn:uuid:...
+   Clearance Level: Top Secret/SCI
+   Personnel: did:key:z6Mk...
+   Note: Full identity NOT included for privacy
+✅ Secret clearance credential issued: urn:uuid:...
+
+✅ Clearance credentials stored in wallets
+✅ Personnel 1 clearance organized
+✅ Personnel 2 clearance organized
+
+🔐 Top Secret System Access Control:
+✅ Clearance Credential: VALID
+   Clearance Level: Top Secret
+   Clearance Type: TS/SCI
+   Need to Know: true
+✅ Clearance requirement MET
+✅ Need to know verified
+✅ Access GRANTED to Top Secret system
+
+🔐 Secret System Access Control:
+✅ Clearance Credential: VALID
+   Clearance Level: Secret
+   Need to Know: true
+✅ Clearance requirement MET
+✅ Access GRANTED to Secret system
+
+🔐 Confidential System Access Control:
+✅ Clearance Credential: VALID
+   Clearance Level: Secret
+   Required Level: Confidential (or higher)
+✅ Clearance requirement MET (higher clearance accepted)
+✅ Access GRANTED to Confidential system
+
+🔐 Multi-Level Access Control Demonstration:
+   ✅ Personnel: Top Secret, Required: Top Secret, Access: true
+   ✅ Personnel: Top Secret, Required: Secret, Access: true
+   ✅ Personnel: Top Secret, Required: Confidential, Access: true
+   ✅ Personnel: Secret, Required: Secret, Access: true
+   ✅ Personnel: Secret, Required: Confidential, Access: true
+   ✅ Personnel: Secret, Required: Top Secret, Access: false
+   ✅ Personnel: Confidential, Required: Top Secret, Access: false
+
+✅ Privacy-preserving clearance presentation created
+   Holder: did:key:z6Mk...
+   Credentials: 1
+
+🔒 Privacy Verification:
+   Full Name exposed: false ❌
+   SSN exposed: false ❌
+   Address exposed: false ❌
+   Clearance level only: true ✅
+✅ Privacy preserved - only clearance information shared
+
+📊 Personnel 1 Wallet Statistics:
+   Total credentials: 1
+   Valid credentials: 1
+   Collections: 1
+   Tags: 5
+
+📊 Personnel 2 Wallet Statistics:
+   Total credentials: 1
+   Valid credentials: 1
+   Collections: 1
+   Tags: 4
+
+======================================================================
+✅ SECURITY CLEARANCE &amp; ACCESS CONTROL SYSTEM COMPLETE
+   Clearance credentials issued and stored
+   Multi-level access control implemented
+   Privacy-preserving verification implemented
+   Selective disclosure for privacy
+   No personal information exposed
+======================================================================
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="key-features-demonstrated">
+  
+  
+    <a href="#key-features-demonstrated" class="anchor-heading" aria-labelledby="key-features-demonstrated"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Features Demonstrated
+  
+  
+</h2>
+    
+
+<ol>
+  <li><strong>Multi-Level Clearance</strong>: Support Top Secret, Secret, Confidential levels</li>
+  <li><strong>Privacy-Preserving</strong>: Only clearance level shared, not personal details</li>
+  <li><strong>Selective Disclosure</strong>: Share only necessary information</li>
+  <li><strong>Access Control</strong>: Verify clearance for system access</li>
+  <li><strong>Compliance</strong>: Automated compliance with clearance regulations</li>
+  <li><strong>Fraud Prevention</strong>: Cryptographic proof prevents fake clearances</li>
+</ol>
+<h2 id="real-world-extensions">
+  
+  
+    <a href="#real-world-extensions" class="anchor-heading" aria-labelledby="real-world-extensions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Extensions
+  
+  
+</h2>
+    
+
+<ul>
+  <li><strong>Compartmented Information</strong>: Support for SCI compartments (HCS, TK, SI)</li>
+  <li><strong>Need-to-Know Verification</strong>: Additional need-to-know checks</li>
+  <li><strong>Clearance Expiration</strong>: Track and enforce clearance expiration</li>
+  <li><strong>Revocation</strong>: Revoke compromised clearances</li>
+  <li><strong>Blockchain Anchoring</strong>: Anchor clearance credentials for audit trails</li>
+  <li><strong>Multi-Authority</strong>: Support clearances from multiple authorities</li>
+  <li><strong>Clearance Renewal</strong>: Automated clearance renewal workflows</li>
+</ul>
+<h2 id="related-documentation">
+  
+  
+    <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
+  
+  
+</h2>
+    
+
+<ul>
+  <li><a href="/trustweave/getting-started/quick-start/">Quick Start</a> - Get started with TrustWeave</li>
+  <li><a href="/trustweave/getting-started/common-patterns/">Common Patterns</a> - Reusable code patterns</li>
+  <li><a href="/trustweave/api-reference/core-api/">API Reference</a> - Complete API documentation</li>
+  <li><a href="/trustweave/scenarios/zero-trust-authentication-scenario/">Zero Trust Continuous Authentication Scenario</a> - Related authentication scenario</li>
+  <li><a href="/trustweave/getting-started/troubleshooting/">Troubleshooting</a> - Common issues and solutions</li>
+</ul>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

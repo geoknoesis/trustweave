@@ -16,5 +16,5 @@ platforms :mingw, :x64_mingw, :mswin, :jruby do
 end
 
 # Performance and livereload for local development
-gem "wdm", "~> 0.1.1", :platforms => [:mingw, :x64_mingw, :mswin]
+# gem "wdm", "~> 0.1.1", :platforms => [:mingw, :x64_mingw, :mswin]  # Temporarily disabled - incompatible with Ruby 3.4
 

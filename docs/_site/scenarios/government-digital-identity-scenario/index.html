@@ -1,0 +1,2233 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+    .site-nav ul li a {
+      background-image: none;
+    }
+
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Government &amp; Digital Identity Scenario | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Government &amp; Digital Identity Scenario" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://localhost:4000/trustweave/scenarios/government-digital-identity-scenario/" />
+<meta property="og:url" content="http://localhost:4000/trustweave/scenarios/government-digital-identity-scenario/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Government &amp; Digital Identity Scenario" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"Government &amp; Digital Identity Scenario","url":"http://localhost:4000/trustweave/scenarios/government-digital-identity-scenario/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/beginner-tutorial-series/" class="nav-list-link">Beginner Tutorial Series</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchored-revocation/" class="nav-list-link">Blockchain-Anchored Revocation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/code-style/" class="nav-list-link">Code Style</a></li><li class="nav-list-item"><a href="/trustweave/comparison/README/" class="nav-list-link">Comparison Documentation</a></li><li class="nav-list-item"><a href="/trustweave/configuration/README/" class="nav-list-link">Configuration Reference</a></li><li class="nav-list-item"><a href="/trustweave/advanced/custom-adapters/" class="nav-list-link">Creating Custom Adapters</a></li><li class="nav-list-item"><a href="/trustweave/contributing/creating-plugins/" class="nav-list-link">Creating TrustWeave Plugins</a></li><li class="nav-list-item"><a href="/trustweave/features/credential-exchange-protocols/README/" class="nav-list-link">Credential Exchange Protocols</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/credential-issuance-tutorial/" class="nav-list-link">Credential Issuance Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/algorithm-compatibility-table/" class="nav-list-link">Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/did-operations-tutorial/" class="nav-list-link">DID Operations Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/delegation/" class="nav-list-link">Delegation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/development-setup/" class="nav-list-link">Development Setup</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/evaluation-engines/" class="nav-list-link">Evaluation Engines</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/json-canonicalization/" class="nav-list-link">JSON Canonicalization</a></li><li class="nav-list-item"><a href="/trustweave/advanced/key-rotation/" class="nav-list-link">Key Rotation Strategies</a></li><li class="nav-list-item"><a href="/trustweave/licensing/README/" class="nav-list-link">Licensing Overview</a></li><li class="nav-list-item"><a href="/trustweave/migration/README/" class="nav-list-link">Migration Guides</a></li><li class="nav-list-item"><a href="/trustweave/advanced/performance/" class="nav-list-link">Performance Considerations</a></li><li class="nav-list-item"><a href="/trustweave/advanced/plugin-lifecycle/" class="nav-list-link">Plugin Lifecycle Management</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/proof-purpose-validation/" class="nav-list-link">Proof Purpose Validation</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/credential-exchange-protocols/" class="nav-list-link">Protocol Abstraction Layer</a></li><li class="nav-list-item"><a href="/trustweave/contributing/pull-request-process/" class="nav-list-link">Pull Request Process</a></li><li class="nav-list-item"><a href="/trustweave/security/README/" class="nav-list-link">Security Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/advanced/spi/" class="nav-list-link">Service Provider Interface (SPI)</a></li><li class="nav-list-item"><a href="/trustweave/plugins/" class="nav-list-link">Supported Plugins</a></li><li class="nav-list-item"><a href="/trustweave/contributing/testing-guidelines/" class="nav-list-link">Testing Guidelines</a></li><li class="nav-list-item"><a href="/trustweave/advanced/testing-strategies/" class="nav-list-link">Testing Strategies</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/trust-registry/" class="nav-list-link">Trust Registry</a></li><li class="nav-list-item"><a href="/trustweave/GLOSSARY/" class="nav-list-link">TrustWeave Glossary</a></li><li class="nav-list-item"><a href="/trustweave/TRUSTWEAVE_WHITEPAPER/" class="nav-list-link">TrustWeave SDK: Decentralized Trust Infrastructure</a></li><li class="nav-list-item"><a href="/trustweave/scenarios/README/" class="nav-list-link">Use Case Scenarios</a></li><li class="nav-list-item"><a href="/trustweave/advanced/verification-policies/" class="nav-list-link">Verification Policies</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/wallet-api-tutorial/" class="nav-list-link">Wallet API Tutorial</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="government--digital-identity-scenario">
+  
+  
+    <a href="#government--digital-identity-scenario" class="anchor-heading" aria-labelledby="government--digital-identity-scenario"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Government &amp; Digital Identity Scenario
+  
+  
+</h1>
+    
+
+<p>This guide demonstrates how to build a government digital identity system using TrustWeave that enables citizen identity wallets, government-issued credentials, document verification, and cross-border identity verification.</p>
+<h2 id="what-youll-build">
+  
+  
+    <a href="#what-youll-build" class="anchor-heading" aria-labelledby="what-youll-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Build
+  
+  
+</h2>
+    
+
+<p>By the end of this tutorial, you’ll have:</p>
+
+<ul>
+  <li>✅ Created DIDs for government agencies and citizens</li>
+  <li>✅ Issued government credentials (driver’s license, passport, tax credentials)</li>
+  <li>✅ Built citizen identity wallet</li>
+  <li>✅ Implemented document verification system</li>
+  <li>✅ Created service access control</li>
+  <li>✅ Enabled cross-border identity verification</li>
+  <li>✅ Anchored critical identity documents to blockchain</li>
+</ul>
+<h2 id="big-picture--significance">
+  
+  
+    <a href="#big-picture--significance" class="anchor-heading" aria-labelledby="big-picture--significance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Big Picture &amp; Significance
+  
+  
+</h2>
+    
+<h3 id="the-digital-government-transformation">
+  
+  
+    <a href="#the-digital-government-transformation" class="anchor-heading" aria-labelledby="the-digital-government-transformation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Digital Government Transformation
+  
+  
+</h3>
+    
+
+<p>Governments worldwide are digitizing citizen services, but face challenges with identity verification, document authenticity, and cross-border recognition. Digital identity systems built on DIDs and VCs provide a foundation for secure, privacy-preserving government services.</p>
+
+<p><strong>Industry Context</strong>:</p>
+<ul>
+  <li><strong>Market Size</strong>: Global digital identity solutions market projected to reach $49.5 billion by 2026</li>
+  <li><strong>Government Initiatives</strong>: Over 100 countries implementing national digital identity programs</li>
+  <li><strong>Regulatory Drivers</strong>: eIDAS in EU, NIST guidelines in US, Aadhaar in India</li>
+  <li><strong>Citizen Demand</strong>: 73% of citizens want digital government services</li>
+  <li><strong>Cost Savings</strong>: Digital identity can reduce government service costs by 30-50%</li>
+</ul>
+
+<p><strong>Why This Matters</strong>:</p>
+<ol>
+  <li><strong>Citizen Convenience</strong>: Access government services from anywhere</li>
+  <li><strong>Fraud Prevention</strong>: Cryptographic proof prevents document forgery</li>
+  <li><strong>Privacy</strong>: Citizens control what identity information is shared</li>
+  <li><strong>Interoperability</strong>: Works across different government agencies</li>
+  <li><strong>Cross-Border</strong>: Enables international identity verification</li>
+  <li><strong>Cost Reduction</strong>: Reduces administrative costs significantly</li>
+</ol>
+<h3 id="the-government-identity-challenge">
+  
+  
+    <a href="#the-government-identity-challenge" class="anchor-heading" aria-labelledby="the-government-identity-challenge"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Government Identity Challenge
+  
+  
+</h3>
+    
+
+<p>Traditional government identity systems face critical issues:</p>
+<ul>
+  <li><strong>Document Forgery</strong>: Paper documents can be easily forged</li>
+  <li><strong>Siloed Systems</strong>: Different agencies can’t verify each other’s documents</li>
+  <li><strong>Privacy Concerns</strong>: Centralized databases create privacy risks</li>
+  <li><strong>Cross-Border Issues</strong>: International verification is complex</li>
+  <li><strong>Citizen Burden</strong>: Multiple identity documents for different services</li>
+  <li><strong>Cost</strong>: High costs for document issuance and verification</li>
+</ul>
+<h2 id="value-proposition">
+  
+  
+    <a href="#value-proposition" class="anchor-heading" aria-labelledby="value-proposition"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Value Proposition
+  
+  
+</h2>
+    
+<h3 id="problems-solved">
+  
+  
+    <a href="#problems-solved" class="anchor-heading" aria-labelledby="problems-solved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Problems Solved
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>Document Authenticity</strong>: Cryptographic proof prevents forgery</li>
+  <li><strong>Citizen Control</strong>: Citizens own and control their identity credentials</li>
+  <li><strong>Interoperability</strong>: Standard format works across all government agencies</li>
+  <li><strong>Privacy</strong>: Selective disclosure protects citizen privacy</li>
+  <li><strong>Cross-Border</strong>: Enables international identity verification</li>
+  <li><strong>Efficiency</strong>: Instant verification without manual checks</li>
+  <li><strong>Cost Reduction</strong>: Reduces document issuance and verification costs</li>
+  <li><strong>Fraud Prevention</strong>: Tamper-proof credentials prevent identity theft</li>
+</ol>
+<h3 id="business-benefits">
+  
+  
+    <a href="#business-benefits" class="anchor-heading" aria-labelledby="business-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Business Benefits
+  
+  
+</h3>
+    
+
+<p><strong>For Government Agencies</strong>:</p>
+<ul>
+  <li><strong>Cost Savings</strong>: 40-60% reduction in document issuance costs</li>
+  <li><strong>Fraud Reduction</strong>: 80% reduction in document forgery</li>
+  <li><strong>Efficiency</strong>: 10x faster identity verification</li>
+  <li><strong>Interoperability</strong>: Seamless data sharing across agencies</li>
+  <li><strong>Compliance</strong>: Meets eIDAS and other regulatory requirements</li>
+</ul>
+
+<p><strong>For Citizens</strong>:</p>
+<ul>
+  <li><strong>Convenience</strong>: Access services from any device</li>
+  <li><strong>Privacy</strong>: Control what information is shared</li>
+  <li><strong>Portability</strong>: Identity credentials work across agencies</li>
+  <li><strong>Security</strong>: Reduced risk of identity theft</li>
+  <li><strong>Speed</strong>: Faster service access</li>
+</ul>
+
+<p><strong>For Service Providers</strong>:</p>
+<ul>
+  <li><strong>Trust</strong>: Verifiable government-issued credentials</li>
+  <li><strong>Efficiency</strong>: Instant identity verification</li>
+  <li><strong>Compliance</strong>: Meets KYC/AML requirements</li>
+  <li><strong>Cost</strong>: Reduced verification costs</li>
+</ul>
+<h3 id="roi-considerations">
+  
+  
+    <a href="#roi-considerations" class="anchor-heading" aria-labelledby="roi-considerations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ROI Considerations
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Document Issuance</strong>: 50% cost reduction</li>
+  <li><strong>Verification</strong>: 90% faster verification process</li>
+  <li><strong>Fraud Prevention</strong>: Saves millions in prevented fraud</li>
+  <li><strong>Citizen Satisfaction</strong>: Improved service delivery</li>
+  <li><strong>Innovation</strong>: Enables new digital services</li>
+</ul>
+<h2 id="understanding-the-problem">
+  
+  
+    <a href="#understanding-the-problem" class="anchor-heading" aria-labelledby="understanding-the-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Understanding the Problem
+  
+  
+</h2>
+    
+
+<p>Government identity management faces several critical challenges:</p>
+
+<ol>
+  <li><strong>Document Security</strong>: Paper documents can be forged or tampered with</li>
+  <li><strong>Siloed Systems</strong>: Different agencies maintain separate identity systems</li>
+  <li><strong>Privacy</strong>: Centralized databases create privacy and security risks</li>
+  <li><strong>Cross-Border</strong>: International identity verification is complex</li>
+  <li><strong>Citizen Burden</strong>: Multiple documents for different services</li>
+  <li><strong>Cost</strong>: High costs for document issuance and verification</li>
+  <li><strong>Fraud</strong>: Identity theft and document forgery</li>
+</ol>
+<h3 id="real-world-pain-points">
+  
+  
+    <a href="#real-world-pain-points" class="anchor-heading" aria-labelledby="real-world-pain-points"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Pain Points
+  
+  
+</h3>
+    
+
+<p><strong>Example 1: Driver’s License Verification</strong></p>
+<ul>
+  <li>Current: Manual verification, paper documents, easy to forge</li>
+  <li>Problem: Fraud, slow verification, no digital access</li>
+  <li>Solution: Verifiable digital driver’s license with instant verification</li>
+</ul>
+
+<p><strong>Example 2: Passport Verification</strong></p>
+<ul>
+  <li>Current: Physical passport, manual border checks</li>
+  <li>Problem: Slow border processing, document forgery</li>
+  <li>Solution: Digital passport credential with instant verification</li>
+</ul>
+
+<p><strong>Example 3: Tax Credentials</strong></p>
+<ul>
+  <li>Current: Multiple documents for tax filing</li>
+  <li>Problem: Complex, time-consuming, privacy concerns</li>
+  <li>Solution: Verifiable tax credentials with selective disclosure</li>
+</ul>
+<h2 id="how-it-works-government-identity-flow">
+  
+  
+    <a href="#how-it-works-government-identity-flow" class="anchor-heading" aria-labelledby="how-it-works-government-identity-flow"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How It Works: Government Identity Flow
+  
+  
+</h2>
+    
+
+<pre><code class="language-mermaid">flowchart TD
+    A["Government Agency&lt;br/&gt;Creates Agency DID&lt;br/&gt;Issues Identity Credentials&lt;br/&gt;Manages Citizen Registry"] --&gt;|issues credentials| B["Government Credentials&lt;br/&gt;Driver's License&lt;br/&gt;Passport&lt;br/&gt;Tax Credential&lt;br/&gt;Proof cryptographic"]
+    B --&gt;|stored in citizen wallet| C["Citizen Identity Wallet&lt;br/&gt;Stores all government credentials&lt;br/&gt;Manages identity&lt;br/&gt;Creates presentations"]
+    C --&gt;|presents for service access| D["Government Service&lt;br/&gt;Verifies credentials&lt;br/&gt;Grants access&lt;br/&gt;Logs access"]
+    
+    style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
+    style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style D fill:#c2185b,stroke:#880e4f,stroke-width:2px,color:#fff
+</code></pre>
+<h2 id="key-concepts">
+  
+  
+    <a href="#key-concepts" class="anchor-heading" aria-labelledby="key-concepts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Concepts
+  
+  
+</h2>
+    
+<h3 id="government-credential-types">
+  
+  
+    <a href="#government-credential-types" class="anchor-heading" aria-labelledby="government-credential-types"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Government Credential Types
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>Driver’s License Credential</strong>: Driving privileges, vehicle classes, expiration</li>
+  <li><strong>Passport Credential</strong>: Citizenship, travel authorization, biometric data</li>
+  <li><strong>Tax Credential</strong>: Tax identification, filing status, authorization</li>
+  <li><strong>Voting Credential</strong>: Eligibility to vote, registration status</li>
+  <li><strong>Social Benefits Credential</strong>: Eligibility for government benefits</li>
+  <li><strong>Professional License Credential</strong>: Professional certifications and licenses</li>
+</ol>
+<h3 id="citizen-identity-wallet">
+  
+  
+    <a href="#citizen-identity-wallet" class="anchor-heading" aria-labelledby="citizen-identity-wallet"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Citizen Identity Wallet
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Self-Sovereign</strong>: Citizen owns and controls identity</li>
+  <li><strong>Multi-Credential</strong>: Stores credentials from multiple agencies</li>
+  <li><strong>Selective Disclosure</strong>: Share only necessary information</li>
+  <li><strong>Privacy</strong>: Control what information is shared</li>
+  <li><strong>Portability</strong>: Works across all government services</li>
+</ul>
+<h3 id="trust-anchors">
+  
+  
+    <a href="#trust-anchors" class="anchor-heading" aria-labelledby="trust-anchors"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Trust Anchors
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Government DIDs</strong>: Trusted government agency identities</li>
+  <li><strong>Verification</strong>: Cryptographic proof of government issuance</li>
+  <li><strong>Revocation</strong>: Government can revoke credentials</li>
+  <li><strong>Audit Trail</strong>: Immutable records of credential issuance</li>
+</ul>
+<h2 id="prerequisites">
+  
+  
+    <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
+  
+  
+</h2>
+    
+
+<ul>
+  <li>Java 21+</li>
+  <li>Kotlin 2.2.0+</li>
+  <li>Gradle 8.5+</li>
+  <li>Basic understanding of Kotlin and coroutines</li>
+  <li>Familiarity with government identity concepts (helpful but not required)</li>
+</ul>
+<h2 id="step-1-add-dependencies">
+  
+  
+    <a href="#step-1-add-dependencies" class="anchor-heading" aria-labelledby="step-1-add-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Add Dependencies
+  
+  
+</h2>
+    
+
+<p>Add TrustWeave dependencies to your <code class="language-plaintext highlighter-rouge">build.gradle.kts</code>. These modules provide DID creation, credential issuance, wallet management, and the in-memory services used in this government scenario.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+</pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
+    <span class="c1">// Core TrustWeave modules</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    
+    <span class="c1">// Test kit for in-memory implementations</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    
+    <span class="c1">// Kotlinx Serialization</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
+    
+    <span class="c1">// Coroutines</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Result:</strong> After syncing, you can run the walkthrough without wiring additional adapters.</p>
+<h2 id="step-2-complete-example">
+  
+  
+    <a href="#step-2-complete-example" class="anchor-heading" aria-labelledby="step-2-complete-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Complete Example
+  
+  
+</h2>
+    
+
+<p>Here’s the full government digital identity workflow. Run it once to see every step—from agency issuance to citizen presentation—before diving into the detailed breakdowns.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.models.VerifiableCredential</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.models.VerifiablePresentation</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.CredentialIssuanceOptions</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.CredentialVerificationOptions</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.PresentationOptions</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.issuer.CredentialIssuer</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.verifier.CredentialVerifier</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.proof.Ed25519ProofGenerator</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.proof.ProofGeneratorRegistry</span>
+<span class="k">import</span> <span class="nn">com.trustweave.testkit.credential.InMemoryWallet</span>
+<span class="k">import</span> <span class="nn">com.trustweave.testkit.did.DidKeyMockMethod</span>
+<span class="k">import</span> <span class="nn">com.trustweave.testkit.kms.InMemoryKeyManagementService</span>
+<span class="k">import</span> <span class="nn">com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient</span>
+<span class="k">import</span> <span class="nn">com.trustweave.anchor.BlockchainAnchorRegistry</span>
+<span class="k">import</span> <span class="nn">com.trustweave.anchor.anchorTyped</span>
+<span class="k">import</span> <span class="nn">com.trustweave.did.DidMethodRegistry</span>
+<span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.Serializable</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.Json</span>
+<span class="k">import</span> <span class="nn">java.time.Instant</span>
+<span class="k">import</span> <span class="nn">java.time.temporal.ChronoUnit</span>
+
+<span class="nd">@Serializable</span>
+<span class="kd">data class</span> <span class="nc">IdentityDocument</span><span class="p">(</span>
+    <span class="kd">val</span> <span class="py">documentType</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">documentNumber</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">citizenDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">issuerDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">credentialDigest</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">)</span>
+
+<span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"=== Government &amp; Digital Identity Scenario ===\n"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 1: Setup services</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Step 1: Setting up services..."</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">dmvKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span> <span class="c1">// Department of Motor Vehicles</span>
+    <span class="kd">val</span> <span class="py">passportOfficeKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">taxAuthorityKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">citizenKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
+    
+    <span class="kd">val</span> <span class="py">didMethod</span> <span class="p">=</span> <span class="nc">DidKeyMockMethod</span><span class="p">(</span><span class="n">dmvKms</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">didRegistry</span> <span class="p">=</span> <span class="nc">DidMethodRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span> <span class="nf">register</span><span class="p">(</span><span class="n">didMethod</span><span class="p">)</span> <span class="p">}</span>
+    
+    <span class="c1">// Setup blockchain for anchoring</span>
+    <span class="kd">val</span> <span class="py">anchorClient</span> <span class="p">=</span> <span class="nc">InMemoryBlockchainAnchorClient</span><span class="p">(</span><span class="s">"eip155:1"</span><span class="p">,</span> <span class="nf">emptyMap</span><span class="p">())</span>
+    <span class="kd">val</span> <span class="py">blockchainRegistry</span> <span class="p">=</span> <span class="nc">BlockchainAnchorRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
+        <span class="nf">register</span><span class="p">(</span><span class="s">"eip155:1"</span><span class="p">,</span> <span class="n">anchorClient</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Step 2: Create government agency DIDs</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 2: Creating government agency DIDs..."</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">dmvDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"DMV DID: ${dmvDid.id}"</span><span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">passportOfficeDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Passport Office DID: ${passportOfficeDid.id}"</span><span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">taxAuthorityDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Tax Authority DID: ${taxAuthorityDid.id}"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 3: Create citizen DID</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 3: Creating citizen DID..."</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">citizenDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Citizen DID: ${citizenDid.id}"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 4: Create citizen identity wallet</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 4: Creating citizen identity wallet..."</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">citizenWallet</span> <span class="p">=</span> <span class="nc">InMemoryWallet</span><span class="p">(</span>
+        <span class="n">walletDid</span> <span class="p">=</span> <span class="n">citizenDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">holderDid</span> <span class="p">=</span> <span class="n">citizenDid</span><span class="p">.</span><span class="n">id</span>
+    <span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Citizen wallet created: ${citizenWallet.walletId}"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 5: Issue driver's license credential</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 5: Issuing driver's license credential..."</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">driversLicenseCredential</span> <span class="p">=</span> <span class="nf">createDriversLicenseCredential</span><span class="p">(</span>
+        <span class="n">citizenDid</span> <span class="p">=</span> <span class="n">citizenDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">dmvDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">licenseNumber</span> <span class="p">=</span> <span class="s">"DL123456789"</span><span class="p">,</span>
+        <span class="n">fullName</span> <span class="p">=</span> <span class="s">"John Doe"</span><span class="p">,</span>
+        <span class="n">dateOfBirth</span> <span class="p">=</span> <span class="s">"1985-06-15"</span><span class="p">,</span>
+        <span class="n">address</span> <span class="p">=</span> <span class="s">"123 Main St, City, State 12345"</span><span class="p">,</span>
+        <span class="n">vehicleClasses</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"Class C"</span><span class="p">,</span> <span class="s">"Class M"</span><span class="p">),</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="s">"2028-06-15"</span>
+    <span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">dmvKey</span> <span class="p">=</span> <span class="n">dmvKms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">dmvProofGenerator</span> <span class="p">=</span> <span class="nc">Ed25519ProofGenerator</span><span class="p">(</span>
+        <span class="n">signer</span> <span class="p">=</span> <span class="p">{</span> <span class="n">data</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">dmvKms</span><span class="p">.</span><span class="nf">sign</span><span class="p">(</span><span class="n">keyId</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span> <span class="p">},</span>
+        <span class="n">getPublicKeyId</span> <span class="p">=</span> <span class="p">{</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">dmvKey</span><span class="p">.</span><span class="n">id</span> <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="kd">val</span> <span class="py">dmvProofRegistry</span> <span class="p">=</span> <span class="nc">ProofGeneratorRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span> <span class="nf">register</span><span class="p">(</span><span class="n">dmvProofGenerator</span><span class="p">)</span> <span class="p">}</span>
+    
+    <span class="kd">val</span> <span class="py">dmvIssuer</span> <span class="p">=</span> <span class="nc">CredentialIssuer</span><span class="p">(</span>
+        <span class="n">proofGenerator</span> <span class="p">=</span> <span class="n">dmvProofGenerator</span><span class="p">,</span>
+        <span class="n">resolveDid</span> <span class="p">=</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span> <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">)</span> <span class="p">!=</span> <span class="k">null</span> <span class="p">},</span>
+        <span class="n">proofRegistry</span> <span class="p">=</span> <span class="n">dmvProofRegistry</span>
+    <span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">issuedDriversLicense</span> <span class="p">=</span> <span class="n">dmvIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">driversLicenseCredential</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">dmvDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">keyId</span> <span class="p">=</span> <span class="n">dmvKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Driver's license credential issued:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - License Number: DL123456789"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Name: John Doe"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Expiration: 2028-06-15"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 6: Issue passport credential</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 6: Issuing passport credential..."</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">passportCredential</span> <span class="p">=</span> <span class="nf">createPassportCredential</span><span class="p">(</span>
+        <span class="n">citizenDid</span> <span class="p">=</span> <span class="n">citizenDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">passportOfficeDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">passportNumber</span> <span class="p">=</span> <span class="s">"P987654321"</span><span class="p">,</span>
+        <span class="n">fullName</span> <span class="p">=</span> <span class="s">"John Doe"</span><span class="p">,</span>
+        <span class="n">dateOfBirth</span> <span class="p">=</span> <span class="s">"1985-06-15"</span><span class="p">,</span>
+        <span class="n">nationality</span> <span class="p">=</span> <span class="s">"US"</span><span class="p">,</span>
+        <span class="n">placeOfBirth</span> <span class="p">=</span> <span class="s">"New York, USA"</span><span class="p">,</span>
+        <span class="n">issueDate</span> <span class="p">=</span> <span class="s">"2023-01-01"</span><span class="p">,</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="s">"2033-01-01"</span>
+    <span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">passportKey</span> <span class="p">=</span> <span class="n">passportOfficeKms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">passportProofGenerator</span> <span class="p">=</span> <span class="nc">Ed25519ProofGenerator</span><span class="p">(</span>
+        <span class="n">signer</span> <span class="p">=</span> <span class="p">{</span> <span class="n">data</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">passportOfficeKms</span><span class="p">.</span><span class="nf">sign</span><span class="p">(</span><span class="n">keyId</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span> <span class="p">},</span>
+        <span class="n">getPublicKeyId</span> <span class="p">=</span> <span class="p">{</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">passportKey</span><span class="p">.</span><span class="n">id</span> <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="kd">val</span> <span class="py">passportProofRegistry</span> <span class="p">=</span> <span class="nc">ProofGeneratorRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span> <span class="nf">register</span><span class="p">(</span><span class="n">passportProofGenerator</span><span class="p">)</span> <span class="p">}</span>
+    
+    <span class="kd">val</span> <span class="py">passportIssuer</span> <span class="p">=</span> <span class="nc">CredentialIssuer</span><span class="p">(</span>
+        <span class="n">proofGenerator</span> <span class="p">=</span> <span class="n">passportProofGenerator</span><span class="p">,</span>
+        <span class="n">resolveDid</span> <span class="p">=</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span> <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">)</span> <span class="p">!=</span> <span class="k">null</span> <span class="p">},</span>
+        <span class="n">proofRegistry</span> <span class="p">=</span> <span class="n">passportProofRegistry</span>
+    <span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">issuedPassport</span> <span class="p">=</span> <span class="n">passportIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">passportCredential</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">passportOfficeDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">keyId</span> <span class="p">=</span> <span class="n">passportKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Passport credential issued"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 7: Issue tax credential</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 7: Issuing tax credential..."</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">taxCredential</span> <span class="p">=</span> <span class="nf">createTaxCredential</span><span class="p">(</span>
+        <span class="n">citizenDid</span> <span class="p">=</span> <span class="n">citizenDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">taxAuthorityDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">taxId</span> <span class="p">=</span> <span class="s">"123-45-6789"</span><span class="p">,</span>
+        <span class="n">fullName</span> <span class="p">=</span> <span class="s">"John Doe"</span><span class="p">,</span>
+        <span class="n">filingStatus</span> <span class="p">=</span> <span class="s">"Single"</span><span class="p">,</span>
+        <span class="n">authorizationLevel</span> <span class="p">=</span> <span class="s">"Full"</span>
+    <span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">taxKey</span> <span class="p">=</span> <span class="n">taxAuthorityKms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">taxProofGenerator</span> <span class="p">=</span> <span class="nc">Ed25519ProofGenerator</span><span class="p">(</span>
+        <span class="n">signer</span> <span class="p">=</span> <span class="p">{</span> <span class="n">data</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">taxAuthorityKms</span><span class="p">.</span><span class="nf">sign</span><span class="p">(</span><span class="n">keyId</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span> <span class="p">},</span>
+        <span class="n">getPublicKeyId</span> <span class="p">=</span> <span class="p">{</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">taxKey</span><span class="p">.</span><span class="n">id</span> <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="kd">val</span> <span class="py">taxProofRegistry</span> <span class="p">=</span> <span class="nc">ProofGeneratorRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span> <span class="nf">register</span><span class="p">(</span><span class="n">taxProofGenerator</span><span class="p">)</span> <span class="p">}</span>
+    
+    <span class="kd">val</span> <span class="py">taxIssuer</span> <span class="p">=</span> <span class="nc">CredentialIssuer</span><span class="p">(</span>
+        <span class="n">proofGenerator</span> <span class="p">=</span> <span class="n">taxProofGenerator</span><span class="p">,</span>
+        <span class="n">resolveDid</span> <span class="p">=</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span> <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">)</span> <span class="p">!=</span> <span class="k">null</span> <span class="p">},</span>
+        <span class="n">proofRegistry</span> <span class="p">=</span> <span class="n">taxProofRegistry</span>
+    <span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">issuedTaxCredential</span> <span class="p">=</span> <span class="n">taxIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">taxCredential</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">taxAuthorityDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">keyId</span> <span class="p">=</span> <span class="n">taxKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Tax credential issued"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 8: Store credentials in citizen wallet</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 8: Storing credentials in citizen wallet..."</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">driversLicenseId</span> <span class="p">=</span> <span class="n">citizenWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">issuedDriversLicense</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">passportId</span> <span class="p">=</span> <span class="n">citizenWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">issuedPassport</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">taxCredentialId</span> <span class="p">=</span> <span class="n">citizenWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">issuedTaxCredential</span><span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Stored ${citizenWallet.list().size} government credentials"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 9: Organize credentials</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 9: Organizing credentials..."</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">identityCollection</span> <span class="p">=</span> <span class="n">citizenWallet</span><span class="p">.</span><span class="nf">createCollection</span><span class="p">(</span>
+        <span class="n">name</span> <span class="p">=</span> <span class="s">"Government Identity"</span><span class="p">,</span>
+        <span class="n">description</span> <span class="p">=</span> <span class="s">"Government-issued identity credentials"</span>
+    <span class="p">)</span>
+    
+    <span class="n">citizenWallet</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">driversLicenseId</span><span class="p">,</span> <span class="n">identityCollection</span><span class="p">)</span>
+    <span class="n">citizenWallet</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">passportId</span><span class="p">,</span> <span class="n">identityCollection</span><span class="p">)</span>
+    <span class="n">citizenWallet</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">taxCredentialId</span><span class="p">,</span> <span class="n">identityCollection</span><span class="p">)</span>
+    
+    <span class="n">citizenWallet</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">driversLicenseId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"driving"</span><span class="p">,</span> <span class="s">"license"</span><span class="p">,</span> <span class="s">"dmv"</span><span class="p">))</span>
+    <span class="n">citizenWallet</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">passportId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"travel"</span><span class="p">,</span> <span class="s">"passport"</span><span class="p">,</span> <span class="s">"citizenship"</span><span class="p">))</span>
+    <span class="n">citizenWallet</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">taxCredentialId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"tax"</span><span class="p">,</span> <span class="s">"irs"</span><span class="p">,</span> <span class="s">"financial"</span><span class="p">))</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Created identity collection"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 10: Verify credentials</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 10: Verifying government credentials..."</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">verifier</span> <span class="p">=</span> <span class="nc">CredentialVerifier</span><span class="p">(</span>
+        <span class="n">didResolver</span> <span class="p">=</span> <span class="nc">CredentialDidResolver</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span>
+            <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">).</span><span class="nf">toCredentialDidResolution</span><span class="p">()</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">licenseVerification</span> <span class="p">=</span> <span class="n">verifier</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">issuedDriversLicense</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialVerificationOptions</span><span class="p">(</span>
+            <span class="n">checkRevocation</span> <span class="p">=</span> <span class="k">true</span><span class="p">,</span>
+            <span class="n">checkExpiration</span> <span class="p">=</span> <span class="k">true</span><span class="p">,</span>
+            <span class="n">validateSchema</span> <span class="p">=</span> <span class="k">true</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">licenseVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Driver's license credential is valid!"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"  - Proof valid: ${licenseVerification.proofValid}"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"  - Issuer valid: ${licenseVerification.issuerValid}"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"  - Not expired: ${licenseVerification.notExpired}"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Step 11: Create service access presentation</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 11: Creating service access presentation..."</span><span class="p">)</span>
+    <span class="c1">// Citizen needs to access government service, presents driver's license</span>
+    <span class="kd">val</span> <span class="py">servicePresentation</span> <span class="p">=</span> <span class="n">citizenWallet</span><span class="p">.</span><span class="nf">createPresentation</span><span class="p">(</span>
+        <span class="n">credentialIds</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="n">driversLicenseId</span><span class="p">),</span>
+        <span class="n">holderDid</span> <span class="p">=</span> <span class="n">citizenDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">PresentationOptions</span><span class="p">(</span>
+            <span class="n">holderDid</span> <span class="p">=</span> <span class="n">citizenDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">,</span>
+            <span class="n">challenge</span> <span class="p">=</span> <span class="s">"government-service-${Instant.now().toEpochMilli()}"</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Service access presentation created"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 12: Anchor identity documents to blockchain</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 12: Anchoring identity documents to blockchain..."</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">licenseDigest</span> <span class="p">=</span> <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">json</span><span class="p">.</span><span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span>
+        <span class="nc">Json</span><span class="p">.</span><span class="nf">encodeToJsonElement</span><span class="p">(</span>
+            <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">credential</span><span class="p">.</span><span class="n">models</span><span class="p">.</span><span class="nc">VerifiableCredential</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
+            <span class="n">issuedDriversLicense</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">identityDoc</span> <span class="p">=</span> <span class="nc">IdentityDocument</span><span class="p">(</span>
+        <span class="n">documentType</span> <span class="p">=</span> <span class="s">"drivers-license"</span><span class="p">,</span>
+        <span class="n">documentNumber</span> <span class="p">=</span> <span class="s">"DL123456789"</span><span class="p">,</span>
+        <span class="n">citizenDid</span> <span class="p">=</span> <span class="n">citizenDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">dmvDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">credentialDigest</span> <span class="p">=</span> <span class="n">licenseDigest</span>
+    <span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">anchorResult</span> <span class="p">=</span> <span class="n">blockchainRegistry</span><span class="p">.</span><span class="nf">anchorTyped</span><span class="p">(</span>
+        <span class="n">value</span> <span class="p">=</span> <span class="n">identityDoc</span><span class="p">,</span>
+        <span class="n">serializer</span> <span class="p">=</span> <span class="nc">IdentityDocument</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
+        <span class="n">targetChainId</span> <span class="p">=</span> <span class="s">"eip155:1"</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Identity document anchored:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Transaction hash: ${anchorResult.ref.txHash}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Provides immutable record"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 13: Cross-border verification</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 13: Cross-border identity verification..."</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">canVerifyCrossBorder</span> <span class="p">=</span> <span class="nf">verifyCrossBorderIdentity</span><span class="p">(</span>
+        <span class="n">passportCredential</span> <span class="p">=</span> <span class="n">issuedPassport</span><span class="p">,</span>
+        <span class="n">verifyingCountryDid</span> <span class="p">=</span> <span class="s">"did:example:border-control"</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Cross-border verification: ${if (canVerifyCrossBorder) "</span><span class="nc">Possible</span><span class="s">" else "</span><span class="nc">Not</span> <span class="n">possible</span><span class="s">"}"</span><span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n=== Scenario Complete ==="</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">fun</span> <span class="nf">createDriversLicenseCredential</span><span class="p">(</span>
+    <span class="n">citizenDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">issuerDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">licenseNumber</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">fullName</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">dateOfBirth</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">address</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">vehicleClasses</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">&gt;,</span>
+    <span class="n">expirationDate</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">):</span> <span class="nc">VerifiableCredential</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+        <span class="n">id</span> <span class="p">=</span> <span class="s">"https://dmv.example.com/licenses/$licenseNumber"</span><span class="p">,</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"DriversLicenseCredential"</span><span class="p">,</span> <span class="s">"GovernmentCredential"</span><span class="p">),</span>
+        <span class="n">issuer</span> <span class="p">=</span> <span class="n">issuerDid</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="n">citizenDid</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"driversLicense"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"licenseNumber"</span><span class="p">,</span> <span class="n">licenseNumber</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"fullName"</span><span class="p">,</span> <span class="n">fullName</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"dateOfBirth"</span><span class="p">,</span> <span class="n">dateOfBirth</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"address"</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"vehicleClasses"</span><span class="p">,</span> <span class="n">vehicleClasses</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"issueDate"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"expirationDate"</span><span class="p">,</span> <span class="n">expirationDate</span><span class="p">)</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">(),</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="n">expirationDate</span><span class="p">,</span>
+        <span class="n">credentialSchema</span> <span class="p">=</span> <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">credential</span><span class="p">.</span><span class="n">models</span><span class="p">.</span><span class="nc">CredentialSchema</span><span class="p">(</span>
+            <span class="n">id</span> <span class="p">=</span> <span class="s">"https://example.com/schemas/drivers-license.json"</span><span class="p">,</span>
+            <span class="n">type</span> <span class="p">=</span> <span class="s">"JsonSchemaValidator2018"</span><span class="p">,</span>
+            <span class="n">schemaFormat</span> <span class="p">=</span> <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">spi</span><span class="p">.</span><span class="nc">SchemaFormat</span><span class="p">.</span><span class="nc">JSON_SCHEMA</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">fun</span> <span class="nf">createPassportCredential</span><span class="p">(</span>
+    <span class="n">citizenDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">issuerDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">passportNumber</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">fullName</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">dateOfBirth</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">nationality</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">placeOfBirth</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">issueDate</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">expirationDate</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">):</span> <span class="nc">VerifiableCredential</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+        <span class="n">id</span> <span class="p">=</span> <span class="s">"https://passport.example.com/passports/$passportNumber"</span><span class="p">,</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"PassportCredential"</span><span class="p">,</span> <span class="s">"GovernmentCredential"</span><span class="p">),</span>
+        <span class="n">issuer</span> <span class="p">=</span> <span class="n">issuerDid</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="n">citizenDid</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"passport"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"passportNumber"</span><span class="p">,</span> <span class="n">passportNumber</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"fullName"</span><span class="p">,</span> <span class="n">fullName</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"dateOfBirth"</span><span class="p">,</span> <span class="n">dateOfBirth</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"nationality"</span><span class="p">,</span> <span class="n">nationality</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"placeOfBirth"</span><span class="p">,</span> <span class="n">placeOfBirth</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"issueDate"</span><span class="p">,</span> <span class="n">issueDate</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"expirationDate"</span><span class="p">,</span> <span class="n">expirationDate</span><span class="p">)</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="n">issueDate</span><span class="p">,</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="n">expirationDate</span><span class="p">,</span>
+        <span class="n">credentialSchema</span> <span class="p">=</span> <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">credential</span><span class="p">.</span><span class="n">models</span><span class="p">.</span><span class="nc">CredentialSchema</span><span class="p">(</span>
+            <span class="n">id</span> <span class="p">=</span> <span class="s">"https://example.com/schemas/passport.json"</span><span class="p">,</span>
+            <span class="n">type</span> <span class="p">=</span> <span class="s">"JsonSchemaValidator2018"</span><span class="p">,</span>
+            <span class="n">schemaFormat</span> <span class="p">=</span> <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">spi</span><span class="p">.</span><span class="nc">SchemaFormat</span><span class="p">.</span><span class="nc">JSON_SCHEMA</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">fun</span> <span class="nf">createTaxCredential</span><span class="p">(</span>
+    <span class="n">citizenDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">issuerDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">taxId</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">fullName</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">filingStatus</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">authorizationLevel</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">):</span> <span class="nc">VerifiableCredential</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+        <span class="n">id</span> <span class="p">=</span> <span class="s">"https://tax.example.com/credentials/$taxId"</span><span class="p">,</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"TaxCredential"</span><span class="p">,</span> <span class="s">"GovernmentCredential"</span><span class="p">),</span>
+        <span class="n">issuer</span> <span class="p">=</span> <span class="n">issuerDid</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="n">citizenDid</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"taxCredential"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"taxId"</span><span class="p">,</span> <span class="n">taxId</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"fullName"</span><span class="p">,</span> <span class="n">fullName</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"filingStatus"</span><span class="p">,</span> <span class="n">filingStatus</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"authorizationLevel"</span><span class="p">,</span> <span class="n">authorizationLevel</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"issueDate"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">(),</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="k">null</span><span class="p">,</span> <span class="c1">// Tax credentials typically don't expire</span>
+        <span class="n">credentialSchema</span> <span class="p">=</span> <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">credential</span><span class="p">.</span><span class="n">models</span><span class="p">.</span><span class="nc">CredentialSchema</span><span class="p">(</span>
+            <span class="n">id</span> <span class="p">=</span> <span class="s">"https://example.com/schemas/tax-credential.json"</span><span class="p">,</span>
+            <span class="n">type</span> <span class="p">=</span> <span class="s">"JsonSchemaValidator2018"</span><span class="p">,</span>
+            <span class="n">schemaFormat</span> <span class="p">=</span> <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">spi</span><span class="p">.</span><span class="nc">SchemaFormat</span><span class="p">.</span><span class="nc">JSON_SCHEMA</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">fun</span> <span class="nf">verifyCrossBorderIdentity</span><span class="p">(</span>
+    <span class="n">passportCredential</span><span class="p">:</span> <span class="nc">VerifiableCredential</span><span class="p">,</span>
+    <span class="n">verifyingCountryDid</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">):</span> <span class="nc">Boolean</span> <span class="p">{</span>
+    <span class="c1">// Verify passport credential is valid</span>
+    <span class="kd">val</span> <span class="py">verifier</span> <span class="p">=</span> <span class="nc">CredentialVerifier</span><span class="p">(</span>
+        <span class="n">didResolver</span> <span class="p">=</span> <span class="nc">CredentialDidResolver</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span>
+            <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">).</span><span class="nf">toCredentialDidResolution</span><span class="p">()</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">verifier</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">passportCredential</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialVerificationOptions</span><span class="p">(</span>
+            <span class="n">checkRevocation</span> <span class="p">=</span> <span class="k">true</span><span class="p">,</span>
+            <span class="n">checkExpiration</span> <span class="p">=</span> <span class="k">true</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(!</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="k">return</span> <span class="k">false</span>
+    
+    <span class="c1">// Check if passport is from recognized issuing country</span>
+    <span class="kd">val</span> <span class="py">issuerDid</span> <span class="p">=</span> <span class="n">passportCredential</span><span class="p">.</span><span class="n">issuer</span>
+    <span class="c1">// In production, check against list of trusted country DIDs</span>
+    <span class="k">return</span> <span class="k">true</span> <span class="c1">// Simplified for example</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="extensive-step-by-step-breakdown">
+  
+  
+    <a href="#extensive-step-by-step-breakdown" class="anchor-heading" aria-labelledby="extensive-step-by-step-breakdown"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Extensive Step-by-Step Breakdown
+  
+  
+</h2>
+    
+<h3 id="step-1-setup-and-initialization">
+  
+  
+    <a href="#step-1-setup-and-initialization" class="anchor-heading" aria-labelledby="step-1-setup-and-initialization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Setup and Initialization
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Initialize government identity system with proper key management for multiple agencies.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ol>
+  <li><strong>Multiple Agency KMS</strong>: Separate key management for DMV, passport office, tax authority ensures proper separation</li>
+  <li><strong>Citizen KMS</strong>: Separate key management for citizen ensures citizen control</li>
+  <li><strong>DID Method Registration</strong>: Register DID method for creating identities</li>
+  <li><strong>Blockchain Setup</strong>: Initialize blockchain for anchoring critical identity documents</li>
+</ol>
+
+<p><strong>Why This Matters</strong>: Government identity requires the highest security standards. Multiple KMS instances ensure proper key isolation and security.</p>
+<h3 id="step-2-create-government-agency-dids">
+  
+  
+    <a href="#step-2-create-government-agency-dids" class="anchor-heading" aria-labelledby="step-2-create-government-agency-dids"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Create Government Agency DIDs
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Establish verifiable identities for government agencies.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ul>
+  <li><strong>DMV DID</strong>: Department of Motor Vehicles identity for issuing driver’s licenses</li>
+  <li><strong>Passport Office DID</strong>: Passport office identity for issuing passports</li>
+  <li><strong>Tax Authority DID</strong>: Tax authority identity for tax credentials</li>
+</ul>
+
+<p><strong>Key Considerations</strong>:</p>
+<ul>
+  <li>Government DIDs serve as trust anchors</li>
+  <li>Must be well-known and resolvable</li>
+  <li>Cryptographic proof of government authority</li>
+  <li>Can be verified by citizens and other agencies</li>
+</ul>
+<h3 id="step-3-create-citizen-did">
+  
+  
+    <a href="#step-3-create-citizen-did" class="anchor-heading" aria-labelledby="step-3-create-citizen-did"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Create Citizen DID
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Establish citizen’s self-sovereign identity.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ul>
+  <li>Citizen DID provides persistent identity</li>
+  <li>Not tied to any specific government system</li>
+  <li>Works across all government services</li>
+  <li>Citizen controls the DID</li>
+</ul>
+
+<p><strong>Benefits</strong>:</p>
+<ul>
+  <li>Single identity across all services</li>
+  <li>Not dependent on any single agency</li>
+  <li>Portable across jurisdictions</li>
+  <li>Privacy-preserving</li>
+</ul>
+<h3 id="step-4-create-citizen-identity-wallet">
+  
+  
+    <a href="#step-4-create-citizen-identity-wallet" class="anchor-heading" aria-labelledby="step-4-create-citizen-identity-wallet"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Create Citizen Identity Wallet
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Provide secure storage for citizen’s government credentials.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ul>
+  <li>Stores all government-issued credentials</li>
+  <li>Provides organization capabilities</li>
+  <li>Enables selective disclosure</li>
+  <li>Citizen controls access</li>
+</ul>
+
+<p><strong>Privacy Benefits</strong>:</p>
+<ul>
+  <li>Citizen owns their identity data</li>
+  <li>Can control what information is shared</li>
+  <li>Selective disclosure minimizes data exposure</li>
+  <li>Audit trail of credential usage</li>
+</ul>
+<h3 id="step-5-issue-drivers-license-credential">
+  
+  
+    <a href="#step-5-issue-drivers-license-credential" class="anchor-heading" aria-labelledby="step-5-issue-drivers-license-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Issue Driver’s License Credential
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Create verifiable driver’s license credential.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ol>
+  <li><strong>License Data</strong>: License number, name, DOB, address, vehicle classes</li>
+  <li><strong>Credential Structure</strong>: Follows W3C VC standard</li>
+  <li><strong>Proof Generation</strong>: Cryptographic signature from DMV</li>
+  <li><strong>Expiration</strong>: License expires on specified date</li>
+</ol>
+
+<p><strong>Security Features</strong>:</p>
+<ul>
+  <li>Tamper-proof cryptographic proof</li>
+  <li>Verifiable issuer (DMV)</li>
+  <li>Expiration prevents misuse</li>
+  <li>Can be revoked if license is suspended</li>
+</ul>
+<h3 id="step-6-issue-passport-credential">
+  
+  
+    <a href="#step-6-issue-passport-credential" class="anchor-heading" aria-labelledby="step-6-issue-passport-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 6: Issue Passport Credential
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Create verifiable passport credential.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ol>
+  <li><strong>Passport Data</strong>: Passport number, name, DOB, nationality, place of birth</li>
+  <li><strong>Travel Authorization</strong>: Proves citizenship and travel eligibility</li>
+  <li><strong>Expiration</strong>: Passport expires on specified date</li>
+  <li><strong>Cross-Border</strong>: Can be verified internationally</li>
+</ol>
+
+<p><strong>Use Cases</strong>:</p>
+<ul>
+  <li>Border control verification</li>
+  <li>International travel</li>
+  <li>Identity verification abroad</li>
+  <li>Citizenship proof</li>
+</ul>
+<h3 id="step-7-issue-tax-credential">
+  
+  
+    <a href="#step-7-issue-tax-credential" class="anchor-heading" aria-labelledby="step-7-issue-tax-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 7: Issue Tax Credential
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Create verifiable tax credential.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ol>
+  <li><strong>Tax Information</strong>: Tax ID, name, filing status</li>
+  <li><strong>Authorization Level</strong>: Level of tax authority access</li>
+  <li><strong>No Expiration</strong>: Tax credentials typically don’t expire</li>
+  <li><strong>Service Access</strong>: Enables tax service access</li>
+</ol>
+
+<p><strong>Use Cases</strong>:</p>
+<ul>
+  <li>Tax filing</li>
+  <li>Tax service access</li>
+  <li>Financial service KYC</li>
+  <li>Government benefit applications</li>
+</ul>
+<h3 id="step-8-store-credentials-in-citizen-wallet">
+  
+  
+    <a href="#step-8-store-credentials-in-citizen-wallet" class="anchor-heading" aria-labelledby="step-8-store-credentials-in-citizen-wallet"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 8: Store Credentials in Citizen Wallet
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Enable citizen to manage their identity credentials.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ul>
+  <li>Store all government credentials in one place</li>
+  <li>Citizen has full control</li>
+  <li>Can organize and query credentials</li>
+  <li>Enables selective sharing</li>
+</ul>
+
+<p><strong>Citizen Benefits</strong>:</p>
+<ul>
+  <li>Single source of truth for identity</li>
+  <li>Easy access from any device</li>
+  <li>Can share with any service provider</li>
+  <li>Complete identity history</li>
+</ul>
+<h3 id="step-9-organize-credentials">
+  
+  
+    <a href="#step-9-organize-credentials" class="anchor-heading" aria-labelledby="step-9-organize-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 9: Organize Credentials
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Enable efficient credential management.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ol>
+  <li><strong>Collections</strong>: Group related credentials</li>
+  <li><strong>Tags</strong>: Add metadata for easy searching</li>
+  <li><strong>Organization Benefits</strong>: Quick access to specific credential types</li>
+</ol>
+
+<p><strong>Real-World Value</strong>:</p>
+<ul>
+  <li>Quick access to driver’s license</li>
+  <li>Find passport for travel</li>
+  <li>Organize by service type</li>
+  <li>Track credential expiration</li>
+</ul>
+<h3 id="step-10-verify-government-credentials">
+  
+  
+    <a href="#step-10-verify-government-credentials" class="anchor-heading" aria-labelledby="step-10-verify-government-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 10: Verify Government Credentials
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Ensure government credentials are valid before use.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ol>
+  <li><strong>Proof Verification</strong>: Verify cryptographic signature</li>
+  <li><strong>Issuer Verification</strong>: Verify government agency DID</li>
+  <li><strong>Expiration Check</strong>: Ensure credential hasn’t expired</li>
+  <li><strong>Revocation Check</strong>: Verify credential hasn’t been revoked</li>
+  <li><strong>Schema Validation</strong>: Validate credential structure</li>
+</ol>
+
+<p><strong>Security Importance</strong>:</p>
+<ul>
+  <li>Prevents use of tampered credentials</li>
+  <li>Ensures credentials from trusted agencies</li>
+  <li>Prevents use of expired credentials</li>
+  <li>Maintains data integrity</li>
+</ul>
+<h3 id="step-11-create-service-access-presentation">
+  
+  
+    <a href="#step-11-create-service-access-presentation" class="anchor-heading" aria-labelledby="step-11-create-service-access-presentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 11: Create Service Access Presentation
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Enable citizen to access government services.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ol>
+  <li><strong>Credential Selection</strong>: Select appropriate credential for service</li>
+  <li><strong>Presentation Creation</strong>: Create verifiable presentation</li>
+  <li><strong>Service Access</strong>: Present to government service</li>
+  <li><strong>Verification</strong>: Service verifies credential</li>
+</ol>
+
+<p><strong>Use Cases</strong>:</p>
+<ul>
+  <li>Access government portal</li>
+  <li>Apply for benefits</li>
+  <li>File taxes</li>
+  <li>Renew licenses</li>
+</ul>
+<h3 id="step-12-anchor-identity-documents-to-blockchain">
+  
+  
+    <a href="#step-12-anchor-identity-documents-to-blockchain" class="anchor-heading" aria-labelledby="step-12-anchor-identity-documents-to-blockchain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 12: Anchor Identity Documents to Blockchain
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Create immutable record of identity document issuance.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ol>
+  <li><strong>Document Record</strong>: Create structured record of identity document</li>
+  <li><strong>Blockchain Anchoring</strong>: Anchor to blockchain for immutability</li>
+  <li><strong>Audit Trail</strong>: Provides permanent record</li>
+  <li><strong>Non-Repudiation</strong>: Government cannot deny issuance</li>
+</ol>
+
+<p><strong>Benefits</strong>:</p>
+<ul>
+  <li>Immutable record</li>
+  <li>Timestamped issuance</li>
+  <li>Cannot be tampered with</li>
+  <li>Meets regulatory requirements</li>
+</ul>
+<h3 id="step-13-cross-border-verification">
+  
+  
+    <a href="#step-13-cross-border-verification" class="anchor-heading" aria-labelledby="step-13-cross-border-verification"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 13: Cross-Border Verification
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Enable international identity verification.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ol>
+  <li><strong>Passport Verification</strong>: Verify passport credential</li>
+  <li><strong>Issuer Recognition</strong>: Check if issuing country is recognized</li>
+  <li><strong>Credential Validity</strong>: Verify credential is valid</li>
+  <li><strong>Cross-Border Access</strong>: Grant access based on verification</li>
+</ol>
+
+<p><strong>Use Cases</strong>:</p>
+<ul>
+  <li>Border control</li>
+  <li>International travel</li>
+  <li>Cross-border services</li>
+  <li>International identity verification</li>
+</ul>
+<h2 id="advanced-features">
+  
+  
+    <a href="#advanced-features" class="anchor-heading" aria-labelledby="advanced-features"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Advanced Features
+  
+  
+</h2>
+    
+<h3 id="multi-agency-credential-aggregation">
+  
+  
+    <a href="#multi-agency-credential-aggregation" class="anchor-heading" aria-labelledby="multi-agency-credential-aggregation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Multi-Agency Credential Aggregation
+  
+  
+</h3>
+    
+
+<p>Aggregate credentials from multiple agencies:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+</pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">aggregateGovernmentCredentials</span><span class="p">(</span>
+    <span class="n">citizenWallet</span><span class="p">:</span> <span class="nc">Wallet</span>
+<span class="p">):</span> <span class="nc">VerifiablePresentation</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">allCredentials</span> <span class="p">=</span> <span class="n">citizenWallet</span><span class="p">.</span><span class="nf">list</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">governmentCredentials</span> <span class="p">=</span> <span class="n">allCredentials</span><span class="p">.</span><span class="nf">filter</span> <span class="p">{</span>
+        <span class="n">it</span><span class="p">.</span><span class="n">type</span><span class="p">.</span><span class="nf">contains</span><span class="p">(</span><span class="s">"GovernmentCredential"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="k">return</span> <span class="n">citizenWallet</span><span class="p">.</span><span class="nf">createPresentation</span><span class="p">(</span>
+        <span class="n">credentialIds</span> <span class="p">=</span> <span class="n">governmentCredentials</span><span class="p">.</span><span class="nf">mapNotNull</span> <span class="p">{</span> <span class="n">it</span><span class="p">.</span><span class="n">id</span> <span class="p">},</span>
+        <span class="n">holderDid</span> <span class="p">=</span> <span class="n">citizenWallet</span><span class="p">.</span><span class="n">holderDid</span><span class="o">!!</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">PresentationOptions</span><span class="p">(</span>
+            <span class="n">holderDid</span> <span class="p">=</span> <span class="n">citizenWallet</span><span class="p">.</span><span class="n">holderDid</span><span class="o">!!</span><span class="p">,</span>
+            <span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="selective-identity-disclosure">
+  
+  
+    <a href="#selective-identity-disclosure" class="anchor-heading" aria-labelledby="selective-identity-disclosure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Selective Identity Disclosure
+  
+  
+</h3>
+    
+
+<p>Share only necessary identity information:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+</pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">createSelectiveIdentityPresentation</span><span class="p">(</span>
+    <span class="n">citizenWallet</span><span class="p">:</span> <span class="nc">Wallet</span><span class="p">,</span>
+    <span class="n">serviceType</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">):</span> <span class="nc">VerifiablePresentation</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">when</span> <span class="p">(</span><span class="n">serviceType</span><span class="p">)</span> <span class="p">{</span>
+        <span class="s">"age-verification"</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="c1">// Share only age, not full identity</span>
+            <span class="n">citizenWallet</span><span class="p">.</span><span class="nf">createSelectiveDisclosure</span><span class="p">(</span>
+                <span class="n">credentialIds</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"drivers-license-id"</span><span class="p">),</span>
+                <span class="n">disclosedFields</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"driversLicense.dateOfBirth"</span><span class="p">),</span>
+                <span class="n">holderDid</span> <span class="p">=</span> <span class="n">citizenWallet</span><span class="p">.</span><span class="n">holderDid</span><span class="o">!!</span><span class="p">,</span>
+                <span class="n">options</span> <span class="p">=</span> <span class="nc">PresentationOptions</span><span class="p">(</span><span class="o">..</span><span class="p">.)</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+        <span class="s">"address-verification"</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="c1">// Share only address</span>
+            <span class="n">citizenWallet</span><span class="p">.</span><span class="nf">createSelectiveDisclosure</span><span class="p">(</span>
+                <span class="n">credentialIds</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"drivers-license-id"</span><span class="p">),</span>
+                <span class="n">disclosedFields</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"driversLicense.address"</span><span class="p">),</span>
+                <span class="n">holderDid</span> <span class="p">=</span> <span class="n">citizenWallet</span><span class="p">.</span><span class="n">holderDid</span><span class="o">!!</span><span class="p">,</span>
+                <span class="n">options</span> <span class="p">=</span> <span class="nc">PresentationOptions</span><span class="p">(</span><span class="o">..</span><span class="p">.)</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+        <span class="k">else</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="c1">// Full identity presentation</span>
+            <span class="n">citizenWallet</span><span class="p">.</span><span class="nf">createPresentation</span><span class="p">(</span><span class="o">..</span><span class="p">.)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="credential-renewal">
+  
+  
+    <a href="#credential-renewal" class="anchor-heading" aria-labelledby="credential-renewal"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Credential Renewal
+  
+  
+</h3>
+    
+
+<p>Renew expired credentials:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+</pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">renewDriversLicense</span><span class="p">(</span>
+    <span class="n">oldCredential</span><span class="p">:</span> <span class="nc">VerifiableCredential</span><span class="p">,</span>
+    <span class="n">newExpirationDate</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">issuerDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">issuer</span><span class="p">:</span> <span class="nc">CredentialIssuer</span>
+<span class="p">):</span> <span class="nc">VerifiableCredential</span> <span class="p">{</span>
+    <span class="c1">// Create new credential based on old one</span>
+    <span class="kd">val</span> <span class="py">renewalCredential</span> <span class="p">=</span> <span class="n">oldCredential</span><span class="p">.</span><span class="nf">copy</span><span class="p">(</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="n">newExpirationDate</span><span class="p">,</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">()</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Issue new credential</span>
+    <span class="k">return</span> <span class="n">issuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">renewalCredential</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">issuerDid</span><span class="p">,</span>
+        <span class="n">keyId</span> <span class="p">=</span> <span class="s">"issuer-key"</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="real-world-use-cases">
+  
+  
+    <a href="#real-world-use-cases" class="anchor-heading" aria-labelledby="real-world-use-cases"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Use Cases
+  
+  
+</h2>
+    
+<h3 id="1-digital-drivers-license">
+  
+  
+    <a href="#1-digital-drivers-license" class="anchor-heading" aria-labelledby="1-digital-drivers-license"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Digital Driver’s License
+  
+  
+</h3>
+    
+
+<p><strong>Scenario</strong>: Citizen uses digital driver’s license for age verification at store.</p>
+
+<p><strong>Implementation</strong>:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+</pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">verifyAgeWithDriversLicense</span><span class="p">(</span>
+    <span class="n">citizenWallet</span><span class="p">:</span> <span class="nc">Wallet</span><span class="p">,</span>
+    <span class="n">minimumAge</span><span class="p">:</span> <span class="nc">Int</span>
+<span class="p">):</span> <span class="nc">Boolean</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">license</span> <span class="p">=</span> <span class="n">citizenWallet</span><span class="p">.</span><span class="nf">query</span> <span class="p">{</span>
+        <span class="nf">byType</span><span class="p">(</span><span class="s">"DriversLicenseCredential"</span><span class="p">)</span>
+        <span class="nf">valid</span><span class="p">()</span>
+    <span class="p">}.</span><span class="nf">firstOrNull</span><span class="p">()</span> <span class="o">?:</span> <span class="k">return</span> <span class="k">false</span>
+    
+    <span class="kd">val</span> <span class="py">dateOfBirth</span> <span class="p">=</span> <span class="n">license</span><span class="p">.</span><span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"driversLicense"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
+        <span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"dateOfBirth"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
+        <span class="o">?:</span> <span class="k">return</span> <span class="k">false</span>
+    
+    <span class="kd">val</span> <span class="py">age</span> <span class="p">=</span> <span class="n">java</span><span class="p">.</span><span class="n">time</span><span class="p">.</span><span class="nc">Period</span><span class="p">.</span><span class="nf">between</span><span class="p">(</span>
+        <span class="n">java</span><span class="p">.</span><span class="n">time</span><span class="p">.</span><span class="nc">LocalDate</span><span class="p">.</span><span class="nf">parse</span><span class="p">(</span><span class="n">dateOfBirth</span><span class="p">),</span>
+        <span class="n">java</span><span class="p">.</span><span class="n">time</span><span class="p">.</span><span class="nc">LocalDate</span><span class="p">.</span><span class="nf">now</span><span class="p">()</span>
+    <span class="p">).</span><span class="n">years</span>
+    
+    <span class="k">return</span> <span class="n">age</span> <span class="p">&gt;=</span> <span class="n">minimumAge</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="2-passport-verification-at-border">
+  
+  
+    <a href="#2-passport-verification-at-border" class="anchor-heading" aria-labelledby="2-passport-verification-at-border"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Passport Verification at Border
+  
+  
+</h3>
+    
+
+<p><strong>Scenario</strong>: Border control verifies passport credential.</p>
+
+<p><strong>Implementation</strong>:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+</pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">verifyPassportAtBorder</span><span class="p">(</span>
+    <span class="n">passportCredential</span><span class="p">:</span> <span class="nc">VerifiableCredential</span><span class="p">,</span>
+    <span class="n">borderControlDid</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">):</span> <span class="nc">BorderVerificationResult</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">verifier</span> <span class="p">=</span> <span class="nc">CredentialVerifier</span><span class="p">(</span>
+        <span class="n">didResolver</span> <span class="p">=</span> <span class="nc">CredentialDidResolver</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span>
+            <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">).</span><span class="nf">toCredentialDidResolution</span><span class="p">()</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">verifier</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">passportCredential</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialVerificationOptions</span><span class="p">(</span>
+            <span class="n">checkRevocation</span> <span class="p">=</span> <span class="k">true</span><span class="p">,</span>
+            <span class="n">checkExpiration</span> <span class="p">=</span> <span class="k">true</span><span class="p">,</span>
+            <span class="n">validateSchema</span> <span class="p">=</span> <span class="k">true</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(!</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nc">BorderVerificationResult</span><span class="p">(</span>
+            <span class="n">authorized</span> <span class="p">=</span> <span class="k">false</span><span class="p">,</span>
+            <span class="n">reason</span> <span class="p">=</span> <span class="n">verification</span><span class="p">.</span><span class="n">errors</span><span class="p">.</span><span class="nf">joinToString</span><span class="p">()</span>
+        <span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Check if passport is from recognized country</span>
+    <span class="kd">val</span> <span class="py">nationality</span> <span class="p">=</span> <span class="n">passportCredential</span><span class="p">.</span><span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"passport"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
+        <span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"nationality"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
+    
+    <span class="k">return</span> <span class="nc">BorderVerificationResult</span><span class="p">(</span>
+        <span class="n">authorized</span> <span class="p">=</span> <span class="k">true</span><span class="p">,</span>
+        <span class="n">nationality</span> <span class="p">=</span> <span class="n">nationality</span><span class="p">,</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="n">passportCredential</span><span class="p">.</span><span class="n">expirationDate</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">data class</span> <span class="nc">BorderVerificationResult</span><span class="p">(</span>
+    <span class="kd">val</span> <span class="py">authorized</span><span class="p">:</span> <span class="nc">Boolean</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">reason</span><span class="p">:</span> <span class="nc">String</span><span class="p">?</span> <span class="p">=</span> <span class="k">null</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">nationality</span><span class="p">:</span> <span class="nc">String</span><span class="p">?</span> <span class="p">=</span> <span class="k">null</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">expirationDate</span><span class="p">:</span> <span class="nc">String</span><span class="p">?</span> <span class="p">=</span> <span class="k">null</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="3-tax-filing">
+  
+  
+    <a href="#3-tax-filing" class="anchor-heading" aria-labelledby="3-tax-filing"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Tax Filing
+  
+  
+</h3>
+    
+
+<p><strong>Scenario</strong>: Citizen files taxes using tax credential.</p>
+
+<p><strong>Implementation</strong>:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+</pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">fileTaxesWithCredential</span><span class="p">(</span>
+    <span class="n">citizenWallet</span><span class="p">:</span> <span class="nc">Wallet</span><span class="p">,</span>
+    <span class="n">taxAuthorityDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">taxData</span><span class="p">:</span> <span class="nc">TaxFilingData</span>
+<span class="p">):</span> <span class="nc">VerifiablePresentation</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">taxCredential</span> <span class="p">=</span> <span class="n">citizenWallet</span><span class="p">.</span><span class="nf">query</span> <span class="p">{</span>
+        <span class="nf">byType</span><span class="p">(</span><span class="s">"TaxCredential"</span><span class="p">)</span>
+        <span class="nf">valid</span><span class="p">()</span>
+    <span class="p">}.</span><span class="nf">firstOrNull</span><span class="p">()</span> <span class="o">?:</span> <span class="k">throw</span> <span class="nc">IllegalArgumentException</span><span class="p">(</span><span class="s">"No valid tax credential"</span><span class="p">)</span>
+    
+    <span class="c1">// Create presentation with tax credential</span>
+    <span class="k">return</span> <span class="n">citizenWallet</span><span class="p">.</span><span class="nf">createPresentation</span><span class="p">(</span>
+        <span class="n">credentialIds</span> <span class="p">=</span> <span class="nf">listOfNotNull</span><span class="p">(</span><span class="n">taxCredential</span><span class="p">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">holderDid</span> <span class="p">=</span> <span class="n">citizenWallet</span><span class="p">.</span><span class="n">holderDid</span><span class="o">!!</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">PresentationOptions</span><span class="p">(</span>
+            <span class="n">holderDid</span> <span class="p">=</span> <span class="n">citizenWallet</span><span class="p">.</span><span class="n">holderDid</span><span class="o">!!</span><span class="p">,</span>
+            <span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">,</span>
+            <span class="n">challenge</span> <span class="p">=</span> <span class="s">"tax-filing-${Instant.now().toEpochMilli()}"</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">data class</span> <span class="nc">TaxFilingData</span><span class="p">(</span>
+    <span class="kd">val</span> <span class="py">income</span><span class="p">:</span> <span class="nc">Double</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">deductions</span><span class="p">:</span> <span class="nc">Double</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">taxYear</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="benefits">
+  
+  
+    <a href="#benefits" class="anchor-heading" aria-labelledby="benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Benefits
+  
+  
+</h2>
+    
+
+<ol>
+  <li><strong>Document Authenticity</strong>: Cryptographic proof prevents forgery</li>
+  <li><strong>Citizen Control</strong>: Citizens own and control their identity</li>
+  <li><strong>Interoperability</strong>: Standard format works across all agencies</li>
+  <li><strong>Privacy</strong>: Selective disclosure protects citizen privacy</li>
+  <li><strong>Cross-Border</strong>: Enables international verification</li>
+  <li><strong>Efficiency</strong>: Instant verification without manual checks</li>
+  <li><strong>Cost Reduction</strong>: Reduces document issuance costs</li>
+  <li><strong>Fraud Prevention</strong>: Tamper-proof credentials prevent identity theft</li>
+  <li><strong>Convenience</strong>: Access services from any device</li>
+  <li><strong>Security</strong>: Reduced risk of identity theft</li>
+</ol>
+<h2 id="best-practices">
+  
+  
+    <a href="#best-practices" class="anchor-heading" aria-labelledby="best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Best Practices
+  
+  
+</h2>
+    
+
+<ol>
+  <li><strong>Trust Anchors</strong>: Use well-known government DIDs as trust anchors</li>
+  <li><strong>Expiration Management</strong>: Set appropriate expiration dates</li>
+  <li><strong>Revocation</strong>: Enable credential revocation</li>
+  <li><strong>Selective Disclosure</strong>: Always use selective disclosure when possible</li>
+  <li><strong>Audit Logging</strong>: Log all credential usage</li>
+  <li><strong>Schema Validation</strong>: Validate credential structure</li>
+  <li><strong>Key Management</strong>: Use secure key storage</li>
+  <li><strong>Error Handling</strong>: Handle verification failures gracefully</li>
+  <li><strong>Citizen Education</strong>: Educate citizens on credential management</li>
+  <li><strong>Interoperability</strong>: Follow standard credential formats</li>
+</ol>
+<h2 id="next-steps">
+  
+  
+    <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
+  
+  
+</h2>
+    
+
+<ul>
+  <li>Learn about <a href="/trustweave/tutorials/wallet-api-tutorial/">Wallet API Tutorial</a></li>
+  <li>Explore <a href="/trustweave/scenarios/healthcare-medical-records-scenario/">Healthcare &amp; Medical Records Scenario</a> for related privacy-preserving credentials</li>
+  <li>Check out <a href="/trustweave/scenarios/financial-services-kyc-scenario/">Financial Services &amp; KYC Scenario</a> for identity verification</li>
+  <li>Review <a href="/trustweave/core-concepts/dids/">Core Concepts: DIDs</a> for identity management</li>
+  <li>Study <a href="/trustweave/core-concepts/verifiable-credentials/">Core Concepts: Verifiable Credentials</a> for credential details</li>
+</ul>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

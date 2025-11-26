@@ -1,0 +1,1745 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+    .site-nav ul li a {
+      background-image: none;
+    }
+
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>News Industry &amp; Content Provenance Scenario | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="News Industry &amp; Content Provenance Scenario" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://localhost:4000/trustweave/scenarios/news-industry-scenario/" />
+<meta property="og:url" content="http://localhost:4000/trustweave/scenarios/news-industry-scenario/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="News Industry &amp; Content Provenance Scenario" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"News Industry &amp; Content Provenance Scenario","url":"http://localhost:4000/trustweave/scenarios/news-industry-scenario/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/beginner-tutorial-series/" class="nav-list-link">Beginner Tutorial Series</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchored-revocation/" class="nav-list-link">Blockchain-Anchored Revocation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/code-style/" class="nav-list-link">Code Style</a></li><li class="nav-list-item"><a href="/trustweave/comparison/README/" class="nav-list-link">Comparison Documentation</a></li><li class="nav-list-item"><a href="/trustweave/configuration/README/" class="nav-list-link">Configuration Reference</a></li><li class="nav-list-item"><a href="/trustweave/advanced/custom-adapters/" class="nav-list-link">Creating Custom Adapters</a></li><li class="nav-list-item"><a href="/trustweave/contributing/creating-plugins/" class="nav-list-link">Creating TrustWeave Plugins</a></li><li class="nav-list-item"><a href="/trustweave/features/credential-exchange-protocols/README/" class="nav-list-link">Credential Exchange Protocols</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/credential-issuance-tutorial/" class="nav-list-link">Credential Issuance Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/algorithm-compatibility-table/" class="nav-list-link">Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/did-operations-tutorial/" class="nav-list-link">DID Operations Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/delegation/" class="nav-list-link">Delegation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/development-setup/" class="nav-list-link">Development Setup</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/evaluation-engines/" class="nav-list-link">Evaluation Engines</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/json-canonicalization/" class="nav-list-link">JSON Canonicalization</a></li><li class="nav-list-item"><a href="/trustweave/advanced/key-rotation/" class="nav-list-link">Key Rotation Strategies</a></li><li class="nav-list-item"><a href="/trustweave/licensing/README/" class="nav-list-link">Licensing Overview</a></li><li class="nav-list-item"><a href="/trustweave/migration/README/" class="nav-list-link">Migration Guides</a></li><li class="nav-list-item"><a href="/trustweave/advanced/performance/" class="nav-list-link">Performance Considerations</a></li><li class="nav-list-item"><a href="/trustweave/advanced/plugin-lifecycle/" class="nav-list-link">Plugin Lifecycle Management</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/proof-purpose-validation/" class="nav-list-link">Proof Purpose Validation</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/credential-exchange-protocols/" class="nav-list-link">Protocol Abstraction Layer</a></li><li class="nav-list-item"><a href="/trustweave/contributing/pull-request-process/" class="nav-list-link">Pull Request Process</a></li><li class="nav-list-item"><a href="/trustweave/security/README/" class="nav-list-link">Security Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/advanced/spi/" class="nav-list-link">Service Provider Interface (SPI)</a></li><li class="nav-list-item"><a href="/trustweave/plugins/" class="nav-list-link">Supported Plugins</a></li><li class="nav-list-item"><a href="/trustweave/contributing/testing-guidelines/" class="nav-list-link">Testing Guidelines</a></li><li class="nav-list-item"><a href="/trustweave/advanced/testing-strategies/" class="nav-list-link">Testing Strategies</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/trust-registry/" class="nav-list-link">Trust Registry</a></li><li class="nav-list-item"><a href="/trustweave/GLOSSARY/" class="nav-list-link">TrustWeave Glossary</a></li><li class="nav-list-item"><a href="/trustweave/TRUSTWEAVE_WHITEPAPER/" class="nav-list-link">TrustWeave SDK: Decentralized Trust Infrastructure</a></li><li class="nav-list-item"><a href="/trustweave/scenarios/README/" class="nav-list-link">Use Case Scenarios</a></li><li class="nav-list-item"><a href="/trustweave/advanced/verification-policies/" class="nav-list-link">Verification Policies</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/wallet-api-tutorial/" class="nav-list-link">Wallet API Tutorial</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="news-industry--content-provenance-scenario">
+  
+  
+    <a href="#news-industry--content-provenance-scenario" class="anchor-heading" aria-labelledby="news-industry--content-provenance-scenario"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> News Industry &amp; Content Provenance Scenario
+  
+  
+</h1>
+    
+
+<p>This guide demonstrates how to build a news content provenance system using TrustWeave to track and verify the authenticity, authorship, and processing history of news articles, images, and multimedia content.</p>
+<h2 id="what-youll-build">
+  
+  
+    <a href="#what-youll-build" class="anchor-heading" aria-labelledby="what-youll-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Build
+  
+  
+</h2>
+    
+
+<p>By the end of this tutorial, you’ll have:</p>
+
+<ul>
+  <li>✅ Created DIDs for news organizations, journalists, and content</li>
+  <li>✅ Issued authorship credentials for articles</li>
+  <li>✅ Tracked content modifications and updates</li>
+  <li>✅ Verified content authenticity and integrity</li>
+  <li>✅ Built content attribution chains</li>
+  <li>✅ Anchored content provenance to blockchain</li>
+  <li>✅ Created fact-checking credentials</li>
+  <li>✅ Built complete news provenance system</li>
+</ul>
+<h2 id="big-picture--significance">
+  
+  
+    <a href="#big-picture--significance" class="anchor-heading" aria-labelledby="big-picture--significance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Big Picture &amp; Significance
+  
+  
+</h2>
+    
+<h3 id="the-news-trust-crisis">
+  
+  
+    <a href="#the-news-trust-crisis" class="anchor-heading" aria-labelledby="the-news-trust-crisis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The News Trust Crisis
+  
+  
+</h3>
+    
+
+<p>The news industry faces a crisis of trust. Misinformation, deepfakes, and content manipulation have eroded public confidence. Verifiable content provenance is critical for rebuilding trust.</p>
+
+<p><strong>Industry Context</strong>:</p>
+<ul>
+  <li><strong>Trust Crisis</strong>: Only 44% of people trust news media globally</li>
+  <li><strong>Misinformation</strong>: False information spreads faster than truth</li>
+  <li><strong>Deepfakes</strong>: AI-generated content threatens authenticity</li>
+  <li><strong>Regulatory Pressure</strong>: Increasing requirements for content transparency</li>
+  <li><strong>Publisher Accountability</strong>: Need to verify content sources</li>
+</ul>
+
+<p><strong>Why This Matters</strong>:</p>
+<ol>
+  <li><strong>Trust</strong>: Rebuild trust in news media</li>
+  <li><strong>Authenticity</strong>: Verify content hasn’t been manipulated</li>
+  <li><strong>Attribution</strong>: Properly credit journalists and sources</li>
+  <li><strong>Accountability</strong>: Hold publishers accountable</li>
+  <li><strong>Transparency</strong>: Show content processing history</li>
+  <li><strong>Fact-Checking</strong>: Enable verifiable fact-checking</li>
+</ol>
+<h3 id="the-content-provenance-problem">
+  
+  
+    <a href="#the-content-provenance-problem" class="anchor-heading" aria-labelledby="the-content-provenance-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Content Provenance Problem
+  
+  
+</h3>
+    
+
+<p>Traditional news systems struggle with provenance because:</p>
+<ul>
+  <li><strong>No Verification</strong>: Can’t verify content authenticity</li>
+  <li><strong>No Attribution</strong>: Missing author and source information</li>
+  <li><strong>No History</strong>: Can’t track content modifications</li>
+  <li><strong>No Standards</strong>: Each publisher tracks differently</li>
+  <li><strong>No Interoperability</strong>: Can’t share provenance across platforms</li>
+</ul>
+<h2 id="value-proposition">
+  
+  
+    <a href="#value-proposition" class="anchor-heading" aria-labelledby="value-proposition"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Value Proposition
+  
+  
+</h2>
+    
+<h3 id="problems-solved">
+  
+  
+    <a href="#problems-solved" class="anchor-heading" aria-labelledby="problems-solved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Problems Solved
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>Content Authenticity</strong>: Verify content hasn’t been manipulated</li>
+  <li><strong>Author Attribution</strong>: Properly credit journalists</li>
+  <li><strong>Source Verification</strong>: Verify content sources</li>
+  <li><strong>Modification Tracking</strong>: Track all content changes</li>
+  <li><strong>Fact-Checking</strong>: Enable verifiable fact-checking</li>
+  <li><strong>Publisher Accountability</strong>: Hold publishers accountable</li>
+  <li><strong>Cross-Platform</strong>: Works across news platforms</li>
+</ol>
+<h3 id="business-benefits">
+  
+  
+    <a href="#business-benefits" class="anchor-heading" aria-labelledby="business-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Business Benefits
+  
+  
+</h3>
+    
+
+<p><strong>For News Organizations</strong>:</p>
+<ul>
+  <li><strong>Trust</strong>: Rebuild reader trust</li>
+  <li><strong>Compliance</strong>: Meet regulatory requirements</li>
+  <li><strong>Differentiation</strong>: Stand out with verifiable content</li>
+  <li><strong>Accountability</strong>: Clear responsibility tracking</li>
+</ul>
+
+<p><strong>For Journalists</strong>:</p>
+<ul>
+  <li><strong>Attribution</strong>: Proper credit for work</li>
+  <li><strong>Protection</strong>: Protect against content theft</li>
+  <li><strong>Reputation</strong>: Build verifiable reputation</li>
+</ul>
+
+<p><strong>For Readers</strong>:</p>
+<ul>
+  <li><strong>Trust</strong>: Verify content authenticity</li>
+  <li><strong>Transparency</strong>: See content history</li>
+  <li><strong>Fact-Checking</strong>: Verify claims</li>
+</ul>
+<h2 id="understanding-the-problem">
+  
+  
+    <a href="#understanding-the-problem" class="anchor-heading" aria-labelledby="understanding-the-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Understanding the Problem
+  
+  
+</h2>
+    
+
+<p>News content provenance faces several critical challenges:</p>
+
+<ol>
+  <li><strong>Authenticity</strong>: Verify content hasn’t been manipulated</li>
+  <li><strong>Attribution</strong>: Properly credit authors and sources</li>
+  <li><strong>Modification Tracking</strong>: Track all content changes</li>
+  <li><strong>Source Verification</strong>: Verify content sources</li>
+  <li><strong>Fact-Checking</strong>: Enable verifiable fact-checking</li>
+  <li><strong>Cross-Platform</strong>: Share provenance across platforms</li>
+</ol>
+<h2 id="how-it-works-content-provenance-flow">
+  
+  
+    <a href="#how-it-works-content-provenance-flow" class="anchor-heading" aria-labelledby="how-it-works-content-provenance-flow"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How It Works: Content Provenance Flow
+  
+  
+</h2>
+    
+
+<pre><code class="language-mermaid">flowchart TD
+    A["Journalist DID&lt;br/&gt;Author Identity&lt;br/&gt;Credentials"] --&gt;|creates| B["Article Content&lt;br/&gt;Article DID&lt;br/&gt;Content Hash&lt;br/&gt;Authorship Credential"]
+    B --&gt;|modified by| C["Editor DID&lt;br/&gt;Editor Identity&lt;br/&gt;Modification Credential"]
+    C --&gt;|publishes| D["Publisher DID&lt;br/&gt;Publication Credential&lt;br/&gt;Blockchain Anchor"]
+    
+    style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
+    style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style D fill:#c2185b,stroke:#880e4f,stroke-width:2px,color:#fff
+</code></pre>
+<h2 id="key-concepts">
+  
+  
+    <a href="#key-concepts" class="anchor-heading" aria-labelledby="key-concepts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Concepts
+  
+  
+</h2>
+    
+<h3 id="content-credential-types">
+  
+  
+    <a href="#content-credential-types" class="anchor-heading" aria-labelledby="content-credential-types"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Content Credential Types
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>Authorship Credential</strong>: Proves who created content</li>
+  <li><strong>Modification Credential</strong>: Tracks content changes</li>
+  <li><strong>Publication Credential</strong>: Records publication</li>
+  <li><strong>Fact-Check Credential</strong>: Verifies claims</li>
+  <li><strong>Source Credential</strong>: Verifies content sources</li>
+</ol>
+<h2 id="prerequisites">
+  
+  
+    <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
+  
+  
+</h2>
+    
+
+<ul>
+  <li>Java 21+</li>
+  <li>Kotlin 2.2.0+</li>
+  <li>Gradle 8.5+</li>
+  <li>Basic understanding of Kotlin and coroutines</li>
+</ul>
+<h2 id="step-1-add-dependencies">
+  
+  
+    <a href="#step-1-add-dependencies" class="anchor-heading" aria-labelledby="step-1-add-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Add Dependencies
+  
+  
+</h2>
+    
+
+<p>Add TrustWeave dependencies to your <code class="language-plaintext highlighter-rouge">build.gradle.kts</code>. These modules provide DID/credential APIs plus the in-memory services used to model newsroom workflows.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Result:</strong> With dependencies in place you can execute the news provenance walkthrough without additional setup.</p>
+<h2 id="step-2-setup-and-create-journalist-did">
+  
+  
+    <a href="#step-2-setup-and-create-journalist-did" class="anchor-heading" aria-labelledby="step-2-setup-and-create-journalist-did"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Setup and Create Journalist DID
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Initialize the news provenance system and create DIDs for journalists.</p>
+
+<p><strong>Why This Matters</strong>: Journalists need verifiable identities to claim authorship. Their DIDs provide persistent identifiers that survive across platforms and time.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Journalist DID</strong>: Represents journalist identity</li>
+  <li><strong>Persistent Identity</strong>: Survives across platforms</li>
+  <li><strong>Verification</strong>: Can verify journalist credentials</li>
+  <li><strong>Attribution</strong>: Enables proper attribution</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.did.DidKeyMockMethod</span>
+<span class="k">import</span> <span class="nn">com.trustweave.testkit.kms.InMemoryKeyManagementService</span>
+<span class="k">import</span> <span class="nn">com.trustweave.did.DidMethodRegistry</span>
+<span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
+
+<span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"=== News Industry &amp; Content Provenance Scenario ===\n"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 1: Setup services</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Step 1: Setting up services..."</span><span class="p">)</span>
+    
+    <span class="c1">// Separate KMS for different participants</span>
+    <span class="c1">// Journalists, editors, publishers each have their own keys</span>
+    <span class="kd">val</span> <span class="py">journalistKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">editorKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">publisherKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
+    
+    <span class="kd">val</span> <span class="py">didMethod</span> <span class="p">=</span> <span class="nc">DidKeyMockMethod</span><span class="p">(</span><span class="n">journalistKms</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">didRegistry</span> <span class="p">=</span> <span class="nc">DidMethodRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span> <span class="nf">register</span><span class="p">(</span><span class="n">didMethod</span><span class="p">)</span> <span class="p">}</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Services initialized"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-3-create-journalist-and-organization-dids">
+  
+  
+    <a href="#step-3-create-journalist-and-organization-dids" class="anchor-heading" aria-labelledby="step-3-create-journalist-and-organization-dids"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Create Journalist and Organization DIDs
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Create DIDs for journalists and news organizations.</p>
+
+<p><strong>Why This Matters</strong>: Both journalists and organizations need verifiable identities. Organizations can issue credentials to journalists, and journalists can claim authorship.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Journalist DID</strong>: Individual journalist identity</li>
+  <li><strong>Organization DID</strong>: News organization identity</li>
+  <li><strong>Relationship</strong>: Organization can verify journalist credentials</li>
+  <li><strong>Attribution</strong>: Enables proper content attribution</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+</pre></td><td class="rouge-code"><pre>    <span class="c1">// Step 2: Create journalist and organization DIDs</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 2: Creating journalist and organization DIDs..."</span><span class="p">)</span>
+    
+    <span class="c1">// Journalist DID represents individual journalist</span>
+    <span class="c1">// This provides persistent identity across platforms</span>
+    <span class="kd">val</span> <span class="py">journalistDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Journalist DID: ${journalistDid.id}"</span><span class="p">)</span>
+    
+    <span class="c1">// Organization DID represents news organization</span>
+    <span class="c1">// Organizations can issue credentials to journalists</span>
+    <span class="kd">val</span> <span class="py">organizationDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Organization DID: ${organizationDid.id}"</span><span class="p">)</span>
+    
+    <span class="c1">// Create journalist credential issued by organization</span>
+    <span class="c1">// This proves journalist is affiliated with organization</span>
+    <span class="kd">val</span> <span class="py">journalistCredential</span> <span class="p">=</span> <span class="nf">createJournalistCredential</span><span class="p">(</span>
+        <span class="n">journalistDid</span> <span class="p">=</span> <span class="n">journalistDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">organizationDid</span> <span class="p">=</span> <span class="n">organizationDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">name</span> <span class="p">=</span> <span class="s">"Alice Reporter"</span><span class="p">,</span>
+        <span class="n">title</span> <span class="p">=</span> <span class="s">"Senior Journalist"</span><span class="p">,</span>
+        <span class="n">beat</span> <span class="p">=</span> <span class="s">"Technology"</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Journalist credential created:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Name: Alice Reporter"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Title: Senior Journalist"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Beat: Technology"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-4-create-article-content-did">
+  
+  
+    <a href="#step-4-create-article-content-did" class="anchor-heading" aria-labelledby="step-4-create-article-content-did"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Create Article Content DID
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Create DID for news article content.</p>
+
+<p><strong>Why This Matters</strong>: Each article needs a unique identifier. The content hash ensures integrity - any modification changes the hash.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Article DID</strong>: Unique identifier for article</li>
+  <li><strong>Content Hash</strong>: Ensures content integrity</li>
+  <li><strong>Persistent Identity</strong>: Survives across platforms</li>
+  <li><strong>Verification</strong>: Can verify content hasn’t changed</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.models.VerifiableCredential</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
+<span class="k">import</span> <span class="nn">java.time.Instant</span>
+
+    <span class="c1">// Step 3: Create article content DID</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 3: Creating article content DID..."</span><span class="p">)</span>
+    
+    <span class="c1">// Article content</span>
+    <span class="kd">val</span> <span class="py">articleContent</span> <span class="p">=</span> <span class="s">"""
+        Breaking: New AI Technology Revolutionizes Healthcare
+        
+        Scientists have developed a new AI system that can diagnose diseases
+        with 95% accuracy. The system uses machine learning to analyze
+        medical images and patient data.
+        
+        "This is a breakthrough," said Dr. Smith, lead researcher.
+    """</span><span class="p">.</span><span class="nf">trimIndent</span><span class="p">()</span>
+    
+    <span class="c1">// Compute content hash for integrity verification</span>
+    <span class="c1">// Any modification to content will change this hash</span>
+    <span class="kd">val</span> <span class="py">contentHash</span> <span class="p">=</span> <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">json</span><span class="p">.</span><span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span>
+        <span class="n">articleContent</span><span class="p">.</span><span class="nf">encodeToByteArray</span><span class="p">()</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Create article DID</span>
+    <span class="kd">val</span> <span class="py">articleDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Article DID: ${articleDid.id}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Content Hash: $contentHash"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-5-create-authorship-credential">
+  
+  
+    <a href="#step-5-create-authorship-credential" class="anchor-heading" aria-labelledby="step-5-create-authorship-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Create Authorship Credential
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Create credential proving journalist authored the article.</p>
+
+<p><strong>Why This Matters</strong>: Authorship credentials provide verifiable proof of who created content. This is critical for attribution and accountability.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Authorship Proof</strong>: Verifiable proof of authorship</li>
+  <li><strong>Attribution</strong>: Enables proper credit</li>
+  <li><strong>Accountability</strong>: Holds authors accountable</li>
+  <li><strong>Protection</strong>: Protects against content theft</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+</pre></td><td class="rouge-code"><pre>    <span class="c1">// Step 4: Create authorship credential</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 4: Creating authorship credential..."</span><span class="p">)</span>
+    
+    <span class="c1">// Authorship credential proves journalist created the article</span>
+    <span class="c1">// This is critical for attribution and accountability</span>
+    <span class="kd">val</span> <span class="py">authorshipCredential</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+        <span class="n">id</span> <span class="p">=</span> <span class="s">"https://news.example.com/articles/${articleDid.id.substringAfterLast("</span><span class="p">:</span><span class="s">")}/authorship"</span><span class="p">,</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"AuthorshipCredential"</span><span class="p">,</span> <span class="s">"NewsCredential"</span><span class="p">),</span>
+        <span class="n">issuer</span> <span class="p">=</span> <span class="n">organizationDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="c1">// Organization verifies journalist's authorship</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="n">journalistDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"authorship"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"articleDid"</span><span class="p">,</span> <span class="n">articleDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"contentHash"</span><span class="p">,</span> <span class="n">contentHash</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"role"</span><span class="p">,</span> <span class="s">"author"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"contribution"</span><span class="p">,</span> <span class="s">"primary-author"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"timestamp"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">(),</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="k">null</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Authorship credential created:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Article: ${articleDid.id}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Author: ${journalistDid.id}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Role: primary-author"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-6-issue-authorship-credential">
+  
+  
+    <a href="#step-6-issue-authorship-credential" class="anchor-heading" aria-labelledby="step-6-issue-authorship-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 6: Issue Authorship Credential
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Cryptographically sign authorship credential.</p>
+
+<p><strong>Why This Matters</strong>: Cryptographic proof ensures authorship claims cannot be forged. This is critical for trust and accountability.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Key Generation</strong>: Generate organization’s signing key</li>
+  <li><strong>Proof Generation</strong>: Create cryptographic proof</li>
+  <li><strong>Credential Issuance</strong>: Sign credential</li>
+  <li><strong>Verification</strong>: Anyone can verify authorship</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.issuer.CredentialIssuer</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.proof.Ed25519ProofGenerator</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.CredentialIssuanceOptions</span>
+
+    <span class="c1">// Step 5: Issue authorship credential</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 5: Issuing authorship credential..."</span><span class="p">)</span>
+    
+    <span class="c1">// Generate organization's signing key</span>
+    <span class="kd">val</span> <span class="py">orgKey</span> <span class="p">=</span> <span class="n">publisherKms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span>
+    
+    <span class="c1">// Create proof generator</span>
+    <span class="kd">val</span> <span class="py">orgProofGenerator</span> <span class="p">=</span> <span class="nc">Ed25519ProofGenerator</span><span class="p">(</span>
+        <span class="n">signer</span> <span class="p">=</span> <span class="p">{</span> <span class="n">data</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">publisherKms</span><span class="p">.</span><span class="nf">sign</span><span class="p">(</span><span class="n">keyId</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span> <span class="p">},</span>
+        <span class="n">getPublicKeyId</span> <span class="p">=</span> <span class="p">{</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">orgKey</span><span class="p">.</span><span class="n">id</span> <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="kd">val</span> <span class="py">didResolver</span> <span class="p">=</span> <span class="nc">CredentialDidResolver</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span>
+        <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">).</span><span class="nf">toCredentialDidResolution</span><span class="p">()</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Create credential issuer</span>
+    <span class="kd">val</span> <span class="py">orgIssuer</span> <span class="p">=</span> <span class="nc">CredentialIssuer</span><span class="p">(</span>
+        <span class="n">proofGenerator</span> <span class="p">=</span> <span class="n">orgProofGenerator</span><span class="p">,</span>
+        <span class="n">resolveDid</span> <span class="p">=</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span> <span class="n">didResolver</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">)</span><span class="o">?.</span><span class="n">isResolvable</span> <span class="p">==</span> <span class="k">true</span> <span class="p">}</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Issue authorship credential</span>
+    <span class="kd">val</span> <span class="py">issuedAuthorshipCredential</span> <span class="p">=</span> <span class="n">orgIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">authorshipCredential</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">organizationDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">keyId</span> <span class="p">=</span> <span class="n">orgKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Authorship credential issued:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Proof: ${issuedAuthorshipCredential.proof != null}"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-7-track-content-modifications">
+  
+  
+    <a href="#step-7-track-content-modifications" class="anchor-heading" aria-labelledby="step-7-track-content-modifications"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 7: Track Content Modifications
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Track article edits and modifications.</p>
+
+<p><strong>Why This Matters</strong>: News articles are often edited. Tracking modifications provides transparency and accountability.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Modification Tracking</strong>: Record all changes</li>
+  <li><strong>Editor Attribution</strong>: Credit editors</li>
+  <li><strong>Transparency</strong>: Show modification history</li>
+  <li><strong>Accountability</strong>: Hold editors accountable</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+</pre></td><td class="rouge-code"><pre>    <span class="c1">// Step 6: Track content modifications</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 6: Tracking content modifications..."</span><span class="p">)</span>
+    
+    <span class="c1">// Editor DID</span>
+    <span class="kd">val</span> <span class="py">editorDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+    
+    <span class="c1">// Modified article content</span>
+    <span class="kd">val</span> <span class="py">modifiedContent</span> <span class="p">=</span> <span class="s">"""
+        Breaking: New AI Technology Revolutionizes Healthcare
+        
+        Scientists have developed a new AI system that can diagnose diseases
+        with 98% accuracy. The system uses advanced machine learning to analyze
+        medical images and patient data.
+        
+        "This is a breakthrough that will transform healthcare," said Dr. Smith,
+        lead researcher at the Medical Research Institute.
+    """</span><span class="p">.</span><span class="nf">trimIndent</span><span class="p">()</span>
+    
+    <span class="kd">val</span> <span class="py">modifiedHash</span> <span class="p">=</span> <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">json</span><span class="p">.</span><span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span>
+        <span class="n">modifiedContent</span><span class="p">.</span><span class="nf">encodeToByteArray</span><span class="p">()</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Create modification credential</span>
+    <span class="c1">// This tracks what was changed and by whom</span>
+    <span class="kd">val</span> <span class="py">modificationCredential</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"ModificationCredential"</span><span class="p">,</span> <span class="s">"NewsCredential"</span><span class="p">),</span>
+        <span class="n">issuer</span> <span class="p">=</span> <span class="n">organizationDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"modification"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"articleDid"</span><span class="p">,</span> <span class="n">articleDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"previousHash"</span><span class="p">,</span> <span class="n">contentHash</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"newHash"</span><span class="p">,</span> <span class="n">modifiedHash</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"editorDid"</span><span class="p">,</span> <span class="n">editorDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"changes"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"accuracyUpdated"</span><span class="p">,</span> <span class="s">"95% → 98%"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"quoteExtended"</span><span class="p">,</span> <span class="s">"true"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"institutionAdded"</span><span class="p">,</span> <span class="s">"Medical Research Institute"</span><span class="p">)</span>
+                <span class="p">})</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"timestamp"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">()</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Issue modification credential</span>
+    <span class="kd">val</span> <span class="py">issuedModificationCredential</span> <span class="p">=</span> <span class="n">orgIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">modificationCredential</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">organizationDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">keyId</span> <span class="p">=</span> <span class="n">orgKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Modification credential created:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Editor: ${editorDid.id}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Changes: accuracy updated, quote extended"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-8-create-publication-credential">
+  
+  
+    <a href="#step-8-create-publication-credential" class="anchor-heading" aria-labelledby="step-8-create-publication-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 8: Create Publication Credential
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Record article publication.</p>
+
+<p><strong>Why This Matters</strong>: Publication credentials record when and where content was published. This is critical for copyright and accountability.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Publication Record</strong>: Records publication event</li>
+  <li><strong>Timestamp</strong>: When content was published</li>
+  <li><strong>Platform</strong>: Where content was published</li>
+  <li><strong>Accountability</strong>: Holds publisher accountable</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+</pre></td><td class="rouge-code"><pre>    <span class="c1">// Step 7: Create publication credential</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 7: Creating publication credential..."</span><span class="p">)</span>
+    
+    <span class="c1">// Publication credential records when article was published</span>
+    <span class="kd">val</span> <span class="py">publicationCredential</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"PublicationCredential"</span><span class="p">,</span> <span class="s">"NewsCredential"</span><span class="p">),</span>
+        <span class="n">issuer</span> <span class="p">=</span> <span class="n">organizationDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"publication"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"articleDid"</span><span class="p">,</span> <span class="n">articleDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"contentHash"</span><span class="p">,</span> <span class="n">modifiedHash</span><span class="p">)</span> <span class="c1">// Use latest hash</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"publisherDid"</span><span class="p">,</span> <span class="n">organizationDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"publicationDate"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"platform"</span><span class="p">,</span> <span class="s">"https://news.example.com"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"url"</span><span class="p">,</span> <span class="s">"https://news.example.com/articles/ai-healthcare-breakthrough"</span><span class="p">)</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">()</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Issue publication credential</span>
+    <span class="kd">val</span> <span class="py">issuedPublicationCredential</span> <span class="p">=</span> <span class="n">orgIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">publicationCredential</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">organizationDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">keyId</span> <span class="p">=</span> <span class="n">orgKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Publication credential created:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Publisher: ${organizationDid.id}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Platform: https://news.example.com"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - URL: https://news.example.com/articles/ai-healthcare-breakthrough"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-9-create-fact-check-credential">
+  
+  
+    <a href="#step-9-create-fact-check-credential" class="anchor-heading" aria-labelledby="step-9-create-fact-check-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 9: Create Fact-Check Credential
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Create credential verifying article claims.</p>
+
+<p><strong>Why This Matters</strong>: Fact-checking credentials provide verifiable proof that claims have been verified. This is critical for trust and combating misinformation.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Fact Verification</strong>: Verifies article claims</li>
+  <li><strong>Fact-Checker Identity</strong>: Who verified the facts</li>
+  <li><strong>Verification Method</strong>: How facts were verified</li>
+  <li><strong>Trust</strong>: Builds reader trust</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+</pre></td><td class="rouge-code"><pre>    <span class="c1">// Step 8: Create fact-check credential</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 8: Creating fact-check credential..."</span><span class="p">)</span>
+    
+    <span class="c1">// Fact-checker DID</span>
+    <span class="kd">val</span> <span class="py">factCheckerDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+    
+    <span class="c1">// Fact-check credential verifies article claims</span>
+    <span class="kd">val</span> <span class="py">factCheckCredential</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"FactCheckCredential"</span><span class="p">,</span> <span class="s">"NewsCredential"</span><span class="p">),</span>
+        <span class="n">issuer</span> <span class="p">=</span> <span class="n">factCheckerDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="c1">// Independent fact-checker</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"factCheck"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"articleDid"</span><span class="p">,</span> <span class="n">articleDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"claims"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"claim1"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                        <span class="nf">put</span><span class="p">(</span><span class="s">"text"</span><span class="p">,</span> <span class="s">"AI system diagnoses with 98% accuracy"</span><span class="p">)</span>
+                        <span class="nf">put</span><span class="p">(</span><span class="s">"status"</span><span class="p">,</span> <span class="s">"verified"</span><span class="p">)</span>
+                        <span class="nf">put</span><span class="p">(</span><span class="s">"source"</span><span class="p">,</span> <span class="s">"Medical Research Institute Study"</span><span class="p">)</span>
+                        <span class="nf">put</span><span class="p">(</span><span class="s">"verificationDate"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+                    <span class="p">})</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"claim2"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                        <span class="nf">put</span><span class="p">(</span><span class="s">"text"</span><span class="p">,</span> <span class="s">"Dr. Smith is lead researcher"</span><span class="p">)</span>
+                        <span class="nf">put</span><span class="p">(</span><span class="s">"status"</span><span class="p">,</span> <span class="s">"verified"</span><span class="p">)</span>
+                        <span class="nf">put</span><span class="p">(</span><span class="s">"source"</span><span class="p">,</span> <span class="s">"Institution Website"</span><span class="p">)</span>
+                    <span class="p">})</span>
+                <span class="p">})</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"overallRating"</span><span class="p">,</span> <span class="s">"verified"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"factCheckerDid"</span><span class="p">,</span> <span class="n">factCheckerDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">()</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Issue fact-check credential</span>
+    <span class="kd">val</span> <span class="py">factCheckerKey</span> <span class="p">=</span> <span class="n">journalistKms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">factCheckerProofGenerator</span> <span class="p">=</span> <span class="nc">Ed25519ProofGenerator</span><span class="p">(</span>
+        <span class="n">signer</span> <span class="p">=</span> <span class="p">{</span> <span class="n">data</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">journalistKms</span><span class="p">.</span><span class="nf">sign</span><span class="p">(</span><span class="n">keyId</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span> <span class="p">},</span>
+        <span class="n">getPublicKeyId</span> <span class="p">=</span> <span class="p">{</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">factCheckerKey</span><span class="p">.</span><span class="n">id</span> <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="kd">val</span> <span class="py">factCheckerProofRegistry</span> <span class="p">=</span> <span class="nc">ProofGeneratorRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
+        <span class="nf">register</span><span class="p">(</span><span class="n">factCheckerProofGenerator</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="kd">val</span> <span class="py">factCheckerIssuer</span> <span class="p">=</span> <span class="nc">CredentialIssuer</span><span class="p">(</span>
+        <span class="n">proofGenerator</span> <span class="p">=</span> <span class="n">factCheckerProofGenerator</span><span class="p">,</span>
+        <span class="n">resolveDid</span> <span class="p">=</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span> <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">)</span> <span class="p">!=</span> <span class="k">null</span> <span class="p">},</span>
+        <span class="n">proofRegistry</span> <span class="p">=</span> <span class="n">factCheckerProofRegistry</span>
+    <span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">issuedFactCheckCredential</span> <span class="p">=</span> <span class="n">factCheckerIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">factCheckCredential</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">factCheckerDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">keyId</span> <span class="p">=</span> <span class="n">factCheckerKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Fact-check credential created:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Fact-checker: ${factCheckerDid.id}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Overall rating: verified"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Claims verified: 2"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-10-verify-content-authenticity">
+  
+  
+    <a href="#step-10-verify-content-authenticity" class="anchor-heading" aria-labelledby="step-10-verify-content-authenticity"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 10: Verify Content Authenticity
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Verify article content hasn’t been tampered with.</p>
+
+<p><strong>Why This Matters</strong>: Content verification ensures readers can trust content hasn’t been manipulated. This is critical for combating misinformation.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Content Verification</strong>: Verify content hash matches</li>
+  <li><strong>Credential Verification</strong>: Verify all credentials</li>
+  <li><strong>Chain Verification</strong>: Verify complete provenance chain</li>
+  <li><strong>Trust</strong>: Builds reader trust</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.verifier.CredentialVerifier</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.CredentialVerificationOptions</span>
+
+    <span class="c1">// Step 9: Verify content authenticity</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 9: Verifying content authenticity..."</span><span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">verifier</span> <span class="p">=</span> <span class="nc">CredentialVerifier</span><span class="p">(</span><span class="n">didResolver</span><span class="p">)</span>
+    
+    <span class="c1">// Verify all credentials</span>
+    <span class="kd">val</span> <span class="py">credentials</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span>
+        <span class="n">issuedAuthorshipCredential</span><span class="p">,</span>
+        <span class="n">issuedModificationCredential</span><span class="p">,</span>
+        <span class="n">issuedPublicationCredential</span><span class="p">,</span>
+        <span class="n">issuedFactCheckCredential</span>
+    <span class="p">)</span>
+    
+    <span class="n">credentials</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="n">credential</span> <span class="p">-&gt;</span>
+        <span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">verifier</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span>
+            <span class="n">credential</span> <span class="p">=</span> <span class="n">credential</span><span class="p">,</span>
+            <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialVerificationOptions</span><span class="p">(</span>
+                <span class="n">checkRevocation</span> <span class="p">=</span> <span class="k">false</span><span class="p">,</span>
+                <span class="n">checkExpiration</span> <span class="p">=</span> <span class="k">false</span><span class="p">,</span>
+                <span class="n">didResolver</span> <span class="p">=</span> <span class="n">didResolver</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Credential verified: ${credential.type.firstOrNull()}"</span><span class="p">)</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Credential verification failed:"</span><span class="p">)</span>
+            <span class="n">verification</span><span class="p">.</span><span class="n">errors</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="nf">println</span><span class="p">(</span><span class="s">"  - $it"</span><span class="p">)</span> <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Verify content hash matches</span>
+    <span class="kd">val</span> <span class="py">currentContentHash</span> <span class="p">=</span> <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">json</span><span class="p">.</span><span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span>
+        <span class="n">modifiedContent</span><span class="p">.</span><span class="nf">encodeToByteArray</span><span class="p">()</span>
+    <span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">currentContentHash</span> <span class="p">==</span> <span class="n">modifiedHash</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Content hash verified - content hasn't been tampered with"</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Content hash mismatch - content may have been modified"</span><span class="p">)</span>
+    <span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-11-anchor-content-to-blockchain">
+  
+  
+    <a href="#step-11-anchor-content-to-blockchain" class="anchor-heading" aria-labelledby="step-11-anchor-content-to-blockchain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 11: Anchor Content to Blockchain
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Create immutable record of content provenance.</p>
+
+<p><strong>Why This Matters</strong>: Blockchain anchoring provides permanent, tamper-proof record. This enables long-term verification and accountability.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Immutability</strong>: Cannot be tampered with</li>
+  <li><strong>Audit Trail</strong>: Permanent record</li>
+  <li><strong>Verification</strong>: Anyone can verify</li>
+  <li><strong>Accountability</strong>: Holds publishers accountable</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient</span>
+<span class="k">import</span> <span class="nn">com.trustweave.anchor.BlockchainAnchorRegistry</span>
+<span class="k">import</span> <span class="nn">com.trustweave.anchor.anchorTyped</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.Serializable</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.Json</span>
+
+<span class="nd">@Serializable</span>
+<span class="kd">data class</span> <span class="nc">ContentProvenanceRecord</span><span class="p">(</span>
+    <span class="kd">val</span> <span class="py">articleDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">authorDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">publisherDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">contentHash</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">publicationDate</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">provenanceDigest</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">)</span>
+
+    <span class="c1">// Step 10: Anchor content to blockchain</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 10: Anchoring content to blockchain..."</span><span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">anchorClient</span> <span class="p">=</span> <span class="nc">InMemoryBlockchainAnchorClient</span><span class="p">(</span><span class="s">"eip155:1"</span><span class="p">,</span> <span class="nf">emptyMap</span><span class="p">())</span>
+    <span class="kd">val</span> <span class="py">blockchainRegistry</span> <span class="p">=</span> <span class="nc">BlockchainAnchorRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
+        <span class="nf">register</span><span class="p">(</span><span class="s">"eip155:1"</span><span class="p">,</span> <span class="n">anchorClient</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Create provenance record</span>
+    <span class="kd">val</span> <span class="py">provenanceDigest</span> <span class="p">=</span> <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">json</span><span class="p">.</span><span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span>
+        <span class="nc">Json</span><span class="p">.</span><span class="nf">encodeToJsonElement</span><span class="p">(</span>
+            <span class="nc">VerifiableCredential</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
+            <span class="n">issuedPublicationCredential</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">provenanceRecord</span> <span class="p">=</span> <span class="nc">ContentProvenanceRecord</span><span class="p">(</span>
+        <span class="n">articleDid</span> <span class="p">=</span> <span class="n">articleDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">authorDid</span> <span class="p">=</span> <span class="n">journalistDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">publisherDid</span> <span class="p">=</span> <span class="n">organizationDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">contentHash</span> <span class="p">=</span> <span class="n">modifiedHash</span><span class="p">,</span>
+        <span class="n">publicationDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">(),</span>
+        <span class="n">provenanceDigest</span> <span class="p">=</span> <span class="n">provenanceDigest</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Anchor to blockchain</span>
+    <span class="kd">val</span> <span class="py">anchorResult</span> <span class="p">=</span> <span class="n">blockchainRegistry</span><span class="p">.</span><span class="nf">anchorTyped</span><span class="p">(</span>
+        <span class="n">value</span> <span class="p">=</span> <span class="n">provenanceRecord</span><span class="p">,</span>
+        <span class="n">serializer</span> <span class="p">=</span> <span class="nc">ContentProvenanceRecord</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
+        <span class="n">targetChainId</span> <span class="p">=</span> <span class="s">"eip155:137"</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Content anchored to blockchain:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Transaction hash: ${anchorResult.ref.txHash}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Provides immutable provenance record"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Enables long-term verification"</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">fun</span> <span class="nf">createJournalistCredential</span><span class="p">(</span>
+    <span class="n">journalistDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">organizationDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">beat</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">):</span> <span class="nc">VerifiableCredential</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"JournalistCredential"</span><span class="p">),</span>
+        <span class="n">issuer</span> <span class="p">=</span> <span class="n">organizationDid</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="n">journalistDid</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"journalist"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"name"</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"title"</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"beat"</span><span class="p">,</span> <span class="n">beat</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"organizationDid"</span><span class="p">,</span> <span class="n">organizationDid</span><span class="p">)</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">(),</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="k">null</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="advanced-features">
+  
+  
+    <a href="#advanced-features" class="anchor-heading" aria-labelledby="advanced-features"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Advanced Features
+  
+  
+</h2>
+    
+<h3 id="multi-author-articles">
+  
+  
+    <a href="#multi-author-articles" class="anchor-heading" aria-labelledby="multi-author-articles"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Multi-Author Articles
+  
+  
+</h3>
+    
+
+<p>Track articles with multiple authors:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+</pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">createMultiAuthorCredential</span><span class="p">(</span>
+    <span class="n">articleDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">authors</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">&gt;,</span>
+    <span class="n">organizationDid</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">):</span> <span class="nc">VerifiableCredential</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"AuthorshipCredential"</span><span class="p">),</span>
+        <span class="n">issuer</span> <span class="p">=</span> <span class="n">organizationDid</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"authorship"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"articleDid"</span><span class="p">,</span> <span class="n">articleDid</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"authors"</span><span class="p">,</span> <span class="n">authors</span><span class="p">.</span><span class="nf">mapIndexed</span> <span class="p">{</span> <span class="n">index</span><span class="p">,</span> <span class="n">authorDid</span> <span class="p">-&gt;</span>
+                    <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                        <span class="nf">put</span><span class="p">(</span><span class="s">"authorDid"</span><span class="p">,</span> <span class="n">authorDid</span><span class="p">)</span>
+                        <span class="nf">put</span><span class="p">(</span><span class="s">"role"</span><span class="p">,</span> <span class="k">if</span> <span class="p">(</span><span class="n">index</span> <span class="p">==</span> <span class="mi">0</span><span class="p">)</span> <span class="s">"primary-author"</span> <span class="k">else</span> <span class="s">"co-author"</span><span class="p">)</span>
+                        <span class="nf">put</span><span class="p">(</span><span class="s">"contribution"</span><span class="p">,</span> <span class="s">"equal"</span><span class="p">)</span>
+                    <span class="p">}</span>
+                <span class="p">})</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">()</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="content-versioning">
+  
+  
+    <a href="#content-versioning" class="anchor-heading" aria-labelledby="content-versioning"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Content Versioning
+  
+  
+</h3>
+    
+
+<p>Track multiple versions of content:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+</pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">createVersionCredential</span><span class="p">(</span>
+    <span class="n">articleDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nc">Int</span><span class="p">,</span>
+    <span class="n">previousVersionHash</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">currentVersionHash</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">editorDid</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">):</span> <span class="nc">VerifiableCredential</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"VersionCredential"</span><span class="p">),</span>
+        <span class="n">issuer</span> <span class="p">=</span> <span class="n">editorDid</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"version"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"articleDid"</span><span class="p">,</span> <span class="n">articleDid</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"versionNumber"</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"previousHash"</span><span class="p">,</span> <span class="n">previousVersionHash</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"currentHash"</span><span class="p">,</span> <span class="n">currentVersionHash</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"editorDid"</span><span class="p">,</span> <span class="n">editorDid</span><span class="p">)</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">()</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="real-world-use-cases">
+  
+  
+    <a href="#real-world-use-cases" class="anchor-heading" aria-labelledby="real-world-use-cases"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Use Cases
+  
+  
+</h2>
+    
+<h3 id="1-breaking-news-verification">
+  
+  
+    <a href="#1-breaking-news-verification" class="anchor-heading" aria-labelledby="1-breaking-news-verification"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Breaking News Verification
+  
+  
+</h3>
+    
+
+<p><strong>Scenario</strong>: Verify breaking news content authenticity.</p>
+
+<p><strong>Implementation</strong>: Use authorship and publication credentials to verify content source and publication.</p>
+<h3 id="2-investigative-journalism">
+  
+  
+    <a href="#2-investigative-journalism" class="anchor-heading" aria-labelledby="2-investigative-journalism"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Investigative Journalism
+  
+  
+</h3>
+    
+
+<p><strong>Scenario</strong>: Track investigative article through research, writing, editing, and publication.</p>
+
+<p><strong>Implementation</strong>: Use provenance chain to track article through all stages.</p>
+<h3 id="3-photo-journalism">
+  
+  
+    <a href="#3-photo-journalism" class="anchor-heading" aria-labelledby="3-photo-journalism"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Photo Journalism
+  
+  
+</h3>
+    
+
+<p><strong>Scenario</strong>: Verify photo authenticity and attribution.</p>
+
+<p><strong>Implementation</strong>: Use content hash and authorship credentials for photos.</p>
+<h2 id="benefits">
+  
+  
+    <a href="#benefits" class="anchor-heading" aria-labelledby="benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Benefits
+  
+  
+</h2>
+    
+
+<ol>
+  <li><strong>Content Authenticity</strong>: Verify content hasn’t been manipulated</li>
+  <li><strong>Author Attribution</strong>: Properly credit journalists</li>
+  <li><strong>Source Verification</strong>: Verify content sources</li>
+  <li><strong>Modification Tracking</strong>: Track all content changes</li>
+  <li><strong>Fact-Checking</strong>: Enable verifiable fact-checking</li>
+  <li><strong>Publisher Accountability</strong>: Hold publishers accountable</li>
+  <li><strong>Cross-Platform</strong>: Works across news platforms</li>
+  <li><strong>Trust</strong>: Rebuild reader trust</li>
+  <li><strong>Compliance</strong>: Meet regulatory requirements</li>
+  <li><strong>Transparency</strong>: Show content history</li>
+</ol>
+<h2 id="best-practices">
+  
+  
+    <a href="#best-practices" class="anchor-heading" aria-labelledby="best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Best Practices
+  
+  
+</h2>
+    
+
+<ol>
+  <li><strong>Content Hashing</strong>: Always hash content for integrity</li>
+  <li><strong>Author Attribution</strong>: Always attribute content to authors</li>
+  <li><strong>Modification Tracking</strong>: Track all content changes</li>
+  <li><strong>Fact-Checking</strong>: Verify claims with fact-check credentials</li>
+  <li><strong>Blockchain Anchoring</strong>: Anchor critical content</li>
+  <li><strong>Credential Verification</strong>: Verify all credentials</li>
+  <li><strong>Error Handling</strong>: Handle verification failures</li>
+  <li><strong>Documentation</strong>: Document content processing</li>
+  <li><strong>Privacy</strong>: Respect source privacy</li>
+  <li><strong>Standards</strong>: Follow industry standards</li>
+</ol>
+<h2 id="next-steps">
+  
+  
+    <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
+  
+  
+</h2>
+    
+
+<ul>
+  <li>Learn about <a href="/trustweave/scenarios/digital-workflow-provenance-scenario/">Digital Workflow &amp; Provenance Scenario</a> for related concepts</li>
+  <li>Explore <a href="/trustweave/scenarios/earth-observation-scenario/">Earth Observation Scenario</a> for data integrity</li>
+  <li>Check out <a href="/trustweave/scenarios/academic-credentials-scenario/">Academic Credentials Scenario</a> for credential concepts</li>
+  <li>Review <a href="/trustweave/core-concepts/verifiable-credentials/">Core Concepts: Verifiable Credentials</a> for credential details</li>
+</ul>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

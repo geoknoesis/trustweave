@@ -1,0 +1,1109 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+    .site-nav ul li a {
+      background-image: none;
+    }
+
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Google Cloud KMS Integration | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Google Cloud KMS Integration" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://localhost:4000/trustweave/integrations/google-kms/" />
+<meta property="og:url" content="http://localhost:4000/trustweave/integrations/google-kms/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Google Cloud KMS Integration" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"Google Cloud KMS Integration","url":"http://localhost:4000/trustweave/integrations/google-kms/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/beginner-tutorial-series/" class="nav-list-link">Beginner Tutorial Series</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchored-revocation/" class="nav-list-link">Blockchain-Anchored Revocation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/code-style/" class="nav-list-link">Code Style</a></li><li class="nav-list-item"><a href="/trustweave/comparison/README/" class="nav-list-link">Comparison Documentation</a></li><li class="nav-list-item"><a href="/trustweave/configuration/README/" class="nav-list-link">Configuration Reference</a></li><li class="nav-list-item"><a href="/trustweave/advanced/custom-adapters/" class="nav-list-link">Creating Custom Adapters</a></li><li class="nav-list-item"><a href="/trustweave/contributing/creating-plugins/" class="nav-list-link">Creating TrustWeave Plugins</a></li><li class="nav-list-item"><a href="/trustweave/features/credential-exchange-protocols/README/" class="nav-list-link">Credential Exchange Protocols</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/credential-issuance-tutorial/" class="nav-list-link">Credential Issuance Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/algorithm-compatibility-table/" class="nav-list-link">Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/did-operations-tutorial/" class="nav-list-link">DID Operations Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/delegation/" class="nav-list-link">Delegation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/development-setup/" class="nav-list-link">Development Setup</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/evaluation-engines/" class="nav-list-link">Evaluation Engines</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/json-canonicalization/" class="nav-list-link">JSON Canonicalization</a></li><li class="nav-list-item"><a href="/trustweave/advanced/key-rotation/" class="nav-list-link">Key Rotation Strategies</a></li><li class="nav-list-item"><a href="/trustweave/licensing/README/" class="nav-list-link">Licensing Overview</a></li><li class="nav-list-item"><a href="/trustweave/migration/README/" class="nav-list-link">Migration Guides</a></li><li class="nav-list-item"><a href="/trustweave/advanced/performance/" class="nav-list-link">Performance Considerations</a></li><li class="nav-list-item"><a href="/trustweave/advanced/plugin-lifecycle/" class="nav-list-link">Plugin Lifecycle Management</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/proof-purpose-validation/" class="nav-list-link">Proof Purpose Validation</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/credential-exchange-protocols/" class="nav-list-link">Protocol Abstraction Layer</a></li><li class="nav-list-item"><a href="/trustweave/contributing/pull-request-process/" class="nav-list-link">Pull Request Process</a></li><li class="nav-list-item"><a href="/trustweave/security/README/" class="nav-list-link">Security Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/advanced/spi/" class="nav-list-link">Service Provider Interface (SPI)</a></li><li class="nav-list-item"><a href="/trustweave/plugins/" class="nav-list-link">Supported Plugins</a></li><li class="nav-list-item"><a href="/trustweave/contributing/testing-guidelines/" class="nav-list-link">Testing Guidelines</a></li><li class="nav-list-item"><a href="/trustweave/advanced/testing-strategies/" class="nav-list-link">Testing Strategies</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/trust-registry/" class="nav-list-link">Trust Registry</a></li><li class="nav-list-item"><a href="/trustweave/GLOSSARY/" class="nav-list-link">TrustWeave Glossary</a></li><li class="nav-list-item"><a href="/trustweave/TRUSTWEAVE_WHITEPAPER/" class="nav-list-link">TrustWeave SDK: Decentralized Trust Infrastructure</a></li><li class="nav-list-item"><a href="/trustweave/scenarios/README/" class="nav-list-link">Use Case Scenarios</a></li><li class="nav-list-item"><a href="/trustweave/advanced/verification-policies/" class="nav-list-link">Verification Policies</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/wallet-api-tutorial/" class="nav-list-link">Wallet API Tutorial</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="google-cloud-kms-integration">
+  
+  
+    <a href="#google-cloud-kms-integration" class="anchor-heading" aria-labelledby="google-cloud-kms-integration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Google Cloud KMS Integration
+  
+  
+</h1>
+    
+
+<blockquote>
+  <p>This guide covers the Google Cloud Key Management Service (KMS) integration for TrustWeave. The Google Cloud KMS plugin provides production-ready key management with support for all Google Cloud KMS-compatible algorithms.</p>
+</blockquote>
+<h2 id="overview">
+  
+  
+    <a href="#overview" class="anchor-heading" aria-labelledby="overview"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Overview
+  
+  
+</h2>
+    
+
+<p>The <code class="language-plaintext highlighter-rouge">kms/plugins/google</code> module provides a complete implementation of TrustWeave’s <code class="language-plaintext highlighter-rouge">KeyManagementService</code> interface using Google Cloud Key Management Service. This integration enables you to:</p>
+
+<ul>
+  <li>Use Google Cloud KMS for secure key generation and storage</li>
+  <li>Leverage Google Cloud KMS’s key versioning and rotation capabilities</li>
+  <li>Support all Google Cloud KMS-compatible algorithms (secp256k1, P-256/P-384, RSA)</li>
+  <li>Integrate with existing Google Cloud infrastructure and IAM policies</li>
+</ul>
+<h2 id="installation">
+  
+  
+    <a href="#installation" class="anchor-heading" aria-labelledby="installation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Installation
+  
+  
+</h2>
+    
+
+<p>Add the Google Cloud KMS module to your dependencies:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.kms:google:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="configuration">
+  
+  
+    <a href="#configuration" class="anchor-heading" aria-labelledby="configuration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Configuration
+  
+  
+</h2>
+    
+<h3 id="basic-configuration">
+  
+  
+    <a href="#basic-configuration" class="anchor-heading" aria-labelledby="basic-configuration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Basic Configuration
+  
+  
+</h3>
+    
+
+<p>The Google Cloud KMS provider can be configured via options map or environment variables:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+<span class="k">import</span> <span class="nn">com.trustweave.googlekms.*</span>
+<span class="k">import</span> <span class="nn">java.util.ServiceLoader</span>
+
+<span class="c1">// Discover Google Cloud KMS provider</span>
+<span class="kd">val</span> <span class="py">providers</span> <span class="p">=</span> <span class="nc">ServiceLoader</span><span class="p">.</span><span class="nf">load</span><span class="p">(</span><span class="nc">KeyManagementServiceProvider</span><span class="o">::</span><span class="k">class</span><span class="p">.</span><span class="n">java</span><span class="p">)</span>
+<span class="kd">val</span> <span class="py">googleProvider</span> <span class="p">=</span> <span class="n">providers</span><span class="p">.</span><span class="nf">find</span> <span class="p">{</span> <span class="n">it</span><span class="p">.</span><span class="n">name</span> <span class="p">==</span> <span class="s">"google-cloud-kms"</span> <span class="p">}</span>
+
+<span class="c1">// Create KMS with explicit configuration</span>
+<span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="n">googleProvider</span><span class="o">?.</span><span class="nf">create</span><span class="p">(</span><span class="nf">mapOf</span><span class="p">(</span>
+    <span class="s">"projectId"</span> <span class="n">to</span> <span class="s">"my-project"</span><span class="p">,</span>
+    <span class="s">"location"</span> <span class="n">to</span> <span class="s">"us-east1"</span><span class="p">,</span>
+    <span class="s">"keyRing"</span> <span class="n">to</span> <span class="s">"my-key-ring"</span>
+<span class="p">))</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="authentication">
+  
+  
+    <a href="#authentication" class="anchor-heading" aria-labelledby="authentication"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Authentication
+  
+  
+</h3>
+    
+
+<p>The plugin supports multiple authentication methods:</p>
+<h4 id="1-application-default-credentials-recommended-for-production">
+  
+  
+    <a href="#1-application-default-credentials-recommended-for-production" class="anchor-heading" aria-labelledby="1-application-default-credentials-recommended-for-production"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Application Default Credentials (Recommended for Production)
+  
+  
+</h4>
+    
+
+<p>When running on Google Cloud infrastructure (Compute Engine, Cloud Run, GKE), use Application Default Credentials:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="c1">// No credentials needed - uses ADC automatically</span>
+<span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="n">googleProvider</span><span class="o">?.</span><span class="nf">create</span><span class="p">(</span><span class="nf">mapOf</span><span class="p">(</span>
+    <span class="s">"projectId"</span> <span class="n">to</span> <span class="s">"my-project"</span><span class="p">,</span>
+    <span class="s">"location"</span> <span class="n">to</span> <span class="s">"us-east1"</span><span class="p">,</span>
+    <span class="s">"keyRing"</span> <span class="n">to</span> <span class="s">"my-key-ring"</span>
+<span class="p">))</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p>Set up ADC:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre>gcloud auth application-default login
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h4 id="2-service-account-json-file">
+  
+  
+    <a href="#2-service-account-json-file" class="anchor-heading" aria-labelledby="2-service-account-json-file"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Service Account JSON File
+  
+  
+</h4>
+    
+
+<p>For local development or non-Google Cloud environments:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="n">googleProvider</span><span class="o">?.</span><span class="nf">create</span><span class="p">(</span><span class="nf">mapOf</span><span class="p">(</span>
+    <span class="s">"projectId"</span> <span class="n">to</span> <span class="s">"my-project"</span><span class="p">,</span>
+    <span class="s">"location"</span> <span class="n">to</span> <span class="s">"us-east1"</span><span class="p">,</span>
+    <span class="s">"keyRing"</span> <span class="n">to</span> <span class="s">"my-key-ring"</span><span class="p">,</span>
+    <span class="s">"credentialsPath"</span> <span class="n">to</span> <span class="s">"/path/to/service-account.json"</span>
+<span class="p">))</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h4 id="3-service-account-json-string">
+  
+  
+    <a href="#3-service-account-json-string" class="anchor-heading" aria-labelledby="3-service-account-json-string"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Service Account JSON String
+  
+  
+</h4>
+    
+
+<p>For programmatic configuration:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="n">googleProvider</span><span class="o">?.</span><span class="nf">create</span><span class="p">(</span><span class="nf">mapOf</span><span class="p">(</span>
+    <span class="s">"projectId"</span> <span class="n">to</span> <span class="s">"my-project"</span><span class="p">,</span>
+    <span class="s">"location"</span> <span class="n">to</span> <span class="s">"us-east1"</span><span class="p">,</span>
+    <span class="s">"keyRing"</span> <span class="n">to</span> <span class="s">"my-key-ring"</span><span class="p">,</span>
+    <span class="s">"credentialsJson"</span> <span class="n">to</span> <span class="n">serviceAccountJsonString</span>
+<span class="p">))</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h4 id="4-environment-variables">
+  
+  
+    <a href="#4-environment-variables" class="anchor-heading" aria-labelledby="4-environment-variables"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Environment Variables
+  
+  
+</h4>
+    
+
+<p>The plugin automatically reads from environment variables:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="nb">export </span><span class="nv">GOOGLE_CLOUD_PROJECT</span><span class="o">=</span>my-project
+<span class="nb">export </span><span class="nv">GOOGLE_CLOUD_LOCATION</span><span class="o">=</span>us-east1
+<span class="nb">export </span><span class="nv">GOOGLE_CLOUD_KEY_RING</span><span class="o">=</span>my-key-ring
+<span class="nb">export </span><span class="nv">GOOGLE_APPLICATION_CREDENTIALS</span><span class="o">=</span>/path/to/service-account.json
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre><span class="c1">// Configuration loaded from environment automatically</span>
+<span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">GoogleKmsConfig</span><span class="p">.</span><span class="nf">fromEnvironment</span><span class="p">()</span>
+<span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">GoogleCloudKeyManagementService</span><span class="p">(</span><span class="n">config</span> <span class="o">?:</span> <span class="k">throw</span> <span class="nc">IllegalStateException</span><span class="p">(</span><span class="s">"Google Cloud config not found"</span><span class="p">))</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="direct-configuration">
+  
+  
+    <a href="#direct-configuration" class="anchor-heading" aria-labelledby="direct-configuration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Direct Configuration
+  
+  
+</h3>
+    
+
+<p>You can also configure directly using the builder:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.googlekms.*</span>
+
+<span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">GoogleKmsConfig</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
+    <span class="p">.</span><span class="nf">projectId</span><span class="p">(</span><span class="s">"my-project"</span><span class="p">)</span>
+    <span class="p">.</span><span class="nf">location</span><span class="p">(</span><span class="s">"us-east1"</span><span class="p">)</span>
+    <span class="p">.</span><span class="nf">keyRing</span><span class="p">(</span><span class="s">"my-key-ring"</span><span class="p">)</span>
+    <span class="p">.</span><span class="nf">credentialsPath</span><span class="p">(</span><span class="s">"/path/to/service-account.json"</span><span class="p">)</span>
+    <span class="p">.</span><span class="nf">build</span><span class="p">()</span>
+
+<span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">GoogleCloudKeyManagementService</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="algorithm-support">
+  
+  
+    <a href="#algorithm-support" class="anchor-heading" aria-labelledby="algorithm-support"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Algorithm Support
+  
+  
+</h2>
+    
+
+<p>The Google Cloud KMS plugin supports the following algorithms:</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Algorithm</th>
+      <th>Google Cloud KMS Algorithm</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>secp256k1</td>
+      <td><code class="language-plaintext highlighter-rouge">EC_SIGN_SECP256K1_SHA256</code></td>
+      <td>Blockchain-compatible</td>
+    </tr>
+    <tr>
+      <td>P-256</td>
+      <td><code class="language-plaintext highlighter-rouge">EC_SIGN_P256_SHA256</code></td>
+      <td>FIPS 140-2 compliant</td>
+    </tr>
+    <tr>
+      <td>P-384</td>
+      <td><code class="language-plaintext highlighter-rouge">EC_SIGN_P384_SHA384</code></td>
+      <td>FIPS 140-2 compliant</td>
+    </tr>
+    <tr>
+      <td>RSA-2048</td>
+      <td><code class="language-plaintext highlighter-rouge">RSA_SIGN_PKCS1_2048_SHA256</code></td>
+      <td>Legacy support</td>
+    </tr>
+    <tr>
+      <td>RSA-3072</td>
+      <td><code class="language-plaintext highlighter-rouge">RSA_SIGN_PKCS1_3072_SHA256</code></td>
+      <td>Higher security</td>
+    </tr>
+    <tr>
+      <td>RSA-4096</td>
+      <td><code class="language-plaintext highlighter-rouge">RSA_SIGN_PKCS1_4096_SHA256</code></td>
+      <td>Maximum security</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p><strong>Note:</strong> Ed25519 and P-521 support may vary by Google Cloud KMS version. The plugin will throw a clear error message if these algorithms are not available, suggesting alternatives.</p>
+<h3 id="checking-algorithm-support">
+  
+  
+    <a href="#checking-algorithm-support" class="anchor-heading" aria-labelledby="checking-algorithm-support"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Checking Algorithm Support
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="n">googleProvider</span><span class="o">?.</span><span class="nf">create</span><span class="p">(</span><span class="nf">mapOf</span><span class="p">(</span>
+    <span class="s">"projectId"</span> <span class="n">to</span> <span class="s">"my-project"</span><span class="p">,</span>
+    <span class="s">"location"</span> <span class="n">to</span> <span class="s">"us-east1"</span><span class="p">,</span>
+    <span class="s">"keyRing"</span> <span class="n">to</span> <span class="s">"my-key-ring"</span>
+<span class="p">))</span>
+
+<span class="c1">// Get all supported algorithms</span>
+<span class="kd">val</span> <span class="py">supported</span> <span class="p">=</span> <span class="n">kms</span><span class="o">?.</span><span class="nf">getSupportedAlgorithms</span><span class="p">()</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"Supported algorithms: ${supported?.joinToString { it.name }}"</span><span class="p">)</span>
+
+<span class="c1">// Check specific algorithm</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">kms</span><span class="o">?.</span><span class="nf">supportsAlgorithm</span><span class="p">(</span><span class="nc">Algorithm</span><span class="p">.</span><span class="nc">Secp256k1</span><span class="p">)</span> <span class="p">==</span> <span class="k">true</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"secp256k1 is supported"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="usage-examples">
+  
+  
+    <a href="#usage-examples" class="anchor-heading" aria-labelledby="usage-examples"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Usage Examples
+  
+  
+</h2>
+    
+<h3 id="generating-keys">
+  
+  
+    <a href="#generating-keys" class="anchor-heading" aria-labelledby="generating-keys"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Generating Keys
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+
+<span class="c1">// Generate secp256k1 key</span>
+<span class="kd">val</span> <span class="py">key</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="nc">Algorithm</span><span class="p">.</span><span class="nc">Secp256k1</span><span class="p">)</span>
+
+<span class="c1">// Generate key with custom ID and labels</span>
+<span class="kd">val</span> <span class="py">keyWithLabels</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span>
+    <span class="n">algorithm</span> <span class="p">=</span> <span class="nc">Algorithm</span><span class="p">.</span><span class="nc">P256</span><span class="p">,</span>
+    <span class="n">options</span> <span class="p">=</span> <span class="nf">mapOf</span><span class="p">(</span>
+        <span class="s">"keyId"</span> <span class="n">to</span> <span class="s">"issuer-key-2025"</span><span class="p">,</span>
+        <span class="s">"labels"</span> <span class="n">to</span> <span class="nf">mapOf</span><span class="p">(</span>
+            <span class="s">"environment"</span> <span class="n">to</span> <span class="s">"production"</span><span class="p">,</span>
+            <span class="s">"purpose"</span> <span class="n">to</span> <span class="s">"issuance"</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1">// Generate P-256 key for FIPS compliance</span>
+<span class="kd">val</span> <span class="py">fipsKey</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span>
+    <span class="n">algorithm</span> <span class="p">=</span> <span class="nc">Algorithm</span><span class="p">.</span><span class="nc">P256</span><span class="p">,</span>
+    <span class="n">options</span> <span class="p">=</span> <span class="nf">mapOf</span><span class="p">(</span>
+        <span class="s">"keyRing"</span> <span class="n">to</span> <span class="s">"fips-keys"</span> <span class="c1">// Override default key ring</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="signing-data">
+  
+  
+    <a href="#signing-data" class="anchor-heading" aria-labelledby="signing-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Signing Data
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+</pre></td><td class="rouge-code"><pre><span class="c1">// Sign with key resource name</span>
+<span class="kd">val</span> <span class="py">signature</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">sign</span><span class="p">(</span><span class="n">keyId</span><span class="p">,</span> <span class="n">data</span><span class="p">.</span><span class="nf">toByteArray</span><span class="p">())</span>
+
+<span class="c1">// Sign with full resource name</span>
+<span class="kd">val</span> <span class="py">signature</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">sign</span><span class="p">(</span>
+    <span class="s">"projects/my-project/locations/us-east1/keyRings/my-key-ring/cryptoKeys/my-key"</span><span class="p">,</span>
+    <span class="n">data</span><span class="p">.</span><span class="nf">toByteArray</span><span class="p">()</span>
+<span class="p">)</span>
+
+<span class="c1">// Sign with algorithm override</span>
+<span class="kd">val</span> <span class="py">signature</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">sign</span><span class="p">(</span>
+    <span class="n">keyId</span> <span class="p">=</span> <span class="n">keyId</span><span class="p">,</span>
+    <span class="n">data</span> <span class="p">=</span> <span class="n">data</span><span class="p">.</span><span class="nf">toByteArray</span><span class="p">(),</span>
+    <span class="n">algorithm</span> <span class="p">=</span> <span class="nc">Algorithm</span><span class="p">.</span><span class="nc">Secp256k1</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="retrieving-public-keys">
+  
+  
+    <a href="#retrieving-public-keys" class="anchor-heading" aria-labelledby="retrieving-public-keys"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Retrieving Public Keys
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+</pre></td><td class="rouge-code"><pre><span class="c1">// Get public key by key ID (uses config defaults)</span>
+<span class="kd">val</span> <span class="py">publicKey</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">getPublicKey</span><span class="p">(</span><span class="s">"my-key"</span><span class="p">)</span>
+
+<span class="c1">// Get public key by full resource name</span>
+<span class="kd">val</span> <span class="py">publicKey</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">getPublicKey</span><span class="p">(</span>
+    <span class="s">"projects/my-project/locations/us-east1/keyRings/my-key-ring/cryptoKeys/my-key"</span>
+<span class="p">)</span>
+
+<span class="c1">// Access JWK format</span>
+<span class="kd">val</span> <span class="py">jwk</span> <span class="p">=</span> <span class="n">publicKey</span><span class="p">.</span><span class="n">publicKeyJwk</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"Public key JWK: $jwk"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="key-deletion">
+  
+  
+    <a href="#key-deletion" class="anchor-heading" aria-labelledby="key-deletion"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Deletion
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td><td class="rouge-code"><pre><span class="c1">// Destroy key version (makes key unusable)</span>
+<span class="kd">val</span> <span class="py">deleted</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">deleteKey</span><span class="p">(</span><span class="n">keyId</span><span class="p">)</span>
+
+<span class="c1">// Note: Google Cloud KMS schedules key version destruction</span>
+<span class="c1">// The key version enters a "DESTROYED" state and cannot be used</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="key-resource-names">
+  
+  
+    <a href="#key-resource-names" class="anchor-heading" aria-labelledby="key-resource-names"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Resource Names
+  
+  
+</h2>
+    
+
+<p>Google Cloud KMS uses full resource names for keys:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre>projects/{project}/locations/{location}/keyRings/{keyRing}/cryptoKeys/{key}
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p>The plugin supports both:</p>
+<ul>
+  <li><strong>Full resource names</strong>: <code class="language-plaintext highlighter-rouge">projects/my-project/locations/us-east1/keyRings/my-key-ring/cryptoKeys/my-key</code></li>
+  <li><strong>Short names</strong>: <code class="language-plaintext highlighter-rouge">my-key</code> (uses defaults from config)</li>
+</ul>
+<h2 id="key-versioning">
+  
+  
+    <a href="#key-versioning" class="anchor-heading" aria-labelledby="key-versioning"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Versioning
+  
+  
+</h2>
+    
+
+<p>Google Cloud KMS uses key versions. When you create a key, a primary version is automatically created. The plugin:</p>
+
+<ul>
+  <li>Uses the primary version for all operations</li>
+  <li>Returns the full resource name as the key ID</li>
+  <li>Handles version management automatically</li>
+</ul>
+<h2 id="error-handling">
+  
+  
+    <a href="#error-handling" class="anchor-heading" aria-labelledby="error-handling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Error Handling
+  
+  
+</h2>
+    
+
+<p>The plugin maps Google Cloud exceptions to TrustWeave exceptions:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+</pre></td><td class="rouge-code"><pre><span class="k">try</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">key</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="nc">Algorithm</span><span class="p">.</span><span class="nc">Secp256k1</span><span class="p">)</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">e</span><span class="p">:</span> <span class="nc">UnsupportedAlgorithmException</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Algorithm not supported: ${e.message}"</span><span class="p">)</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">e</span><span class="p">:</span> <span class="nc">KeyNotFoundException</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Key not found: ${e.message}"</span><span class="p">)</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">e</span><span class="p">:</span> <span class="nc">TrustWeaveException</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">when</span> <span class="p">{</span>
+        <span class="n">e</span><span class="p">.</span><span class="n">message</span><span class="o">?.</span><span class="nf">contains</span><span class="p">(</span><span class="s">"Permission denied"</span><span class="p">)</span> <span class="p">==</span> <span class="k">true</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"Check IAM permissions"</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">e</span><span class="p">.</span><span class="n">message</span><span class="o">?.</span><span class="nf">contains</span><span class="p">(</span><span class="s">"Key not found"</span><span class="p">)</span> <span class="p">==</span> <span class="k">true</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"Key does not exist"</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="k">else</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"Error: ${e.message}"</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="common-errors">
+  
+  
+    <a href="#common-errors" class="anchor-heading" aria-labelledby="common-errors"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Common Errors
+  
+  
+</h3>
+    
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Error</th>
+      <th>Cause</th>
+      <th>Solution</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">PermissionDeniedException</code></td>
+      <td>Insufficient IAM permissions</td>
+      <td>Grant <code class="language-plaintext highlighter-rouge">cloudkms.cryptoKeys.create</code>, <code class="language-plaintext highlighter-rouge">cloudkms.cryptoKeys.useToSign</code>, <code class="language-plaintext highlighter-rouge">cloudkms.cryptoKeyVersions.useToSign</code> permissions</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">NotFoundException</code></td>
+      <td>Key doesn’t exist</td>
+      <td>Verify key resource name is correct</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">UnsupportedAlgorithmException</code></td>
+      <td>Algorithm not supported</td>
+      <td>Check algorithm compatibility table</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">IllegalArgumentException</code></td>
+      <td>Missing required config</td>
+      <td>Ensure projectId, location, and keyRing are provided</td>
+    </tr>
+  </tbody>
+</table></div>
+<h2 id="iam-permissions">
+  
+  
+    <a href="#iam-permissions" class="anchor-heading" aria-labelledby="iam-permissions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> IAM Permissions
+  
+  
+</h2>
+    
+
+<p>Your Google Cloud service account needs the following IAM roles:</p>
+<h3 id="minimum-required-permissions">
+  
+  
+    <a href="#minimum-required-permissions" class="anchor-heading" aria-labelledby="minimum-required-permissions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Minimum Required Permissions
+  
+  
+</h3>
+    
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="rouge-code"><pre><span class="p">{</span><span class="w">
+  </span><span class="nl">"bindings"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"role"</span><span class="p">:</span><span class="w"> </span><span class="s2">"roles/cloudkms.cryptoKeyEncrypterDecrypter"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"members"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"serviceAccount:my-service-account@my-project.iam.gserviceaccount.com"</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="recommended-roles">
+  
+  
+    <a href="#recommended-roles" class="anchor-heading" aria-labelledby="recommended-roles"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Recommended Roles
+  
+  
+</h3>
+    
+
+<p>For full key management capabilities:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">roles/cloudkms.admin</code> - Full key management access</li>
+  <li><code class="language-plaintext highlighter-rouge">roles/cloudkms.cryptoKeyEncrypterDecrypter</code> - Signing and encryption</li>
+  <li><code class="language-plaintext highlighter-rouge">roles/cloudkms.viewer</code> - Read-only access to keys</li>
+</ul>
+<h3 id="key-ring-permissions">
+  
+  
+    <a href="#key-ring-permissions" class="anchor-heading" aria-labelledby="key-ring-permissions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Ring Permissions
+  
+  
+</h3>
+    
+
+<p>Ensure the service account has access to the key ring:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre>gcloud kms keyrings add-iam-policy-binding my-key-ring <span class="se">\</span>
+    <span class="nt">--location</span><span class="o">=</span>us-east1 <span class="se">\</span>
+    <span class="nt">--member</span><span class="o">=</span><span class="s2">"serviceAccount:my-service-account@my-project.iam.gserviceaccount.com"</span> <span class="se">\</span>
+    <span class="nt">--role</span><span class="o">=</span><span class="s2">"roles/cloudkms.cryptoKeyEncrypterDecrypter"</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="algorithm-compatibility">
+  
+  
+    <a href="#algorithm-compatibility" class="anchor-heading" aria-labelledby="algorithm-compatibility"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Algorithm Compatibility
+  
+  
+</h2>
+    
+
+<p>See the <a href="/trustweave/core-concepts/algorithm-compatibility-table/">Algorithm Compatibility Table</a> for detailed comparison of algorithm support across DIDs, VCs, AWS KMS, Azure Key Vault, and Google Cloud KMS.</p>
+
+<p><strong>Key Points:</strong></p>
+<ul>
+  <li>✅ secp256k1 supported for blockchain integration</li>
+  <li>✅ All NIST curves (P-256/P-384) supported</li>
+  <li>✅ RSA keys supported for legacy compatibility</li>
+  <li>⚠️ Ed25519 support varies by Google Cloud KMS version</li>
+  <li>⚠️ P-521 support varies by Google Cloud KMS version</li>
+  <li>❌ BLS12-381 not supported (requires specialized KMS)</li>
+</ul>
+<h2 id="best-practices">
+  
+  
+    <a href="#best-practices" class="anchor-heading" aria-labelledby="best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Best Practices
+  
+  
+</h2>
+    
+
+<ol>
+  <li><strong>Use Application Default Credentials</strong>: Prefer ADC over service account files for production</li>
+  <li><strong>Key Rings</strong>: Organize keys by environment or purpose using key rings</li>
+  <li><strong>Key Labels</strong>: Use labels to tag keys with metadata (environment, purpose, etc.)</li>
+  <li><strong>Resource Names</strong>: Use full resource names for clarity in production</li>
+  <li><strong>Error Handling</strong>: Implement proper error handling for Google Cloud exceptions</li>
+  <li><strong>Key Lifecycle</strong>: Plan key rotation and destruction schedules</li>
+  <li><strong>Access Control</strong>: Use IAM policies to restrict key access</li>
+  <li><strong>Key Versioning</strong>: Understand that Google Cloud KMS uses key versions internally</li>
+</ol>
+<h2 id="testing">
+  
+  
+    <a href="#testing" class="anchor-heading" aria-labelledby="testing"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Testing
+  
+  
+</h2>
+    
+<h3 id="unit-tests">
+  
+  
+    <a href="#unit-tests" class="anchor-heading" aria-labelledby="unit-tests"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Unit Tests
+  
+  
+</h3>
+    
+
+<p>The module includes unit tests that can be run without Google Cloud credentials:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre>./gradlew :kms/plugins/google:test
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="integration-tests">
+  
+  
+    <a href="#integration-tests" class="anchor-heading" aria-labelledby="integration-tests"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Integration Tests
+  
+  
+</h3>
+    
+
+<p>For integration testing, use a test Google Cloud project:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="c1">// Configure for test project</span>
+<span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="n">googleProvider</span><span class="o">?.</span><span class="nf">create</span><span class="p">(</span><span class="nf">mapOf</span><span class="p">(</span>
+    <span class="s">"projectId"</span> <span class="n">to</span> <span class="s">"test-project"</span><span class="p">,</span>
+    <span class="s">"location"</span> <span class="n">to</span> <span class="s">"us-east1"</span><span class="p">,</span>
+    <span class="s">"keyRing"</span> <span class="n">to</span> <span class="s">"test-key-ring"</span><span class="p">,</span>
+    <span class="s">"credentialsPath"</span> <span class="n">to</span> <span class="s">"/path/to/test-service-account.json"</span>
+<span class="p">))</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="using-with-trustweave">
+  
+  
+    <a href="#using-with-trustweave" class="anchor-heading" aria-labelledby="using-with-trustweave"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Using with TrustWeave
+  
+  
+</h2>
+    
+<h3 id="basic-setup">
+  
+  
+    <a href="#basic-setup" class="anchor-heading" aria-labelledby="basic-setup"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Basic Setup
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.*</span>
+<span class="k">import</span> <span class="nn">com.trustweave.googlekms.*</span>
+
+<span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
+    <span class="n">kms</span> <span class="p">=</span> <span class="nc">GoogleCloudKeyManagementService</span><span class="p">(</span>
+        <span class="nc">GoogleKmsConfig</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
+            <span class="p">.</span><span class="nf">projectId</span><span class="p">(</span><span class="s">"my-project"</span><span class="p">)</span>
+            <span class="p">.</span><span class="nf">location</span><span class="p">(</span><span class="s">"us-east1"</span><span class="p">)</span>
+            <span class="p">.</span><span class="nf">keyRing</span><span class="p">(</span><span class="s">"TrustWeave-keys"</span><span class="p">)</span>
+            <span class="p">.</span><span class="nf">build</span><span class="p">()</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="with-spi-auto-discovery">
+  
+  
+    <a href="#with-spi-auto-discovery" class="anchor-heading" aria-labelledby="with-spi-auto-discovery"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> With SPI Auto-Discovery
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
+    <span class="c1">// Google Cloud KMS will be discovered automatically if on classpath</span>
+    <span class="c1">// Configure via environment variables or system properties</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="related-documentation">
+  
+  
+    <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
+  
+  
+</h2>
+    
+
+<ul>
+  <li><a href="/trustweave/core-concepts/key-management/">Key Management Guide</a> - Core KMS concepts</li>
+  <li><a href="/trustweave/core-concepts/algorithm-compatibility-table/">Algorithm Compatibility Table</a> - Algorithm support comparison</li>
+  <li><a href="/trustweave/advanced/key-rotation/">Key Rotation Guide</a> - Key rotation strategies</li>
+  <li><a href="/trustweave/contributing/creating-plugins/">Creating Plugins Guide</a> - Custom KMS implementations</li>
+</ul>
+<h2 id="see-also">
+  
+  
+    <a href="#see-also" class="anchor-heading" aria-labelledby="see-also"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> See Also
+  
+  
+</h2>
+    
+
+<ul>
+  <li><a href="https://cloud.google.com/kms/docs">Google Cloud KMS Documentation</a></li>
+  <li><a href="https://github.com/googleapis/java-kms">Google Cloud KMS Java Client</a></li>
+  <li><a href="https://cloud.google.com/kms/docs/reference/rest">Google Cloud KMS API Reference</a></li>
+</ul>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

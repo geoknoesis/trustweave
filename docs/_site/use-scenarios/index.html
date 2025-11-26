@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Main Navigation Styles - Consistent across all pages -->
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1e40af;
+    --secondary: #7c3aed;
+    --accent: #10b981;
+    --text: #1f2937;
+    --text-light: #6b7280;
+    --bg: #ffffff;
+    --bg-light: #f9fafb;
+    --border: #e5e7eb;
+    --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .main-nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    z-index: 1000;
+    padding: 0.5rem 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  .main-nav .nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .main-nav .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    transition: opacity 0.3s;
+  }
+
+  .main-nav .logo-img {
+    height: 120px;
+    width: auto;
+    transition: opacity 0.3s;
+    display: block;
+  }
+
+  .main-nav .logo-img:not([src]),
+  .main-nav .logo-img[src=""],
+  .main-nav .logo-img[src*="undefined"] {
+    display: none;
+  }
+
+
+  .main-nav .logo:hover {
+    opacity: 0.8;
+  }
+
+  .main-nav .logo:hover .logo-img {
+    opacity: 0.8;
+  }
+  
+  .main-nav .nav-links {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+  }
+  
+  .main-nav .nav-links .nav-link {
+    text-decoration: none;
+    color: var(--text);
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.5rem 0;
+    transition: color 0.3s;
+    position: relative;
+    white-space: nowrap;
+  }
+  
+  .main-nav .nav-links .nav-link:hover {
+    color: var(--primary);
+  }
+
+  .main-nav .nav-links .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--primary);
+    transition: width 0.3s ease;
+  }
+
+  .main-nav .nav-links .nav-link:hover::after,
+  .main-nav .nav-links .nav-link.active::after {
+    width: 100%;
+  }
+
+  .main-nav .nav-links .nav-link.active {
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  /* GitHub icon button */
+  .main-nav .nav-links .github-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 0.5rem;
+    transition: all 0.3s;
+    padding: 0.5rem;
+    color: var(--text);
+    text-decoration: none;
+    margin-left: 0.5rem;
+  }
+
+  .main-nav .nav-links .github-icon:hover {
+    background: var(--bg-light);
+    transform: translateY(-2px);
+    color: var(--primary);
+  }
+
+  .main-nav .nav-links .github-icon svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Mobile menu toggle */
+  .menu-toggle {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    gap: 5px;
+    padding: 0.5rem;
+    z-index: 1001;
+  }
+
+  .menu-toggle span {
+    width: 25px;
+    height: 3px;
+    background: var(--text);
+    transition: all 0.3s;
+    border-radius: 2px;
+  }
+
+  .menu-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(8px, 8px);
+  }
+
+  .menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .menu-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
+  }
+
+  /* Footer styles */
+  .site-footer {
+    background: var(--text);
+    color: white;
+    padding: 3rem 2rem;
+    text-align: center;
+    margin-top: 4rem;
+  }
+
+  .site-footer .footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .site-footer .footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .site-footer .footer-links a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+
+  .site-footer .footer-links a:hover {
+    color: white;
+  }
+
+  .site-footer .footer-text {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.875rem;
+  }
+
+  /* Adjust content for fixed nav */
+  body {
+    padding-top: 160px;
+  }
+
+  /* Just the Docs theme adjustments */
+  .site-header {
+    margin-top: 0 !important;
+  }
+
+  /* Mobile responsive */
+  @media (max-width: 968px) {
+    .menu-toggle {
+      display: flex;
+    }
+
+    .main-nav .nav-links {
+      position: fixed;
+      top: 160px;
+      left: 0;
+      right: 0;
+      background: white;
+      flex-direction: column;
+      padding: 2rem;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-100%);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      gap: 1.5rem;
+      align-items: flex-start;
+      max-height: calc(100vh - 160px);
+      overflow-y: auto;
+    }
+
+    .main-nav .nav-links.active {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .main-nav .nav-links .nav-link {
+      width: 100%;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .main-nav .nav-links .nav-link::after {
+      display: none;
+    }
+
+    .main-nav .nav-links .github-icon {
+      width: 100%;
+      justify-content: flex-start;
+      margin-left: 0;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .main-nav .logo-img {
+      height: 120px;
+    }
+
+    .site-footer .footer-links {
+      flex-direction: column;
+      gap: 1rem;
+    }
+  }
+
+  /* Tablet adjustments */
+  @media (max-width: 968px) and (min-width: 769px) {
+    .main-nav .nav-links {
+      gap: 1rem;
+    }
+
+    .main-nav .nav-links .nav-link {
+      font-size: 0.9rem;
+    }
+  }
+</style>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Use Scenarios - TrustWeave</title>
+    <meta name="description" content="Explore 25+ real-world use case scenarios with complete, runnable examples. See how TrustWeave powers applications across industries.">
+    <style>
+        /* Page-specific styles */
+
+        /* Hero Section */
+        .hero {
+            margin-top: 0;
+            padding: 4rem 2rem;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            text-align: center;
+        }
+
+        .hero-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Section Styles */
+        .section {
+            padding: 4rem 2rem;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 1.125rem;
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Scenarios Grid */
+        .scenarios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .scenario-tile {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            height: 100%;
+        }
+
+        .scenario-tile:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .scenario-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .scenario-tile h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            color: var(--text);
+            line-height: 1.3;
+        }
+
+        .scenario-tile p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .scenario-category {
+            display: inline-block;
+            background: var(--bg-light);
+            color: var(--text-light);
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            margin-top: 1rem;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            padding: 2rem;
+            background: var(--bg-light);
+            margin-bottom: 2rem;
+            border-radius: 1rem;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1.25rem;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            color: var(--text);
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--text);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-text {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.25rem;
+            }
+
+
+            .scenarios-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Site Header - Consistent across all pages -->
+<nav class="main-nav">
+    <div class="nav-container">
+        <a href="/trustweave/" class="logo">
+            <img src="/trustweave/assets/images/trustweave-logo.jpg" alt="TrustWeave Logo" class="logo-img">
+        </a>
+        <div class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="nav-links" id="navLinks">
+            <a href="/trustweave/" class="nav-link">Home</a>
+            <a href="/trustweave/#features" class="nav-link">Features</a>
+            <a href="/trustweave/use-scenarios/" class="nav-link">Use Scenarios</a>
+            <a href="/trustweave/introduction/README/" class="nav-link">Docs</a>
+            <a href="/trustweave/partnership/" class="nav-link">Partners</a>
+            <a href="/trustweave/about/" class="nav-link">About</a>
+            <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" rel="noopener noreferrer" class="github-icon" title="View on GitHub" aria-label="GitHub Repository">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Mobile menu toggle and active page highlighting
+    (function() {
+        const menuToggle = document.getElementById('menuToggle');
+        const navLinks = document.getElementById('navLinks');
+        
+        // Mobile menu toggle
+        if (menuToggle && navLinks) {
+            menuToggle.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+                menuToggle.classList.toggle('active');
+            });
+            
+            // Close menu when clicking on a link
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.addEventListener('click', () => {
+                    navLinks.classList.remove('active');
+                    menuToggle.classList.remove('active');
+                });
+            });
+            
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
+                    navLinks.classList.remove('active');
+                    menuToggle.classList.remove('active');
+                }
+            });
+        }
+
+        // Highlight active page
+        const currentPath = window.location.pathname;
+        const navLinksList = document.querySelectorAll('.nav-links .nav-link');
+        
+        navLinksList.forEach(link => {
+            try {
+                const linkUrl = new URL(link.href, window.location.origin);
+                const linkPath = linkUrl.pathname;
+                const baseUrl = '/trustweave' || '';
+                
+                // Normalize paths
+                let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
+                let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
+                
+                // Handle index pages
+                if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
+                if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
+                
+                // Check if current path matches link path
+                if (cleanCurrentPath === cleanLinkPath) {
+                    link.classList.add('active');
+                } else if (cleanLinkPath !== '/' && cleanCurrentPath.startsWith(cleanLinkPath + '/')) {
+                    // Handle sub-pages (e.g., /introduction/ matches /introduction/README/)
+                    link.classList.add('active');
+                }
+            } catch (e) {
+                // Fallback for relative URLs or errors
+                const href = link.getAttribute('href');
+                if (href && (currentPath.includes(href) || (href === '/' && currentPath.endsWith('index.html')))) {
+                    link.classList.add('active');
+                }
+            }
+        });
+    })();
+</script>
+
+
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <h1>Use Case Scenarios</h1>
+            <p>25+ complete, runnable examples showing TrustWeave in real-world applications across industries</p>
+        </div>
+    </section>
+
+    <!-- Scenarios Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Explore Real-World Use Cases</h2>
+            <p class="section-subtitle">Each scenario includes a complete, runnable example with industry context and best practices</p>
+            
+            <div class="scenarios-grid">
+                <!-- Cybersecurity & Access Control -->
+                <a href="/trustweave/scenarios/zero-trust-authentication-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">🔐</div>
+                    <h3>Zero Trust Authentication</h3>
+                    <p>Continuous authentication system without traditional sessions. Short-lived credentials and risk-based access control.</p>
+                    <span class="scenario-category">Cybersecurity</span>
+                </a>
+
+                <a href="/trustweave/scenarios/security-clearance-access-control-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">🛡️</div>
+                    <h3>Security Clearance & Access Control</h3>
+                    <p>Privacy-preserving security clearance verification for classified systems with multi-level access control.</p>
+                    <span class="scenario-category">Cybersecurity</span>
+                </a>
+
+                <a href="/trustweave/scenarios/biometric-verification-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">👤</div>
+                    <h3>Biometric Verification</h3>
+                    <p>Complete biometric verification system with fingerprint, face, and voice. Privacy-preserving templates.</p>
+                    <span class="scenario-category">Cybersecurity</span>
+                </a>
+
+                <a href="/trustweave/scenarios/security-training-certification-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">🎓</div>
+                    <h3>Security Training & Certification</h3>
+                    <p>Instant verification of security certifications (CISSP, CEH, Security+) with privacy-preserving verification.</p>
+                    <span class="scenario-category">Cybersecurity</span>
+                </a>
+
+                <a href="/trustweave/scenarios/software-supply-chain-security-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">🔒</div>
+                    <h3>Software Supply Chain Security</h3>
+                    <p>Software provenance, build attestation, and SBOM verification. Prevent supply chain attacks.</p>
+                    <span class="scenario-category">Cybersecurity</span>
+                </a>
+
+                <!-- Identity & Verification -->
+                <a href="/trustweave/scenarios/government-digital-identity-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">🆔</div>
+                    <h3>Government Digital Identity</h3>
+                    <p>Citizens receive, store, and present official IDs. Complete workflow for government-issued digital identity.</p>
+                    <span class="scenario-category">Identity</span>
+                </a>
+
+                <a href="/trustweave/scenarios/professional-identity-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">💼</div>
+                    <h3>Professional Identity</h3>
+                    <p>Professional credential wallet management. Store and organize professional certifications and licenses.</p>
+                    <span class="scenario-category">Identity</span>
+                </a>
+
+                <a href="/trustweave/scenarios/age-verification-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">🔞</div>
+                    <h3>Age Verification</h3>
+                    <p>Privacy-preserving age verification for age-restricted services. Verify age without revealing personal information.</p>
+                    <span class="scenario-category">Identity</span>
+                </a>
+
+                <a href="/trustweave/scenarios/financial-services-kyc-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">💰</div>
+                    <h3>Financial Services (KYC)</h3>
+                    <p>Streamline onboarding and reuse credentials across institutions. KYC/AML compliance workflows.</p>
+                    <span class="scenario-category">Identity</span>
+                </a>
+
+                <!-- Education -->
+                <a href="/trustweave/scenarios/academic-credentials-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">🎓</div>
+                    <h3>Academic Credentials</h3>
+                    <p>University credential issuance and verification. Degree credentials, transcript management, and wallet organization.</p>
+                    <span class="scenario-category">Education</span>
+                </a>
+
+                <a href="/trustweave/scenarios/national-education-credentials-algeria-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">🌍</div>
+                    <h3>National Education Credentials (Algeria)</h3>
+                    <p>AlgeroPass national-level education credential system. Build a national credential infrastructure.</p>
+                    <span class="scenario-category">Education</span>
+                </a>
+
+                <!-- Employment -->
+                <a href="/trustweave/scenarios/employee-onboarding-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">👔</div>
+                    <h3>Employee Onboarding</h3>
+                    <p>Complete employee onboarding system with credential verification. Education, work history, and background checks.</p>
+                    <span class="scenario-category">Employment</span>
+                </a>
+
+                <!-- Healthcare -->
+                <a href="/trustweave/scenarios/healthcare-medical-records-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">🏥</div>
+                    <h3>Healthcare Medical Records</h3>
+                    <p>Share consented medical data across providers with audit trails. Patient credential workflows and privacy-preserving sharing.</p>
+                    <span class="scenario-category">Healthcare</span>
+                </a>
+
+                <a href="/trustweave/scenarios/vaccination-health-passport-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">💉</div>
+                    <h3>Vaccination & Health Passports</h3>
+                    <p>Vaccination credential issuance and health passport verification. Privacy-preserving health credentials for travel.</p>
+                    <span class="scenario-category">Healthcare</span>
+                </a>
+
+                <!-- Supply Chain -->
+                <a href="/trustweave/scenarios/supply-chain-traceability-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">📦</div>
+                    <h3>Supply Chain Traceability</h3>
+                    <p>Follow goods from origin to shelf with verifiable checkpoints. Complete supply chain provenance tracking.</p>
+                    <span class="scenario-category">Supply Chain</span>
+                </a>
+
+                <a href="/trustweave/scenarios/supply-chain-eudr-compliance-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">🌳</div>
+                    <h3>Supply Chain & EUDR Compliance</h3>
+                    <p>EU Deforestation Regulation compliance with EO data. Digital Product Passports using verifiable credentials.</p>
+                    <span class="scenario-category">Supply Chain</span>
+                </a>
+
+                <a href="/trustweave/scenarios/digital-workflow-provenance-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">📋</div>
+                    <h3>Digital Workflow & Provenance</h3>
+                    <p>PROV-O workflow provenance tracking for digital information. Track information flow through complex workflows.</p>
+                    <span class="scenario-category">Supply Chain</span>
+                </a>
+
+                <!-- Geospatial & Location -->
+                <a href="/trustweave/scenarios/proof-of-location-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">📍</div>
+                    <h3>Proof of Location</h3>
+                    <p>Capture sensor evidence, notarise location, and present proofs. Geospatial location proofs and verification.</p>
+                    <span class="scenario-category">Geospatial</span>
+                </a>
+
+                <a href="/trustweave/scenarios/earth-observation-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">🛰️</div>
+                    <h3>Earth Observation</h3>
+                    <p>Manage satellite imagery provenance with digest anchoring. Complete EO data integrity workflow with Linksets.</p>
+                    <span class="scenario-category">Geospatial</span>
+                </a>
+
+                <a href="/trustweave/scenarios/spatial-web-authorization-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">🌐</div>
+                    <h3>Spatial Web Authorization</h3>
+                    <p>Grant AR/VR permissions using verifiable policies. DID-based authorization for spatial entities.</p>
+                    <span class="scenario-category">Geospatial</span>
+                </a>
+
+                <!-- Earth Observation & Climate -->
+                <a href="/trustweave/scenarios/parametric-insurance-eo-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">🌍</div>
+                    <h3>Parametric Insurance (EO)</h3>
+                    <p>Build parametric insurance using EO data credentials. Accept data from any certified provider without custom integrations.</p>
+                    <span class="scenario-category">Insurance</span>
+                </a>
+
+                <a href="/trustweave/scenarios/carbon-markets-dmrv-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">🌱</div>
+                    <h3>Carbon Markets & dMRV</h3>
+                    <p>Digital Measurement, Reporting, and Verification for carbon markets. Prevent double counting with blockchain-anchored credentials.</p>
+                    <span class="scenario-category">Climate</span>
+                </a>
+
+                <!-- Media & Content -->
+                <a href="/trustweave/scenarios/news-industry-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">📰</div>
+                    <h3>News Industry</h3>
+                    <p>Content provenance and authenticity verification for news media. Anchor articles, trace updates, and verify sources.</p>
+                    <span class="scenario-category">Media</span>
+                </a>
+
+                <a href="/trustweave/scenarios/event-ticketing-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">🎫</div>
+                    <h3>Event Ticketing</h3>
+                    <p>Verifiable event tickets with transfer control and access verification. Prevent fraud and scalping.</p>
+                    <span class="scenario-category">Media</span>
+                </a>
+
+                <!-- Data Management -->
+                <a href="/trustweave/scenarios/data-catalog-dcat-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">📊</div>
+                    <h3>Data Catalog & DCAT</h3>
+                    <p>Verifiable data catalog system using DCAT for government and enterprise. Metadata provenance and catalog management.</p>
+                    <span class="scenario-category">Data</span>
+                </a>
+
+                <!-- IoT & Devices -->
+                <a href="/trustweave/scenarios/iot-device-identity-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">🔌</div>
+                    <h3>IoT Device Identity</h3>
+                    <p>Connected device onboarding and identity management. Provision devices, rotate keys, and secure telemetry feeds.</p>
+                    <span class="scenario-category">IoT</span>
+                </a>
+
+                <a href="/trustweave/scenarios/iot-sensor-data-provenance-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">📡</div>
+                    <h3>IoT Sensor Data Provenance</h3>
+                    <p>Verify sensor data authenticity and integrity. Sensor attestation, data provenance, and tamper detection.</p>
+                    <span class="scenario-category">IoT</span>
+                </a>
+
+                <a href="/trustweave/scenarios/iot-firmware-update-verification-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">⚙️</div>
+                    <h3>IoT Firmware Update Verification</h3>
+                    <p>Verify firmware authenticity and update authorization. Firmware attestation, update policies, and version control.</p>
+                    <span class="scenario-category">IoT</span>
+                </a>
+
+                <a href="/trustweave/scenarios/iot-device-ownership-transfer-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">🔄</div>
+                    <h3>IoT Device Ownership Transfer</h3>
+                    <p>Secure device ownership transfer with complete audit trail. Transfer authorization and ownership history tracking.</p>
+                    <span class="scenario-category">IoT</span>
+                </a>
+
+                <!-- Trust & Reputation -->
+                <a href="/trustweave/scenarios/web-of-trust-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">🤝</div>
+                    <h3>Web of Trust</h3>
+                    <p>Build trust networks and reputation systems. Demonstrate how entities establish and verify trust relationships.</p>
+                    <span class="scenario-category">Trust</span>
+                </a>
+
+                <!-- Insurance & Claims -->
+                <a href="/trustweave/scenarios/insurance-claims-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">🛡️</div>
+                    <h3>Insurance Claims</h3>
+                    <p>Complete insurance claims verification system. Claim credentials, damage assessment, and fraud prevention.</p>
+                    <span class="scenario-category">Insurance</span>
+                </a>
+
+                <a href="/trustweave/scenarios/parametric-insurance-travel-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">✈️</div>
+                    <h3>Parametric Insurance (Travel)</h3>
+                    <p>Build parametric travel insurance system. Automatic payouts for flight delays, weather guarantees, and baggage delays.</p>
+                    <span class="scenario-category">Insurance</span>
+                </a>
+
+                <a href="/trustweave/scenarios/smart-contract-parametric-insurance-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">📜</div>
+                    <h3>Smart Contract: Parametric Insurance</h3>
+                    <p>Parametric insurance using TrustWeave Smart Contracts. Automatic execution based on EO data triggers.</p>
+                    <span class="scenario-category">Insurance</span>
+                </a>
+
+                <!-- Compliance & Security -->
+                <a href="/trustweave/scenarios/soc2-compliance-scenario/" class="scenario-tile">
+                    <div class="scenario-icon">✅</div>
+                    <h3>SOC2 Compliance</h3>
+                    <p>Build SOC2 Type II compliant systems. Immutable audit trails, access control, and automated compliance reporting.</p>
+                    <span class="scenario-category">Compliance</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="/trustweave/">Home</a>
+                <a href="/trustweave/use-scenarios.html">Use Scenarios</a>
+                <a href="/trustweave/partnership.html">Partners</a>
+                <a href="/trustweave/about.html">About</a>
+                <a href="https://github.com/geoknoesis/TrustWeave" target="_blank">GitHub</a>
+                <a href="/trustweave/introduction/README/">Documentation</a>
+                <a href="https://github.com/geoknoesis/TrustWeave/blob/main/LICENSE" target="_blank">License</a>
+                <a href="https://www.geoknoesis.com" target="_blank">Geoknoesis LLC</a>
+            </div>
+            <p class="footer-text">Made with ❤️ by Geoknoesis LLC</p>
+        </div>
+    </footer>
+</body>
+</html>
+

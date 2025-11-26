@@ -1,0 +1,1545 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+    .site-nav ul li a {
+      background-image: none;
+    }
+
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Earth Observation Scenario | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Earth Observation Scenario" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://localhost:4000/trustweave/scenarios/earth-observation-scenario/" />
+<meta property="og:url" content="http://localhost:4000/trustweave/scenarios/earth-observation-scenario/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Earth Observation Scenario" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"Earth Observation Scenario","url":"http://localhost:4000/trustweave/scenarios/earth-observation-scenario/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/beginner-tutorial-series/" class="nav-list-link">Beginner Tutorial Series</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchored-revocation/" class="nav-list-link">Blockchain-Anchored Revocation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/code-style/" class="nav-list-link">Code Style</a></li><li class="nav-list-item"><a href="/trustweave/comparison/README/" class="nav-list-link">Comparison Documentation</a></li><li class="nav-list-item"><a href="/trustweave/configuration/README/" class="nav-list-link">Configuration Reference</a></li><li class="nav-list-item"><a href="/trustweave/advanced/custom-adapters/" class="nav-list-link">Creating Custom Adapters</a></li><li class="nav-list-item"><a href="/trustweave/contributing/creating-plugins/" class="nav-list-link">Creating TrustWeave Plugins</a></li><li class="nav-list-item"><a href="/trustweave/features/credential-exchange-protocols/README/" class="nav-list-link">Credential Exchange Protocols</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/credential-issuance-tutorial/" class="nav-list-link">Credential Issuance Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/algorithm-compatibility-table/" class="nav-list-link">Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/did-operations-tutorial/" class="nav-list-link">DID Operations Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/delegation/" class="nav-list-link">Delegation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/development-setup/" class="nav-list-link">Development Setup</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/evaluation-engines/" class="nav-list-link">Evaluation Engines</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/json-canonicalization/" class="nav-list-link">JSON Canonicalization</a></li><li class="nav-list-item"><a href="/trustweave/advanced/key-rotation/" class="nav-list-link">Key Rotation Strategies</a></li><li class="nav-list-item"><a href="/trustweave/licensing/README/" class="nav-list-link">Licensing Overview</a></li><li class="nav-list-item"><a href="/trustweave/migration/README/" class="nav-list-link">Migration Guides</a></li><li class="nav-list-item"><a href="/trustweave/advanced/performance/" class="nav-list-link">Performance Considerations</a></li><li class="nav-list-item"><a href="/trustweave/advanced/plugin-lifecycle/" class="nav-list-link">Plugin Lifecycle Management</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/proof-purpose-validation/" class="nav-list-link">Proof Purpose Validation</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/credential-exchange-protocols/" class="nav-list-link">Protocol Abstraction Layer</a></li><li class="nav-list-item"><a href="/trustweave/contributing/pull-request-process/" class="nav-list-link">Pull Request Process</a></li><li class="nav-list-item"><a href="/trustweave/security/README/" class="nav-list-link">Security Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/advanced/spi/" class="nav-list-link">Service Provider Interface (SPI)</a></li><li class="nav-list-item"><a href="/trustweave/plugins/" class="nav-list-link">Supported Plugins</a></li><li class="nav-list-item"><a href="/trustweave/contributing/testing-guidelines/" class="nav-list-link">Testing Guidelines</a></li><li class="nav-list-item"><a href="/trustweave/advanced/testing-strategies/" class="nav-list-link">Testing Strategies</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/trust-registry/" class="nav-list-link">Trust Registry</a></li><li class="nav-list-item"><a href="/trustweave/GLOSSARY/" class="nav-list-link">TrustWeave Glossary</a></li><li class="nav-list-item"><a href="/trustweave/TRUSTWEAVE_WHITEPAPER/" class="nav-list-link">TrustWeave SDK: Decentralized Trust Infrastructure</a></li><li class="nav-list-item"><a href="/trustweave/scenarios/README/" class="nav-list-link">Use Case Scenarios</a></li><li class="nav-list-item"><a href="/trustweave/advanced/verification-policies/" class="nav-list-link">Verification Policies</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/wallet-api-tutorial/" class="nav-list-link">Wallet API Tutorial</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="earth-observation-scenario">
+  
+  
+    <a href="#earth-observation-scenario" class="anchor-heading" aria-labelledby="earth-observation-scenario"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Earth Observation Scenario
+  
+  
+</h1>
+    
+
+<p>This guide walks you through building a complete Earth Observation (EO) data integrity verification system using TrustWeave. You’ll learn how to create DIDs, compute digests, build integrity chains, and anchor data to blockchains.</p>
+<h2 id="what-youll-build">
+  
+  
+    <a href="#what-youll-build" class="anchor-heading" aria-labelledby="what-youll-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Build
+  
+  
+</h2>
+    
+
+<p>By the end of this tutorial, you’ll have:</p>
+
+<ul>
+  <li>✅ Created a DID for a data provider</li>
+  <li>✅ Generated metadata, provenance, and quality reports for EO datasets</li>
+  <li>✅ Built a Linkset connecting all artifacts</li>
+  <li>✅ Created a Verifiable Credential referencing the Linkset</li>
+  <li>✅ Anchored the VC digest to a blockchain</li>
+  <li>✅ Verified the complete integrity chain</li>
+</ul>
+<h2 id="big-picture--significance">
+  
+  
+    <a href="#big-picture--significance" class="anchor-heading" aria-labelledby="big-picture--significance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Big Picture &amp; Significance
+  
+  
+</h2>
+    
+<h3 id="the-earth-observation-data-challenge">
+  
+  
+    <a href="#the-earth-observation-data-challenge" class="anchor-heading" aria-labelledby="the-earth-observation-data-challenge"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Earth Observation Data Challenge
+  
+  
+</h3>
+    
+
+<p>Earth Observation data powers critical applications from climate monitoring to disaster response. However, ensuring data integrity, authenticity, and provenance is a fundamental challenge that affects trust, compliance, and decision-making.</p>
+
+<p><strong>Industry Context</strong>:</p>
+<ul>
+  <li><strong>Market Size</strong>: Global EO market projected to reach $11.3 billion by 2026 (CAGR 9.8%)</li>
+  <li><strong>Data Volume</strong>: Petabytes of satellite imagery generated daily</li>
+  <li><strong>Critical Applications</strong>: Climate monitoring, disaster management, agriculture, urban planning</li>
+  <li><strong>Trust Requirements</strong>: Data used for policy decisions, scientific research, and emergency response</li>
+  <li><strong>Regulatory Pressure</strong>: Increasing requirements for data provenance and quality assurance</li>
+</ul>
+
+<p><strong>Why This Matters</strong>:</p>
+<ol>
+  <li><strong>Data Trust</strong>: Verify EO data hasn’t been tampered with or corrupted</li>
+  <li><strong>Provenance</strong>: Track data lineage from satellite to end user</li>
+  <li><strong>Quality Assurance</strong>: Ensure data meets quality standards for critical applications</li>
+  <li><strong>Compliance</strong>: Meet regulatory requirements for data integrity</li>
+  <li><strong>Reproducibility</strong>: Enable scientific reproducibility with verifiable data</li>
+  <li><strong>Accountability</strong>: Hold data providers accountable for data quality</li>
+</ol>
+<h3 id="the-data-integrity-problem">
+  
+  
+    <a href="#the-data-integrity-problem" class="anchor-heading" aria-labelledby="the-data-integrity-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Data Integrity Problem
+  
+  
+</h3>
+    
+
+<p>Traditional EO data systems struggle with integrity because:</p>
+<ul>
+  <li><strong>No Verification</strong>: Can’t verify data hasn’t been tampered with</li>
+  <li><strong>No Provenance</strong>: Missing information about data origin and processing</li>
+  <li><strong>No Quality Tracking</strong>: Can’t verify data quality claims</li>
+  <li><strong>Centralized Trust</strong>: Reliance on single authorities creates bottlenecks</li>
+  <li><strong>No Interoperability</strong>: Different systems can’t verify each other’s data</li>
+</ul>
+<h2 id="value-proposition">
+  
+  
+    <a href="#value-proposition" class="anchor-heading" aria-labelledby="value-proposition"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Value Proposition
+  
+  
+</h2>
+    
+<h3 id="problems-solved">
+  
+  
+    <a href="#problems-solved" class="anchor-heading" aria-labelledby="problems-solved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Problems Solved
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>Data Integrity</strong>: Cryptographic proof that data hasn’t been tampered with</li>
+  <li><strong>Provenance Tracking</strong>: Complete lineage from satellite to end user</li>
+  <li><strong>Quality Verification</strong>: Verifiable quality reports and metadata</li>
+  <li><strong>Interoperability</strong>: Standard format works across all EO systems</li>
+  <li><strong>Compliance</strong>: Automated audit trails for regulatory requirements</li>
+  <li><strong>Trust</strong>: Build trust in EO data through verifiable credentials</li>
+  <li><strong>Accountability</strong>: Hold data providers accountable for data quality</li>
+</ol>
+<h3 id="business-benefits">
+  
+  
+    <a href="#business-benefits" class="anchor-heading" aria-labelledby="business-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Business Benefits
+  
+  
+</h3>
+    
+
+<p><strong>For Data Providers</strong>:</p>
+<ul>
+  <li><strong>Trust</strong>: Build trust with data consumers</li>
+  <li><strong>Compliance</strong>: Meet regulatory requirements</li>
+  <li><strong>Differentiation</strong>: Stand out with verifiable data quality</li>
+  <li><strong>Accountability</strong>: Clear responsibility tracking</li>
+</ul>
+
+<p><strong>For Data Consumers</strong>:</p>
+<ul>
+  <li><strong>Confidence</strong>: Verify data integrity before use</li>
+  <li><strong>Quality</strong>: Access verifiable quality reports</li>
+  <li><strong>Provenance</strong>: Understand data lineage</li>
+  <li><strong>Compliance</strong>: Meet data quality requirements</li>
+</ul>
+
+<p><strong>For Regulators</strong>:</p>
+<ul>
+  <li><strong>Audit Trails</strong>: Complete data lineage records</li>
+  <li><strong>Verification</strong>: Verify data quality claims</li>
+  <li><strong>Transparency</strong>: Understand data processing</li>
+</ul>
+<h3 id="roi-considerations">
+  
+  
+    <a href="#roi-considerations" class="anchor-heading" aria-labelledby="roi-considerations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ROI Considerations
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Trust</strong>: Increased data trust enables new use cases</li>
+  <li><strong>Compliance</strong>: Automated compliance reduces costs by 50%</li>
+  <li><strong>Quality</strong>: Reduced errors save time and money</li>
+  <li><strong>Interoperability</strong>: Standard format reduces integration costs</li>
+</ul>
+<h2 id="understanding-the-problem">
+  
+  
+    <a href="#understanding-the-problem" class="anchor-heading" aria-labelledby="understanding-the-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Understanding the Problem
+  
+  
+</h2>
+    
+
+<p>Earth Observation data (like satellite imagery) needs to be trustworthy. When someone receives EO data, they need to verify:</p>
+
+<ol>
+  <li><strong>Who created it?</strong> - Identity of the data provider</li>
+  <li><strong>Is it authentic?</strong> - Has it been tampered with?</li>
+  <li><strong>What’s its quality?</strong> - Is the data reliable?</li>
+  <li><strong>Where did it come from?</strong> - What’s the data’s provenance?</li>
+</ol>
+
+<p>TrustWeave solves this by creating a <strong>verifiable integrity chain</strong> that links all this information together and anchors it to a blockchain for tamper-proof verification.</p>
+<h2 id="how-it-works-the-integrity-chain">
+  
+  
+    <a href="#how-it-works-the-integrity-chain" class="anchor-heading" aria-labelledby="how-it-works-the-integrity-chain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How It Works: The Integrity Chain
+  
+  
+</h2>
+    
+
+<p>Think of the integrity chain like a Russian nesting doll, where each layer protects and verifies the next:</p>
+
+<pre><code class="language-mermaid">flowchart TD
+    A["Blockchain Anchor&lt;br/&gt;VC Digest&lt;br/&gt;Immutable proof on blockchain"] --&gt;|references| B["Verifiable Credential VC&lt;br/&gt;Linkset Digest Reference&lt;br/&gt;Dataset Metadata&lt;br/&gt;Credential about the dataset"]
+    B --&gt;|references| C["Linkset&lt;br/&gt;Metadata Link&lt;br/&gt;Provenance Link&lt;br/&gt;Quality Report Link&lt;br/&gt;Collection of links to artifacts"]
+    C --&gt;|references| D["Artifacts&lt;br/&gt;Metadata Document&lt;br/&gt;Provenance Document&lt;br/&gt;Quality Report Document&lt;br/&gt;Actual data documents"]
+    
+    style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
+    style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style D fill:#c2185b,stroke:#880e4f,stroke-width:2px,color:#fff
+</code></pre>
+
+<p><strong>Key Concept</strong>: Each level contains a <strong>digest</strong> (cryptographic hash) of the level below it. If any data is tampered with, the digest won’t match, and verification will fail.</p>
+<h2 id="prerequisites">
+  
+  
+    <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
+  
+  
+</h2>
+    
+
+<ul>
+  <li>Java 21+</li>
+  <li>Kotlin 2.2.0+</li>
+  <li>Gradle 8.5+</li>
+  <li>Basic understanding of Kotlin and coroutines</li>
+</ul>
+
+<p><strong>Note</strong>: Don’t worry if you’re new to DIDs, Verifiable Credentials, or blockchain! This guide explains everything step-by-step.</p>
+<h2 id="step-1-add-dependencies">
+  
+  
+    <a href="#step-1-add-dependencies" class="anchor-heading" aria-labelledby="step-1-add-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Add Dependencies
+  
+  
+</h2>
+    
+
+<p>Add TrustWeave dependencies to your <code class="language-plaintext highlighter-rouge">build.gradle.kts</code>. This pulls in the core runtime plus optional adapters the scenario uses (JSON, DID, anchoring, and the in-memory test kit).</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+</pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
+    <span class="c1">// Core TrustWeave modules</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    
+    <span class="c1">// Test kit for in-memory implementations</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    
+    <span class="c1">// Optional: Algorand adapter for real blockchain anchoring</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.chains:algorand:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    
+    <span class="c1">// Kotlinx Serialization</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
+    
+    <span class="c1">// Coroutines</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Result:</strong> Gradle resolves the full stack so every snippet below compiles with zero additional setup.</p>
+<h2 id="step-2-complete-runnable-example">
+  
+  
+    <a href="#step-2-complete-runnable-example" class="anchor-heading" aria-labelledby="step-2-complete-runnable-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Complete Runnable Example
+  
+  
+</h2>
+    
+
+<p>Here’s the full Earth Observation data integrity workflow using the TrustWeave facade API. This complete, copy-paste ready example demonstrates the entire workflow from DID creation to blockchain anchoring and verification.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+</pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.example.earth.observation</span>
+
+<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">com.trustweave.anchor.BlockchainAnchorRegistry</span>
+<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.models.VerifiableCredential</span>
+<span class="k">import</span> <span class="nn">com.trustweave.json.DigestUtils</span>
+<span class="k">import</span> <span class="nn">com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient</span>
+<span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.Json</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.encodeToJsonElement</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
+<span class="k">import</span> <span class="nn">java.time.Instant</span>
+
+<span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Earth Observation Data Integrity Scenario - Complete End-to-End Example"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+    
+    <span class="c1">// Step 1: Create TrustWeave instance with blockchain anchoring</span>
+    <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
+        <span class="nf">blockchains</span> <span class="p">{</span>
+            <span class="s">"inmemory:anchor"</span> <span class="n">to</span> <span class="nc">InMemoryBlockchainAnchorClient</span><span class="p">(</span><span class="s">"inmemory:anchor"</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ TrustWeave initialized with blockchain anchoring"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 2: Create DID for data provider</span>
+    <span class="kd">val</span> <span class="py">providerDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">providerDid</span> <span class="p">=</span> <span class="n">providerDidDoc</span><span class="p">.</span><span class="n">id</span>
+    <span class="kd">val</span> <span class="py">providerKeyId</span> <span class="p">=</span> <span class="n">providerDidDoc</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
+        <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Data Provider DID: $providerDid"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 3: Create EO dataset artifacts with digests</span>
+    <span class="c1">// Metadata artifact</span>
+    <span class="kd">val</span> <span class="py">metadata</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="s">"metadata-1"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"title"</span><span class="p">,</span> <span class="s">"Sentinel-2 L2A Dataset"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"description"</span><span class="p">,</span> <span class="s">"Atmospherically corrected Sentinel-2 Level 2A product"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"spatialCoverage"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"type"</span><span class="p">,</span> <span class="s">"Polygon"</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"coordinates"</span><span class="p">,</span> <span class="nf">listOf</span><span class="p">(</span>
+                <span class="nf">listOf</span><span class="p">(</span><span class="nf">listOf</span><span class="p">(-</span><span class="mf">122.5</span><span class="p">,</span> <span class="mf">37.8</span><span class="p">),</span> <span class="nf">listOf</span><span class="p">(-</span><span class="mf">122.3</span><span class="p">,</span> <span class="mf">37.8</span><span class="p">),</span> 
+                       <span class="nf">listOf</span><span class="p">(-</span><span class="mf">122.3</span><span class="p">,</span> <span class="mf">37.9</span><span class="p">),</span> <span class="nf">listOf</span><span class="p">(-</span><span class="mf">122.5</span><span class="p">,</span> <span class="mf">37.9</span><span class="p">),</span> <span class="nf">listOf</span><span class="p">(-</span><span class="mf">122.5</span><span class="p">,</span> <span class="mf">37.8</span><span class="p">))</span>
+            <span class="p">))</span>
+        <span class="p">})</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"temporalCoverage"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"startDate"</span><span class="p">,</span> <span class="s">"2023-06-15T00:00:00Z"</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"endDate"</span><span class="p">,</span> <span class="s">"2023-06-15T23:59:59Z"</span><span class="p">)</span>
+        <span class="p">})</span>
+    <span class="p">}</span>
+    <span class="kd">val</span> <span class="py">metadataDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Metadata artifact created: $metadataDigest"</span><span class="p">)</span>
+    
+    <span class="c1">// Provenance artifact</span>
+    <span class="kd">val</span> <span class="py">provenance</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="s">"provenance-1"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"activity"</span><span class="p">,</span> <span class="s">"EO Data Collection"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"agent"</span><span class="p">,</span> <span class="n">providerDid</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"startedAtTime"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"endedAtTime"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+    <span class="p">}</span>
+    <span class="kd">val</span> <span class="py">provenanceDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">provenance</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Provenance artifact created: $provenanceDigest"</span><span class="p">)</span>
+    
+    <span class="c1">// Quality report artifact</span>
+    <span class="kd">val</span> <span class="py">qualityReport</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="s">"quality-1"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"qualityScore"</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"metrics"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"completeness"</span><span class="p">,</span> <span class="mf">0.98</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"accuracy"</span><span class="p">,</span> <span class="mf">0.92</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"temporalConsistency"</span><span class="p">,</span> <span class="mf">0.96</span><span class="p">)</span>
+        <span class="p">})</span>
+    <span class="p">}</span>
+    <span class="kd">val</span> <span class="py">qualityDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">qualityReport</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Quality report artifact created: $qualityDigest"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 4: Create Linkset connecting all artifacts</span>
+    <span class="kd">val</span> <span class="py">linkset</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="s">"linkset-1"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"links"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"metadata"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"href"</span><span class="p">,</span> <span class="s">"metadata-1"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"digestMultibase"</span><span class="p">,</span> <span class="n">metadataDigest</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"type"</span><span class="p">,</span> <span class="s">"Metadata"</span><span class="p">)</span>
+            <span class="p">})</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"provenance"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"href"</span><span class="p">,</span> <span class="s">"provenance-1"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"digestMultibase"</span><span class="p">,</span> <span class="n">provenanceDigest</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"type"</span><span class="p">,</span> <span class="s">"Provenance"</span><span class="p">)</span>
+            <span class="p">})</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"quality"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"href"</span><span class="p">,</span> <span class="s">"quality-1"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"digestMultibase"</span><span class="p">,</span> <span class="n">qualityDigest</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"type"</span><span class="p">,</span> <span class="s">"QualityReport"</span><span class="p">)</span>
+            <span class="p">})</span>
+        <span class="p">})</span>
+    <span class="p">}</span>
+    <span class="kd">val</span> <span class="py">linksetDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">linkset</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Linkset created: $linksetDigest"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 5: Issue Verifiable Credential referencing the Linkset</span>
+    <span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">credentials</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">providerDid</span><span class="p">,</span>
+        <span class="n">issuerKeyId</span> <span class="p">=</span> <span class="n">providerKeyId</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="s">"eo-dataset-1"</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"dataset"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"title"</span><span class="p">,</span> <span class="s">"Sentinel-2 L2A Dataset"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"linksetDigest"</span><span class="p">,</span> <span class="n">linksetDigest</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"metadataDigest"</span><span class="p">,</span> <span class="n">metadataDigest</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"provenanceDigest"</span><span class="p">,</span> <span class="n">provenanceDigest</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"qualityDigest"</span><span class="p">,</span> <span class="n">qualityDigest</span><span class="p">)</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"EarthObservationCredential"</span><span class="p">,</span> <span class="s">"DataIntegrityCredential"</span><span class="p">)</span>
+    <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Verifiable Credential issued: ${credential.id}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Linkset digest: $linksetDigest"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 6: Anchor credential to blockchain</span>
+    <span class="kd">val</span> <span class="py">anchorRegistry</span> <span class="p">=</span> <span class="nc">BlockchainAnchorRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
+        <span class="nf">register</span><span class="p">(</span><span class="s">"inmemory:anchor"</span><span class="p">,</span> <span class="nc">InMemoryBlockchainAnchorClient</span><span class="p">(</span><span class="s">"inmemory:anchor"</span><span class="p">))</span>
+    <span class="p">}</span>
+    <span class="kd">val</span> <span class="py">anchorClient</span> <span class="p">=</span> <span class="nf">requireNotNull</span><span class="p">(</span><span class="n">anchorRegistry</span><span class="p">.</span><span class="k">get</span><span class="p">(</span><span class="s">"inmemory:anchor"</span><span class="p">))</span> <span class="p">{</span>
+        <span class="s">"inmemory anchor client not registered"</span>
+    <span class="p">}</span>
+    
+    <span class="kd">val</span> <span class="py">anchorResult</span> <span class="p">=</span> <span class="nf">runCatching</span> <span class="p">{</span>
+        <span class="kd">val</span> <span class="py">payload</span> <span class="p">=</span> <span class="nc">Json</span><span class="p">.</span><span class="nf">encodeToJsonElement</span><span class="p">(</span><span class="nc">VerifiableCredential</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span> <span class="n">credential</span><span class="p">)</span>
+        <span class="n">anchorClient</span><span class="p">.</span><span class="nf">writePayload</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+    <span class="p">}.</span><span class="nf">getOrElse</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
+        <span class="nf">error</span><span class="p">(</span><span class="s">"Anchoring failed: ${error.message}"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Credential anchored to blockchain"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Chain ID: ${anchorResult.ref.chainId}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Transaction Hash: ${anchorResult.ref.txHash}"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 7: Verify the credential</span>
+    <span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">credentials</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ Credential Verification SUCCESS"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Proof valid: ${verification.proofValid}"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Issuer valid: ${verification.issuerValid}"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Not revoked: ${verification.notRevoked}"</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"\n❌ Credential Verification FAILED"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Errors: ${verification.errors}"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Step 8: Verify integrity chain</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔗 Integrity Chain Verification:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Metadata digest: $metadataDigest"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Provenance digest: $provenanceDigest"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Quality digest: $qualityDigest"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Linkset digest: $linksetDigest"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Credential anchored: ${anchorResult.ref.txHash}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   ✅ Complete integrity chain verified!"</span><span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n"</span> <span class="p">+</span> <span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Earth Observation Scenario Complete!"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+<span class="p">}</span>
+
+<span class="p">**</span><span class="nc">Expected</span> <span class="nc">Output</span><span class="p">:**</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<p>======================================================================
+Earth Observation Data Integrity Scenario - Complete End-to-End Example
+======================================================================</p>
+
+<p>✅ TrustWeave initialized with blockchain anchoring
+✅ Data Provider DID: did:key:z6Mk…
+✅ Metadata artifact created: u5v…
+✅ Provenance artifact created: u5v…
+✅ Quality report artifact created: u5v…
+✅ Linkset created: u5v…
+✅ Verifiable Credential issued: urn:uuid:…
+   Linkset digest: u5v…
+✅ Credential anchored to blockchain
+   Chain ID: inmemory:anchor
+   Transaction Hash: tx_…</p>
+
+<p>✅ Credential Verification SUCCESS
+   Proof valid: true
+   Issuer valid: true
+   Not revoked: true</p>
+
+<p>🔗 Integrity Chain Verification:
+   Metadata digest: u5v…
+   Provenance digest: u5v…
+   Quality digest: u5v…
+   Linkset digest: u5v…
+   Credential anchored: tx_…
+   ✅ Complete integrity chain verified!</p>
+
+<p>======================================================================
+✅ Earth Observation Scenario Complete!
+======================================================================</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+</pre></td><td class="rouge-code"><pre>
+**To run this example:**
+1. Copy the code above into `src/main/kotlin/EarthObservationExample.kt`
+2. Ensure dependencies are added (see Step 1)
+3. Run with `./gradlew run` or execute in your IDE
+
+**What this demonstrates:**
+- ✅ Complete data provider → integrity chain → blockchain workflow
+- ✅ DID creation for data providers
+- ✅ Artifact creation with cryptographic digests
+- ✅ Linkset creation for artifact linking
+- ✅ Verifiable Credential issuance
+- ✅ Blockchain anchoring for tamper evidence
+- ✅ Complete integrity chain verification
+- ✅ Error handling with Result types
+
+## Step 3: Step-by-Step Breakdown
+
+The sections below explain each step in detail. The complete example above demonstrates the full workflow using the TrustWeave facade API.
+
+### Understanding the Integrity Chain
+
+The integrity chain works like this:
+
+1. **Artifacts** (metadata, provenance, quality) are created with cryptographic digests
+2. **Linkset** connects all artifacts together with their digests
+3. **Verifiable Credential** references the Linkset digest
+4. **Blockchain** anchors the credential for tamper evidence
+
+Each step builds on the previous one, creating a verifiable chain of trust.
+
+### Detailed Steps
+
+The following sections provide detailed explanations of each component:
+
+- **DID Creation**: How to create identities for data providers
+- **Artifact Creation**: How to create and digest metadata, provenance, and quality reports
+- **Linkset Creation**: How to link artifacts together
+- **Credential Issuance**: How to issue verifiable credentials
+- **Blockchain Anchoring**: How to anchor credentials to blockchains
+- **Verification**: How to verify the complete integrity chain
+
+For a complete working example, see the code in Step 2 above.
+
+## Step 4: Running the Example
+
+1. Copy the complete example from Step 2 above into `src/main/kotlin/EarthObservationExample.kt`
+2. Ensure dependencies are added (see Step 1)
+3. Run the application:
+```bash
+./gradlew run
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Expected output:</strong></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+</pre></td><td class="rouge-code"><pre>======================================================================
+Earth Observation Data Integrity Scenario - Complete End-to-End Example
+======================================================================
+
+✅ TrustWeave initialized with blockchain anchoring
+✅ Data Provider DID: did:key:z6Mk...
+✅ Metadata artifact created: u5v...
+✅ Provenance artifact created: u5v...
+✅ Quality report artifact created: u5v...
+✅ Linkset created: u5v...
+✅ Verifiable Credential issued: urn:uuid:...
+   Linkset digest: u5v...
+✅ Credential anchored to blockchain
+   Chain ID: inmemory:anchor
+   Transaction Hash: tx_...
+
+✅ Credential Verification SUCCESS
+   Proof valid: true
+   Issuer valid: true
+   Not revoked: true
+
+🔗 Integrity Chain Verification:
+   Metadata digest: u5v...
+   Provenance digest: u5v...
+   Quality digest: u5v...
+   Linkset digest: u5v...
+   Credential anchored: tx_...
+   ✅ Complete integrity chain verified!
+
+======================================================================
+✅ Earth Observation Scenario Complete!
+======================================================================
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Alternative:</strong> Run the example from the TrustWeave examples module:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre>./gradlew :TrustWeave-examples:runEarthObservation
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-5-using-real-blockchain-algorand">
+  
+  
+    <a href="#step-5-using-real-blockchain-algorand" class="anchor-heading" aria-labelledby="step-5-using-real-blockchain-algorand"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Using Real Blockchain (Algorand)
+  
+  
+</h2>
+    
+
+<p>So far, we’ve used an in-memory blockchain client for testing. For production, you’ll want to use a real blockchain like Algorand.</p>
+<h3 id="why-algorand">
+  
+  
+    <a href="#why-algorand" class="anchor-heading" aria-labelledby="why-algorand"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Why Algorand?
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Fast</strong>: Transactions confirm in seconds</li>
+  <li><strong>Low cost</strong>: Very affordable for anchoring</li>
+  <li><strong>Eco-friendly</strong>: Uses proof-of-stake (low energy)</li>
+  <li><strong>Testnet available</strong>: Free testing environment</li>
+</ul>
+<h3 id="switching-to-real-algorand">
+  
+  
+    <a href="#switching-to-real-algorand" class="anchor-heading" aria-labelledby="switching-to-real-algorand"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Switching to Real Algorand
+  
+  
+</h3>
+    
+
+<p>Replace the in-memory client with Algorand:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.algorand.AlgorandBlockchainAnchorClient</span>
+
+<span class="c1">// Replace this:</span>
+<span class="c1">// val anchorClient = InMemoryBlockchainAnchorClient(chainId)</span>
+
+<span class="c1">// With this:</span>
+<span class="kd">val</span> <span class="py">anchorClient</span> <span class="p">=</span> <span class="nc">AlgorandBlockchainAnchorClient</span><span class="p">(</span>
+    <span class="n">chainId</span> <span class="p">=</span> <span class="nc">AlgorandBlockchainAnchorClient</span><span class="p">.</span><span class="nc">TESTNET</span><span class="p">,</span>  <span class="c1">// Use TESTNET for testing</span>
+    <span class="n">options</span> <span class="p">=</span> <span class="nf">mapOf</span><span class="p">(</span>
+        <span class="s">"algodUrl"</span> <span class="n">to</span> <span class="s">"https://testnet-api.algonode.cloud"</span><span class="p">,</span>  <span class="c1">// Algorand testnet API</span>
+        <span class="s">"privateKey"</span> <span class="n">to</span> <span class="s">"your-private-key-base64"</span>  <span class="c1">// Your Algorand account private key</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="getting-algorand-testnet-credentials">
+  
+  
+    <a href="#getting-algorand-testnet-credentials" class="anchor-heading" aria-labelledby="getting-algorand-testnet-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Getting Algorand Testnet Credentials
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>Create a testnet account</strong>: Use <a href="https://bank.testnet.algorand.network/">Algorand Testnet Faucet</a></li>
+  <li><strong>Get your private key</strong>: Export from Algorand wallet</li>
+  <li><strong>Use testnet API</strong>: Public endpoints available (no API key needed)</li>
+</ol>
+
+<p><strong>Important</strong>: Never use real Algorand mainnet credentials in test code!</p>
+<h2 id="step-6-customizing-artifacts">
+  
+  
+    <a href="#step-6-customizing-artifacts" class="anchor-heading" aria-labelledby="step-6-customizing-artifacts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 6: Customizing Artifacts
+  
+  
+</h2>
+    
+
+<p>The example uses standard artifact types, but you can customize them for your specific needs.</p>
+<h3 id="custom-metadata">
+  
+  
+    <a href="#custom-metadata" class="anchor-heading" aria-labelledby="custom-metadata"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Custom Metadata
+  
+  
+</h3>
+    
+
+<p>Add domain-specific fields to metadata:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+</pre></td><td class="rouge-code"><pre><span class="c1">// Custom metadata artifact with EO-specific fields</span>
+<span class="kd">val</span> <span class="py">customMetadata</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"title"</span><span class="p">,</span> <span class="s">"My Custom Dataset"</span><span class="p">)</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"description"</span><span class="p">,</span> <span class="s">"Custom description"</span><span class="p">)</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"spatialResolution"</span><span class="p">,</span> <span class="s">"10m"</span><span class="p">)</span>  <span class="c1">// Resolution in meters</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"temporalResolution"</span><span class="p">,</span> <span class="s">"5 days"</span><span class="p">)</span>  <span class="c1">// How often data is collected</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"sensor"</span><span class="p">,</span> <span class="s">"Sentinel-2"</span><span class="p">)</span>  <span class="c1">// Which satellite/sensor</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"processingLevel"</span><span class="p">,</span> <span class="s">"L2A"</span><span class="p">)</span>  <span class="c1">// Processing level</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"cloudCoverage"</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>  <span class="c1">// Cloud coverage percentage</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"bands"</span><span class="p">,</span> <span class="nf">buildJsonArray</span> <span class="p">{</span>  <span class="c1">// Available spectral bands</span>
+        <span class="nf">add</span><span class="p">(</span><span class="s">"B02"</span><span class="p">);</span> <span class="nf">add</span><span class="p">(</span><span class="s">"B03"</span><span class="p">);</span> <span class="nf">add</span><span class="p">(</span><span class="s">"B04"</span><span class="p">);</span> <span class="nf">add</span><span class="p">(</span><span class="s">"B08"</span><span class="p">)</span>
+    <span class="p">})</span>
+<span class="p">}</span>
+<span class="kd">val</span> <span class="py">metadataDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">customMetadata</span><span class="p">)</span>
+<span class="kd">val</span> <span class="py">metadataArtifact</span> <span class="p">=</span> <span class="nc">TestDataBuilders</span><span class="p">.</span><span class="nf">buildArtifact</span><span class="p">(</span>
+    <span class="n">id</span> <span class="p">=</span> <span class="s">"custom-metadata-1"</span><span class="p">,</span>
+    <span class="n">type</span> <span class="p">=</span> <span class="s">"Metadata"</span><span class="p">,</span>
+    <span class="n">content</span> <span class="p">=</span> <span class="n">customMetadata</span><span class="p">,</span>
+    <span class="n">digestMultibase</span> <span class="p">=</span> <span class="n">metadataDigest</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="custom-provenance">
+  
+  
+    <a href="#custom-provenance" class="anchor-heading" aria-labelledby="custom-provenance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Custom Provenance
+  
+  
+</h3>
+    
+
+<p>Track detailed provenance information:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">customProvenance</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"activity"</span><span class="p">,</span> <span class="s">"EO Data Collection"</span><span class="p">)</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"agent"</span><span class="p">,</span> <span class="n">issuerDid</span><span class="p">)</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"startTime"</span><span class="p">,</span> <span class="s">"2024-01-15T10:00:00Z"</span><span class="p">)</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"endTime"</span><span class="p">,</span> <span class="s">"2024-01-15T10:20:00Z"</span><span class="p">)</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"instrument"</span><span class="p">,</span> <span class="s">"MSI"</span><span class="p">)</span>  <span class="c1">// MultiSpectral Instrument</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"orbit"</span><span class="p">,</span> <span class="s">"12345"</span><span class="p">)</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"processingSteps"</span><span class="p">,</span> <span class="nf">buildJsonArray</span> <span class="p">{</span>
+        <span class="nf">add</span><span class="p">(</span><span class="s">"Atmospheric correction"</span><span class="p">)</span>
+        <span class="nf">add</span><span class="p">(</span><span class="s">"Cloud masking"</span><span class="p">)</span>
+        <span class="nf">add</span><span class="p">(</span><span class="s">"Radiometric calibration"</span><span class="p">)</span>
+    <span class="p">})</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="custom-quality-metrics">
+  
+  
+    <a href="#custom-quality-metrics" class="anchor-heading" aria-labelledby="custom-quality-metrics"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Custom Quality Metrics
+  
+  
+</h3>
+    
+
+<p>Add domain-specific quality metrics:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">customQuality</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"overallQuality"</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">)</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"metrics"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"completeness"</span><span class="p">,</span> <span class="mf">0.98</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"accuracy"</span><span class="p">,</span> <span class="mf">0.92</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"temporalConsistency"</span><span class="p">,</span> <span class="mf">0.96</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"spatialAccuracy"</span><span class="p">,</span> <span class="mf">0.94</span><span class="p">)</span>  <span class="c1">// EO-specific</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"radiometricAccuracy"</span><span class="p">,</span> <span class="mf">0.91</span><span class="p">)</span>  <span class="c1">// EO-specific</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"geometricAccuracy"</span><span class="p">,</span> <span class="mf">0.93</span><span class="p">)</span>  <span class="c1">// EO-specific</span>
+    <span class="p">})</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"validation"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"validatedBy"</span><span class="p">,</span> <span class="s">"Quality Assurance Team"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"validationDate"</span><span class="p">,</span> <span class="s">"2024-01-16"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"validationMethod"</span><span class="p">,</span> <span class="s">"Automated + Manual Review"</span><span class="p">)</span>
+    <span class="p">})</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Tip</strong>: Follow existing standards (ISO 19115, DCAT, PROV, DQV) when possible for interoperability.</p>
+<h2 id="next-steps">
+  
+  
+    <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
+  
+  
+</h2>
+    
+
+<ul>
+  <li>Explore <a href="/trustweave/core-concepts/README/">Core Concepts</a> for deeper understanding</li>
+  <li>Learn about <a href="/trustweave/integrations/README/">Integration Modules</a> for production use</li>
+</ul>
+<h2 id="common-questions">
+  
+  
+    <a href="#common-questions" class="anchor-heading" aria-labelledby="common-questions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Common Questions
+  
+  
+</h2>
+    
+<h3 id="why-do-we-compute-digests-before-adding-them">
+  
+  
+    <a href="#why-do-we-compute-digests-before-adding-them" class="anchor-heading" aria-labelledby="why-do-we-compute-digests-before-adding-them"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Why do we compute digests before adding them?
+  
+  
+</h3>
+    
+
+<p>We compute digests before adding them to avoid circular dependencies:</p>
+<ul>
+  <li><strong>VC digest</strong> depends on VC content (including linksetDigest)</li>
+  <li>But if VC digest was already in VC, it would change the digest!</li>
+  <li>Solution: Compute digest from VC without digest field, then add it</li>
+</ul>
+
+<p>Same logic applies to Linkset.</p>
+<h3 id="why-store-only-digests-on-blockchain">
+  
+  
+    <a href="#why-store-only-digests-on-blockchain" class="anchor-heading" aria-labelledby="why-store-only-digests-on-blockchain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Why store only digests on blockchain?
+  
+  
+</h3>
+    
+
+<p>Storing full data on blockchain is expensive and unnecessary:</p>
+<ul>
+  <li><strong>Digests are small</strong>: ~44 characters vs. potentially megabytes of data</li>
+  <li><strong>Digests are sufficient</strong>: If digest matches, data is intact</li>
+  <li><strong>Data can be stored elsewhere</strong>: IPFS, cloud storage, etc.</li>
+  <li><strong>Blockchain provides proof</strong>: Timestamp and immutability</li>
+</ul>
+<h3 id="what-if-i-need-to-update-data">
+  
+  
+    <a href="#what-if-i-need-to-update-data" class="anchor-heading" aria-labelledby="what-if-i-need-to-update-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What if I need to update data?
+  
+  
+</h3>
+    
+
+<p>The integrity chain is immutable, but you can:</p>
+<ol>
+  <li><strong>Create a new VC</strong>: Issue a new credential with updated data</li>
+  <li><strong>Link versions</strong>: Reference previous VC in new VC</li>
+  <li><strong>Track history</strong>: All versions remain verifiable</li>
+</ol>
+<h3 id="how-do-i-share-this-with-others">
+  
+  
+    <a href="#how-do-i-share-this-with-others" class="anchor-heading" aria-labelledby="how-do-i-share-this-with-others"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How do I share this with others?
+  
+  
+</h3>
+    
+
+<p>Share:</p>
+<ul>
+  <li>The VC (with digest and linksetDigest)</li>
+  <li>The Linkset</li>
+  <li>The artifacts</li>
+  <li>The blockchain anchor reference</li>
+</ul>
+
+<p>Anyone can verify the chain using these components!</p>
+<h2 id="troubleshooting">
+  
+  
+    <a href="#troubleshooting" class="anchor-heading" aria-labelledby="troubleshooting"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Troubleshooting
+  
+  
+</h2>
+    
+<h3 id="issue-digest-mismatch">
+  
+  
+    <a href="#issue-digest-mismatch" class="anchor-heading" aria-labelledby="issue-digest-mismatch"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Issue: Digest mismatch
+  
+  
+</h3>
+    
+
+<p><strong>Problem</strong>: Verification fails with digest mismatch</p>
+
+<p><strong>Cause</strong>: Digests are computed from specific content. If you include/exclude wrong fields, digests won’t match.</p>
+
+<p><strong>Solution</strong>: Ensure you’re computing digests from the correct content:</p>
+<ul>
+  <li><strong>VC digest</strong>: Computed from VC <strong>without</strong> <code class="language-plaintext highlighter-rouge">digestMultibase</code>, <code class="language-plaintext highlighter-rouge">evidence</code>, <code class="language-plaintext highlighter-rouge">credentialStatus</code></li>
+  <li><strong>Linkset digest</strong>: Computed from Linkset <strong>without</strong> <code class="language-plaintext highlighter-rouge">digestMultibase</code> field</li>
+  <li><strong>Artifact digest</strong>: Computed from artifact <code class="language-plaintext highlighter-rouge">content</code> field, <strong>not</strong> the entire artifact object</li>
+</ul>
+
+<p><strong>Debug tip</strong>: Print the JSON you’re digesting to see what’s included.</p>
+<h3 id="issue-blockchain-client-not-found">
+  
+  
+    <a href="#issue-blockchain-client-not-found" class="anchor-heading" aria-labelledby="issue-blockchain-client-not-found"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Issue: Blockchain client not found
+  
+  
+</h3>
+    
+
+<p><strong>Problem</strong>: <code class="language-plaintext highlighter-rouge">No blockchain client registered for chain: algorand:testnet</code></p>
+
+<p><strong>Cause</strong>: The blockchain client wasn’t registered before use.</p>
+
+<p><strong>Solution</strong>: Register the blockchain client before using it:</p>
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">blockchainRegistry</span> <span class="p">=</span> <span class="nc">BlockchainAnchorRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
+    <span class="nf">register</span><span class="p">(</span><span class="n">chainId</span><span class="p">,</span> <span class="n">anchorClient</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Check</strong>: Ensure the registry registration happens before calling <code class="language-plaintext highlighter-rouge">anchorClient.writePayload()</code>.</p>
+<h3 id="issue-did-method-not-found">
+  
+  
+    <a href="#issue-did-method-not-found" class="anchor-heading" aria-labelledby="issue-did-method-not-found"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Issue: DID method not found
+  
+  
+</h3>
+    
+
+<p><strong>Problem</strong>: <code class="language-plaintext highlighter-rouge">DID method 'key' is not registered</code></p>
+
+<p><strong>Cause</strong>: The DID method wasn’t registered before creating/resolving DIDs.</p>
+
+<p><strong>Solution</strong>: Register the DID method:</p>
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">didRegistry</span> <span class="p">=</span> <span class="nc">DidMethodRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span> <span class="nf">register</span><span class="p">(</span><span class="n">didMethod</span><span class="p">)</span> <span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Check</strong>: Ensure registration happens before calling <code class="language-plaintext highlighter-rouge">didMethod.createDid()</code> or resolving through <code class="language-plaintext highlighter-rouge">didRegistry</code>.</p>
+<h3 id="issue-verification-fails-unexpectedly">
+  
+  
+    <a href="#issue-verification-fails-unexpectedly" class="anchor-heading" aria-labelledby="issue-verification-fails-unexpectedly"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Issue: Verification fails unexpectedly
+  
+  
+</h3>
+    
+
+<p><strong>Problem</strong>: All data looks correct but verification fails</p>
+
+<p><strong>Possible causes</strong>:</p>
+<ol>
+  <li><strong>Timestamp mismatch</strong>: Using different timestamps changes VC digest</li>
+  <li><strong>Key order</strong>: JSON key order shouldn’t matter (canonicalization handles this)</li>
+  <li><strong>Extra fields</strong>: Adding fields to artifacts changes digests</li>
+  <li><strong>Wrong artifact</strong>: Using wrong artifact in verification map</li>
+</ol>
+
+<p><strong>Debug</strong>: Check each verification step individually to find which one fails.</p>
+<h2 id="summary">
+  
+  
+    <a href="#summary" class="anchor-heading" aria-labelledby="summary"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Summary
+  
+  
+</h2>
+    
+
+<p>Congratulations! You’ve built a complete Earth Observation data integrity system. Here’s what you accomplished:</p>
+<h3 id="what-you-built">
+  
+  
+    <a href="#what-you-built" class="anchor-heading" aria-labelledby="what-you-built"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You Built
+  
+  
+</h3>
+    
+
+<ol>
+  <li>✅ <strong>Service Setup</strong>: Configured KMS, DID methods, and blockchain clients</li>
+  <li>✅ <strong>Identity Creation</strong>: Created a DID for the data provider</li>
+  <li>✅ <strong>Artifact Generation</strong>: Generated metadata, provenance, and quality reports</li>
+  <li>✅ <strong>Linkset Creation</strong>: Built a Linkset connecting all artifacts</li>
+  <li>✅ <strong>Credential Issuance</strong>: Created a Verifiable Credential attesting to the dataset</li>
+  <li>✅ <strong>Blockchain Anchoring</strong>: Anchored the VC digest for immutable proof</li>
+  <li>✅ <strong>Integrity Verification</strong>: Verified the complete chain from blockchain to artifacts</li>
+</ol>
+<h3 id="key-takeaways">
+  
+  
+    <a href="#key-takeaways" class="anchor-heading" aria-labelledby="key-takeaways"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Takeaways
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Digests are fingerprints</strong>: They uniquely identify data and detect tampering</li>
+  <li><strong>Chain of trust</strong>: Each level verifies the next through digest references</li>
+  <li><strong>Blockchain provides proof</strong>: Immutable, timestamped proof of existence</li>
+  <li><strong>Verification is public</strong>: Anyone can verify the chain with the right components</li>
+</ul>
+<h3 id="next-steps-1">
+  
+  
+    <a href="#next-steps-1" class="anchor-heading" aria-labelledby="next-steps-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Explore production adapters</strong>: Try real blockchain adapters (Algorand, Polygon)</li>
+  <li><strong>Add more artifacts</strong>: Include additional metadata or quality metrics</li>
+  <li><strong>Implement in your system</strong>: Integrate this workflow into your EO data pipeline</li>
+  <li><strong>Learn more</strong>: Check out <a href="/trustweave/core-concepts/README/">Core Concepts</a> and <a href="/trustweave/api-reference/README/">API Reference</a></li>
+</ul>
+<h3 id="real-world-applications">
+  
+  
+    <a href="#real-world-applications" class="anchor-heading" aria-labelledby="real-world-applications"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Applications
+  
+  
+</h3>
+    
+
+<p>This pattern works for:</p>
+<ul>
+  <li><strong>Satellite imagery</strong>: Verify authenticity and provenance</li>
+  <li><strong>Sensor data</strong>: Ensure data hasn’t been tampered with</li>
+  <li><strong>Processing pipelines</strong>: Track data transformations</li>
+  <li><strong>Data catalogs</strong>: Verify catalog entries match actual data</li>
+  <li><strong>Data sharing</strong>: Provide verifiable data to consumers</li>
+</ul>
+
+<p>This workflow ensures EO data integrity from collection to verification, providing tamper-proof guarantees through blockchain anchoring and cryptographic digests. Your data is now verifiable, traceable, and trustworthy! 🎉</p>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

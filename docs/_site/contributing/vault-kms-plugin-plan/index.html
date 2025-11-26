@@ -1,0 +1,1163 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+    .site-nav ul li a {
+      background-image: none;
+    }
+
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>HashiCorp Vault KMS Plugin Implementation Plan | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="HashiCorp Vault KMS Plugin Implementation Plan" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://localhost:4000/trustweave/contributing/vault-kms-plugin-plan/" />
+<meta property="og:url" content="http://localhost:4000/trustweave/contributing/vault-kms-plugin-plan/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="HashiCorp Vault KMS Plugin Implementation Plan" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"HashiCorp Vault KMS Plugin Implementation Plan","url":"http://localhost:4000/trustweave/contributing/vault-kms-plugin-plan/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/beginner-tutorial-series/" class="nav-list-link">Beginner Tutorial Series</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchored-revocation/" class="nav-list-link">Blockchain-Anchored Revocation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/code-style/" class="nav-list-link">Code Style</a></li><li class="nav-list-item"><a href="/trustweave/comparison/README/" class="nav-list-link">Comparison Documentation</a></li><li class="nav-list-item"><a href="/trustweave/configuration/README/" class="nav-list-link">Configuration Reference</a></li><li class="nav-list-item"><a href="/trustweave/advanced/custom-adapters/" class="nav-list-link">Creating Custom Adapters</a></li><li class="nav-list-item"><a href="/trustweave/contributing/creating-plugins/" class="nav-list-link">Creating TrustWeave Plugins</a></li><li class="nav-list-item"><a href="/trustweave/features/credential-exchange-protocols/README/" class="nav-list-link">Credential Exchange Protocols</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/credential-issuance-tutorial/" class="nav-list-link">Credential Issuance Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/algorithm-compatibility-table/" class="nav-list-link">Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/did-operations-tutorial/" class="nav-list-link">DID Operations Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/delegation/" class="nav-list-link">Delegation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/development-setup/" class="nav-list-link">Development Setup</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/evaluation-engines/" class="nav-list-link">Evaluation Engines</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/json-canonicalization/" class="nav-list-link">JSON Canonicalization</a></li><li class="nav-list-item"><a href="/trustweave/advanced/key-rotation/" class="nav-list-link">Key Rotation Strategies</a></li><li class="nav-list-item"><a href="/trustweave/licensing/README/" class="nav-list-link">Licensing Overview</a></li><li class="nav-list-item"><a href="/trustweave/migration/README/" class="nav-list-link">Migration Guides</a></li><li class="nav-list-item"><a href="/trustweave/advanced/performance/" class="nav-list-link">Performance Considerations</a></li><li class="nav-list-item"><a href="/trustweave/advanced/plugin-lifecycle/" class="nav-list-link">Plugin Lifecycle Management</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/proof-purpose-validation/" class="nav-list-link">Proof Purpose Validation</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/credential-exchange-protocols/" class="nav-list-link">Protocol Abstraction Layer</a></li><li class="nav-list-item"><a href="/trustweave/contributing/pull-request-process/" class="nav-list-link">Pull Request Process</a></li><li class="nav-list-item"><a href="/trustweave/security/README/" class="nav-list-link">Security Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/advanced/spi/" class="nav-list-link">Service Provider Interface (SPI)</a></li><li class="nav-list-item"><a href="/trustweave/plugins/" class="nav-list-link">Supported Plugins</a></li><li class="nav-list-item"><a href="/trustweave/contributing/testing-guidelines/" class="nav-list-link">Testing Guidelines</a></li><li class="nav-list-item"><a href="/trustweave/advanced/testing-strategies/" class="nav-list-link">Testing Strategies</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/trust-registry/" class="nav-list-link">Trust Registry</a></li><li class="nav-list-item"><a href="/trustweave/GLOSSARY/" class="nav-list-link">TrustWeave Glossary</a></li><li class="nav-list-item"><a href="/trustweave/TRUSTWEAVE_WHITEPAPER/" class="nav-list-link">TrustWeave SDK: Decentralized Trust Infrastructure</a></li><li class="nav-list-item"><a href="/trustweave/scenarios/README/" class="nav-list-link">Use Case Scenarios</a></li><li class="nav-list-item"><a href="/trustweave/advanced/verification-policies/" class="nav-list-link">Verification Policies</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/wallet-api-tutorial/" class="nav-list-link">Wallet API Tutorial</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="hashicorp-vault-kms-plugin-implementation-plan">
+  
+  
+    <a href="#hashicorp-vault-kms-plugin-implementation-plan" class="anchor-heading" aria-labelledby="hashicorp-vault-kms-plugin-implementation-plan"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> HashiCorp Vault KMS Plugin Implementation Plan
+  
+  
+</h1>
+    
+<h2 id="overview">
+  
+  
+    <a href="#overview" class="anchor-heading" aria-labelledby="overview"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Overview
+  
+  
+</h2>
+    
+
+<p>This plan outlines the implementation of a HashiCorp Vault Key Management Service (KMS) plugin for TrustWeave. The plugin will be implemented as the <code class="language-plaintext highlighter-rouge">kms/plugins/hashicorp</code> module and will integrate with Vault’s Transit secrets engine to provide cryptographic key operations for DID and Verifiable Credential workflows.</p>
+<h2 id="background">
+  
+  
+    <a href="#background" class="anchor-heading" aria-labelledby="background"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Background
+  
+  
+</h2>
+    
+
+<p>HashiCorp Vault is a popular open-source secrets management platform that provides:</p>
+<ul>
+  <li><strong>Transit Engine</strong>: Cryptographic operations (encryption, signing, key generation)</li>
+  <li><strong>Key Management</strong>: Centralized key lifecycle management</li>
+  <li><strong>Multi-cloud Support</strong>: Works on-premises and in cloud environments</li>
+  <li><strong>Policy-based Access Control</strong>: Fine-grained access control via Vault policies</li>
+</ul>
+<h2 id="vault-transit-engine-capabilities">
+  
+  
+    <a href="#vault-transit-engine-capabilities" class="anchor-heading" aria-labelledby="vault-transit-engine-capabilities"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Vault Transit Engine Capabilities
+  
+  
+</h2>
+    
+
+<p>The Transit engine supports the following key types:</p>
+<ul>
+  <li><strong>ed25519</strong>: Ed25519 signing keys</li>
+  <li><strong>ecdsa-p256</strong>: ECDSA P-256 (NIST P-256)</li>
+  <li><strong>ecdsa-p384</strong>: ECDSA P-384 (NIST P-384)</li>
+  <li><strong>ecdsa-p521</strong>: ECDSA P-521 (NIST P-521)</li>
+  <li><strong>ecdsa-p256k1</strong>: ECDSA secp256k1 (Bitcoin/Ethereum curve)</li>
+  <li><strong>rsa-2048</strong>: RSA 2048-bit keys</li>
+  <li><strong>rsa-3072</strong>: RSA 3072-bit keys</li>
+  <li><strong>rsa-4096</strong>: RSA 4096-bit keys</li>
+</ul>
+
+<p><strong>Note</strong>: Vault Transit does NOT support BLS12-381.</p>
+<h2 id="implementation-tasks">
+  
+  
+    <a href="#implementation-tasks" class="anchor-heading" aria-labelledby="implementation-tasks"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Implementation Tasks
+  
+  
+</h2>
+    
+<h3 id="1-module-structure-and-dependencies">
+  
+  
+    <a href="#1-module-structure-and-dependencies" class="anchor-heading" aria-labelledby="1-module-structure-and-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Module Structure and Dependencies
+  
+  
+</h3>
+    
+
+<p><strong>Task</strong>: Create <code class="language-plaintext highlighter-rouge">kms/plugins/hashicorp</code> module with build configuration</p>
+
+<p><strong>Files</strong>:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">kms/plugins/hashicorp/build.gradle.kts</code></li>
+</ul>
+
+<p><strong>Dependencies</strong>:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">trustweave-common</code></li>
+  <li><code class="language-plaintext highlighter-rouge">trustweave-kms</code></li>
+  <li>Vault Java client library (e.g., <code class="language-plaintext highlighter-rouge">com.bettercloud:vault-java-driver</code> or direct HTTP client)</li>
+  <li>HTTP client (OkHttp or similar)</li>
+  <li>JSON serialization (Jackson or Kotlinx Serialization)</li>
+</ul>
+
+<p><strong>Acceptance Criteria</strong>:</p>
+<ul>
+  <li>Module compiles successfully</li>
+  <li>All dependencies resolved</li>
+  <li>Module included in <code class="language-plaintext highlighter-rouge">settings.gradle.kts</code></li>
+</ul><hr />
+<h3 id="2-configuration-class">
+  
+  
+    <a href="#2-configuration-class" class="anchor-heading" aria-labelledby="2-configuration-class"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Configuration Class
+  
+  
+</h3>
+    
+
+<p><strong>Task</strong>: Implement <code class="language-plaintext highlighter-rouge">VaultKmsConfig</code> data class with builder pattern</p>
+
+<p><strong>Files</strong>:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/TrustWeave/hashicorpkms/VaultKmsConfig.kt</code></li>
+</ul>
+
+<p><strong>Features</strong>:</p>
+<ul>
+  <li>Vault server address (required)</li>
+  <li>Authentication methods:
+    <ul>
+      <li>Token authentication (default)</li>
+      <li>AppRole authentication (roleId + secretId)</li>
+      <li>Environment variable support (<code class="language-plaintext highlighter-rouge">VAULT_ADDR</code>, <code class="language-plaintext highlighter-rouge">VAULT_TOKEN</code>, <code class="language-plaintext highlighter-rouge">VAULT_NAMESPACE</code>)</li>
+    </ul>
+  </li>
+  <li>Transit engine path (default: “transit”)</li>
+  <li>Namespace support (for Vault Enterprise)</li>
+  <li>Engine version (default: 2)</li>
+</ul>
+
+<p><strong>Builder Pattern</strong>:</p>
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="nc">VaultKmsConfig</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
+    <span class="p">.</span><span class="nf">address</span><span class="p">(</span><span class="s">"http://localhost:8200"</span><span class="p">)</span>
+    <span class="p">.</span><span class="nf">token</span><span class="p">(</span><span class="s">"hvs.xxx"</span><span class="p">)</span>
+    <span class="p">.</span><span class="nf">transitPath</span><span class="p">(</span><span class="s">"transit"</span><span class="p">)</span>
+    <span class="p">.</span><span class="nf">namespace</span><span class="p">(</span><span class="s">"admin"</span><span class="p">)</span>
+    <span class="p">.</span><span class="nf">build</span><span class="p">()</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Environment Variable Support</strong>:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">VAULT_ADDR</code> - Vault server address</li>
+  <li><code class="language-plaintext highlighter-rouge">VAULT_TOKEN</code> - Authentication token</li>
+  <li><code class="language-plaintext highlighter-rouge">VAULT_NAMESPACE</code> - Vault namespace (Enterprise)</li>
+  <li><code class="language-plaintext highlighter-rouge">VAULT_TRANSIT_PATH</code> - Transit engine path (optional, defaults to “transit”)</li>
+</ul>
+
+<p><strong>Acceptance Criteria</strong>:</p>
+<ul>
+  <li>Configuration can be created from builder</li>
+  <li>Configuration can be loaded from environment variables</li>
+  <li>Configuration can be created from options map</li>
+  <li>Validation ensures required fields are present</li>
+</ul><hr />
+<h3 id="3-algorithm-mapping">
+  
+  
+    <a href="#3-algorithm-mapping" class="anchor-heading" aria-labelledby="3-algorithm-mapping"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Algorithm Mapping
+  
+  
+</h3>
+    
+
+<p><strong>Task</strong>: Implement <code class="language-plaintext highlighter-rouge">AlgorithmMapping</code> utilities for TrustWeave ↔ Vault Transit mapping</p>
+
+<p><strong>Files</strong>:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/TrustWeave/hashicorpkms/AlgorithmMapping.kt</code></li>
+</ul>
+
+<p><strong>Mappings</strong>:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">Algorithm.Ed25519</code> → <code class="language-plaintext highlighter-rouge">"ed25519"</code></li>
+  <li><code class="language-plaintext highlighter-rouge">Algorithm.Secp256k1</code> → <code class="language-plaintext highlighter-rouge">"ecdsa-p256k1"</code></li>
+  <li><code class="language-plaintext highlighter-rouge">Algorithm.P256</code> → <code class="language-plaintext highlighter-rouge">"ecdsa-p256"</code></li>
+  <li><code class="language-plaintext highlighter-rouge">Algorithm.P384</code> → <code class="language-plaintext highlighter-rouge">"ecdsa-p384"</code></li>
+  <li><code class="language-plaintext highlighter-rouge">Algorithm.P521</code> → <code class="language-plaintext highlighter-rouge">"ecdsa-p521"</code></li>
+  <li><code class="language-plaintext highlighter-rouge">Algorithm.RSA.RSA_2048</code> → <code class="language-plaintext highlighter-rouge">"rsa-2048"</code></li>
+  <li><code class="language-plaintext highlighter-rouge">Algorithm.RSA.RSA_3072</code> → <code class="language-plaintext highlighter-rouge">"rsa-3072"</code></li>
+  <li><code class="language-plaintext highlighter-rouge">Algorithm.RSA.RSA_4096</code> → <code class="language-plaintext highlighter-rouge">"rsa-4096"</code></li>
+</ul>
+
+<p><strong>Functions</strong>:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">toVaultKeyType(algorithm: Algorithm): String</code> - Convert TrustWeave algorithm to Vault key type</li>
+  <li><code class="language-plaintext highlighter-rouge">fromVaultKeyType(keyType: String): Algorithm?</code> - Parse Vault key type to TrustWeave algorithm</li>
+  <li><code class="language-plaintext highlighter-rouge">resolveKeyName(keyId: String, config: VaultKmsConfig): String</code> - Resolve key name for Vault API</li>
+</ul>
+
+<p><strong>Acceptance Criteria</strong>:</p>
+<ul>
+  <li>All supported algorithms map correctly</li>
+  <li>Unsupported algorithms throw appropriate exceptions</li>
+  <li>Key name resolution handles various formats</li>
+</ul><hr />
+<h3 id="4-vault-client-factory">
+  
+  
+    <a href="#4-vault-client-factory" class="anchor-heading" aria-labelledby="4-vault-client-factory"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Vault Client Factory
+  
+  
+</h3>
+    
+
+<p><strong>Task</strong>: Implement <code class="language-plaintext highlighter-rouge">VaultKmsClientFactory</code> for creating Vault HTTP clients</p>
+
+<p><strong>Files</strong>:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/TrustWeave/hashicorpkms/VaultKmsClientFactory.kt</code></li>
+</ul>
+
+<p><strong>Features</strong>:</p>
+<ul>
+  <li>HTTP client creation with proper authentication</li>
+  <li>Token-based authentication</li>
+  <li>AppRole authentication (if configured)</li>
+  <li>Namespace header support (Vault Enterprise)</li>
+  <li>Error handling and retry logic</li>
+</ul>
+
+<p><strong>Vault API Endpoints</strong> (Transit engine):</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">POST /v1/{transitPath}/keys/{keyName}</code> - Create key</li>
+  <li><code class="language-plaintext highlighter-rouge">GET /v1/{transitPath}/keys/{keyName}</code> - Get key info</li>
+  <li><code class="language-plaintext highlighter-rouge">POST /v1/{transitPath}/keys/{keyName}/config</code> - Update key config</li>
+  <li><code class="language-plaintext highlighter-rouge">POST /v1/{transitPath}/sign/{keyName}</code> - Sign data</li>
+  <li><code class="language-plaintext highlighter-rouge">GET /v1/{transitPath}/keys/{keyName}/{version}</code> - Get public key</li>
+</ul>
+
+<p><strong>Acceptance Criteria</strong>:</p>
+<ul>
+  <li>Client created with correct authentication</li>
+  <li>Namespace headers added when configured</li>
+  <li>Proper error handling for authentication failures</li>
+</ul><hr />
+<h3 id="5-vault-key-management-service">
+  
+  
+    <a href="#5-vault-key-management-service" class="anchor-heading" aria-labelledby="5-vault-key-management-service"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5. Vault Key Management Service
+  
+  
+</h3>
+    
+
+<p><strong>Task</strong>: Implement <code class="language-plaintext highlighter-rouge">VaultKeyManagementService</code> implementing <code class="language-plaintext highlighter-rouge">KeyManagementService</code> interface</p>
+
+<p><strong>Files</strong>:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/TrustWeave/hashicorpkms/VaultKeyManagementService.kt</code></li>
+</ul>
+
+<p><strong>Supported Algorithms</strong>:</p>
+<ul>
+  <li>Ed25519</li>
+  <li>secp256k1</li>
+  <li>P-256, P-384, P-521</li>
+  <li>RSA-2048, RSA-3072, RSA-4096</li>
+</ul>
+
+<p><strong>Methods Implementation</strong>:</p>
+
+<ol>
+  <li><strong><code class="language-plaintext highlighter-rouge">getSupportedAlgorithms()</code></strong>:
+    <ul>
+      <li>Return set of supported algorithms</li>
+    </ul>
+  </li>
+  <li><strong><code class="language-plaintext highlighter-rouge">generateKey(algorithm, options)</code></strong>:
+    <ul>
+      <li>Use Vault Transit API: <code class="language-plaintext highlighter-rouge">POST /v1/{transitPath}/keys/{keyName}</code></li>
+      <li>Extract key name from options or generate UUID</li>
+      <li>Set key type based on algorithm</li>
+      <li>Retrieve public key after creation</li>
+      <li>Return <code class="language-plaintext highlighter-rouge">KeyHandle</code> with key name, algorithm, and public key JWK</li>
+    </ul>
+  </li>
+  <li><strong><code class="language-plaintext highlighter-rouge">getPublicKey(keyId)</code></strong>:
+    <ul>
+      <li>Use Vault Transit API: <code class="language-plaintext highlighter-rouge">GET /v1/{transitPath}/keys/{keyName}</code></li>
+      <li>Extract public key from response</li>
+      <li>Convert to JWK format</li>
+      <li>Return <code class="language-plaintext highlighter-rouge">KeyHandle</code></li>
+    </ul>
+  </li>
+  <li><strong><code class="language-plaintext highlighter-rouge">sign(keyId, data, algorithm)</code></strong>:
+    <ul>
+      <li>Use Vault Transit API: <code class="language-plaintext highlighter-rouge">POST /v1/{transitPath}/sign/{keyName}</code></li>
+      <li>Base64 encode input data</li>
+      <li>Specify hash algorithm (SHA-256, SHA-384, SHA-512 based on key type)</li>
+      <li>Return signature bytes</li>
+    </ul>
+  </li>
+  <li><strong><code class="language-plaintext highlighter-rouge">deleteKey(keyId)</code></strong>:
+    <ul>
+      <li>Use Vault Transit API: <code class="language-plaintext highlighter-rouge">DELETE /v1/{transitPath}/keys/{keyName}</code></li>
+      <li>Return true if successful, false if key doesn’t exist</li>
+    </ul>
+  </li>
+</ol>
+
+<p><strong>Key Naming</strong>:</p>
+<ul>
+  <li>Keys are identified by name in Vault Transit</li>
+  <li>Format: <code class="language-plaintext highlighter-rouge">{transitPath}/keys/{keyName}</code></li>
+  <li>Key names should be URL-safe</li>
+</ul>
+
+<p><strong>Public Key Format</strong>:</p>
+<ul>
+  <li>Vault Transit returns public keys in PEM format</li>
+  <li>Convert PEM to JWK for <code class="language-plaintext highlighter-rouge">KeyHandle.publicKeyJwk</code></li>
+</ul>
+
+<p><strong>Error Handling</strong>:</p>
+<ul>
+  <li>Map Vault API errors to TrustWeave exceptions</li>
+  <li><code class="language-plaintext highlighter-rouge">404</code> → <code class="language-plaintext highlighter-rouge">KeyNotFoundException</code></li>
+  <li><code class="language-plaintext highlighter-rouge">403</code> → <code class="language-plaintext highlighter-rouge">TrustWeaveException</code> with access denied message</li>
+  <li><code class="language-plaintext highlighter-rouge">400</code> → <code class="language-plaintext highlighter-rouge">UnsupportedAlgorithmException</code> or <code class="language-plaintext highlighter-rouge">TrustWeaveException</code></li>
+</ul>
+
+<p><strong>Acceptance Criteria</strong>:</p>
+<ul>
+  <li>All <code class="language-plaintext highlighter-rouge">KeyManagementService</code> methods implemented</li>
+  <li>Proper error handling and exception mapping</li>
+  <li>Public keys converted to JWK format</li>
+  <li>Algorithm advertisement working correctly</li>
+</ul><hr />
+<h3 id="6-vault-key-management-service-provider">
+  
+  
+    <a href="#6-vault-key-management-service-provider" class="anchor-heading" aria-labelledby="6-vault-key-management-service-provider"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6. Vault Key Management Service Provider
+  
+  
+</h3>
+    
+
+<p><strong>Task</strong>: Implement <code class="language-plaintext highlighter-rouge">VaultKeyManagementServiceProvider</code> for SPI registration</p>
+
+<p><strong>Files</strong>:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/TrustWeave/hashicorpkms/VaultKeyManagementServiceProvider.kt</code></li>
+</ul>
+
+<p><strong>Features</strong>:</p>
+<ul>
+  <li>Provider name: <code class="language-plaintext highlighter-rouge">"vault"</code> or <code class="language-plaintext highlighter-rouge">"hashicorp-vault"</code></li>
+  <li>Advertise supported algorithms</li>
+  <li>Create <code class="language-plaintext highlighter-rouge">VaultKeyManagementService</code> from options</li>
+  <li>Support configuration from options map or environment variables</li>
+</ul>
+
+<p><strong>Acceptance Criteria</strong>:</p>
+<ul>
+  <li>Provider discoverable via ServiceLoader</li>
+  <li>Configuration loaded correctly</li>
+  <li>Service created successfully</li>
+</ul><hr />
+<h3 id="7-spi-registration">
+  
+  
+    <a href="#7-spi-registration" class="anchor-heading" aria-labelledby="7-spi-registration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7. SPI Registration
+  
+  
+</h3>
+    
+
+<p><strong>Task</strong>: Create SPI registration file</p>
+
+<p><strong>Files</strong>:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">kms/plugins/hashicorp/src/main/resources/META-INF/services/com.trustweave.kms.spi.KeyManagementServiceProvider</code></li>
+</ul>
+
+<p><strong>Content</strong>:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre>com.trustweave.hashicorpkms.VaultKeyManagementServiceProvider
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Acceptance Criteria</strong>:</p>
+<ul>
+  <li>Provider automatically discovered when module is on classpath</li>
+</ul><hr />
+<h3 id="8-unit-tests">
+  
+  
+    <a href="#8-unit-tests" class="anchor-heading" aria-labelledby="8-unit-tests"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8. Unit Tests
+  
+  
+</h3>
+    
+
+<p><strong>Task</strong>: Create comprehensive unit tests</p>
+
+<p><strong>Files</strong>:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">kms/plugins/hashicorp/src/test/kotlin/com/geoknoesis/TrustWeave/hashicorpkms/VaultKmsConfigTest.kt</code></li>
+  <li><code class="language-plaintext highlighter-rouge">kms/plugins/hashicorp/src/test/kotlin/com/geoknoesis/TrustWeave/hashicorpkms/AlgorithmMappingTest.kt</code></li>
+  <li><code class="language-plaintext highlighter-rouge">kms/plugins/hashicorp/src/test/kotlin/com/geoknoesis/TrustWeave/hashicorpkms/VaultKeyManagementServiceTest.kt</code></li>
+  <li><code class="language-plaintext highlighter-rouge">kms/plugins/hashicorp/src/test/kotlin/com/geoknoesis/TrustWeave/hashicorpkms/VaultKeyManagementServiceProviderTest.kt</code></li>
+</ul>
+
+<p><strong>Test Coverage</strong>:</p>
+<ul>
+  <li>Configuration creation and validation</li>
+  <li>Algorithm mapping (all supported algorithms)</li>
+  <li>Key generation for each algorithm</li>
+  <li>Public key retrieval</li>
+  <li>Signing operations</li>
+  <li>Error handling (key not found, authentication failures)</li>
+  <li>Provider discovery and creation</li>
+</ul>
+
+<p><strong>Mocking Strategy</strong>:</p>
+<ul>
+  <li>Mock Vault HTTP client responses</li>
+  <li>Use testcontainers or local Vault instance for integration tests (optional)</li>
+</ul>
+
+<p><strong>Acceptance Criteria</strong>:</p>
+<ul>
+  <li>All tests pass</li>
+  <li>Good test coverage (&gt;80%)</li>
+  <li>Tests run without requiring actual Vault instance</li>
+</ul><hr />
+<h3 id="9-integration-with-build-system">
+  
+  
+    <a href="#9-integration-with-build-system" class="anchor-heading" aria-labelledby="9-integration-with-build-system"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9. Integration with Build System
+  
+  
+</h3>
+    
+
+<p><strong>Task</strong>: Update root settings to include new module</p>
+
+<p><strong>Files</strong>:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">settings.gradle.kts</code></li>
+</ul>
+
+<p><strong>Changes</strong>:</p>
+<ul>
+  <li>Add <code class="language-plaintext highlighter-rouge">"kms/plugins/hashicorp"</code> to <code class="language-plaintext highlighter-rouge">include()</code> list</li>
+</ul>
+
+<p><strong>Acceptance Criteria</strong>:</p>
+<ul>
+  <li>Module included in build</li>
+  <li>Module compiles successfully</li>
+</ul><hr />
+<h3 id="10-documentation">
+  
+  
+    <a href="#10-documentation" class="anchor-heading" aria-labelledby="10-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10. Documentation
+  
+  
+</h3>
+    
+
+<p><strong>Task</strong>: Create comprehensive documentation</p>
+
+<p><strong>Files</strong>:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">docs/integrations/hashicorp-vault-kms.md</code></li>
+</ul>
+
+<p><strong>Sections</strong>:</p>
+<ol>
+  <li>Overview</li>
+  <li>Installation</li>
+  <li>Configuration
+    <ul>
+      <li>Basic configuration</li>
+      <li>Authentication methods (Token, AppRole)</li>
+      <li>Environment variables</li>
+      <li>Namespace support (Enterprise)</li>
+    </ul>
+  </li>
+  <li>Algorithm Support
+    <ul>
+      <li>Supported algorithms table</li>
+      <li>Vault Transit key types</li>
+    </ul>
+  </li>
+  <li>Usage Examples
+    <ul>
+      <li>Key generation</li>
+      <li>Signing</li>
+      <li>Public key retrieval</li>
+      <li>Key rotation</li>
+    </ul>
+  </li>
+  <li>Vault Setup
+    <ul>
+      <li>Enabling Transit engine</li>
+      <li>Creating policies</li>
+      <li>Key naming conventions</li>
+    </ul>
+  </li>
+  <li>Error Handling</li>
+  <li>Best Practices</li>
+  <li>Troubleshooting</li>
+</ol>
+
+<p><strong>Update</strong>:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">docs/integrations/README.md</code> - Add Vault KMS to integrations list</li>
+</ul>
+
+<p><strong>Acceptance Criteria</strong>:</p>
+<ul>
+  <li>Complete documentation with examples</li>
+  <li>Clear configuration instructions</li>
+  <li>Troubleshooting guide included</li>
+</ul><hr />
+<h2 id="vault-transit-engine-api-reference">
+  
+  
+    <a href="#vault-transit-engine-api-reference" class="anchor-heading" aria-labelledby="vault-transit-engine-api-reference"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Vault Transit Engine API Reference
+  
+  
+</h2>
+    
+<h3 id="key-creation">
+  
+  
+    <a href="#key-creation" class="anchor-heading" aria-labelledby="key-creation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Creation
+  
+  
+</h3>
+    
+<div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="rouge-code"><pre><span class="err">POST /v1/transit/keys/{keyName}
+{
+  "type": "ed25519",
+  "convergent_encryption": false,
+  "derived": false,
+  "exportable": false,
+  "allow_plaintext_backup": false
+}
+</span></pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="get-key-info">
+  
+  
+    <a href="#get-key-info" class="anchor-heading" aria-labelledby="get-key-info"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Get Key Info
+  
+  
+</h3>
+    
+<div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="err">GET /v1/transit/keys/{keyName}
+</span></pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p>Response includes:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">keys</code>: Map of key versions</li>
+  <li><code class="language-plaintext highlighter-rouge">latest_version</code>: Latest key version</li>
+  <li><code class="language-plaintext highlighter-rouge">type</code>: Key type</li>
+  <li><code class="language-plaintext highlighter-rouge">public_key</code>: Public key in PEM format</li>
+</ul>
+<h3 id="sign-data">
+  
+  
+    <a href="#sign-data" class="anchor-heading" aria-labelledby="sign-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Sign Data
+  
+  
+</h3>
+    
+<div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="err">POST /v1/transit/sign/{keyName}
+{
+  "input": "base64-encoded-data",
+  "hash_algorithm": "sha2-256",
+  "marshaling_algorithm": "asn1"
+}
+</span></pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="get-public-key">
+  
+  
+    <a href="#get-public-key" class="anchor-heading" aria-labelledby="get-public-key"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Get Public Key
+  
+  
+</h3>
+    
+<div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="err">GET /v1/transit/keys/{keyName}/{version}
+</span></pre></td></tr></tbody></table></div></code></pre></div></div><hr />
+<h2 id="algorithm-support-matrix">
+  
+  
+    <a href="#algorithm-support-matrix" class="anchor-heading" aria-labelledby="algorithm-support-matrix"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Algorithm Support Matrix
+  
+  
+</h2>
+    
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>TrustWeave Algorithm</th>
+      <th>Vault Transit Key Type</th>
+      <th>Hash Algorithm</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Ed25519</td>
+      <td><code class="language-plaintext highlighter-rouge">ed25519</code></td>
+      <td>N/A (direct signing)</td>
+      <td>Native Ed25519 support</td>
+    </tr>
+    <tr>
+      <td>secp256k1</td>
+      <td><code class="language-plaintext highlighter-rouge">ecdsa-p256k1</code></td>
+      <td><code class="language-plaintext highlighter-rouge">sha2-256</code></td>
+      <td>Blockchain-compatible</td>
+    </tr>
+    <tr>
+      <td>P-256</td>
+      <td><code class="language-plaintext highlighter-rouge">ecdsa-p256</code></td>
+      <td><code class="language-plaintext highlighter-rouge">sha2-256</code></td>
+      <td>FIPS-compliant</td>
+    </tr>
+    <tr>
+      <td>P-384</td>
+      <td><code class="language-plaintext highlighter-rouge">ecdsa-p384</code></td>
+      <td><code class="language-plaintext highlighter-rouge">sha2-384</code></td>
+      <td>FIPS-compliant</td>
+    </tr>
+    <tr>
+      <td>P-521</td>
+      <td><code class="language-plaintext highlighter-rouge">ecdsa-p521</code></td>
+      <td><code class="language-plaintext highlighter-rouge">sha2-512</code></td>
+      <td>FIPS-compliant</td>
+    </tr>
+    <tr>
+      <td>RSA-2048</td>
+      <td><code class="language-plaintext highlighter-rouge">rsa-2048</code></td>
+      <td><code class="language-plaintext highlighter-rouge">sha2-256</code></td>
+      <td>Legacy support</td>
+    </tr>
+    <tr>
+      <td>RSA-3072</td>
+      <td><code class="language-plaintext highlighter-rouge">rsa-3072</code></td>
+      <td><code class="language-plaintext highlighter-rouge">sha2-256</code></td>
+      <td>Higher security</td>
+    </tr>
+    <tr>
+      <td>RSA-4096</td>
+      <td><code class="language-plaintext highlighter-rouge">rsa-4096</code></td>
+      <td><code class="language-plaintext highlighter-rouge">sha2-256</code></td>
+      <td>Maximum security</td>
+    </tr>
+  </tbody>
+</table></div><hr />
+<h2 id="authentication-methods">
+  
+  
+    <a href="#authentication-methods" class="anchor-heading" aria-labelledby="authentication-methods"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Authentication Methods
+  
+  
+</h2>
+    
+<h3 id="1-token-authentication-default">
+  
+  
+    <a href="#1-token-authentication-default" class="anchor-heading" aria-labelledby="1-token-authentication-default"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Token Authentication (Default)
+  
+  
+</h3>
+    
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">VaultKmsConfig</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
+    <span class="p">.</span><span class="nf">address</span><span class="p">(</span><span class="s">"http://localhost:8200"</span><span class="p">)</span>
+    <span class="p">.</span><span class="nf">token</span><span class="p">(</span><span class="s">"hvs.xxx"</span><span class="p">)</span>
+    <span class="p">.</span><span class="nf">build</span><span class="p">()</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="2-approle-authentication">
+  
+  
+    <a href="#2-approle-authentication" class="anchor-heading" aria-labelledby="2-approle-authentication"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. AppRole Authentication
+  
+  
+</h3>
+    
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">VaultKmsConfig</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
+    <span class="p">.</span><span class="nf">address</span><span class="p">(</span><span class="s">"http://localhost:8200"</span><span class="p">)</span>
+    <span class="p">.</span><span class="nf">appRolePath</span><span class="p">(</span><span class="s">"approle"</span><span class="p">)</span>
+    <span class="p">.</span><span class="nf">roleId</span><span class="p">(</span><span class="s">"xxx"</span><span class="p">)</span>
+    <span class="p">.</span><span class="nf">secretId</span><span class="p">(</span><span class="s">"yyy"</span><span class="p">)</span>
+    <span class="p">.</span><span class="nf">build</span><span class="p">()</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="3-environment-variables">
+  
+  
+    <a href="#3-environment-variables" class="anchor-heading" aria-labelledby="3-environment-variables"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Environment Variables
+  
+  
+</h3>
+    
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre><span class="nb">export </span><span class="nv">VAULT_ADDR</span><span class="o">=</span>http://localhost:8200
+<span class="nb">export </span><span class="nv">VAULT_TOKEN</span><span class="o">=</span>hvs.xxx
+<span class="nb">export </span><span class="nv">VAULT_NAMESPACE</span><span class="o">=</span>admin
+</pre></td></tr></tbody></table></div></code></pre></div></div><hr />
+<h2 id="key-naming-conventions">
+  
+  
+    <a href="#key-naming-conventions" class="anchor-heading" aria-labelledby="key-naming-conventions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Naming Conventions
+  
+  
+</h2>
+    
+
+<p>Vault Transit uses key names (not IDs) to identify keys. Recommendations:</p>
+<ul>
+  <li>Use descriptive names: <code class="language-plaintext highlighter-rouge">did-issuer-key</code>, <code class="language-plaintext highlighter-rouge">vc-signing-key</code></li>
+  <li>Include algorithm in name: <code class="language-plaintext highlighter-rouge">ed25519-main-key</code></li>
+  <li>Use hierarchical naming: <code class="language-plaintext highlighter-rouge">production/issuer/ed25519-key</code></li>
+  <li>Avoid special characters (use hyphens, underscores)</li>
+</ul><hr />
+<h2 id="vault-policy-example">
+  
+  
+    <a href="#vault-policy-example" class="anchor-heading" aria-labelledby="vault-policy-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Vault Policy Example
+  
+  
+</h2>
+    
+
+<div class="language-hcl highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td><td class="rouge-code"><pre><span class="c1"># Policy for TrustWeave KMS operations</span>
+<span class="nx">path</span> <span class="s2">"transit/keys/*"</span> <span class="p">{</span>
+  <span class="nx">capabilities</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"create"</span><span class="p">,</span> <span class="s2">"read"</span><span class="p">,</span> <span class="s2">"update"</span><span class="p">,</span> <span class="s2">"delete"</span><span class="p">]</span>
+<span class="p">}</span>
+
+<span class="nx">path</span> <span class="s2">"transit/keys/+/config"</span> <span class="p">{</span>
+  <span class="nx">capabilities</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"update"</span><span class="p">]</span>
+<span class="p">}</span>
+
+<span class="nx">path</span> <span class="s2">"transit/sign/*"</span> <span class="p">{</span>
+  <span class="nx">capabilities</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"create"</span><span class="p">,</span> <span class="s2">"update"</span><span class="p">]</span>
+<span class="p">}</span>
+
+<span class="nx">path</span> <span class="s2">"transit/keys/+/+"</span> <span class="p">{</span>
+  <span class="nx">capabilities</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"read"</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div><hr />
+<h2 id="testing-strategy">
+  
+  
+    <a href="#testing-strategy" class="anchor-heading" aria-labelledby="testing-strategy"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Testing Strategy
+  
+  
+</h2>
+    
+<h3 id="unit-tests">
+  
+  
+    <a href="#unit-tests" class="anchor-heading" aria-labelledby="unit-tests"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Unit Tests
+  
+  
+</h3>
+    
+<ul>
+  <li>Mock Vault HTTP responses</li>
+  <li>Test algorithm mappings</li>
+  <li>Test configuration parsing</li>
+  <li>Test error handling</li>
+</ul>
+<h3 id="integration-tests-optional">
+  
+  
+    <a href="#integration-tests-optional" class="anchor-heading" aria-labelledby="integration-tests-optional"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Integration Tests (Optional)
+  
+  
+</h3>
+    
+<ul>
+  <li>Use Testcontainers with Vault container</li>
+  <li>Test against real Vault instance</li>
+  <li>Verify end-to-end key operations</li>
+</ul><hr />
+<h2 id="dependencies">
+  
+  
+    <a href="#dependencies" class="anchor-heading" aria-labelledby="dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Dependencies
+  
+  
+</h2>
+    
+<h3 id="required">
+  
+  
+    <a href="#required" class="anchor-heading" aria-labelledby="required"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Required
+  
+  
+</h3>
+    
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">trustweave-common</code></li>
+  <li><code class="language-plaintext highlighter-rouge">trustweave-kms</code></li>
+  <li>HTTP client (OkHttp or similar)</li>
+  <li>JSON library (Jackson or Kotlinx Serialization)</li>
+</ul>
+<h3 id="optional">
+  
+  
+    <a href="#optional" class="anchor-heading" aria-labelledby="optional"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Optional
+  
+  
+</h3>
+    
+<ul>
+  <li>Vault Java client library (if using existing client)</li>
+  <li>Testcontainers (for integration tests)</li>
+</ul><hr />
+<h2 id="implementation-order">
+  
+  
+    <a href="#implementation-order" class="anchor-heading" aria-labelledby="implementation-order"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Implementation Order
+  
+  
+</h2>
+    
+
+<ol>
+  <li>Module structure and dependencies</li>
+  <li>Configuration class</li>
+  <li>Algorithm mapping</li>
+  <li>Vault client factory</li>
+  <li>Key management service (core implementation)</li>
+  <li>Service provider</li>
+  <li>SPI registration</li>
+  <li>Unit tests</li>
+  <li>Build system integration</li>
+  <li>Documentation</li>
+</ol><hr />
+<h2 id="success-criteria">
+  
+  
+    <a href="#success-criteria" class="anchor-heading" aria-labelledby="success-criteria"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Success Criteria
+  
+  
+</h2>
+    
+
+<ul>
+  <li>✅ All TrustWeave algorithms supported (except BLS12-381)</li>
+  <li>✅ Token and AppRole authentication working</li>
+  <li>✅ Environment variable configuration supported</li>
+  <li>✅ Proper error handling and exception mapping</li>
+  <li>✅ Public keys converted to JWK format</li>
+  <li>✅ Comprehensive test coverage</li>
+  <li>✅ Complete documentation</li>
+  <li>✅ Module compiles and integrates successfully</li>
+</ul><hr />
+<h2 id="future-enhancements">
+  
+  
+    <a href="#future-enhancements" class="anchor-heading" aria-labelledby="future-enhancements"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Future Enhancements
+  
+  
+</h2>
+    
+
+<ul>
+  <li>Key rotation support using Vault’s key versioning</li>
+  <li>Key export support (if exportable keys enabled)</li>
+  <li>Convergent encryption support</li>
+  <li>Integration with Vault’s PKI engine</li>
+  <li>Support for Vault’s KMIP secrets engine</li>
+</ul><hr />
+<h2 id="references">
+  
+  
+    <a href="#references" class="anchor-heading" aria-labelledby="references"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> References
+  
+  
+</h2>
+    
+
+<ul>
+  <li><a href="https://developer.hashicorp.com/vault/docs/secrets/transit">HashiCorp Vault Transit Engine Documentation</a></li>
+  <li><a href="https://developer.hashicorp.com/vault/api-docs">Vault API Reference</a></li>
+  <li><a href="https://github.com/hashicorp/vault-java-driver">Vault Java Client Libraries</a></li>
+</ul>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

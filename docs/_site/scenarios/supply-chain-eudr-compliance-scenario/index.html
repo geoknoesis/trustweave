@@ -1,0 +1,1290 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+    .site-nav ul li a {
+      background-image: none;
+    }
+
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Supply Chain &amp; Regulatory Compliance (EUDR) with Earth Observation | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Supply Chain &amp; Regulatory Compliance (EUDR) with Earth Observation" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://localhost:4000/trustweave/scenarios/supply-chain-eudr-compliance-scenario/" />
+<meta property="og:url" content="http://localhost:4000/trustweave/scenarios/supply-chain-eudr-compliance-scenario/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Supply Chain &amp; Regulatory Compliance (EUDR) with Earth Observation" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"Supply Chain &amp; Regulatory Compliance (EUDR) with Earth Observation","url":"http://localhost:4000/trustweave/scenarios/supply-chain-eudr-compliance-scenario/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/beginner-tutorial-series/" class="nav-list-link">Beginner Tutorial Series</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchored-revocation/" class="nav-list-link">Blockchain-Anchored Revocation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/code-style/" class="nav-list-link">Code Style</a></li><li class="nav-list-item"><a href="/trustweave/comparison/README/" class="nav-list-link">Comparison Documentation</a></li><li class="nav-list-item"><a href="/trustweave/configuration/README/" class="nav-list-link">Configuration Reference</a></li><li class="nav-list-item"><a href="/trustweave/advanced/custom-adapters/" class="nav-list-link">Creating Custom Adapters</a></li><li class="nav-list-item"><a href="/trustweave/contributing/creating-plugins/" class="nav-list-link">Creating TrustWeave Plugins</a></li><li class="nav-list-item"><a href="/trustweave/features/credential-exchange-protocols/README/" class="nav-list-link">Credential Exchange Protocols</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/credential-issuance-tutorial/" class="nav-list-link">Credential Issuance Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/algorithm-compatibility-table/" class="nav-list-link">Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/did-operations-tutorial/" class="nav-list-link">DID Operations Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/delegation/" class="nav-list-link">Delegation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/development-setup/" class="nav-list-link">Development Setup</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/evaluation-engines/" class="nav-list-link">Evaluation Engines</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/json-canonicalization/" class="nav-list-link">JSON Canonicalization</a></li><li class="nav-list-item"><a href="/trustweave/advanced/key-rotation/" class="nav-list-link">Key Rotation Strategies</a></li><li class="nav-list-item"><a href="/trustweave/licensing/README/" class="nav-list-link">Licensing Overview</a></li><li class="nav-list-item"><a href="/trustweave/migration/README/" class="nav-list-link">Migration Guides</a></li><li class="nav-list-item"><a href="/trustweave/advanced/performance/" class="nav-list-link">Performance Considerations</a></li><li class="nav-list-item"><a href="/trustweave/advanced/plugin-lifecycle/" class="nav-list-link">Plugin Lifecycle Management</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/proof-purpose-validation/" class="nav-list-link">Proof Purpose Validation</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/credential-exchange-protocols/" class="nav-list-link">Protocol Abstraction Layer</a></li><li class="nav-list-item"><a href="/trustweave/contributing/pull-request-process/" class="nav-list-link">Pull Request Process</a></li><li class="nav-list-item"><a href="/trustweave/security/README/" class="nav-list-link">Security Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/advanced/spi/" class="nav-list-link">Service Provider Interface (SPI)</a></li><li class="nav-list-item"><a href="/trustweave/plugins/" class="nav-list-link">Supported Plugins</a></li><li class="nav-list-item"><a href="/trustweave/contributing/testing-guidelines/" class="nav-list-link">Testing Guidelines</a></li><li class="nav-list-item"><a href="/trustweave/advanced/testing-strategies/" class="nav-list-link">Testing Strategies</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/trust-registry/" class="nav-list-link">Trust Registry</a></li><li class="nav-list-item"><a href="/trustweave/GLOSSARY/" class="nav-list-link">TrustWeave Glossary</a></li><li class="nav-list-item"><a href="/trustweave/TRUSTWEAVE_WHITEPAPER/" class="nav-list-link">TrustWeave SDK: Decentralized Trust Infrastructure</a></li><li class="nav-list-item"><a href="/trustweave/scenarios/README/" class="nav-list-link">Use Case Scenarios</a></li><li class="nav-list-item"><a href="/trustweave/advanced/verification-policies/" class="nav-list-link">Verification Policies</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/wallet-api-tutorial/" class="nav-list-link">Wallet API Tutorial</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="supply-chain--regulatory-compliance-eudr-with-earth-observation">
+  
+  
+    <a href="#supply-chain--regulatory-compliance-eudr-with-earth-observation" class="anchor-heading" aria-labelledby="supply-chain--regulatory-compliance-eudr-with-earth-observation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Supply Chain &amp; Regulatory Compliance (EUDR) with Earth Observation
+  
+  
+</h1>
+    
+
+<p>This guide demonstrates how to build a supply chain compliance system for the EU Deforestation Regulation (EUDR) using TrustWeave and Earth Observation data. You’ll learn how to create verifiable credentials that prove geospatial non-deforestation for every shipment.</p>
+<h2 id="what-youll-build">
+  
+  
+    <a href="#what-youll-build" class="anchor-heading" aria-labelledby="what-youll-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Build
+  
+  
+</h2>
+    
+
+<p>By the end of this tutorial, you’ll have:</p>
+
+<ul>
+  <li>✅ Created DIDs for importers, exporters, and verifiers</li>
+  <li>✅ Issued verifiable credentials for geospatial non-deforestation proof</li>
+  <li>✅ Built Digital Product Passport (DPP) using VCs</li>
+  <li>✅ Implemented automated compliance verification</li>
+  <li>✅ Created EO data evidence for deforestation monitoring</li>
+  <li>✅ Anchored compliance credentials to blockchain for audit trails</li>
+</ul>
+<h2 id="big-picture--significance">
+  
+  
+    <a href="#big-picture--significance" class="anchor-heading" aria-labelledby="big-picture--significance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Big Picture &amp; Significance
+  
+  
+</h2>
+    
+<h3 id="the-eu-deforestation-regulation-eudr">
+  
+  
+    <a href="#the-eu-deforestation-regulation-eudr" class="anchor-heading" aria-labelledby="the-eu-deforestation-regulation-eudr"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The EU Deforestation Regulation (EUDR)
+  
+  
+</h3>
+    
+
+<p>By 2025, importers must prove geospatial non-deforestation for every shipment. Current systems rely on self-declared PDFs, creating a trust gap. Verifiable Credentials provide cryptographic proof of compliance.</p>
+
+<p><strong>Industry Context:</strong></p>
+<ul>
+  <li><strong>Regulatory Requirement</strong>: EUDR mandatory by 2025</li>
+  <li><strong>Scope</strong>: All imports of commodities (coffee, cocoa, palm oil, etc.)</li>
+  <li><strong>Current Gap</strong>: Self-declared PDFs are not verifiable</li>
+  <li><strong>Solution</strong>: W3C Verifiable Credentials to model farm identity and compliance status</li>
+  <li><strong>EO Data</strong>: Earth Observation data provides verifiable evidence of non-deforestation</li>
+</ul>
+
+<p><strong>Why This Matters:</strong></p>
+<ol>
+  <li><strong>Regulatory Compliance</strong>: Meet EUDR requirements with verifiable proof</li>
+  <li><strong>Geospatial Proof</strong>: EO data provides verifiable evidence of non-deforestation</li>
+  <li><strong>Digital Product Passport</strong>: VCs are leading candidate for DPP implementation</li>
+  <li><strong>Trust</strong>: Cryptographic proof prevents fraud and false declarations</li>
+  <li><strong>Automation</strong>: Enable automated compliance verification</li>
+  <li><strong>Audit Trails</strong>: Complete compliance history for regulators</li>
+</ol>
+<h3 id="real-world-examples">
+  
+  
+    <a href="#real-world-examples" class="anchor-heading" aria-labelledby="real-world-examples"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Examples
+  
+  
+</h3>
+    
+
+<p><strong>EU Deforestation Regulation (EUDR)</strong>:</p>
+<ul>
+  <li>Requirement: By 2025, importers must prove geospatial non-deforestation</li>
+  <li>Current Gap: Self-declared PDFs</li>
+  <li>Solution: AgrospAI and similar Agri-food data spaces testing W3C Verifiable Credentials</li>
+</ul>
+
+<p><strong>Climate TRACE</strong>:</p>
+<ul>
+  <li>Independent tracking of GHG emissions using satellites and AI</li>
+  <li>Acts as “Global Verifier”</li>
+  <li>Emitter could issue VC claiming “Low Emissions”</li>
+  <li>Verifier checks against Climate TRACE data to validate/refute automatically</li>
+</ul>
+<h2 id="value-proposition">
+  
+  
+    <a href="#value-proposition" class="anchor-heading" aria-labelledby="value-proposition"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Value Proposition
+  
+  
+</h2>
+    
+<h3 id="problems-solved">
+  
+  
+    <a href="#problems-solved" class="anchor-heading" aria-labelledby="problems-solved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Problems Solved
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>Regulatory Compliance</strong>: Meet EUDR requirements with verifiable proof</li>
+  <li><strong>Geospatial Proof</strong>: EO data provides verifiable evidence</li>
+  <li><strong>Digital Product Passport</strong>: Standard format for DPP implementation</li>
+  <li><strong>Automated Verification</strong>: Enable automated compliance checks</li>
+  <li><strong>Fraud Prevention</strong>: Cryptographic proof prevents false declarations</li>
+  <li><strong>Audit Trails</strong>: Complete compliance history</li>
+  <li><strong>Trust</strong>: Build trust through verifiable credentials</li>
+</ol>
+<h3 id="business-benefits">
+  
+  
+    <a href="#business-benefits" class="anchor-heading" aria-labelledby="business-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Business Benefits
+  
+  
+</h3>
+    
+
+<p><strong>For Importers:</strong></p>
+<ul>
+  <li><strong>Compliance</strong>: Meet EUDR requirements automatically</li>
+  <li><strong>Risk Reduction</strong>: Reduce risk of non-compliance penalties</li>
+  <li><strong>Efficiency</strong>: Automated verification reduces costs</li>
+  <li><strong>Trust</strong>: Build trust with regulators and consumers</li>
+</ul>
+
+<p><strong>For Exporters:</strong></p>
+<ul>
+  <li><strong>Market Access</strong>: Access EU market with verifiable compliance</li>
+  <li><strong>Differentiation</strong>: Stand out with verifiable credentials</li>
+  <li><strong>Efficiency</strong>: Reduce compliance documentation costs</li>
+  <li><strong>Trust</strong>: Build trust with importers</li>
+</ul>
+
+<p><strong>For Regulators:</strong></p>
+<ul>
+  <li><strong>Verification</strong>: Automated compliance verification</li>
+  <li><strong>Audit Trails</strong>: Complete compliance history</li>
+  <li><strong>Transparency</strong>: Verifiable data lineage</li>
+  <li><strong>Efficiency</strong>: Reduce manual verification costs</li>
+</ul>
+<h2 id="understanding-the-problem">
+  
+  
+    <a href="#understanding-the-problem" class="anchor-heading" aria-labelledby="understanding-the-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Understanding the Problem
+  
+  
+</h2>
+    
+
+<p>EUDR compliance needs:</p>
+
+<ol>
+  <li><strong>Geospatial Proof</strong>: Prove non-deforestation for specific locations</li>
+  <li><strong>Digital Product Passport</strong>: Standard format for product information</li>
+  <li><strong>Automated Verification</strong>: Enable automated compliance checks</li>
+  <li><strong>Audit Trails</strong>: Complete compliance history</li>
+  <li><strong>EO Data Evidence</strong>: Use Earth Observation data as proof</li>
+  <li><strong>Trust</strong>: Cryptographic proof prevents fraud</li>
+</ol>
+<h2 id="prerequisites">
+  
+  
+    <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
+  
+  
+</h2>
+    
+
+<ul>
+  <li>Java 21+</li>
+  <li>Kotlin 2.2.0+</li>
+  <li>Gradle 8.5+</li>
+  <li>Basic understanding of Kotlin and coroutines</li>
+  <li>Understanding of EUDR requirements</li>
+</ul>
+<h2 id="step-1-add-dependencies">
+  
+  
+    <a href="#step-1-add-dependencies" class="anchor-heading" aria-labelledby="step-1-add-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Add Dependencies
+  
+  
+</h2>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
+    <span class="c1">// Core TrustWeave modules</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-all:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    
+    <span class="c1">// Test kit for in-memory implementations</span>
+    <span class="nf">testImplementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    
+    <span class="c1">// Optional: Algorand adapter for real blockchain anchoring</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.chains:algorand:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    
+    <span class="c1">// Kotlinx Serialization</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
+    
+    <span class="c1">// Coroutines</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-2-complete-runnable-example">
+  
+  
+    <a href="#step-2-complete-runnable-example" class="anchor-heading" aria-labelledby="step-2-complete-runnable-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Complete Runnable Example
+  
+  
+</h2>
+    
+
+<p>Here’s a complete EUDR compliance workflow:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+</pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.example.eudr.compliance</span>
+
+<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
+<span class="k">import</span> <span class="nn">com.trustweave.json.DigestUtils</span>
+<span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.*</span>
+<span class="k">import</span> <span class="nn">java.time.Instant</span>
+
+<span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"EUDR Compliance with EO Data - Complete Example"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+    
+    <span class="c1">// Step 1: Create TrustWeave instance</span>
+    <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ TrustWeave initialized"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 2: Create DIDs for exporter, importer, and verifier</span>
+    <span class="kd">val</span> <span class="py">exporterDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+    <span class="nc">Result</span><span class="p">.</span><span class="nf">success</span><span class="p">(</span><span class="n">exporterDid</span><span class="p">).</span><span class="nf">fold</span><span class="p">(</span>
+        <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">it</span> <span class="p">},</span>
+        <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Failed to create exporter DID: ${error.message}"</span><span class="p">)</span>
+            <span class="k">return</span><span class="nd">@runBlocking</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">importerDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+    <span class="nc">Result</span><span class="p">.</span><span class="nf">success</span><span class="p">(</span><span class="n">importerDid</span><span class="p">).</span><span class="nf">fold</span><span class="p">(</span>
+        <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">it</span> <span class="p">},</span>
+        <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Failed to create importer DID: ${error.message}"</span><span class="p">)</span>
+            <span class="k">return</span><span class="nd">@runBlocking</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">verifierDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+    <span class="nc">Result</span><span class="p">.</span><span class="nf">success</span><span class="p">(</span><span class="n">verifierDid</span><span class="p">).</span><span class="nf">fold</span><span class="p">(</span>
+        <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">it</span> <span class="p">},</span>
+        <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Failed to create verifier DID: ${error.message}"</span><span class="p">)</span>
+            <span class="k">return</span><span class="nd">@runBlocking</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Exporter DID: ${exporterDid.id}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Importer DID: ${importerDid.id}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Verifier DID: ${verifierDid.id}"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 3: Create farm/production site DID</span>
+    <span class="kd">val</span> <span class="py">farmDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+    <span class="nc">Result</span><span class="p">.</span><span class="nf">success</span><span class="p">(</span><span class="n">farmDid</span><span class="p">).</span><span class="nf">fold</span><span class="p">(</span>
+        <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">it</span> <span class="p">},</span>
+        <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Failed to create farm DID: ${error.message}"</span><span class="p">)</span>
+            <span class="k">return</span><span class="nd">@runBlocking</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Farm DID: ${farmDid.id}"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 4: Create EO data evidence (non-deforestation proof)</span>
+    <span class="kd">val</span> <span class="py">eoDeforestationProof</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="s">"eo-deforestation-proof-2024"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"type"</span><span class="p">,</span> <span class="s">"NonDeforestationProof"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"location"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"latitude"</span><span class="p">,</span> <span class="p">-</span><span class="mf">3.4653</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"longitude"</span><span class="p">,</span> <span class="p">-</span><span class="mf">62.2159</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"region"</span><span class="p">,</span> <span class="s">"Amazon Rainforest, Brazil"</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"farmId"</span><span class="p">,</span> <span class="n">farmDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"polygon"</span><span class="p">,</span> <span class="nf">buildJsonArray</span> <span class="p">{</span>
+                <span class="c1">// Farm boundary coordinates</span>
+                <span class="nf">add</span><span class="p">(</span><span class="nf">buildJsonArray</span> <span class="p">{</span> <span class="nf">add</span><span class="p">(-</span><span class="mf">62.22</span><span class="p">);</span> <span class="nf">add</span><span class="p">(-</span><span class="mf">3.47</span><span class="p">)</span> <span class="p">})</span>
+                <span class="nf">add</span><span class="p">(</span><span class="nf">buildJsonArray</span> <span class="p">{</span> <span class="nf">add</span><span class="p">(-</span><span class="mf">62.21</span><span class="p">);</span> <span class="nf">add</span><span class="p">(-</span><span class="mf">3.47</span><span class="p">)</span> <span class="p">})</span>
+                <span class="nf">add</span><span class="p">(</span><span class="nf">buildJsonArray</span> <span class="p">{</span> <span class="nf">add</span><span class="p">(-</span><span class="mf">62.21</span><span class="p">);</span> <span class="nf">add</span><span class="p">(-</span><span class="mf">3.46</span><span class="p">)</span> <span class="p">})</span>
+                <span class="nf">add</span><span class="p">(</span><span class="nf">buildJsonArray</span> <span class="p">{</span> <span class="nf">add</span><span class="p">(-</span><span class="mf">62.22</span><span class="p">);</span> <span class="nf">add</span><span class="p">(-</span><span class="mf">3.46</span><span class="p">)</span> <span class="p">})</span>
+                <span class="nf">add</span><span class="p">(</span><span class="nf">buildJsonArray</span> <span class="p">{</span> <span class="nf">add</span><span class="p">(-</span><span class="mf">62.22</span><span class="p">);</span> <span class="nf">add</span><span class="p">(-</span><span class="mf">3.47</span><span class="p">)</span> <span class="p">})</span>
+            <span class="p">})</span>
+        <span class="p">})</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"analysis"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"method"</span><span class="p">,</span> <span class="s">"Sentinel-2 L2A Time Series Analysis"</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"analysisPeriod"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"startDate"</span><span class="p">,</span> <span class="s">"2020-01-01"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"endDate"</span><span class="p">,</span> <span class="s">"2024-12-31"</span><span class="p">)</span>
+            <span class="p">})</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"deforestationDetected"</span><span class="p">,</span> <span class="k">false</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"forestCoverChange"</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">)</span>  <span class="c1">// 2% increase (reforestation)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"confidence"</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"verificationDate"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+        <span class="p">})</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"timestamp"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+    <span class="p">}</span>
+    
+    <span class="kd">val</span> <span class="py">eoProofDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">eoDeforestationProof</span><span class="p">)</span>
+    
+    <span class="c1">// Step 5: Verifier issues compliance credential</span>
+    <span class="kd">val</span> <span class="py">verifierKeyId</span> <span class="p">=</span> <span class="n">verifierDid</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
+        <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">complianceCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">verifierDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">issuerKeyId</span> <span class="p">=</span> <span class="n">verifierKeyId</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="s">"eudr-compliance-2024-001"</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"complianceType"</span><span class="p">,</span> <span class="s">"EUDR"</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"farm"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="n">farmDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"name"</span><span class="p">,</span> <span class="s">"Sustainable Coffee Farm"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"location"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"latitude"</span><span class="p">,</span> <span class="p">-</span><span class="mf">3.4653</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"longitude"</span><span class="p">,</span> <span class="p">-</span><span class="mf">62.2159</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"country"</span><span class="p">,</span> <span class="s">"Brazil"</span><span class="p">)</span>
+                <span class="p">})</span>
+            <span class="p">})</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"eoEvidence"</span><span class="p">,</span> <span class="n">eoDeforestationProof</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"eoEvidenceDigest"</span><span class="p">,</span> <span class="n">eoProofDigest</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"complianceStatus"</span><span class="p">,</span> <span class="s">"compliant"</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"verificationDate"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"validUntil"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">plus</span><span class="p">(</span><span class="mi">365</span><span class="p">,</span> <span class="n">java</span><span class="p">.</span><span class="n">time</span><span class="p">.</span><span class="n">temporal</span><span class="p">.</span><span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">DAYS</span><span class="p">).</span><span class="nf">toString</span><span class="p">())</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"verifier"</span><span class="p">,</span> <span class="n">verifierDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="p">},</span>
+        <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"EUDRComplianceCredential"</span><span class="p">)</span>
+    <span class="p">).</span><span class="nf">fold</span><span class="p">(</span>
+        <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">it</span> <span class="p">},</span>
+        <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Failed to issue compliance credential: ${error.message}"</span><span class="p">)</span>
+            <span class="k">return</span><span class="nd">@runBlocking</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Compliance Credential issued: ${complianceCredential.id}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Status: compliant"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Farm: ${farmDid.id}"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 6: Create Digital Product Passport (DPP)</span>
+    <span class="kd">val</span> <span class="py">exporterKeyId</span> <span class="p">=</span> <span class="n">exporterDid</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
+        <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">dppCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">exporterDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">issuerKeyId</span> <span class="p">=</span> <span class="n">exporterKeyId</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="s">"dpp-coffee-shipment-2024-001"</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"productType"</span><span class="p">,</span> <span class="s">"Coffee"</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"commodity"</span><span class="p">,</span> <span class="s">"Coffee Beans"</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"quantity"</span><span class="p">,</span> <span class="mf">10000.0</span><span class="p">)</span>  <span class="c1">// kg</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"unit"</span><span class="p">,</span> <span class="s">"kg"</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"farm"</span><span class="p">,</span> <span class="n">farmDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"complianceCredentialId"</span><span class="p">,</span> <span class="n">complianceCredential</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"eoEvidenceDigest"</span><span class="p">,</span> <span class="n">eoProofDigest</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"harvestDate"</span><span class="p">,</span> <span class="s">"2024-06-15"</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"exportDate"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"exporter"</span><span class="p">,</span> <span class="n">exporterDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"destination"</span><span class="p">,</span> <span class="s">"EU"</span><span class="p">)</span>
+        <span class="p">},</span>
+        <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"DigitalProductPassport"</span><span class="p">,</span> <span class="s">"EUDRProductCredential"</span><span class="p">)</span>
+    <span class="p">).</span><span class="nf">fold</span><span class="p">(</span>
+        <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">it</span> <span class="p">},</span>
+        <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Failed to issue DPP: ${error.message}"</span><span class="p">)</span>
+            <span class="k">return</span><span class="nd">@runBlocking</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Digital Product Passport issued: ${dppCredential.id}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Product: Coffee Beans"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Quantity: 10,000 kg"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 7: Importer verifies compliance before import</span>
+    <span class="kd">val</span> <span class="py">dppVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">dppCredential</span><span class="p">).</span><span class="nf">fold</span><span class="p">(</span>
+        <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">it</span> <span class="p">},</span>
+        <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ DPP verification failed: ${error.message}"</span><span class="p">)</span>
+            <span class="k">return</span><span class="nd">@runBlocking</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(!</span><span class="n">dppVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ DPP verification failed: ${dppVerification.errors}"</span><span class="p">)</span>
+        <span class="k">return</span><span class="nd">@runBlocking</span>
+    <span class="p">}</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ DPP verified"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 8: Verify compliance credential</span>
+    <span class="kd">val</span> <span class="py">complianceVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">complianceCredential</span><span class="p">).</span><span class="nf">fold</span><span class="p">(</span>
+        <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">it</span> <span class="p">},</span>
+        <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Compliance verification failed: ${error.message}"</span><span class="p">)</span>
+            <span class="k">return</span><span class="nd">@runBlocking</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(!</span><span class="n">complianceVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Compliance verification failed: ${complianceVerification.errors}"</span><span class="p">)</span>
+        <span class="k">return</span><span class="nd">@runBlocking</span>
+    <span class="p">}</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Compliance verified"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 9: Verify EO evidence integrity</span>
+    <span class="kd">val</span> <span class="py">currentProofDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">eoDeforestationProof</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">credentialProofDigest</span> <span class="p">=</span> <span class="n">complianceCredential</span><span class="p">.</span><span class="n">credentialSubject</span>
+        <span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"eoEvidenceDigest"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span> <span class="o">?:</span> <span class="s">""</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">currentProofDigest</span> <span class="p">==</span> <span class="n">credentialProofDigest</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ EO Evidence integrity verified"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   No tampering detected"</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ EO Evidence integrity FAILED"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Evidence may have been tampered with"</span><span class="p">)</span>
+        <span class="k">return</span><span class="nd">@runBlocking</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Step 10: Check against Climate TRACE (global verifier)</span>
+    <span class="kd">val</span> <span class="py">climateTraceVerification</span> <span class="p">=</span> <span class="nf">verifyAgainstClimateTrace</span><span class="p">(</span>
+        <span class="n">location</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"latitude"</span><span class="p">,</span> <span class="p">-</span><span class="mf">3.4653</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"longitude"</span><span class="p">,</span> <span class="p">-</span><span class="mf">62.2159</span><span class="p">)</span>
+        <span class="p">},</span>
+        <span class="n">eoEvidence</span> <span class="p">=</span> <span class="n">eoDeforestationProof</span>
+    <span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">climateTraceVerification</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Verified against Climate TRACE"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Global verification confirms compliance"</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"⚠️ Climate TRACE verification inconclusive"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Step 11: Anchor to blockchain for audit trail</span>
+    <span class="kd">val</span> <span class="py">anchorResult</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">blockchains</span><span class="p">.</span><span class="nf">anchor</span><span class="p">(</span>
+        <span class="n">data</span> <span class="p">=</span> <span class="n">dppCredential</span><span class="p">,</span>
+        <span class="n">serializer</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
+        <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span>
+    <span class="p">).</span><span class="nf">fold</span><span class="p">(</span>
+        <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">anchor</span> <span class="p">-&gt;</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ DPP anchored: ${anchor.ref.txHash}"</span><span class="p">)</span>
+            <span class="n">anchor</span>
+        <span class="p">},</span>
+        <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Anchoring failed: ${error.message}"</span><span class="p">)</span>
+            <span class="k">null</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n📊 EUDR Compliance Summary:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Farm: ${farmDid.id}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Compliance Status: compliant"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   EO Evidence: verified"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   DPP: issued and verified"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Blockchain Anchor: ${anchorResult?.ref?.txHash}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   ✅ Ready for EU import"</span><span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n"</span> <span class="p">+</span> <span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ EUDR Compliance Scenario Complete!"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+<span class="p">}</span>
+
+<span class="c1">// Helper function to verify against Climate TRACE</span>
+<span class="k">suspend</span> <span class="k">fun</span> <span class="nf">verifyAgainstClimateTrace</span><span class="p">(</span>
+    <span class="n">location</span><span class="p">:</span> <span class="nc">JsonObject</span><span class="p">,</span>
+    <span class="n">eoEvidence</span><span class="p">:</span> <span class="nc">JsonObject</span>
+<span class="p">):</span> <span class="nc">Boolean</span> <span class="p">{</span>
+    <span class="c1">// In production, query Climate TRACE API</span>
+    <span class="c1">// Compare EO evidence with Climate TRACE data</span>
+    <span class="c1">// Return true if evidence matches Climate TRACE data</span>
+    <span class="k">return</span> <span class="k">true</span>  <span class="c1">// Placeholder</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Expected Output:</strong></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+</pre></td><td class="rouge-code"><pre>======================================================================
+EUDR Compliance with EO Data - Complete Example
+======================================================================
+
+✅ TrustWeave initialized
+✅ Exporter DID: did:key:z6Mk...
+✅ Importer DID: did:key:z6Mk...
+✅ Verifier DID: did:key:z6Mk...
+✅ Farm DID: did:key:z6Mk...
+✅ Compliance Credential issued: urn:uuid:...
+   Status: compliant
+   Farm: did:key:z6Mk...
+✅ Digital Product Passport issued: urn:uuid:...
+   Product: Coffee Beans
+   Quantity: 10,000 kg
+✅ DPP verified
+✅ Compliance verified
+✅ EO Evidence integrity verified
+   No tampering detected
+✅ Verified against Climate TRACE
+   Global verification confirms compliance
+✅ DPP anchored: tx_...
+
+📊 EUDR Compliance Summary:
+   Farm: did:key:z6Mk...
+   Compliance Status: compliant
+   EO Evidence: verified
+   DPP: issued and verified
+   Blockchain Anchor: tx_...
+   ✅ Ready for EU import
+
+======================================================================
+✅ EUDR Compliance Scenario Complete!
+======================================================================
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-3-automated-compliance-verification">
+  
+  
+    <a href="#step-3-automated-compliance-verification" class="anchor-heading" aria-labelledby="step-3-automated-compliance-verification"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Automated Compliance Verification
+  
+  
+</h2>
+    
+
+<p>Enable automated verification:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+</pre></td><td class="rouge-code"><pre><span class="k">suspend</span> <span class="k">fun</span> <span class="nf">automatedEUDRVerification</span><span class="p">(</span>
+    <span class="n">dppCredential</span><span class="p">:</span> <span class="nc">VerifiableCredential</span>
+<span class="p">):</span> <span class="nc">ComplianceResult</span> <span class="p">{</span>
+    <span class="c1">// Verify DPP credential</span>
+    <span class="kd">val</span> <span class="py">dppVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">dppCredential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    <span class="k">if</span> <span class="p">(!</span><span class="n">dppVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nc">ComplianceResult</span><span class="p">.</span><span class="nc">NonCompliant</span><span class="p">(</span><span class="s">"DPP verification failed"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Extract compliance credential ID</span>
+    <span class="kd">val</span> <span class="py">complianceCredentialId</span> <span class="p">=</span> <span class="nf">extractComplianceCredentialId</span><span class="p">(</span><span class="n">dppCredential</span><span class="p">)</span>
+    
+    <span class="c1">// Verify compliance credential</span>
+    <span class="kd">val</span> <span class="py">complianceCredential</span> <span class="p">=</span> <span class="nf">fetchCredential</span><span class="p">(</span><span class="n">complianceCredentialId</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">complianceVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">complianceCredential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    <span class="k">if</span> <span class="p">(!</span><span class="n">complianceVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nc">ComplianceResult</span><span class="p">.</span><span class="nc">NonCompliant</span><span class="p">(</span><span class="s">"Compliance verification failed"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Verify EO evidence</span>
+    <span class="kd">val</span> <span class="py">eoEvidence</span> <span class="p">=</span> <span class="nf">extractEOEvidence</span><span class="p">(</span><span class="n">complianceCredential</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">eoVerification</span> <span class="p">=</span> <span class="nf">verifyEOEvidence</span><span class="p">(</span><span class="n">eoEvidence</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(!</span><span class="n">eoVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nc">ComplianceResult</span><span class="p">.</span><span class="nc">NonCompliant</span><span class="p">(</span><span class="s">"EO evidence verification failed"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Check against Climate TRACE</span>
+    <span class="kd">val</span> <span class="py">climateTraceCheck</span> <span class="p">=</span> <span class="nf">verifyAgainstClimateTrace</span><span class="p">(</span><span class="n">eoEvidence</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(!</span><span class="n">climateTraceCheck</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nc">ComplianceResult</span><span class="p">.</span><span class="nc">NonCompliant</span><span class="p">(</span><span class="s">"Climate TRACE verification failed"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="k">return</span> <span class="nc">ComplianceResult</span><span class="p">.</span><span class="nc">Compliant</span><span class="p">(</span><span class="s">"All checks passed"</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">sealed</span> <span class="kd">class</span> <span class="nc">ComplianceResult</span> <span class="p">{</span>
+    <span class="kd">data class</span> <span class="nc">Compliant</span><span class="p">(</span><span class="kd">val</span> <span class="py">message</span><span class="p">:</span> <span class="nc">String</span><span class="p">)</span> <span class="p">:</span> <span class="nc">ComplianceResult</span><span class="p">()</span>
+    <span class="kd">data class</span> <span class="nc">NonCompliant</span><span class="p">(</span><span class="kd">val</span> <span class="py">reason</span><span class="p">:</span> <span class="nc">String</span><span class="p">)</span> <span class="p">:</span> <span class="nc">ComplianceResult</span><span class="p">()</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-4-digital-product-passport-dpp-structure">
+  
+  
+    <a href="#step-4-digital-product-passport-dpp-structure" class="anchor-heading" aria-labelledby="step-4-digital-product-passport-dpp-structure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Digital Product Passport (DPP) Structure
+  
+  
+</h2>
+    
+
+<p>DPP using VCs:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">dpp</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="s">"dpp-product-001"</span><span class="p">)</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"product"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"type"</span><span class="p">,</span> <span class="s">"Coffee"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"quantity"</span><span class="p">,</span> <span class="mf">10000.0</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"unit"</span><span class="p">,</span> <span class="s">"kg"</span><span class="p">)</span>
+    <span class="p">})</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"compliance"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"eudrCompliant"</span><span class="p">,</span> <span class="k">true</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"complianceCredentialId"</span><span class="p">,</span> <span class="n">complianceCredential</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"verificationDate"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+    <span class="p">})</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"provenance"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"farm"</span><span class="p">,</span> <span class="n">farmDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"harvestDate"</span><span class="p">,</span> <span class="s">"2024-06-15"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"exportDate"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+    <span class="p">})</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"eoEvidence"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"digest"</span><span class="p">,</span> <span class="n">eoProofDigest</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"verificationStatus"</span><span class="p">,</span> <span class="s">"verified"</span><span class="p">)</span>
+    <span class="p">})</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-5-climate-trace-integration">
+  
+  
+    <a href="#step-5-climate-trace-integration" class="anchor-heading" aria-labelledby="step-5-climate-trace-integration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Climate TRACE Integration
+  
+  
+</h2>
+    
+
+<p>Verify against Climate TRACE as global verifier:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre></td><td class="rouge-code"><pre><span class="k">suspend</span> <span class="k">fun</span> <span class="nf">verifyAgainstClimateTrace</span><span class="p">(</span>
+    <span class="n">location</span><span class="p">:</span> <span class="nc">JsonObject</span><span class="p">,</span>
+    <span class="n">eoEvidence</span><span class="p">:</span> <span class="nc">JsonObject</span>
+<span class="p">):</span> <span class="nc">Boolean</span> <span class="p">{</span>
+    <span class="c1">// Query Climate TRACE API</span>
+    <span class="kd">val</span> <span class="py">climateTraceData</span> <span class="p">=</span> <span class="nf">queryClimateTraceAPI</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
+    
+    <span class="c1">// Compare with EO evidence</span>
+    <span class="kd">val</span> <span class="py">matches</span> <span class="p">=</span> <span class="nf">compareWithClimateTrace</span><span class="p">(</span><span class="n">eoEvidence</span><span class="p">,</span> <span class="n">climateTraceData</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">matches</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="next-steps">
+  
+  
+    <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
+  
+  
+</h2>
+    
+
+<ul>
+  <li>Explore <a href="/trustweave/scenarios/supply-chain-traceability-scenario/">Supply Chain Traceability Scenario</a></li>
+  <li>Learn about <a href="/trustweave/core-concepts/blockchain-anchoring/">Blockchain Anchoring</a></li>
+  <li>Review <a href="/trustweave/advanced/verification-policies/">Verification Policies</a></li>
+</ul>
+<h2 id="related-documentation">
+  
+  
+    <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
+  
+  
+</h2>
+    
+
+<ul>
+  <li><a href="/trustweave/scenarios/supply-chain-traceability-scenario/">Supply Chain Traceability Scenario</a> - Supply chain workflows</li>
+  <li><a href="/trustweave/scenarios/earth-observation-scenario/">Earth Observation Scenario</a> - EO data integrity</li>
+  <li><a href="/trustweave/core-concepts/blockchain-anchoring/">Blockchain Anchoring</a> - Anchoring concepts</li>
+  <li><a href="/trustweave/api-reference/core-api/">API Reference</a> - Complete API documentation</li>
+</ul>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

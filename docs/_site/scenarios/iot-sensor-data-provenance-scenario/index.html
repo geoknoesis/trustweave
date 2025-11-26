@@ -1,0 +1,1384 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+    .site-nav ul li a {
+      background-image: none;
+    }
+
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>IoT Sensor Data Provenance &amp; Integrity Scenario | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="IoT Sensor Data Provenance &amp; Integrity Scenario" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://localhost:4000/trustweave/scenarios/iot-sensor-data-provenance-scenario/" />
+<meta property="og:url" content="http://localhost:4000/trustweave/scenarios/iot-sensor-data-provenance-scenario/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="IoT Sensor Data Provenance &amp; Integrity Scenario" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"IoT Sensor Data Provenance &amp; Integrity Scenario","url":"http://localhost:4000/trustweave/scenarios/iot-sensor-data-provenance-scenario/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/beginner-tutorial-series/" class="nav-list-link">Beginner Tutorial Series</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchored-revocation/" class="nav-list-link">Blockchain-Anchored Revocation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/code-style/" class="nav-list-link">Code Style</a></li><li class="nav-list-item"><a href="/trustweave/comparison/README/" class="nav-list-link">Comparison Documentation</a></li><li class="nav-list-item"><a href="/trustweave/configuration/README/" class="nav-list-link">Configuration Reference</a></li><li class="nav-list-item"><a href="/trustweave/advanced/custom-adapters/" class="nav-list-link">Creating Custom Adapters</a></li><li class="nav-list-item"><a href="/trustweave/contributing/creating-plugins/" class="nav-list-link">Creating TrustWeave Plugins</a></li><li class="nav-list-item"><a href="/trustweave/features/credential-exchange-protocols/README/" class="nav-list-link">Credential Exchange Protocols</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/credential-issuance-tutorial/" class="nav-list-link">Credential Issuance Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/algorithm-compatibility-table/" class="nav-list-link">Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/did-operations-tutorial/" class="nav-list-link">DID Operations Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/delegation/" class="nav-list-link">Delegation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/development-setup/" class="nav-list-link">Development Setup</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/evaluation-engines/" class="nav-list-link">Evaluation Engines</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/json-canonicalization/" class="nav-list-link">JSON Canonicalization</a></li><li class="nav-list-item"><a href="/trustweave/advanced/key-rotation/" class="nav-list-link">Key Rotation Strategies</a></li><li class="nav-list-item"><a href="/trustweave/licensing/README/" class="nav-list-link">Licensing Overview</a></li><li class="nav-list-item"><a href="/trustweave/migration/README/" class="nav-list-link">Migration Guides</a></li><li class="nav-list-item"><a href="/trustweave/advanced/performance/" class="nav-list-link">Performance Considerations</a></li><li class="nav-list-item"><a href="/trustweave/advanced/plugin-lifecycle/" class="nav-list-link">Plugin Lifecycle Management</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/proof-purpose-validation/" class="nav-list-link">Proof Purpose Validation</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/credential-exchange-protocols/" class="nav-list-link">Protocol Abstraction Layer</a></li><li class="nav-list-item"><a href="/trustweave/contributing/pull-request-process/" class="nav-list-link">Pull Request Process</a></li><li class="nav-list-item"><a href="/trustweave/security/README/" class="nav-list-link">Security Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/advanced/spi/" class="nav-list-link">Service Provider Interface (SPI)</a></li><li class="nav-list-item"><a href="/trustweave/plugins/" class="nav-list-link">Supported Plugins</a></li><li class="nav-list-item"><a href="/trustweave/contributing/testing-guidelines/" class="nav-list-link">Testing Guidelines</a></li><li class="nav-list-item"><a href="/trustweave/advanced/testing-strategies/" class="nav-list-link">Testing Strategies</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/trust-registry/" class="nav-list-link">Trust Registry</a></li><li class="nav-list-item"><a href="/trustweave/GLOSSARY/" class="nav-list-link">TrustWeave Glossary</a></li><li class="nav-list-item"><a href="/trustweave/TRUSTWEAVE_WHITEPAPER/" class="nav-list-link">TrustWeave SDK: Decentralized Trust Infrastructure</a></li><li class="nav-list-item"><a href="/trustweave/scenarios/README/" class="nav-list-link">Use Case Scenarios</a></li><li class="nav-list-item"><a href="/trustweave/advanced/verification-policies/" class="nav-list-link">Verification Policies</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/wallet-api-tutorial/" class="nav-list-link">Wallet API Tutorial</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="iot-sensor-data-provenance--integrity-scenario">
+  
+  
+    <a href="#iot-sensor-data-provenance--integrity-scenario" class="anchor-heading" aria-labelledby="iot-sensor-data-provenance--integrity-scenario"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> IoT Sensor Data Provenance &amp; Integrity Scenario
+  
+  
+</h1>
+    
+
+<p>This guide demonstrates how to build an IoT sensor data provenance and integrity system using TrustWeave. You’ll learn how sensor manufacturers can issue sensor attestation credentials, how sensors can create data attestation credentials, and how data consumers can verify sensor data authenticity and integrity.</p>
+<h2 id="what-youll-build">
+  
+  
+    <a href="#what-youll-build" class="anchor-heading" aria-labelledby="what-youll-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Build
+  
+  
+</h2>
+    
+
+<p>By the end of this tutorial, you’ll have:</p>
+
+<ul>
+  <li>✅ Created DIDs for sensor manufacturers, sensors, and data consumers</li>
+  <li>✅ Issued sensor attestation credentials</li>
+  <li>✅ Created sensor data attestation credentials</li>
+  <li>✅ Implemented data integrity verification</li>
+  <li>✅ Verified sensor calibration records</li>
+  <li>✅ Demonstrated timestamp verification</li>
+  <li>✅ Implemented data source verification</li>
+  <li>✅ Created tamper-proof data provenance chain</li>
+</ul>
+<h2 id="big-picture--significance">
+  
+  
+    <a href="#big-picture--significance" class="anchor-heading" aria-labelledby="big-picture--significance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Big Picture &amp; Significance
+  
+  
+</h2>
+    
+<h3 id="the-iot-sensor-data-challenge">
+  
+  
+    <a href="#the-iot-sensor-data-challenge" class="anchor-heading" aria-labelledby="the-iot-sensor-data-challenge"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The IoT Sensor Data Challenge
+  
+  
+</h3>
+    
+
+<p>IoT sensors generate vast amounts of data used for critical decisions in environmental monitoring, industrial automation, smart cities, and healthcare. However, sensor data can be tampered with, sensors can malfunction, and data provenance is often unclear. Verifiable credentials enable cryptographic proof of sensor data authenticity and integrity.</p>
+
+<p><strong>Industry Context:</strong></p>
+<ul>
+  <li><strong>Market Size</strong>: Global IoT sensors market projected to reach $40 billion by 2027</li>
+  <li><strong>Data Volume</strong>: Billions of sensor readings per day</li>
+  <li><strong>Critical Decisions</strong>: Sensor data drives automated decisions</li>
+  <li><strong>Regulatory</strong>: Environmental regulations require verifiable sensor data</li>
+  <li><strong>Trust Crisis</strong>: Growing need for verifiable data provenance</li>
+</ul>
+
+<p><strong>Why This Matters:</strong></p>
+<ol>
+  <li><strong>Trust</strong>: Verify sensor data authenticity</li>
+  <li><strong>Integrity</strong>: Detect data tampering</li>
+  <li><strong>Compliance</strong>: Meet regulatory requirements for sensor data</li>
+  <li><strong>Provenance</strong>: Track data from sensor to consumer</li>
+  <li><strong>Calibration</strong>: Verify sensor calibration status</li>
+  <li><strong>Quality</strong>: Ensure data quality and reliability</li>
+</ol>
+<h3 id="the-iot-sensor-data-problem">
+  
+  
+    <a href="#the-iot-sensor-data-problem" class="anchor-heading" aria-labelledby="the-iot-sensor-data-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The IoT Sensor Data Problem
+  
+  
+</h3>
+    
+
+<p>Traditional sensor data systems face critical issues:</p>
+<ul>
+  <li><strong>No Provenance</strong>: Can’t verify where data came from</li>
+  <li><strong>Tampering Risk</strong>: Data can be modified in transit</li>
+  <li><strong>No Calibration Tracking</strong>: Can’t verify sensor calibration</li>
+  <li><strong>No Integrity Proof</strong>: No cryptographic proof of data integrity</li>
+  <li><strong>Trust Issues</strong>: Can’t verify sensor authenticity</li>
+  <li><strong>Compliance Risk</strong>: Difficult to meet regulatory requirements</li>
+</ul>
+<h2 id="value-proposition">
+  
+  
+    <a href="#value-proposition" class="anchor-heading" aria-labelledby="value-proposition"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Value Proposition
+  
+  
+</h2>
+    
+<h3 id="problems-solved">
+  
+  
+    <a href="#problems-solved" class="anchor-heading" aria-labelledby="problems-solved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Problems Solved
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>Data Provenance</strong>: Verify sensor data source and lineage</li>
+  <li><strong>Data Integrity</strong>: Cryptographic proof data hasn’t been tampered with</li>
+  <li><strong>Sensor Attestation</strong>: Verify sensor authenticity and calibration</li>
+  <li><strong>Timestamp Verification</strong>: Verify data timestamps</li>
+  <li><strong>Compliance</strong>: Automated compliance with regulatory requirements</li>
+  <li><strong>Trust</strong>: Cryptographic proof of data authenticity</li>
+  <li><strong>Quality Assurance</strong>: Verify sensor calibration and health</li>
+</ol>
+<h3 id="business-benefits">
+  
+  
+    <a href="#business-benefits" class="anchor-heading" aria-labelledby="business-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Business Benefits
+  
+  
+</h3>
+    
+
+<p><strong>For Data Consumers:</strong></p>
+<ul>
+  <li><strong>Trust</strong>: Verify sensor data authenticity</li>
+  <li><strong>Compliance</strong>: Meet regulatory requirements</li>
+  <li><strong>Quality</strong>: Ensure data quality and reliability</li>
+  <li><strong>Risk Reduction</strong>: Reduce reliance on untrusted data</li>
+  <li><strong>Efficiency</strong>: Automated verification process</li>
+</ul>
+
+<p><strong>For Sensor Manufacturers:</strong></p>
+<ul>
+  <li><strong>Trust</strong>: Enhanced trust through verifiable credentials</li>
+  <li><strong>Differentiation</strong>: Stand out with verifiable data provenance</li>
+  <li><strong>Compliance</strong>: Meet regulatory requirements</li>
+  <li><strong>Efficiency</strong>: Automated credential issuance</li>
+</ul>
+
+<p><strong>For System Operators:</strong></p>
+<ul>
+  <li><strong>Security</strong>: Detect data tampering</li>
+  <li><strong>Compliance</strong>: Automated compliance verification</li>
+  <li><strong>Quality</strong>: Monitor sensor health and calibration</li>
+  <li><strong>Efficiency</strong>: Streamlined data verification</li>
+</ul>
+<h3 id="roi-considerations">
+  
+  
+    <a href="#roi-considerations" class="anchor-heading" aria-labelledby="roi-considerations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ROI Considerations
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Compliance</strong>: Automated regulatory compliance</li>
+  <li><strong>Trust</strong>: Enhanced trust in sensor data</li>
+  <li><strong>Risk Reduction</strong>: 90% reduction in data tampering risk</li>
+  <li><strong>Cost Savings</strong>: Prevents costly decisions based on bad data</li>
+  <li><strong>Quality</strong>: Improved data quality and reliability</li>
+</ul>
+<h2 id="understanding-the-problem">
+  
+  
+    <a href="#understanding-the-problem" class="anchor-heading" aria-labelledby="understanding-the-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Understanding the Problem
+  
+  
+</h2>
+    
+
+<p>Traditional sensor data systems have several problems:</p>
+
+<ol>
+  <li><strong>No provenance</strong>: Can’t verify where data came from</li>
+  <li><strong>Tampering risk</strong>: Data can be modified in transit</li>
+  <li><strong>No calibration tracking</strong>: Can’t verify sensor calibration</li>
+  <li><strong>No integrity proof</strong>: No cryptographic proof of data integrity</li>
+  <li><strong>Trust issues</strong>: Can’t verify sensor authenticity</li>
+</ol>
+
+<p>TrustWeave solves this by enabling:</p>
+
+<ul>
+  <li><strong>Data provenance</strong>: Verify sensor data source and lineage</li>
+  <li><strong>Data integrity</strong>: Cryptographic proof data hasn’t been tampered with</li>
+  <li><strong>Sensor attestation</strong>: Verify sensor authenticity and calibration</li>
+  <li><strong>Timestamp verification</strong>: Verify data timestamps</li>
+  <li><strong>Compliance</strong>: Automated compliance with regulations</li>
+</ul>
+<h2 id="how-it-works-the-sensor-data-provenance-flow">
+  
+  
+    <a href="#how-it-works-the-sensor-data-provenance-flow" class="anchor-heading" aria-labelledby="how-it-works-the-sensor-data-provenance-flow"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How It Works: The Sensor Data Provenance Flow
+  
+  
+</h2>
+    
+
+<pre><code class="language-mermaid">flowchart TD
+    A["Sensor Manufacturer&lt;br/&gt;Issues Sensor&lt;br/&gt;Attestation Credential"] --&gt;|issues| B["Sensor Attestation Credential&lt;br/&gt;Sensor DID&lt;br/&gt;Calibration Records&lt;br/&gt;Capabilities&lt;br/&gt;Cryptographic Proof"]
+    B --&gt;|sensor uses| C["IoT Sensor&lt;br/&gt;Captures Data&lt;br/&gt;Creates Data Attestation&lt;br/&gt;Signs with Sensor Key"]
+    C --&gt;|issues| D["Data Attestation Credential&lt;br/&gt;Data Digest&lt;br/&gt;Timestamp&lt;br/&gt;Sensor DID&lt;br/&gt;Calibration Status&lt;br/&gt;Cryptographic Proof"]
+    D --&gt;|consumers verify| E["Data Consumer&lt;br/&gt;Verifies Sensor Attestation&lt;br/&gt;Checks Data Integrity&lt;br/&gt;Validates Timestamp&lt;br/&gt;Grants Access"]
+    
+    style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
+    style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style D fill:#9c27b0,stroke:#4a148c,stroke-width:2px,color:#fff
+    style E fill:#c2185b,stroke:#880e4f,stroke-width:2px,color:#fff
+</code></pre>
+<h2 id="prerequisites">
+  
+  
+    <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
+  
+  
+</h2>
+    
+
+<ul>
+  <li>Java 21+</li>
+  <li>Kotlin 2.2.0+</li>
+  <li>Gradle 8.5+</li>
+  <li>Basic understanding of Kotlin and coroutines</li>
+  <li>Understanding of sensor data and calibration</li>
+</ul>
+<h2 id="step-1-add-dependencies">
+  
+  
+    <a href="#step-1-add-dependencies" class="anchor-heading" aria-labelledby="step-1-add-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Add Dependencies
+  
+  
+</h2>
+    
+
+<p>Add TrustWeave dependencies to your <code class="language-plaintext highlighter-rouge">build.gradle.kts</code>:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
+    <span class="c1">// Core TrustWeave modules</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-all:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    
+    <span class="c1">// Kotlinx Serialization</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
+    
+    <span class="c1">// Coroutines</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-2-complete-runnable-example">
+  
+  
+    <a href="#step-2-complete-runnable-example" class="anchor-heading" aria-labelledby="step-2-complete-runnable-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Complete Runnable Example
+  
+  
+</h2>
+    
+
+<p>Here’s the full IoT sensor data provenance and integrity flow using the TrustWeave facade API:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+</pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.example.iot.sensor.data</span>
+
+<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.PresentationOptions</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.wallet.Wallet</span>
+<span class="k">import</span> <span class="nn">com.trustweave.json.DigestUtils</span>
+<span class="k">import</span> <span class="nn">com.trustweave.spi.services.WalletCreationOptionsBuilder</span>
+<span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
+<span class="k">import</span> <span class="nn">java.time.Instant</span>
+<span class="k">import</span> <span class="nn">java.time.temporal.ChronoUnit</span>
+<span class="k">import</span> <span class="nn">java.util.Base64</span>
+
+<span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"IoT Sensor Data Provenance &amp; Integrity Scenario - Complete End-to-End Example"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+    
+    <span class="c1">// Step 1: Create TrustWeave instance</span>
+    <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ TrustWeave initialized"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 2: Create DIDs for sensor manufacturer, sensors, and data consumer</span>
+    <span class="kd">val</span> <span class="py">manufacturerDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">manufacturerDid</span> <span class="p">=</span> <span class="n">manufacturerDidDoc</span><span class="p">.</span><span class="n">id</span>
+    <span class="kd">val</span> <span class="py">manufacturerKeyId</span> <span class="p">=</span> <span class="n">manufacturerDidDoc</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
+        <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">temperatureSensorDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">temperatureSensorDid</span> <span class="p">=</span> <span class="n">temperatureSensorDidDoc</span><span class="p">.</span><span class="n">id</span>
+    <span class="kd">val</span> <span class="py">temperatureSensorKeyId</span> <span class="p">=</span> <span class="n">temperatureSensorDidDoc</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
+        <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">humiditySensorDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">humiditySensorDid</span> <span class="p">=</span> <span class="n">humiditySensorDidDoc</span><span class="p">.</span><span class="n">id</span>
+    <span class="kd">val</span> <span class="py">humiditySensorKeyId</span> <span class="p">=</span> <span class="n">humiditySensorDidDoc</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
+        <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">dataConsumerDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">dataConsumerDid</span> <span class="p">=</span> <span class="n">dataConsumerDidDoc</span><span class="p">.</span><span class="n">id</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Sensor Manufacturer DID: $manufacturerDid"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Temperature Sensor DID: $temperatureSensorDid"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Humidity Sensor DID: $humiditySensorDid"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Data Consumer DID: $dataConsumerDid"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 3: Issue sensor attestation credential for temperature sensor</span>
+    <span class="kd">val</span> <span class="py">temperatureSensorAttestation</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">manufacturerDid</span><span class="p">,</span>
+        <span class="n">issuerKeyId</span> <span class="p">=</span> <span class="n">manufacturerKeyId</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="n">temperatureSensorDid</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"sensor"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"sensorType"</span><span class="p">,</span> <span class="s">"Temperature"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"model"</span><span class="p">,</span> <span class="s">"TempSense-Pro-2024"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"serialNumber"</span><span class="p">,</span> <span class="s">"TS-2024-001234"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"manufacturer"</span><span class="p">,</span> <span class="n">manufacturerDid</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"calibration"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"calibrated"</span><span class="p">,</span> <span class="k">true</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"calibrationDate"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">minus</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">DAYS</span><span class="p">).</span><span class="nf">toString</span><span class="p">())</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"calibrationExpiry"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">plus</span><span class="p">(</span><span class="mi">330</span><span class="p">,</span> <span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">DAYS</span><span class="p">).</span><span class="nf">toString</span><span class="p">())</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"calibrationStandard"</span><span class="p">,</span> <span class="s">"NIST"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"accuracy"</span><span class="p">,</span> <span class="s">"±0.1°C"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"range"</span><span class="p">,</span> <span class="s">"-40°C to +85°C"</span><span class="p">)</span>
+                <span class="p">})</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"capabilities"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"measurementInterval"</span><span class="p">,</span> <span class="s">"1 second"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"resolution"</span><span class="p">,</span> <span class="s">"0.01°C"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"dataFormat"</span><span class="p">,</span> <span class="s">"JSON"</span><span class="p">)</span>
+                <span class="p">})</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"SensorAttestationCredential"</span><span class="p">,</span> <span class="s">"IoTDeviceCredential"</span><span class="p">),</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="k">null</span> <span class="c1">// Sensor attestation doesn't expire</span>
+    <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ Temperature sensor attestation credential issued: ${temperatureSensorAttestation.id}"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 4: Issue sensor attestation credential for humidity sensor</span>
+    <span class="kd">val</span> <span class="py">humiditySensorAttestation</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">manufacturerDid</span><span class="p">,</span>
+        <span class="n">issuerKeyId</span> <span class="p">=</span> <span class="n">manufacturerKeyId</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="n">humiditySensorDid</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"sensor"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"sensorType"</span><span class="p">,</span> <span class="s">"Humidity"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"model"</span><span class="p">,</span> <span class="s">"HumidSense-Pro-2024"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"serialNumber"</span><span class="p">,</span> <span class="s">"HS-2024-005678"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"manufacturer"</span><span class="p">,</span> <span class="n">manufacturerDid</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"calibration"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"calibrated"</span><span class="p">,</span> <span class="k">true</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"calibrationDate"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">minus</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">DAYS</span><span class="p">).</span><span class="nf">toString</span><span class="p">())</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"calibrationExpiry"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">plus</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">DAYS</span><span class="p">).</span><span class="nf">toString</span><span class="p">())</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"calibrationStandard"</span><span class="p">,</span> <span class="s">"NIST"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"accuracy"</span><span class="p">,</span> <span class="s">"±2% RH"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"range"</span><span class="p">,</span> <span class="s">"0% to 100% RH"</span><span class="p">)</span>
+                <span class="p">})</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"capabilities"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"measurementInterval"</span><span class="p">,</span> <span class="s">"1 second"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"resolution"</span><span class="p">,</span> <span class="s">"0.1% RH"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"dataFormat"</span><span class="p">,</span> <span class="s">"JSON"</span><span class="p">)</span>
+                <span class="p">})</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"SensorAttestationCredential"</span><span class="p">,</span> <span class="s">"IoTDeviceCredential"</span><span class="p">),</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="k">null</span>
+    <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Humidity sensor attestation credential issued: ${humiditySensorAttestation.id}"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 5: Simulate sensor data capture and create data attestation</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n📊 Sensor Data Capture:"</span><span class="p">)</span>
+    
+    <span class="c1">// Temperature reading</span>
+    <span class="kd">val</span> <span class="py">temperatureReading</span> <span class="p">=</span> <span class="mf">23.5</span>
+    <span class="kd">val</span> <span class="py">temperatureData</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"sensorId"</span><span class="p">,</span> <span class="n">temperatureSensorDid</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"sensorType"</span><span class="p">,</span> <span class="s">"Temperature"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"value"</span><span class="p">,</span> <span class="n">temperatureReading</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"unit"</span><span class="p">,</span> <span class="s">"Celsius"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"timestamp"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"location"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"latitude"</span><span class="p">,</span> <span class="mf">40.7128</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"longitude"</span><span class="p">,</span> <span class="p">-</span><span class="mf">74.0060</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"altitude"</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)</span>
+        <span class="p">})</span>
+    <span class="p">}</span>
+    
+    <span class="kd">val</span> <span class="py">temperatureDataBytes</span> <span class="p">=</span> <span class="n">temperatureData</span><span class="p">.</span><span class="nf">toString</span><span class="p">().</span><span class="nf">toByteArray</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">temperatureDataDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">temperatureDataBytes</span><span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Temperature: ${temperatureReading}°C"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Data digest: ${temperatureDataDigest.take(20)}..."</span><span class="p">)</span>
+    
+    <span class="c1">// Humidity reading</span>
+    <span class="kd">val</span> <span class="py">humidityReading</span> <span class="p">=</span> <span class="mf">65.3</span>
+    <span class="kd">val</span> <span class="py">humidityData</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"sensorId"</span><span class="p">,</span> <span class="n">humiditySensorDid</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"sensorType"</span><span class="p">,</span> <span class="s">"Humidity"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"value"</span><span class="p">,</span> <span class="n">humidityReading</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"unit"</span><span class="p">,</span> <span class="s">"% RH"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"timestamp"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"location"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"latitude"</span><span class="p">,</span> <span class="mf">40.7128</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"longitude"</span><span class="p">,</span> <span class="p">-</span><span class="mf">74.0060</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"altitude"</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)</span>
+        <span class="p">})</span>
+    <span class="p">}</span>
+    
+    <span class="kd">val</span> <span class="py">humidityDataBytes</span> <span class="p">=</span> <span class="n">humidityData</span><span class="p">.</span><span class="nf">toString</span><span class="p">().</span><span class="nf">toByteArray</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">humidityDataDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">humidityDataBytes</span><span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Humidity: ${humidityReading}% RH"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Data digest: ${humidityDataDigest.take(20)}..."</span><span class="p">)</span>
+    
+    <span class="c1">// Step 6: Create data attestation credentials (signed by sensor)</span>
+    <span class="c1">// Note: In production, sensors would sign these with their own keys</span>
+    <span class="c1">// For this example, we'll use the manufacturer's key to simulate sensor signing</span>
+    
+    <span class="kd">val</span> <span class="py">temperatureDataAttestation</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">temperatureSensorDid</span><span class="p">,</span>
+        <span class="n">issuerKeyId</span> <span class="p">=</span> <span class="n">temperatureSensorKeyId</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="s">"data:temperature:${Instant.now().toEpochMilli()}"</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"sensorData"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"sensorId"</span><span class="p">,</span> <span class="n">temperatureSensorDid</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"dataDigest"</span><span class="p">,</span> <span class="n">temperatureDataDigest</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"dataType"</span><span class="p">,</span> <span class="s">"Temperature"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"timestamp"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"calibrationStatus"</span><span class="p">,</span> <span class="s">"Valid"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"sensorHealth"</span><span class="p">,</span> <span class="s">"Good"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"dataQuality"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"signalStrength"</span><span class="p">,</span> <span class="s">"Strong"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"noiseLevel"</span><span class="p">,</span> <span class="s">"Low"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"confidence"</span><span class="p">,</span> <span class="mf">0.98</span><span class="p">)</span>
+                <span class="p">})</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"SensorDataAttestationCredential"</span><span class="p">,</span> <span class="s">"DataProvenanceCredential"</span><span class="p">),</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="k">null</span> <span class="c1">// Data attestation doesn't expire</span>
+    <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ Temperature data attestation credential issued: ${temperatureDataAttestation.id}"</span><span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">humidityDataAttestation</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">humiditySensorDid</span><span class="p">,</span>
+        <span class="n">issuerKeyId</span> <span class="p">=</span> <span class="n">humiditySensorKeyId</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="s">"data:humidity:${Instant.now().toEpochMilli()}"</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"sensorData"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"sensorId"</span><span class="p">,</span> <span class="n">humiditySensorDid</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"dataDigest"</span><span class="p">,</span> <span class="n">humidityDataDigest</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"dataType"</span><span class="p">,</span> <span class="s">"Humidity"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"timestamp"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"calibrationStatus"</span><span class="p">,</span> <span class="s">"Valid"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"sensorHealth"</span><span class="p">,</span> <span class="s">"Good"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"dataQuality"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"signalStrength"</span><span class="p">,</span> <span class="s">"Strong"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"noiseLevel"</span><span class="p">,</span> <span class="s">"Low"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"confidence"</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">)</span>
+                <span class="p">})</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"SensorDataAttestationCredential"</span><span class="p">,</span> <span class="s">"DataProvenanceCredential"</span><span class="p">),</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="k">null</span>
+    <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Humidity data attestation credential issued: ${humidityDataAttestation.id}"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 7: Create consumer wallet and store credentials</span>
+    <span class="kd">val</span> <span class="py">consumerWallet</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">createWallet</span><span class="p">(</span>
+        <span class="n">holderDid</span> <span class="p">=</span> <span class="n">dataConsumerDid</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">WalletCreationOptionsBuilder</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
+            <span class="n">enableOrganization</span> <span class="p">=</span> <span class="k">true</span>
+            <span class="n">enablePresentation</span> <span class="p">=</span> <span class="k">true</span>
+        <span class="p">}.</span><span class="nf">build</span><span class="p">()</span>
+    <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    
+    <span class="kd">val</span> <span class="py">tempSensorAttestationId</span> <span class="p">=</span> <span class="n">consumerWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">temperatureSensorAttestation</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">humiditySensorAttestationId</span> <span class="p">=</span> <span class="n">consumerWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">humiditySensorAttestation</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">tempDataAttestationId</span> <span class="p">=</span> <span class="n">consumerWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">temperatureDataAttestation</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">humidityDataAttestationId</span> <span class="p">=</span> <span class="n">consumerWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">humidityDataAttestation</span><span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ All credentials stored in consumer wallet"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 8: Organize credentials</span>
+    <span class="n">consumerWallet</span><span class="p">.</span><span class="nf">withOrganization</span> <span class="p">{</span> <span class="n">org</span> <span class="p">-&gt;</span>
+        <span class="kd">val</span> <span class="py">sensorCollectionId</span> <span class="p">=</span> <span class="n">org</span><span class="p">.</span><span class="nf">createCollection</span><span class="p">(</span><span class="s">"Sensors"</span><span class="p">,</span> <span class="s">"Sensor attestation credentials"</span><span class="p">)</span>
+        <span class="kd">val</span> <span class="py">dataCollectionId</span> <span class="p">=</span> <span class="n">org</span><span class="p">.</span><span class="nf">createCollection</span><span class="p">(</span><span class="s">"Sensor Data"</span><span class="p">,</span> <span class="s">"Sensor data attestation credentials"</span><span class="p">)</span>
+        
+        <span class="n">org</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">tempSensorAttestationId</span><span class="p">,</span> <span class="n">sensorCollectionId</span><span class="p">)</span>
+        <span class="n">org</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">humiditySensorAttestationId</span><span class="p">,</span> <span class="n">sensorCollectionId</span><span class="p">)</span>
+        <span class="n">org</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">tempDataAttestationId</span><span class="p">,</span> <span class="n">dataCollectionId</span><span class="p">)</span>
+        <span class="n">org</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">humidityDataAttestationId</span><span class="p">,</span> <span class="n">dataCollectionId</span><span class="p">)</span>
+        
+        <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">tempSensorAttestationId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"sensor"</span><span class="p">,</span> <span class="s">"temperature"</span><span class="p">,</span> <span class="s">"attestation"</span><span class="p">,</span> <span class="s">"calibration"</span><span class="p">))</span>
+        <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">humiditySensorAttestationId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"sensor"</span><span class="p">,</span> <span class="s">"humidity"</span><span class="p">,</span> <span class="s">"attestation"</span><span class="p">,</span> <span class="s">"calibration"</span><span class="p">))</span>
+        <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">tempDataAttestationId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"data"</span><span class="p">,</span> <span class="s">"temperature"</span><span class="p">,</span> <span class="s">"provenance"</span><span class="p">,</span> <span class="s">"integrity"</span><span class="p">))</span>
+        <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">humidityDataAttestationId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"data"</span><span class="p">,</span> <span class="s">"humidity"</span><span class="p">,</span> <span class="s">"provenance"</span><span class="p">,</span> <span class="s">"integrity"</span><span class="p">))</span>
+        
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Credentials organized"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Step 9: Data consumer verification - Sensor attestation</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔍 Data Consumer Verification - Sensor Attestation:"</span><span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">tempSensorVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">temperatureSensorAttestation</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">tempSensorVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">val</span> <span class="py">credentialSubject</span> <span class="p">=</span> <span class="n">temperatureSensorAttestation</span><span class="p">.</span><span class="n">credentialSubject</span>
+        <span class="kd">val</span> <span class="py">sensor</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"sensor"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
+        <span class="kd">val</span> <span class="py">sensorType</span> <span class="p">=</span> <span class="n">sensor</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"sensorType"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
+        <span class="kd">val</span> <span class="py">calibration</span> <span class="p">=</span> <span class="n">sensor</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"calibration"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonObject</span>
+        <span class="kd">val</span> <span class="py">calibrated</span> <span class="p">=</span> <span class="n">calibration</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"calibrated"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toBoolean</span><span class="p">()</span> <span class="o">?:</span> <span class="k">false</span>
+        <span class="kd">val</span> <span class="py">calibrationExpiry</span> <span class="p">=</span> <span class="n">calibration</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"calibrationExpiry"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
+        
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Sensor Attestation Credential: VALID"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Sensor Type: $sensorType"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Calibrated: $calibrated"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Calibration Expiry: $calibrationExpiry"</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">calibrated</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Sensor calibration verified"</span><span class="p">)</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Sensor attestation VERIFIED"</span><span class="p">)</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Sensor not calibrated"</span><span class="p">)</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Sensor attestation NOT VERIFIED"</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Sensor Attestation Credential: INVALID"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Sensor attestation NOT VERIFIED"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Step 10: Data consumer verification - Data integrity</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔍 Data Consumer Verification - Data Integrity:"</span><span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">tempDataVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">temperatureDataAttestation</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">tempDataVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">val</span> <span class="py">credentialSubject</span> <span class="p">=</span> <span class="n">temperatureDataAttestation</span><span class="p">.</span><span class="n">credentialSubject</span>
+        <span class="kd">val</span> <span class="py">sensorData</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"sensorData"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
+        <span class="kd">val</span> <span class="py">dataDigest</span> <span class="p">=</span> <span class="n">sensorData</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"dataDigest"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
+        <span class="kd">val</span> <span class="py">calibrationStatus</span> <span class="p">=</span> <span class="n">sensorData</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"calibrationStatus"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
+        <span class="kd">val</span> <span class="py">sensorHealth</span> <span class="p">=</span> <span class="n">sensorData</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"sensorHealth"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
+        <span class="kd">val</span> <span class="py">dataQuality</span> <span class="p">=</span> <span class="n">sensorData</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"dataQuality"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonObject</span>
+        <span class="kd">val</span> <span class="py">confidence</span> <span class="p">=</span> <span class="n">dataQuality</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"confidence"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toDouble</span><span class="p">()</span> <span class="o">?:</span> <span class="mf">0.0</span>
+        
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Data Attestation Credential: VALID"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Data Digest: ${dataDigest?.take(20)}..."</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Calibration Status: $calibrationStatus"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Sensor Health: $sensorHealth"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Data Confidence: $confidence"</span><span class="p">)</span>
+        
+        <span class="c1">// Verify data digest matches actual data</span>
+        <span class="kd">val</span> <span class="py">computedDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">temperatureDataBytes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">dataDigest</span> <span class="p">==</span> <span class="n">computedDigest</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Data digest matches"</span><span class="p">)</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Data integrity VERIFIED"</span><span class="p">)</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Data has not been tampered with"</span><span class="p">)</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Data digest mismatch"</span><span class="p">)</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Data integrity NOT VERIFIED"</span><span class="p">)</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Data may have been tampered with"</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Data Attestation Credential: INVALID"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Data integrity NOT VERIFIED"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Step 11: Complete data provenance verification workflow</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔍 Complete Data Provenance Verification Workflow:"</span><span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">sensorAttestationValid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">temperatureSensorAttestation</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">().</span><span class="n">valid</span>
+    <span class="kd">val</span> <span class="py">dataAttestationValid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">temperatureDataAttestation</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">().</span><span class="n">valid</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">sensorAttestationValid</span> <span class="p">&amp;&amp;</span> <span class="n">dataAttestationValid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Sensor Attestation: VERIFIED"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Data Attestation: VERIFIED"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Data Provenance: VERIFIED"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Data Integrity: VERIFIED"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ All verifications passed"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Sensor data is TRUSTED"</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ One or more verifications failed"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Sensor data is NOT TRUSTED"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Data should be rejected"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Step 12: Display wallet statistics</span>
+    <span class="kd">val</span> <span class="py">stats</span> <span class="p">=</span> <span class="n">consumerWallet</span><span class="p">.</span><span class="nf">getStatistics</span><span class="p">()</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n📊 Consumer Wallet Statistics:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Total credentials: ${stats.totalCredentials}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Valid credentials: ${stats.validCredentials}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Collections: ${stats.collectionsCount}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Tags: ${stats.tagsCount}"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 13: Summary</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n"</span> <span class="p">+</span> <span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ IoT SENSOR DATA PROVENANCE &amp; INTEGRITY SYSTEM COMPLETE"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Sensor attestation credentials issued"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Data attestation credentials created"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Data integrity verification implemented"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Sensor calibration tracking enabled"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Complete provenance chain established"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Expected Output:</strong></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+</pre></td><td class="rouge-code"><pre>======================================================================
+IoT Sensor Data Provenance &amp; Integrity Scenario - Complete End-to-End Example
+======================================================================
+
+✅ TrustWeave initialized
+✅ Sensor Manufacturer DID: did:key:z6Mk...
+✅ Temperature Sensor DID: did:key:z6Mk...
+✅ Humidity Sensor DID: did:key:z6Mk...
+✅ Data Consumer DID: did:key:z6Mk...
+
+✅ Temperature sensor attestation credential issued: urn:uuid:...
+✅ Humidity sensor attestation credential issued: urn:uuid:...
+
+📊 Sensor Data Capture:
+   Temperature: 23.5°C
+   Data digest: u5v...
+   Humidity: 65.3% RH
+   Data digest: u5v...
+
+✅ Temperature data attestation credential issued: urn:uuid:...
+✅ Humidity data attestation credential issued: urn:uuid:...
+
+✅ All credentials stored in consumer wallet
+✅ Credentials organized
+
+🔍 Data Consumer Verification - Sensor Attestation:
+✅ Sensor Attestation Credential: VALID
+   Sensor Type: Temperature
+   Calibrated: true
+   Calibration Expiry: 2025-10-18T...
+✅ Sensor calibration verified
+✅ Sensor attestation VERIFIED
+
+🔍 Data Consumer Verification - Data Integrity:
+✅ Data Attestation Credential: VALID
+   Data Digest: u5v...
+   Calibration Status: Valid
+   Sensor Health: Good
+   Data Confidence: 0.98
+✅ Data digest matches
+✅ Data integrity VERIFIED
+✅ Data has not been tampered with
+
+🔍 Complete Data Provenance Verification Workflow:
+✅ Sensor Attestation: VERIFIED
+✅ Data Attestation: VERIFIED
+✅ Data Provenance: VERIFIED
+✅ Data Integrity: VERIFIED
+✅ All verifications passed
+✅ Sensor data is TRUSTED
+
+📊 Consumer Wallet Statistics:
+   Total credentials: 4
+   Valid credentials: 4
+   Collections: 2
+   Tags: 8
+
+======================================================================
+✅ IoT SENSOR DATA PROVENANCE &amp; INTEGRITY SYSTEM COMPLETE
+   Sensor attestation credentials issued
+   Data attestation credentials created
+   Data integrity verification implemented
+   Sensor calibration tracking enabled
+   Complete provenance chain established
+======================================================================
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="key-features-demonstrated">
+  
+  
+    <a href="#key-features-demonstrated" class="anchor-heading" aria-labelledby="key-features-demonstrated"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Features Demonstrated
+  
+  
+</h2>
+    
+
+<ol>
+  <li><strong>Sensor Attestation</strong>: Verify sensor authenticity and calibration</li>
+  <li><strong>Data Integrity</strong>: Cryptographic proof data hasn’t been tampered with</li>
+  <li><strong>Data Provenance</strong>: Track data from sensor to consumer</li>
+  <li><strong>Calibration Tracking</strong>: Verify sensor calibration status</li>
+  <li><strong>Timestamp Verification</strong>: Verify data timestamps</li>
+  <li><strong>Quality Metrics</strong>: Data quality and confidence scores</li>
+</ol>
+<h2 id="real-world-extensions">
+  
+  
+    <a href="#real-world-extensions" class="anchor-heading" aria-labelledby="real-world-extensions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Extensions
+  
+  
+</h2>
+    
+
+<ul>
+  <li><strong>Multi-Sensor Networks</strong>: Support sensor networks and data aggregation</li>
+  <li><strong>Real-Time Verification</strong>: Real-time data verification pipelines</li>
+  <li><strong>Data Aggregation</strong>: Verify aggregated sensor data</li>
+  <li><strong>Anomaly Detection</strong>: Detect anomalous sensor readings</li>
+  <li><strong>Calibration Reminders</strong>: Automated calibration expiry alerts</li>
+  <li><strong>Blockchain Anchoring</strong>: Anchor sensor data for permanent records</li>
+  <li><strong>Regulatory Compliance</strong>: Automated compliance with environmental regulations</li>
+</ul>
+<h2 id="related-documentation">
+  
+  
+    <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
+  
+  
+</h2>
+    
+
+<ul>
+  <li><a href="/trustweave/getting-started/quick-start/">Quick Start</a> - Get started with TrustWeave</li>
+  <li><a href="/trustweave/scenarios/iot-device-identity-scenario/">IoT Device Identity Scenario</a> - Related device identity scenario</li>
+  <li><a href="/trustweave/getting-started/common-patterns/">Common Patterns</a> - Reusable code patterns</li>
+  <li><a href="/trustweave/api-reference/core-api/">API Reference</a> - Complete API documentation</li>
+  <li><a href="/trustweave/getting-started/troubleshooting/">Troubleshooting</a> - Common issues and solutions</li>
+</ul>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

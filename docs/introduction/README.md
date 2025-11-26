@@ -24,6 +24,7 @@ Welcome to TrustWeave! This section provides an overview of the library, its pur
 ## Next Steps
 
 **New to TrustWeave?** Start here:
+- [The Story Behind TrustWeave](origin-story.md) - How TrustWeave was born from frustration and built for freedom
 - [What is TrustWeave?](what-is-trustweave.md) - Learn about the library's purpose and design philosophy
 - [Architecture Overview](architecture-overview.md) - Understand the modular design
 - [Mental Model](mental-model.md) - Core concepts and how they fit together

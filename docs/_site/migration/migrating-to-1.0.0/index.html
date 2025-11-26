@@ -1,0 +1,708 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+    .site-nav ul li a {
+      background-image: none;
+    }
+
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Migrating to TrustWeave 1.0.0 | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Migrating to TrustWeave 1.0.0" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://localhost:4000/trustweave/migration/migrating-to-1.0.0/" />
+<meta property="og:url" content="http://localhost:4000/trustweave/migration/migrating-to-1.0.0/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Migrating to TrustWeave 1.0.0" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"Migrating to TrustWeave 1.0.0","url":"http://localhost:4000/trustweave/migration/migrating-to-1.0.0/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/beginner-tutorial-series/" class="nav-list-link">Beginner Tutorial Series</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchored-revocation/" class="nav-list-link">Blockchain-Anchored Revocation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/code-style/" class="nav-list-link">Code Style</a></li><li class="nav-list-item"><a href="/trustweave/comparison/README/" class="nav-list-link">Comparison Documentation</a></li><li class="nav-list-item"><a href="/trustweave/configuration/README/" class="nav-list-link">Configuration Reference</a></li><li class="nav-list-item"><a href="/trustweave/advanced/custom-adapters/" class="nav-list-link">Creating Custom Adapters</a></li><li class="nav-list-item"><a href="/trustweave/contributing/creating-plugins/" class="nav-list-link">Creating TrustWeave Plugins</a></li><li class="nav-list-item"><a href="/trustweave/features/credential-exchange-protocols/README/" class="nav-list-link">Credential Exchange Protocols</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/credential-issuance-tutorial/" class="nav-list-link">Credential Issuance Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/algorithm-compatibility-table/" class="nav-list-link">Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/did-operations-tutorial/" class="nav-list-link">DID Operations Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/delegation/" class="nav-list-link">Delegation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/development-setup/" class="nav-list-link">Development Setup</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/evaluation-engines/" class="nav-list-link">Evaluation Engines</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/json-canonicalization/" class="nav-list-link">JSON Canonicalization</a></li><li class="nav-list-item"><a href="/trustweave/advanced/key-rotation/" class="nav-list-link">Key Rotation Strategies</a></li><li class="nav-list-item"><a href="/trustweave/licensing/README/" class="nav-list-link">Licensing Overview</a></li><li class="nav-list-item"><a href="/trustweave/migration/README/" class="nav-list-link">Migration Guides</a></li><li class="nav-list-item"><a href="/trustweave/advanced/performance/" class="nav-list-link">Performance Considerations</a></li><li class="nav-list-item"><a href="/trustweave/advanced/plugin-lifecycle/" class="nav-list-link">Plugin Lifecycle Management</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/proof-purpose-validation/" class="nav-list-link">Proof Purpose Validation</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/credential-exchange-protocols/" class="nav-list-link">Protocol Abstraction Layer</a></li><li class="nav-list-item"><a href="/trustweave/contributing/pull-request-process/" class="nav-list-link">Pull Request Process</a></li><li class="nav-list-item"><a href="/trustweave/security/README/" class="nav-list-link">Security Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/advanced/spi/" class="nav-list-link">Service Provider Interface (SPI)</a></li><li class="nav-list-item"><a href="/trustweave/plugins/" class="nav-list-link">Supported Plugins</a></li><li class="nav-list-item"><a href="/trustweave/contributing/testing-guidelines/" class="nav-list-link">Testing Guidelines</a></li><li class="nav-list-item"><a href="/trustweave/advanced/testing-strategies/" class="nav-list-link">Testing Strategies</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/trust-registry/" class="nav-list-link">Trust Registry</a></li><li class="nav-list-item"><a href="/trustweave/GLOSSARY/" class="nav-list-link">TrustWeave Glossary</a></li><li class="nav-list-item"><a href="/trustweave/TRUSTWEAVE_WHITEPAPER/" class="nav-list-link">TrustWeave SDK: Decentralized Trust Infrastructure</a></li><li class="nav-list-item"><a href="/trustweave/scenarios/README/" class="nav-list-link">Use Case Scenarios</a></li><li class="nav-list-item"><a href="/trustweave/advanced/verification-policies/" class="nav-list-link">Verification Policies</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/wallet-api-tutorial/" class="nav-list-link">Wallet API Tutorial</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="migrating-to-trustweave-100">
+  
+  
+    <a href="#migrating-to-trustweave-100" class="anchor-heading" aria-labelledby="migrating-to-trustweave-100"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Migrating to TrustWeave 1.0.0
+  
+  
+</h1>
+    
+
+<p>This guide helps you migrate from earlier versions of TrustWeave to version 1.0.0.</p>
+<h2 id="overview-of-changes">
+  
+  
+    <a href="#overview-of-changes" class="anchor-heading" aria-labelledby="overview-of-changes"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Overview of Changes
+  
+  
+</h2>
+    
+
+<p>Version 1.0.0 introduces several improvements:</p>
+
+<ul>
+  <li><strong>Type-safe options</strong>: Replaces map-based configuration with typed options classes</li>
+  <li><strong>Result-based APIs</strong>: All operations return <code class="language-plaintext highlighter-rouge">Result&lt;T&gt;</code> for consistent error handling</li>
+  <li><strong>Enhanced error types</strong>: Structured error hierarchy with rich context</li>
+  <li><strong>Plugin lifecycle</strong>: New lifecycle management APIs</li>
+</ul>
+<h2 id="migration-checklist">
+  
+  
+    <a href="#migration-checklist" class="anchor-heading" aria-labelledby="migration-checklist"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Migration Checklist
+  
+  
+</h2>
+    
+
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update dependencies to 1.0.0-SNAPSHOT</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Migrate to type-safe options</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update error handling to use <code class="language-plaintext highlighter-rouge">Result&lt;T&gt;</code></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update plugin lifecycle calls</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Test thoroughly</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update documentation references</li>
+</ul>
+<h2 id="1-migrating-to-type-safe-options">
+  
+  
+    <a href="#1-migrating-to-type-safe-options" class="anchor-heading" aria-labelledby="1-migrating-to-type-safe-options"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Migrating to Type-Safe Options
+  
+  
+</h2>
+    
+<h3 id="before-map-based">
+  
+  
+    <a href="#before-map-based" class="anchor-heading" aria-labelledby="before-map-based"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Before (Map-based)
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">client</span> <span class="p">=</span> <span class="nc">AlgorandBlockchainAnchorClient</span><span class="p">(</span>
+    <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span><span class="p">,</span>
+    <span class="n">options</span> <span class="p">=</span> <span class="nf">mapOf</span><span class="p">(</span>
+        <span class="s">"algodUrl"</span> <span class="n">to</span> <span class="s">"https://testnet-api.algonode.cloud"</span><span class="p">,</span>
+        <span class="s">"privateKey"</span> <span class="n">to</span> <span class="s">"base64-key"</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="after-type-safe">
+  
+  
+    <a href="#after-type-safe" class="anchor-heading" aria-labelledby="after-type-safe"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> After (Type-safe)
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.anchor.options.AlgorandOptions</span>
+<span class="k">import</span> <span class="nn">com.trustweave.anchor.ChainId</span>
+
+<span class="kd">val</span> <span class="py">chainId</span> <span class="p">=</span> <span class="nc">ChainId</span><span class="p">.</span><span class="nc">Algorand</span><span class="p">.</span><span class="nc">Testnet</span>
+<span class="kd">val</span> <span class="py">options</span> <span class="p">=</span> <span class="nc">AlgorandOptions</span><span class="p">(</span>
+    <span class="n">algodUrl</span> <span class="p">=</span> <span class="s">"https://testnet-api.algonode.cloud"</span><span class="p">,</span>
+    <span class="n">privateKey</span> <span class="p">=</span> <span class="s">"base64-key"</span>
+<span class="p">)</span>
+<span class="kd">val</span> <span class="py">client</span> <span class="p">=</span> <span class="nc">AlgorandBlockchainAnchorClient</span><span class="p">(</span><span class="n">chainId</span><span class="p">.</span><span class="nf">toString</span><span class="p">(),</span> <span class="n">options</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Benefits:</strong></p>
+<ul>
+  <li>Compile-time validation</li>
+  <li>Better IDE autocomplete</li>
+  <li>Type safety prevents configuration errors</li>
+</ul>
+<h2 id="2-migrating-to-result-based-apis">
+  
+  
+    <a href="#2-migrating-to-result-based-apis" class="anchor-heading" aria-labelledby="2-migrating-to-result-based-apis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Migrating to Result-Based APIs
+  
+  
+</h2>
+    
+<h3 id="before-exception-based">
+  
+  
+    <a href="#before-exception-based" class="anchor-heading" aria-labelledby="before-exception-based"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Before (Exception-based)
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="k">try</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">client</span><span class="p">.</span><span class="nf">writePayload</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Anchored: ${result.ref.txHash}"</span><span class="p">)</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">e</span><span class="p">:</span> <span class="nc">TrustWeaveException</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Error: ${e.message}"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="after-result-based">
+  
+  
+    <a href="#after-result-based" class="anchor-heading" aria-labelledby="after-result-based"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> After (Result-based)
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">anchor</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">serializer</span><span class="p">,</span> <span class="n">chainId</span><span class="p">)</span>
+<span class="n">result</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
+    <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">anchor</span> <span class="p">-&gt;</span> 
+        <span class="nf">println</span><span class="p">(</span><span class="s">"Anchored: ${anchor.ref.txHash}"</span><span class="p">)</span>
+    <span class="p">},</span>
+    <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
+        <span class="k">when</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">is</span> <span class="nc">TrustWeaveError</span><span class="p">.</span><span class="nc">ChainNotRegistered</span> <span class="p">-&gt;</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Chain not registered: ${error.chainId}"</span><span class="p">)</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Available chains: ${error.availableChains}"</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="k">else</span> <span class="p">-&gt;</span> <span class="nf">println</span><span class="p">(</span><span class="s">"Error: ${error.message}"</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Benefits:</strong></p>
+<ul>
+  <li>Explicit error handling</li>
+  <li>Structured error types</li>
+  <li>Better error context</li>
+</ul>
+<h2 id="3-migrating-error-handling">
+  
+  
+    <a href="#3-migrating-error-handling" class="anchor-heading" aria-labelledby="3-migrating-error-handling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Migrating Error Handling
+  
+  
+</h2>
+    
+<h3 id="before">
+  
+  
+    <a href="#before" class="anchor-heading" aria-labelledby="before"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Before
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="k">try</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">e</span><span class="p">:</span> <span class="nc">IllegalArgumentException</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Invalid argument: ${e.message}"</span><span class="p">)</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">e</span><span class="p">:</span> <span class="nc">Exception</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Error: ${e.message}"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="after">
+  
+  
+    <a href="#after" class="anchor-heading" aria-labelledby="after"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> After
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+<span class="n">result</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
+    <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span> 
+        <span class="nf">println</span><span class="p">(</span><span class="s">"Created: ${did.id}"</span><span class="p">)</span>
+    <span class="p">},</span>
+    <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
+        <span class="k">when</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">is</span> <span class="nc">TrustWeaveError</span><span class="p">.</span><span class="nc">DidMethodNotRegistered</span> <span class="p">-&gt;</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Method not registered: ${error.method}"</span><span class="p">)</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Available methods: ${error.availableMethods}"</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="k">is</span> <span class="nc">TrustWeaveError</span><span class="p">.</span><span class="nc">InvalidDidFormat</span> <span class="p">-&gt;</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Invalid format: ${error.reason}"</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="k">else</span> <span class="p">-&gt;</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Error: ${error.message}"</span><span class="p">)</span>
+                <span class="n">error</span><span class="p">.</span><span class="n">context</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="p">-&gt;</span>
+                    <span class="nf">println</span><span class="p">(</span><span class="s">"  $key: $value"</span><span class="p">)</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="4-migrating-plugin-lifecycle">
+  
+  
+    <a href="#4-migrating-plugin-lifecycle" class="anchor-heading" aria-labelledby="4-migrating-plugin-lifecycle"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Migrating Plugin Lifecycle
+  
+  
+</h2>
+    
+<h3 id="before-1">
+  
+  
+    <a href="#before-1" class="anchor-heading" aria-labelledby="before-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Before
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre><span class="c1">// No explicit lifecycle management</span>
+<span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+<span class="c1">// Use immediately</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="after-1">
+  
+  
+    <a href="#after-1" class="anchor-heading" aria-labelledby="after-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> After
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+
+<span class="c1">// Initialize plugins</span>
+<span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">initialize</span><span class="p">().</span><span class="nf">fold</span><span class="p">(</span>
+    <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="nf">println</span><span class="p">(</span><span class="s">"Plugins initialized"</span><span class="p">)</span> <span class="p">},</span>
+    <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span> 
+        <span class="nf">println</span><span class="p">(</span><span class="s">"Initialization error: ${error.message}"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1">// Start plugins</span>
+<span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">start</span><span class="p">().</span><span class="nf">fold</span><span class="p">(</span>
+    <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="nf">println</span><span class="p">(</span><span class="s">"Plugins started"</span><span class="p">)</span> <span class="p">},</span>
+    <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span> <span class="nf">println</span><span class="p">(</span><span class="s">"Start error: ${error.message}"</span><span class="p">)</span> <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1">// Use TrustWeave</span>
+<span class="c1">// ...</span>
+
+<span class="c1">// Stop plugins (cleanup)</span>
+<span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">stop</span><span class="p">().</span><span class="nf">fold</span><span class="p">(</span>
+    <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="nf">println</span><span class="p">(</span><span class="s">"Plugins stopped"</span><span class="p">)</span> <span class="p">},</span>
+    <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span> <span class="nf">println</span><span class="p">(</span><span class="s">"Stop error: ${error.message}"</span><span class="p">)</span> <span class="p">}</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="5-migrating-type-safe-chain-ids">
+  
+  
+    <a href="#5-migrating-type-safe-chain-ids" class="anchor-heading" aria-labelledby="5-migrating-type-safe-chain-ids"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5. Migrating Type-Safe Chain IDs
+  
+  
+</h2>
+    
+<h3 id="before-2">
+  
+  
+    <a href="#before-2" class="anchor-heading" aria-labelledby="before-2"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Before
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span>  <span class="c1">// Typo-prone string</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="after-2">
+  
+  
+    <a href="#after-2" class="anchor-heading" aria-labelledby="after-2"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> After
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.anchor.ChainId</span>
+
+<span class="kd">val</span> <span class="py">chainId</span> <span class="p">=</span> <span class="nc">ChainId</span><span class="p">.</span><span class="nc">Algorand</span><span class="p">.</span><span class="nc">Testnet</span>  <span class="c1">// Compile-time safe</span>
+<span class="c1">// Or use string with validation</span>
+<span class="kd">val</span> <span class="py">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span>  <span class="c1">// Still supported, but less safe</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="common-migration-issues">
+  
+  
+    <a href="#common-migration-issues" class="anchor-heading" aria-labelledby="common-migration-issues"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Common Migration Issues
+  
+  
+</h2>
+    
+<h3 id="issue-1-missing-error-handling">
+  
+  
+    <a href="#issue-1-missing-error-handling" class="anchor-heading" aria-labelledby="issue-1-missing-error-handling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Issue 1: Missing Error Handling
+  
+  
+</h3>
+    
+
+<p><strong>Problem</strong>: Code assumes operations always succeed</p>
+
+<p><strong>Solution</strong>: Always handle <code class="language-plaintext highlighter-rouge">Result&lt;T&gt;</code> with <code class="language-plaintext highlighter-rouge">fold()</code> or <code class="language-plaintext highlighter-rouge">getOrThrow()</code> (only for tests)</p>
+<h3 id="issue-2-type-mismatches">
+  
+  
+    <a href="#issue-2-type-mismatches" class="anchor-heading" aria-labelledby="issue-2-type-mismatches"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Issue 2: Type Mismatches
+  
+  
+</h3>
+    
+
+<p><strong>Problem</strong>: Using old map-based options with new APIs</p>
+
+<p><strong>Solution</strong>: Migrate to type-safe options classes</p>
+<h3 id="issue-3-missing-lifecycle-calls">
+  
+  
+    <a href="#issue-3-missing-lifecycle-calls" class="anchor-heading" aria-labelledby="issue-3-missing-lifecycle-calls"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Issue 3: Missing Lifecycle Calls
+  
+  
+</h3>
+    
+
+<p><strong>Problem</strong>: Plugins not initialized before use</p>
+
+<p><strong>Solution</strong>: Call <code class="language-plaintext highlighter-rouge">initialize()</code> and <code class="language-plaintext highlighter-rouge">start()</code> before using TrustWeave</p>
+<h2 id="testing-your-migration">
+  
+  
+    <a href="#testing-your-migration" class="anchor-heading" aria-labelledby="testing-your-migration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Testing Your Migration
+  
+  
+</h2>
+    
+
+<ol>
+  <li><strong>Run Tests</strong>: Ensure all tests pass with new APIs</li>
+  <li><strong>Check Error Handling</strong>: Verify error handling works correctly</li>
+  <li><strong>Validate Configuration</strong>: Ensure type-safe options are configured correctly</li>
+  <li><strong>Test Lifecycle</strong>: Verify plugin lifecycle is managed properly</li>
+</ol>
+<h2 id="getting-help">
+  
+  
+    <a href="#getting-help" class="anchor-heading" aria-labelledby="getting-help"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Getting Help
+  
+  
+</h2>
+    
+
+<p>If you encounter issues during migration:</p>
+
+<ol>
+  <li>Check <a href="/trustweave/advanced/error-handling/">Error Handling</a> for error patterns</li>
+  <li>Review <a href="/trustweave/api-reference/core-api/">API Reference</a> for API changes</li>
+  <li>Open an issue on GitHub with migration details</li>
+  <li>Contact support at <a href="https://www.geoknoesis.com">www.geoknoesis.com</a></li>
+</ol>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

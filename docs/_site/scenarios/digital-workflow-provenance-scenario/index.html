@@ -1,0 +1,2306 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+    .site-nav ul li a {
+      background-image: none;
+    }
+
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Digital Workflow &amp; Provenance Scenario | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Digital Workflow &amp; Provenance Scenario" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://localhost:4000/trustweave/scenarios/digital-workflow-provenance-scenario/" />
+<meta property="og:url" content="http://localhost:4000/trustweave/scenarios/digital-workflow-provenance-scenario/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Digital Workflow &amp; Provenance Scenario" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"Digital Workflow &amp; Provenance Scenario","url":"http://localhost:4000/trustweave/scenarios/digital-workflow-provenance-scenario/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/beginner-tutorial-series/" class="nav-list-link">Beginner Tutorial Series</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchored-revocation/" class="nav-list-link">Blockchain-Anchored Revocation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/code-style/" class="nav-list-link">Code Style</a></li><li class="nav-list-item"><a href="/trustweave/comparison/README/" class="nav-list-link">Comparison Documentation</a></li><li class="nav-list-item"><a href="/trustweave/configuration/README/" class="nav-list-link">Configuration Reference</a></li><li class="nav-list-item"><a href="/trustweave/advanced/custom-adapters/" class="nav-list-link">Creating Custom Adapters</a></li><li class="nav-list-item"><a href="/trustweave/contributing/creating-plugins/" class="nav-list-link">Creating TrustWeave Plugins</a></li><li class="nav-list-item"><a href="/trustweave/features/credential-exchange-protocols/README/" class="nav-list-link">Credential Exchange Protocols</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/credential-issuance-tutorial/" class="nav-list-link">Credential Issuance Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/algorithm-compatibility-table/" class="nav-list-link">Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/did-operations-tutorial/" class="nav-list-link">DID Operations Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/delegation/" class="nav-list-link">Delegation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/development-setup/" class="nav-list-link">Development Setup</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/evaluation-engines/" class="nav-list-link">Evaluation Engines</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/json-canonicalization/" class="nav-list-link">JSON Canonicalization</a></li><li class="nav-list-item"><a href="/trustweave/advanced/key-rotation/" class="nav-list-link">Key Rotation Strategies</a></li><li class="nav-list-item"><a href="/trustweave/licensing/README/" class="nav-list-link">Licensing Overview</a></li><li class="nav-list-item"><a href="/trustweave/migration/README/" class="nav-list-link">Migration Guides</a></li><li class="nav-list-item"><a href="/trustweave/advanced/performance/" class="nav-list-link">Performance Considerations</a></li><li class="nav-list-item"><a href="/trustweave/advanced/plugin-lifecycle/" class="nav-list-link">Plugin Lifecycle Management</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/proof-purpose-validation/" class="nav-list-link">Proof Purpose Validation</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/credential-exchange-protocols/" class="nav-list-link">Protocol Abstraction Layer</a></li><li class="nav-list-item"><a href="/trustweave/contributing/pull-request-process/" class="nav-list-link">Pull Request Process</a></li><li class="nav-list-item"><a href="/trustweave/security/README/" class="nav-list-link">Security Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/advanced/spi/" class="nav-list-link">Service Provider Interface (SPI)</a></li><li class="nav-list-item"><a href="/trustweave/plugins/" class="nav-list-link">Supported Plugins</a></li><li class="nav-list-item"><a href="/trustweave/contributing/testing-guidelines/" class="nav-list-link">Testing Guidelines</a></li><li class="nav-list-item"><a href="/trustweave/advanced/testing-strategies/" class="nav-list-link">Testing Strategies</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/trust-registry/" class="nav-list-link">Trust Registry</a></li><li class="nav-list-item"><a href="/trustweave/GLOSSARY/" class="nav-list-link">TrustWeave Glossary</a></li><li class="nav-list-item"><a href="/trustweave/TRUSTWEAVE_WHITEPAPER/" class="nav-list-link">TrustWeave SDK: Decentralized Trust Infrastructure</a></li><li class="nav-list-item"><a href="/trustweave/scenarios/README/" class="nav-list-link">Use Case Scenarios</a></li><li class="nav-list-item"><a href="/trustweave/advanced/verification-policies/" class="nav-list-link">Verification Policies</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/wallet-api-tutorial/" class="nav-list-link">Wallet API Tutorial</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="digital-workflow--provenance-scenario">
+  
+  
+    <a href="#digital-workflow--provenance-scenario" class="anchor-heading" aria-labelledby="digital-workflow--provenance-scenario"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Digital Workflow &amp; Provenance Scenario
+  
+  
+</h1>
+    
+
+<p>This guide demonstrates how to build a digital workflow provenance system using TrustWeave and PROV-O (Provenance Ontology) to track and verify the provenance of digital information through processing workflows, transformations, and data lineage.</p>
+<h2 id="what-youll-build">
+  
+  
+    <a href="#what-youll-build" class="anchor-heading" aria-labelledby="what-youll-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Build
+  
+  
+</h2>
+    
+
+<p>By the end of this tutorial, you’ll have:</p>
+
+<ul>
+  <li>✅ Created DIDs for workflow participants (agents, activities, entities)</li>
+  <li>✅ Tracked digital information through processing workflows</li>
+  <li>✅ Built provenance chains using PROV-O concepts</li>
+  <li>✅ Issued provenance credentials for workflow steps</li>
+  <li>✅ Verified data lineage and transformation history</li>
+  <li>✅ Anchored provenance records to blockchain</li>
+  <li>✅ Built complete workflow provenance system</li>
+</ul>
+<h2 id="big-picture--significance">
+  
+  
+    <a href="#big-picture--significance" class="anchor-heading" aria-labelledby="big-picture--significance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Big Picture &amp; Significance
+  
+  
+</h2>
+    
+<h3 id="the-digital-provenance-challenge">
+  
+  
+    <a href="#the-digital-provenance-challenge" class="anchor-heading" aria-labelledby="the-digital-provenance-challenge"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Digital Provenance Challenge
+  
+  
+</h3>
+    
+
+<p>In digital workflows, information undergoes multiple transformations, processing steps, and handoffs between different agents. Understanding where data came from, how it was processed, and who handled it is critical for trust, compliance, and debugging.</p>
+
+<p><strong>Industry Context</strong>:</p>
+<ul>
+  <li><strong>Market Size</strong>: Data lineage and provenance market projected to reach $2.1 billion by 2027</li>
+  <li><strong>Regulatory Pressure</strong>: Increasing requirements for data provenance (GDPR, data governance)</li>
+  <li><strong>Trust Issues</strong>: Need to verify data hasn’t been tampered with</li>
+  <li><strong>Compliance</strong>: Audit trails required for regulatory compliance</li>
+  <li><strong>Debugging</strong>: Provenance helps debug data quality issues</li>
+</ul>
+
+<p><strong>Why This Matters</strong>:</p>
+<ol>
+  <li><strong>Data Trust</strong>: Verify data hasn’t been tampered with</li>
+  <li><strong>Compliance</strong>: Meet regulatory requirements for data lineage</li>
+  <li><strong>Debugging</strong>: Trace data issues to their source</li>
+  <li><strong>Accountability</strong>: Know who processed data and when</li>
+  <li><strong>Reproducibility</strong>: Reproduce data processing workflows</li>
+  <li><strong>Transparency</strong>: Understand data transformations</li>
+</ol>
+<h3 id="the-provenance-problem">
+  
+  
+    <a href="#the-provenance-problem" class="anchor-heading" aria-labelledby="the-provenance-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Provenance Problem
+  
+  
+</h3>
+    
+
+<p>Traditional systems struggle with provenance because:</p>
+<ul>
+  <li><strong>No Standard Format</strong>: Each system tracks provenance differently</li>
+  <li><strong>Data Silos</strong>: Provenance information is scattered</li>
+  <li><strong>No Verification</strong>: Can’t verify provenance claims</li>
+  <li><strong>Incomplete Records</strong>: Missing information about transformations</li>
+  <li><strong>No Interoperability</strong>: Can’t share provenance across systems</li>
+</ul>
+<h2 id="value-proposition">
+  
+  
+    <a href="#value-proposition" class="anchor-heading" aria-labelledby="value-proposition"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Value Proposition
+  
+  
+</h2>
+    
+<h3 id="problems-solved">
+  
+  
+    <a href="#problems-solved" class="anchor-heading" aria-labelledby="problems-solved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Problems Solved
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>Standard Provenance</strong>: PROV-O standard format for interoperability</li>
+  <li><strong>Verifiable Provenance</strong>: Cryptographic proof of provenance claims</li>
+  <li><strong>Complete Lineage</strong>: Track data through all transformations</li>
+  <li><strong>Interoperability</strong>: Standard format works across systems</li>
+  <li><strong>Compliance</strong>: Automated audit trails for regulatory requirements</li>
+  <li><strong>Trust</strong>: Verify data hasn’t been tampered with</li>
+  <li><strong>Reproducibility</strong>: Reproduce data processing workflows</li>
+</ol>
+<h3 id="business-benefits">
+  
+  
+    <a href="#business-benefits" class="anchor-heading" aria-labelledby="business-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Business Benefits
+  
+  
+</h3>
+    
+
+<p><strong>For Organizations</strong>:</p>
+<ul>
+  <li><strong>Compliance</strong>: Meet regulatory requirements</li>
+  <li><strong>Trust</strong>: Build trust in data quality</li>
+  <li><strong>Debugging</strong>: Faster issue resolution</li>
+  <li><strong>Accountability</strong>: Clear responsibility tracking</li>
+</ul>
+
+<p><strong>For Data Scientists</strong>:</p>
+<ul>
+  <li><strong>Reproducibility</strong>: Reproduce workflows</li>
+  <li><strong>Transparency</strong>: Understand data transformations</li>
+  <li><strong>Collaboration</strong>: Share workflows easily</li>
+</ul>
+
+<p><strong>For Regulators</strong>:</p>
+<ul>
+  <li><strong>Audit Trails</strong>: Complete data lineage</li>
+  <li><strong>Verification</strong>: Verify provenance claims</li>
+  <li><strong>Transparency</strong>: Understand data processing</li>
+</ul>
+<h3 id="roi-considerations">
+  
+  
+    <a href="#roi-considerations" class="anchor-heading" aria-labelledby="roi-considerations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ROI Considerations
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Compliance</strong>: Automated compliance reduces costs by 50%</li>
+  <li><strong>Debugging</strong>: Faster issue resolution saves time</li>
+  <li><strong>Trust</strong>: Increased data trust enables new use cases</li>
+  <li><strong>Reproducibility</strong>: Enables collaboration and knowledge sharing</li>
+</ul>
+<h2 id="understanding-the-problem">
+  
+  
+    <a href="#understanding-the-problem" class="anchor-heading" aria-labelledby="understanding-the-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Understanding the Problem
+  
+  
+</h2>
+    
+
+<p>Digital workflow provenance faces several critical challenges:</p>
+
+<ol>
+  <li><strong>Data Lineage</strong>: Track data through multiple transformations</li>
+  <li><strong>Agent Tracking</strong>: Know which agents processed data</li>
+  <li><strong>Transformation History</strong>: Understand what transformations were applied</li>
+  <li><strong>Verification</strong>: Verify provenance claims</li>
+  <li><strong>Interoperability</strong>: Share provenance across systems</li>
+  <li><strong>Completeness</strong>: Ensure complete provenance records</li>
+</ol>
+<h3 id="real-world-pain-points">
+  
+  
+    <a href="#real-world-pain-points" class="anchor-heading" aria-labelledby="real-world-pain-points"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Pain Points
+  
+  
+</h3>
+    
+
+<p><strong>Example 1: Image Processing Pipeline</strong></p>
+<ul>
+  <li>Current: No way to track image through processing steps</li>
+  <li>Problem: Can’t verify image authenticity or processing history</li>
+  <li>Solution: Verifiable provenance credentials for each processing step</li>
+</ul>
+
+<p><strong>Example 2: Data Science Workflow</strong></p>
+<ul>
+  <li>Current: No provenance tracking for data transformations</li>
+  <li>Problem: Can’t reproduce results or debug issues</li>
+  <li>Solution: Complete provenance chain with verifiable credentials</li>
+</ul>
+
+<p><strong>Example 3: Content Creation</strong></p>
+<ul>
+  <li>Current: No way to prove content creation process</li>
+  <li>Problem: Can’t verify content authenticity or authorship</li>
+  <li>Solution: Provenance credentials tracking creation workflow</li>
+</ul>
+<h2 id="how-it-works-provenance-flow">
+  
+  
+    <a href="#how-it-works-provenance-flow" class="anchor-heading" aria-labelledby="how-it-works-provenance-flow"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How It Works: Provenance Flow
+  
+  
+</h2>
+    
+
+<pre><code class="language-mermaid">flowchart TD
+    A["Source Entity&lt;br/&gt;Original Data&lt;br/&gt;Entity DID"] --&gt;|used by| B["Activity Processing Step&lt;br/&gt;Activity DID&lt;br/&gt;Transformation Applied&lt;br/&gt;Agent DID who performed"]
+    B --&gt;|generated| C["Derived Entity&lt;br/&gt;Processed Data&lt;br/&gt;Entity DID&lt;br/&gt;Provenance Credential"]
+    C --&gt;|anchors to blockchain| D["Blockchain Anchor&lt;br/&gt;Immutable Provenance Record&lt;br/&gt;Complete Lineage"]
+    
+    style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
+    style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style D fill:#c2185b,stroke:#880e4f,stroke-width:2px,color:#fff
+</code></pre>
+<h2 id="key-concepts">
+  
+  
+    <a href="#key-concepts" class="anchor-heading" aria-labelledby="key-concepts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Concepts
+  
+  
+</h2>
+    
+<h3 id="prov-o-concepts">
+  
+  
+    <a href="#prov-o-concepts" class="anchor-heading" aria-labelledby="prov-o-concepts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> PROV-O Concepts
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>Entity</strong>: A digital object (e.g., image, dataset, document)</li>
+  <li><strong>Activity</strong>: A processing step or transformation</li>
+  <li><strong>Agent</strong>: Who or what performed the activity</li>
+  <li><strong>Used</strong>: Relationship showing entity was used by activity</li>
+  <li><strong>Generated</strong>: Relationship showing activity generated entity</li>
+  <li><strong>WasAttributedTo</strong>: Relationship showing entity was attributed to agent</li>
+</ol>
+<h3 id="provenance-credential-types">
+  
+  
+    <a href="#provenance-credential-types" class="anchor-heading" aria-labelledby="provenance-credential-types"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Provenance Credential Types
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>Entity Credential</strong>: Describes a digital entity</li>
+  <li><strong>Activity Credential</strong>: Describes a processing activity</li>
+  <li><strong>Provenance Chain Credential</strong>: Links entities through activities</li>
+  <li><strong>Transformation Credential</strong>: Describes data transformation</li>
+</ol>
+<h2 id="prerequisites">
+  
+  
+    <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
+  
+  
+</h2>
+    
+
+<ul>
+  <li>Java 21+</li>
+  <li>Kotlin 2.2.0+</li>
+  <li>Gradle 8.5+</li>
+  <li>Basic understanding of Kotlin and coroutines</li>
+  <li>Familiarity with PROV-O concepts (helpful but not required)</li>
+</ul>
+<h2 id="step-1-add-dependencies">
+  
+  
+    <a href="#step-1-add-dependencies" class="anchor-heading" aria-labelledby="step-1-add-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Add Dependencies
+  
+  
+</h2>
+    
+
+<p>Add TrustWeave dependencies to your <code class="language-plaintext highlighter-rouge">build.gradle.kts</code>. These modules provide DID support, credential issuance, wallet storage, and the in-memory services used to model provenance workflows.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+</pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
+    <span class="c1">// Core TrustWeave modules</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    
+    <span class="c1">// Test kit for in-memory implementations</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    
+    <span class="c1">// Kotlinx Serialization</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
+    
+    <span class="c1">// Coroutines</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Result:</strong> With the dependencies synced, you can run the provenance walkthrough without wiring additional adapters.</p>
+<h2 id="step-2-setup-and-create-entity-dids">
+  
+  
+    <a href="#step-2-setup-and-create-entity-dids" class="anchor-heading" aria-labelledby="step-2-setup-and-create-entity-dids"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Setup and Create Entity DIDs
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Initialize the provenance system and create DIDs for workflow entities.</p>
+
+<p><strong>Why This Matters</strong>: In PROV-O, everything is an entity, activity, or agent. Each needs a unique DID for verifiable identity. This enables tracking relationships between entities through activities.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Entity DIDs</strong>: Represent digital objects (images, datasets, documents)</li>
+  <li><strong>Activity DIDs</strong>: Represent processing steps (transformations, analyses)</li>
+  <li><strong>Agent DIDs</strong>: Represent who/what performed activities</li>
+  <li><strong>Separation</strong>: Clear separation enables precise provenance tracking</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.did.DidKeyMockMethod</span>
+<span class="k">import</span> <span class="nn">com.trustweave.testkit.kms.InMemoryKeyManagementService</span>
+<span class="k">import</span> <span class="nn">com.trustweave.did.DidMethodRegistry</span>
+<span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
+
+<span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"=== Digital Workflow &amp; Provenance Scenario ===\n"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 1: Setup services</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Step 1: Setting up services..."</span><span class="p">)</span>
+    
+    <span class="c1">// Separate KMS for different workflow participants</span>
+    <span class="c1">// This ensures proper key isolation and security</span>
+    <span class="kd">val</span> <span class="py">processorKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span> <span class="c1">// For processing agents</span>
+    <span class="kd">val</span> <span class="py">sourceKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>   <span class="c1">// For source entities</span>
+    
+    <span class="kd">val</span> <span class="py">didMethod</span> <span class="p">=</span> <span class="nc">DidKeyMockMethod</span><span class="p">(</span><span class="n">processorKms</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">didRegistry</span> <span class="p">=</span> <span class="nc">DidMethodRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span> <span class="nf">register</span><span class="p">(</span><span class="n">didMethod</span><span class="p">)</span> <span class="p">}</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Services initialized"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-3-create-source-entity-did">
+  
+  
+    <a href="#step-3-create-source-entity-did" class="anchor-heading" aria-labelledby="step-3-create-source-entity-did"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Create Source Entity DID
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Create DID for the original source entity (e.g., original image).</p>
+
+<p><strong>Why This Matters</strong>: The source entity is the starting point of the provenance chain. Its DID provides a persistent identifier that can be referenced throughout the workflow.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Source Entity</strong>: Represents original, unprocessed data</li>
+  <li><strong>Entity DID</strong>: Provides persistent identifier</li>
+  <li><strong>Provenance Start</strong>: Beginning of provenance chain</li>
+  <li><strong>Verification</strong>: Can verify entity hasn’t been tampered with</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+</pre></td><td class="rouge-code"><pre>    <span class="c1">// Step 2: Create source entity DID</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 2: Creating source entity DID..."</span><span class="p">)</span>
+    
+    <span class="c1">// Source entity represents original data before any processing</span>
+    <span class="c1">// In image processing example, this would be the original photograph</span>
+    <span class="c1">// The DID provides persistent identity that survives transformations</span>
+    <span class="kd">val</span> <span class="py">sourceEntityDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Source Entity DID: ${sourceEntityDid.id}"</span><span class="p">)</span>
+    
+    <span class="c1">// Create entity credential for source</span>
+    <span class="c1">// This credential describes the original entity</span>
+    <span class="kd">val</span> <span class="py">sourceEntityCredential</span> <span class="p">=</span> <span class="nf">createEntityCredential</span><span class="p">(</span>
+        <span class="n">entityDid</span> <span class="p">=</span> <span class="n">sourceEntityDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">entityType</span> <span class="p">=</span> <span class="s">"Image"</span><span class="p">,</span>
+        <span class="n">entityHash</span> <span class="p">=</span> <span class="s">"sha256:original-image-hash"</span><span class="p">,</span>
+        <span class="n">metadata</span> <span class="p">=</span> <span class="nf">mapOf</span><span class="p">(</span>
+            <span class="s">"format"</span> <span class="n">to</span> <span class="s">"JPEG"</span><span class="p">,</span>
+            <span class="s">"resolution"</span> <span class="n">to</span> <span class="s">"1920x1080"</span><span class="p">,</span>
+            <span class="s">"created"</span> <span class="n">to</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">()</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Source entity credential created:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Type: Image"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Format: JPEG"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Resolution: 1920x1080"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-4-create-activity-and-agent-dids">
+  
+  
+    <a href="#step-4-create-activity-and-agent-dids" class="anchor-heading" aria-labelledby="step-4-create-activity-and-agent-dids"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Create Activity and Agent DIDs
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Create DIDs for processing activity and the agent performing it.</p>
+
+<p><strong>Why This Matters</strong>: PROV-O requires tracking who (agent) did what (activity) to which entities. These DIDs enable verifiable provenance relationships.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Activity DID</strong>: Represents the processing step (e.g., “image-resize”)</li>
+  <li><strong>Agent DID</strong>: Represents who/what performed it (e.g., processing service)</li>
+  <li><strong>Relationship Tracking</strong>: DIDs enable tracking relationships</li>
+  <li><strong>Verification</strong>: Can verify who did what and when</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td><td class="rouge-code"><pre>    <span class="c1">// Step 3: Create activity and agent DIDs</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 3: Creating activity and agent DIDs..."</span><span class="p">)</span>
+    
+    <span class="c1">// Activity DID represents a processing step</span>
+    <span class="c1">// In PROV-O, activities are things that happen and transform entities</span>
+    <span class="c1">// Example: "resize-image", "apply-filter", "crop-image"</span>
+    <span class="kd">val</span> <span class="py">resizeActivityDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Activity (Resize) DID: ${resizeActivityDid.id}"</span><span class="p">)</span>
+    
+    <span class="c1">// Agent DID represents who or what performed the activity</span>
+    <span class="c1">// This could be a person, software service, or automated system</span>
+    <span class="c1">// Example: "image-processing-service", "user-alice"</span>
+    <span class="kd">val</span> <span class="py">processingAgentDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Agent (Image Processor) DID: ${processingAgentDid.id}"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-5-create-activity-credential">
+  
+  
+    <a href="#step-5-create-activity-credential" class="anchor-heading" aria-labelledby="step-5-create-activity-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Create Activity Credential
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Create credential describing the processing activity.</p>
+
+<p><strong>Why This Matters</strong>: The activity credential records what transformation was applied. This is critical for reproducibility - you need to know exactly what was done to the data.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Activity Description</strong>: What processing was performed</li>
+  <li><strong>Parameters</strong>: How the processing was configured</li>
+  <li><strong>Timing</strong>: When the activity occurred</li>
+  <li><strong>Agent Reference</strong>: Who/what performed it</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.models.VerifiableCredential</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
+<span class="k">import</span> <span class="nn">java.time.Instant</span>
+
+    <span class="c1">// Step 4: Create activity credential</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 4: Creating activity credential..."</span><span class="p">)</span>
+    
+    <span class="c1">// Activity credential describes the processing step</span>
+    <span class="c1">// This follows PROV-O "Activity" concept</span>
+    <span class="c1">// Records what transformation was applied and how</span>
+    <span class="kd">val</span> <span class="py">resizeActivityCredential</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+        <span class="n">id</span> <span class="p">=</span> <span class="s">"https://processor.example.com/activities/${resizeActivityDid.id.substringAfterLast("</span><span class="p">:</span><span class="s">")}"</span><span class="p">,</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"ActivityCredential"</span><span class="p">,</span> <span class="s">"ProvenanceCredential"</span><span class="p">),</span>
+        <span class="n">issuer</span> <span class="p">=</span> <span class="n">processingAgentDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="c1">// Agent issues credential about activity they performed</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="n">resizeActivityDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"activity"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"activityType"</span><span class="p">,</span> <span class="s">"resize-image"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"description"</span><span class="p">,</span> <span class="s">"Resize image to target dimensions"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"parameters"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"targetWidth"</span><span class="p">,</span> <span class="s">"800"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"targetHeight"</span><span class="p">,</span> <span class="s">"600"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"algorithm"</span><span class="p">,</span> <span class="s">"lanczos"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"maintainAspectRatio"</span><span class="p">,</span> <span class="s">"true"</span><span class="p">)</span>
+                <span class="p">})</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"startTime"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"endTime"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">plusSeconds</span><span class="p">(</span><span class="mi">5</span><span class="p">).</span><span class="nf">toString</span><span class="p">())</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"agentDid"</span><span class="p">,</span> <span class="n">processingAgentDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">(),</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="k">null</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Activity credential created:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Type: resize-image"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Parameters: 800x600, lanczos algorithm"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Agent: ${processingAgentDid.id}"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-6-create-provenance-chain-credential">
+  
+  
+    <a href="#step-6-create-provenance-chain-credential" class="anchor-heading" aria-labelledby="step-6-create-provenance-chain-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 6: Create Provenance Chain Credential
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Create credential linking source entity to derived entity through activity.</p>
+
+<p><strong>Why This Matters</strong>: This credential captures the PROV-O relationships: entity was “used” by activity, activity “generated” new entity. This creates the provenance chain.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Used Relationship</strong>: Source entity was used by activity</li>
+  <li><strong>Generated Relationship</strong>: Activity generated derived entity</li>
+  <li><strong>Chain Continuity</strong>: Links entities through activities</li>
+  <li><strong>Complete Lineage</strong>: Enables full provenance tracking</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+</pre></td><td class="rouge-code"><pre>    <span class="c1">// Step 5: Create derived entity DID</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 5: Creating derived entity DID..."</span><span class="p">)</span>
+    
+    <span class="c1">// Derived entity is the result of processing</span>
+    <span class="c1">// In PROV-O, activities generate new entities from used entities</span>
+    <span class="c1">// This entity is the resized image</span>
+    <span class="kd">val</span> <span class="py">derivedEntityDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Derived Entity DID: ${derivedEntityDid.id}"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 6: Create provenance chain credential</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 6: Creating provenance chain credential..."</span><span class="p">)</span>
+    
+    <span class="c1">// Provenance chain credential links entities through activities</span>
+    <span class="c1">// This follows PROV-O relationships:</span>
+    <span class="c1">// - sourceEntity was "used" by activity</span>
+    <span class="c1">// - activity "generated" derivedEntity</span>
+    <span class="c1">// This creates verifiable provenance chain</span>
+    <span class="kd">val</span> <span class="py">provenanceChainCredential</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+        <span class="n">id</span> <span class="p">=</span> <span class="s">"https://processor.example.com/provenance/${sourceEntityDid.id.substringAfterLast("</span><span class="p">:</span><span class="s">")}-to-${derivedEntityDid.id.substringAfterLast("</span><span class="p">:</span><span class="s">")}"</span><span class="p">,</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"ProvenanceChainCredential"</span><span class="p">,</span> <span class="s">"ProvenanceCredential"</span><span class="p">),</span>
+        <span class="n">issuer</span> <span class="p">=</span> <span class="n">processingAgentDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"provenance"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="c1">// PROV-O: Entity that was used</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"usedEntity"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"entityDid"</span><span class="p">,</span> <span class="n">sourceEntityDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"entityHash"</span><span class="p">,</span> <span class="s">"sha256:original-image-hash"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"role"</span><span class="p">,</span> <span class="s">"input"</span><span class="p">)</span>
+                <span class="p">})</span>
+                
+                <span class="c1">// PROV-O: Activity that used the entity</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"activity"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"activityDid"</span><span class="p">,</span> <span class="n">resizeActivityDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"activityType"</span><span class="p">,</span> <span class="s">"resize-image"</span><span class="p">)</span>
+                <span class="p">})</span>
+                
+                <span class="c1">// PROV-O: Entity that was generated</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"generatedEntity"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"entityDid"</span><span class="p">,</span> <span class="n">derivedEntityDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"entityHash"</span><span class="p">,</span> <span class="s">"sha256:resized-image-hash"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"role"</span><span class="p">,</span> <span class="s">"output"</span><span class="p">)</span>
+                <span class="p">})</span>
+                
+                <span class="c1">// PROV-O: Agent that performed activity</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"agent"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"agentDid"</span><span class="p">,</span> <span class="n">processingAgentDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"agentType"</span><span class="p">,</span> <span class="s">"image-processing-service"</span><span class="p">)</span>
+                <span class="p">})</span>
+                
+                <span class="c1">// Timestamp of transformation</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"timestamp"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">(),</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="k">null</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Provenance chain credential created:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Used: ${sourceEntityDid.id}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Activity: resize-image"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Generated: ${derivedEntityDid.id}"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-7-issue-credentials-with-proof">
+  
+  
+    <a href="#step-7-issue-credentials-with-proof" class="anchor-heading" aria-labelledby="step-7-issue-credentials-with-proof"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 7: Issue Credentials with Proof
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Cryptographically sign provenance credentials to make them verifiable.</p>
+
+<p><strong>Why This Matters</strong>: Cryptographic proof ensures provenance claims cannot be tampered with. This is critical for trust - you need to verify that provenance records are authentic.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Key Generation</strong>: Generate signing key for processing agent</li>
+  <li><strong>Proof Generation</strong>: Create cryptographic proof</li>
+  <li><strong>Credential Issuance</strong>: Sign credentials with agent’s key</li>
+  <li><strong>Verification</strong>: Anyone can verify credentials came from agent</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.issuer.CredentialIssuer</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.proof.Ed25519ProofGenerator</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.proof.ProofGeneratorRegistry</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.CredentialIssuanceOptions</span>
+
+    <span class="c1">// Step 7: Issue credentials with proof</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 7: Issuing provenance credentials..."</span><span class="p">)</span>
+    
+    <span class="c1">// Generate agent's signing key</span>
+    <span class="c1">// This key will be used to sign all provenance credentials</span>
+    <span class="c1">// In production, use hardware security module (HSM)</span>
+    <span class="kd">val</span> <span class="py">agentKey</span> <span class="p">=</span> <span class="n">processorKms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span>
+    
+    <span class="c1">// Create proof generator for agent</span>
+    <span class="c1">// Ed25519 provides strong security with good performance</span>
+    <span class="kd">val</span> <span class="py">agentProofGenerator</span> <span class="p">=</span> <span class="nc">Ed25519ProofGenerator</span><span class="p">(</span>
+        <span class="n">signer</span> <span class="p">=</span> <span class="p">{</span> <span class="n">data</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">processorKms</span><span class="p">.</span><span class="nf">sign</span><span class="p">(</span><span class="n">keyId</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span> <span class="p">},</span>
+        <span class="n">getPublicKeyId</span> <span class="p">=</span> <span class="p">{</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">agentKey</span><span class="p">.</span><span class="n">id</span> <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="kd">val</span> <span class="py">agentProofRegistry</span> <span class="p">=</span> <span class="nc">ProofGeneratorRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
+        <span class="nf">register</span><span class="p">(</span><span class="n">agentProofGenerator</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Create credential issuer</span>
+    <span class="kd">val</span> <span class="py">agentIssuer</span> <span class="p">=</span> <span class="nc">CredentialIssuer</span><span class="p">(</span>
+        <span class="n">proofGenerator</span> <span class="p">=</span> <span class="n">agentProofGenerator</span><span class="p">,</span>
+        <span class="n">resolveDid</span> <span class="p">=</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span> <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">)</span> <span class="p">!=</span> <span class="k">null</span> <span class="p">},</span>
+        <span class="n">proofRegistry</span> <span class="p">=</span> <span class="n">agentProofRegistry</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Issue activity credential</span>
+    <span class="c1">// This proves the activity was performed by the agent</span>
+    <span class="kd">val</span> <span class="py">issuedActivityCredential</span> <span class="p">=</span> <span class="n">agentIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">resizeActivityCredential</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">processingAgentDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">keyId</span> <span class="p">=</span> <span class="n">agentKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Issue provenance chain credential</span>
+    <span class="c1">// This proves the provenance relationships are authentic</span>
+    <span class="kd">val</span> <span class="py">issuedProvenanceChain</span> <span class="p">=</span> <span class="n">agentIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">provenanceChainCredential</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">processingAgentDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">keyId</span> <span class="p">=</span> <span class="n">agentKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Provenance credentials issued:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Activity credential: ${issuedActivityCredential.proof != null}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Provenance chain: ${issuedProvenanceChain.proof != null}"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-8-build-multi-step-provenance-chain">
+  
+  
+    <a href="#step-8-build-multi-step-provenance-chain" class="anchor-heading" aria-labelledby="step-8-build-multi-step-provenance-chain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 8: Build Multi-Step Provenance Chain
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Extend provenance chain through multiple processing steps.</p>
+
+<p><strong>Why This Matters</strong>: Real workflows have multiple steps. Each step generates a new entity and extends the provenance chain. This enables complete lineage tracking.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Chain Extension</strong>: Each step adds to the chain</li>
+  <li><strong>Entity References</strong>: Each step references previous entity</li>
+  <li><strong>Complete Lineage</strong>: Enables full workflow tracking</li>
+  <li><strong>Verification</strong>: Can verify entire chain</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+</pre></td><td class="rouge-code"><pre>    <span class="c1">// Step 8: Build multi-step provenance chain</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 8: Building multi-step provenance chain..."</span><span class="p">)</span>
+    
+    <span class="c1">// Real workflows have multiple processing steps</span>
+    <span class="c1">// Each step creates a new entity and extends the provenance chain</span>
+    <span class="c1">// Example: Original Image → Resize → Apply Filter → Crop → Final Image</span>
+    
+    <span class="c1">// Step 2: Apply filter to resized image</span>
+    <span class="kd">val</span> <span class="py">filterActivityDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">filteredEntityDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+    
+    <span class="c1">// Create filter activity credential</span>
+    <span class="kd">val</span> <span class="py">filterActivityCredential</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"ActivityCredential"</span><span class="p">,</span> <span class="s">"ProvenanceCredential"</span><span class="p">),</span>
+        <span class="n">issuer</span> <span class="p">=</span> <span class="n">processingAgentDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="n">filterActivityDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"activity"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"activityType"</span><span class="p">,</span> <span class="s">"apply-filter"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"parameters"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"filterType"</span><span class="p">,</span> <span class="s">"sharpen"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"intensity"</span><span class="p">,</span> <span class="s">"0.5"</span><span class="p">)</span>
+                <span class="p">})</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"agentDid"</span><span class="p">,</span> <span class="n">processingAgentDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">()</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Create provenance chain credential linking resized to filtered</span>
+    <span class="c1">// This extends the provenance chain: original → resized → filtered</span>
+    <span class="kd">val</span> <span class="py">filterProvenanceChain</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"ProvenanceChainCredential"</span><span class="p">),</span>
+        <span class="n">issuer</span> <span class="p">=</span> <span class="n">processingAgentDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"provenance"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="c1">// Previous entity (resized image)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"usedEntity"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"entityDid"</span><span class="p">,</span> <span class="n">derivedEntityDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"entityHash"</span><span class="p">,</span> <span class="s">"sha256:resized-image-hash"</span><span class="p">)</span>
+                <span class="p">})</span>
+                
+                <span class="c1">// Current activity (apply filter)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"activity"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"activityDid"</span><span class="p">,</span> <span class="n">filterActivityDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"activityType"</span><span class="p">,</span> <span class="s">"apply-filter"</span><span class="p">)</span>
+                <span class="p">})</span>
+                
+                <span class="c1">// Generated entity (filtered image)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"generatedEntity"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"entityDid"</span><span class="p">,</span> <span class="n">filteredEntityDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"entityHash"</span><span class="p">,</span> <span class="s">"sha256:filtered-image-hash"</span><span class="p">)</span>
+                <span class="p">})</span>
+                
+                <span class="nf">put</span><span class="p">(</span><span class="s">"agent"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"agentDid"</span><span class="p">,</span> <span class="n">processingAgentDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="p">})</span>
+                
+                <span class="nf">put</span><span class="p">(</span><span class="s">"timestamp"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">()</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Issue credentials</span>
+    <span class="kd">val</span> <span class="py">issuedFilterActivity</span> <span class="p">=</span> <span class="n">agentIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">filterActivityCredential</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">processingAgentDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">keyId</span> <span class="p">=</span> <span class="n">agentKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">issuedFilterChain</span> <span class="p">=</span> <span class="n">agentIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">filterProvenanceChain</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">processingAgentDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">keyId</span> <span class="p">=</span> <span class="n">agentKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Multi-step provenance chain created:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Step 1: Original → Resized"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Step 2: Resized → Filtered"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-9-verify-provenance-chain">
+  
+  
+    <a href="#step-9-verify-provenance-chain" class="anchor-heading" aria-labelledby="step-9-verify-provenance-chain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 9: Verify Provenance Chain
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Verify complete provenance chain from source to final entity.</p>
+
+<p><strong>Why This Matters</strong>: Verification ensures the provenance chain is authentic and complete. This enables trust in the data processing workflow.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Chain Verification</strong>: Verify each credential in chain</li>
+  <li><strong>Continuity Check</strong>: Verify entities link correctly</li>
+  <li><strong>Agent Verification</strong>: Verify agents are legitimate</li>
+  <li><strong>Completeness</strong>: Ensure no missing steps</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.verifier.CredentialVerifier</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.CredentialVerificationOptions</span>
+
+    <span class="c1">// Step 9: Verify provenance chain</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 9: Verifying provenance chain..."</span><span class="p">)</span>
+    
+    <span class="c1">// Create verifier to check provenance credentials</span>
+    <span class="kd">val</span> <span class="py">verifier</span> <span class="p">=</span> <span class="nc">CredentialVerifier</span><span class="p">(</span>
+        <span class="n">didResolver</span> <span class="p">=</span> <span class="nc">CredentialDidResolver</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span>
+            <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">).</span><span class="nf">toCredentialDidResolution</span><span class="p">()</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Verify all credentials in chain</span>
+    <span class="kd">val</span> <span class="py">provenanceChain</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span>
+        <span class="n">issuedProvenanceChain</span><span class="p">,</span>
+        <span class="n">issuedFilterChain</span>
+    <span class="p">)</span>
+    
+    <span class="kd">var</span> <span class="py">chainValid</span> <span class="p">=</span> <span class="k">true</span>
+    <span class="n">provenanceChain</span><span class="p">.</span><span class="nf">forEachIndexed</span> <span class="p">{</span> <span class="n">index</span><span class="p">,</span> <span class="n">credential</span> <span class="p">-&gt;</span>
+        <span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">verifier</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span>
+            <span class="n">credential</span> <span class="p">=</span> <span class="n">credential</span><span class="p">,</span>
+            <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialVerificationOptions</span><span class="p">(</span>
+                <span class="n">checkRevocation</span> <span class="p">=</span> <span class="k">true</span><span class="p">,</span>
+                <span class="n">checkExpiration</span> <span class="p">=</span> <span class="k">false</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Step ${index + 1} verified"</span><span class="p">)</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Step ${index + 1} verification failed:"</span><span class="p">)</span>
+            <span class="n">verification</span><span class="p">.</span><span class="n">errors</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="nf">println</span><span class="p">(</span><span class="s">"  - $it"</span><span class="p">)</span> <span class="p">}</span>
+            <span class="n">chainValid</span> <span class="p">=</span> <span class="k">false</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">chainValid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Complete provenance chain verified!"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"  - Can trace from source to final entity"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"  - All transformations verified"</span><span class="p">)</span>
+    <span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-10-trace-data-lineage">
+  
+  
+    <a href="#step-10-trace-data-lineage" class="anchor-heading" aria-labelledby="step-10-trace-data-lineage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 10: Trace Data Lineage
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Retrieve complete data lineage from source to final entity.</p>
+
+<p><strong>Why This Matters</strong>: Data lineage enables understanding how data was transformed. This is critical for debugging, compliance, and trust.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Lineage Retrieval</strong>: Get all steps in workflow</li>
+  <li><strong>Entity Tracking</strong>: Track entities through transformations</li>
+  <li><strong>Activity Tracking</strong>: Track activities performed</li>
+  <li><strong>Agent Tracking</strong>: Track who performed activities</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+</pre></td><td class="rouge-code"><pre>    <span class="c1">// Step 10: Trace data lineage</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 10: Tracing data lineage..."</span><span class="p">)</span>
+    
+    <span class="c1">// Function to trace lineage from final entity back to source</span>
+    <span class="k">fun</span> <span class="nf">traceLineage</span><span class="p">(</span>
+        <span class="n">finalEntityDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+        <span class="n">provenanceChains</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span>
+    <span class="p">):</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">LineageStep</span><span class="p">&gt;</span> <span class="p">{</span>
+        <span class="kd">val</span> <span class="py">lineage</span> <span class="p">=</span> <span class="n">mutableListOf</span><span class="p">&lt;</span><span class="nc">LineageStep</span><span class="p">&gt;()</span>
+        <span class="kd">var</span> <span class="py">currentEntityDid</span> <span class="p">=</span> <span class="n">finalEntityDid</span>
+        
+        <span class="c1">// Trace backwards through provenance chain</span>
+        <span class="k">while</span> <span class="p">(</span><span class="k">true</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">val</span> <span class="py">chainCredential</span> <span class="p">=</span> <span class="n">provenanceChains</span><span class="p">.</span><span class="nf">find</span> <span class="p">{</span> <span class="n">credential</span> <span class="p">-&gt;</span>
+                <span class="kd">val</span> <span class="py">generatedEntity</span> <span class="p">=</span> <span class="n">credential</span><span class="p">.</span><span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"provenance"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
+                    <span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"generatedEntity"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonObject</span>
+                    <span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"entityDid"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
+                <span class="n">generatedEntity</span> <span class="p">==</span> <span class="n">currentEntityDid</span>
+            <span class="p">}</span> <span class="o">?:</span> <span class="k">break</span>
+            
+            <span class="kd">val</span> <span class="py">provenance</span> <span class="p">=</span> <span class="n">chainCredential</span><span class="p">.</span><span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"provenance"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
+                <span class="o">?:</span> <span class="k">break</span>
+            
+            <span class="kd">val</span> <span class="py">usedEntity</span> <span class="p">=</span> <span class="n">provenance</span><span class="p">[</span><span class="s">"usedEntity"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
+                <span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"entityDid"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span> <span class="o">?:</span> <span class="k">break</span>
+            
+            <span class="kd">val</span> <span class="py">activity</span> <span class="p">=</span> <span class="n">provenance</span><span class="p">[</span><span class="s">"activity"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
+                <span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"activityType"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span> <span class="o">?:</span> <span class="k">break</span>
+            
+            <span class="kd">val</span> <span class="py">agent</span> <span class="p">=</span> <span class="n">provenance</span><span class="p">[</span><span class="s">"agent"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
+                <span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"agentDid"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span> <span class="o">?:</span> <span class="k">break</span>
+            
+            <span class="n">lineage</span><span class="p">.</span><span class="nf">add</span><span class="p">(</span><span class="nc">LineageStep</span><span class="p">(</span>
+                <span class="n">entityDid</span> <span class="p">=</span> <span class="n">currentEntityDid</span><span class="p">,</span>
+                <span class="n">activityType</span> <span class="p">=</span> <span class="n">activity</span><span class="p">,</span>
+                <span class="n">agentDid</span> <span class="p">=</span> <span class="n">agent</span><span class="p">,</span>
+                <span class="n">previousEntityDid</span> <span class="p">=</span> <span class="n">usedEntity</span>
+            <span class="p">))</span>
+            
+            <span class="n">currentEntityDid</span> <span class="p">=</span> <span class="n">usedEntity</span>
+        <span class="p">}</span>
+        
+        <span class="k">return</span> <span class="n">lineage</span><span class="p">.</span><span class="nf">reversed</span><span class="p">()</span> <span class="c1">// Reverse to show source to final</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Trace lineage from filtered image back to original</span>
+    <span class="kd">val</span> <span class="py">lineage</span> <span class="p">=</span> <span class="nf">traceLineage</span><span class="p">(</span>
+        <span class="n">finalEntityDid</span> <span class="p">=</span> <span class="n">filteredEntityDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">provenanceChains</span> <span class="p">=</span> <span class="n">provenanceChain</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Data lineage traced:"</span><span class="p">)</span>
+    <span class="n">lineage</span><span class="p">.</span><span class="nf">forEachIndexed</span> <span class="p">{</span> <span class="n">index</span><span class="p">,</span> <span class="n">step</span> <span class="p">-&gt;</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"  ${index + 1}. ${step.activityType} by ${step.agentDid}"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"     Entity: ${step.entityDid}"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">data class</span> <span class="nc">LineageStep</span><span class="p">(</span>
+    <span class="kd">val</span> <span class="py">entityDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">activityType</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">agentDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">previousEntityDid</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">)</span>
+
+<span class="k">fun</span> <span class="nf">createEntityCredential</span><span class="p">(</span>
+    <span class="n">entityDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">entityType</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">entityHash</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">metadata</span><span class="p">:</span> <span class="nc">Map</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">,</span> <span class="nc">String</span><span class="p">&gt;</span>
+<span class="p">):</span> <span class="nc">VerifiableCredential</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"EntityCredential"</span><span class="p">,</span> <span class="s">"ProvenanceCredential"</span><span class="p">),</span>
+        <span class="n">issuer</span> <span class="p">=</span> <span class="n">entityDid</span><span class="p">,</span> <span class="c1">// Entity issues its own credential</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="n">entityDid</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"entity"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"entityType"</span><span class="p">,</span> <span class="n">entityType</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"entityHash"</span><span class="p">,</span> <span class="n">entityHash</span><span class="p">)</span>
+                <span class="n">metadata</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="p">-&gt;</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                <span class="p">}</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">(),</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="k">null</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-11-anchor-provenance-to-blockchain">
+  
+  
+    <a href="#step-11-anchor-provenance-to-blockchain" class="anchor-heading" aria-labelledby="step-11-anchor-provenance-to-blockchain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 11: Anchor Provenance to Blockchain
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Create immutable record of provenance chain.</p>
+
+<p><strong>Why This Matters</strong>: Blockchain anchoring provides permanent, tamper-proof record of provenance. This enables long-term audit trails and verification.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Immutability</strong>: Cannot be tampered with</li>
+  <li><strong>Audit Trail</strong>: Permanent record</li>
+  <li><strong>Verification</strong>: Anyone can verify</li>
+  <li><strong>Non-Repudiation</strong>: Agents cannot deny activities</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient</span>
+<span class="k">import</span> <span class="nn">com.trustweave.anchor.BlockchainAnchorRegistry</span>
+<span class="k">import</span> <span class="nn">com.trustweave.anchor.anchorTyped</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.Serializable</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.Json</span>
+
+<span class="nd">@Serializable</span>
+<span class="kd">data class</span> <span class="nc">ProvenanceRecord</span><span class="p">(</span>
+    <span class="kd">val</span> <span class="py">sourceEntityDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">finalEntityDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">activityCount</span><span class="p">:</span> <span class="nc">Int</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">provenanceDigest</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">timestamp</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">)</span>
+
+    <span class="c1">// Step 11: Anchor provenance to blockchain</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 11: Anchoring provenance to blockchain..."</span><span class="p">)</span>
+    
+    <span class="c1">// Setup blockchain client</span>
+    <span class="kd">val</span> <span class="py">anchorClient</span> <span class="p">=</span> <span class="nc">InMemoryBlockchainAnchorClient</span><span class="p">(</span><span class="s">"eip155:1"</span><span class="p">,</span> <span class="nf">emptyMap</span><span class="p">())</span>
+    <span class="kd">val</span> <span class="py">blockchainRegistry</span> <span class="p">=</span> <span class="nc">BlockchainAnchorRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
+        <span class="nf">register</span><span class="p">(</span><span class="s">"eip155:1"</span><span class="p">,</span> <span class="n">anchorClient</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Compute digest of complete provenance chain</span>
+    <span class="c1">// This digest uniquely identifies the entire workflow</span>
+    <span class="kd">val</span> <span class="py">provenanceDigest</span> <span class="p">=</span> <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">json</span><span class="p">.</span><span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span>
+        <span class="nc">Json</span><span class="p">.</span><span class="nf">encodeToJsonElement</span><span class="p">(</span>
+            <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">credential</span><span class="p">.</span><span class="n">models</span><span class="p">.</span><span class="nc">VerifiableCredential</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
+            <span class="n">issuedProvenanceChain</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Create provenance record</span>
+    <span class="kd">val</span> <span class="py">provenanceRecord</span> <span class="p">=</span> <span class="nc">ProvenanceRecord</span><span class="p">(</span>
+        <span class="n">sourceEntityDid</span> <span class="p">=</span> <span class="n">sourceEntityDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">finalEntityDid</span> <span class="p">=</span> <span class="n">filteredEntityDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">activityCount</span> <span class="p">=</span> <span class="mi">2</span><span class="p">,</span> <span class="c1">// resize + filter</span>
+        <span class="n">provenanceDigest</span> <span class="p">=</span> <span class="n">provenanceDigest</span><span class="p">,</span>
+        <span class="n">timestamp</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">()</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Anchor to blockchain</span>
+    <span class="kd">val</span> <span class="py">anchorResult</span> <span class="p">=</span> <span class="n">blockchainRegistry</span><span class="p">.</span><span class="nf">anchorTyped</span><span class="p">(</span>
+        <span class="n">value</span> <span class="p">=</span> <span class="n">provenanceRecord</span><span class="p">,</span>
+        <span class="n">serializer</span> <span class="p">=</span> <span class="nc">ProvenanceRecord</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
+        <span class="n">targetChainId</span> <span class="p">=</span> <span class="s">"eip155:137"</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Provenance anchored to blockchain:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Transaction hash: ${anchorResult.ref.txHash}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Provides immutable provenance record"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Enables long-term audit trail"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="extensive-step-by-step-breakdown">
+  
+  
+    <a href="#extensive-step-by-step-breakdown" class="anchor-heading" aria-labelledby="extensive-step-by-step-breakdown"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Extensive Step-by-Step Breakdown
+  
+  
+</h2>
+    
+<h3 id="step-1-setup-and-initialization">
+  
+  
+    <a href="#step-1-setup-and-initialization" class="anchor-heading" aria-labelledby="step-1-setup-and-initialization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Setup and Initialization
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Initialize provenance system with proper key management.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ol>
+  <li><strong>Multiple KMS Instances</strong>: Separate key management for processors and sources ensures proper isolation</li>
+  <li><strong>DID Method Registration</strong>: Register DID method for creating identities</li>
+  <li><strong>Why Separation Matters</strong>:
+    <ul>
+      <li><strong>Security</strong>: If one system compromised, others remain secure</li>
+      <li><strong>Accountability</strong>: Clear separation of responsibilities</li>
+      <li><strong>Scalability</strong>: Each system scales independently</li>
+    </ul>
+  </li>
+</ol>
+<h3 id="step-2-create-source-entity-did">
+  
+  
+    <a href="#step-2-create-source-entity-did" class="anchor-heading" aria-labelledby="step-2-create-source-entity-did"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Create Source Entity DID
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Establish identity for original data entity.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ul>
+  <li><strong>Source Entity</strong>: Represents original, unprocessed data</li>
+  <li><strong>Entity DID</strong>: Provides persistent identifier</li>
+  <li><strong>Provenance Start</strong>: Beginning of provenance chain</li>
+  <li><strong>Why This Matters</strong>: Source entity is the root of all provenance. Its DID enables tracking all derived entities.</li>
+</ul>
+<h3 id="step-3-create-activity-and-agent-dids">
+  
+  
+    <a href="#step-3-create-activity-and-agent-dids" class="anchor-heading" aria-labelledby="step-3-create-activity-and-agent-dids"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Create Activity and Agent DIDs
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Establish identities for processing activities and agents.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ul>
+  <li><strong>Activity DID</strong>: Represents processing step</li>
+  <li><strong>Agent DID</strong>: Represents who/what performed it</li>
+  <li><strong>PROV-O Compliance</strong>: Follows PROV-O ontology structure</li>
+  <li><strong>Why This Matters</strong>: Activities and agents are core PROV-O concepts. Their DIDs enable verifiable provenance relationships.</li>
+</ul>
+<h3 id="step-4-create-activity-credential">
+  
+  
+    <a href="#step-4-create-activity-credential" class="anchor-heading" aria-labelledby="step-4-create-activity-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Create Activity Credential
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Record what processing was performed.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ul>
+  <li><strong>Activity Description</strong>: What transformation was applied</li>
+  <li><strong>Parameters</strong>: How transformation was configured</li>
+  <li><strong>Timing</strong>: When activity occurred</li>
+  <li><strong>Why This Matters</strong>: Activity credentials enable reproducibility. You can recreate the exact transformation.</li>
+</ul>
+<h3 id="step-5-create-provenance-chain-credential">
+  
+  
+    <a href="#step-5-create-provenance-chain-credential" class="anchor-heading" aria-labelledby="step-5-create-provenance-chain-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Create Provenance Chain Credential
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Link entities through activities.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ul>
+  <li><strong>Used Relationship</strong>: Source entity was used by activity</li>
+  <li><strong>Generated Relationship</strong>: Activity generated derived entity</li>
+  <li><strong>PROV-O Compliance</strong>: Follows PROV-O relationships</li>
+  <li><strong>Why This Matters</strong>: This credential creates the provenance chain. It proves how entities are related.</li>
+</ul>
+<h3 id="step-6-issue-credentials-with-proof">
+  
+  
+    <a href="#step-6-issue-credentials-with-proof" class="anchor-heading" aria-labelledby="step-6-issue-credentials-with-proof"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 6: Issue Credentials with Proof
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Make provenance credentials verifiable.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ul>
+  <li><strong>Key Generation</strong>: Generate agent’s signing key</li>
+  <li><strong>Proof Generation</strong>: Create cryptographic proof</li>
+  <li><strong>Credential Issuance</strong>: Sign credentials</li>
+  <li><strong>Why This Matters</strong>: Cryptographic proof ensures provenance cannot be tampered with. This is critical for trust.</li>
+</ul>
+<h3 id="step-7-build-multi-step-chain">
+  
+  
+    <a href="#step-7-build-multi-step-chain" class="anchor-heading" aria-labelledby="step-7-build-multi-step-chain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 7: Build Multi-Step Chain
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Extend provenance through multiple steps.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ul>
+  <li><strong>Chain Extension</strong>: Each step adds to chain</li>
+  <li><strong>Entity References</strong>: Each step references previous entity</li>
+  <li><strong>Complete Lineage</strong>: Enables full workflow tracking</li>
+  <li><strong>Why This Matters</strong>: Real workflows have multiple steps. This enables complete provenance tracking.</li>
+</ul>
+<h3 id="step-8-verify-provenance-chain">
+  
+  
+    <a href="#step-8-verify-provenance-chain" class="anchor-heading" aria-labelledby="step-8-verify-provenance-chain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 8: Verify Provenance Chain
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Ensure provenance chain is authentic.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ul>
+  <li><strong>Credential Verification</strong>: Verify each credential</li>
+  <li><strong>Chain Continuity</strong>: Verify entities link correctly</li>
+  <li><strong>Agent Verification</strong>: Verify agents are legitimate</li>
+  <li><strong>Why This Matters</strong>: Verification ensures provenance is trustworthy. This enables trust in data processing.</li>
+</ul>
+<h3 id="step-9-trace-data-lineage">
+  
+  
+    <a href="#step-9-trace-data-lineage" class="anchor-heading" aria-labelledby="step-9-trace-data-lineage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 9: Trace Data Lineage
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Retrieve complete data lineage.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ul>
+  <li><strong>Lineage Retrieval</strong>: Get all steps in workflow</li>
+  <li><strong>Backward Tracing</strong>: Trace from final to source</li>
+  <li><strong>Complete History</strong>: See all transformations</li>
+  <li><strong>Why This Matters</strong>: Lineage enables understanding data transformations. Critical for debugging and compliance.</li>
+</ul>
+<h3 id="step-10-anchor-to-blockchain">
+  
+  
+    <a href="#step-10-anchor-to-blockchain" class="anchor-heading" aria-labelledby="step-10-anchor-to-blockchain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 10: Anchor to Blockchain
+  
+  
+</h3>
+    
+
+<p><strong>Purpose</strong>: Create immutable provenance record.</p>
+
+<p><strong>Detailed Explanation</strong>:</p>
+<ul>
+  <li><strong>Immutability</strong>: Cannot be tampered with</li>
+  <li><strong>Audit Trail</strong>: Permanent record</li>
+  <li><strong>Verification</strong>: Anyone can verify</li>
+  <li><strong>Why This Matters</strong>: Blockchain provides permanent, verifiable record. Critical for long-term audit trails.</li>
+</ul>
+<h2 id="advanced-features">
+  
+  
+    <a href="#advanced-features" class="anchor-heading" aria-labelledby="advanced-features"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Advanced Features
+  
+  
+</h2>
+    
+<h3 id="multi-agent-workflows">
+  
+  
+    <a href="#multi-agent-workflows" class="anchor-heading" aria-labelledby="multi-agent-workflows"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Multi-Agent Workflows
+  
+  
+</h3>
+    
+
+<p>Track workflows with multiple agents:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+</pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">createMultiAgentProvenance</span><span class="p">(</span>
+    <span class="n">sourceEntityDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">intermediateEntityDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">finalEntityDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">agent1Did</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">agent2Did</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">):</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span> <span class="p">{</span>
+    <span class="c1">// Agent 1 performs first step</span>
+    <span class="kd">val</span> <span class="py">step1Credential</span> <span class="p">=</span> <span class="nf">createProvenanceChainCredential</span><span class="p">(</span>
+        <span class="n">usedEntityDid</span> <span class="p">=</span> <span class="n">sourceEntityDid</span><span class="p">,</span>
+        <span class="n">activityDid</span> <span class="p">=</span> <span class="s">"activity-1"</span><span class="p">,</span>
+        <span class="n">generatedEntityDid</span> <span class="p">=</span> <span class="n">intermediateEntityDid</span><span class="p">,</span>
+        <span class="n">agentDid</span> <span class="p">=</span> <span class="n">agent1Did</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Agent 2 performs second step</span>
+    <span class="kd">val</span> <span class="py">step2Credential</span> <span class="p">=</span> <span class="nf">createProvenanceChainCredential</span><span class="p">(</span>
+        <span class="n">usedEntityDid</span> <span class="p">=</span> <span class="n">intermediateEntityDid</span><span class="p">,</span>
+        <span class="n">activityDid</span> <span class="p">=</span> <span class="s">"activity-2"</span><span class="p">,</span>
+        <span class="n">generatedEntityDid</span> <span class="p">=</span> <span class="n">finalEntityDid</span><span class="p">,</span>
+        <span class="n">agentDid</span> <span class="p">=</span> <span class="n">agent2Did</span>
+    <span class="p">)</span>
+    
+    <span class="k">return</span> <span class="nf">listOf</span><span class="p">(</span><span class="n">step1Credential</span><span class="p">,</span> <span class="n">step2Credential</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="provenance-queries">
+  
+  
+    <a href="#provenance-queries" class="anchor-heading" aria-labelledby="provenance-queries"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Provenance Queries
+  
+  
+</h3>
+    
+
+<p>Query provenance by various criteria:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+</pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">queryProvenanceByAgent</span><span class="p">(</span>
+    <span class="n">agentDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">provenanceChains</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span>
+<span class="p">):</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">provenanceChains</span><span class="p">.</span><span class="nf">filter</span> <span class="p">{</span> <span class="n">credential</span> <span class="p">-&gt;</span>
+        <span class="kd">val</span> <span class="py">agent</span> <span class="p">=</span> <span class="n">credential</span><span class="p">.</span><span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"provenance"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
+            <span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"agent"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonObject</span>
+            <span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"agentDid"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
+        <span class="n">agent</span> <span class="p">==</span> <span class="n">agentDid</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">fun</span> <span class="nf">queryProvenanceByActivityType</span><span class="p">(</span>
+    <span class="n">activityType</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">provenanceChains</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span>
+<span class="p">):</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">provenanceChains</span><span class="p">.</span><span class="nf">filter</span> <span class="p">{</span> <span class="n">credential</span> <span class="p">-&gt;</span>
+        <span class="kd">val</span> <span class="py">activity</span> <span class="p">=</span> <span class="n">credential</span><span class="p">.</span><span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"provenance"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
+            <span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"activity"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonObject</span>
+            <span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"activityType"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
+        <span class="n">activity</span> <span class="p">==</span> <span class="n">activityType</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="real-world-use-cases">
+  
+  
+    <a href="#real-world-use-cases" class="anchor-heading" aria-labelledby="real-world-use-cases"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Use Cases
+  
+  
+</h2>
+    
+<h3 id="1-image-processing-pipeline">
+  
+  
+    <a href="#1-image-processing-pipeline" class="anchor-heading" aria-labelledby="1-image-processing-pipeline"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Image Processing Pipeline
+  
+  
+</h3>
+    
+
+<p><strong>Scenario</strong>: Track image through multiple processing steps.</p>
+
+<p><strong>Implementation</strong>:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+</pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">createImageProcessingProvenance</span><span class="p">(</span>
+    <span class="n">originalImageDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">processingSteps</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">ProcessingStep</span><span class="p">&gt;</span>
+<span class="p">):</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="py">currentEntityDid</span> <span class="p">=</span> <span class="n">originalImageDid</span>
+    <span class="kd">val</span> <span class="py">provenanceChains</span> <span class="p">=</span> <span class="n">mutableListOf</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;()</span>
+    
+    <span class="n">processingSteps</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="n">step</span> <span class="p">-&gt;</span>
+        <span class="kd">val</span> <span class="py">activityDid</span> <span class="p">=</span> <span class="n">step</span><span class="p">.</span><span class="n">activityDid</span>
+        <span class="kd">val</span> <span class="py">outputEntityDid</span> <span class="p">=</span> <span class="n">step</span><span class="p">.</span><span class="n">outputEntityDid</span>
+        
+        <span class="kd">val</span> <span class="py">chainCredential</span> <span class="p">=</span> <span class="nf">createProvenanceChainCredential</span><span class="p">(</span>
+            <span class="n">usedEntityDid</span> <span class="p">=</span> <span class="n">currentEntityDid</span><span class="p">,</span>
+            <span class="n">activityDid</span> <span class="p">=</span> <span class="n">activityDid</span><span class="p">,</span>
+            <span class="n">generatedEntityDid</span> <span class="p">=</span> <span class="n">outputEntityDid</span><span class="p">,</span>
+            <span class="n">agentDid</span> <span class="p">=</span> <span class="n">step</span><span class="p">.</span><span class="n">agentDid</span>
+        <span class="p">)</span>
+        
+        <span class="n">provenanceChains</span><span class="p">.</span><span class="nf">add</span><span class="p">(</span><span class="n">chainCredential</span><span class="p">)</span>
+        <span class="n">currentEntityDid</span> <span class="p">=</span> <span class="n">outputEntityDid</span>
+    <span class="p">}</span>
+    
+    <span class="k">return</span> <span class="n">provenanceChains</span>
+<span class="p">}</span>
+
+<span class="kd">data class</span> <span class="nc">ProcessingStep</span><span class="p">(</span>
+    <span class="kd">val</span> <span class="py">activityDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">outputEntityDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">agentDid</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="2-data-science-workflow">
+  
+  
+    <a href="#2-data-science-workflow" class="anchor-heading" aria-labelledby="2-data-science-workflow"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Data Science Workflow
+  
+  
+</h3>
+    
+
+<p><strong>Scenario</strong>: Track data through data science pipeline.</p>
+
+<p><strong>Implementation</strong>:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+</pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">createDataScienceProvenance</span><span class="p">(</span>
+    <span class="n">rawDataDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">transformations</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">DataTransformation</span><span class="p">&gt;</span>
+<span class="p">):</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="py">currentDataDid</span> <span class="p">=</span> <span class="n">rawDataDid</span>
+    <span class="kd">val</span> <span class="py">provenanceChains</span> <span class="p">=</span> <span class="n">mutableListOf</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;()</span>
+    
+    <span class="n">transformations</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="n">transformation</span> <span class="p">-&gt;</span>
+        <span class="kd">val</span> <span class="py">outputDataDid</span> <span class="p">=</span> <span class="n">transformation</span><span class="p">.</span><span class="n">outputDataDid</span>
+        
+        <span class="kd">val</span> <span class="py">chainCredential</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+            <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"ProvenanceChainCredential"</span><span class="p">),</span>
+            <span class="n">issuer</span> <span class="p">=</span> <span class="n">transformation</span><span class="p">.</span><span class="n">analystDid</span><span class="p">,</span>
+            <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"provenance"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"usedEntity"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                        <span class="nf">put</span><span class="p">(</span><span class="s">"entityDid"</span><span class="p">,</span> <span class="n">currentDataDid</span><span class="p">)</span>
+                    <span class="p">})</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"activity"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                        <span class="nf">put</span><span class="p">(</span><span class="s">"activityDid"</span><span class="p">,</span> <span class="n">transformation</span><span class="p">.</span><span class="n">transformationDid</span><span class="p">)</span>
+                        <span class="nf">put</span><span class="p">(</span><span class="s">"activityType"</span><span class="p">,</span> <span class="n">transformation</span><span class="p">.</span><span class="n">type</span><span class="p">)</span>
+                        <span class="nf">put</span><span class="p">(</span><span class="s">"parameters"</span><span class="p">,</span> <span class="n">transformation</span><span class="p">.</span><span class="n">parameters</span><span class="p">)</span>
+                    <span class="p">})</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"generatedEntity"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                        <span class="nf">put</span><span class="p">(</span><span class="s">"entityDid"</span><span class="p">,</span> <span class="n">outputDataDid</span><span class="p">)</span>
+                    <span class="p">})</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"agent"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                        <span class="nf">put</span><span class="p">(</span><span class="s">"agentDid"</span><span class="p">,</span> <span class="n">transformation</span><span class="p">.</span><span class="n">analystDid</span><span class="p">)</span>
+                    <span class="p">})</span>
+                <span class="p">})</span>
+            <span class="p">},</span>
+            <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">()</span>
+        <span class="p">)</span>
+        
+        <span class="n">provenanceChains</span><span class="p">.</span><span class="nf">add</span><span class="p">(</span><span class="n">chainCredential</span><span class="p">)</span>
+        <span class="n">currentDataDid</span> <span class="p">=</span> <span class="n">outputDataDid</span>
+    <span class="p">}</span>
+    
+    <span class="k">return</span> <span class="n">provenanceChains</span>
+<span class="p">}</span>
+
+<span class="kd">data class</span> <span class="nc">DataTransformation</span><span class="p">(</span>
+    <span class="kd">val</span> <span class="py">transformationDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">type</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">parameters</span><span class="p">:</span> <span class="nc">Map</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">,</span> <span class="nc">String</span><span class="p">&gt;,</span>
+    <span class="kd">val</span> <span class="py">outputDataDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">analystDid</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="benefits">
+  
+  
+    <a href="#benefits" class="anchor-heading" aria-labelledby="benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Benefits
+  
+  
+</h2>
+    
+
+<ol>
+  <li><strong>Standard Provenance</strong>: PROV-O standard format</li>
+  <li><strong>Verifiable Provenance</strong>: Cryptographic proof</li>
+  <li><strong>Complete Lineage</strong>: Track all transformations</li>
+  <li><strong>Interoperability</strong>: Works across systems</li>
+  <li><strong>Compliance</strong>: Automated audit trails</li>
+  <li><strong>Reproducibility</strong>: Reproduce workflows</li>
+  <li><strong>Trust</strong>: Verify data processing</li>
+  <li><strong>Debugging</strong>: Trace issues to source</li>
+  <li><strong>Accountability</strong>: Know who did what</li>
+  <li><strong>Transparency</strong>: Understand transformations</li>
+</ol>
+<h2 id="best-practices">
+  
+  
+    <a href="#best-practices" class="anchor-heading" aria-labelledby="best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Best Practices
+  
+  
+</h2>
+    
+
+<ol>
+  <li><strong>PROV-O Compliance</strong>: Follow PROV-O ontology</li>
+  <li><strong>Complete Records</strong>: Record all processing steps</li>
+  <li><strong>Entity References</strong>: Always reference entity DIDs</li>
+  <li><strong>Activity Details</strong>: Record activity parameters</li>
+  <li><strong>Agent Tracking</strong>: Track who performed activities</li>
+  <li><strong>Timestamps</strong>: Record when activities occurred</li>
+  <li><strong>Chain Verification</strong>: Verify entire chain</li>
+  <li><strong>Blockchain Anchoring</strong>: Anchor critical provenance</li>
+  <li><strong>Error Handling</strong>: Handle verification failures</li>
+  <li><strong>Documentation</strong>: Document workflow steps</li>
+</ol>
+<h2 id="next-steps">
+  
+  
+    <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
+  
+  
+</h2>
+    
+
+<ul>
+  <li>Learn about <a href="/trustweave/scenarios/earth-observation-scenario/">Earth Observation Scenario</a> for related integrity concepts</li>
+  <li>Explore <a href="/trustweave/scenarios/news-industry-scenario/">News Industry Scenario</a> for content provenance</li>
+  <li>Check out <a href="/trustweave/scenarios/supply-chain-traceability-scenario/">Supply Chain &amp; Traceability Scenario</a> for related tracking</li>
+  <li>Review <a href="/trustweave/core-concepts/blockchain-anchoring/">Core Concepts: Blockchain Anchoring</a> for anchoring details</li>
+</ul>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

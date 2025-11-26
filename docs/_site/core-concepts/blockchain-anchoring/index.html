@@ -1,0 +1,637 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+
+    .site-nav > ul.nav-list:first-child > li > a,
+    
+    .site-nav > ul.nav-list:first-child > li > ul > li:not(:nth-child(4)) > a,
+    .site-nav > ul.nav-list:first-child > li > ul > li > ul > li a {
+      background-image: none;
+    }
+
+    .site-nav > ul.nav-list:not(:first-child) a,
+    .site-nav li.external a {
+      background-image: none;
+    }
+
+    .site-nav > ul.nav-list:first-child > li:nth-child(3) > ul > li:nth-child(4) > a {
+      font-weight: 600;
+      text-decoration: none;
+    }.site-nav > ul.nav-list:first-child > li:nth-child(3) > button svg,
+    .site-nav > ul.nav-list:first-child > li:nth-child(3) > ul > li:nth-child(4) > button svg {
+      transform: rotate(-90deg);
+    }.site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(3) > ul.nav-list,
+    .site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(3) > ul.nav-list > li.nav-list-item:nth-child(4) > ul.nav-list {
+      display: block;
+    }
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Blockchain Anchoring | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Blockchain Anchoring" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://localhost:4000/trustweave/core-concepts/blockchain-anchoring/" />
+<meta property="og:url" content="http://localhost:4000/trustweave/core-concepts/blockchain-anchoring/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Blockchain Anchoring" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"Blockchain Anchoring","url":"http://localhost:4000/trustweave/core-concepts/blockchain-anchoring/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/beginner-tutorial-series/" class="nav-list-link">Beginner Tutorial Series</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchored-revocation/" class="nav-list-link">Blockchain-Anchored Revocation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/code-style/" class="nav-list-link">Code Style</a></li><li class="nav-list-item"><a href="/trustweave/comparison/README/" class="nav-list-link">Comparison Documentation</a></li><li class="nav-list-item"><a href="/trustweave/configuration/README/" class="nav-list-link">Configuration Reference</a></li><li class="nav-list-item"><a href="/trustweave/advanced/custom-adapters/" class="nav-list-link">Creating Custom Adapters</a></li><li class="nav-list-item"><a href="/trustweave/contributing/creating-plugins/" class="nav-list-link">Creating TrustWeave Plugins</a></li><li class="nav-list-item"><a href="/trustweave/features/credential-exchange-protocols/README/" class="nav-list-link">Credential Exchange Protocols</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/credential-issuance-tutorial/" class="nav-list-link">Credential Issuance Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/algorithm-compatibility-table/" class="nav-list-link">Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/did-operations-tutorial/" class="nav-list-link">DID Operations Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/delegation/" class="nav-list-link">Delegation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/development-setup/" class="nav-list-link">Development Setup</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/evaluation-engines/" class="nav-list-link">Evaluation Engines</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/json-canonicalization/" class="nav-list-link">JSON Canonicalization</a></li><li class="nav-list-item"><a href="/trustweave/advanced/key-rotation/" class="nav-list-link">Key Rotation Strategies</a></li><li class="nav-list-item"><a href="/trustweave/licensing/README/" class="nav-list-link">Licensing Overview</a></li><li class="nav-list-item"><a href="/trustweave/migration/README/" class="nav-list-link">Migration Guides</a></li><li class="nav-list-item"><a href="/trustweave/advanced/performance/" class="nav-list-link">Performance Considerations</a></li><li class="nav-list-item"><a href="/trustweave/advanced/plugin-lifecycle/" class="nav-list-link">Plugin Lifecycle Management</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/proof-purpose-validation/" class="nav-list-link">Proof Purpose Validation</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/credential-exchange-protocols/" class="nav-list-link">Protocol Abstraction Layer</a></li><li class="nav-list-item"><a href="/trustweave/contributing/pull-request-process/" class="nav-list-link">Pull Request Process</a></li><li class="nav-list-item"><a href="/trustweave/security/README/" class="nav-list-link">Security Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/advanced/spi/" class="nav-list-link">Service Provider Interface (SPI)</a></li><li class="nav-list-item"><a href="/trustweave/plugins/" class="nav-list-link">Supported Plugins</a></li><li class="nav-list-item"><a href="/trustweave/contributing/testing-guidelines/" class="nav-list-link">Testing Guidelines</a></li><li class="nav-list-item"><a href="/trustweave/advanced/testing-strategies/" class="nav-list-link">Testing Strategies</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/trust-registry/" class="nav-list-link">Trust Registry</a></li><li class="nav-list-item"><a href="/trustweave/GLOSSARY/" class="nav-list-link">TrustWeave Glossary</a></li><li class="nav-list-item"><a href="/trustweave/TRUSTWEAVE_WHITEPAPER/" class="nav-list-link">TrustWeave SDK: Decentralized Trust Infrastructure</a></li><li class="nav-list-item"><a href="/trustweave/scenarios/README/" class="nav-list-link">Use Case Scenarios</a></li><li class="nav-list-item"><a href="/trustweave/advanced/verification-policies/" class="nav-list-link">Verification Policies</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/wallet-api-tutorial/" class="nav-list-link">Wallet API Tutorial</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      <nav aria-label="Breadcrumb" class="breadcrumb-nav">
+  <ol class="breadcrumb-nav-list">
+    <li class="breadcrumb-nav-list-item"><a href="/trustweave/core-concepts/README/">Core Concepts</a></li>
+    <li class="breadcrumb-nav-list-item"><span>Blockchain Anchoring</span></li>
+  </ol>
+</nav>
+
+
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="blockchain-anchoring">
+  
+  
+    <a href="#blockchain-anchoring" class="anchor-heading" aria-labelledby="blockchain-anchoring"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Blockchain Anchoring
+  
+  
+</h1>
+    
+
+<p>Anchoring creates an immutable audit trail for important events or payloads by writing a compact reference to a blockchain. TrustWeave standardises the experience so you can leverage tamper evidence without becoming a chain expert.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Result:</strong> Adds the anchoring registry and clients to your project so the examples below compile.</p>
+<h2 id="why-anchor-data">
+  
+  
+    <a href="#why-anchor-data" class="anchor-heading" aria-labelledby="why-anchor-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Why anchor data?
+  
+  
+</h2>
+    
+
+<ul>
+  <li><strong>Integrity</strong> – recompute a digest and compare it to the anchor; any change breaks the link.</li>
+  <li><strong>Provenance</strong> – the anchor’s block height or timestamp proves when the information existed.</li>
+  <li><strong>Portability</strong> – <code class="language-plaintext highlighter-rouge">AnchorRef</code> structures capture chain ID, transaction hash, optional contract/app ID, and metadata that verifiers can consume.</li>
+</ul>
+
+<p>Anchoring complements verifiable credentials: you can notarise VC digests, presentation receipts, workflow checkpoints—anything that needs an immutable trail.</p>
+<h2 id="how-trustweave-anchors-payloads">
+  
+  
+    <a href="#how-trustweave-anchors-payloads" class="anchor-heading" aria-labelledby="how-trustweave-anchors-payloads"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How TrustWeave anchors payloads
+  
+  
+</h2>
+    
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Step</th>
+      <th>Implementation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1. Choose a chain</td>
+      <td>Register a <code class="language-plaintext highlighter-rouge">BlockchainAnchorClient</code> (in-memory, <a href="/trustweave/integrations/algorand/">Algorand</a>, <a href="/trustweave/integrations/README/#blockchain-anchor-integrations">Polygon</a>, <a href="/trustweave/integrations/ethereum-anchor/">Ethereum</a>, <a href="/trustweave/integrations/base-anchor/">Base</a>, <a href="/trustweave/integrations/arbitrum-anchor/">Arbitrum</a>, Indy, or your own adapter). Chains use CAIP-2 IDs such as <code class="language-plaintext highlighter-rouge">algorand:testnet</code>.</td>
+    </tr>
+    <tr>
+      <td>2. Canonicalise payload</td>
+      <td>Kotlinx Serialization + JSON Canonicalization Scheme ensure deterministic bytes.</td>
+    </tr>
+    <tr>
+      <td>3. Submit</td>
+      <td><code class="language-plaintext highlighter-rouge">writePayload</code> stores the digest on chain and returns <code class="language-plaintext highlighter-rouge">AnchorResult</code> with an <code class="language-plaintext highlighter-rouge">AnchorRef</code>.</td>
+    </tr>
+    <tr>
+      <td>4. Verify</td>
+      <td><code class="language-plaintext highlighter-rouge">readPayload</code> rehydrates the JSON, or recompute the digest locally and compare to the stored reference.</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.Json</span>
+
+<span class="c1">// Using TrustWeave facade (recommended)</span>
+<span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+<span class="kd">val</span> <span class="py">anchorResult</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">blockchains</span><span class="p">.</span><span class="nf">anchor</span><span class="p">(</span>
+    <span class="n">data</span> <span class="p">=</span> <span class="n">credential</span><span class="p">,</span>
+    <span class="n">serializer</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
+    <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span>
+<span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"Anchored tx: ${anchorResult.ref.txHash}"</span><span class="p">)</span>
+
+<span class="c1">// With error handling (wrap in try-catch)</span>
+<span class="k">try</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">anchor</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">blockchains</span><span class="p">.</span><span class="nf">anchor</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">serializer</span><span class="p">,</span> <span class="n">chainId</span><span class="p">)</span>
+<span class="n">result</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
+    <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">anchor</span> <span class="p">-&gt;</span> <span class="nf">println</span><span class="p">(</span><span class="s">"Anchored tx: ${anchor.ref.txHash}"</span><span class="p">)</span> <span class="p">},</span>
+    <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
+        <span class="k">when</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">is</span> <span class="nc">TrustWeaveError</span><span class="p">.</span><span class="nc">ChainNotRegistered</span> <span class="p">-&gt;</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Chain not registered: ${error.chainId}"</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="k">else</span> <span class="p">-&gt;</span> <span class="nf">println</span><span class="p">(</span><span class="s">"Anchoring error: ${error.message}"</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="configuring-clients">
+  
+  
+    <a href="#configuring-clients" class="anchor-heading" aria-labelledby="configuring-clients"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Configuring clients
+  
+  
+</h2>
+    
+
+<ul>
+  <li><strong>In-memory</strong> – perfect for tutorials and unit tests.</li>
+  <li><strong>Algorand</strong> – use <code class="language-plaintext highlighter-rouge">AlgorandBlockchainAnchorClientOptions</code> (<code class="language-plaintext highlighter-rouge">algodUrl</code>, <code class="language-plaintext highlighter-rouge">algodToken</code>, optional private key).</li>
+  <li><strong>Polygon / Ganache</strong> – specify RPC endpoints, signer keys, and (optionally) contract addresses.</li>
+  <li><strong>Indy</strong> – configure pool parameters and wallet credentials for permissioned ledgers.</li>
+  <li><strong>Custom</strong> – implement <code class="language-plaintext highlighter-rouge">BlockchainAnchorClient</code> or <code class="language-plaintext highlighter-rouge">BlockchainAnchorClientProvider</code> (discovered via SPI).</li>
+</ul>
+<h2 id="reading-and-verifying">
+  
+  
+    <a href="#reading-and-verifying" class="anchor-heading" aria-labelledby="reading-and-verifying"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Reading and verifying
+  
+  
+</h2>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
+
+<span class="c1">// Using TrustWeave facade (recommended)</span>
+<span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+<span class="kd">val</span> <span class="py">data</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">blockchains</span><span class="p">.</span><span class="n">read</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;(</span>
+    <span class="n">ref</span> <span class="p">=</span> <span class="n">anchorRef</span><span class="p">,</span>
+    <span class="n">serializer</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">.</span><span class="nf">serializer</span><span class="p">()</span>
+<span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"Read credential: ${data.id}"</span><span class="p">)</span>
+
+<span class="c1">// With error handling (wrap in try-catch)</span>
+<span class="k">try</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">data</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">blockchains</span><span class="p">.</span><span class="n">read</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;(</span><span class="n">ref</span><span class="p">,</span> <span class="n">serializer</span><span class="p">)</span>
+<span class="n">result</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
+    <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">data</span> <span class="p">-&gt;</span> <span class="nf">println</span><span class="p">(</span><span class="s">"Read: ${data.id}"</span><span class="p">)</span> <span class="p">},</span>
+    <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
+        <span class="k">when</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">is</span> <span class="nc">TrustWeaveError</span><span class="p">.</span><span class="nc">ChainNotRegistered</span> <span class="p">-&gt;</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Chain not registered: ${error.chainId}"</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="k">else</span> <span class="p">-&gt;</span> <span class="nf">println</span><span class="p">(</span><span class="s">"Read error: ${error.message}"</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">readAnchor</code> returns <code class="language-plaintext highlighter-rouge">Result&lt;T&gt;</code> with the deserialized data.</li>
+  <li>For higher assurance, recompute the digest from the canonical payload and compare it to the data stored on chain.</li>
+  <li>Keep connection credentials (RPC tokens, private keys) in a secret store for production deployments.</li>
+  <li>All anchoring operations return <code class="language-plaintext highlighter-rouge">Result&lt;T&gt;</code> for consistent error handling.</li>
+</ul>
+<h2 id="practical-usage-tips">
+  
+  
+    <a href="#practical-usage-tips" class="anchor-heading" aria-labelledby="practical-usage-tips"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Practical usage tips
+  
+  
+</h2>
+    
+
+<ul>
+  <li><strong>Persist AnchorRefs with credentials</strong> so verifiers can revalidate without bespoke lookups.</li>
+  <li><strong>Retry-friendly anchoring</strong> – public chains may require exponential back-off; design idempotent submissions.</li>
+  <li><strong>Integrate with revocation</strong> – anchor revocation lists or proofs to create audit trails for credential status changes.</li>
+  <li><strong>Testing</strong> – use the in-memory client or spin up Ganache/Testnet clients for end-to-end tests.</li>
+  <li><strong>Error handling</strong> – all anchoring operations return <code class="language-plaintext highlighter-rouge">Result&lt;T&gt;</code> with structured <code class="language-plaintext highlighter-rouge">TrustWeaveError</code> types. See <a href="/trustweave/advanced/error-handling/">Error Handling</a>.</li>
+  <li><strong>Input validation</strong> – TrustWeave automatically validates chain ID format and registration before anchoring.</li>
+</ul>
+<h2 id="see-also">
+  
+  
+    <a href="#see-also" class="anchor-heading" aria-labelledby="see-also"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> See also
+  
+  
+</h2>
+    
+
+<ul>
+  <li><a href="/trustweave/integrations/README/#blockchain-anchor-integrations">Blockchain Anchor Integration Guides</a> – Implementation guides for Algorand, Ethereum, Base, Arbitrum, Polygon, and Ganache</li>
+  <li><a href="/trustweave/getting-started/quick-start/#step-5-verify-and-optionally-anchor">Quick Start – Step 5</a> for an end-to-end example.</li>
+  <li><a href="/trustweave/api-reference/wallet-api/#anchors">Wallet API Reference – Anchoring helpers</a> for wallet-integrated flows.</li>
+  <li><a href="/trustweave/introduction/architecture-overview/">Architecture Overview</a> for the DID ➜ credential ➜ anchor flow.</li>
+  <li><a href="/trustweave/core-concepts/verifiable-credentials/">Verifiable Credentials</a> to understand what you may want to anchor.</li>
+  <li><a href="/trustweave/core-concepts/blockchain-anchored-revocation/">Blockchain-Anchored Revocation</a> for anchoring credential revocation status lists.</li>
+</ul><hr />
+<h1 id="blockchain-anchoring-1">
+  
+  
+    <a href="#blockchain-anchoring-1" class="anchor-heading" aria-labelledby="blockchain-anchoring-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Blockchain Anchoring
+  
+  
+</h1>
+    
+
+<p>Anchoring creates an immutable audit trail for important events or payloads by writing a compact reference to a blockchain. TrustWeave standardizes the experience so you can take advantage of tamper evidence without having to become a chain expert.</p>
+<h2 id="why-anchor">
+  
+  
+    <a href="#why-anchor" class="anchor-heading" aria-labelledby="why-anchor"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Why Anchor?
+  
+  
+</h2>
+    
+
+<ul>
+  <li><strong>Integrity</strong> – prove a payload was not modified after anchoring by recomputing its digest and comparing it to the on-chain reference.</li>
+  <li><strong>Provenance</strong> – demonstrate when information existed by referencing the block height or timestamp of the anchor transaction.</li>
+  <li><strong>Portability</strong> – exchangeable <code class="language-plaintext highlighter-rouge">AnchorRef</code> models capture chain, transaction hash, optional contract, and any custom metadata.</li>
+</ul>
+
+<p>Anchoring is complementary to verifiable credentials: you can anchor raw JSON, credential digests, presentation receipts, or any other data you want to notarize.</p>
+<h2 id="how-trustweave-anchoring-works">
+  
+  
+    <a href="#how-trustweave-anchoring-works" class="anchor-heading" aria-labelledby="how-trustweave-anchoring-works"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How TrustWeave Anchoring Works
+  
+  
+</h2>
+    
+
+<ol>
+  <li><strong>Choose a chain</strong> – TrustWeave ships with in-memory clients for testing and adapters for <a href="/trustweave/integrations/algorand/">Algorand</a>, <a href="/trustweave/integrations/README/#blockchain-anchor-integrations">Polygon</a>, <a href="/trustweave/integrations/ethereum-anchor/">Ethereum</a>, <a href="/trustweave/integrations/base-anchor/">Base</a>, <a href="/trustweave/integrations/arbitrum-anchor/">Arbitrum</a>, Indy, and community providers. Chains are identified using CAIP-2 strings (for example <code class="language-plaintext highlighter-rouge">algorand:testnet</code>).</li>
+  <li><strong>Serialize the payload</strong> – the SDK serializes your Kotlin data using Kotlinx Serialization before hashing.</li>
+  <li><strong>Submit</strong> – the registered <code class="language-plaintext highlighter-rouge">BlockchainAnchorClient</code> stores the digest on-chain and returns an <code class="language-plaintext highlighter-rouge">AnchorResult</code> containing the <code class="language-plaintext highlighter-rouge">AnchorRef</code> (transaction hash, contract/app ID, chain).</li>
+  <li><strong>Verify</strong> – later you can <code class="language-plaintext highlighter-rouge">readPayload</code> or independently recompute the digest to confirm the payload matches the anchor reference.</li>
+</ol>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">anchorClient</span> <span class="p">=</span> <span class="n">anchorRegistry</span><span class="p">.</span><span class="k">get</span><span class="p">(</span><span class="s">"algorand:testnet"</span><span class="p">)</span>
+<span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">anchorClient</span><span class="o">?.</span><span class="nf">writePayload</span><span class="p">(</span><span class="n">jsonPayload</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"Anchored tx: ${result?.ref?.txHash}"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="configuring-clients-1">
+  
+  
+    <a href="#configuring-clients-1" class="anchor-heading" aria-labelledby="configuring-clients-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Configuring Clients
+  
+  
+</h2>
+    
+
+<ul>
+  <li><strong>In-memory</strong> – great for tests. Register with <code class="language-plaintext highlighter-rouge">BlockchainAnchorRegistry().register("inmemory:anchor", InMemoryBlockchainAnchorClient("inmemory:anchor"))</code>.</li>
+  <li><strong>Algorand</strong> – configure <code class="language-plaintext highlighter-rouge">AlgorandBlockchainAnchorClientOptions</code> (<code class="language-plaintext highlighter-rouge">algodUrl</code>, <code class="language-plaintext highlighter-rouge">algodToken</code>, optional private key for signing). See <a href="/trustweave/integrations/algorand/">Algorand Integration Guide</a>.</li>
+  <li><strong>Polygon / Ganache</strong> – supply RPC URLs, contract addresses, and private keys via typed options. See <a href="/trustweave/integrations/README/#blockchain-anchor-integrations">Integration Modules</a>.</li>
+  <li><strong>Indy</strong> – connect to Hyperledger Indy pools using pool endpoints, wallet names, and DIDs.</li>
+</ul>
+
+<p>All clients share a common template (<code class="language-plaintext highlighter-rouge">AbstractBlockchainAnchorClient</code>) for fallbacks, metadata, and error handling. You can implement your own by extending the base class or providing an SPI adapter discovered via <code class="language-plaintext highlighter-rouge">META-INF/services</code>.</p>
+<h2 id="reading-and-verifying-1">
+  
+  
+    <a href="#reading-and-verifying-1" class="anchor-heading" aria-labelledby="reading-and-verifying-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Reading and Verifying
+  
+  
+</h2>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">anchorRef</span><span class="p">:</span> <span class="nc">AnchorRef</span> <span class="p">=</span> <span class="n">result</span><span class="p">.</span><span class="n">ref</span>
+<span class="kd">val</span> <span class="py">stored</span> <span class="p">=</span> <span class="n">anchorClient</span><span class="o">?.</span><span class="nf">readPayload</span><span class="p">(</span><span class="n">anchorRef</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"Stored mediaType=${stored?.mediaType} payload=${stored?.payload}"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<ul>
+  <li>The payload is returned as a <code class="language-plaintext highlighter-rouge">JsonElement</code>; you can re-hydrate it using your serializer.</li>
+  <li>Anchoring with in-memory fallbacks works without private keys, which makes it ideal for unit tests and demos.</li>
+  <li>For production you should secure credentials (RPC URLs, tokens, private keys) using your secrets management system.</li>
+</ul>
+<h2 id="when-to-use-anchoring">
+  
+  
+    <a href="#when-to-use-anchoring" class="anchor-heading" aria-labelledby="when-to-use-anchoring"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> When to Use Anchoring
+  
+  
+</h2>
+    
+
+<ul>
+  <li>Credential issuance receipts or revocation records.</li>
+  <li>Supply-chain checkpoints or sensor readings.</li>
+  <li>Publication timestamps for news or research.</li>
+  <li>Any workflow where you need evidence that “this existed in this exact form at this time.”</li>
+</ul>
+<h2 id="next-steps">
+  
+  
+    <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
+  
+  
+</h2>
+    
+
+<p><strong>Ready to use Blockchain Anchoring?</strong></p>
+<ul>
+  <li><a href="../getting-started/quick-start.html#step-5-verify-and-optionally-anchor">Quick Start – Step 5</a> - Anchor your first credential</li>
+  <li><a href="../api-reference/core-api.html#blockchain-anchoring">Core API Reference – Blockchain Operations</a> - Complete API documentation</li>
+  <li><a href="../modules/trustweave-anchor.html">TrustWeave Anchor Module</a> - Implementation details</li>
+</ul>
+
+<p><strong>Want to learn more?</strong></p>
+<ul>
+  <li><a href="verifiable-credentials.html">Verifiable Credentials</a> - Issue and verify credentials</li>
+  <li><a href="blockchain-anchored-revocation.html">Blockchain-Anchored Revocation</a> - Revocation with blockchain anchoring</li>
+  <li><a href="smart-contracts.html">Smart Contracts</a> - Executable agreements with anchoring</li>
+</ul>
+
+<p><strong>Explore integrations:</strong></p>
+<ul>
+  <li><a href="../integrations/README.html#blockchain-anchoring">Blockchain Integrations</a> - Algorand, Polygon, Ethereum, and more</li>
+  <li><a href="../scenarios/README.html">Use Case Scenarios</a> - Real-world anchoring examples</li>
+</ul>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

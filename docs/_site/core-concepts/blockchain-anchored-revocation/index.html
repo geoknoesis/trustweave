@@ -1,0 +1,1169 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+
+    
+    .site-nav > ul.nav-list:first-child > li:not(:nth-child(12)) > a,
+    .site-nav > ul.nav-list:first-child > li > ul > li a {
+      background-image: none;
+    }
+
+    .site-nav > ul.nav-list:not(:first-child) a,
+    .site-nav li.external a {
+      background-image: none;
+    }
+
+    .site-nav > ul.nav-list:first-child > li:nth-child(12) > a {
+      font-weight: 600;
+      text-decoration: none;
+    }.site-nav > ul.nav-list:first-child > li:nth-child(12) > button svg {
+      transform: rotate(-90deg);
+    }.site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(12) > ul.nav-list {
+      display: block;
+    }
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Blockchain-Anchored Revocation | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Blockchain-Anchored Revocation" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://localhost:4000/trustweave/core-concepts/blockchain-anchored-revocation/" />
+<meta property="og:url" content="http://localhost:4000/trustweave/core-concepts/blockchain-anchored-revocation/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Blockchain-Anchored Revocation" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"Blockchain-Anchored Revocation","url":"http://localhost:4000/trustweave/core-concepts/blockchain-anchored-revocation/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/beginner-tutorial-series/" class="nav-list-link">Beginner Tutorial Series</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchored-revocation/" class="nav-list-link">Blockchain-Anchored Revocation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/code-style/" class="nav-list-link">Code Style</a></li><li class="nav-list-item"><a href="/trustweave/comparison/README/" class="nav-list-link">Comparison Documentation</a></li><li class="nav-list-item"><a href="/trustweave/configuration/README/" class="nav-list-link">Configuration Reference</a></li><li class="nav-list-item"><a href="/trustweave/advanced/custom-adapters/" class="nav-list-link">Creating Custom Adapters</a></li><li class="nav-list-item"><a href="/trustweave/contributing/creating-plugins/" class="nav-list-link">Creating TrustWeave Plugins</a></li><li class="nav-list-item"><a href="/trustweave/features/credential-exchange-protocols/README/" class="nav-list-link">Credential Exchange Protocols</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/credential-issuance-tutorial/" class="nav-list-link">Credential Issuance Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/algorithm-compatibility-table/" class="nav-list-link">Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/did-operations-tutorial/" class="nav-list-link">DID Operations Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/delegation/" class="nav-list-link">Delegation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/development-setup/" class="nav-list-link">Development Setup</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/evaluation-engines/" class="nav-list-link">Evaluation Engines</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/json-canonicalization/" class="nav-list-link">JSON Canonicalization</a></li><li class="nav-list-item"><a href="/trustweave/advanced/key-rotation/" class="nav-list-link">Key Rotation Strategies</a></li><li class="nav-list-item"><a href="/trustweave/licensing/README/" class="nav-list-link">Licensing Overview</a></li><li class="nav-list-item"><a href="/trustweave/migration/README/" class="nav-list-link">Migration Guides</a></li><li class="nav-list-item"><a href="/trustweave/advanced/performance/" class="nav-list-link">Performance Considerations</a></li><li class="nav-list-item"><a href="/trustweave/advanced/plugin-lifecycle/" class="nav-list-link">Plugin Lifecycle Management</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/proof-purpose-validation/" class="nav-list-link">Proof Purpose Validation</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/credential-exchange-protocols/" class="nav-list-link">Protocol Abstraction Layer</a></li><li class="nav-list-item"><a href="/trustweave/contributing/pull-request-process/" class="nav-list-link">Pull Request Process</a></li><li class="nav-list-item"><a href="/trustweave/security/README/" class="nav-list-link">Security Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/advanced/spi/" class="nav-list-link">Service Provider Interface (SPI)</a></li><li class="nav-list-item"><a href="/trustweave/plugins/" class="nav-list-link">Supported Plugins</a></li><li class="nav-list-item"><a href="/trustweave/contributing/testing-guidelines/" class="nav-list-link">Testing Guidelines</a></li><li class="nav-list-item"><a href="/trustweave/advanced/testing-strategies/" class="nav-list-link">Testing Strategies</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/trust-registry/" class="nav-list-link">Trust Registry</a></li><li class="nav-list-item"><a href="/trustweave/GLOSSARY/" class="nav-list-link">TrustWeave Glossary</a></li><li class="nav-list-item"><a href="/trustweave/TRUSTWEAVE_WHITEPAPER/" class="nav-list-link">TrustWeave SDK: Decentralized Trust Infrastructure</a></li><li class="nav-list-item"><a href="/trustweave/scenarios/README/" class="nav-list-link">Use Case Scenarios</a></li><li class="nav-list-item"><a href="/trustweave/advanced/verification-policies/" class="nav-list-link">Verification Policies</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/wallet-api-tutorial/" class="nav-list-link">Wallet API Tutorial</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="blockchain-anchored-revocation">
+  
+  
+    <a href="#blockchain-anchored-revocation" class="anchor-heading" aria-labelledby="blockchain-anchored-revocation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Blockchain-Anchored Revocation
+  
+  
+</h1>
+    
+
+<p>TrustWeave provides a sophisticated revocation management system that combines fast off-chain status lists with tamper-proof blockchain anchoring. This hybrid approach gives you the performance of off-chain storage with the immutability guarantees of blockchain.</p>
+<h2 id="overview">
+  
+  
+    <a href="#overview" class="anchor-heading" aria-labelledby="overview"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Overview
+  
+  
+</h2>
+    
+
+<p>The <code class="language-plaintext highlighter-rouge">BlockchainRevocationRegistry</code> extends <code class="language-plaintext highlighter-rouge">StatusListManager</code> to automatically anchor status list hashes to blockchain, providing:</p>
+
+<ul>
+  <li><strong>Fast Revocation</strong>: Off-chain updates are immediate (no blockchain latency)</li>
+  <li><strong>Cost Efficiency</strong>: Only anchors hashes, not full data (batched updates)</li>
+  <li><strong>Tamper-Proof</strong>: Blockchain anchors prevent status list tampering</li>
+  <li><strong>Configurable Strategies</strong>: Choose when and how often to anchor</li>
+  <li><strong>Automatic Management</strong>: Anchoring happens automatically based on your strategy</li>
+</ul>
+<h2 id="architecture">
+  
+  
+    <a href="#architecture" class="anchor-heading" aria-labelledby="architecture"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Architecture
+  
+  
+</h2>
+    
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+</pre></td><td class="rouge-code"><pre>┌─────────────────────────────────────────────────────────┐
+│         BlockchainRevocationRegistry                    │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │  StatusListManager (Off-Chain Storage)          │   │
+│  │  - Fast updates                                  │   │
+│  │  - Status list data                              │   │
+│  └──────────────────────────────────────────────────┘   │
+│                          │                                │
+│                          ▼                                │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │  AnchorStrategy (When to Anchor)                  │   │
+│  │  - Periodic: Time-based or update count          │   │
+│  │  - Lazy: On-demand for verification               │   │
+│  │  - Hybrid: Combine both approaches              │   │
+│  └──────────────────────────────────────────────────┘   │
+│                          │                                │
+│                          ▼                                │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │  BlockchainAnchorClient (On-Chain Storage)       │   │
+│  │  - Status list hash                              │   │
+│  │  - Transaction reference                         │   │
+│  └──────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────┘
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="key-components">
+  
+  
+    <a href="#key-components" class="anchor-heading" aria-labelledby="key-components"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Components
+  
+  
+</h2>
+    
+<h3 id="statuslistmanager">
+  
+  
+    <a href="#statuslistmanager" class="anchor-heading" aria-labelledby="statuslistmanager"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> StatusListManager
+  
+  
+</h3>
+    
+
+<p>The base interface for managing credential revocation status lists. Stores the actual status list data (bitstrings) off-chain for fast access.</p>
+
+<p><strong>Key Operations:</strong></p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">createStatusList()</code> - Create a new status list</li>
+  <li><code class="language-plaintext highlighter-rouge">revokeCredential()</code> - Revoke a credential</li>
+  <li><code class="language-plaintext highlighter-rouge">suspendCredential()</code> - Suspend a credential</li>
+  <li><code class="language-plaintext highlighter-rouge">checkRevocationStatus()</code> - Check if a credential is revoked</li>
+  <li><code class="language-plaintext highlighter-rouge">getStatusList()</code> - Retrieve status list data</li>
+</ul>
+<h3 id="blockchainrevocationregistry">
+  
+  
+    <a href="#blockchainrevocationregistry" class="anchor-heading" aria-labelledby="blockchainrevocationregistry"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> BlockchainRevocationRegistry
+  
+  
+</h3>
+    
+
+<p>Extends <code class="language-plaintext highlighter-rouge">StatusListManager</code> to add blockchain anchoring capabilities. Automatically anchors status list hashes based on your chosen strategy.</p>
+
+<p><strong>Key Features:</strong></p>
+<ul>
+  <li>Delegates all operations to underlying <code class="language-plaintext highlighter-rouge">StatusListManager</code></li>
+  <li>Tracks pending anchors (updates since last anchor)</li>
+  <li>Automatically triggers anchoring based on strategy</li>
+  <li>Provides manual anchoring for immediate needs</li>
+</ul>
+<h3 id="anchorstrategy">
+  
+  
+    <a href="#anchorstrategy" class="anchor-heading" aria-labelledby="anchorstrategy"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> AnchorStrategy
+  
+  
+</h3>
+    
+
+<p>Determines when status lists should be anchored to blockchain.</p>
+
+<p><strong>Available Strategies:</strong></p>
+
+<ol>
+  <li><strong>PeriodicAnchorStrategy</strong> - Anchor on schedule or after N updates</li>
+  <li><strong>LazyAnchorStrategy</strong> - Anchor only when verification is requested</li>
+  <li><strong>HybridAnchorStrategy</strong> - Combine periodic and lazy approaches</li>
+</ol>
+<h2 id="step-by-step-guide">
+  
+  
+    <a href="#step-by-step-guide" class="anchor-heading" aria-labelledby="step-by-step-guide"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step-by-Step Guide
+  
+  
+</h2>
+    
+<h3 id="step-1-set-up-dependencies">
+  
+  
+    <a href="#step-1-set-up-dependencies" class="anchor-heading" aria-labelledby="step-1-set-up-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Set Up Dependencies
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="c1">// Add blockchain anchor client for your chain</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor-algorand:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="step-2-create-status-list-manager">
+  
+  
+    <a href="#step-2-create-status-list-manager" class="anchor-heading" aria-labelledby="step-2-create-status-list-manager"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Create Status List Manager
+  
+  
+</h3>
+    
+
+<p>Choose an implementation based on your needs:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.revocation.*</span>
+
+<span class="c1">// For development/testing</span>
+<span class="kd">val</span> <span class="py">statusListManager</span> <span class="p">=</span> <span class="nc">InMemoryStatusListManager</span><span class="p">()</span>
+
+<span class="c1">// For production (persistent storage)</span>
+<span class="kd">val</span> <span class="py">statusListManager</span> <span class="p">=</span> <span class="nc">DatabaseStatusListManager</span><span class="p">(</span><span class="n">dataSource</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="step-3-configure-blockchain-anchor-client">
+  
+  
+    <a href="#step-3-configure-blockchain-anchor-client" class="anchor-heading" aria-labelledby="step-3-configure-blockchain-anchor-client"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Configure Blockchain Anchor Client
+  
+  
+</h3>
+    
+
+<p>Set up your blockchain anchor client:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
+
+<span class="kd">val</span> <span class="py">anchorClient</span> <span class="p">=</span> <span class="nc">AlgorandBlockchainAnchorClient</span><span class="p">(</span>
+    <span class="n">algodUrl</span> <span class="p">=</span> <span class="s">"https://testnet-api.algonode.cloud"</span><span class="p">,</span>
+    <span class="n">algodToken</span> <span class="p">=</span> <span class="s">""</span><span class="p">,</span>
+    <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="step-4-choose-anchoring-strategy">
+  
+  
+    <a href="#step-4-choose-anchoring-strategy" class="anchor-heading" aria-labelledby="step-4-choose-anchoring-strategy"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Choose Anchoring Strategy
+  
+  
+</h3>
+    
+
+<p>Select the strategy that fits your use case:</p>
+<h4 id="option-a-periodic-anchoring-recommended-for-high-volume">
+  
+  
+    <a href="#option-a-periodic-anchoring-recommended-for-high-volume" class="anchor-heading" aria-labelledby="option-a-periodic-anchoring-recommended-for-high-volume"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Option A: Periodic Anchoring (Recommended for High Volume)
+  
+  
+</h4>
+    
+
+<p>Anchor every hour or after 100 updates:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">java.time.Duration</span>
+
+<span class="kd">val</span> <span class="py">strategy</span> <span class="p">=</span> <span class="nc">PeriodicAnchorStrategy</span><span class="p">(</span>
+    <span class="n">interval</span> <span class="p">=</span> <span class="nc">Duration</span><span class="p">.</span><span class="nf">ofHours</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+    <span class="n">maxUpdates</span> <span class="p">=</span> <span class="mi">100</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Use Case:</strong> High-volume revocation (100+ revocations per hour)
+<strong>Cost:</strong> ~$0.50-$5 per hour (1 transaction)
+<strong>Latency:</strong> 0-1 hour for blockchain confirmation</p>
+<h4 id="option-b-lazy-anchoring-recommended-for-low-volume">
+  
+  
+    <a href="#option-b-lazy-anchoring-recommended-for-low-volume" class="anchor-heading" aria-labelledby="option-b-lazy-anchoring-recommended-for-low-volume"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Option B: Lazy Anchoring (Recommended for Low Volume)
+  
+  
+</h4>
+    
+
+<p>Anchor only when verification is requested:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">strategy</span> <span class="p">=</span> <span class="nc">LazyAnchorStrategy</span><span class="p">(</span>
+    <span class="n">maxStaleness</span> <span class="p">=</span> <span class="nc">Duration</span><span class="p">.</span><span class="nf">ofDays</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="c1">// Force anchor if older than 1 day</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Use Case:</strong> Low-volume revocation (&lt; 10 revocations per day)
+<strong>Cost:</strong> ~$0.50-$5 per verification (only when needed)
+<strong>Latency:</strong> On-demand (when verification happens)</p>
+<h4 id="option-c-hybrid-anchoring-recommended-for-most-cases">
+  
+  
+    <a href="#option-c-hybrid-anchoring-recommended-for-most-cases" class="anchor-heading" aria-labelledby="option-c-hybrid-anchoring-recommended-for-most-cases"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Option C: Hybrid Anchoring (Recommended for Most Cases)
+  
+  
+</h4>
+    
+
+<p>Combine periodic and lazy approaches:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">strategy</span> <span class="p">=</span> <span class="nc">HybridAnchorStrategy</span><span class="p">(</span>
+    <span class="n">periodicInterval</span> <span class="p">=</span> <span class="nc">Duration</span><span class="p">.</span><span class="nf">ofHours</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+    <span class="n">maxUpdates</span> <span class="p">=</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="n">forceAnchorOnVerify</span> <span class="p">=</span> <span class="k">true</span> <span class="c1">// Also anchor on verification if stale</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Use Case:</strong> Medium-volume revocation with critical verifications
+<strong>Cost:</strong> ~$0.50-$5 per hour + occasional on-demand anchors
+<strong>Latency:</strong> 0-1 hour for periodic, immediate for critical verifications</p>
+<h3 id="step-5-create-blockchain-revocation-registry">
+  
+  
+    <a href="#step-5-create-blockchain-revocation-registry" class="anchor-heading" aria-labelledby="step-5-create-blockchain-revocation-registry"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Create Blockchain Revocation Registry
+  
+  
+</h3>
+    
+
+<p>Combine all components:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">registry</span> <span class="p">=</span> <span class="nc">BlockchainRevocationRegistry</span><span class="p">(</span>
+    <span class="n">anchorClient</span> <span class="p">=</span> <span class="n">anchorClient</span><span class="p">,</span>
+    <span class="n">statusListManager</span> <span class="p">=</span> <span class="n">statusListManager</span><span class="p">,</span>
+    <span class="n">anchorStrategy</span> <span class="p">=</span> <span class="n">strategy</span><span class="p">,</span>
+    <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="step-6-create-status-list">
+  
+  
+    <a href="#step-6-create-status-list" class="anchor-heading" aria-labelledby="step-6-create-status-list"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 6: Create Status List
+  
+  
+</h3>
+    
+
+<p>Create a status list for your issuer:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">statusList</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">createStatusList</span><span class="p">(</span>
+    <span class="n">issuerDid</span> <span class="p">=</span> <span class="s">"did:key:z6Mkr..."</span><span class="p">,</span>
+    <span class="n">purpose</span> <span class="p">=</span> <span class="nc">StatusPurpose</span><span class="p">.</span><span class="nc">REVOCATION</span><span class="p">,</span>
+    <span class="n">size</span> <span class="p">=</span> <span class="mi">131072</span> <span class="c1">// 16KB bitstring (default)</span>
+<span class="p">)</span>
+
+<span class="nf">println</span><span class="p">(</span><span class="s">"Status List ID: ${statusList.id}"</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"Status List Purpose: ${statusList.credentialSubject.statusPurpose}"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="step-7-issue-credential-with-status-list-reference">
+  
+  
+    <a href="#step-7-issue-credential-with-status-list-reference" class="anchor-heading" aria-labelledby="step-7-issue-credential-with-status-list-reference"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 7: Issue Credential with Status List Reference
+  
+  
+</h3>
+    
+
+<p>When issuing a credential, include the status list reference:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.models.*</span>
+
+<span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+    <span class="n">id</span> <span class="p">=</span> <span class="s">"cred-123"</span><span class="p">,</span>
+    <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"UniversityDegree"</span><span class="p">),</span>
+    <span class="n">issuer</span> <span class="p">=</span> <span class="s">"did:key:z6Mkr..."</span><span class="p">,</span>
+    <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"degree"</span><span class="p">,</span> <span class="s">"Bachelor of Science"</span><span class="p">)</span>
+    <span class="p">},</span>
+    <span class="n">issuanceDate</span> <span class="p">=</span> <span class="s">"2024-01-01T00:00:00Z"</span><span class="p">,</span>
+    <span class="n">credentialStatus</span> <span class="p">=</span> <span class="nc">CredentialStatus</span><span class="p">(</span>
+        <span class="n">id</span> <span class="p">=</span> <span class="s">"${statusList.id}#${index}"</span><span class="p">,</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="s">"StatusList2021Entry"</span><span class="p">,</span>
+        <span class="n">statusPurpose</span> <span class="p">=</span> <span class="s">"revocation"</span><span class="p">,</span>
+        <span class="n">statusListIndex</span> <span class="p">=</span> <span class="n">index</span><span class="p">.</span><span class="nf">toString</span><span class="p">(),</span>
+        <span class="n">statusListCredential</span> <span class="p">=</span> <span class="n">statusList</span><span class="p">.</span><span class="n">id</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="step-8-revoke-credential">
+  
+  
+    <a href="#step-8-revoke-credential" class="anchor-heading" aria-labelledby="step-8-revoke-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 8: Revoke Credential
+  
+  
+</h3>
+    
+
+<p>Revoke a credential (anchoring happens automatically if threshold reached):</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+</pre></td><td class="rouge-code"><pre><span class="c1">// Single revocation</span>
+<span class="kd">val</span> <span class="py">revoked</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">revokeCredential</span><span class="p">(</span>
+    <span class="n">credentialId</span> <span class="p">=</span> <span class="s">"cred-123"</span><span class="p">,</span>
+    <span class="n">statusListId</span> <span class="p">=</span> <span class="n">statusList</span><span class="p">.</span><span class="n">id</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">revoked</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Credential revoked successfully"</span><span class="p">)</span>
+    
+    <span class="c1">// Check if anchoring was triggered</span>
+    <span class="kd">val</span> <span class="py">pending</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">getPendingAnchor</span><span class="p">(</span><span class="n">statusList</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">pending</span> <span class="p">==</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"Status list was anchored to blockchain"</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"Pending anchor: ${pending.updateCount} updates since last anchor"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="step-9-batch-revocation">
+  
+  
+    <a href="#step-9-batch-revocation" class="anchor-heading" aria-labelledby="step-9-batch-revocation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 9: Batch Revocation
+  
+  
+</h3>
+    
+
+<p>Revoke multiple credentials at once:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">credentialIds</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"cred-123"</span><span class="p">,</span> <span class="s">"cred-456"</span><span class="p">,</span> <span class="s">"cred-789"</span><span class="p">)</span>
+<span class="kd">val</span> <span class="py">results</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">revokeCredentials</span><span class="p">(</span>
+    <span class="n">credentialIds</span> <span class="p">=</span> <span class="n">credentialIds</span><span class="p">,</span>
+    <span class="n">statusListId</span> <span class="p">=</span> <span class="n">statusList</span><span class="p">.</span><span class="n">id</span>
+<span class="p">)</span>
+
+<span class="kd">val</span> <span class="py">successCount</span> <span class="p">=</span> <span class="n">results</span><span class="p">.</span><span class="n">values</span><span class="p">.</span><span class="nf">count</span> <span class="p">{</span> <span class="n">it</span> <span class="p">}</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"Revoked $successCount out of ${credentialIds.size} credentials"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="step-10-check-revocation-status">
+  
+  
+    <a href="#step-10-check-revocation-status" class="anchor-heading" aria-labelledby="step-10-check-revocation-status"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 10: Check Revocation Status
+  
+  
+</h3>
+    
+
+<p>Check if a credential is revoked:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">status</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">checkRevocationStatus</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">status</span><span class="p">.</span><span class="n">revoked</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Credential is revoked"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Status List: ${status.statusListId}"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">status</span><span class="p">.</span><span class="n">reason</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"Reason: ${status.reason}"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Credential is valid"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="step-11-verify-on-chain-optional">
+  
+  
+    <a href="#step-11-verify-on-chain-optional" class="anchor-heading" aria-labelledby="step-11-verify-on-chain-optional"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 11: Verify On-Chain (Optional)
+  
+  
+</h3>
+    
+
+<p>For hybrid strategies, verify that the status list is anchored:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">onChainStatus</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">checkRevocationOnChain</span><span class="p">(</span>
+    <span class="n">credential</span> <span class="p">=</span> <span class="n">credential</span><span class="p">,</span>
+    <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span>
+<span class="p">)</span>
+
+<span class="c1">// This will trigger anchoring if using HybridAnchorStrategy</span>
+<span class="c1">// and the status list is stale</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="step-12-manual-anchoring-if-needed">
+  
+  
+    <a href="#step-12-manual-anchoring-if-needed" class="anchor-heading" aria-labelledby="step-12-manual-anchoring-if-needed"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 12: Manual Anchoring (If Needed)
+  
+  
+</h3>
+    
+
+<p>Force immediate anchoring (bypasses strategy):</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">currentStatusList</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">getStatusList</span><span class="p">(</span><span class="n">statusList</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+<span class="kd">val</span> <span class="py">anchorRef</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">anchorRevocationList</span><span class="p">(</span>
+    <span class="n">statusList</span> <span class="p">=</span> <span class="n">currentStatusList</span><span class="o">!!</span><span class="p">,</span>
+    <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span>
+<span class="p">)</span>
+
+<span class="nf">println</span><span class="p">(</span><span class="s">"Status list anchored at: $anchorRef"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="complete-example">
+  
+  
+    <a href="#complete-example" class="anchor-heading" aria-labelledby="complete-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Complete Example
+  
+  
+</h2>
+    
+
+<p>Here’s a complete example showing the full workflow:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.revocation.*</span>
+<span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
+<span class="k">import</span> <span class="nn">java.time.Duration</span>
+
+<span class="k">suspend</span> <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// 1. Set up components</span>
+    <span class="kd">val</span> <span class="py">statusListManager</span> <span class="p">=</span> <span class="nc">InMemoryStatusListManager</span><span class="p">()</span>
+    <span class="kd">val</span> <span class="py">anchorClient</span> <span class="p">=</span> <span class="cm">/* your blockchain anchor client */</span>
+    
+    <span class="c1">// 2. Create registry with periodic strategy</span>
+    <span class="kd">val</span> <span class="py">registry</span> <span class="p">=</span> <span class="nc">BlockchainRevocationRegistry</span><span class="p">(</span>
+        <span class="n">anchorClient</span> <span class="p">=</span> <span class="n">anchorClient</span><span class="p">,</span>
+        <span class="n">statusListManager</span> <span class="p">=</span> <span class="n">statusListManager</span><span class="p">,</span>
+        <span class="n">anchorStrategy</span> <span class="p">=</span> <span class="nc">PeriodicAnchorStrategy</span><span class="p">(</span>
+            <span class="n">interval</span> <span class="p">=</span> <span class="nc">Duration</span><span class="p">.</span><span class="nf">ofHours</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+            <span class="n">maxUpdates</span> <span class="p">=</span> <span class="mi">100</span>
+        <span class="p">),</span>
+        <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// 3. Create status list</span>
+    <span class="kd">val</span> <span class="py">statusList</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">createStatusList</span><span class="p">(</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="s">"did:key:z6Mkr..."</span><span class="p">,</span>
+        <span class="n">purpose</span> <span class="p">=</span> <span class="nc">StatusPurpose</span><span class="p">.</span><span class="nc">REVOCATION</span>
+    <span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Created status list: ${statusList.id}"</span><span class="p">)</span>
+    
+    <span class="c1">// 4. Issue credential with status list reference</span>
+    <span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="cm">/* issue credential with statusList.id */</span>
+    
+    <span class="c1">// 5. Revoke credential (automatic anchoring if threshold reached)</span>
+    <span class="n">registry</span><span class="p">.</span><span class="nf">revokeCredential</span><span class="p">(</span><span class="s">"cred-123"</span><span class="p">,</span> <span class="n">statusList</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+    
+    <span class="c1">// 6. Check revocation status</span>
+    <span class="kd">val</span> <span class="py">status</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">checkRevocationStatus</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Revoked: ${status.revoked}"</span><span class="p">)</span>
+    
+    <span class="c1">// 7. Check anchor status</span>
+    <span class="kd">val</span> <span class="py">lastAnchor</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">getLastAnchorTime</span><span class="p">(</span><span class="n">statusList</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">lastAnchor</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"Last anchored: $lastAnchor"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="strategy-comparison">
+  
+  
+    <a href="#strategy-comparison" class="anchor-heading" aria-labelledby="strategy-comparison"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Strategy Comparison
+  
+  
+</h2>
+    
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Strategy</th>
+      <th>Cost per 1000 Revocations</th>
+      <th>Latency</th>
+      <th>Best For</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Periodic (hourly)</strong></td>
+      <td>$0.50-$5</td>
+      <td>0-1 hour</td>
+      <td>High volume (&gt;100/hour)</td>
+    </tr>
+    <tr>
+      <td><strong>Periodic (daily)</strong></td>
+      <td>$0.50-$5</td>
+      <td>0-24 hours</td>
+      <td>Cost-sensitive, low urgency</td>
+    </tr>
+    <tr>
+      <td><strong>Lazy</strong></td>
+      <td>$0.50-$5</td>
+      <td>On-demand</td>
+      <td>Low volume (&lt;10/day)</td>
+    </tr>
+    <tr>
+      <td><strong>Hybrid</strong></td>
+      <td>$0.50-$5 + occasional</td>
+      <td>0-1 hour + on-demand</td>
+      <td>Most use cases</td>
+    </tr>
+  </tbody>
+</table></div>
+<h2 id="monitoring-and-management">
+  
+  
+    <a href="#monitoring-and-management" class="anchor-heading" aria-labelledby="monitoring-and-management"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Monitoring and Management
+  
+  
+</h2>
+    
+<h3 id="check-pending-anchors">
+  
+  
+    <a href="#check-pending-anchors" class="anchor-heading" aria-labelledby="check-pending-anchors"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Check Pending Anchors
+  
+  
+</h3>
+    
+
+<p>Monitor pending anchors to see when the next anchor will happen:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">pending</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">getPendingAnchor</span><span class="p">(</span><span class="n">statusList</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">pending</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Pending updates: ${pending.updateCount}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Last update: ${pending.lastUpdate}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Time since last anchor: ${Duration.between(pending.lastAnchorTime, Instant.now())}"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="check-last-anchor-time">
+  
+  
+    <a href="#check-last-anchor-time" class="anchor-heading" aria-labelledby="check-last-anchor-time"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Check Last Anchor Time
+  
+  
+</h3>
+    
+
+<p>See when a status list was last anchored:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">lastAnchor</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">getLastAnchorTime</span><span class="p">(</span><span class="n">statusList</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">lastAnchor</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Last anchored: $lastAnchor"</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">age</span> <span class="p">=</span> <span class="nc">Duration</span><span class="p">.</span><span class="nf">between</span><span class="p">(</span><span class="n">lastAnchor</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">())</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Age: ${age.toHours()} hours"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="get-status-list-statistics">
+  
+  
+    <a href="#get-status-list-statistics" class="anchor-heading" aria-labelledby="get-status-list-statistics"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Get Status List Statistics
+  
+  
+</h3>
+    
+
+<p>Get detailed statistics about a status list:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">stats</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">getStatusListStatistics</span><span class="p">(</span><span class="n">statusList</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">stats</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Total capacity: ${stats.totalCapacity}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Used indices: ${stats.usedIndices}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Revoked count: ${stats.revokedCount}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Available indices: ${stats.availableIndices}"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="best-practices">
+  
+  
+    <a href="#best-practices" class="anchor-heading" aria-labelledby="best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Best Practices
+  
+  
+</h2>
+    
+
+<ol>
+  <li><strong>Choose the Right Strategy</strong>
+    <ul>
+      <li>High volume → Periodic (hourly)</li>
+      <li>Low volume → Lazy</li>
+      <li>Critical verifications → Hybrid</li>
+    </ul>
+  </li>
+  <li><strong>Monitor Pending Anchors</strong>
+    <ul>
+      <li>Check <code class="language-plaintext highlighter-rouge">getPendingAnchor()</code> regularly</li>
+      <li>Set up alerts for high update counts</li>
+    </ul>
+  </li>
+  <li><strong>Handle Anchoring Failures</strong>
+    <ul>
+      <li>Implement retry logic for failed anchors</li>
+      <li>Log anchor failures for debugging</li>
+      <li>Consider fallback strategies</li>
+    </ul>
+  </li>
+  <li><strong>Optimize Update Batching</strong>
+    <ul>
+      <li>Use <code class="language-plaintext highlighter-rouge">revokeCredentials()</code> for batch operations</li>
+      <li>Use <code class="language-plaintext highlighter-rouge">updateStatusListBatch()</code> for bulk updates</li>
+    </ul>
+  </li>
+  <li><strong>Test Your Strategy</strong>
+    <ul>
+      <li>Test with realistic update patterns</li>
+      <li>Monitor costs and latency</li>
+      <li>Adjust thresholds based on usage</li>
+    </ul>
+  </li>
+</ol>
+<h2 id="troubleshooting">
+  
+  
+    <a href="#troubleshooting" class="anchor-heading" aria-labelledby="troubleshooting"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Troubleshooting
+  
+  
+</h2>
+    
+<h3 id="anchoring-not-happening">
+  
+  
+    <a href="#anchoring-not-happening" class="anchor-heading" aria-labelledby="anchoring-not-happening"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Anchoring Not Happening
+  
+  
+</h3>
+    
+
+<p><strong>Problem:</strong> Status lists aren’t being anchored automatically.</p>
+
+<p><strong>Solutions:</strong></p>
+<ul>
+  <li>Check if <code class="language-plaintext highlighter-rouge">anchorClient</code> is properly configured</li>
+  <li>Verify <code class="language-plaintext highlighter-rouge">chainId</code> is set correctly</li>
+  <li>Check strategy thresholds (may not have reached them)</li>
+  <li>Use manual anchoring for immediate needs</li>
+</ul>
+<h3 id="high-costs">
+  
+  
+    <a href="#high-costs" class="anchor-heading" aria-labelledby="high-costs"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> High Costs
+  
+  
+</h3>
+    
+
+<p><strong>Problem:</strong> Too many blockchain transactions.</p>
+
+<p><strong>Solutions:</strong></p>
+<ul>
+  <li>Increase <code class="language-plaintext highlighter-rouge">interval</code> in PeriodicAnchorStrategy</li>
+  <li>Increase <code class="language-plaintext highlighter-rouge">maxUpdates</code> threshold</li>
+  <li>Switch to LazyAnchorStrategy for low volume</li>
+  <li>Use cheaper blockchain (testnet, Layer 2)</li>
+</ul>
+<h3 id="slow-verification">
+  
+  
+    <a href="#slow-verification" class="anchor-heading" aria-labelledby="slow-verification"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Slow Verification
+  
+  
+</h3>
+    
+
+<p><strong>Problem:</strong> Verification takes too long.</p>
+
+<p><strong>Solutions:</strong></p>
+<ul>
+  <li>Use HybridAnchorStrategy with <code class="language-plaintext highlighter-rouge">forceAnchorOnVerify = true</code></li>
+  <li>Pre-anchor status lists before verification</li>
+  <li>Use faster blockchain (Layer 2, optimized chains)</li>
+</ul>
+<h2 id="related-documentation">
+  
+  
+    <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
+  
+  
+</h2>
+    
+
+<ul>
+  <li><a href="/trustweave/core-concepts/blockchain-anchoring/">Blockchain Anchoring</a> - General blockchain anchoring guide</li>
+  <li><a href="/trustweave/core-concepts/verifiable-credentials/">Verifiable Credentials</a> - Credential management</li>
+  <li><a href="/trustweave/api-reference/core-api/#status-list-manager">Status List Manager API</a> - API reference</li>
+</ul>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

@@ -1,0 +1,1228 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+
+    .site-nav > ul.nav-list:first-child > li > a,
+    
+    .site-nav > ul.nav-list:first-child > li > ul > li:not(:nth-child(2)) > a,
+    .site-nav > ul.nav-list:first-child > li > ul > li > ul > li a {
+      background-image: none;
+    }
+
+    .site-nav > ul.nav-list:not(:first-child) a,
+    .site-nav li.external a {
+      background-image: none;
+    }
+
+    .site-nav > ul.nav-list:first-child > li:nth-child(5) > ul > li:nth-child(2) > a {
+      font-weight: 600;
+      text-decoration: none;
+    }.site-nav > ul.nav-list:first-child > li:nth-child(5) > button svg,
+    .site-nav > ul.nav-list:first-child > li:nth-child(5) > ul > li:nth-child(2) > button svg {
+      transform: rotate(-90deg);
+    }.site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(5) > ul.nav-list,
+    .site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(5) > ul.nav-list > li.nav-list-item:nth-child(2) > ul.nav-list {
+      display: block;
+    }
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Wallet API Reference | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Wallet API Reference" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://localhost:4000/trustweave/api-reference/wallet-api/" />
+<meta property="og:url" content="http://localhost:4000/trustweave/api-reference/wallet-api/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Wallet API Reference" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"Wallet API Reference","url":"http://localhost:4000/trustweave/api-reference/wallet-api/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/beginner-tutorial-series/" class="nav-list-link">Beginner Tutorial Series</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchored-revocation/" class="nav-list-link">Blockchain-Anchored Revocation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/code-style/" class="nav-list-link">Code Style</a></li><li class="nav-list-item"><a href="/trustweave/comparison/README/" class="nav-list-link">Comparison Documentation</a></li><li class="nav-list-item"><a href="/trustweave/configuration/README/" class="nav-list-link">Configuration Reference</a></li><li class="nav-list-item"><a href="/trustweave/advanced/custom-adapters/" class="nav-list-link">Creating Custom Adapters</a></li><li class="nav-list-item"><a href="/trustweave/contributing/creating-plugins/" class="nav-list-link">Creating TrustWeave Plugins</a></li><li class="nav-list-item"><a href="/trustweave/features/credential-exchange-protocols/README/" class="nav-list-link">Credential Exchange Protocols</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/credential-issuance-tutorial/" class="nav-list-link">Credential Issuance Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/algorithm-compatibility-table/" class="nav-list-link">Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/did-operations-tutorial/" class="nav-list-link">DID Operations Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/delegation/" class="nav-list-link">Delegation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/development-setup/" class="nav-list-link">Development Setup</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/evaluation-engines/" class="nav-list-link">Evaluation Engines</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/json-canonicalization/" class="nav-list-link">JSON Canonicalization</a></li><li class="nav-list-item"><a href="/trustweave/advanced/key-rotation/" class="nav-list-link">Key Rotation Strategies</a></li><li class="nav-list-item"><a href="/trustweave/licensing/README/" class="nav-list-link">Licensing Overview</a></li><li class="nav-list-item"><a href="/trustweave/migration/README/" class="nav-list-link">Migration Guides</a></li><li class="nav-list-item"><a href="/trustweave/advanced/performance/" class="nav-list-link">Performance Considerations</a></li><li class="nav-list-item"><a href="/trustweave/advanced/plugin-lifecycle/" class="nav-list-link">Plugin Lifecycle Management</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/proof-purpose-validation/" class="nav-list-link">Proof Purpose Validation</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/credential-exchange-protocols/" class="nav-list-link">Protocol Abstraction Layer</a></li><li class="nav-list-item"><a href="/trustweave/contributing/pull-request-process/" class="nav-list-link">Pull Request Process</a></li><li class="nav-list-item"><a href="/trustweave/security/README/" class="nav-list-link">Security Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/advanced/spi/" class="nav-list-link">Service Provider Interface (SPI)</a></li><li class="nav-list-item"><a href="/trustweave/plugins/" class="nav-list-link">Supported Plugins</a></li><li class="nav-list-item"><a href="/trustweave/contributing/testing-guidelines/" class="nav-list-link">Testing Guidelines</a></li><li class="nav-list-item"><a href="/trustweave/advanced/testing-strategies/" class="nav-list-link">Testing Strategies</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/trust-registry/" class="nav-list-link">Trust Registry</a></li><li class="nav-list-item"><a href="/trustweave/GLOSSARY/" class="nav-list-link">TrustWeave Glossary</a></li><li class="nav-list-item"><a href="/trustweave/TRUSTWEAVE_WHITEPAPER/" class="nav-list-link">TrustWeave SDK: Decentralized Trust Infrastructure</a></li><li class="nav-list-item"><a href="/trustweave/scenarios/README/" class="nav-list-link">Use Case Scenarios</a></li><li class="nav-list-item"><a href="/trustweave/advanced/verification-policies/" class="nav-list-link">Verification Policies</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/wallet-api-tutorial/" class="nav-list-link">Wallet API Tutorial</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      <nav aria-label="Breadcrumb" class="breadcrumb-nav">
+  <ol class="breadcrumb-nav-list">
+    <li class="breadcrumb-nav-list-item"><a href="/trustweave/api-reference/README/">API Reference</a></li>
+    <li class="breadcrumb-nav-list-item"><span>Wallet API Reference</span></li>
+  </ol>
+</nav>
+
+
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="wallet-api-reference">
+  
+  
+    <a href="#wallet-api-reference" class="anchor-heading" aria-labelledby="wallet-api-reference"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Wallet API Reference
+  
+  
+</h1>
+    
+
+<p>Complete API reference for TrustWeave’s Wallet system.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Result:</strong> Gradle exposes the wallet interfaces and DSLs referenced throughout this reference.</p>
+<h2 id="overview">
+  
+  
+    <a href="#overview" class="anchor-heading" aria-labelledby="overview"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Overview
+  
+  
+</h2>
+    
+
+<p>The Wallet API provides a unified interface for managing verifiable credentials and identities. It follows the Interface Segregation Principle (ISP) with composable capability interfaces.</p>
+<h2 id="core-interfaces">
+  
+  
+    <a href="#core-interfaces" class="anchor-heading" aria-labelledby="core-interfaces"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Core Interfaces
+  
+  
+</h2>
+    
+<h3 id="wallet">
+  
+  
+    <a href="#wallet" class="anchor-heading" aria-labelledby="wallet"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Wallet
+  
+  
+</h3>
+    
+
+<p>The main wallet interface that all wallets implement.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+</pre></td><td class="rouge-code"><pre><span class="kd">interface</span> <span class="nc">Wallet</span> <span class="p">:</span> <span class="nc">CredentialStorage</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">walletId</span><span class="p">:</span> <span class="nc">String</span>
+    <span class="kd">val</span> <span class="py">capabilities</span><span class="p">:</span> <span class="nc">WalletCapabilities</span>
+    <span class="k">fun</span> <span class="p">&lt;</span><span class="nc">T</span> <span class="p">:</span> <span class="nc">Any</span><span class="p">&gt;</span> <span class="nf">supports</span><span class="p">(</span><span class="n">capability</span><span class="p">:</span> <span class="nc">KClass</span><span class="p">&lt;</span><span class="nc">T</span><span class="p">&gt;):</span> <span class="nc">Boolean</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">getStatistics</span><span class="p">():</span> <span class="nc">WalletStatistics</span>
+<span class="p">}</span>
+
+<span class="err">####</span> <span class="nc">Method</span> <span class="n">summary</span>
+
+<span class="p">|</span> <span class="nc">Method</span> <span class="p">|</span> <span class="nc">Returns</span> <span class="p">|</span> <span class="nc">Exceptions</span> <span class="p">|</span> <span class="nc">Notes</span> <span class="p">|</span>
+<span class="p">|--------|---------|------------|-------|</span>
+<span class="p">|</span> <span class="nf">`supports</span><span class="p">(</span><span class="n">capability</span><span class="p">)</span><span class="err">`</span> <span class="p">|</span> <span class="nc">`Boolean`</span> <span class="p">|</span> <span class="err">–</span> <span class="p">|</span> <span class="nc">Detect</span> <span class="n">optional</span> <span class="nf">interfaces</span> <span class="p">(</span><span class="n">presentation</span><span class="p">,</span> <span class="nc">DID</span> <span class="n">management</span><span class="p">,</span> <span class="n">etc</span><span class="p">.).</span> <span class="p">|</span>
+<span class="p">|</span> <span class="nf">`getStatistics</span><span class="p">()</span><span class="err">`</span> <span class="p">|</span> <span class="nc">`WalletStatistics`</span> <span class="p">|</span> <span class="nc">`IllegalStateException`</span> <span class="k">if</span> <span class="n">the</span> <span class="n">backing</span> <span class="n">store</span> <span class="n">cannot</span> <span class="n">compute</span> <span class="n">statistics</span><span class="p">.</span> <span class="p">|</span> <span class="nc">Useful</span> <span class="k">for</span> <span class="n">dashboards</span> <span class="n">and</span> <span class="n">monitoring</span><span class="p">.</span> <span class="p">|</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="credentialstorage">
+  
+  
+    <a href="#credentialstorage" class="anchor-heading" aria-labelledby="credentialstorage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> CredentialStorage
+  
+  
+</h3>
+    
+
+<p>Core credential storage operations (always available).</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+</pre></td><td class="rouge-code"><pre><span class="kd">interface</span> <span class="nc">CredentialStorage</span> <span class="p">{</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">store</span><span class="p">(</span><span class="n">credential</span><span class="p">:</span> <span class="nc">VerifiableCredential</span><span class="p">):</span> <span class="nc">String</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">get</span><span class="p">(</span><span class="n">credentialId</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">VerifiableCredential</span><span class="p">?</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">list</span><span class="p">(</span><span class="n">filter</span><span class="p">:</span> <span class="nc">CredentialFilter</span><span class="p">?</span> <span class="p">=</span> <span class="k">null</span><span class="p">):</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">delete</span><span class="p">(</span><span class="n">credentialId</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">Boolean</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">query</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nc">CredentialQueryBuilder</span><span class="p">.()</span> <span class="p">-&gt;</span> <span class="nc">Unit</span><span class="p">):</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span>
+<span class="p">}</span>
+
+<span class="err">####</span> <span class="nc">Method</span> <span class="n">summary</span>
+
+<span class="p">|</span> <span class="nc">Method</span> <span class="p">|</span> <span class="nc">Parameters</span> <span class="p">|</span> <span class="nc">Returns</span> <span class="p">|</span> <span class="nc">Exceptions</span> <span class="p">|</span> <span class="nc">Notes</span> <span class="p">|</span>
+<span class="p">|--------|------------|---------|------------|-------|</span>
+<span class="p">|</span> <span class="n">`store`</span> <span class="p">|</span> <span class="n">`credential`</span> <span class="p">|</span> <span class="nc">`String`</span> <span class="p">(</span><span class="n">stored</span> <span class="n">id</span><span class="p">)</span> <span class="p">|</span> <span class="nc">`IllegalStateException`</span> <span class="k">if</span> <span class="n">storage</span> <span class="k">is</span> <span class="n">read-only</span> <span class="n">or</span> <span class="n">full</span><span class="p">.</span> <span class="p">|</span> <span class="nc">Canonicalises</span> <span class="n">the</span> <span class="n">credential</span> <span class="n">content</span> <span class="n">before</span> <span class="n">persistence</span><span class="p">.</span> <span class="p">|</span>
+<span class="p">|</span> <span class="n">`get`</span> <span class="p">|</span> <span class="n">`credentialId`</span> <span class="p">|</span> <span class="nc">`VerifiableCredential</span><span class="p">?</span><span class="err">`</span> <span class="p">|</span> <span class="err">–</span> <span class="p">|</span> <span class="nc">Returns</span> <span class="n">`null`</span> <span class="k">when</span> <span class="n">not</span> <span class="n">found</span><span class="p">.</span> <span class="p">|</span>
+<span class="p">|</span> <span class="n">`list`</span> <span class="p">|</span> <span class="n">`filter`</span> <span class="p">|</span> <span class="nc">`List</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span><span class="err">`</span> <span class="p">|</span> <span class="err">–</span> <span class="p">|</span> <span class="n">`filter`</span> <span class="k">is</span> <span class="n">optional</span> <span class="n">and</span> <span class="n">may</span> <span class="n">be</span> <span class="n">ignored</span> <span class="k">by</span> <span class="n">simple</span> <span class="n">stores</span><span class="p">.</span> <span class="p">|</span>
+<span class="p">|</span> <span class="n">`delete`</span> <span class="p">|</span> <span class="n">`credentialId`</span> <span class="p">|</span> <span class="nc">`Boolean`</span> <span class="p">|</span> <span class="err">–</span> <span class="p">|</span> <span class="n">`true`</span> <span class="k">if</span> <span class="n">a</span> <span class="n">credential</span> <span class="n">was</span> <span class="n">removed</span><span class="p">.</span> <span class="p">|</span>
+<span class="p">|</span> <span class="n">`query`</span> <span class="p">|</span> <span class="nc">`CredentialQueryBuilder</span><span class="p">.()</span> <span class="p">-&gt;</span> <span class="nc">Unit`</span> <span class="p">|</span> <span class="nc">`List</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span><span class="err">`</span> <span class="p">|</span> <span class="nc">`IllegalArgumentException`</span> <span class="k">when</span> <span class="n">a</span> <span class="n">query</span> <span class="n">clause</span> <span class="k">is</span> <span class="n">unsupported</span><span class="p">.</span> <span class="p">|</span> <span class="nc">Compose</span> <span class="n">filters</span> <span class="n">via</span> <span class="n">builder</span> <span class="nf">functions</span> <span class="p">(</span><span class="n">`byIssuer`</span><span class="p">,</span> <span class="n">`notExpired`</span><span class="p">,</span> <span class="n">etc</span><span class="p">.).</span> <span class="p">|</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="credentialorganization">
+  
+  
+    <a href="#credentialorganization" class="anchor-heading" aria-labelledby="credentialorganization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> CredentialOrganization
+  
+  
+</h3>
+    
+
+<p>Optional interface for organizing credentials.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+</pre></td><td class="rouge-code"><pre><span class="kd">interface</span> <span class="nc">CredentialOrganization</span> <span class="p">{</span>
+    <span class="c1">// Collections</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">createCollection</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="nc">String</span><span class="p">?</span> <span class="p">=</span> <span class="k">null</span><span class="p">):</span> <span class="nc">String</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">getCollection</span><span class="p">(</span><span class="n">collectionId</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">CredentialCollection</span><span class="p">?</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">listCollections</span><span class="p">():</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">CredentialCollection</span><span class="p">&gt;</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">deleteCollection</span><span class="p">(</span><span class="n">collectionId</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">Boolean</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">addToCollection</span><span class="p">(</span><span class="n">credentialId</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span> <span class="n">collectionId</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">Boolean</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">removeFromCollection</span><span class="p">(</span><span class="n">credentialId</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span> <span class="n">collectionId</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">Boolean</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">getCredentialsInCollection</span><span class="p">(</span><span class="n">collectionId</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span>
+    
+    <span class="c1">// Tags</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">tagCredential</span><span class="p">(</span><span class="n">credentialId</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span> <span class="n">tags</span><span class="p">:</span> <span class="nc">Set</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">&gt;):</span> <span class="nc">Boolean</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">untagCredential</span><span class="p">(</span><span class="n">credentialId</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span> <span class="n">tags</span><span class="p">:</span> <span class="nc">Set</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">&gt;):</span> <span class="nc">Boolean</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">getTags</span><span class="p">(</span><span class="n">credentialId</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">Set</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">&gt;</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">getAllTags</span><span class="p">():</span> <span class="nc">Set</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">&gt;</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">findByTag</span><span class="p">(</span><span class="n">tag</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span>
+    
+    <span class="c1">// Metadata</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">addMetadata</span><span class="p">(</span><span class="n">credentialId</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="nc">Map</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">,</span> <span class="nc">Any</span><span class="p">&gt;):</span> <span class="nc">Boolean</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">getMetadata</span><span class="p">(</span><span class="n">credentialId</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">CredentialMetadata</span><span class="p">?</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">updateNotes</span><span class="p">(</span><span class="n">credentialId</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span> <span class="n">notes</span><span class="p">:</span> <span class="nc">String</span><span class="p">?):</span> <span class="nc">Boolean</span>
+<span class="p">}</span>
+
+<span class="err">####</span> <span class="nc">Method</span> <span class="n">summary</span>
+
+<span class="p">|</span> <span class="nc">Method</span> <span class="p">|</span> <span class="nc">Returns</span> <span class="p">|</span> <span class="nc">Exceptions</span> <span class="p">|</span> <span class="nc">Notes</span> <span class="p">|</span>
+<span class="p">|--------|---------|------------|-------|</span>
+<span class="p">|</span> <span class="n">`createCollection`</span> <span class="p">|</span> <span class="nc">`String`</span> <span class="p">(</span><span class="n">collectionId</span><span class="p">)</span> <span class="p">|</span> <span class="nc">`IllegalArgumentException`</span> <span class="k">when</span> <span class="n">the</span> <span class="n">name</span> <span class="n">already</span> <span class="n">exists</span><span class="p">.</span> <span class="p">|</span> <span class="nc">Use</span> <span class="k">for</span> <span class="n">folders</span><span class="p">/</span><span class="n">projects</span><span class="p">.</span> <span class="p">|</span>
+<span class="p">|</span> <span class="n">`addToCollection`</span> <span class="p">/</span> <span class="n">`removeFromCollection`</span> <span class="p">|</span> <span class="nc">`Boolean`</span> <span class="p">|</span> <span class="err">–</span> <span class="p">|</span> <span class="n">`false`</span> <span class="n">indicates</span> <span class="n">missing</span> <span class="n">credential</span> <span class="n">or</span> <span class="n">collection</span><span class="p">.</span> <span class="p">|</span>
+<span class="p">|</span> <span class="n">`tagCredential`</span> <span class="p">/</span> <span class="n">`untagCredential`</span> <span class="p">|</span> <span class="nc">`Boolean`</span> <span class="p">|</span> <span class="err">–</span> <span class="p">|</span> <span class="nc">Implementations</span> <span class="n">may</span> <span class="n">normalise</span> <span class="n">tags</span> <span class="n">to</span> <span class="n">lowercase</span><span class="p">.</span> <span class="p">|</span>
+<span class="p">|</span> <span class="n">`addMetadata`</span> <span class="p">|</span> <span class="nc">`Boolean`</span> <span class="p">|</span> <span class="nc">`IllegalStateException`</span> <span class="k">if</span> <span class="n">metadata</span> <span class="n">updates</span> <span class="n">unsupported</span><span class="p">.</span> <span class="p">|</span> <span class="nc">Ideal</span> <span class="k">for</span> <span class="n">provenance</span><span class="p">/</span><span class="n">data</span> <span class="n">catalog</span> <span class="n">info</span><span class="p">.</span> <span class="p">|</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="credentiallifecycle">
+  
+  
+    <a href="#credentiallifecycle" class="anchor-heading" aria-labelledby="credentiallifecycle"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> CredentialLifecycle
+  
+  
+</h3>
+    
+
+<p>Optional interface for lifecycle management.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="kd">interface</span> <span class="nc">CredentialLifecycle</span> <span class="p">{</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">archive</span><span class="p">(</span><span class="n">credentialId</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">Boolean</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">unarchive</span><span class="p">(</span><span class="n">credentialId</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">Boolean</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">getArchived</span><span class="p">():</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">refreshCredential</span><span class="p">(</span><span class="n">credentialId</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">VerifiableCredential</span><span class="p">?</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<blockquote>
+  <p>Implementations may throw <code class="language-plaintext highlighter-rouge">UnsupportedOperationException</code> when lifecycle features are disabled.</p>
+</blockquote>
+<h3 id="credentialpresentation">
+  
+  
+    <a href="#credentialpresentation" class="anchor-heading" aria-labelledby="credentialpresentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> CredentialPresentation
+  
+  
+</h3>
+    
+
+<p>Optional interface for creating presentations.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td><td class="rouge-code"><pre><span class="kd">interface</span> <span class="nc">CredentialPresentation</span> <span class="p">{</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">createPresentation</span><span class="p">(</span>
+        <span class="n">credentialIds</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">&gt;,</span>
+        <span class="n">holderDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+        <span class="n">options</span><span class="p">:</span> <span class="nc">PresentationOptions</span>
+    <span class="p">):</span> <span class="nc">VerifiablePresentation</span>
+    
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">createSelectiveDisclosure</span><span class="p">(</span>
+        <span class="n">credentialIds</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">&gt;,</span>
+        <span class="n">disclosedFields</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">&gt;,</span>
+        <span class="n">holderDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+        <span class="n">options</span><span class="p">:</span> <span class="nc">PresentationOptions</span>
+    <span class="p">):</span> <span class="nc">VerifiablePresentation</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h4 id="method-summary">
+  
+  
+    <a href="#method-summary" class="anchor-heading" aria-labelledby="method-summary"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Method summary
+  
+  
+</h4>
+    
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Purpose</th>
+      <th>Exceptions</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">createPresentation</code></td>
+      <td>Build a verifiable presentation from stored credential IDs.</td>
+      <td><code class="language-plaintext highlighter-rouge">IllegalArgumentException</code> when required fields in <code class="language-plaintext highlighter-rouge">PresentationOptions</code> are missing.</td>
+      <td>Uses configured proof generator; ensure holder DID has signing keys.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">createSelectiveDisclosure</code></td>
+      <td>Produce a filtered presentation revealing selected fields.</td>
+      <td>Same as above.</td>
+      <td>Default implementation delegates to <code class="language-plaintext highlighter-rouge">createPresentation</code>.</td>
+    </tr>
+  </tbody>
+</table></div>
+<h3 id="didmanagement">
+  
+  
+    <a href="#didmanagement" class="anchor-heading" aria-labelledby="didmanagement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> DidManagement
+  
+  
+</h3>
+    
+
+<p>Optional interface for DID management.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="rouge-code"><pre><span class="kd">interface</span> <span class="nc">DidManagement</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">walletDid</span><span class="p">:</span> <span class="nc">String</span>
+    <span class="kd">val</span> <span class="py">holderDid</span><span class="p">:</span> <span class="nc">String</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">createDid</span><span class="p">(</span><span class="n">method</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="nc">DidCreationOptions</span> <span class="p">=</span> <span class="nc">DidCreationOptions</span><span class="p">()):</span> <span class="nc">String</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">createDid</span><span class="p">(</span><span class="n">method</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span> <span class="n">configure</span><span class="p">:</span> <span class="nc">DidCreationOptionsBuilder</span><span class="p">.()</span> <span class="p">-&gt;</span> <span class="nc">Unit</span><span class="p">):</span> <span class="nc">String</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">getDids</span><span class="p">():</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">&gt;</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">getPrimaryDid</span><span class="p">():</span> <span class="nc">String</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">setPrimaryDid</span><span class="p">(</span><span class="n">did</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">Boolean</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">resolveDid</span><span class="p">(</span><span class="n">did</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">Any</span><span class="p">?</span> <span class="c1">// DidDocument</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Returns</th>
+      <th>Exceptions</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">createDid</code></td>
+      <td>DID string</td>
+      <td><code class="language-plaintext highlighter-rouge">IllegalArgumentException</code> when method not registered.</td>
+      <td>Overload allows typed builder.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">getDids</code> / <code class="language-plaintext highlighter-rouge">getPrimaryDid</code></td>
+      <td><code class="language-plaintext highlighter-rouge">List&lt;String&gt;</code> / <code class="language-plaintext highlighter-rouge">String</code></td>
+      <td>–</td>
+      <td>Use to display wallet inventory.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">resolveDid</code></td>
+      <td><code class="language-plaintext highlighter-rouge">DidDocument?</code></td>
+      <td><code class="language-plaintext highlighter-rouge">IllegalStateException</code> if no resolver configured.</td>
+      <td>Handy for UX that surfaces DID metadata.</td>
+    </tr>
+  </tbody>
+</table></div>
+<h3 id="keymanagement">
+  
+  
+    <a href="#keymanagement" class="anchor-heading" aria-labelledby="keymanagement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> KeyManagement
+  
+  
+</h3>
+    
+
+<p>Optional interface for key management.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="rouge-code"><pre><span class="kd">interface</span> <span class="nc">KeyManagement</span> <span class="p">{</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">generateKey</span><span class="p">(</span>
+        <span class="n">algorithm</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+        <span class="n">configure</span><span class="p">:</span> <span class="nc">KeyGenerationOptionsBuilder</span><span class="p">.()</span> <span class="p">-&gt;</span> <span class="nc">Unit</span> <span class="p">=</span> <span class="p">{}</span>
+    <span class="p">):</span> <span class="nc">KeyInfo</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">getKeys</span><span class="p">():</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">KeyInfo</span><span class="p">&gt;</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">getKey</span><span class="p">(</span><span class="n">keyId</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">KeyInfo</span><span class="p">?</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">deleteKey</span><span class="p">(</span><span class="n">keyId</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">Boolean</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">sign</span><span class="p">(</span><span class="n">keyId</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nc">ByteArray</span><span class="p">):</span> <span class="nc">ByteArray</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Returns</th>
+      <th>Exceptions</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">generateKey</code></td>
+      <td><code class="language-plaintext highlighter-rouge">KeyInfo</code></td>
+      <td><code class="language-plaintext highlighter-rouge">IllegalArgumentException</code> for unknown algorithms.</td>
+      <td>Delegates to the configured <code class="language-plaintext highlighter-rouge">KeyManagementService</code>.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">deleteKey</code></td>
+      <td><code class="language-plaintext highlighter-rouge">Boolean</code></td>
+      <td><code class="language-plaintext highlighter-rouge">IllegalStateException</code> if removal unsupported.</td>
+      <td><code class="language-plaintext highlighter-rouge">true</code> indicates the key was removed.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">sign</code></td>
+      <td><code class="language-plaintext highlighter-rouge">ByteArray</code></td>
+      <td><code class="language-plaintext highlighter-rouge">IllegalStateException</code> when key missing/inactive.</td>
+      <td>Input should already be canonicalised.</td>
+    </tr>
+  </tbody>
+</table></div>
+<h3 id="credentialissuance">
+  
+  
+    <a href="#credentialissuance" class="anchor-heading" aria-labelledby="credentialissuance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> CredentialIssuance
+  
+  
+</h3>
+    
+
+<p>Optional interface for credential issuance.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="rouge-code"><pre><span class="kd">interface</span> <span class="nc">CredentialIssuance</span> <span class="p">{</span>
+    <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">issueCredential</span><span class="p">(</span>
+        <span class="n">subjectDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+        <span class="n">credentialType</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+        <span class="n">claims</span><span class="p">:</span> <span class="nc">Map</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">,</span> <span class="nc">Any</span><span class="p">&gt;,</span>
+        <span class="n">options</span><span class="p">:</span> <span class="nc">CredentialIssuanceOptions</span>
+    <span class="p">):</span> <span class="nc">VerifiableCredential</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="data-models">
+  
+  
+    <a href="#data-models" class="anchor-heading" aria-labelledby="data-models"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Data Models
+  
+  
+</h2>
+    
+<h3 id="credentialfilter">
+  
+  
+    <a href="#credentialfilter" class="anchor-heading" aria-labelledby="credentialfilter"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> CredentialFilter
+  
+  
+</h3>
+    
+
+<p>Filter criteria for listing credentials.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="kd">data class</span> <span class="nc">CredentialFilter</span><span class="p">(</span>
+    <span class="kd">val</span> <span class="py">issuer</span><span class="p">:</span> <span class="nc">String</span><span class="p">?</span> <span class="p">=</span> <span class="k">null</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">type</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">&gt;?</span> <span class="p">=</span> <span class="k">null</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">subjectId</span><span class="p">:</span> <span class="nc">String</span><span class="p">?</span> <span class="p">=</span> <span class="k">null</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">expired</span><span class="p">:</span> <span class="nc">Boolean</span><span class="p">?</span> <span class="p">=</span> <span class="k">null</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">revoked</span><span class="p">:</span> <span class="nc">Boolean</span><span class="p">?</span> <span class="p">=</span> <span class="k">null</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="credentialquerybuilder">
+  
+  
+    <a href="#credentialquerybuilder" class="anchor-heading" aria-labelledby="credentialquerybuilder"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> CredentialQueryBuilder
+  
+  
+</h3>
+    
+
+<p>Fluent query builder for credentials.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+</pre></td><td class="rouge-code"><pre><span class="kd">class</span> <span class="nc">CredentialQueryBuilder</span> <span class="p">{</span>
+    <span class="k">fun</span> <span class="nf">byIssuer</span><span class="p">(</span><span class="n">issuerDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">)</span>
+    <span class="k">fun</span> <span class="nf">byType</span><span class="p">(</span><span class="n">type</span><span class="p">:</span> <span class="nc">String</span><span class="p">)</span>
+    <span class="k">fun</span> <span class="nf">byTypes</span><span class="p">(</span><span class="k">vararg</span> <span class="n">types</span><span class="p">:</span> <span class="nc">String</span><span class="p">)</span>
+    <span class="k">fun</span> <span class="nf">bySubject</span><span class="p">(</span><span class="n">subjectId</span><span class="p">:</span> <span class="nc">String</span><span class="p">)</span>
+    <span class="k">fun</span> <span class="nf">notExpired</span><span class="p">()</span>
+    <span class="k">fun</span> <span class="nf">expired</span><span class="p">()</span>
+    <span class="k">fun</span> <span class="nf">notRevoked</span><span class="p">()</span>
+    <span class="k">fun</span> <span class="nf">revoked</span><span class="p">()</span>
+    <span class="k">fun</span> <span class="nf">valid</span><span class="p">()</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="credentialcollection">
+  
+  
+    <a href="#credentialcollection" class="anchor-heading" aria-labelledby="credentialcollection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> CredentialCollection
+  
+  
+</h3>
+    
+
+<p>Collection model.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="kd">data class</span> <span class="nc">CredentialCollection</span><span class="p">(</span>
+    <span class="kd">val</span> <span class="py">id</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">name</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">description</span><span class="p">:</span> <span class="nc">String</span><span class="p">?</span> <span class="p">=</span> <span class="k">null</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">createdAt</span><span class="p">:</span> <span class="nc">Instant</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">(),</span>
+    <span class="kd">val</span> <span class="py">credentialCount</span><span class="p">:</span> <span class="nc">Int</span> <span class="p">=</span> <span class="mi">0</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="credentialmetadata">
+  
+  
+    <a href="#credentialmetadata" class="anchor-heading" aria-labelledby="credentialmetadata"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> CredentialMetadata
+  
+  
+</h3>
+    
+
+<p>Metadata model.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="rouge-code"><pre><span class="kd">data class</span> <span class="nc">CredentialMetadata</span><span class="p">(</span>
+    <span class="kd">val</span> <span class="py">credentialId</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">notes</span><span class="p">:</span> <span class="nc">String</span><span class="p">?</span> <span class="p">=</span> <span class="k">null</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">tags</span><span class="p">:</span> <span class="nc">Set</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">&gt;</span> <span class="p">=</span> <span class="nf">emptySet</span><span class="p">(),</span>
+    <span class="kd">val</span> <span class="py">metadata</span><span class="p">:</span> <span class="nc">Map</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">,</span> <span class="nc">Any</span><span class="p">&gt;</span> <span class="p">=</span> <span class="nf">emptyMap</span><span class="p">(),</span>
+    <span class="kd">val</span> <span class="py">createdAt</span><span class="p">:</span> <span class="nc">Instant</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">(),</span>
+    <span class="kd">val</span> <span class="py">updatedAt</span><span class="p">:</span> <span class="nc">Instant</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="walletcapabilities">
+  
+  
+    <a href="#walletcapabilities" class="anchor-heading" aria-labelledby="walletcapabilities"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> WalletCapabilities
+  
+  
+</h3>
+    
+
+<p>Runtime capability discovery.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td><td class="rouge-code"><pre><span class="kd">data class</span> <span class="nc">WalletCapabilities</span><span class="p">(</span>
+    <span class="kd">val</span> <span class="py">credentialStorage</span><span class="p">:</span> <span class="nc">Boolean</span> <span class="p">=</span> <span class="k">true</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">credentialQuery</span><span class="p">:</span> <span class="nc">Boolean</span> <span class="p">=</span> <span class="k">true</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">collections</span><span class="p">:</span> <span class="nc">Boolean</span> <span class="p">=</span> <span class="k">false</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">tags</span><span class="p">:</span> <span class="nc">Boolean</span> <span class="p">=</span> <span class="k">false</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">metadata</span><span class="p">:</span> <span class="nc">Boolean</span> <span class="p">=</span> <span class="k">false</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">archive</span><span class="p">:</span> <span class="nc">Boolean</span> <span class="p">=</span> <span class="k">false</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">refresh</span><span class="p">:</span> <span class="nc">Boolean</span> <span class="p">=</span> <span class="k">false</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">createPresentation</span><span class="p">:</span> <span class="nc">Boolean</span> <span class="p">=</span> <span class="k">false</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">selectiveDisclosure</span><span class="p">:</span> <span class="nc">Boolean</span> <span class="p">=</span> <span class="k">false</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">didManagement</span><span class="p">:</span> <span class="nc">Boolean</span> <span class="p">=</span> <span class="k">false</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">keyManagement</span><span class="p">:</span> <span class="nc">Boolean</span> <span class="p">=</span> <span class="k">false</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">credentialIssuance</span><span class="p">:</span> <span class="nc">Boolean</span> <span class="p">=</span> <span class="k">false</span>
+<span class="p">)</span> <span class="p">{</span>
+    <span class="k">fun</span> <span class="nf">supports</span><span class="p">(</span><span class="n">feature</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">Boolean</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="walletstatistics">
+  
+  
+    <a href="#walletstatistics" class="anchor-heading" aria-labelledby="walletstatistics"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> WalletStatistics
+  
+  
+</h3>
+    
+
+<p>Wallet statistics model.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="rouge-code"><pre><span class="kd">data class</span> <span class="nc">WalletStatistics</span><span class="p">(</span>
+    <span class="kd">val</span> <span class="py">totalCredentials</span><span class="p">:</span> <span class="nc">Int</span> <span class="p">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">validCredentials</span><span class="p">:</span> <span class="nc">Int</span> <span class="p">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">expiredCredentials</span><span class="p">:</span> <span class="nc">Int</span> <span class="p">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">revokedCredentials</span><span class="p">:</span> <span class="nc">Int</span> <span class="p">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">collectionsCount</span><span class="p">:</span> <span class="nc">Int</span> <span class="p">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">tagsCount</span><span class="p">:</span> <span class="nc">Int</span> <span class="p">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">archivedCount</span><span class="p">:</span> <span class="nc">Int</span> <span class="p">=</span> <span class="mi">0</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="provider-configuration">
+  
+  
+    <a href="#provider-configuration" class="anchor-heading" aria-labelledby="provider-configuration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Provider Configuration
+  
+  
+</h2>
+    
+<h3 id="walletcreationoptions">
+  
+  
+    <a href="#walletcreationoptions" class="anchor-heading" aria-labelledby="walletcreationoptions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> WalletCreationOptions
+  
+  
+</h3>
+    
+
+<p><code class="language-plaintext highlighter-rouge">WalletCreationOptions</code> is shared by the TrustWeave facade, the Trust Layer DSL, and custom <code class="language-plaintext highlighter-rouge">WalletFactory</code> implementations. It removes the need for untyped configuration blobs while still allowing provider-specific extensions.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.spi.services.WalletCreationOptionsBuilder</span>
+
+<span class="kd">val</span> <span class="py">options</span> <span class="p">=</span> <span class="nc">WalletCreationOptionsBuilder</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
+    <span class="n">label</span> <span class="p">=</span> <span class="s">"Production Wallet"</span>
+    <span class="n">storagePath</span> <span class="p">=</span> <span class="s">"/var/lib/TrustWeave/wallets/holder-42"</span>
+    <span class="n">enableOrganization</span> <span class="p">=</span> <span class="k">true</span>
+    <span class="n">enablePresentation</span> <span class="p">=</span> <span class="k">true</span>
+    <span class="nf">property</span><span class="p">(</span><span class="s">"connectionString"</span><span class="p">,</span> <span class="nc">System</span><span class="p">.</span><span class="nf">getenv</span><span class="p">(</span><span class="s">"WALLET_DB_URL"</span><span class="p">))</span>
+<span class="p">}.</span><span class="nf">build</span><span class="p">()</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Type</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">label</code></td>
+      <td><code class="language-plaintext highlighter-rouge">String?</code></td>
+      <td>Optional human readable label shown in dashboards or UIs</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">storagePath</code></td>
+      <td><code class="language-plaintext highlighter-rouge">String?</code></td>
+      <td>File system or bucket path for providers that persist data</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">encryptionKey</code></td>
+      <td><code class="language-plaintext highlighter-rouge">String?</code></td>
+      <td>Secret material for at-rest encryption</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">enableOrganization</code></td>
+      <td><code class="language-plaintext highlighter-rouge">Boolean</code></td>
+      <td>Signals that collection/tag capabilities should be enabled</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">enablePresentation</code></td>
+      <td><code class="language-plaintext highlighter-rouge">Boolean</code></td>
+      <td>Enables selective disclosure and presentation builders</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">additionalProperties</code></td>
+      <td><code class="language-plaintext highlighter-rouge">Map&lt;String, Any?&gt;</code></td>
+      <td>Provider-specific extensions added via <code class="language-plaintext highlighter-rouge">property("key", value)</code></td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>A custom factory receives the same object:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td><td class="rouge-code"><pre><span class="kd">class</span> <span class="nc">PostgresWalletFactory</span> <span class="p">:</span> <span class="nc">WalletFactory</span> <span class="p">{</span>
+    <span class="k">override</span> <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">create</span><span class="p">(</span>
+        <span class="n">providerName</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+        <span class="n">walletId</span><span class="p">:</span> <span class="nc">String</span><span class="p">?,</span>
+        <span class="n">walletDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">?,</span>
+        <span class="n">holderDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">?,</span>
+        <span class="n">options</span><span class="p">:</span> <span class="nc">WalletCreationOptions</span>
+    <span class="p">):</span> <span class="nc">Any</span> <span class="p">{</span>
+        <span class="kd">val</span> <span class="py">connection</span> <span class="p">=</span> <span class="n">options</span><span class="p">.</span><span class="n">additionalProperties</span><span class="p">[</span><span class="s">"connectionString"</span><span class="p">]</span> <span class="k">as</span><span class="p">?</span> <span class="nc">String</span>
+            <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"connectionString is required"</span><span class="p">)</span>
+        <span class="nf">require</span><span class="p">(</span><span class="n">options</span><span class="p">.</span><span class="n">enablePresentation</span><span class="p">)</span> <span class="p">{</span> <span class="s">"Presentations must be enabled for Postgres wallets"</span> <span class="p">}</span>
+        <span class="c1">// build and return wallet instance</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="extension-functions">
+  
+  
+    <a href="#extension-functions" class="anchor-heading" aria-labelledby="extension-functions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Extension Functions
+  
+  
+</h2>
+    
+<h3 id="type-safe-capability-access">
+  
+  
+    <a href="#type-safe-capability-access" class="anchor-heading" aria-labelledby="type-safe-capability-access"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Type-Safe Capability Access
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="k">inline</span> <span class="k">fun</span> <span class="p">&lt;</span><span class="nc">T</span><span class="p">&gt;</span> <span class="nc">Wallet</span><span class="p">.</span><span class="nf">withOrganization</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="p">(</span><span class="nc">CredentialOrganization</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="nc">T</span><span class="p">):</span> <span class="nc">T</span><span class="p">?</span>
+<span class="k">inline</span> <span class="k">fun</span> <span class="p">&lt;</span><span class="nc">T</span><span class="p">&gt;</span> <span class="nc">Wallet</span><span class="p">.</span><span class="nf">withLifecycle</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="p">(</span><span class="nc">CredentialLifecycle</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="nc">T</span><span class="p">):</span> <span class="nc">T</span><span class="p">?</span>
+<span class="k">inline</span> <span class="k">fun</span> <span class="p">&lt;</span><span class="nc">T</span><span class="p">&gt;</span> <span class="nc">Wallet</span><span class="p">.</span><span class="nf">withPresentation</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="p">(</span><span class="nc">CredentialPresentation</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="nc">T</span><span class="p">):</span> <span class="nc">T</span><span class="p">?</span>
+<span class="k">inline</span> <span class="k">fun</span> <span class="p">&lt;</span><span class="nc">T</span><span class="p">&gt;</span> <span class="nc">Wallet</span><span class="p">.</span><span class="nf">withDidManagement</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="p">(</span><span class="nc">DidManagement</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="nc">T</span><span class="p">):</span> <span class="nc">T</span><span class="p">?</span>
+<span class="k">inline</span> <span class="k">fun</span> <span class="p">&lt;</span><span class="nc">T</span><span class="p">&gt;</span> <span class="nc">Wallet</span><span class="p">.</span><span class="nf">withKeyManagement</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="p">(</span><span class="nc">KeyManagement</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="nc">T</span><span class="p">):</span> <span class="nc">T</span><span class="p">?</span>
+<span class="k">inline</span> <span class="k">fun</span> <span class="p">&lt;</span><span class="nc">T</span><span class="p">&gt;</span> <span class="nc">Wallet</span><span class="p">.</span><span class="nf">withIssuance</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="p">(</span><span class="nc">CredentialIssuance</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="nc">T</span><span class="p">):</span> <span class="nc">T</span><span class="p">?</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="walletdirectory">
+  
+  
+    <a href="#walletdirectory" class="anchor-heading" aria-labelledby="walletdirectory"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> WalletDirectory
+  
+  
+</h2>
+    
+
+<p>Instance-scoped registry for wallet management.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">directory</span> <span class="p">=</span> <span class="nc">WalletDirectory</span><span class="p">()</span>
+<span class="n">directory</span><span class="p">.</span><span class="nf">register</span><span class="p">(</span><span class="n">wallet</span><span class="p">)</span>
+<span class="kd">val</span> <span class="py">retrieved</span> <span class="p">=</span> <span class="n">directory</span><span class="p">.</span><span class="k">get</span><span class="p">(</span><span class="n">wallet</span><span class="p">.</span><span class="n">walletId</span><span class="p">)</span>
+<span class="kd">val</span> <span class="py">didWallet</span> <span class="p">=</span> <span class="n">directory</span><span class="p">.</span><span class="nf">getByDid</span><span class="p">(</span><span class="s">"did:key:holder"</span><span class="p">)</span>
+<span class="kd">val</span> <span class="py">orgWallets</span> <span class="p">=</span> <span class="n">directory</span><span class="p">.</span><span class="nf">findByCapability</span><span class="p">(</span><span class="nc">CredentialOrganization</span><span class="o">::</span><span class="k">class</span><span class="p">)</span>
+<span class="n">directory</span><span class="p">.</span><span class="nf">unregister</span><span class="p">(</span><span class="n">wallet</span><span class="p">.</span><span class="n">walletId</span><span class="p">)</span>
+<span class="n">directory</span><span class="p">.</span><span class="nf">clear</span><span class="p">()</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<blockquote>
+  <p><strong>Heads up:</strong> <code class="language-plaintext highlighter-rouge">WalletDirectory</code> only indexes <code class="language-plaintext highlighter-rouge">walletDid</code> / <code class="language-plaintext highlighter-rouge">holderDid</code> values for wallets that implement <code class="language-plaintext highlighter-rouge">DidManagement</code>. Pure storage wallets will still resolve by <code class="language-plaintext highlighter-rouge">walletId</code>, but <code class="language-plaintext highlighter-rouge">getByDid</code> will return <code class="language-plaintext highlighter-rouge">null</code>.</p>
+</blockquote>
+<h2 id="walletbuilder">
+  
+  
+    <a href="#walletbuilder" class="anchor-heading" aria-labelledby="walletbuilder"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> WalletBuilder
+  
+  
+</h2>
+    
+
+<p>The Trust Layer DSL exposes a <code class="language-plaintext highlighter-rouge">wallet { ... }</code> builder backed by <code class="language-plaintext highlighter-rouge">WalletCreationOptionsBuilder</code>:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">wallet</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">wallet</span> <span class="p">{</span>
+    <span class="nf">id</span><span class="p">(</span><span class="s">"my-wallet"</span><span class="p">)</span>
+    <span class="nf">holder</span><span class="p">(</span><span class="s">"did:key:holder"</span><span class="p">)</span>
+    <span class="nf">enableOrganization</span><span class="p">()</span>
+    <span class="nf">enablePresentation</span><span class="p">()</span>
+    <span class="nf">option</span><span class="p">(</span><span class="s">"connectionString"</span><span class="p">,</span> <span class="s">"jdbc:postgresql://localhost/TrustWeave"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p>Available builder functions:</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Function</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">id(String)</code></td>
+      <td>Override the generated wallet identifier</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">holder(String)</code></td>
+      <td>Set the holder DID (required)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">walletDid(String)</code></td>
+      <td>Override the wallet DID (defaults to <code class="language-plaintext highlighter-rouge">did:key:test-wallet-&lt;id&gt;</code>)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">provider(String)</code></td>
+      <td>Select a provider by name (defaults to <code class="language-plaintext highlighter-rouge">inMemory</code>)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">inMemory()</code> / <code class="language-plaintext highlighter-rouge">basic()</code></td>
+      <td>Convenience methods that set the provider</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">enableOrganization()</code></td>
+      <td>Turns on collections, tags, and metadata features</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">enablePresentation()</code></td>
+      <td>Enables presentation and selective disclosure support</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">option(key, value)</code></td>
+      <td>Add provider-specific configuration (retrievable via <code class="language-plaintext highlighter-rouge">options.additionalProperties[key]</code>)</td>
+    </tr>
+  </tbody>
+</table></div>
+<h2 id="implementations">
+  
+  
+    <a href="#implementations" class="anchor-heading" aria-labelledby="implementations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Implementations
+  
+  
+</h2>
+    
+<h3 id="basicwallet">
+  
+  
+    <a href="#basicwallet" class="anchor-heading" aria-labelledby="basicwallet"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> BasicWallet
+  
+  
+</h3>
+    
+
+<p>Minimal wallet implementation (storage only).</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre><span class="kd">class</span> <span class="nc">BasicWallet</span><span class="p">(</span>
+    <span class="k">override</span> <span class="kd">val</span> <span class="py">walletId</span><span class="p">:</span> <span class="nc">String</span> <span class="p">=</span> <span class="nc">UUID</span><span class="p">.</span><span class="nf">randomUUID</span><span class="p">().</span><span class="nf">toString</span><span class="p">()</span>
+<span class="p">)</span> <span class="p">:</span> <span class="nc">Wallet</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="inmemorywallet">
+  
+  
+    <a href="#inmemorywallet" class="anchor-heading" aria-labelledby="inmemorywallet"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> InMemoryWallet
+  
+  
+</h3>
+    
+
+<p>Full-featured in-memory wallet for testing.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="rouge-code"><pre><span class="kd">class</span> <span class="nc">InMemoryWallet</span><span class="p">(</span>
+    <span class="k">override</span> <span class="kd">val</span> <span class="py">walletId</span><span class="p">:</span> <span class="nc">String</span> <span class="p">=</span> <span class="nc">UUID</span><span class="p">.</span><span class="nf">randomUUID</span><span class="p">().</span><span class="nf">toString</span><span class="p">(),</span>
+    <span class="k">override</span> <span class="kd">val</span> <span class="py">walletDid</span><span class="p">:</span> <span class="nc">String</span> <span class="p">=</span> <span class="s">"did:key:test-wallet-$walletId"</span><span class="p">,</span>
+    <span class="k">override</span> <span class="kd">val</span> <span class="py">holderDid</span><span class="p">:</span> <span class="nc">String</span> <span class="p">=</span> <span class="s">"did:key:test-holder-$walletId"</span>
+<span class="p">)</span> <span class="p">:</span> <span class="nc">Wallet</span><span class="p">,</span>
+    <span class="nc">CredentialOrganization</span><span class="p">,</span>
+    <span class="nc">CredentialLifecycle</span><span class="p">,</span>
+    <span class="nc">CredentialPresentation</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="usage-examples">
+  
+  
+    <a href="#usage-examples" class="anchor-heading" aria-labelledby="usage-examples"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Usage Examples
+  
+  
+</h2>
+    
+
+<p>See the <a href="/trustweave/tutorials/wallet-api-tutorial/">Wallet API Tutorial</a> for comprehensive usage examples.</p>
+<h2 id="related-documentation">
+  
+  
+    <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
+  
+  
+</h2>
+    
+
+<ul>
+  <li><a href="/trustweave/core-concepts/wallets/">Wallets Core Concept</a></li>
+  <li><a href="/trustweave/tutorials/wallet-api-tutorial/">Wallet API Tutorial</a></li>
+  <li><a href="/trustweave/core-concepts/verifiable-credentials/">Verifiable Credentials</a></li>
+</ul>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

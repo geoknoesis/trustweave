@@ -1,0 +1,1186 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+    .site-nav ul li a {
+      background-image: none;
+    }
+
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Web of Trust Scenario | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Web of Trust Scenario" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://localhost:4000/trustweave/scenarios/web-of-trust-scenario/" />
+<meta property="og:url" content="http://localhost:4000/trustweave/scenarios/web-of-trust-scenario/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Web of Trust Scenario" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"Web of Trust Scenario","url":"http://localhost:4000/trustweave/scenarios/web-of-trust-scenario/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/beginner-tutorial-series/" class="nav-list-link">Beginner Tutorial Series</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchored-revocation/" class="nav-list-link">Blockchain-Anchored Revocation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/code-style/" class="nav-list-link">Code Style</a></li><li class="nav-list-item"><a href="/trustweave/comparison/README/" class="nav-list-link">Comparison Documentation</a></li><li class="nav-list-item"><a href="/trustweave/configuration/README/" class="nav-list-link">Configuration Reference</a></li><li class="nav-list-item"><a href="/trustweave/advanced/custom-adapters/" class="nav-list-link">Creating Custom Adapters</a></li><li class="nav-list-item"><a href="/trustweave/contributing/creating-plugins/" class="nav-list-link">Creating TrustWeave Plugins</a></li><li class="nav-list-item"><a href="/trustweave/features/credential-exchange-protocols/README/" class="nav-list-link">Credential Exchange Protocols</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/credential-issuance-tutorial/" class="nav-list-link">Credential Issuance Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/algorithm-compatibility-table/" class="nav-list-link">Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/did-operations-tutorial/" class="nav-list-link">DID Operations Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/delegation/" class="nav-list-link">Delegation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/development-setup/" class="nav-list-link">Development Setup</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/evaluation-engines/" class="nav-list-link">Evaluation Engines</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/json-canonicalization/" class="nav-list-link">JSON Canonicalization</a></li><li class="nav-list-item"><a href="/trustweave/advanced/key-rotation/" class="nav-list-link">Key Rotation Strategies</a></li><li class="nav-list-item"><a href="/trustweave/licensing/README/" class="nav-list-link">Licensing Overview</a></li><li class="nav-list-item"><a href="/trustweave/migration/README/" class="nav-list-link">Migration Guides</a></li><li class="nav-list-item"><a href="/trustweave/advanced/performance/" class="nav-list-link">Performance Considerations</a></li><li class="nav-list-item"><a href="/trustweave/advanced/plugin-lifecycle/" class="nav-list-link">Plugin Lifecycle Management</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/proof-purpose-validation/" class="nav-list-link">Proof Purpose Validation</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/credential-exchange-protocols/" class="nav-list-link">Protocol Abstraction Layer</a></li><li class="nav-list-item"><a href="/trustweave/contributing/pull-request-process/" class="nav-list-link">Pull Request Process</a></li><li class="nav-list-item"><a href="/trustweave/security/README/" class="nav-list-link">Security Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/advanced/spi/" class="nav-list-link">Service Provider Interface (SPI)</a></li><li class="nav-list-item"><a href="/trustweave/plugins/" class="nav-list-link">Supported Plugins</a></li><li class="nav-list-item"><a href="/trustweave/contributing/testing-guidelines/" class="nav-list-link">Testing Guidelines</a></li><li class="nav-list-item"><a href="/trustweave/advanced/testing-strategies/" class="nav-list-link">Testing Strategies</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/trust-registry/" class="nav-list-link">Trust Registry</a></li><li class="nav-list-item"><a href="/trustweave/GLOSSARY/" class="nav-list-link">TrustWeave Glossary</a></li><li class="nav-list-item"><a href="/trustweave/TRUSTWEAVE_WHITEPAPER/" class="nav-list-link">TrustWeave SDK: Decentralized Trust Infrastructure</a></li><li class="nav-list-item"><a href="/trustweave/scenarios/README/" class="nav-list-link">Use Case Scenarios</a></li><li class="nav-list-item"><a href="/trustweave/advanced/verification-policies/" class="nav-list-link">Verification Policies</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/wallet-api-tutorial/" class="nav-list-link">Wallet API Tutorial</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="web-of-trust-scenario">
+  
+  
+    <a href="#web-of-trust-scenario" class="anchor-heading" aria-labelledby="web-of-trust-scenario"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Web of Trust Scenario
+  
+  
+</h1>
+    
+
+<p>This document provides a complete walkthrough of using TrustWeave’s web of trust features, including trust registries, delegation chains, and proof purpose validation.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-trust:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Result:</strong> These modules give you the trust-layer DSLs, registries, and in-memory mocks used throughout the walkthrough.</p>
+<h2 id="overview">
+  
+  
+    <a href="#overview" class="anchor-heading" aria-labelledby="overview"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Overview
+  
+  
+</h2>
+    
+
+<p>The web of trust scenario demonstrates how to:</p>
+<ol>
+  <li>Set up trust anchors</li>
+  <li>Issue trusted credentials</li>
+  <li>Verify trust paths</li>
+  <li>Delegate capabilities</li>
+  <li>Verify delegation chains</li>
+  <li>Use proof purpose validation</li>
+  <li>Integrate all features together</li>
+</ol>
+<h2 id="step-by-step-walkthrough">
+  
+  
+    <a href="#step-by-step-walkthrough" class="anchor-heading" aria-labelledby="step-by-step-walkthrough"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step-by-Step Walkthrough
+  
+  
+</h2>
+    
+<h3 id="step-1-configure-trust-layer-with-trust-registry">
+  
+  
+    <a href="#step-1-configure-trust-layer-with-trust-registry" class="anchor-heading" aria-labelledby="step-1-configure-trust-layer-with-trust-registry"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Configure Trust Layer with Trust Registry
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.dsl.*</span>
+<span class="k">import</span> <span class="nn">java.time.Instant</span>
+<span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
+
+<span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">trustLayer</span> <span class="p">=</span> <span class="nf">trustLayer</span> <span class="p">{</span>
+        <span class="nf">keys</span> <span class="p">{</span>
+            <span class="nf">provider</span><span class="p">(</span><span class="s">"inMemory"</span><span class="p">)</span>
+            <span class="nf">algorithm</span><span class="p">(</span><span class="nc">KeyAlgorithms</span><span class="p">.</span><span class="nc">ED25519</span><span class="p">)</span>
+        <span class="p">}</span>
+        
+        <span class="nf">did</span> <span class="p">{</span>
+            <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nf">algorithm</span><span class="p">(</span><span class="nc">KeyAlgorithms</span><span class="p">.</span><span class="nc">ED25519</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        
+        <span class="nf">credentials</span> <span class="p">{</span>
+            <span class="nf">defaultProofType</span><span class="p">(</span><span class="nc">ProofTypes</span><span class="p">.</span><span class="nc">ED25519</span><span class="p">)</span>
+        <span class="p">}</span>
+        
+        <span class="nf">trust</span> <span class="p">{</span>
+            <span class="nf">provider</span><span class="p">(</span><span class="s">"inMemory"</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>What this does:</strong> Builds a <code class="language-plaintext highlighter-rouge">trustLayer</code> instance with in-memory KMS, DID method, credential defaults, and trust registry providers—perfect for local demos.</p>
+
+<p><strong>Outcome:</strong> Returns a configured trust layer you reuse in subsequent steps to create DIDs, issue credentials, and resolve trust anchors.</p>
+<h3 id="step-2-create-dids-for-entities">
+  
+  
+    <a href="#step-2-create-dids-for-entities" class="anchor-heading" aria-labelledby="step-2-create-dids-for-entities"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Create DIDs for Entities
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">universityDid</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span>
+    <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span>
+    <span class="nf">algorithm</span><span class="p">(</span><span class="nc">KeyAlgorithms</span><span class="p">.</span><span class="nc">ED25519</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">val</span> <span class="py">companyDid</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span>
+    <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span>
+    <span class="nf">algorithm</span><span class="p">(</span><span class="nc">KeyAlgorithms</span><span class="p">.</span><span class="nc">ED25519</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">val</span> <span class="py">studentDid</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span>
+    <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span>
+    <span class="nf">algorithm</span><span class="p">(</span><span class="nc">KeyAlgorithms</span><span class="p">.</span><span class="nc">ED25519</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">val</span> <span class="py">hrDeptDid</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span>
+    <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span>
+    <span class="nf">algorithm</span><span class="p">(</span><span class="nc">KeyAlgorithms</span><span class="p">.</span><span class="nc">ED25519</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>What this does:</strong> Issues four DIDs—university, company, student, and HR department—using the configured DID method.</p>
+
+<p><strong>Outcome:</strong> Each actor has a resolvable identifier that upcoming trust and delegation steps can reference.</p>
+<h3 id="step-3-set-up-trust-anchors">
+  
+  
+    <a href="#step-3-set-up-trust-anchors" class="anchor-heading" aria-labelledby="step-3-set-up-trust-anchors"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Set Up Trust Anchors
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+</pre></td><td class="rouge-code"><pre><span class="n">trustLayer</span><span class="p">.</span><span class="nf">trust</span> <span class="p">{</span>
+    <span class="c1">// Add university as trusted anchor for education credentials</span>
+    <span class="nf">addAnchor</span><span class="p">(</span><span class="n">universityDid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">credentialTypes</span><span class="p">(</span><span class="s">"EducationCredential"</span><span class="p">,</span> <span class="s">"DegreeCredential"</span><span class="p">)</span>
+        <span class="nf">description</span><span class="p">(</span><span class="s">"Trusted university for education credentials"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Add company as trusted anchor for employment credentials</span>
+    <span class="nf">addAnchor</span><span class="p">(</span><span class="n">companyDid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">credentialTypes</span><span class="p">(</span><span class="s">"EmploymentCredential"</span><span class="p">)</span>
+        <span class="nf">description</span><span class="p">(</span><span class="s">"Trusted company for employment credentials"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Verify trust anchors were added</span>
+    <span class="kd">val</span> <span class="py">isUniversityTrusted</span> <span class="p">=</span> <span class="nf">isTrusted</span><span class="p">(</span><span class="n">universityDid</span><span class="p">,</span> <span class="s">"EducationCredential"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"University trusted for EducationCredential: $isUniversityTrusted"</span><span class="p">)</span>
+<span class="p">}</span>
+
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>What this does:</strong> Seeds the trust registry with anchors for the university and company, then confirms the university anchor is active for education credentials.</p>
+
+<p><strong>Outcome:</strong> Subsequent verifications can rely on trust registry lookups instead of hard-coded issuer lists.</p>
+<h3 id="step-4-issue-credentials-with-trust-verification">
+  
+  
+    <a href="#step-4-issue-credentials-with-trust-verification" class="anchor-heading" aria-labelledby="step-4-issue-credentials-with-trust-verification"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Issue Credentials with Trust Verification
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+</pre></td><td class="rouge-code"><pre><span class="c1">// Issue degree credential from university</span>
+<span class="kd">val</span> <span class="py">degreeCredential</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span>
+    <span class="nf">credential</span> <span class="p">{</span>
+        <span class="nf">id</span><span class="p">(</span><span class="s">"https://university.edu/credentials/degree-123"</span><span class="p">)</span>
+        <span class="nf">type</span><span class="p">(</span><span class="s">"EducationCredential"</span><span class="p">,</span> <span class="s">"DegreeCredential"</span><span class="p">)</span>
+        <span class="nf">issuer</span><span class="p">(</span><span class="n">universityDid</span><span class="p">)</span>
+        <span class="nf">subject</span> <span class="p">{</span>
+            <span class="nf">id</span><span class="p">(</span><span class="n">studentDid</span><span class="p">)</span>
+            <span class="s">"degree"</span> <span class="p">{</span>
+                <span class="s">"type"</span> <span class="n">to</span> <span class="s">"Bachelor"</span>
+                <span class="s">"field"</span> <span class="n">to</span> <span class="s">"Computer Science"</span>
+                <span class="s">"university"</span> <span class="n">to</span> <span class="s">"Example University"</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="nf">issued</span><span class="p">(</span><span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">())</span>
+        <span class="nf">expires</span><span class="p">(</span><span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">plusSeconds</span><span class="p">(</span><span class="mi">31536000</span><span class="p">))</span> <span class="c1">// 1 year</span>
+    <span class="p">}</span>
+    <span class="k">by</span><span class="p">(</span><span class="n">issuerDid</span> <span class="p">=</span> <span class="n">universityDid</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">=</span> <span class="s">"key-1"</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// Verify with trust registry</span>
+<span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+    <span class="nf">credential</span><span class="p">(</span><span class="n">degreeCredential</span><span class="p">)</span>
+    <span class="nf">checkTrustRegistry</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
+    <span class="nf">checkExpiration</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="nf">println</span><span class="p">(</span><span class="s">"Verification Results:"</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"  Valid: ${verification.valid}"</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"  Trust Registry Valid: ${verification.trustRegistryValid}"</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"  Proof Valid: ${verification.proofValid}"</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"  Not Expired: ${verification.notExpired}"</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">verification</span><span class="p">.</span><span class="n">trustRegistryValid</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Issuer is trusted!"</span><span class="p">)</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Issuer is not trusted"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>What this does:</strong> Issues a degree credential and verifies it with trust registry and expiration checks enabled.</p>
+
+<p><strong>Outcome:</strong> A positive result confirms both the issuer’s trust anchor and the credential’s validity window are satisfied.</p>
+<h3 id="step-5-set-up-delegation">
+  
+  
+    <a href="#step-5-set-up-delegation" class="anchor-heading" aria-labelledby="step-5-set-up-delegation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Set Up Delegation
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+</pre></td><td class="rouge-code"><pre><span class="c1">// Company delegates credential issuance to HR department</span>
+<span class="n">trustLayer</span><span class="p">.</span><span class="nf">updateDid</span> <span class="p">{</span>
+    <span class="nf">did</span><span class="p">(</span><span class="n">companyDid</span><span class="p">)</span>
+    <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span>
+    <span class="nf">addCapabilityDelegation</span><span class="p">(</span><span class="s">"$hrDeptDid#key-1"</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// Verify delegation chain</span>
+<span class="kd">val</span> <span class="py">delegationResult</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">delegation</span> <span class="p">{</span>
+    <span class="nf">verifyChain</span><span class="p">(</span><span class="n">delegatorDid</span> <span class="p">=</span> <span class="n">companyDid</span><span class="p">,</span> <span class="n">delegateDid</span> <span class="p">=</span> <span class="n">hrDeptDid</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">delegationResult</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Delegation verified:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Path: ${delegationResult.path.joinToString("</span> <span class="p">-&gt;</span> <span class="s">")}"</span><span class="p">)</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Delegation failed:"</span><span class="p">)</span>
+    <span class="n">delegationResult</span><span class="p">.</span><span class="n">errors</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="nf">println</span><span class="p">(</span><span class="s">"   - $it"</span><span class="p">)</span> <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>What this does:</strong> Adds capability delegation from the company to its HR department and validates the resulting delegation path.</p>
+
+<p><strong>Outcome:</strong> A <code class="language-plaintext highlighter-rouge">valid</code> result proves the HR department may act on behalf of the company when issuing credentials.</p>
+<h3 id="step-6-issue-credential-using-delegated-authority">
+  
+  
+    <a href="#step-6-issue-credential-using-delegated-authority" class="anchor-heading" aria-labelledby="step-6-issue-credential-using-delegated-authority"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 6: Issue Credential Using Delegated Authority
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+</pre></td><td class="rouge-code"><pre><span class="c1">// HR department issues credential using delegated authority</span>
+<span class="kd">val</span> <span class="py">employmentCredential</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span>
+    <span class="nf">credential</span> <span class="p">{</span>
+        <span class="nf">id</span><span class="p">(</span><span class="s">"https://company.com/credentials/employment-456"</span><span class="p">)</span>
+        <span class="nf">type</span><span class="p">(</span><span class="s">"EmploymentCredential"</span><span class="p">)</span>
+        <span class="nf">issuer</span><span class="p">(</span><span class="n">hrDeptDid</span><span class="p">)</span> <span class="c1">// HR issues on behalf of company</span>
+        <span class="nf">subject</span> <span class="p">{</span>
+            <span class="nf">id</span><span class="p">(</span><span class="n">studentDid</span><span class="p">)</span>
+            <span class="s">"employment"</span> <span class="p">{</span>
+                <span class="s">"company"</span> <span class="n">to</span> <span class="s">"Tech Corp"</span>
+                <span class="s">"role"</span> <span class="n">to</span> <span class="s">"Software Engineer"</span>
+                <span class="s">"startDate"</span> <span class="n">to</span> <span class="s">"2024-01-01"</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="nf">issued</span><span class="p">(</span><span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">())</span>
+    <span class="p">}</span>
+    <span class="k">by</span><span class="p">(</span><span class="n">issuerDid</span> <span class="p">=</span> <span class="n">hrDeptDid</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">=</span> <span class="s">"key-1"</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// Verify credential with delegation check</span>
+<span class="kd">val</span> <span class="py">employmentVerification</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+    <span class="nf">credential</span><span class="p">(</span><span class="n">employmentCredential</span><span class="p">)</span>
+    <span class="nf">checkTrustRegistry</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
+    <span class="nf">verifyDelegation</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
+    <span class="nf">checkExpiration</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="nf">println</span><span class="p">(</span><span class="s">"Employment Credential Verification:"</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"  Valid: ${employmentVerification.valid}"</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"  Trust Registry Valid: ${employmentVerification.trustRegistryValid}"</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"  Delegation Valid: ${employmentVerification.delegationValid}"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>What this does:</strong> Issues an employment credential from the delegated HR DID and verifies it with both trust registry and delegation checks enabled.</p>
+
+<p><strong>Outcome:</strong> Successful verification confirms the delegation chain and trust anchors are respected before the credential is accepted.</p>
+<h3 id="step-7-find-trust-paths">
+  
+  
+    <a href="#step-7-find-trust-paths" class="anchor-heading" aria-labelledby="step-7-find-trust-paths"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 7: Find Trust Paths
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td><td class="rouge-code"><pre><span class="n">trustLayer</span><span class="p">.</span><span class="nf">trust</span> <span class="p">{</span>
+    <span class="c1">// Get all trusted issuers for a credential type</span>
+    <span class="kd">val</span> <span class="py">educationIssuers</span> <span class="p">=</span> <span class="nf">getTrustedIssuers</span><span class="p">(</span><span class="s">"EducationCredential"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Trusted education issuers: ${educationIssuers.joinToString("</span><span class="p">,</span> <span class="s">")}"</span><span class="p">)</span>
+    
+    <span class="c1">// Find trust path between two DIDs (if trust relationships exist)</span>
+    <span class="kd">val</span> <span class="py">trustPath</span> <span class="p">=</span> <span class="nf">getTrustPath</span><span class="p">(</span><span class="n">universityDid</span><span class="p">,</span> <span class="n">companyDid</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">trustPath</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"Trust path found:"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"  Path: ${trustPath.path.joinToString("</span> <span class="p">-&gt;</span> <span class="s">")}"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"  Trust Score: ${trustPath.trustScore}"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"  Valid: ${trustPath.valid}"</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"No trust path found between university and company"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>What this does:</strong> Lists all trusted issuers for education credentials and attempts to compute a trust path between the university and company anchors.</p>
+
+<p><strong>Outcome:</strong> If a path exists you receive the ordered DIDs and trust score, helping you diagnose trust relationships before accepting credentials.</p>
+<h3 id="step-8-update-did-documents-with-new-fields">
+  
+  
+    <a href="#step-8-update-did-documents-with-new-fields" class="anchor-heading" aria-labelledby="step-8-update-did-documents-with-new-fields"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 8: Update DID Documents with New Fields
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+</pre></td><td class="rouge-code"><pre><span class="n">trustLayer</span><span class="p">.</span><span class="nf">updateDid</span> <span class="p">{</span>
+    <span class="nf">did</span><span class="p">(</span><span class="n">studentDid</span><span class="p">)</span>
+    <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span>
+    
+    <span class="c1">// Add capability invocation for signing documents</span>
+    <span class="nf">addCapabilityInvocation</span><span class="p">(</span><span class="s">"$studentDid#key-1"</span><span class="p">)</span>
+    
+    <span class="c1">// Add capability delegation for delegating to assistants</span>
+    <span class="nf">addCapabilityDelegation</span><span class="p">(</span><span class="s">"$studentDid#key-2"</span><span class="p">)</span>
+    
+    <span class="c1">// Set JSON-LD context</span>
+    <span class="nf">context</span><span class="p">(</span><span class="s">"https://www.w3.org/ns/did/v1"</span><span class="p">,</span> <span class="s">"https://example.com/context/v1"</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="nf">println</span><span class="p">(</span><span class="s">"✅ DID document updated with capability relationships and context"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>What this does:</strong> Augments the student DID document with capability invocation/delegation relationships and an expanded JSON-LD context.</p>
+
+<p><strong>Outcome:</strong> The student can now sign documents and delegate capabilities while verifiers understand the DID document structure.</p>
+<h3 id="step-9-use-proof-purpose-validation">
+  
+  
+    <a href="#step-9-use-proof-purpose-validation" class="anchor-heading" aria-labelledby="step-9-use-proof-purpose-validation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 9: Use Proof Purpose Validation
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+</pre></td><td class="rouge-code"><pre><span class="c1">// Update issuer DID to have assertionMethod relationship</span>
+<span class="n">trustLayer</span><span class="p">.</span><span class="nf">updateDid</span> <span class="p">{</span>
+    <span class="nf">did</span><span class="p">(</span><span class="n">universityDid</span><span class="p">)</span>
+    <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span>
+    <span class="nf">addAssertionMethod</span><span class="p">(</span><span class="s">"$universityDid#key-1"</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// Issue credential with assertionMethod proof purpose</span>
+<span class="kd">val</span> <span class="py">validatedCredential</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span>
+    <span class="nf">credential</span> <span class="p">{</span>
+        <span class="nf">id</span><span class="p">(</span><span class="s">"https://university.edu/credentials/validated-789"</span><span class="p">)</span>
+        <span class="nf">type</span><span class="p">(</span><span class="s">"EducationCredential"</span><span class="p">)</span>
+        <span class="nf">issuer</span><span class="p">(</span><span class="n">universityDid</span><span class="p">)</span>
+        <span class="nf">subject</span> <span class="p">{</span>
+            <span class="nf">id</span><span class="p">(</span><span class="n">studentDid</span><span class="p">)</span>
+            <span class="s">"certification"</span> <span class="p">{</span>
+                <span class="s">"name"</span> <span class="n">to</span> <span class="s">"Certified Developer"</span>
+                <span class="s">"level"</span> <span class="n">to</span> <span class="s">"Advanced"</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="nf">issued</span><span class="p">(</span><span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">())</span>
+    <span class="p">}</span>
+    <span class="k">by</span><span class="p">(</span><span class="n">issuerDid</span> <span class="p">=</span> <span class="n">universityDid</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">=</span> <span class="s">"key-1"</span><span class="p">)</span>
+    <span class="nf">proofPurpose</span><span class="p">(</span><span class="nc">ProofPurposes</span><span class="p">.</span><span class="nc">ASSERTION_METHOD</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// Verify with proof purpose validation</span>
+<span class="kd">val</span> <span class="py">proofPurposeVerification</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+    <span class="nf">credential</span><span class="p">(</span><span class="n">validatedCredential</span><span class="p">)</span>
+    <span class="nf">validateProofPurpose</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
+    <span class="nf">checkTrustRegistry</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="nf">println</span><span class="p">(</span><span class="s">"Proof Purpose Validation:"</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"  Valid: ${proofPurposeVerification.valid}"</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"  Proof Purpose Valid: ${proofPurposeVerification.proofPurposeValid}"</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"  Trust Registry Valid: ${proofPurposeVerification.trustRegistryValid}"</span><span class="p">)</span>
+
+<span class="p">**</span><span class="nc">What</span> <span class="k">this</span> <span class="n">does</span><span class="p">:**</span> <span class="nc">Ensures</span> <span class="n">the</span> <span class="n">issuer</span><span class="err">’</span><span class="n">s</span> <span class="nc">DID</span> <span class="n">advertises</span> <span class="n">`assertionMethod`</span><span class="p">,</span> <span class="n">issues</span> <span class="n">a</span> <span class="n">credential</span> <span class="n">with</span> <span class="n">that</span> <span class="n">proof</span> <span class="n">purpose</span><span class="p">,</span> <span class="n">and</span> <span class="n">validates</span> <span class="n">the</span> <span class="n">proof</span> <span class="n">purpose</span> <span class="n">alongside</span> <span class="n">trust</span> <span class="n">and</span> <span class="n">expiration</span> <span class="n">checks</span><span class="p">.</span>
+
+<span class="p">**</span><span class="nc">Outcome</span><span class="p">:**</span> <span class="nc">A</span> <span class="n">`proofPurposeValid`</span> <span class="n">flag</span> <span class="n">of</span> <span class="n">`true`</span> <span class="n">confirms</span> <span class="n">the</span> <span class="n">credential</span><span class="err">’</span><span class="n">s</span> <span class="n">proof</span> <span class="n">aligns</span> <span class="n">with</span> <span class="n">the</span> <span class="n">declared</span> <span class="n">purpose</span><span class="p">,</span> <span class="n">preventing</span> <span class="n">misuse</span> <span class="k">in</span> <span class="n">other</span> <span class="n">contexts</span><span class="p">.</span>
+
+<span class="err">###</span> <span class="nc">Step</span> <span class="mi">10</span><span class="p">:</span> <span class="nc">Complete</span> <span class="nc">Integration</span> <span class="nc">Example</span>
+
+<span class="err">``</span><span class="n">`kotlin</span>
+<span class="c1">// Complete workflow combining all features</span>
+<span class="k">fun</span> <span class="nf">completeWebOfTrustWorkflow</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">trustLayer</span> <span class="p">=</span> <span class="nf">trustLayer</span> <span class="p">{</span>
+        <span class="nf">keys</span> <span class="p">{</span> <span class="nf">provider</span><span class="p">(</span><span class="s">"inMemory"</span><span class="p">)</span> <span class="p">}</span>
+        <span class="nf">did</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span> <span class="p">}</span>
+        <span class="nf">trust</span> <span class="p">{</span> <span class="nf">provider</span><span class="p">(</span><span class="s">"inMemory"</span><span class="p">)</span> <span class="p">}</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// 1. Create DIDs</span>
+    <span class="kd">val</span> <span class="py">issuerDid</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span> <span class="p">}</span>
+    <span class="kd">val</span> <span class="py">holderDid</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span> <span class="p">}</span>
+    
+    <span class="c1">// 2. Set up trust anchor</span>
+    <span class="n">trustLayer</span><span class="p">.</span><span class="nf">trust</span> <span class="p">{</span>
+        <span class="nf">addAnchor</span><span class="p">(</span><span class="n">issuerDid</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nf">credentialTypes</span><span class="p">(</span><span class="s">"TestCredential"</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// 3. Update issuer DID with assertionMethod</span>
+    <span class="n">trustLayer</span><span class="p">.</span><span class="nf">updateDid</span> <span class="p">{</span>
+        <span class="nf">did</span><span class="p">(</span><span class="n">issuerDid</span><span class="p">)</span>
+        <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span>
+        <span class="nf">addAssertionMethod</span><span class="p">(</span><span class="s">"$issuerDid#key-1"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// 4. Issue credential</span>
+    <span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span>
+        <span class="nf">credential</span> <span class="p">{</span>
+            <span class="nf">id</span><span class="p">(</span><span class="s">"https://example.com/credential-1"</span><span class="p">)</span>
+            <span class="nf">type</span><span class="p">(</span><span class="s">"TestCredential"</span><span class="p">)</span>
+            <span class="nf">issuer</span><span class="p">(</span><span class="n">issuerDid</span><span class="p">)</span>
+            <span class="nf">subject</span> <span class="p">{</span>
+                <span class="nf">id</span><span class="p">(</span><span class="n">holderDid</span><span class="p">)</span>
+                <span class="s">"test"</span> <span class="n">to</span> <span class="s">"value"</span>
+            <span class="p">}</span>
+            <span class="nf">issued</span><span class="p">(</span><span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">())</span>
+        <span class="p">}</span>
+        <span class="k">by</span><span class="p">(</span><span class="n">issuerDid</span> <span class="p">=</span> <span class="n">issuerDid</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">=</span> <span class="s">"key-1"</span><span class="p">)</span>
+        <span class="nf">proofPurpose</span><span class="p">(</span><span class="nc">ProofPurposes</span><span class="p">.</span><span class="nc">ASSERTION_METHOD</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// 5. Verify with all checks enabled</span>
+    <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+        <span class="nf">credential</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
+        <span class="nf">checkTrustRegistry</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
+        <span class="nf">validateProofPurpose</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
+        <span class="nf">checkExpiration</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// 6. Check results</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Complete Verification Results:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  Valid: ${result.valid}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  Trust Registry Valid: ${result.trustRegistryValid}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  Proof Purpose Valid: ${result.proofPurposeValid}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  Proof Valid: ${result.proofValid}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  Not Expired: ${result.notExpired}"</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">valid</span> <span class="p">&amp;&amp;</span> <span class="n">result</span><span class="p">.</span><span class="n">trustRegistryValid</span> <span class="p">&amp;&amp;</span> <span class="n">result</span><span class="p">.</span><span class="n">proofPurposeValid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Credential verified successfully with all checks!"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>What this does:</strong> Demonstrates the full trust workflow in miniature—build a trust layer, establish anchors, issue a credential with proof purpose, and verify it with all checks enabled.</p>
+
+<p><strong>Outcome:</strong> Use this function as a regression test to ensure future changes preserve the trust-layer guarantees.</p>
+<h2 id="real-world-use-cases">
+  
+  
+    <a href="#real-world-use-cases" class="anchor-heading" aria-labelledby="real-world-use-cases"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Use Cases
+  
+  
+</h2>
+    
+<h3 id="university-credential-verification">
+  
+  
+    <a href="#university-credential-verification" class="anchor-heading" aria-labelledby="university-credential-verification"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> University Credential Verification
+  
+  
+</h3>
+    
+
+<p>Universities can be added as trust anchors, allowing verifiers to automatically trust credentials issued by recognized institutions.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="n">trustLayer</span><span class="p">.</span><span class="nf">trust</span> <span class="p">{</span>
+    <span class="nf">addAnchor</span><span class="p">(</span><span class="n">universityDid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">credentialTypes</span><span class="p">(</span><span class="s">"EducationCredential"</span><span class="p">,</span> <span class="s">"DegreeCredential"</span><span class="p">,</span> <span class="s">"CertificateCredential"</span><span class="p">)</span>
+        <span class="nf">description</span><span class="p">(</span><span class="s">"Accredited university"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Outcome:</strong> Any verifier consulting the trust registry now recognises the university’s credentials automatically, reducing ad-hoc whitelists across institutions.</p>
+<h3 id="corporate-delegation">
+  
+  
+    <a href="#corporate-delegation" class="anchor-heading" aria-labelledby="corporate-delegation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Corporate Delegation
+  
+  
+</h3>
+    
+
+<p>Companies can delegate credential issuance to HR departments, creating a hierarchical authority structure while maintaining centralized trust.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+</pre></td><td class="rouge-code"><pre><span class="c1">// CEO delegates to HR Director</span>
+<span class="n">trustLayer</span><span class="p">.</span><span class="nf">updateDid</span> <span class="p">{</span>
+    <span class="nf">did</span><span class="p">(</span><span class="n">ceoDid</span><span class="p">)</span>
+    <span class="nf">addCapabilityDelegation</span><span class="p">(</span><span class="s">"$hrDirectorDid#key-1"</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// HR Director delegates to HR Manager</span>
+<span class="n">trustLayer</span><span class="p">.</span><span class="nf">updateDid</span> <span class="p">{</span>
+    <span class="nf">did</span><span class="p">(</span><span class="n">hrDirectorDid</span><span class="p">)</span>
+    <span class="nf">addCapabilityDelegation</span><span class="p">(</span><span class="s">"$hrManagerDid#key-1"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Outcome:</strong> A delegation ladder forms so HR staff can issue credentials while the executive team retains ultimate control over capability revocation.</p>
+<h3 id="multi-party-trust-networks">
+  
+  
+    <a href="#multi-party-trust-networks" class="anchor-heading" aria-labelledby="multi-party-trust-networks"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Multi-Party Trust Networks
+  
+  
+</h3>
+    
+
+<p>Multiple organizations can form trust networks where credentials issued by one trusted party are automatically trusted by others in the network.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td><td class="rouge-code"><pre><span class="c1">// Create trust network</span>
+<span class="n">trustLayer</span><span class="p">.</span><span class="nf">trust</span> <span class="p">{</span>
+    <span class="nf">addAnchor</span><span class="p">(</span><span class="n">organization1Did</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">credentialTypes</span><span class="p">(</span><span class="s">"PartnershipCredential"</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="nf">addAnchor</span><span class="p">(</span><span class="n">organization2Did</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">credentialTypes</span><span class="p">(</span><span class="s">"PartnershipCredential"</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="nf">addAnchor</span><span class="p">(</span><span class="n">organization3Did</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">credentialTypes</span><span class="p">(</span><span class="s">"PartnershipCredential"</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Get all trusted partners</span>
+    <span class="kd">val</span> <span class="py">partners</span> <span class="p">=</span> <span class="nf">getTrustedIssuers</span><span class="p">(</span><span class="s">"PartnershipCredential"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Trusted partners: ${partners.joinToString("</span><span class="p">,</span> <span class="s">")}"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Outcome:</strong> A single query returns every organisation trusted for partnership credentials, making it easy to surface network relationships to auditors or dashboards.</p>
+<h2 id="best-practices">
+  
+  
+    <a href="#best-practices" class="anchor-heading" aria-labelledby="best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Best Practices
+  
+  
+</h2>
+    
+
+<ol>
+  <li><strong>Use Credential Type Filtering</strong>: Specify credential types when adding trust anchors to limit trust scope</li>
+  <li><strong>Verify Delegation Chains</strong>: Always verify delegation chains when accepting delegated credentials</li>
+  <li><strong>Check Trust Paths</strong>: Verify trust paths before accepting credentials from unknown issuers</li>
+  <li><strong>Update DID Documents</strong>: Keep DID documents up-to-date with capability relationships</li>
+  <li><strong>Use Proof Purpose Validation</strong>: Enable proof purpose validation to ensure proofs are used correctly</li>
+  <li><strong>Monitor Trust Scores</strong>: Use trust scores to make informed decisions about credential acceptance</li>
+  <li><strong>Regular Audits</strong>: Periodically review and update trust anchors and delegation relationships</li>
+</ol>
+<h2 id="error-handling">
+  
+  
+    <a href="#error-handling" class="anchor-heading" aria-labelledby="error-handling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Error Handling
+  
+  
+</h2>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td><td class="rouge-code"><pre><span class="k">try</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+        <span class="nf">credential</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
+        <span class="nf">checkTrustRegistry</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
+        <span class="nf">validateProofPurpose</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
+        <span class="nf">verifyDelegation</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="k">if</span> <span class="p">(!</span><span class="n">result</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"Verification failed:"</span><span class="p">)</span>
+        <span class="n">result</span><span class="p">.</span><span class="n">errors</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="nf">println</span><span class="p">(</span><span class="s">"  - $it"</span><span class="p">)</span> <span class="p">}</span>
+        <span class="n">result</span><span class="p">.</span><span class="n">warnings</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="nf">println</span><span class="p">(</span><span class="s">"  Warning: $it"</span><span class="p">)</span> <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">e</span><span class="p">:</span> <span class="nc">Exception</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Verification error: ${e.message}"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Outcome:</strong> Errors and warnings are surfaced explicitly so you can distinguish hard failures (invalid proofs, missing trust anchors) from advisory messages during troubleshooting.</p>
+<h2 id="see-also">
+  
+  
+    <a href="#see-also" class="anchor-heading" aria-labelledby="see-also"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> See Also
+  
+  
+</h2>
+    
+
+<ul>
+  <li><a href="/trustweave/core-concepts/trust-registry/">Trust Registry Documentation</a></li>
+  <li><a href="/trustweave/core-concepts/delegation/">Delegation Documentation</a></li>
+  <li><a href="/trustweave/core-concepts/proof-purpose-validation/">Proof Purpose Validation Documentation</a></li>
+  <li><a href="/trustweave/core-concepts/dids/">DID Documentation</a></li>
+  <li><a href="../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/trust/WebOfTrustExample.kt">Web of Trust Example</a></li>
+  <li><a href="../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/delegation/DelegationChainExample.kt">Delegation Chain Example</a></li>
+</ul>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

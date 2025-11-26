@@ -1,0 +1,1030 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+
+    .site-nav > ul.nav-list:first-child > li > a,
+    
+    .site-nav > ul.nav-list:first-child > li > ul > li:not(:nth-child(5)) > a,
+    .site-nav > ul.nav-list:first-child > li > ul > li > ul > li a {
+      background-image: none;
+    }
+
+    .site-nav > ul.nav-list:not(:first-child) a,
+    .site-nav li.external a {
+      background-image: none;
+    }
+
+    .site-nav > ul.nav-list:first-child > li:nth-child(3) > ul > li:nth-child(5) > a {
+      font-weight: 600;
+      text-decoration: none;
+    }.site-nav > ul.nav-list:first-child > li:nth-child(3) > button svg,
+    .site-nav > ul.nav-list:first-child > li:nth-child(3) > ul > li:nth-child(5) > button svg {
+      transform: rotate(-90deg);
+    }.site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(3) > ul.nav-list,
+    .site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(3) > ul.nav-list > li.nav-list-item:nth-child(5) > ul.nav-list {
+      display: block;
+    }
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Smart Contracts | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Smart Contracts" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://localhost:4000/trustweave/core-concepts/smart-contracts/" />
+<meta property="og:url" content="http://localhost:4000/trustweave/core-concepts/smart-contracts/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Smart Contracts" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"Smart Contracts","url":"http://localhost:4000/trustweave/core-concepts/smart-contracts/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/beginner-tutorial-series/" class="nav-list-link">Beginner Tutorial Series</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchored-revocation/" class="nav-list-link">Blockchain-Anchored Revocation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/code-style/" class="nav-list-link">Code Style</a></li><li class="nav-list-item"><a href="/trustweave/comparison/README/" class="nav-list-link">Comparison Documentation</a></li><li class="nav-list-item"><a href="/trustweave/configuration/README/" class="nav-list-link">Configuration Reference</a></li><li class="nav-list-item"><a href="/trustweave/advanced/custom-adapters/" class="nav-list-link">Creating Custom Adapters</a></li><li class="nav-list-item"><a href="/trustweave/contributing/creating-plugins/" class="nav-list-link">Creating TrustWeave Plugins</a></li><li class="nav-list-item"><a href="/trustweave/features/credential-exchange-protocols/README/" class="nav-list-link">Credential Exchange Protocols</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/credential-issuance-tutorial/" class="nav-list-link">Credential Issuance Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/algorithm-compatibility-table/" class="nav-list-link">Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/did-operations-tutorial/" class="nav-list-link">DID Operations Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/delegation/" class="nav-list-link">Delegation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/development-setup/" class="nav-list-link">Development Setup</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/evaluation-engines/" class="nav-list-link">Evaluation Engines</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/json-canonicalization/" class="nav-list-link">JSON Canonicalization</a></li><li class="nav-list-item"><a href="/trustweave/advanced/key-rotation/" class="nav-list-link">Key Rotation Strategies</a></li><li class="nav-list-item"><a href="/trustweave/licensing/README/" class="nav-list-link">Licensing Overview</a></li><li class="nav-list-item"><a href="/trustweave/migration/README/" class="nav-list-link">Migration Guides</a></li><li class="nav-list-item"><a href="/trustweave/advanced/performance/" class="nav-list-link">Performance Considerations</a></li><li class="nav-list-item"><a href="/trustweave/advanced/plugin-lifecycle/" class="nav-list-link">Plugin Lifecycle Management</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/proof-purpose-validation/" class="nav-list-link">Proof Purpose Validation</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/credential-exchange-protocols/" class="nav-list-link">Protocol Abstraction Layer</a></li><li class="nav-list-item"><a href="/trustweave/contributing/pull-request-process/" class="nav-list-link">Pull Request Process</a></li><li class="nav-list-item"><a href="/trustweave/security/README/" class="nav-list-link">Security Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/advanced/spi/" class="nav-list-link">Service Provider Interface (SPI)</a></li><li class="nav-list-item"><a href="/trustweave/plugins/" class="nav-list-link">Supported Plugins</a></li><li class="nav-list-item"><a href="/trustweave/contributing/testing-guidelines/" class="nav-list-link">Testing Guidelines</a></li><li class="nav-list-item"><a href="/trustweave/advanced/testing-strategies/" class="nav-list-link">Testing Strategies</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/trust-registry/" class="nav-list-link">Trust Registry</a></li><li class="nav-list-item"><a href="/trustweave/GLOSSARY/" class="nav-list-link">TrustWeave Glossary</a></li><li class="nav-list-item"><a href="/trustweave/TRUSTWEAVE_WHITEPAPER/" class="nav-list-link">TrustWeave SDK: Decentralized Trust Infrastructure</a></li><li class="nav-list-item"><a href="/trustweave/scenarios/README/" class="nav-list-link">Use Case Scenarios</a></li><li class="nav-list-item"><a href="/trustweave/advanced/verification-policies/" class="nav-list-link">Verification Policies</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/wallet-api-tutorial/" class="nav-list-link">Wallet API Tutorial</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      <nav aria-label="Breadcrumb" class="breadcrumb-nav">
+  <ol class="breadcrumb-nav-list">
+    <li class="breadcrumb-nav-list-item"><a href="/trustweave/core-concepts/README/">Core Concepts</a></li>
+    <li class="breadcrumb-nav-list-item"><span>Smart Contracts</span></li>
+  </ol>
+</nav>
+
+
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="smart-contracts">
+  
+  
+    <a href="#smart-contracts" class="anchor-heading" aria-labelledby="smart-contracts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Smart Contracts
+  
+  
+</h1>
+    
+
+<blockquote>
+  <p>TrustWeave Smart Contracts provide a domain-agnostic abstraction for executable agreements with verifiable credentials and blockchain anchoring support.</p>
+</blockquote>
+<h2 id="what-is-a-smart-contract">
+  
+  
+    <a href="#what-is-a-smart-contract" class="anchor-heading" aria-labelledby="what-is-a-smart-contract"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What is a Smart Contract?
+  
+  
+</h2>
+    
+
+<p>A <strong>Smart Contract</strong> in TrustWeave is an executable agreement between parties that combines:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-contract:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-all:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Result:</strong> Grants access to the SmartContract models and service APIs referenced throughout this guide.</p>
+
+<ol>
+  <li><strong>Verifiable Identity</strong> – parties identified by DIDs</li>
+  <li><strong>Cryptographic Proof</strong> – contract terms wrapped in Verifiable Credentials</li>
+  <li><strong>Immutable Audit Trail</strong> – blockchain anchoring for tamper-proof records</li>
+  <li><strong>Pluggable Execution</strong> – parametric, conditional, scheduled, event-driven, or manual execution models</li>
+</ol>
+<h2 id="why-smart-contracts-matter-in-trustweave">
+  
+  
+    <a href="#why-smart-contracts-matter-in-trustweave" class="anchor-heading" aria-labelledby="why-smart-contracts-matter-in-trustweave"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Why Smart Contracts Matter in TrustWeave
+  
+  
+</h2>
+    
+
+<ul>
+  <li><strong>Domain-Agnostic</strong>: Works for insurance, legal, financial, SLA, and supply chain contracts</li>
+  <li><strong>Trust</strong>: Cryptographic proof of contract terms prevents disputes</li>
+  <li><strong>Automation</strong>: Parametric execution enables automatic payouts based on external data</li>
+  <li><strong>Auditability</strong>: Blockchain anchoring provides immutable audit trails</li>
+  <li><strong>Standards-Based</strong>: Integrates with W3C Verifiable Credentials and DIDs</li>
+</ul>
+<h2 id="contract-lifecycle">
+  
+  
+    <a href="#contract-lifecycle" class="anchor-heading" aria-labelledby="contract-lifecycle"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Contract Lifecycle
+  
+  
+</h2>
+    
+
+<p>Smart Contracts follow a clear lifecycle:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre>DRAFT → PENDING → ACTIVE → EXECUTED/EXPIRED/CANCELLED/TERMINATED
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Status</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">DRAFT</code></td>
+      <td>Being created/negotiated</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">PENDING</code></td>
+      <td>Awaiting signatures/approval</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">ACTIVE</code></td>
+      <td>In effect and executable</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">SUSPENDED</code></td>
+      <td>Temporarily paused</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">EXECUTED</code></td>
+      <td>Conditions met, executed</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">EXPIRED</code></td>
+      <td>Past expiration date</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">CANCELLED</code></td>
+      <td>Cancelled by parties</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">TERMINATED</code></td>
+      <td>Terminated by breach or agreement</td>
+    </tr>
+  </tbody>
+</table></div>
+<h2 id="execution-models">
+  
+  
+    <a href="#execution-models" class="anchor-heading" aria-labelledby="execution-models"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Execution Models
+  
+  
+</h2>
+    
+
+<p>TrustWeave supports multiple execution models:</p>
+<h3 id="1-parametric-execution">
+  
+  
+    <a href="#1-parametric-execution" class="anchor-heading" aria-labelledby="1-parametric-execution"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Parametric Execution
+  
+  
+</h3>
+    
+
+<p>Triggers based on external data (e.g., EO data, weather, market data):</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="nc">ExecutionModel</span><span class="p">.</span><span class="nc">Parametric</span><span class="p">(</span>
+    <span class="n">triggerType</span> <span class="p">=</span> <span class="nc">TriggerType</span><span class="p">.</span><span class="nc">EarthObservation</span><span class="p">,</span>
+    <span class="n">evaluationEngine</span> <span class="p">=</span> <span class="s">"parametric-insurance"</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Use Cases:</strong></p>
+<ul>
+  <li>Parametric insurance (flood depth, temperature thresholds)</li>
+  <li>Weather derivatives</li>
+  <li>Market-based triggers</li>
+</ul>
+<h3 id="2-conditional-execution">
+  
+  
+    <a href="#2-conditional-execution" class="anchor-heading" aria-labelledby="2-conditional-execution"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Conditional Execution
+  
+  
+</h3>
+    
+
+<p>If/then logic with rule evaluation:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+</pre></td><td class="rouge-code"><pre><span class="nc">ExecutionModel</span><span class="p">.</span><span class="nc">Conditional</span><span class="p">(</span>
+    <span class="n">conditions</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span>
+        <span class="nc">ContractCondition</span><span class="p">(</span>
+            <span class="n">id</span> <span class="p">=</span> <span class="s">"condition-1"</span><span class="p">,</span>
+            <span class="n">description</span> <span class="p">=</span> <span class="s">"Value exceeds threshold"</span><span class="p">,</span>
+            <span class="n">conditionType</span> <span class="p">=</span> <span class="nc">ConditionType</span><span class="p">.</span><span class="nc">THRESHOLD</span><span class="p">,</span>
+            <span class="n">expression</span> <span class="p">=</span> <span class="s">"$.floodDepth &gt;= 50"</span>
+        <span class="p">)</span>
+    <span class="p">),</span>
+    <span class="n">evaluationEngine</span> <span class="p">=</span> <span class="s">"rule-engine"</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Use Cases:</strong></p>
+<ul>
+  <li>Service level agreements</li>
+  <li>Performance-based contracts</li>
+  <li>Compliance monitoring</li>
+</ul>
+<h3 id="3-scheduled-execution">
+  
+  
+    <a href="#3-scheduled-execution" class="anchor-heading" aria-labelledby="3-scheduled-execution"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Scheduled Execution
+  
+  
+</h3>
+    
+
+<p>Time-based actions:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="nc">ExecutionModel</span><span class="p">.</span><span class="nc">Scheduled</span><span class="p">(</span>
+    <span class="n">schedule</span> <span class="p">=</span> <span class="nc">ScheduleDefinition</span><span class="p">(</span>
+        <span class="n">cronExpression</span> <span class="p">=</span> <span class="s">"0 0 * * *"</span><span class="p">,</span> <span class="c1">// Daily at midnight</span>
+        <span class="n">timezone</span> <span class="p">=</span> <span class="s">"UTC"</span>
+    <span class="p">),</span>
+    <span class="n">evaluationEngine</span> <span class="p">=</span> <span class="s">"scheduler"</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Use Cases:</strong></p>
+<ul>
+  <li>Recurring payments</li>
+  <li>Periodic reviews</li>
+  <li>Automated renewals</li>
+</ul>
+<h3 id="4-event-driven-execution">
+  
+  
+    <a href="#4-event-driven-execution" class="anchor-heading" aria-labelledby="4-event-driven-execution"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Event-Driven Execution
+  
+  
+</h3>
+    
+
+<p>Responds to external events:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="nc">ExecutionModel</span><span class="p">.</span><span class="nc">EventDriven</span><span class="p">(</span>
+    <span class="n">eventTypes</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"payment.received"</span><span class="p">,</span> <span class="s">"delivery.completed"</span><span class="p">),</span>
+    <span class="n">evaluationEngine</span> <span class="p">=</span> <span class="s">"event-processor"</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Use Cases:</strong></p>
+<ul>
+  <li>Supply chain contracts</li>
+  <li>Payment processing</li>
+  <li>Workflow automation</li>
+</ul>
+<h3 id="5-manual-execution">
+  
+  
+    <a href="#5-manual-execution" class="anchor-heading" aria-labelledby="5-manual-execution"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5. Manual Execution
+  
+  
+</h3>
+    
+
+<p>Requires human intervention:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="nc">ExecutionModel</span><span class="p">.</span><span class="nc">Manual</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Use Cases:</strong></p>
+<ul>
+  <li>Legal contracts requiring approval</li>
+  <li>Complex decisions</li>
+  <li>Dispute resolution</li>
+</ul>
+<h2 id="how-trustweave-manages-smart-contracts">
+  
+  
+    <a href="#how-trustweave-manages-smart-contracts" class="anchor-heading" aria-labelledby="how-trustweave-manages-smart-contracts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How TrustWeave Manages Smart Contracts
+  
+  
+</h2>
+    
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">SmartContractService</code></td>
+      <td>Interface for contract operations</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">DefaultSmartContractService</code></td>
+      <td>In-memory implementation (for testing/development)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">ContractValidator</code></td>
+      <td>Validates parties, dates, terms, and state transitions</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">TrustWeave.contracts</code></td>
+      <td>High-level facade for contract operations</td>
+    </tr>
+  </tbody>
+</table></div>
+<h2 id="example-creating-a-contract">
+  
+  
+    <a href="#example-creating-a-contract" class="anchor-heading" aria-labelledby="example-creating-a-contract"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Example: Creating a Contract
+  
+  
+</h2>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">com.trustweave.contract.models.*</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
+<span class="k">import</span> <span class="nn">java.time.Instant</span>
+
+<span class="k">suspend</span> <span class="k">fun</span> <span class="nf">createFloodInsuranceContract</span><span class="p">(</span>
+    <span class="n">trustweave</span><span class="p">:</span> <span class="nc">TrustWeave</span><span class="p">,</span>
+    <span class="n">insurerDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">insuredDid</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">)</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">contract</span> <span class="p">=</span> <span class="n">trustweave</span><span class="p">.</span><span class="n">contracts</span><span class="p">.</span><span class="nf">draft</span><span class="p">(</span>
+        <span class="n">request</span> <span class="p">=</span> <span class="nc">ContractDraftRequest</span><span class="p">(</span>
+            <span class="n">contractType</span> <span class="p">=</span> <span class="nc">ContractType</span><span class="p">.</span><span class="nc">Insurance</span><span class="p">,</span>
+            <span class="n">executionModel</span> <span class="p">=</span> <span class="nc">ExecutionModel</span><span class="p">.</span><span class="nc">Parametric</span><span class="p">(</span>
+                <span class="n">triggerType</span> <span class="p">=</span> <span class="nc">TriggerType</span><span class="p">.</span><span class="nc">EarthObservation</span><span class="p">,</span>
+                <span class="n">evaluationEngine</span> <span class="p">=</span> <span class="s">"parametric-insurance"</span>
+            <span class="p">),</span>
+            <span class="n">parties</span> <span class="p">=</span> <span class="nc">ContractParties</span><span class="p">(</span>
+                <span class="n">primaryPartyDid</span> <span class="p">=</span> <span class="n">insurerDid</span><span class="p">,</span>
+                <span class="n">counterpartyDid</span> <span class="p">=</span> <span class="n">insuredDid</span>
+            <span class="p">),</span>
+            <span class="n">terms</span> <span class="p">=</span> <span class="nc">ContractTerms</span><span class="p">(</span>
+                <span class="n">obligations</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span>
+                    <span class="nc">Obligation</span><span class="p">(</span>
+                        <span class="n">id</span> <span class="p">=</span> <span class="s">"obligation-1"</span><span class="p">,</span>
+                        <span class="n">partyDid</span> <span class="p">=</span> <span class="n">insurerDid</span><span class="p">,</span>
+                        <span class="n">description</span> <span class="p">=</span> <span class="s">"Pay out if flood depth exceeds 50cm"</span><span class="p">,</span>
+                        <span class="n">obligationType</span> <span class="p">=</span> <span class="nc">ObligationType</span><span class="p">.</span><span class="nc">PAYMENT</span><span class="p">,</span>
+                        <span class="n">deadline</span> <span class="p">=</span> <span class="k">null</span>
+                    <span class="p">)</span>
+                <span class="p">),</span>
+                <span class="n">conditions</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span>
+                    <span class="nc">ContractCondition</span><span class="p">(</span>
+                        <span class="n">id</span> <span class="p">=</span> <span class="s">"condition-1"</span><span class="p">,</span>
+                        <span class="n">description</span> <span class="p">=</span> <span class="s">"Flood depth &gt;= 50cm"</span><span class="p">,</span>
+                        <span class="n">conditionType</span> <span class="p">=</span> <span class="nc">ConditionType</span><span class="p">.</span><span class="nc">THRESHOLD</span><span class="p">,</span>
+                        <span class="n">expression</span> <span class="p">=</span> <span class="s">"$.floodDepth &gt;= 50"</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">effectiveDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">(),</span>
+            <span class="n">expirationDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">plusSeconds</span><span class="p">(</span><span class="mi">365</span> <span class="p">*</span> <span class="mi">24</span> <span class="p">*</span> <span class="mi">60</span> <span class="p">*</span> <span class="mi">60</span><span class="p">).</span><span class="nf">toString</span><span class="p">(),</span>
+            <span class="n">contractData</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"productType"</span><span class="p">,</span> <span class="s">"SarFlood"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"coverageAmount"</span><span class="p">,</span> <span class="mf">1_000_000.0</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"location"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"latitude"</span><span class="p">,</span> <span class="mf">35.2271</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"longitude"</span><span class="p">,</span> <span class="p">-</span><span class="mf">80.8431</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"address"</span><span class="p">,</span> <span class="s">"Charlotte, NC"</span><span class="p">)</span>
+                <span class="p">})</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Created contract: ${contract.id}"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">contract</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Outcome:</strong> Creates a draft contract with parametric execution model, ready for binding and activation.</p>
+<h2 id="example-binding-a-contract">
+  
+  
+    <a href="#example-binding-a-contract" class="anchor-heading" aria-labelledby="example-binding-a-contract"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Example: Binding a Contract
+  
+  
+</h2>
+    
+
+<p>Binding issues a verifiable credential and anchors the contract to blockchain:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+</pre></td><td class="rouge-code"><pre><span class="k">suspend</span> <span class="k">fun</span> <span class="nf">bindContract</span><span class="p">(</span>
+    <span class="n">trustweave</span><span class="p">:</span> <span class="nc">TrustWeave</span><span class="p">,</span>
+    <span class="n">contractId</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">issuerDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">issuerKeyId</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">)</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">bound</span> <span class="p">=</span> <span class="n">trustweave</span><span class="p">.</span><span class="n">contracts</span><span class="p">.</span><span class="nf">bindContract</span><span class="p">(</span>
+        <span class="n">contractId</span> <span class="p">=</span> <span class="n">contractId</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">issuerDid</span><span class="p">,</span>
+        <span class="n">issuerKeyId</span> <span class="p">=</span> <span class="n">issuerKeyId</span><span class="p">,</span>
+        <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:mainnet"</span>
+    <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Contract bound:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  Credential ID: ${bound.credentialId}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  Anchor: ${bound.anchorRef.txHash}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  Status: ${bound.contract.status}"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Outcome:</strong> Contract is now verifiable via credential and anchored to blockchain for audit trail.</p>
+<h2 id="example-executing-a-contract">
+  
+  
+    <a href="#example-executing-a-contract" class="anchor-heading" aria-labelledby="example-executing-a-contract"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Example: Executing a Contract
+  
+  
+</h2>
+    
+
+<p>For parametric contracts, execution happens when trigger data arrives:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+</pre></td><td class="rouge-code"><pre><span class="k">suspend</span> <span class="k">fun</span> <span class="nf">executeFloodContract</span><span class="p">(</span>
+    <span class="n">trustweave</span><span class="p">:</span> <span class="nc">TrustWeave</span><span class="p">,</span>
+    <span class="n">contract</span><span class="p">:</span> <span class="nc">SmartContract</span><span class="p">,</span>
+    <span class="n">floodDataCredential</span><span class="p">:</span> <span class="nc">VerifiableCredential</span>
+<span class="p">)</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">trustweave</span><span class="p">.</span><span class="n">contracts</span><span class="p">.</span><span class="nf">executeContract</span><span class="p">(</span>
+        <span class="n">contract</span> <span class="p">=</span> <span class="n">contract</span><span class="p">,</span>
+        <span class="n">executionContext</span> <span class="p">=</span> <span class="nc">ExecutionContext</span><span class="p">(</span>
+            <span class="n">triggerData</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"floodDepthCm"</span><span class="p">,</span> <span class="mf">75.0</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"credentialId"</span><span class="p">,</span> <span class="n">floodDataCredential</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">executed</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"Contract executed!"</span><span class="p">)</span>
+        <span class="n">result</span><span class="p">.</span><span class="n">outcomes</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="n">outcome</span> <span class="p">-&gt;</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"  Outcome: ${outcome.description}"</span><span class="p">)</span>
+            <span class="n">outcome</span><span class="p">.</span><span class="n">monetaryImpact</span><span class="o">?.</span><span class="nf">let</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"  Amount: ${it.amount} ${it.currency}"</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"Contract conditions not met"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Outcome:</strong> Evaluates conditions and executes contract if thresholds are met, generating outcomes and updating contract status.</p>
+<h2 id="validation">
+  
+  
+    <a href="#validation" class="anchor-heading" aria-labelledby="validation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Validation
+  
+  
+</h2>
+    
+
+<p>TrustWeave automatically validates:</p>
+
+<ul>
+  <li><strong>DID Format</strong>: All party DIDs must be valid</li>
+  <li><strong>Date Ranges</strong>: Expiration must be after effective date</li>
+  <li><strong>State Transitions</strong>: Only valid transitions are allowed</li>
+  <li><strong>Terms</strong>: Obligations and conditions must have unique IDs</li>
+  <li><strong>Expiration</strong>: Contracts are automatically checked for expiration</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+</pre></td><td class="rouge-code"><pre><span class="c1">// Validation happens automatically in draft()</span>
+<span class="kd">val</span> <span class="py">trustweave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+<span class="k">try</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">contract</span> <span class="p">=</span> <span class="n">trustweave</span><span class="p">.</span><span class="n">contracts</span><span class="p">.</span><span class="nf">draft</span><span class="p">(</span><span class="n">request</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Contract created: ${contract.id}"</span><span class="p">)</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">TrustWeaveError</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">when</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">is</span> <span class="nc">TrustWeaveError</span><span class="p">.</span><span class="nc">ValidationFailed</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"Validation failed: ${error.reason}"</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="k">else</span> <span class="p">-&gt;</span> <span class="nf">println</span><span class="p">(</span><span class="s">"Error: ${error.message}"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="state-transition-rules">
+  
+  
+    <a href="#state-transition-rules" class="anchor-heading" aria-labelledby="state-transition-rules"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> State Transition Rules
+  
+  
+</h2>
+    
+
+<p>Valid state transitions are enforced:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">DRAFT</code> → <code class="language-plaintext highlighter-rouge">PENDING</code>, <code class="language-plaintext highlighter-rouge">CANCELLED</code></li>
+  <li><code class="language-plaintext highlighter-rouge">PENDING</code> → <code class="language-plaintext highlighter-rouge">ACTIVE</code>, <code class="language-plaintext highlighter-rouge">CANCELLED</code></li>
+  <li><code class="language-plaintext highlighter-rouge">ACTIVE</code> → <code class="language-plaintext highlighter-rouge">EXECUTED</code>, <code class="language-plaintext highlighter-rouge">SUSPENDED</code>, <code class="language-plaintext highlighter-rouge">EXPIRED</code>, <code class="language-plaintext highlighter-rouge">TERMINATED</code>, <code class="language-plaintext highlighter-rouge">CANCELLED</code></li>
+  <li><code class="language-plaintext highlighter-rouge">SUSPENDED</code> → <code class="language-plaintext highlighter-rouge">ACTIVE</code>, <code class="language-plaintext highlighter-rouge">TERMINATED</code>, <code class="language-plaintext highlighter-rouge">CANCELLED</code></li>
+  <li>Terminal states (<code class="language-plaintext highlighter-rouge">EXECUTED</code>, <code class="language-plaintext highlighter-rouge">EXPIRED</code>, <code class="language-plaintext highlighter-rouge">CANCELLED</code>, <code class="language-plaintext highlighter-rouge">TERMINATED</code>) cannot transition</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="rouge-code"><pre><span class="c1">// Invalid transition will throw InvalidOperationException</span>
+<span class="kd">val</span> <span class="py">trustweave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+<span class="k">try</span> <span class="p">{</span>
+    <span class="n">trustweave</span><span class="p">.</span><span class="n">contracts</span><span class="p">.</span><span class="nf">updateStatus</span><span class="p">(</span>
+        <span class="n">contractId</span> <span class="p">=</span> <span class="n">contract</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">newStatus</span> <span class="p">=</span> <span class="nc">ContractStatus</span><span class="p">.</span><span class="nc">EXECUTED</span> <span class="c1">// Must be ACTIVE first</span>
+    <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">TrustWeaveError</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"State transition failed: ${error.message}"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="integration-with-trustweave">
+  
+  
+    <a href="#integration-with-trustweave" class="anchor-heading" aria-labelledby="integration-with-trustweave"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Integration with TrustWeave
+  
+  
+</h2>
+    
+
+<p>Smart Contracts integrate seamlessly with TrustWeave’s trust infrastructure:</p>
+<h3 id="verifiable-credentials">
+  
+  
+    <a href="#verifiable-credentials" class="anchor-heading" aria-labelledby="verifiable-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Verifiable Credentials
+  
+  
+</h3>
+    
+
+<p>Contracts are issued as Verifiable Credentials:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="c1">// Contract credential is automatically issued during bindContract()</span>
+<span class="kd">val</span> <span class="py">trustweave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+<span class="kd">val</span> <span class="py">bound</span> <span class="p">=</span> <span class="n">trustweave</span><span class="p">.</span><span class="n">contracts</span><span class="p">.</span><span class="nf">bindContract</span><span class="p">(</span><span class="o">..</span><span class="p">.).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+<span class="c1">// bound.credentialId contains the VC ID</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="blockchain-anchoring">
+  
+  
+    <a href="#blockchain-anchoring" class="anchor-heading" aria-labelledby="blockchain-anchoring"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Blockchain Anchoring
+  
+  
+</h3>
+    
+
+<p>Contracts are anchored to blockchain for audit trails:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="c1">// Anchor reference is stored in contract.anchorRef</span>
+<span class="kd">val</span> <span class="py">trustweave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
+<span class="kd">val</span> <span class="py">contract</span> <span class="p">=</span> <span class="n">trustweave</span><span class="p">.</span><span class="n">contracts</span><span class="p">.</span><span class="nf">getContract</span><span class="p">(</span><span class="n">contractId</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+<span class="n">contract</span><span class="p">.</span><span class="n">anchorRef</span><span class="o">?.</span><span class="nf">let</span> <span class="p">{</span> <span class="n">anchor</span> <span class="p">-&gt;</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Anchored on: ${anchor.chainId}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Transaction: ${anchor.txHash}"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="did-based-parties">
+  
+  
+    <a href="#did-based-parties" class="anchor-heading" aria-labelledby="did-based-parties"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> DID-Based Parties
+  
+  
+</h3>
+    
+
+<p>All parties are identified by DIDs:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="rouge-code"><pre><span class="nc">ContractParties</span><span class="p">(</span>
+    <span class="n">primaryPartyDid</span> <span class="p">=</span> <span class="s">"did:key:insurer-123"</span><span class="p">,</span>
+    <span class="n">counterpartyDid</span> <span class="p">=</span> <span class="s">"did:key:insured-456"</span><span class="p">,</span>
+    <span class="n">additionalParties</span> <span class="p">=</span> <span class="nf">mapOf</span><span class="p">(</span>
+        <span class="s">"broker"</span> <span class="n">to</span> <span class="s">"did:key:broker-789"</span><span class="p">,</span>
+        <span class="s">"reinsurer"</span> <span class="n">to</span> <span class="s">"did:key:reinsurer-101"</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="practical-usage-tips">
+  
+  
+    <a href="#practical-usage-tips" class="anchor-heading" aria-labelledby="practical-usage-tips"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Practical Usage Tips
+  
+  
+</h2>
+    
+
+<ul>
+  <li><strong>Validation</strong>: Contract operations return <code class="language-plaintext highlighter-rouge">Result&lt;T&gt;</code> - use <code class="language-plaintext highlighter-rouge">fold()</code> or <code class="language-plaintext highlighter-rouge">getOrThrow()</code> for error handling</li>
+  <li><strong>State Management</strong>: Use <code class="language-plaintext highlighter-rouge">updateStatus()</code> for explicit state transitions</li>
+  <li><strong>Expiration</strong>: Check expiration before executing contracts</li>
+  <li><strong>Error Handling</strong>: All operations return <code class="language-plaintext highlighter-rouge">Result&lt;T&gt;</code> with structured <code class="language-plaintext highlighter-rouge">TrustWeaveError</code> types</li>
+  <li><strong>Storage</strong>: <code class="language-plaintext highlighter-rouge">DefaultSmartContractService</code> is in-memory; use persistent storage for production</li>
+  <li><strong>Condition Evaluation</strong>: Condition evaluation is extensible; implement custom evaluators for production</li>
+</ul>
+<h2 id="next-steps">
+  
+  
+    <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
+  
+  
+</h2>
+    
+
+<p><strong>Ready to use Smart Contracts?</strong></p>
+<ul>
+  <li><a href="../api-reference/smart-contract-api.html">Smart Contract API Reference</a> - Complete API documentation</li>
+  <li><a href="../scenarios/smart-contract-parametric-insurance-scenario.html">Parametric Insurance Scenario</a> - Complete parametric insurance example</li>
+  <li><a href="../scenarios/parametric-insurance-mga-implementation-guide.html">Parametric Insurance MGA Implementation Guide</a> - Advanced implementation guide</li>
+</ul>
+
+<p><strong>Want to learn more?</strong></p>
+<ul>
+  <li><a href="verifiable-credentials.html">Verifiable Credentials</a> - Understand credential issuance and verification</li>
+  <li><a href="blockchain-anchoring.html">Blockchain Anchoring</a> - Learn about anchoring concepts</li>
+  <li><a href="dids.html">DIDs</a> - Understand DID management</li>
+  <li><a href="evaluation-engines.html">Evaluation Engines</a> - Pluggable condition evaluation with tamper protection</li>
+</ul>
+
+<p><strong>Explore related concepts:</strong></p>
+<ul>
+  <li><a href="../api-reference/core-api.html">Core API Reference</a> - Complete API documentation</li>
+  <li><a href="../scenarios/README.html">Use Case Scenarios</a> - More real-world examples</li>
+</ul>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

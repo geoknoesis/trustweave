@@ -1,0 +1,32 @@
+---
+# Custom layout for documentation pages with consistent header/footer
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include main-nav-head.html %}
+    {% seo %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if page.title %}{{ page.title }} - {% endif %}{{ site.title }}</title>
+    <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/just-the-docs-default.css">
+    {% if site.search_enabled != false %}
+    <script src="{{ site.baseurl }}/assets/js/vendor/lunr.min.js"></script>
+    {% endif %}
+</head>
+<body>
+    {% include site-header.html %}
+    
+    <main class="main-content" style="min-height: calc(100vh - 200px); padding-top: 2rem;">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
+            <article>
+                <h1>{{ page.title }}</h1>
+                {{ content }}
+            </article>
+        </div>
+    </main>
+    
+    {% include site-footer.html %}
+</body>
+</html>
+

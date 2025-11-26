@@ -1,0 +1,812 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+
+    
+    .site-nav > ul.nav-list:first-child > li:not(:nth-child(34)) > a,
+    .site-nav > ul.nav-list:first-child > li > ul > li a {
+      background-image: none;
+    }
+
+    .site-nav > ul.nav-list:not(:first-child) a,
+    .site-nav li.external a {
+      background-image: none;
+    }
+
+    .site-nav > ul.nav-list:first-child > li:nth-child(34) > a {
+      font-weight: 600;
+      text-decoration: none;
+    }.site-nav > ul.nav-list:first-child > li:nth-child(34) > button svg {
+      transform: rotate(-90deg);
+    }.site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(34) > ul.nav-list {
+      display: block;
+    }
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Security Best Practices | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Security Best Practices" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://localhost:4000/trustweave/security/README/" />
+<meta property="og:url" content="http://localhost:4000/trustweave/security/README/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Security Best Practices" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"Security Best Practices","url":"http://localhost:4000/trustweave/security/README/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/beginner-tutorial-series/" class="nav-list-link">Beginner Tutorial Series</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchored-revocation/" class="nav-list-link">Blockchain-Anchored Revocation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/code-style/" class="nav-list-link">Code Style</a></li><li class="nav-list-item"><a href="/trustweave/comparison/README/" class="nav-list-link">Comparison Documentation</a></li><li class="nav-list-item"><a href="/trustweave/configuration/README/" class="nav-list-link">Configuration Reference</a></li><li class="nav-list-item"><a href="/trustweave/advanced/custom-adapters/" class="nav-list-link">Creating Custom Adapters</a></li><li class="nav-list-item"><a href="/trustweave/contributing/creating-plugins/" class="nav-list-link">Creating TrustWeave Plugins</a></li><li class="nav-list-item"><a href="/trustweave/features/credential-exchange-protocols/README/" class="nav-list-link">Credential Exchange Protocols</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/credential-issuance-tutorial/" class="nav-list-link">Credential Issuance Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/algorithm-compatibility-table/" class="nav-list-link">Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/did-operations-tutorial/" class="nav-list-link">DID Operations Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/delegation/" class="nav-list-link">Delegation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/development-setup/" class="nav-list-link">Development Setup</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/evaluation-engines/" class="nav-list-link">Evaluation Engines</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/json-canonicalization/" class="nav-list-link">JSON Canonicalization</a></li><li class="nav-list-item"><a href="/trustweave/advanced/key-rotation/" class="nav-list-link">Key Rotation Strategies</a></li><li class="nav-list-item"><a href="/trustweave/licensing/README/" class="nav-list-link">Licensing Overview</a></li><li class="nav-list-item"><a href="/trustweave/migration/README/" class="nav-list-link">Migration Guides</a></li><li class="nav-list-item"><a href="/trustweave/advanced/performance/" class="nav-list-link">Performance Considerations</a></li><li class="nav-list-item"><a href="/trustweave/advanced/plugin-lifecycle/" class="nav-list-link">Plugin Lifecycle Management</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/proof-purpose-validation/" class="nav-list-link">Proof Purpose Validation</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/credential-exchange-protocols/" class="nav-list-link">Protocol Abstraction Layer</a></li><li class="nav-list-item"><a href="/trustweave/contributing/pull-request-process/" class="nav-list-link">Pull Request Process</a></li><li class="nav-list-item"><a href="/trustweave/security/README/" class="nav-list-link">Security Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/advanced/spi/" class="nav-list-link">Service Provider Interface (SPI)</a></li><li class="nav-list-item"><a href="/trustweave/plugins/" class="nav-list-link">Supported Plugins</a></li><li class="nav-list-item"><a href="/trustweave/contributing/testing-guidelines/" class="nav-list-link">Testing Guidelines</a></li><li class="nav-list-item"><a href="/trustweave/advanced/testing-strategies/" class="nav-list-link">Testing Strategies</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/trust-registry/" class="nav-list-link">Trust Registry</a></li><li class="nav-list-item"><a href="/trustweave/GLOSSARY/" class="nav-list-link">TrustWeave Glossary</a></li><li class="nav-list-item"><a href="/trustweave/TRUSTWEAVE_WHITEPAPER/" class="nav-list-link">TrustWeave SDK: Decentralized Trust Infrastructure</a></li><li class="nav-list-item"><a href="/trustweave/scenarios/README/" class="nav-list-link">Use Case Scenarios</a></li><li class="nav-list-item"><a href="/trustweave/advanced/verification-policies/" class="nav-list-link">Verification Policies</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/wallet-api-tutorial/" class="nav-list-link">Wallet API Tutorial</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="security-best-practices">
+  
+  
+    <a href="#security-best-practices" class="anchor-heading" aria-labelledby="security-best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Security Best Practices
+  
+  
+</h1>
+    
+
+<p>This guide covers security best practices for using TrustWeave in production environments.</p>
+<h2 id="overview">
+  
+  
+    <a href="#overview" class="anchor-heading" aria-labelledby="overview"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Overview
+  
+  
+</h2>
+    
+
+<p>TrustWeave handles sensitive cryptographic operations and identity management. Following security best practices is essential for production deployments.</p>
+<h2 id="key-management">
+  
+  
+    <a href="#key-management" class="anchor-heading" aria-labelledby="key-management"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Management
+  
+  
+</h2>
+    
+<h3 id="use-production-grade-kms">
+  
+  
+    <a href="#use-production-grade-kms" class="anchor-heading" aria-labelledby="use-production-grade-kms"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Use Production-Grade KMS
+  
+  
+</h3>
+    
+
+<p>❌ <strong>Don’t</strong>: Use in-memory KMS in production</p>
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>  <span class="c1">// Only for testing!</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p>✅ <strong>Do</strong>: Use production KMS providers</p>
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+</pre></td><td class="rouge-code"><pre><span class="c1">// AWS KMS</span>
+<span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">AwsKeyManagementService</span><span class="p">(</span>
+    <span class="n">region</span> <span class="p">=</span> <span class="s">"us-east-1"</span><span class="p">,</span>
+    <span class="n">credentials</span> <span class="p">=</span> <span class="n">awsCredentials</span>
+<span class="p">)</span>
+
+<span class="c1">// Azure Key Vault</span>
+<span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">AzureKeyManagementService</span><span class="p">(</span>
+    <span class="n">vaultUrl</span> <span class="p">=</span> <span class="s">"https://your-vault.vault.azure.net/"</span><span class="p">,</span>
+    <span class="n">credentials</span> <span class="p">=</span> <span class="n">azureCredentials</span>
+<span class="p">)</span>
+
+<span class="c1">// Google Cloud KMS</span>
+<span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">GoogleKeyManagementService</span><span class="p">(</span>
+    <span class="n">projectId</span> <span class="p">=</span> <span class="s">"your-project"</span><span class="p">,</span>
+    <span class="n">location</span> <span class="p">=</span> <span class="s">"us-east1"</span><span class="p">,</span>
+    <span class="n">keyRing</span> <span class="p">=</span> <span class="s">"your-keyring"</span><span class="p">,</span>
+    <span class="n">credentials</span> <span class="p">=</span> <span class="n">googleCredentials</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="key-rotation">
+  
+  
+    <a href="#key-rotation" class="anchor-heading" aria-labelledby="key-rotation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Rotation
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Regular Rotation</strong>: Rotate keys regularly (every 90 days recommended)</li>
+  <li><strong>Key Versioning</strong>: Use key versioning for gradual rotation</li>
+  <li><strong>Backup Keys</strong>: Maintain secure backups of key material</li>
+  <li>See <a href="/trustweave/advanced/key-rotation/">Key Rotation Guide</a> for details</li>
+</ul>
+<h3 id="key-access-control">
+  
+  
+    <a href="#key-access-control" class="anchor-heading" aria-labelledby="key-access-control"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Access Control
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Principle of Least Privilege</strong>: Grant minimum required permissions</li>
+  <li><strong>Separate Keys</strong>: Use different keys for different purposes (issuance, signing, etc.)</li>
+  <li><strong>Audit Logging</strong>: Enable audit logging for all key operations</li>
+</ul>
+<h2 id="credential-storage">
+  
+  
+    <a href="#credential-storage" class="anchor-heading" aria-labelledby="credential-storage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Credential Storage
+  
+  
+</h2>
+    
+<h3 id="secure-storage">
+  
+  
+    <a href="#secure-storage" class="anchor-heading" aria-labelledby="secure-storage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Secure Storage
+  
+  
+</h3>
+    
+
+<p>❌ <strong>Don’t</strong>: Store credentials in plain text</p>
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="c1">// BAD: No encryption</span>
+<span class="kd">val</span> <span class="py">wallet</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">createWallet</span><span class="p">(</span><span class="n">holderDid</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">storagePath</span> <span class="p">=</span> <span class="s">"/var/credentials"</span>  <span class="c1">// Unencrypted!</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p>✅ <strong>Do</strong>: Use encrypted storage</p>
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="c1">// GOOD: Encrypted storage</span>
+<span class="kd">val</span> <span class="py">wallet</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">createWallet</span><span class="p">(</span><span class="n">holderDid</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">storagePath</span> <span class="p">=</span> <span class="s">"/var/credentials"</span>
+    <span class="n">encryptionKey</span> <span class="p">=</span> <span class="n">secureKey</span>  <span class="c1">// Use secure key management</span>
+    <span class="nf">property</span><span class="p">(</span><span class="s">"encryptionAlgorithm"</span><span class="p">,</span> <span class="s">"AES-256-GCM"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="access-control">
+  
+  
+    <a href="#access-control" class="anchor-heading" aria-labelledby="access-control"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Access Control
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>File Permissions</strong>: Restrict file system permissions (600 for files, 700 for directories)</li>
+  <li><strong>Network Security</strong>: Use encrypted connections (TLS) for network storage</li>
+  <li><strong>Authentication</strong>: Implement proper authentication for credential access</li>
+</ul>
+<h2 id="did-management">
+  
+  
+    <a href="#did-management" class="anchor-heading" aria-labelledby="did-management"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> DID Management
+  
+  
+</h2>
+    
+<h3 id="did-method-selection">
+  
+  
+    <a href="#did-method-selection" class="anchor-heading" aria-labelledby="did-method-selection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> DID Method Selection
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Security</strong>: Choose DID methods with strong security guarantees</li>
+  <li><strong>Resolvability</strong>: Ensure DID resolution is reliable and secure</li>
+  <li><strong>Privacy</strong>: Consider privacy implications of DID methods</li>
+</ul>
+<h3 id="did-document-security">
+  
+  
+    <a href="#did-document-security" class="anchor-heading" aria-labelledby="did-document-security"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> DID Document Security
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Key Management</strong>: Store verification keys securely</li>
+  <li><strong>Service Endpoints</strong>: Use HTTPS for all service endpoints</li>
+  <li><strong>Document Updates</strong>: Implement secure update mechanisms</li>
+</ul>
+<h2 id="credential-issuance">
+  
+  
+    <a href="#credential-issuance" class="anchor-heading" aria-labelledby="credential-issuance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Credential Issuance
+  
+  
+</h2>
+    
+<h3 id="issuer-authentication">
+  
+  
+    <a href="#issuer-authentication" class="anchor-heading" aria-labelledby="issuer-authentication"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Issuer Authentication
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Verify Identity</strong>: Verify issuer identity before accepting credentials</li>
+  <li><strong>Trust Registry</strong>: Use trust registries to validate issuers</li>
+  <li><strong>Revocation</strong>: Implement revocation mechanisms</li>
+</ul>
+<h3 id="credential-validation">
+  
+  
+    <a href="#credential-validation" class="anchor-heading" aria-labelledby="credential-validation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Credential Validation
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Structure Validation</strong>: Always validate credential structure</li>
+  <li><strong>Proof Verification</strong>: Verify cryptographic proofs</li>
+  <li><strong>Expiration Checks</strong>: Check credential expiration</li>
+  <li><strong>Revocation Checks</strong>: Verify credential is not revoked</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">credential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
+
+<span class="c1">// Check all validation flags</span>
+<span class="k">if</span> <span class="p">(!</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">throw</span> <span class="nc">SecurityException</span><span class="p">(</span><span class="s">"Credential validation failed"</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">if</span> <span class="p">(!</span><span class="n">verification</span><span class="p">.</span><span class="n">proofValid</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">throw</span> <span class="nc">SecurityException</span><span class="p">(</span><span class="s">"Proof validation failed"</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">if</span> <span class="p">(!</span><span class="n">verification</span><span class="p">.</span><span class="n">issuerValid</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">throw</span> <span class="nc">SecurityException</span><span class="p">(</span><span class="s">"Issuer validation failed"</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">if</span> <span class="p">(!</span><span class="n">verification</span><span class="p">.</span><span class="n">notRevoked</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">throw</span> <span class="nc">SecurityException</span><span class="p">(</span><span class="s">"Credential is revoked"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="blockchain-anchoring">
+  
+  
+    <a href="#blockchain-anchoring" class="anchor-heading" aria-labelledby="blockchain-anchoring"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Blockchain Anchoring
+  
+  
+</h2>
+    
+<h3 id="chain-selection">
+  
+  
+    <a href="#chain-selection" class="anchor-heading" aria-labelledby="chain-selection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Chain Selection
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Security</strong>: Choose chains with strong security guarantees</li>
+  <li><strong>Finality</strong>: Consider finality time for your use case</li>
+  <li><strong>Cost</strong>: Balance security and cost</li>
+</ul>
+<h3 id="transaction-security">
+  
+  
+    <a href="#transaction-security" class="anchor-heading" aria-labelledby="transaction-security"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Transaction Security
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Private Keys</strong>: Never expose private keys</li>
+  <li><strong>Transaction Signing</strong>: Use secure signing mechanisms</li>
+  <li><strong>Gas Management</strong>: Implement proper gas management</li>
+</ul>
+<h2 id="network-security">
+  
+  
+    <a href="#network-security" class="anchor-heading" aria-labelledby="network-security"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Network Security
+  
+  
+</h2>
+    
+<h3 id="tlshttps">
+  
+  
+    <a href="#tlshttps" class="anchor-heading" aria-labelledby="tlshttps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> TLS/HTTPS
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Always Use TLS</strong>: Use HTTPS for all network communications</li>
+  <li><strong>Certificate Validation</strong>: Validate TLS certificates</li>
+  <li><strong>Cipher Suites</strong>: Use strong cipher suites</li>
+</ul>
+<h3 id="api-security">
+  
+  
+    <a href="#api-security" class="anchor-heading" aria-labelledby="api-security"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> API Security
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Authentication</strong>: Implement proper API authentication</li>
+  <li><strong>Authorization</strong>: Use role-based access control (RBAC)</li>
+  <li><strong>Rate Limiting</strong>: Implement rate limiting to prevent abuse</li>
+  <li><strong>Input Validation</strong>: Validate all inputs</li>
+</ul>
+<h2 id="error-handling">
+  
+  
+    <a href="#error-handling" class="anchor-heading" aria-labelledby="error-handling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Error Handling
+  
+  
+</h2>
+    
+<h3 id="secure-error-messages">
+  
+  
+    <a href="#secure-error-messages" class="anchor-heading" aria-labelledby="secure-error-messages"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Secure Error Messages
+  
+  
+</h3>
+    
+
+<p>❌ <strong>Don’t</strong>: Expose sensitive information in errors</p>
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="k">catch</span> <span class="p">(</span><span class="n">e</span><span class="p">:</span> <span class="nc">Exception</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Error: ${e.message}"</span><span class="p">)</span>  <span class="c1">// May expose sensitive data</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Stack trace: ${e.stackTrace}"</span><span class="p">)</span>  <span class="c1">// May expose internals</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p>✅ <strong>Do</strong>: Sanitize error messages</p>
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="rouge-code"><pre><span class="k">catch</span> <span class="p">(</span><span class="n">e</span><span class="p">:</span> <span class="nc">Exception</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">logger</span><span class="p">.</span><span class="nf">error</span><span class="p">(</span><span class="s">"Operation failed"</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>  <span class="c1">// Log full details</span>
+    <span class="k">return</span> <span class="nc">Result</span><span class="p">.</span><span class="nf">failure</span><span class="p">(</span>
+        <span class="nc">TrustWeaveError</span><span class="p">.</span><span class="nc">Unknown</span><span class="p">(</span>
+            <span class="n">message</span> <span class="p">=</span> <span class="s">"Operation failed. Please try again."</span><span class="p">,</span>  <span class="c1">// Generic message</span>
+            <span class="n">context</span> <span class="p">=</span> <span class="nf">emptyMap</span><span class="p">()</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="logging-and-monitoring">
+  
+  
+    <a href="#logging-and-monitoring" class="anchor-heading" aria-labelledby="logging-and-monitoring"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Logging and Monitoring
+  
+  
+</h2>
+    
+<h3 id="secure-logging">
+  
+  
+    <a href="#secure-logging" class="anchor-heading" aria-labelledby="secure-logging"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Secure Logging
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>No Sensitive Data</strong>: Never log keys, passwords, or credentials</li>
+  <li><strong>Structured Logging</strong>: Use structured logging for better analysis</li>
+  <li><strong>Log Rotation</strong>: Implement log rotation and retention policies</li>
+</ul>
+<h3 id="monitoring">
+  
+  
+    <a href="#monitoring" class="anchor-heading" aria-labelledby="monitoring"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Monitoring
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Security Events</strong>: Monitor security-relevant events</li>
+  <li><strong>Anomaly Detection</strong>: Implement anomaly detection</li>
+  <li><strong>Alerting</strong>: Set up alerts for security incidents</li>
+</ul>
+<h2 id="compliance">
+  
+  
+    <a href="#compliance" class="anchor-heading" aria-labelledby="compliance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Compliance
+  
+  
+</h2>
+    
+<h3 id="data-protection">
+  
+  
+    <a href="#data-protection" class="anchor-heading" aria-labelledby="data-protection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Data Protection
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>GDPR</strong>: Ensure GDPR compliance for EU users</li>
+  <li><strong>CCPA</strong>: Ensure CCPA compliance for California users</li>
+  <li><strong>Data Minimization</strong>: Collect only necessary data</li>
+</ul>
+<h3 id="audit-trails">
+  
+  
+    <a href="#audit-trails" class="anchor-heading" aria-labelledby="audit-trails"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Audit Trails
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Comprehensive Logging</strong>: Log all security-relevant operations</li>
+  <li><strong>Immutable Logs</strong>: Use immutable log storage</li>
+  <li><strong>Retention</strong>: Maintain logs according to compliance requirements</li>
+</ul>
+<h2 id="threat-modeling">
+  
+  
+    <a href="#threat-modeling" class="anchor-heading" aria-labelledby="threat-modeling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Threat Modeling
+  
+  
+</h2>
+    
+<h3 id="common-threats">
+  
+  
+    <a href="#common-threats" class="anchor-heading" aria-labelledby="common-threats"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Common Threats
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>Key Theft</strong>: Protect keys with strong access controls</li>
+  <li><strong>Credential Forgery</strong>: Verify all credentials cryptographically</li>
+  <li><strong>Man-in-the-Middle</strong>: Use TLS for all communications</li>
+  <li><strong>Replay Attacks</strong>: Use nonces and timestamps</li>
+  <li><strong>Denial of Service</strong>: Implement rate limiting and resource limits</li>
+</ol>
+<h3 id="mitigation-strategies">
+  
+  
+    <a href="#mitigation-strategies" class="anchor-heading" aria-labelledby="mitigation-strategies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Mitigation Strategies
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Defense in Depth</strong>: Use multiple security layers</li>
+  <li><strong>Least Privilege</strong>: Grant minimum required permissions</li>
+  <li><strong>Regular Updates</strong>: Keep dependencies updated</li>
+  <li><strong>Security Audits</strong>: Conduct regular security audits</li>
+</ul>
+<h2 id="best-practices-summary">
+  
+  
+    <a href="#best-practices-summary" class="anchor-heading" aria-labelledby="best-practices-summary"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Best Practices Summary
+  
+  
+</h2>
+    
+
+<ol>
+  <li>✅ Use production-grade KMS (AWS, Azure, Google Cloud)</li>
+  <li>✅ Encrypt credential storage</li>
+  <li>✅ Validate all credentials before use</li>
+  <li>✅ Use TLS/HTTPS for all network communications</li>
+  <li>✅ Implement proper authentication and authorization</li>
+  <li>✅ Log security events (without sensitive data)</li>
+  <li>✅ Rotate keys regularly</li>
+  <li>✅ Keep dependencies updated</li>
+  <li>✅ Conduct security audits</li>
+  <li>✅ Follow principle of least privilege</li>
+</ol>
+<h2 id="additional-resources">
+  
+  
+    <a href="#additional-resources" class="anchor-heading" aria-labelledby="additional-resources"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Additional Resources
+  
+  
+</h2>
+    
+
+<ul>
+  <li><a href="/trustweave/advanced/key-rotation/">Key Rotation Guide</a></li>
+  <li><a href="/trustweave/advanced/error-handling/">Error Handling</a></li>
+  <li><a href="/trustweave/advanced/verification-policies/">Verification Policies</a></li>
+  <li><a href="https://www.w3.org/TR/vc-data-model/#security-considerations">W3C Security Considerations</a></li>
+</ul>
+<h2 id="getting-help">
+  
+  
+    <a href="#getting-help" class="anchor-heading" aria-labelledby="getting-help"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Getting Help
+  
+  
+</h2>
+    
+
+<p>For security concerns:</p>
+
+<ol>
+  <li><strong>Security Issues</strong>: Report to security@geoknoesis.com</li>
+  <li><strong>General Questions</strong>: See <a href="/trustweave/faq/">FAQ</a></li>
+  <li><strong>Support</strong>: Contact <a href="https://www.geoknoesis.com">www.geoknoesis.com</a></li>
+</ol>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

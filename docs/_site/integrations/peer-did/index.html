@@ -1,0 +1,804 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+    .site-nav ul li a {
+      background-image: none;
+    }
+
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Peer DID Integration | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Peer DID Integration" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://localhost:4000/trustweave/integrations/peer-did/" />
+<meta property="og:url" content="http://localhost:4000/trustweave/integrations/peer-did/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Peer DID Integration" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"Peer DID Integration","url":"http://localhost:4000/trustweave/integrations/peer-did/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/beginner-tutorial-series/" class="nav-list-link">Beginner Tutorial Series</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchored-revocation/" class="nav-list-link">Blockchain-Anchored Revocation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/code-style/" class="nav-list-link">Code Style</a></li><li class="nav-list-item"><a href="/trustweave/comparison/README/" class="nav-list-link">Comparison Documentation</a></li><li class="nav-list-item"><a href="/trustweave/configuration/README/" class="nav-list-link">Configuration Reference</a></li><li class="nav-list-item"><a href="/trustweave/advanced/custom-adapters/" class="nav-list-link">Creating Custom Adapters</a></li><li class="nav-list-item"><a href="/trustweave/contributing/creating-plugins/" class="nav-list-link">Creating TrustWeave Plugins</a></li><li class="nav-list-item"><a href="/trustweave/features/credential-exchange-protocols/README/" class="nav-list-link">Credential Exchange Protocols</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/credential-issuance-tutorial/" class="nav-list-link">Credential Issuance Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/algorithm-compatibility-table/" class="nav-list-link">Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/did-operations-tutorial/" class="nav-list-link">DID Operations Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/delegation/" class="nav-list-link">Delegation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/development-setup/" class="nav-list-link">Development Setup</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/evaluation-engines/" class="nav-list-link">Evaluation Engines</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/json-canonicalization/" class="nav-list-link">JSON Canonicalization</a></li><li class="nav-list-item"><a href="/trustweave/advanced/key-rotation/" class="nav-list-link">Key Rotation Strategies</a></li><li class="nav-list-item"><a href="/trustweave/licensing/README/" class="nav-list-link">Licensing Overview</a></li><li class="nav-list-item"><a href="/trustweave/migration/README/" class="nav-list-link">Migration Guides</a></li><li class="nav-list-item"><a href="/trustweave/advanced/performance/" class="nav-list-link">Performance Considerations</a></li><li class="nav-list-item"><a href="/trustweave/advanced/plugin-lifecycle/" class="nav-list-link">Plugin Lifecycle Management</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/proof-purpose-validation/" class="nav-list-link">Proof Purpose Validation</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/credential-exchange-protocols/" class="nav-list-link">Protocol Abstraction Layer</a></li><li class="nav-list-item"><a href="/trustweave/contributing/pull-request-process/" class="nav-list-link">Pull Request Process</a></li><li class="nav-list-item"><a href="/trustweave/security/README/" class="nav-list-link">Security Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/advanced/spi/" class="nav-list-link">Service Provider Interface (SPI)</a></li><li class="nav-list-item"><a href="/trustweave/plugins/" class="nav-list-link">Supported Plugins</a></li><li class="nav-list-item"><a href="/trustweave/contributing/testing-guidelines/" class="nav-list-link">Testing Guidelines</a></li><li class="nav-list-item"><a href="/trustweave/advanced/testing-strategies/" class="nav-list-link">Testing Strategies</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/trust-registry/" class="nav-list-link">Trust Registry</a></li><li class="nav-list-item"><a href="/trustweave/GLOSSARY/" class="nav-list-link">TrustWeave Glossary</a></li><li class="nav-list-item"><a href="/trustweave/TRUSTWEAVE_WHITEPAPER/" class="nav-list-link">TrustWeave SDK: Decentralized Trust Infrastructure</a></li><li class="nav-list-item"><a href="/trustweave/scenarios/README/" class="nav-list-link">Use Case Scenarios</a></li><li class="nav-list-item"><a href="/trustweave/advanced/verification-policies/" class="nav-list-link">Verification Policies</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/wallet-api-tutorial/" class="nav-list-link">Wallet API Tutorial</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="peer-did-integration">
+  
+  
+    <a href="#peer-did-integration" class="anchor-heading" aria-labelledby="peer-did-integration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Peer DID Integration
+  
+  
+</h1>
+    
+
+<blockquote>
+  <p>This guide covers the did:peer method integration for TrustWeave. The did:peer plugin provides peer-to-peer DIDs without external registries or blockchains.</p>
+</blockquote>
+<h2 id="overview">
+  
+  
+    <a href="#overview" class="anchor-heading" aria-labelledby="overview"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Overview
+  
+  
+</h2>
+    
+
+<p>The <code class="language-plaintext highlighter-rouge">did/plugins/peer</code> module provides an implementation of TrustWeave’s <code class="language-plaintext highlighter-rouge">DidMethod</code> interface using the peer DID method. This integration enables you to:</p>
+
+<ul>
+  <li>Create and resolve peer DIDs for P2P communication</li>
+  <li>Store DID documents locally (no external registry)</li>
+  <li>Support numalgo 0, 1, and 2</li>
+  <li>Embedded document resolution</li>
+  <li>No blockchain or HTTP dependencies</li>
+</ul>
+<h2 id="installation">
+  
+  
+    <a href="#installation" class="anchor-heading" aria-labelledby="installation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Installation
+  
+  
+</h2>
+    
+
+<p>Add the did:peer module to your dependencies:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.did:peer:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.did:base:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="configuration">
+  
+  
+    <a href="#configuration" class="anchor-heading" aria-labelledby="configuration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Configuration
+  
+  
+</h2>
+    
+<h3 id="basic-configuration">
+  
+  
+    <a href="#basic-configuration" class="anchor-heading" aria-labelledby="basic-configuration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Basic Configuration
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.peerdid.*</span>
+<span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+
+<span class="c1">// Create configuration</span>
+<span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">PeerDidConfig</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
+    <span class="p">.</span><span class="nf">numalgo</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="c1">// Use numalgo 2 (recommended)</span>
+    <span class="p">.</span><span class="nf">includeServices</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
+    <span class="p">.</span><span class="nf">build</span><span class="p">()</span>
+
+<span class="c1">// Create KMS</span>
+<span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
+
+<span class="c1">// Create did:peer method</span>
+<span class="kd">val</span> <span class="py">method</span> <span class="p">=</span> <span class="nc">PeerDidMethod</span><span class="p">(</span><span class="n">kms</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="pre-configured-numalgos">
+  
+  
+    <a href="#pre-configured-numalgos" class="anchor-heading" aria-labelledby="pre-configured-numalgos"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Pre-configured Numalgos
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="rouge-code"><pre><span class="c1">// Numalgo 0 (static numeric)</span>
+<span class="kd">val</span> <span class="py">config0</span> <span class="p">=</span> <span class="nc">PeerDidConfig</span><span class="p">.</span><span class="nf">numalgo0</span><span class="p">()</span>
+
+<span class="c1">// Numalgo 1 (short-form with inception key)</span>
+<span class="kd">val</span> <span class="py">config1</span> <span class="p">=</span> <span class="nc">PeerDidConfig</span><span class="p">.</span><span class="nf">numalgo1</span><span class="p">()</span>
+
+<span class="c1">// Numalgo 2 (short-form with multibase, recommended)</span>
+<span class="kd">val</span> <span class="py">config2</span> <span class="p">=</span> <span class="nc">PeerDidConfig</span><span class="p">.</span><span class="nf">numalgo2</span><span class="p">()</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="spi-auto-discovery">
+  
+  
+    <a href="#spi-auto-discovery" class="anchor-heading" aria-labelledby="spi-auto-discovery"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> SPI Auto-Discovery
+  
+  
+</h3>
+    
+
+<p>When the module is on the classpath, did:peer is automatically available:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.*</span>
+<span class="k">import</span> <span class="nn">java.util.ServiceLoader</span>
+
+<span class="c1">// Discover did:peer provider</span>
+<span class="kd">val</span> <span class="py">providers</span> <span class="p">=</span> <span class="nc">ServiceLoader</span><span class="p">.</span><span class="nf">load</span><span class="p">(</span><span class="nc">DidMethodProvider</span><span class="o">::</span><span class="k">class</span><span class="p">.</span><span class="n">java</span><span class="p">)</span>
+<span class="kd">val</span> <span class="py">peerProvider</span> <span class="p">=</span> <span class="n">providers</span><span class="p">.</span><span class="nf">find</span> <span class="p">{</span> <span class="n">it</span><span class="p">.</span><span class="n">supportedMethods</span><span class="p">.</span><span class="nf">contains</span><span class="p">(</span><span class="s">"peer"</span><span class="p">)</span> <span class="p">}</span>
+
+<span class="c1">// Create method</span>
+<span class="kd">val</span> <span class="py">options</span> <span class="p">=</span> <span class="nc">DidCreationOptions</span><span class="p">()</span>
+<span class="kd">val</span> <span class="py">method</span> <span class="p">=</span> <span class="n">peerProvider</span><span class="o">?.</span><span class="nf">create</span><span class="p">(</span><span class="s">"peer"</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="usage-examples">
+  
+  
+    <a href="#usage-examples" class="anchor-heading" aria-labelledby="usage-examples"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Usage Examples
+  
+  
+</h2>
+    
+<h3 id="creating-a-didpeer">
+  
+  
+    <a href="#creating-a-didpeer" class="anchor-heading" aria-labelledby="creating-a-didpeer"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Creating a did:peer
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">PeerDidConfig</span><span class="p">.</span><span class="nf">numalgo2</span><span class="p">()</span>
+<span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
+<span class="kd">val</span> <span class="py">method</span> <span class="p">=</span> <span class="nc">PeerDidMethod</span><span class="p">(</span><span class="n">kms</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+<span class="c1">// Create DID</span>
+<span class="kd">val</span> <span class="py">options</span> <span class="p">=</span> <span class="nf">didCreationOptions</span> <span class="p">{</span>
+    <span class="n">algorithm</span> <span class="p">=</span> <span class="nc">KeyAlgorithm</span><span class="p">.</span><span class="nc">ED25519</span>
+    <span class="nf">purpose</span><span class="p">(</span><span class="nc">KeyPurpose</span><span class="p">.</span><span class="nc">AUTHENTICATION</span><span class="p">)</span>
+    <span class="nf">purpose</span><span class="p">(</span><span class="nc">KeyPurpose</span><span class="p">.</span><span class="nc">ASSERTION</span><span class="p">)</span>
+    <span class="nf">property</span><span class="p">(</span><span class="s">"serviceEndpoint"</span><span class="p">,</span> <span class="s">"https://example.com/didcomm"</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">val</span> <span class="py">document</span> <span class="p">=</span> <span class="n">method</span><span class="p">.</span><span class="nf">createDid</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"Created: ${document.id}"</span><span class="p">)</span> <span class="c1">// did:peer:2...</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="resolving-a-didpeer">
+  
+  
+    <a href="#resolving-a-didpeer" class="anchor-heading" aria-labelledby="resolving-a-didpeer"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Resolving a did:peer
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">method</span><span class="p">.</span><span class="nf">resolveDid</span><span class="p">(</span><span class="s">"did:peer:2..."</span><span class="p">)</span>
+
+<span class="n">result</span><span class="p">.</span><span class="n">document</span><span class="o">?.</span><span class="nf">let</span> <span class="p">{</span> <span class="n">doc</span> <span class="p">-&gt;</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Resolved: ${doc.id}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Verification methods: ${doc.verificationMethod.size}"</span><span class="p">)</span>
+<span class="p">}</span> <span class="o">?:</span> <span class="nf">println</span><span class="p">(</span><span class="s">"Not found"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="updating-a-didpeer">
+  
+  
+    <a href="#updating-a-didpeer" class="anchor-heading" aria-labelledby="updating-a-didpeer"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Updating a did:peer
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">document</span> <span class="p">=</span> <span class="n">method</span><span class="p">.</span><span class="nf">updateDid</span><span class="p">(</span><span class="s">"did:peer:2..."</span><span class="p">)</span> <span class="p">{</span> <span class="n">currentDoc</span> <span class="p">-&gt;</span>
+    <span class="n">currentDoc</span><span class="p">.</span><span class="nf">copy</span><span class="p">(</span>
+        <span class="n">service</span> <span class="p">=</span> <span class="n">currentDoc</span><span class="p">.</span><span class="n">service</span> <span class="p">+</span> <span class="nc">Service</span><span class="p">(</span>
+            <span class="n">id</span> <span class="p">=</span> <span class="s">"${currentDoc.id}#didcomm"</span><span class="p">,</span>
+            <span class="n">type</span> <span class="p">=</span> <span class="s">"DIDCommMessaging"</span><span class="p">,</span>
+            <span class="n">serviceEndpoint</span> <span class="p">=</span> <span class="s">"https://example.com/didcomm"</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="deactivating-a-didpeer">
+  
+  
+    <a href="#deactivating-a-didpeer" class="anchor-heading" aria-labelledby="deactivating-a-didpeer"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Deactivating a did:peer
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">deactivated</span> <span class="p">=</span> <span class="n">method</span><span class="p">.</span><span class="nf">deactivateDid</span><span class="p">(</span><span class="s">"did:peer:2..."</span><span class="p">)</span>
+<span class="nf">println</span><span class="p">(</span><span class="s">"Deactivated: $deactivated"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="did-format">
+  
+  
+    <a href="#did-format" class="anchor-heading" aria-labelledby="did-format"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> DID Format
+  
+  
+</h2>
+    
+<h3 id="numalgo-0-static-numeric">
+  
+  
+    <a href="#numalgo-0-static-numeric" class="anchor-heading" aria-labelledby="numalgo-0-static-numeric"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Numalgo 0 (Static Numeric)
+  
+  
+</h3>
+    
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre>did:peer:0...
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="numalgo-1-short-form-with-inception-key">
+  
+  
+    <a href="#numalgo-1-short-form-with-inception-key" class="anchor-heading" aria-labelledby="numalgo-1-short-form-with-inception-key"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Numalgo 1 (Short-form with Inception Key)
+  
+  
+</h3>
+    
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre>did:peer:1...
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="numalgo-2-short-form-with-multibase-recommended">
+  
+  
+    <a href="#numalgo-2-short-form-with-multibase-recommended" class="anchor-heading" aria-labelledby="numalgo-2-short-form-with-multibase-recommended"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Numalgo 2 (Short-form with Multibase, Recommended)
+  
+  
+</h3>
+    
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre>did:peer:2...
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="numalgo-versions">
+  
+  
+    <a href="#numalgo-versions" class="anchor-heading" aria-labelledby="numalgo-versions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Numalgo Versions
+  
+  
+</h2>
+    
+
+<ul>
+  <li><strong>Numalgo 0</strong>: Static numeric algorithm (legacy)</li>
+  <li><strong>Numalgo 1</strong>: Short-form with inception key</li>
+  <li><strong>Numalgo 2</strong>: Short-form with multibase encoding (recommended)</li>
+</ul>
+<h2 id="local-storage">
+  
+  
+    <a href="#local-storage" class="anchor-heading" aria-labelledby="local-storage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Local Storage
+  
+  
+</h2>
+    
+
+<p>Peer DIDs don’t use external registries or blockchains:</p>
+
+<ul>
+  <li>Documents are stored locally in memory or persistent storage</li>
+  <li>No external dependencies required</li>
+  <li>Fast resolution from local cache</li>
+  <li>No network calls needed</li>
+</ul>
+<h2 id="embedded-documents">
+  
+  
+    <a href="#embedded-documents" class="anchor-heading" aria-labelledby="embedded-documents"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Embedded Documents
+  
+  
+</h2>
+    
+
+<p>Long-form peer DIDs can embed documents:</p>
+
+<ul>
+  <li>Documents can be encoded in the DID itself</li>
+  <li>Useful for offline or P2P scenarios</li>
+  <li>No external resolution needed</li>
+</ul>
+<h2 id="configuration-options">
+  
+  
+    <a href="#configuration-options" class="anchor-heading" aria-labelledby="configuration-options"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Configuration Options
+  
+  
+</h2>
+    
+<h3 id="peerdidconfig">
+  
+  
+    <a href="#peerdidconfig" class="anchor-heading" aria-labelledby="peerdidconfig"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> PeerDidConfig
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">PeerDidConfig</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
+    <span class="p">.</span><span class="nf">numalgo</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>           <span class="c1">// Numalgo version (0, 1, or 2)</span>
+    <span class="p">.</span><span class="nf">includeServices</span><span class="p">(</span><span class="k">true</span><span class="p">)</span> <span class="c1">// Include service endpoints</span>
+    <span class="p">.</span><span class="nf">build</span><span class="p">()</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="integration-with-trustweave">
+  
+  
+    <a href="#integration-with-trustweave" class="anchor-heading" aria-labelledby="integration-with-trustweave"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Integration with TrustWeave
+  
+  
+</h2>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">com.trustweave.peerdid.*</span>
+
+<span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">PeerDidConfig</span><span class="p">.</span><span class="nf">numalgo2</span><span class="p">()</span>
+
+<span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
+    <span class="n">kms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
+    
+    <span class="nf">didMethods</span> <span class="p">{</span>
+        <span class="p">+</span> <span class="nc">PeerDidMethod</span><span class="p">(</span><span class="n">kms</span><span class="o">!!</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// Use did:peer</span>
+<span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">(</span><span class="s">"peer"</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">algorithm</span> <span class="p">=</span> <span class="nc">KeyAlgorithm</span><span class="p">.</span><span class="nc">ED25519</span>
+<span class="p">}</span>
+
+<span class="kd">val</span> <span class="py">resolved</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="error-handling">
+  
+  
+    <a href="#error-handling" class="anchor-heading" aria-labelledby="error-handling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Error Handling
+  
+  
+</h2>
+    
+
+<p>Common errors and solutions:</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Error</th>
+      <th>Cause</th>
+      <th>Solution</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">Unsupported numalgo</code></td>
+      <td>Invalid numalgo version</td>
+      <td>Use 0, 1, or 2</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">DID document not found</code></td>
+      <td>Document not stored locally</td>
+      <td>Create DID first</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">Public key multibase required</code></td>
+      <td>Missing multibase key</td>
+      <td>Ensure key has multibase format</td>
+    </tr>
+  </tbody>
+</table></div>
+<h2 id="testing">
+  
+  
+    <a href="#testing" class="anchor-heading" aria-labelledby="testing"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Testing
+  
+  
+</h2>
+    
+
+<p>Peer DIDs are ideal for testing since they don’t require external services:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">PeerDidConfig</span><span class="p">.</span><span class="nf">numalgo2</span><span class="p">()</span>
+<span class="kd">val</span> <span class="py">method</span> <span class="p">=</span> <span class="nc">PeerDidMethod</span><span class="p">(</span><span class="n">kms</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+<span class="c1">// Create and resolve (stored locally)</span>
+<span class="kd">val</span> <span class="py">document</span> <span class="p">=</span> <span class="n">method</span><span class="p">.</span><span class="nf">createDid</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+<span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">method</span><span class="p">.</span><span class="nf">resolveDid</span><span class="p">(</span><span class="n">document</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="best-practices">
+  
+  
+    <a href="#best-practices" class="anchor-heading" aria-labelledby="best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Best Practices
+  
+  
+</h2>
+    
+
+<ol>
+  <li><strong>Use numalgo 2</strong>: Recommended for new implementations</li>
+  <li><strong>Local storage</strong>: Consider persistent storage for peer DIDs</li>
+  <li><strong>Service endpoints</strong>: Include service endpoints for P2P communication</li>
+  <li><strong>Key management</strong>: Securely store keys for peer DIDs</li>
+  <li><strong>Document sharing</strong>: Share documents explicitly in P2P scenarios</li>
+</ol>
+<h2 id="advantages">
+  
+  
+    <a href="#advantages" class="anchor-heading" aria-labelledby="advantages"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Advantages
+  
+  
+</h2>
+    
+
+<ul>
+  <li><strong>No external dependencies</strong>: No blockchain or HTTP needed</li>
+  <li><strong>Fast resolution</strong>: Local storage provides instant resolution</li>
+  <li><strong>P2P ready</strong>: Designed for peer-to-peer communication</li>
+  <li><strong>Privacy</strong>: No external registry tracks DIDs</li>
+  <li><strong>Offline support</strong>: Works without network connectivity</li>
+</ul>
+<h2 id="use-cases">
+  
+  
+    <a href="#use-cases" class="anchor-heading" aria-labelledby="use-cases"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Use Cases
+  
+  
+</h2>
+    
+
+<ul>
+  <li><strong>P2P messaging</strong>: Direct communication between peers</li>
+  <li><strong>Offline scenarios</strong>: No external services required</li>
+  <li><strong>Privacy-sensitive</strong>: No external registry tracking</li>
+  <li><strong>Testing</strong>: Fast, local-only DIDs for testing</li>
+  <li><strong>Temporary DIDs</strong>: Short-lived identifiers</li>
+</ul>
+<h2 id="next-steps">
+  
+  
+    <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
+  
+  
+</h2>
+    
+
+<ul>
+  <li>See <a href="/trustweave/contributing/creating-plugins/">Creating Plugins Guide</a> for custom implementations</li>
+  <li>Review <a href="https://identity.foundation/peer-did-method-spec/">Peer DID Specification</a> for protocol details</li>
+  <li>Check <a href="/trustweave/integrations/README/">Integration Modules</a> for other DID methods</li>
+</ul>
+<h2 id="references">
+  
+  
+    <a href="#references" class="anchor-heading" aria-labelledby="references"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> References
+  
+  
+</h2>
+    
+
+<ul>
+  <li><a href="https://identity.foundation/peer-did-method-spec/">Peer DID Method Specification</a></li>
+  <li><a href="https://www.w3.org/TR/did-core/">DID Core Specification</a></li>
+  <li><a href="/trustweave/api-reference/core-api/">TrustWeave Core API</a></li>
+</ul>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

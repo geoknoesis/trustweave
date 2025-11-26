@@ -1,0 +1,1821 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+    .site-nav ul li a {
+      background-image: none;
+    }
+
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>National Education Credentials Scenario (AlgeroPass) | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="National Education Credentials Scenario (AlgeroPass)" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://localhost:4000/trustweave/scenarios/national-education-credentials-algeria-scenario/" />
+<meta property="og:url" content="http://localhost:4000/trustweave/scenarios/national-education-credentials-algeria-scenario/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="National Education Credentials Scenario (AlgeroPass)" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"National Education Credentials Scenario (AlgeroPass)","url":"http://localhost:4000/trustweave/scenarios/national-education-credentials-algeria-scenario/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/beginner-tutorial-series/" class="nav-list-link">Beginner Tutorial Series</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchored-revocation/" class="nav-list-link">Blockchain-Anchored Revocation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/code-style/" class="nav-list-link">Code Style</a></li><li class="nav-list-item"><a href="/trustweave/comparison/README/" class="nav-list-link">Comparison Documentation</a></li><li class="nav-list-item"><a href="/trustweave/configuration/README/" class="nav-list-link">Configuration Reference</a></li><li class="nav-list-item"><a href="/trustweave/advanced/custom-adapters/" class="nav-list-link">Creating Custom Adapters</a></li><li class="nav-list-item"><a href="/trustweave/contributing/creating-plugins/" class="nav-list-link">Creating TrustWeave Plugins</a></li><li class="nav-list-item"><a href="/trustweave/features/credential-exchange-protocols/README/" class="nav-list-link">Credential Exchange Protocols</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/credential-issuance-tutorial/" class="nav-list-link">Credential Issuance Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/algorithm-compatibility-table/" class="nav-list-link">Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/did-operations-tutorial/" class="nav-list-link">DID Operations Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/delegation/" class="nav-list-link">Delegation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/development-setup/" class="nav-list-link">Development Setup</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/evaluation-engines/" class="nav-list-link">Evaluation Engines</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/json-canonicalization/" class="nav-list-link">JSON Canonicalization</a></li><li class="nav-list-item"><a href="/trustweave/advanced/key-rotation/" class="nav-list-link">Key Rotation Strategies</a></li><li class="nav-list-item"><a href="/trustweave/licensing/README/" class="nav-list-link">Licensing Overview</a></li><li class="nav-list-item"><a href="/trustweave/migration/README/" class="nav-list-link">Migration Guides</a></li><li class="nav-list-item"><a href="/trustweave/advanced/performance/" class="nav-list-link">Performance Considerations</a></li><li class="nav-list-item"><a href="/trustweave/advanced/plugin-lifecycle/" class="nav-list-link">Plugin Lifecycle Management</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/proof-purpose-validation/" class="nav-list-link">Proof Purpose Validation</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/credential-exchange-protocols/" class="nav-list-link">Protocol Abstraction Layer</a></li><li class="nav-list-item"><a href="/trustweave/contributing/pull-request-process/" class="nav-list-link">Pull Request Process</a></li><li class="nav-list-item"><a href="/trustweave/security/README/" class="nav-list-link">Security Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/advanced/spi/" class="nav-list-link">Service Provider Interface (SPI)</a></li><li class="nav-list-item"><a href="/trustweave/plugins/" class="nav-list-link">Supported Plugins</a></li><li class="nav-list-item"><a href="/trustweave/contributing/testing-guidelines/" class="nav-list-link">Testing Guidelines</a></li><li class="nav-list-item"><a href="/trustweave/advanced/testing-strategies/" class="nav-list-link">Testing Strategies</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/trust-registry/" class="nav-list-link">Trust Registry</a></li><li class="nav-list-item"><a href="/trustweave/GLOSSARY/" class="nav-list-link">TrustWeave Glossary</a></li><li class="nav-list-item"><a href="/trustweave/TRUSTWEAVE_WHITEPAPER/" class="nav-list-link">TrustWeave SDK: Decentralized Trust Infrastructure</a></li><li class="nav-list-item"><a href="/trustweave/scenarios/README/" class="nav-list-link">Use Case Scenarios</a></li><li class="nav-list-item"><a href="/trustweave/advanced/verification-policies/" class="nav-list-link">Verification Policies</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/wallet-api-tutorial/" class="nav-list-link">Wallet API Tutorial</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="national-education-credentials-scenario-algeropass">
+  
+  
+    <a href="#national-education-credentials-scenario-algeropass" class="anchor-heading" aria-labelledby="national-education-credentials-scenario-algeropass"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> National Education Credentials Scenario (AlgeroPass)
+  
+  
+</h1>
+    
+
+<p>This guide demonstrates how to build a national-level education credential system using TrustWeave, specifically designed for Algeria’s AlgeroPass initiative. You’ll learn how a national education authority can issue verifiable credentials to students, enable cross-institution verification, and provide a unified credential system across the entire country.</p>
+<h2 id="what-youll-build">
+  
+  
+    <a href="#what-youll-build" class="anchor-heading" aria-labelledby="what-youll-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Build
+  
+  
+</h2>
+    
+
+<p>By the end of this tutorial, you’ll have:</p>
+
+<ul>
+  <li>✅ Created DIDs for national education authority and educational institutions</li>
+  <li>✅ Issued national-level education credentials (AlgeroPass credentials)</li>
+  <li>✅ Built cross-institution credential verification system</li>
+  <li>✅ Implemented credential portability across Algerian universities</li>
+  <li>✅ Created student credential wallet for national credentials</li>
+  <li>✅ Anchored critical credentials to blockchain for immutability</li>
+  <li>✅ Built complete national education credential ecosystem</li>
+</ul>
+<h2 id="big-picture--significance">
+  
+  
+    <a href="#big-picture--significance" class="anchor-heading" aria-labelledby="big-picture--significance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Big Picture &amp; Significance
+  
+  
+</h2>
+    
+<h3 id="the-national-education-credential-challenge">
+  
+  
+    <a href="#the-national-education-credential-challenge" class="anchor-heading" aria-labelledby="the-national-education-credential-challenge"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The National Education Credential Challenge
+  
+  
+</h3>
+    
+
+<p>National education systems face the challenge of providing unified, verifiable credentials that work across all educational institutions. Students need credentials that are recognized nationally, portable across institutions, and verifiable without contacting individual universities.</p>
+
+<p><strong>Industry Context</strong>:</p>
+<ul>
+  <li><strong>Market Size</strong>: Global digital identity in education market projected to reach $8.1 billion by 2027</li>
+  <li><strong>National Initiatives</strong>: Countries worldwide implementing national education credential systems</li>
+  <li><strong>Student Mobility</strong>: Increasing need for credentials that work across institutions</li>
+  <li><strong>Fraud Prevention</strong>: National-level systems reduce credential fraud</li>
+  <li><strong>Interoperability</strong>: Standard format enables seamless credential sharing</li>
+</ul>
+
+<p><strong>Why This Matters</strong>:</p>
+<ol>
+  <li><strong>National Recognition</strong>: Credentials recognized across all Algerian institutions</li>
+  <li><strong>Student Mobility</strong>: Easy transfer between universities</li>
+  <li><strong>Fraud Prevention</strong>: Cryptographic proof prevents credential forgery</li>
+  <li><strong>Efficiency</strong>: Eliminates need for manual verification between institutions</li>
+  <li><strong>Portability</strong>: Students own and control their credentials</li>
+  <li><strong>Compliance</strong>: Meets national education standards and regulations</li>
+</ol>
+<h3 id="the-national-credential-problem">
+  
+  
+    <a href="#the-national-credential-problem" class="anchor-heading" aria-labelledby="the-national-credential-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The National Credential Problem
+  
+  
+</h3>
+    
+
+<p>Traditional national education systems face critical issues:</p>
+<ul>
+  <li><strong>Fragmented Systems</strong>: Each institution has its own credential system</li>
+  <li><strong>No Portability</strong>: Credentials don’t transfer between institutions</li>
+  <li><strong>Manual Verification</strong>: Slow, expensive verification processes</li>
+  <li><strong>Fraud Risk</strong>: Paper credentials can be forged</li>
+  <li><strong>No National Registry</strong>: No unified system for credential management</li>
+  <li><strong>Privacy Concerns</strong>: Centralized databases create privacy risks</li>
+</ul>
+<h2 id="value-proposition">
+  
+  
+    <a href="#value-proposition" class="anchor-heading" aria-labelledby="value-proposition"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Value Proposition
+  
+  
+</h2>
+    
+<h3 id="problems-solved">
+  
+  
+    <a href="#problems-solved" class="anchor-heading" aria-labelledby="problems-solved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Problems Solved
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>National Recognition</strong>: Credentials recognized across all Algerian institutions</li>
+  <li><strong>Cross-Institution Portability</strong>: Credentials work at any university</li>
+  <li><strong>Instant Verification</strong>: Cryptographic proof without contacting institutions</li>
+  <li><strong>Fraud Prevention</strong>: Tamper-proof credentials cannot be forged</li>
+  <li><strong>Student Control</strong>: Students own and control their credentials</li>
+  <li><strong>Interoperability</strong>: Standard format works across all institutions</li>
+  <li><strong>Efficiency</strong>: Eliminates expensive verification processes</li>
+</ol>
+<h3 id="business-benefits">
+  
+  
+    <a href="#business-benefits" class="anchor-heading" aria-labelledby="business-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Business Benefits
+  
+  
+</h3>
+    
+
+<p><strong>For National Education Authority</strong>:</p>
+<ul>
+  <li><strong>Unified System</strong>: Single credential system for entire country</li>
+  <li><strong>Compliance</strong>: Meet national education standards</li>
+  <li><strong>Efficiency</strong>: Automated credential issuance and verification</li>
+  <li><strong>Fraud Prevention</strong>: Reduced credential fraud</li>
+  <li><strong>Cost Savings</strong>: Eliminate duplicate verification systems</li>
+</ul>
+
+<p><strong>For Educational Institutions</strong>:</p>
+<ul>
+  <li><strong>Efficiency</strong>: Instant credential verification</li>
+  <li><strong>Cost Savings</strong>: Reduced verification workload</li>
+  <li><strong>Trust</strong>: Cryptographic proof of authenticity</li>
+  <li><strong>Compliance</strong>: Meet national standards</li>
+  <li><strong>Student Satisfaction</strong>: Improved student experience</li>
+</ul>
+
+<p><strong>For Students</strong>:</p>
+<ul>
+  <li><strong>Portability</strong>: Credentials work across all institutions</li>
+  <li><strong>Control</strong>: Own and control credentials</li>
+  <li><strong>Privacy</strong>: Selective disclosure protects privacy</li>
+  <li><strong>Convenience</strong>: Access credentials from any device</li>
+  <li><strong>Mobility</strong>: Easy transfer between universities</li>
+</ul>
+
+<p><strong>For Employers</strong>:</p>
+<ul>
+  <li><strong>Speed</strong>: Instant verification</li>
+  <li><strong>Trust</strong>: Cryptographic proof of authenticity</li>
+  <li><strong>National Recognition</strong>: Credentials recognized nationwide</li>
+  <li><strong>Efficiency</strong>: Streamlined hiring process</li>
+</ul>
+<h3 id="roi-considerations">
+  
+  
+    <a href="#roi-considerations" class="anchor-heading" aria-labelledby="roi-considerations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ROI Considerations
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Verification Costs</strong>: 80-90% reduction in verification costs</li>
+  <li><strong>Fraud Prevention</strong>: Eliminates credential fraud</li>
+  <li><strong>Efficiency</strong>: 10x faster verification process</li>
+  <li><strong>Student Mobility</strong>: Increased student transfers between institutions</li>
+  <li><strong>National Compliance</strong>: Automated compliance with national standards</li>
+</ul>
+<h2 id="understanding-the-problem">
+  
+  
+    <a href="#understanding-the-problem" class="anchor-heading" aria-labelledby="understanding-the-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Understanding the Problem
+  
+  
+</h2>
+    
+
+<p>National education credential systems face several critical challenges:</p>
+
+<ol>
+  <li><strong>Fragmentation</strong>: Each institution has its own system</li>
+  <li><strong>No Portability</strong>: Credentials don’t transfer between institutions</li>
+  <li><strong>Manual Verification</strong>: Slow, expensive processes</li>
+  <li><strong>Fraud Risk</strong>: Credentials can be forged</li>
+  <li><strong>Privacy Concerns</strong>: Centralized databases create risks</li>
+  <li><strong>Compliance</strong>: Complex national standards</li>
+  <li><strong>Student Mobility</strong>: Difficult to transfer credentials</li>
+</ol>
+<h3 id="real-world-pain-points">
+  
+  
+    <a href="#real-world-pain-points" class="anchor-heading" aria-labelledby="real-world-pain-points"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Pain Points
+  
+  
+</h3>
+    
+
+<p><strong>Example 1: Student Transfer</strong></p>
+<ul>
+  <li>Current: Student must request transcripts from each institution</li>
+  <li>Problem: Slow, expensive, not portable</li>
+  <li>Solution: National credentials transfer instantly</li>
+</ul>
+
+<p><strong>Example 2: Employer Verification</strong></p>
+<ul>
+  <li>Current: Must contact multiple institutions</li>
+  <li>Problem: Slow, expensive, inconsistent</li>
+  <li>Solution: Instant verification with national credentials</li>
+</ul>
+
+<p><strong>Example 3: Graduate School Applications</strong></p>
+<ul>
+  <li>Current: Manual submission of transcripts</li>
+  <li>Problem: Time-consuming, privacy concerns</li>
+  <li>Solution: Selective disclosure of credentials</li>
+</ul>
+<h2 id="how-it-works-national-education-credential-flow">
+  
+  
+    <a href="#how-it-works-national-education-credential-flow" class="anchor-heading" aria-labelledby="how-it-works-national-education-credential-flow"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How It Works: National Education Credential Flow
+  
+  
+</h2>
+    
+
+<pre><code class="language-mermaid">flowchart TD
+    A["National Education Authority&lt;br/&gt;Ministry of Higher Education&lt;br/&gt;Creates Authority DID&lt;br/&gt;Manages National Registry"] --&gt;|issues national credentials| B["AlgeroPass Credential&lt;br/&gt;Student DID&lt;br/&gt;Education Information&lt;br/&gt;Institution Reference&lt;br/&gt;National Recognition&lt;br/&gt;Proof cryptographic"]
+    B --&gt;|stored in student wallet| C["Student National Wallet&lt;br/&gt;Stores AlgeroPass credentials&lt;br/&gt;Manages all education credentials&lt;br/&gt;Creates presentations"]
+    C --&gt;|presents to institution| D["Educational Institution&lt;br/&gt;Verifies national credential&lt;br/&gt;Checks institution reference&lt;br/&gt;Grants access or credit"]
+    C --&gt;|presents to employer| E["Employer&lt;br/&gt;Verifies national credential&lt;br/&gt;Checks authenticity&lt;br/&gt;Validates education level"]
+    
+    style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
+    style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style D fill:#c2185b,stroke:#880e4f,stroke-width:2px,color:#fff
+    style E fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
+</code></pre>
+<h2 id="key-concepts">
+  
+  
+    <a href="#key-concepts" class="anchor-heading" aria-labelledby="key-concepts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Concepts
+  
+  
+</h2>
+    
+<h3 id="algeropass-credential-types">
+  
+  
+    <a href="#algeropass-credential-types" class="anchor-heading" aria-labelledby="algeropass-credential-types"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> AlgeroPass Credential Types
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>Student Enrollment Credential</strong>: Proves student enrollment at national level</li>
+  <li><strong>Academic Achievement Credential</strong>: Records academic achievements and grades</li>
+  <li><strong>Degree Credential</strong>: National recognition of degree completion</li>
+  <li><strong>Transfer Credential</strong>: Enables transfer between institutions</li>
+  <li><strong>Continuing Education Credential</strong>: Records ongoing education</li>
+</ol>
+<h3 id="national-registry">
+  
+  
+    <a href="#national-registry" class="anchor-heading" aria-labelledby="national-registry"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> National Registry
+  
+  
+</h3>
+    
+
+<ul>
+  <li><strong>Institution Registry</strong>: All recognized educational institutions</li>
+  <li><strong>Credential Registry</strong>: National registry of issued credentials</li>
+  <li><strong>Verification Registry</strong>: Public verification endpoints</li>
+  <li><strong>Revocation Registry</strong>: National revocation list</li>
+</ul>
+<h3 id="credential-levels">
+  
+  
+    <a href="#credential-levels" class="anchor-heading" aria-labelledby="credential-levels"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Credential Levels
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>Basic</strong>: Student enrollment verification</li>
+  <li><strong>Standard</strong>: Academic achievements and grades</li>
+  <li><strong>Enhanced</strong>: Complete academic history</li>
+  <li><strong>Premium</strong>: Includes certifications and continuing education</li>
+</ol>
+<h2 id="prerequisites">
+  
+  
+    <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
+  
+  
+</h2>
+    
+
+<ul>
+  <li>Java 21+</li>
+  <li>Kotlin 2.2.0+</li>
+  <li>Gradle 8.5+</li>
+  <li>Basic understanding of Kotlin and coroutines</li>
+  <li>Familiarity with education credential concepts</li>
+</ul>
+<h2 id="step-1-add-dependencies">
+  
+  
+    <a href="#step-1-add-dependencies" class="anchor-heading" aria-labelledby="step-1-add-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Add Dependencies
+  
+  
+</h2>
+    
+
+<p>Add TrustWeave dependencies to your <code class="language-plaintext highlighter-rouge">build.gradle.kts</code>. These modules cover DID support, credential issuance, wallet storage, and the in-memory services used across the AlgeroPass scenario.</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+</pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
+    <span class="c1">// Core TrustWeave modules</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    
+    <span class="c1">// Test kit for in-memory implementations</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    
+    <span class="c1">// Kotlinx Serialization</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
+    
+    <span class="c1">// Coroutines</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Result:</strong> After syncing, you can execute every snippet in this guide without extra setup.</p>
+<h2 id="step-2-setup-and-create-national-authority-did">
+  
+  
+    <a href="#step-2-setup-and-create-national-authority-did" class="anchor-heading" aria-labelledby="step-2-setup-and-create-national-authority-did"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Setup and Create National Authority DID
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Initialize the national education credential system and create DIDs for the national education authority.</p>
+
+<p><strong>Why This Matters</strong>: The national education authority needs a verifiable identity to issue credentials. Its DID provides a persistent identifier that all institutions and students can trust.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Authority DID</strong>: Represents the national education authority</li>
+  <li><strong>Persistent Identity</strong>: Survives across time and systems</li>
+  <li><strong>Trust</strong>: All parties trust credentials from this DID</li>
+  <li><strong>Verification</strong>: Anyone can verify credentials came from authority</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.did.DidKeyMockMethod</span>
+<span class="k">import</span> <span class="nn">com.trustweave.testkit.kms.InMemoryKeyManagementService</span>
+<span class="k">import</span> <span class="nn">com.trustweave.did.DidMethodRegistry</span>
+<span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
+
+<span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"=== National Education Credentials (AlgeroPass) Scenario ===\n"</span><span class="p">)</span>
+    
+    <span class="c1">// Step 1: Setup services</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Step 1: Setting up services..."</span><span class="p">)</span>
+    
+    <span class="c1">// Separate KMS for different participants</span>
+    <span class="c1">// National authority, institutions, and students each have their own keys</span>
+    <span class="kd">val</span> <span class="py">authorityKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span> <span class="c1">// For national education authority</span>
+    <span class="kd">val</span> <span class="py">institutionKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span> <span class="c1">// For educational institutions</span>
+    <span class="kd">val</span> <span class="py">studentKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span> <span class="c1">// For students</span>
+    
+    <span class="kd">val</span> <span class="py">didMethod</span> <span class="p">=</span> <span class="nc">DidKeyMockMethod</span><span class="p">(</span><span class="n">authorityKms</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">didRegistry</span> <span class="p">=</span> <span class="nc">DidMethodRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span> <span class="nf">register</span><span class="p">(</span><span class="n">didMethod</span><span class="p">)</span> <span class="p">}</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Services initialized"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-3-create-national-authority-and-institution-dids">
+  
+  
+    <a href="#step-3-create-national-authority-and-institution-dids" class="anchor-heading" aria-labelledby="step-3-create-national-authority-and-institution-dids"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Create National Authority and Institution DIDs
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Create DIDs for the national education authority and educational institutions.</p>
+
+<p><strong>Why This Matters</strong>: Both the national authority and institutions need verifiable identities. The authority issues national credentials, while institutions provide education and reference information.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Authority DID</strong>: National education authority identity</li>
+  <li><strong>Institution DID</strong>: Individual educational institution identity</li>
+  <li><strong>Relationship</strong>: Authority can verify institution credentials</li>
+  <li><strong>Trust</strong>: Students trust credentials from recognized institutions</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+</pre></td><td class="rouge-code"><pre>    <span class="c1">// Step 2: Create national authority and institution DIDs</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 2: Creating national authority and institution DIDs..."</span><span class="p">)</span>
+    
+    <span class="c1">// National Education Authority DID</span>
+    <span class="c1">// Represents the Ministry of Higher Education and Scientific Research</span>
+    <span class="c1">// This is the trusted issuer of national credentials</span>
+    <span class="kd">val</span> <span class="py">authorityDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"National Education Authority DID: ${authorityDid.id}"</span><span class="p">)</span>
+    
+    <span class="c1">// Educational Institution DID</span>
+    <span class="c1">// Example: University of Algiers, University of Oran, etc.</span>
+    <span class="c1">// Institutions are registered with the national authority</span>
+    <span class="kd">val</span> <span class="py">institutionDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Educational Institution DID: ${institutionDid.id}"</span><span class="p">)</span>
+    
+    <span class="c1">// Create institution registration credential</span>
+    <span class="c1">// This proves the institution is recognized by the national authority</span>
+    <span class="kd">val</span> <span class="py">institutionRegistrationCredential</span> <span class="p">=</span> <span class="nf">createInstitutionRegistrationCredential</span><span class="p">(</span>
+        <span class="n">institutionDid</span> <span class="p">=</span> <span class="n">institutionDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">authorityDid</span> <span class="p">=</span> <span class="n">authorityDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">institutionName</span> <span class="p">=</span> <span class="s">"University of Algiers"</span><span class="p">,</span>
+        <span class="n">institutionCode</span> <span class="p">=</span> <span class="s">"UA-001"</span><span class="p">,</span>
+        <span class="n">recognitionDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">()</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Institution registration credential created:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Institution: University of Algiers"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Code: UA-001"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Recognized by: ${authorityDid.id}"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-4-create-student-did-and-enrollment-credential">
+  
+  
+    <a href="#step-4-create-student-did-and-enrollment-credential" class="anchor-heading" aria-labelledby="step-4-create-student-did-and-enrollment-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Create Student DID and Enrollment Credential
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Create DID for student and issue national enrollment credential.</p>
+
+<p><strong>Why This Matters</strong>: Students need verifiable identities and national credentials proving their enrollment. This enables cross-institution recognition and portability.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Student DID</strong>: Individual student identity</li>
+  <li><strong>Enrollment Credential</strong>: Proves student enrollment at national level</li>
+  <li><strong>National Recognition</strong>: Credential recognized by all institutions</li>
+  <li><strong>Portability</strong>: Enables student mobility</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.models.VerifiableCredential</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
+<span class="k">import</span> <span class="nn">java.time.Instant</span>
+
+    <span class="c1">// Step 3: Create student DID and enrollment credential</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 3: Creating student DID and enrollment credential..."</span><span class="p">)</span>
+    
+    <span class="c1">// Student DID</span>
+    <span class="c1">// Represents individual student</span>
+    <span class="c1">// Students own their DIDs and credentials</span>
+    <span class="kd">val</span> <span class="py">studentDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Student DID: ${studentDid.id}"</span><span class="p">)</span>
+    
+    <span class="c1">// Create AlgeroPass enrollment credential</span>
+    <span class="c1">// This is the national-level credential proving student enrollment</span>
+    <span class="c1">// It references the institution but is issued by national authority</span>
+    <span class="kd">val</span> <span class="py">enrollmentCredential</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+        <span class="n">id</span> <span class="p">=</span> <span class="s">"https://algeropass.dz/credentials/${studentDid.id.substringAfterLast("</span><span class="p">:</span><span class="s">")}/enrollment"</span><span class="p">,</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"AlgeroPassCredential"</span><span class="p">,</span> <span class="s">"EnrollmentCredential"</span><span class="p">,</span> <span class="s">"EducationCredential"</span><span class="p">),</span>
+        <span class="n">issuer</span> <span class="p">=</span> <span class="n">authorityDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="c1">// National authority issues credential</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="n">studentDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"algeroPass"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"credentialType"</span><span class="p">,</span> <span class="s">"enrollment"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"studentId"</span><span class="p">,</span> <span class="s">"STU-2024-001234"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"nationalId"</span><span class="p">,</span> <span class="s">"1234567890123"</span><span class="p">)</span> <span class="c1">// Algerian national ID</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"institution"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"institutionDid"</span><span class="p">,</span> <span class="n">institutionDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"institutionName"</span><span class="p">,</span> <span class="s">"University of Algiers"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"institutionCode"</span><span class="p">,</span> <span class="s">"UA-001"</span><span class="p">)</span>
+                <span class="p">})</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"program"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"programName"</span><span class="p">,</span> <span class="s">"Computer Science"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"programCode"</span><span class="p">,</span> <span class="s">"CS-BS"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"degreeLevel"</span><span class="p">,</span> <span class="s">"Bachelor"</span><span class="p">)</span>
+                <span class="p">})</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"enrollmentDate"</span><span class="p">,</span> <span class="s">"2024-09-01"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"status"</span><span class="p">,</span> <span class="s">"active"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"academicYear"</span><span class="p">,</span> <span class="s">"2024-2025"</span><span class="p">)</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">(),</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="k">null</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"AlgeroPass enrollment credential created:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Student ID: STU-2024-001234"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Institution: University of Algiers"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Program: Computer Science (Bachelor)"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Status: active"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-5-issue-enrollment-credential-with-proof">
+  
+  
+    <a href="#step-5-issue-enrollment-credential-with-proof" class="anchor-heading" aria-labelledby="step-5-issue-enrollment-credential-with-proof"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Issue Enrollment Credential with Proof
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Cryptographically sign the enrollment credential to make it verifiable.</p>
+
+<p><strong>Why This Matters</strong>: Cryptographic proof ensures the credential is authentic and issued by the national authority. This is critical for trust - institutions need to verify credentials are legitimate.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Key Generation</strong>: Generate authority’s signing key</li>
+  <li><strong>Proof Generation</strong>: Create cryptographic proof</li>
+  <li><strong>Credential Issuance</strong>: Sign credential with authority’s key</li>
+  <li><strong>Verification</strong>: Anyone can verify credential authenticity</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.issuer.CredentialIssuer</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.proof.Ed25519ProofGenerator</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.CredentialIssuanceOptions</span>
+
+    <span class="c1">// Step 4: Issue enrollment credential with proof</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 4: Issuing AlgeroPass enrollment credential..."</span><span class="p">)</span>
+    
+    <span class="c1">// Generate authority's signing key</span>
+    <span class="c1">// This key will be used to sign all national credentials</span>
+    <span class="c1">// In production, use hardware security module (HSM)</span>
+    <span class="kd">val</span> <span class="py">authorityKey</span> <span class="p">=</span> <span class="n">authorityKms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span>
+    
+    <span class="c1">// Create proof generator for authority</span>
+    <span class="kd">val</span> <span class="py">authorityProofGenerator</span> <span class="p">=</span> <span class="nc">Ed25519ProofGenerator</span><span class="p">(</span>
+        <span class="n">signer</span> <span class="p">=</span> <span class="p">{</span> <span class="n">data</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">authorityKms</span><span class="p">.</span><span class="nf">sign</span><span class="p">(</span><span class="n">keyId</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span> <span class="p">},</span>
+        <span class="n">getPublicKeyId</span> <span class="p">=</span> <span class="p">{</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">authorityKey</span><span class="p">.</span><span class="n">id</span> <span class="p">}</span>
+    <span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">didResolver</span> <span class="p">=</span> <span class="nc">CredentialDidResolver</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span>
+        <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">).</span><span class="nf">toCredentialDidResolution</span><span class="p">()</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Create credential issuer</span>
+    <span class="kd">val</span> <span class="py">authorityIssuer</span> <span class="p">=</span> <span class="nc">CredentialIssuer</span><span class="p">(</span>
+        <span class="n">proofGenerator</span> <span class="p">=</span> <span class="n">authorityProofGenerator</span><span class="p">,</span>
+        <span class="n">resolveDid</span> <span class="p">=</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span> <span class="n">didResolver</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">)</span><span class="o">?.</span><span class="n">isResolvable</span> <span class="p">==</span> <span class="k">true</span> <span class="p">}</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Issue enrollment credential</span>
+    <span class="c1">// This proves the student is enrolled at national level</span>
+    <span class="kd">val</span> <span class="py">issuedEnrollmentCredential</span> <span class="p">=</span> <span class="n">authorityIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">enrollmentCredential</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">authorityDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">keyId</span> <span class="p">=</span> <span class="n">authorityKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"AlgeroPass enrollment credential issued:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Proof: ${issuedEnrollmentCredential.proof != null}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Issuer: ${authorityDid.id}"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-6-create-academic-achievement-credential">
+  
+  
+    <a href="#step-6-create-academic-achievement-credential" class="anchor-heading" aria-labelledby="step-6-create-academic-achievement-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 6: Create Academic Achievement Credential
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Create credential recording academic achievements and grades.</p>
+
+<p><strong>Why This Matters</strong>: Academic achievement credentials provide verifiable proof of student performance. This enables credit transfer and recognition across institutions.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Achievement Tracking</strong>: Records academic performance</li>
+  <li><strong>National Recognition</strong>: Achievements recognized nationally</li>
+  <li><strong>Credit Transfer</strong>: Enables transfer between institutions</li>
+  <li><strong>Verification</strong>: Institutions can verify achievements</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+</pre></td><td class="rouge-code"><pre>    <span class="c1">// Step 5: Create academic achievement credential</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 5: Creating academic achievement credential..."</span><span class="p">)</span>
+    
+    <span class="c1">// Academic achievement credential records student performance</span>
+    <span class="c1">// This is issued by the institution but recognized nationally</span>
+    <span class="kd">val</span> <span class="py">achievementCredential</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"AlgeroPassCredential"</span><span class="p">,</span> <span class="s">"AchievementCredential"</span><span class="p">,</span> <span class="s">"EducationCredential"</span><span class="p">),</span>
+        <span class="n">issuer</span> <span class="p">=</span> <span class="n">institutionDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="c1">// Institution issues achievement credential</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="n">studentDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"algeroPass"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"credentialType"</span><span class="p">,</span> <span class="s">"achievement"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"studentId"</span><span class="p">,</span> <span class="s">"STU-2024-001234"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"institution"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"institutionDid"</span><span class="p">,</span> <span class="n">institutionDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"institutionName"</span><span class="p">,</span> <span class="s">"University of Algiers"</span><span class="p">)</span>
+                <span class="p">})</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"academicYear"</span><span class="p">,</span> <span class="s">"2024-2025"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"semester"</span><span class="p">,</span> <span class="s">"Fall"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"achievements"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"courses"</span><span class="p">,</span> <span class="nf">listOf</span><span class="p">(</span>
+                        <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                            <span class="nf">put</span><span class="p">(</span><span class="s">"courseCode"</span><span class="p">,</span> <span class="s">"CS101"</span><span class="p">)</span>
+                            <span class="nf">put</span><span class="p">(</span><span class="s">"courseName"</span><span class="p">,</span> <span class="s">"Introduction to Computer Science"</span><span class="p">)</span>
+                            <span class="nf">put</span><span class="p">(</span><span class="s">"credits"</span><span class="p">,</span> <span class="s">"3"</span><span class="p">)</span>
+                            <span class="nf">put</span><span class="p">(</span><span class="s">"grade"</span><span class="p">,</span> <span class="s">"A"</span><span class="p">)</span>
+                            <span class="nf">put</span><span class="p">(</span><span class="s">"gpa"</span><span class="p">,</span> <span class="s">"4.0"</span><span class="p">)</span>
+                        <span class="p">},</span>
+                        <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                            <span class="nf">put</span><span class="p">(</span><span class="s">"courseCode"</span><span class="p">,</span> <span class="s">"MATH101"</span><span class="p">)</span>
+                            <span class="nf">put</span><span class="p">(</span><span class="s">"courseName"</span><span class="p">,</span> <span class="s">"Calculus I"</span><span class="p">)</span>
+                            <span class="nf">put</span><span class="p">(</span><span class="s">"credits"</span><span class="p">,</span> <span class="s">"4"</span><span class="p">)</span>
+                            <span class="nf">put</span><span class="p">(</span><span class="s">"grade"</span><span class="p">,</span> <span class="s">"B+"</span><span class="p">)</span>
+                            <span class="nf">put</span><span class="p">(</span><span class="s">"gpa"</span><span class="p">,</span> <span class="s">"3.5"</span><span class="p">)</span>
+                        <span class="p">}</span>
+                    <span class="p">))</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"semesterGPA"</span><span class="p">,</span> <span class="s">"3.75"</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"cumulativeGPA"</span><span class="p">,</span> <span class="s">"3.75"</span><span class="p">)</span>
+                <span class="p">})</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"timestamp"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">(),</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="k">null</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Issue achievement credential</span>
+    <span class="kd">val</span> <span class="py">institutionKey</span> <span class="p">=</span> <span class="n">institutionKms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">institutionProofGenerator</span> <span class="p">=</span> <span class="nc">Ed25519ProofGenerator</span><span class="p">(</span>
+        <span class="n">signer</span> <span class="p">=</span> <span class="p">{</span> <span class="n">data</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">institutionKms</span><span class="p">.</span><span class="nf">sign</span><span class="p">(</span><span class="n">keyId</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span> <span class="p">},</span>
+        <span class="n">getPublicKeyId</span> <span class="p">=</span> <span class="p">{</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">institutionKey</span><span class="p">.</span><span class="n">id</span> <span class="p">}</span>
+    <span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">institutionIssuer</span> <span class="p">=</span> <span class="nc">CredentialIssuer</span><span class="p">(</span>
+        <span class="n">proofGenerator</span> <span class="p">=</span> <span class="n">institutionProofGenerator</span><span class="p">,</span>
+        <span class="n">resolveDid</span> <span class="p">=</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span> <span class="n">didResolver</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">)</span><span class="o">?.</span><span class="n">isResolvable</span> <span class="p">==</span> <span class="k">true</span> <span class="p">}</span>
+    <span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">issuedAchievementCredential</span> <span class="p">=</span> <span class="n">institutionIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">achievementCredential</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">institutionDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">keyId</span> <span class="p">=</span> <span class="n">institutionKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Academic achievement credential created:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Semester GPA: 3.75"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Courses: 2"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Issued by: University of Algiers"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-7-store-credentials-in-student-wallet">
+  
+  
+    <a href="#step-7-store-credentials-in-student-wallet" class="anchor-heading" aria-labelledby="step-7-store-credentials-in-student-wallet"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 7: Store Credentials in Student Wallet
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Store national credentials in student’s wallet for easy access and management.</p>
+
+<p><strong>Why This Matters</strong>: Students need a secure place to store their credentials. The wallet enables easy access, organization, and presentation of credentials.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Credential Storage</strong>: Secure storage for credentials</li>
+  <li><strong>Organization</strong>: Organize credentials by type</li>
+  <li><strong>Access Control</strong>: Students control their credentials</li>
+  <li><strong>Presentation</strong>: Easy creation of presentations</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.credential.InMemoryWallet</span>
+
+    <span class="c1">// Step 6: Store credentials in student wallet</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 6: Storing credentials in student wallet..."</span><span class="p">)</span>
+    
+    <span class="c1">// Create student's national credential wallet</span>
+    <span class="c1">// This wallet stores all AlgeroPass credentials</span>
+    <span class="kd">val</span> <span class="py">studentWallet</span> <span class="p">=</span> <span class="nc">InMemoryWallet</span><span class="p">(</span>
+        <span class="n">walletDid</span> <span class="p">=</span> <span class="n">studentDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">holderDid</span> <span class="p">=</span> <span class="n">studentDid</span><span class="p">.</span><span class="n">id</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Store enrollment credential</span>
+    <span class="kd">val</span> <span class="py">enrollmentCredentialId</span> <span class="p">=</span> <span class="n">studentWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">issuedEnrollmentCredential</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Enrollment credential stored: $enrollmentCredentialId"</span><span class="p">)</span>
+    
+    <span class="c1">// Store achievement credential</span>
+    <span class="kd">val</span> <span class="py">achievementCredentialId</span> <span class="p">=</span> <span class="n">studentWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">issuedAchievementCredential</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Achievement credential stored: $achievementCredentialId"</span><span class="p">)</span>
+    
+    <span class="c1">// Create collections for organization</span>
+    <span class="kd">val</span> <span class="py">enrollmentCollection</span> <span class="p">=</span> <span class="n">studentWallet</span><span class="p">.</span><span class="nf">createCollection</span><span class="p">(</span><span class="s">"AlgeroPass Enrollment"</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">achievementCollection</span> <span class="p">=</span> <span class="n">studentWallet</span><span class="p">.</span><span class="nf">createCollection</span><span class="p">(</span><span class="s">"Academic Achievements"</span><span class="p">)</span>
+    
+    <span class="n">studentWallet</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">enrollmentCredentialId</span><span class="p">,</span> <span class="n">enrollmentCollection</span><span class="p">)</span>
+    <span class="n">studentWallet</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">achievementCredentialId</span><span class="p">,</span> <span class="n">achievementCollection</span><span class="p">)</span>
+    
+    <span class="c1">// Tag credentials for easy searching</span>
+    <span class="n">studentWallet</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">enrollmentCredentialId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"algeropass"</span><span class="p">,</span> <span class="s">"enrollment"</span><span class="p">,</span> <span class="s">"national"</span><span class="p">))</span>
+    <span class="n">studentWallet</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">achievementCredentialId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"algeropass"</span><span class="p">,</span> <span class="s">"achievement"</span><span class="p">,</span> <span class="s">"grades"</span><span class="p">))</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Credentials organized in wallet:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Collections: 2"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Total credentials: ${studentWallet.listCredentials().size}"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-8-verify-credentials">
+  
+  
+    <a href="#step-8-verify-credentials" class="anchor-heading" aria-labelledby="step-8-verify-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 8: Verify Credentials
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Verify credentials are authentic and valid.</p>
+
+<p><strong>Why This Matters</strong>: Verification ensures credentials are legitimate and haven’t been tampered with. This is critical for trust - institutions need to verify credentials before accepting them.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Credential Verification</strong>: Verify credential authenticity</li>
+  <li><strong>Issuer Verification</strong>: Verify issuer is legitimate</li>
+  <li><strong>Revocation Check</strong>: Check if credential is revoked</li>
+  <li><strong>Trust</strong>: Builds trust in credential system</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.verifier.CredentialVerifier</span>
+<span class="k">import</span> <span class="nn">com.trustweave.credential.CredentialVerificationOptions</span>
+
+    <span class="c1">// Step 7: Verify credentials</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 7: Verifying credentials..."</span><span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">verifier</span> <span class="p">=</span> <span class="nc">CredentialVerifier</span><span class="p">(</span><span class="n">didResolver</span><span class="p">)</span>
+    
+    <span class="c1">// Verify enrollment credential</span>
+    <span class="kd">val</span> <span class="py">enrollmentVerification</span> <span class="p">=</span> <span class="n">verifier</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">issuedEnrollmentCredential</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialVerificationOptions</span><span class="p">(</span>
+            <span class="n">checkRevocation</span> <span class="p">=</span> <span class="k">false</span><span class="p">,</span>
+            <span class="n">checkExpiration</span> <span class="p">=</span> <span class="k">false</span><span class="p">,</span>
+            <span class="n">didResolver</span> <span class="p">=</span> <span class="n">didResolver</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">enrollmentVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Enrollment credential verified"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"  - Issuer: ${authorityDid.id}"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"  - Student: ${studentDid.id}"</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Enrollment credential verification failed:"</span><span class="p">)</span>
+        <span class="n">enrollmentVerification</span><span class="p">.</span><span class="n">errors</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="nf">println</span><span class="p">(</span><span class="s">"  - $it"</span><span class="p">)</span> <span class="p">}</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Verify achievement credential</span>
+    <span class="kd">val</span> <span class="py">achievementVerification</span> <span class="p">=</span> <span class="n">verifier</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">issuedAchievementCredential</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialVerificationOptions</span><span class="p">(</span>
+            <span class="n">checkRevocation</span> <span class="p">=</span> <span class="k">false</span><span class="p">,</span>
+            <span class="n">checkExpiration</span> <span class="p">=</span> <span class="k">false</span><span class="p">,</span>
+            <span class="n">didResolver</span> <span class="p">=</span> <span class="n">didResolver</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">achievementVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Achievement credential verified"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"  - Issuer: ${institutionDid.id}"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"  - Institution: University of Algiers"</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Achievement credential verification failed:"</span><span class="p">)</span>
+        <span class="n">achievementVerification</span><span class="p">.</span><span class="n">errors</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="nf">println</span><span class="p">(</span><span class="s">"  - $it"</span><span class="p">)</span> <span class="p">}</span>
+    <span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-9-create-transfer-credential">
+  
+  
+    <a href="#step-9-create-transfer-credential" class="anchor-heading" aria-labelledby="step-9-create-transfer-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 9: Create Transfer Credential
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Create credential enabling student transfer between institutions.</p>
+
+<p><strong>Why This Matters</strong>: Transfer credentials enable student mobility. Students can transfer between institutions while maintaining their academic history and achievements.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Student Mobility</strong>: Enables transfer between institutions</li>
+  <li><strong>Academic History</strong>: Preserves academic achievements</li>
+  <li><strong>Credit Transfer</strong>: Enables credit recognition</li>
+  <li><strong>National Recognition</strong>: Transfer recognized nationally</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+</pre></td><td class="rouge-code"><pre>    <span class="c1">// Step 8: Create transfer credential</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 8: Creating transfer credential..."</span><span class="p">)</span>
+    
+    <span class="c1">// Target institution for transfer</span>
+    <span class="kd">val</span> <span class="py">targetInstitutionDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
+    
+    <span class="c1">// Transfer credential enables student to transfer</span>
+    <span class="c1">// This is issued by the national authority and references both institutions</span>
+    <span class="kd">val</span> <span class="py">transferCredential</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"AlgeroPassCredential"</span><span class="p">,</span> <span class="s">"TransferCredential"</span><span class="p">,</span> <span class="s">"EducationCredential"</span><span class="p">),</span>
+        <span class="n">issuer</span> <span class="p">=</span> <span class="n">authorityDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="c1">// National authority issues transfer credential</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="n">studentDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"algeroPass"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"credentialType"</span><span class="p">,</span> <span class="s">"transfer"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"studentId"</span><span class="p">,</span> <span class="s">"STU-2024-001234"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"sourceInstitution"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"institutionDid"</span><span class="p">,</span> <span class="n">institutionDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"institutionName"</span><span class="p">,</span> <span class="s">"University of Algiers"</span><span class="p">)</span>
+                <span class="p">})</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"targetInstitution"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"institutionDid"</span><span class="p">,</span> <span class="n">targetInstitutionDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                    <span class="nf">put</span><span class="p">(</span><span class="s">"institutionName"</span><span class="p">,</span> <span class="s">"University of Oran"</span><span class="p">)</span>
+                <span class="p">})</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"transferDate"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"academicYear"</span><span class="p">,</span> <span class="s">"2024-2025"</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"creditsTransferred"</span><span class="p">,</span> <span class="s">"7"</span><span class="p">)</span> <span class="c1">// Credits eligible for transfer</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"status"</span><span class="p">,</span> <span class="s">"approved"</span><span class="p">)</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">(),</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="k">null</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Issue transfer credential</span>
+    <span class="kd">val</span> <span class="py">issuedTransferCredential</span> <span class="p">=</span> <span class="n">authorityIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">transferCredential</span><span class="p">,</span>
+        <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">authorityDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">keyId</span> <span class="p">=</span> <span class="n">authorityKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Store in wallet</span>
+    <span class="kd">val</span> <span class="py">transferCredentialId</span> <span class="p">=</span> <span class="n">studentWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">issuedTransferCredential</span><span class="p">)</span>
+    <span class="n">studentWallet</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">transferCredentialId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"algeropass"</span><span class="p">,</span> <span class="s">"transfer"</span><span class="p">))</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Transfer credential created:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - From: University of Algiers"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - To: University of Oran"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Credits transferred: 7"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Status: approved"</span><span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-10-anchor-critical-credentials-to-blockchain">
+  
+  
+    <a href="#step-10-anchor-critical-credentials-to-blockchain" class="anchor-heading" aria-labelledby="step-10-anchor-critical-credentials-to-blockchain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 10: Anchor Critical Credentials to Blockchain
+  
+  
+</h2>
+    
+
+<p><strong>Purpose</strong>: Create immutable record of critical credentials.</p>
+
+<p><strong>Why This Matters</strong>: Blockchain anchoring provides permanent, tamper-proof record of credentials. This enables long-term verification and prevents credential fraud.</p>
+
+<p><strong>Rationale</strong>:</p>
+<ul>
+  <li><strong>Immutability</strong>: Cannot be tampered with</li>
+  <li><strong>Audit Trail</strong>: Permanent record</li>
+  <li><strong>Verification</strong>: Anyone can verify credentials</li>
+  <li><strong>Fraud Prevention</strong>: Prevents credential forgery</li>
+</ul>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient</span>
+<span class="k">import</span> <span class="nn">com.trustweave.anchor.BlockchainAnchorRegistry</span>
+<span class="k">import</span> <span class="nn">com.trustweave.anchor.anchorTyped</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.Serializable</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.Json</span>
+
+<span class="nd">@Serializable</span>
+<span class="kd">data class</span> <span class="nc">AlgeroPassRecord</span><span class="p">(</span>
+    <span class="kd">val</span> <span class="py">studentDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">studentId</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">credentialType</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">institutionDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">credentialDigest</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">timestamp</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">)</span>
+
+    <span class="c1">// Step 9: Anchor critical credentials to blockchain</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 9: Anchoring credentials to blockchain..."</span><span class="p">)</span>
+    
+    <span class="kd">val</span> <span class="py">anchorClient</span> <span class="p">=</span> <span class="nc">InMemoryBlockchainAnchorClient</span><span class="p">(</span><span class="s">"eip155:1"</span><span class="p">,</span> <span class="nf">emptyMap</span><span class="p">())</span>
+    <span class="kd">val</span> <span class="py">blockchainRegistry</span> <span class="p">=</span> <span class="nc">BlockchainAnchorRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
+        <span class="nf">register</span><span class="p">(</span><span class="s">"eip155:1"</span><span class="p">,</span> <span class="n">anchorClient</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Compute digest of enrollment credential</span>
+    <span class="kd">val</span> <span class="py">enrollmentDigest</span> <span class="p">=</span> <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">json</span><span class="p">.</span><span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span>
+        <span class="nc">Json</span><span class="p">.</span><span class="nf">encodeToJsonElement</span><span class="p">(</span>
+            <span class="nc">VerifiableCredential</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
+            <span class="n">issuedEnrollmentCredential</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Create AlgeroPass record</span>
+    <span class="kd">val</span> <span class="py">algeroPassRecord</span> <span class="p">=</span> <span class="nc">AlgeroPassRecord</span><span class="p">(</span>
+        <span class="n">studentDid</span> <span class="p">=</span> <span class="n">studentDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">studentId</span> <span class="p">=</span> <span class="s">"STU-2024-001234"</span><span class="p">,</span>
+        <span class="n">credentialType</span> <span class="p">=</span> <span class="s">"enrollment"</span><span class="p">,</span>
+        <span class="n">institutionDid</span> <span class="p">=</span> <span class="n">institutionDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">credentialDigest</span> <span class="p">=</span> <span class="n">enrollmentDigest</span><span class="p">,</span>
+        <span class="n">timestamp</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">()</span>
+    <span class="p">)</span>
+    
+    <span class="c1">// Anchor to blockchain</span>
+    <span class="kd">val</span> <span class="py">anchorResult</span> <span class="p">=</span> <span class="n">blockchainRegistry</span><span class="p">.</span><span class="nf">anchorTyped</span><span class="p">(</span>
+        <span class="n">value</span> <span class="p">=</span> <span class="n">algeroPassRecord</span><span class="p">,</span>
+        <span class="n">serializer</span> <span class="p">=</span> <span class="nc">AlgeroPassRecord</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
+        <span class="n">targetChainId</span> <span class="p">=</span> <span class="s">"eip155:1"</span>
+    <span class="p">)</span>
+    
+    <span class="nf">println</span><span class="p">(</span><span class="s">"AlgeroPass credential anchored to blockchain:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Transaction hash: ${anchorResult.ref.txHash}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Provides immutable credential record"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"  - Enables long-term verification"</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">fun</span> <span class="nf">createInstitutionRegistrationCredential</span><span class="p">(</span>
+    <span class="n">institutionDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">authorityDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">institutionName</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">institutionCode</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">recognitionDate</span><span class="p">:</span> <span class="nc">String</span>
+<span class="p">):</span> <span class="nc">VerifiableCredential</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
+        <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"InstitutionRegistrationCredential"</span><span class="p">),</span>
+        <span class="n">issuer</span> <span class="p">=</span> <span class="n">authorityDid</span><span class="p">,</span>
+        <span class="n">credentialSubject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="n">institutionDid</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"institution"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"institutionName"</span><span class="p">,</span> <span class="n">institutionName</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"institutionCode"</span><span class="p">,</span> <span class="n">institutionCode</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"recognitionDate"</span><span class="p">,</span> <span class="n">recognitionDate</span><span class="p">)</span>
+                <span class="nf">put</span><span class="p">(</span><span class="s">"authorityDid"</span><span class="p">,</span> <span class="n">authorityDid</span><span class="p">)</span>
+            <span class="p">})</span>
+        <span class="p">},</span>
+        <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">(),</span>
+        <span class="n">expirationDate</span> <span class="p">=</span> <span class="k">null</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="advanced-features">
+  
+  
+    <a href="#advanced-features" class="anchor-heading" aria-labelledby="advanced-features"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Advanced Features
+  
+  
+</h2>
+    
+<h3 id="cross-institution-credit-transfer">
+  
+  
+    <a href="#cross-institution-credit-transfer" class="anchor-heading" aria-labelledby="cross-institution-credit-transfer"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Cross-Institution Credit Transfer
+  
+  
+</h3>
+    
+
+<p>Enable automatic credit recognition:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+</pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">verifyCreditTransfer</span><span class="p">(</span>
+    <span class="n">sourceCredential</span><span class="p">:</span> <span class="nc">VerifiableCredential</span><span class="p">,</span>
+    <span class="n">targetInstitutionDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">verifier</span><span class="p">:</span> <span class="nc">CredentialVerifier</span>
+<span class="p">):</span> <span class="nc">Boolean</span> <span class="p">{</span>
+    <span class="c1">// Verify source credential</span>
+    <span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">verifier</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span>
+        <span class="n">credential</span> <span class="p">=</span> <span class="n">sourceCredential</span><span class="p">,</span>
+        <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialVerificationOptions</span><span class="p">(</span><span class="n">checkRevocation</span> <span class="p">=</span> <span class="k">true</span><span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(!</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="k">return</span> <span class="k">false</span>
+    
+    <span class="c1">// Check if target institution recognizes source institution</span>
+    <span class="c1">// This would check against national registry</span>
+    <span class="kd">val</span> <span class="py">sourceInstitution</span> <span class="p">=</span> <span class="n">sourceCredential</span><span class="p">.</span><span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"algeroPass"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
+        <span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"institution"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonObject</span>
+        <span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"institutionDid"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
+    
+    <span class="c1">// Verify institutions are both registered</span>
+    <span class="k">return</span> <span class="n">sourceInstitution</span> <span class="p">!=</span> <span class="k">null</span> <span class="p">&amp;&amp;</span> <span class="n">targetInstitutionDid</span><span class="p">.</span><span class="nf">isNotEmpty</span><span class="p">()</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="national-credential-registry-query">
+  
+  
+    <a href="#national-credential-registry-query" class="anchor-heading" aria-labelledby="national-credential-registry-query"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> National Credential Registry Query
+  
+  
+</h3>
+    
+
+<p>Query credentials from national registry:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">queryNationalCredentials</span><span class="p">(</span>
+    <span class="n">studentDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">credentialType</span><span class="p">:</span> <span class="nc">String</span><span class="p">?</span> <span class="p">=</span> <span class="k">null</span>
+<span class="p">):</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span> <span class="p">{</span>
+    <span class="c1">// Query national registry for student credentials</span>
+    <span class="c1">// This would connect to AlgeroPass national registry</span>
+    <span class="k">return</span> <span class="nf">emptyList</span><span class="p">()</span> <span class="c1">// Placeholder</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="real-world-use-cases">
+  
+  
+    <a href="#real-world-use-cases" class="anchor-heading" aria-labelledby="real-world-use-cases"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Use Cases
+  
+  
+</h2>
+    
+<h3 id="1-student-transfer-between-universities">
+  
+  
+    <a href="#1-student-transfer-between-universities" class="anchor-heading" aria-labelledby="1-student-transfer-between-universities"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Student Transfer Between Universities
+  
+  
+</h3>
+    
+
+<p><strong>Scenario</strong>: Student transfers from University of Algiers to University of Oran.</p>
+
+<p><strong>Implementation</strong>: Use transfer credential and achievement credentials to enable credit recognition.</p>
+<h3 id="2-graduate-school-application">
+  
+  
+    <a href="#2-graduate-school-application" class="anchor-heading" aria-labelledby="2-graduate-school-application"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Graduate School Application
+  
+  
+</h3>
+    
+
+<p><strong>Scenario</strong>: Student applies to graduate program at different institution.</p>
+
+<p><strong>Implementation</strong>: Present academic achievement credentials with selective disclosure.</p>
+<h3 id="3-employer-verification">
+  
+  
+    <a href="#3-employer-verification" class="anchor-heading" aria-labelledby="3-employer-verification"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Employer Verification
+  
+  
+</h3>
+    
+
+<p><strong>Scenario</strong>: Employer verifies student’s education credentials.</p>
+
+<p><strong>Implementation</strong>: Student presents degree credential, employer verifies instantly.</p>
+<h2 id="benefits">
+  
+  
+    <a href="#benefits" class="anchor-heading" aria-labelledby="benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Benefits
+  
+  
+</h2>
+    
+
+<ol>
+  <li><strong>National Recognition</strong>: Credentials recognized across all Algerian institutions</li>
+  <li><strong>Student Mobility</strong>: Easy transfer between universities</li>
+  <li><strong>Fraud Prevention</strong>: Cryptographic proof prevents forgery</li>
+  <li><strong>Efficiency</strong>: Instant verification without contacting institutions</li>
+  <li><strong>Student Control</strong>: Students own and control credentials</li>
+  <li><strong>Privacy</strong>: Selective disclosure protects student privacy</li>
+  <li><strong>Interoperability</strong>: Standard format works across all institutions</li>
+  <li><strong>Compliance</strong>: Meets national education standards</li>
+  <li><strong>Cost Reduction</strong>: Eliminates expensive verification processes</li>
+  <li><strong>Transparency</strong>: Clear credential history and verification</li>
+</ol>
+<h2 id="best-practices">
+  
+  
+    <a href="#best-practices" class="anchor-heading" aria-labelledby="best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Best Practices
+  
+  
+</h2>
+    
+
+<ol>
+  <li><strong>National Standards</strong>: Follow AlgeroPass national standards</li>
+  <li><strong>Institution Registration</strong>: Register all institutions with national authority</li>
+  <li><strong>Credential Issuance</strong>: Issue credentials promptly</li>
+  <li><strong>Verification</strong>: Always verify credentials before acceptance</li>
+  <li><strong>Revocation</strong>: Maintain revocation registry</li>
+  <li><strong>Privacy</strong>: Respect student privacy with selective disclosure</li>
+  <li><strong>Blockchain Anchoring</strong>: Anchor critical credentials</li>
+  <li><strong>Error Handling</strong>: Handle verification failures gracefully</li>
+  <li><strong>Documentation</strong>: Document credential types and formats</li>
+  <li><strong>Compliance</strong>: Meet national education regulations</li>
+</ol>
+<h2 id="next-steps">
+  
+  
+    <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
+  
+  
+</h2>
+    
+
+<ul>
+  <li>Learn about <a href="/trustweave/scenarios/academic-credentials-scenario/">Academic Credentials Scenario</a> for institution-level credentials</li>
+  <li>Explore <a href="/trustweave/scenarios/government-digital-identity-scenario/">Government Digital Identity Scenario</a> for related concepts</li>
+  <li>Check out <a href="/trustweave/scenarios/professional-identity-scenario/">Professional Identity Scenario</a> for credential management</li>
+  <li>Review <a href="/trustweave/core-concepts/verifiable-credentials/">Core Concepts: Verifiable Credentials</a> for credential details</li>
+</ul>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

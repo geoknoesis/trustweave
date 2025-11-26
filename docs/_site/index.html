@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Main Navigation Styles - Consistent across all pages -->
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1e40af;
+    --secondary: #7c3aed;
+    --accent: #10b981;
+    --text: #1f2937;
+    --text-light: #6b7280;
+    --bg: #ffffff;
+    --bg-light: #f9fafb;
+    --border: #e5e7eb;
+    --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .main-nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    z-index: 1000;
+    padding: 0.5rem 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  .main-nav .nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .main-nav .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    transition: opacity 0.3s;
+  }
+
+  .main-nav .logo-img {
+    height: 120px;
+    width: auto;
+    transition: opacity 0.3s;
+    display: block;
+  }
+
+  .main-nav .logo-img:not([src]),
+  .main-nav .logo-img[src=""],
+  .main-nav .logo-img[src*="undefined"] {
+    display: none;
+  }
+
+
+  .main-nav .logo:hover {
+    opacity: 0.8;
+  }
+
+  .main-nav .logo:hover .logo-img {
+    opacity: 0.8;
+  }
+  
+  .main-nav .nav-links {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+  }
+  
+  .main-nav .nav-links .nav-link {
+    text-decoration: none;
+    color: var(--text);
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.5rem 0;
+    transition: color 0.3s;
+    position: relative;
+    white-space: nowrap;
+  }
+  
+  .main-nav .nav-links .nav-link:hover {
+    color: var(--primary);
+  }
+
+  .main-nav .nav-links .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--primary);
+    transition: width 0.3s ease;
+  }
+
+  .main-nav .nav-links .nav-link:hover::after,
+  .main-nav .nav-links .nav-link.active::after {
+    width: 100%;
+  }
+
+  .main-nav .nav-links .nav-link.active {
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  /* GitHub icon button */
+  .main-nav .nav-links .github-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 0.5rem;
+    transition: all 0.3s;
+    padding: 0.5rem;
+    color: var(--text);
+    text-decoration: none;
+    margin-left: 0.5rem;
+  }
+
+  .main-nav .nav-links .github-icon:hover {
+    background: var(--bg-light);
+    transform: translateY(-2px);
+    color: var(--primary);
+  }
+
+  .main-nav .nav-links .github-icon svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Mobile menu toggle */
+  .menu-toggle {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    gap: 5px;
+    padding: 0.5rem;
+    z-index: 1001;
+  }
+
+  .menu-toggle span {
+    width: 25px;
+    height: 3px;
+    background: var(--text);
+    transition: all 0.3s;
+    border-radius: 2px;
+  }
+
+  .menu-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(8px, 8px);
+  }
+
+  .menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .menu-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
+  }
+
+  /* Footer styles */
+  .site-footer {
+    background: var(--text);
+    color: white;
+    padding: 3rem 2rem;
+    text-align: center;
+    margin-top: 4rem;
+  }
+
+  .site-footer .footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .site-footer .footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .site-footer .footer-links a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+
+  .site-footer .footer-links a:hover {
+    color: white;
+  }
+
+  .site-footer .footer-text {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.875rem;
+  }
+
+  /* Adjust content for fixed nav */
+  body {
+    padding-top: 160px;
+  }
+
+  /* Just the Docs theme adjustments */
+  .site-header {
+    margin-top: 0 !important;
+  }
+
+  /* Mobile responsive */
+  @media (max-width: 968px) {
+    .menu-toggle {
+      display: flex;
+    }
+
+    .main-nav .nav-links {
+      position: fixed;
+      top: 160px;
+      left: 0;
+      right: 0;
+      background: white;
+      flex-direction: column;
+      padding: 2rem;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-100%);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      gap: 1.5rem;
+      align-items: flex-start;
+      max-height: calc(100vh - 160px);
+      overflow-y: auto;
+    }
+
+    .main-nav .nav-links.active {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .main-nav .nav-links .nav-link {
+      width: 100%;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .main-nav .nav-links .nav-link::after {
+      display: none;
+    }
+
+    .main-nav .nav-links .github-icon {
+      width: 100%;
+      justify-content: flex-start;
+      margin-left: 0;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .main-nav .logo-img {
+      height: 120px;
+    }
+
+    .site-footer .footer-links {
+      flex-direction: column;
+      gap: 1rem;
+    }
+  }
+
+  /* Tablet adjustments */
+  @media (max-width: 968px) and (min-width: 769px) {
+    .main-nav .nav-links {
+      gap: 1rem;
+    }
+
+    .main-nav .nav-links .nav-link {
+      font-size: 0.9rem;
+    }
+  }
+</style>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrustWeave - Build Trusted Domains Without Vendor Lock-In | Open Source</title>
+    <meta name="description" content="Build trusted domains without vendor lock-in. Switch blockchains, DID methods, or KMS providers with configuration, not code rewrites. Free & open source.">
+    <meta name="keywords" content="decentralized identity, verifiable credentials, DID, blockchain identity, Kotlin SDK, open source identity, chain-agnostic, KMS-agnostic">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="TrustWeave - Build Trusted Domains Without Vendor Lock-In">
+    <meta property="og:description" content="Switch technologies anytime. No code rewrites. Never locked in. The only SDK that gives you true freedom.">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="TrustWeave - Build Trusted Domains Without Vendor Lock-In">
+    <meta name="twitter:description" content="Switch technologies anytime. No code rewrites. Never locked in. Free & open source.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #7c3aed;
+            --accent: #10b981;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --bg: #ffffff;
+            --bg-light: #f9fafb;
+            --border: #e5e7eb;
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-top: 0;
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            text-align: center;
+        }
+
+        .hero-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            margin-bottom: 2.5rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Section Styling */
+        section {
+            padding: 5rem 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-align: center;
+            color: var(--text);
+        }
+
+        .section-subtitle {
+            font-size: 1.125rem;
+            color: var(--text-light);
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            line-height: 1.8;
+        }
+
+        /* The Essence Section */
+        .essence {
+            background: var(--bg);
+        }
+
+        /* Benefits Section */
+        .benefits {
+            background: var(--bg-light);
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .benefit-item {
+            padding: 2rem;
+            background: white;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .benefit-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+        }
+
+        .benefit-item h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: var(--text);
+        }
+
+        .benefit-item p {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        /* Trust Signals */
+        .trust-signals {
+            background: var(--bg);
+        }
+
+        .trust-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .trust-item {
+            padding: 1.5rem;
+            background: var(--bg-light);
+            border-radius: 0.75rem;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .trust-item strong {
+            display: block;
+            font-size: 1.125rem;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .trust-item span {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        /* Final CTA */
+        .final-cta {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            text-align: center;
+        }
+
+        .cta-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .final-cta h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .final-cta p {
+            font-size: 1.125rem;
+            color: var(--text-light);
+            margin-bottom: 2.5rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .cta-note {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-top: 1rem;
+        }
+
+        /* Waitlist Form */
+        .waitlist-form {
+            display: flex;
+            gap: 1rem;
+            max-width: 500px;
+            margin: 2rem auto 0;
+            flex-wrap: wrap;
+        }
+
+        .waitlist-form input {
+            flex: 1;
+            min-width: 250px;
+            padding: 0.875rem 1.25rem;
+            border: 2px solid var(--border);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .waitlist-form input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .waitlist-form button {
+            padding: 0.875rem 2rem;
+            white-space: nowrap;
+        }
+
+        .success-message {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #d1fae5;
+            color: #065f46;
+            border-radius: 0.5rem;
+            border: 1px solid #10b981;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.125rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .final-cta h2 {
+                font-size: 2rem;
+            }
+
+            .waitlist-form {
+                flex-direction: column;
+            }
+
+            .waitlist-form input,
+            .waitlist-form button {
+                width: 100%;
+            }
+
+            .benefits-grid,
+            .trust-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Site Header - Consistent across all pages -->
+<nav class="main-nav">
+    <div class="nav-container">
+        <a href="/trustweave/" class="logo">
+            <img src="/trustweave/assets/images/trustweave-logo.jpg" alt="TrustWeave Logo" class="logo-img">
+        </a>
+        <div class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="nav-links" id="navLinks">
+            <a href="/trustweave/" class="nav-link">Home</a>
+            <a href="/trustweave/#features" class="nav-link">Features</a>
+            <a href="/trustweave/use-scenarios/" class="nav-link">Use Scenarios</a>
+            <a href="/trustweave/introduction/README/" class="nav-link">Docs</a>
+            <a href="/trustweave/partnership/" class="nav-link">Partners</a>
+            <a href="/trustweave/about/" class="nav-link">About</a>
+            <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" rel="noopener noreferrer" class="github-icon" title="View on GitHub" aria-label="GitHub Repository">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Mobile menu toggle and active page highlighting
+    (function() {
+        const menuToggle = document.getElementById('menuToggle');
+        const navLinks = document.getElementById('navLinks');
+        
+        // Mobile menu toggle
+        if (menuToggle && navLinks) {
+            menuToggle.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+                menuToggle.classList.toggle('active');
+            });
+            
+            // Close menu when clicking on a link
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.addEventListener('click', () => {
+                    navLinks.classList.remove('active');
+                    menuToggle.classList.remove('active');
+                });
+            });
+            
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
+                    navLinks.classList.remove('active');
+                    menuToggle.classList.remove('active');
+                }
+            });
+        }
+
+        // Highlight active page
+        const currentPath = window.location.pathname;
+        const navLinksList = document.querySelectorAll('.nav-links .nav-link');
+        
+        navLinksList.forEach(link => {
+            try {
+                const linkUrl = new URL(link.href, window.location.origin);
+                const linkPath = linkUrl.pathname;
+                const baseUrl = '/trustweave' || '';
+                
+                // Normalize paths
+                let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
+                let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
+                
+                // Handle index pages
+                if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
+                if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
+                
+                // Check if current path matches link path
+                if (cleanCurrentPath === cleanLinkPath) {
+                    link.classList.add('active');
+                } else if (cleanLinkPath !== '/' && cleanCurrentPath.startsWith(cleanLinkPath + '/')) {
+                    // Handle sub-pages (e.g., /introduction/ matches /introduction/README/)
+                    link.classList.add('active');
+                }
+            } catch (e) {
+                // Fallback for relative URLs or errors
+                const href = link.getAttribute('href');
+                if (href && (currentPath.includes(href) || (href === '/' && currentPath.endsWith('index.html')))) {
+                    link.classList.add('active');
+                }
+            }
+        });
+    })();
+</script>
+
+
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <h1>Build Trusted Domains Without Vendor Lock-In</h1>
+            <p>Write once. Switch blockchains, DID methods, or KMS providers with configuration—not code rewrites. Never locked in. Always future-proof.</p>
+            
+            <!-- Quality Indicators -->
+            <div style="display: flex; justify-content: center; gap: 2.5rem; margin: 2.5rem 0; flex-wrap: wrap; font-size: 1.1rem; font-weight: 500;">
+                <span style="display: flex; align-items: center; gap: 0.75rem; color: var(--text);">
+                    <span style="color: var(--accent); font-size: 1.3rem;">✅</span> W3C Standards Compliant
+                </span>
+                <span style="display: flex; align-items: center; gap: 0.75rem; color: var(--text);">
+                    <span style="color: var(--accent); font-size: 1.3rem;">✅</span> AGPL v3.0 Open Source
+                </span>
+                <span style="display: flex; align-items: center; gap: 0.75rem; color: var(--text);">
+                    <span style="color: var(--accent); font-size: 1.3rem;">✅</span> Production-Ready
+                </span>
+                <span style="display: flex; align-items: center; gap: 0.75rem; color: var(--text);">
+                    <span style="color: var(--accent); font-size: 1.3rem;">✅</span> 25+ Real-World Examples
+                </span>
+            </div>
+            
+            <div class="hero-buttons">
+                <a href="/trustweave/getting-started/quick-start/" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+                    🚀 Start Building Free (Open Source)
+                </a>
+                <a href="/trustweave/introduction/README/" class="btn btn-secondary" style="font-size: 1rem; padding: 1rem 1.5rem;">
+                    📚 Documentation
+                </a>
+            </div>
+            
+            <p style="margin-top: 1.5rem; font-size: 0.95rem; color: var(--text-light);">
+                💼 Need managed infrastructure? <a href="#waitlist" style="color: var(--primary); text-decoration: underline;">Join SaaS waitlist →</a>
+            </p>
+        </div>
+    </section>
+
+    <!-- The Essence Section -->
+    <section class="essence">
+        <div class="container">
+            <div style="max-width: 1000px; margin: 0 auto;">
+                <!-- Problem Statement -->
+                <div style="text-align: center; margin-bottom: 4rem;">
+                    <h2 class="section-title">The Problem Every Developer Faces</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+                        <div style="background: #fef2f2; padding: 1.5rem; border-radius: 1rem; border-left: 4px solid #dc2626;">
+                            <p style="color: var(--text); font-weight: 600; margin-bottom: 0.5rem;">You build on Ethereum.</p>
+                            <p style="color: var(--text-light); font-size: 0.95rem;">Then you need Polygon for lower fees. Or Algorand for speed.</p>
+                            <p style="color: #dc2626; font-weight: 600; margin-top: 1rem;">You rewrite everything.</p>
+                        </div>
+                        <div style="background: #fef2f2; padding: 1.5rem; border-radius: 1rem; border-left: 4px solid #dc2626;">
+                            <p style="color: var(--text); font-weight: 600; margin-bottom: 0.5rem;">You choose AWS KMS.</p>
+                            <p style="color: var(--text-light); font-size: 0.95rem;">Then Azure offers better pricing. Or you need on-premise.</p>
+                            <p style="color: #dc2626; font-weight: 600; margin-top: 1rem;">You rewrite everything.</p>
+                        </div>
+                        <div style="background: #fef2f2; padding: 1.5rem; border-radius: 1rem; border-left: 4px solid #dc2626;">
+                            <p style="color: var(--text); font-weight: 600; margin-bottom: 0.5rem;">You use did:key.</p>
+                            <p style="color: var(--text-light); font-size: 0.95rem;">Then you need did:ion for production. Or did:web for your domain.</p>
+                            <p style="color: #dc2626; font-weight: 600; margin-top: 1rem;">You rewrite everything.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- The Promise -->
+                <div style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); padding: 4rem 3rem; border-radius: 2rem; text-align: center; margin-bottom: 4rem; border: 2px solid var(--primary);">
+                    <h2 class="section-title">The TrustWeave Promise</h2>
+                    <p style="font-size: 1.5rem; color: var(--text); font-weight: 600; margin-bottom: 2rem; line-height: 1.6;">
+                        Write your trust layer once. Switch technologies with configuration, not code.
+                    </p>
+                    <p style="font-size: 1.125rem; color: var(--text-light); margin-bottom: 3rem; max-width: 800px; margin-left: auto; margin-right: auto;">
+                        TrustWeave is the <strong>only SDK</strong> that gives you true freedom. Your application code never changes. Only your configuration does.
+                    </p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-top: 3rem;">
+                        <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">⛓️</div>
+                            <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text);">Blockchain Freedom</h3>
+                            <p style="color: var(--text-light); font-size: 0.9rem;">Switch from Ethereum to Algorand to Polygon with one config change</p>
+                        </div>
+                        <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🆔</div>
+                            <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text);">DID Method Freedom</h3>
+                            <p style="color: var(--text-light); font-size: 0.9rem;">Use any DID method (key, web, ion, ethr, and 15+ more)</p>
+                        </div>
+                        <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔐</div>
+                            <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text);">KMS Freedom</h3>
+                            <p style="color: var(--text-light); font-size: 0.9rem;">AWS, Azure, Google Cloud, HashiCorp, or your own - all work the same</p>
+                        </div>
+                        <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🚀</div>
+                            <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text);">Future Freedom</h3>
+                            <p style="color: var(--text-light); font-size: 0.9rem;">New blockchains? New DID methods? Add them as plugins. Your code stays the same.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real Example -->
+                <div style="background: white; padding: 3rem; border-radius: 1.5rem; box-shadow: 0 8px 24px rgba(0,0,0,0.1); margin-bottom: 4rem;">
+                    <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem; color: var(--text); text-align: center;">
+                        Real Example: The Difference
+                    </h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                        <div>
+                            <h3 style="color: #dc2626; margin-bottom: 1rem; font-size: 1.25rem;">❌ Before TrustWeave</h3>
+                            <div style="background: #fef2f2; padding: 1.5rem; border-radius: 0.75rem; font-family: 'Courier New', monospace; font-size: 0.85rem; line-height: 1.6; overflow-x: auto;">
+                                <div style="color: #dc2626; margin-bottom: 0.5rem;">// You're locked into Ethereum</div>
+                                <div style="color: var(--text);">val ethereumClient = EthereumClient(...)</div>
+                                <div style="color: var(--text);">val credential = issueCredential(</div>
+                                <div style="color: var(--text); margin-left: 1rem;">ethereumClient, ...)</div>
+                                <div style="margin-top: 1rem; color: #dc2626;">// Need Algorand? Rewrite everything:</div>
+                                <div style="color: var(--text);">val algorandClient = AlgorandClient(...)</div>
+                                <div style="color: var(--text);">val credential = issueCredentialAlgorand(</div>
+                                <div style="color: var(--text); margin-left: 1rem;">algorandClient, ...) // Different API!</div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 style="color: var(--accent); margin-bottom: 1rem; font-size: 1.25rem;">✅ With TrustWeave</h3>
+                            <div style="background: #d1fae5; padding: 1.5rem; border-radius: 0.75rem; font-family: 'Courier New', monospace; font-size: 0.85rem; line-height: 1.6; overflow-x: auto;">
+                                <div style="color: var(--accent); margin-bottom: 0.5rem;">// Your code stays the same</div>
+                                <div style="color: var(--text);">val credential = trustLayer.issueCredential(...)</div>
+                                <div style="margin-top: 1rem; color: var(--accent);">// Switch blockchains? Change config:</div>
+                                <div style="color: var(--text);">val trustLayer = trustLayer {</div>
+                                <div style="color: var(--text); margin-left: 1rem;">blockchains {</div>
+                                <div style="color: var(--text); margin-left: 2rem;">"algorand:mainnet" to algorandClient</div>
+                                <div style="color: var(--accent); margin-left: 2rem; font-size: 0.8rem;">// Just this line changes</div>
+                                <div style="color: var(--text); margin-left: 1rem;">}</div>
+                                <div style="color: var(--text);">}</div>
+                                <div style="margin-top: 0.5rem; color: var(--accent); font-size: 0.8rem;">// Everything else works exactly the same</div>
+                            </div>
+                        </div>
+                    </div>
+                    <p style="text-align: center; margin-top: 2rem; font-size: 1.125rem; color: var(--text); font-weight: 600;">
+                        Same code. Different technology. Zero rewrites.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits -->
+    <section class="benefits" id="benefits">
+        <div class="container">
+            <h2 class="section-title">Why TrustWeave?</h2>
+            <div class="benefits-grid">
+                <div class="benefit-item">
+                    <h3>🚫 No Vendor Lock-In</h3>
+                    <p>Switch from Ethereum to Algorand to Polygon with one config change. Your code never changes.</p>
+                </div>
+                <div class="benefit-item">
+                    <h3>🔮 Future-Proof</h3>
+                    <p>New blockchains or DID methods? Add them as plugins. Your application code stays the same.</p>
+                </div>
+                <div class="benefit-item">
+                    <h3>⚡ Faster Development</h3>
+                    <p>Focus on your business logic, not infrastructure. Production-ready APIs with sensible defaults.</p>
+                </div>
+                <div class="benefit-item">
+                    <h3>💰 Lower Costs</h3>
+                    <p>Switch when costs change, not when contracts expire. No rewrites mean no hidden migration costs.</p>
+                </div>
+                <div class="benefit-item">
+                    <h3>✅ Production-Ready</h3>
+                    <p>Type-safe Kotlin APIs, W3C standards-compliant, 25+ real-world examples, comprehensive documentation.</p>
+                </div>
+                <div class="benefit-item">
+                    <h3>🌐 Standards-Based</h3>
+                    <p>Built on W3C Verifiable Credentials and DIDs. Works seamlessly with any standards-compliant system.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technical Excellence Section -->
+    <section class="trust-signals" id="trust">
+        <div class="container">
+            <h2 class="section-title">Developer-First Architecture</h2>
+            <p class="section-subtitle">Built for developers who value clean code, type safety, and maintainability</p>
+            <div class="trust-grid">
+                <div class="trust-item">
+                    <strong>🔧 Pluggable Architecture</strong>
+                    <span>Swap implementations via configuration. No code changes needed.</span>
+                </div>
+                <div class="trust-item">
+                    <strong>📝 Type-Safe DSL</strong>
+                    <span>Fluent APIs with compile-time safety. Catch errors before runtime.</span>
+                </div>
+                <div class="trust-item">
+                    <strong>⚡ Coroutine-Based</strong>
+                    <span>Modern async/await patterns. Built for Kotlin's concurrency model.</span>
+                </div>
+                <div class="trust-item">
+                    <strong>🧩 Modular Design</strong>
+                    <span>Use only what you need. Lightweight and composable modules.</span>
+                </div>
+                <div class="trust-item">
+                    <strong>📚 Comprehensive Docs</strong>
+                    <span>25+ examples, tutorials, API reference. Everything you need to succeed.</span>
+                </div>
+                <div class="trust-item">
+                    <strong>🔌 Protocol Agnostic</strong>
+                    <span>DIDComm, OIDC4VCI, CHAPI - all supported through unified APIs.</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="final-cta" id="waitlist">
+        <div class="cta-container">
+            <h2>Start Building Today</h2>
+            <p>Free. Open Source. No strings attached.</p>
+            <div class="cta-buttons">
+                <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" class="btn btn-primary">Get Started on GitHub</a>
+                <a href="/trustweave/introduction/README/" class="btn btn-secondary">View Documentation</a>
+            </div>
+            <p class="cta-note">Get started in 5 minutes with our quick start guide</p>
+            
+            <form class="waitlist-form" id="waitlistForm">
+                <input 
+                    type="email" 
+                    id="emailInput" 
+                    placeholder="Enter your email for SaaS waitlist" 
+                    required
+                    aria-label="Email address"
+                >
+                <button type="submit" class="btn btn-primary">Join Waitlist</button>
+            </form>
+            <div class="success-message" id="successMessage">
+                ✅ Thank you! We've added you to the waitlist. You'll receive an email confirmation shortly.
+            </div>
+        </div>
+    </section>
+
+    <!-- Site Footer - Consistent across all pages -->
+<footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-links">
+            <a href="/trustweave/">Home</a>
+            <a href="/trustweave/introduction/">Documentation</a>
+            <a href="https://github.com/geoknoesis/TrustWeave" target="_blank">GitHub</a>
+            <a href="/trustweave/partnership.html">Partners</a>
+            <a href="https://github.com/geoknoesis/TrustWeave/blob/main/docs/README.md" target="_blank">Docs</a>
+            <a href="https://github.com/geoknoesis/TrustWeave/blob/main/LICENSE" target="_blank">License</a>
+            <a href="https://www.geoknoesis.com" target="_blank">Geoknoesis LLC</a>
+        </div>
+        <p class="footer-text">Made with ❤️ by Geoknoesis LLC</p>
+    </div>
+</footer>
+
+
+
+    <script>
+        // Waitlist form handling
+        const waitlistForm = document.getElementById('waitlistForm');
+        const emailInput = document.getElementById('emailInput');
+        const successMessage = document.getElementById('successMessage');
+
+        waitlistForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = emailInput.value.trim();
+            
+            if (!email) {
+                return;
+            }
+
+            // Here you would typically send the email to your backend API
+            // For now, we'll just show a success message
+            // Example API call:
+            /*
+            try {
+                const response = await fetch('/api/waitlist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                if (response.ok) {
+                    successMessage.classList.add('show');
+                    emailInput.value = '';
+                } else {
+                    alert('Something went wrong. Please try again.');
+                }
+            } catch (error) {
+                alert('Network error. Please try again.');
+            }
+            */
+
+            // Demo: Show success message
+            successMessage.classList.add('show');
+            emailInput.value = '';
+            
+            // Scroll to success message
+            successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                    // Close mobile menu if open
+                    const navLinks = document.getElementById('navLinks');
+                    if (navLinks) {
+                        navLinks.classList.remove('active');
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

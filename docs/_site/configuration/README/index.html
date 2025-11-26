@@ -1,0 +1,754 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+
+    
+    .site-nav > ul.nav-list:first-child > li:not(:nth-child(15)) > a,
+    .site-nav > ul.nav-list:first-child > li > ul > li a {
+      background-image: none;
+    }
+
+    .site-nav > ul.nav-list:not(:first-child) a,
+    .site-nav li.external a {
+      background-image: none;
+    }
+
+    .site-nav > ul.nav-list:first-child > li:nth-child(15) > a {
+      font-weight: 600;
+      text-decoration: none;
+    }.site-nav > ul.nav-list:first-child > li:nth-child(15) > button svg {
+      transform: rotate(-90deg);
+    }.site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(15) > ul.nav-list {
+      display: block;
+    }
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Configuration Reference | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Configuration Reference" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://localhost:4000/trustweave/configuration/README/" />
+<meta property="og:url" content="http://localhost:4000/trustweave/configuration/README/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Configuration Reference" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"Configuration Reference","url":"http://localhost:4000/trustweave/configuration/README/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/beginner-tutorial-series/" class="nav-list-link">Beginner Tutorial Series</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchored-revocation/" class="nav-list-link">Blockchain-Anchored Revocation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/code-style/" class="nav-list-link">Code Style</a></li><li class="nav-list-item"><a href="/trustweave/comparison/README/" class="nav-list-link">Comparison Documentation</a></li><li class="nav-list-item"><a href="/trustweave/configuration/README/" class="nav-list-link">Configuration Reference</a></li><li class="nav-list-item"><a href="/trustweave/advanced/custom-adapters/" class="nav-list-link">Creating Custom Adapters</a></li><li class="nav-list-item"><a href="/trustweave/contributing/creating-plugins/" class="nav-list-link">Creating TrustWeave Plugins</a></li><li class="nav-list-item"><a href="/trustweave/features/credential-exchange-protocols/README/" class="nav-list-link">Credential Exchange Protocols</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/credential-issuance-tutorial/" class="nav-list-link">Credential Issuance Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/algorithm-compatibility-table/" class="nav-list-link">Cryptographic Algorithm Compatibility: DIDs, VCs, AWS KMS, and Azure Key Vault</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/did-operations-tutorial/" class="nav-list-link">DID Operations Tutorial</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/delegation/" class="nav-list-link">Delegation</a></li><li class="nav-list-item"><a href="/trustweave/contributing/development-setup/" class="nav-list-link">Development Setup</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/evaluation-engines/" class="nav-list-link">Evaluation Engines</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/json-canonicalization/" class="nav-list-link">JSON Canonicalization</a></li><li class="nav-list-item"><a href="/trustweave/advanced/key-rotation/" class="nav-list-link">Key Rotation Strategies</a></li><li class="nav-list-item"><a href="/trustweave/licensing/README/" class="nav-list-link">Licensing Overview</a></li><li class="nav-list-item"><a href="/trustweave/migration/README/" class="nav-list-link">Migration Guides</a></li><li class="nav-list-item"><a href="/trustweave/advanced/performance/" class="nav-list-link">Performance Considerations</a></li><li class="nav-list-item"><a href="/trustweave/advanced/plugin-lifecycle/" class="nav-list-link">Plugin Lifecycle Management</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/proof-purpose-validation/" class="nav-list-link">Proof Purpose Validation</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/credential-exchange-protocols/" class="nav-list-link">Protocol Abstraction Layer</a></li><li class="nav-list-item"><a href="/trustweave/contributing/pull-request-process/" class="nav-list-link">Pull Request Process</a></li><li class="nav-list-item"><a href="/trustweave/security/README/" class="nav-list-link">Security Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/advanced/spi/" class="nav-list-link">Service Provider Interface (SPI)</a></li><li class="nav-list-item"><a href="/trustweave/plugins/" class="nav-list-link">Supported Plugins</a></li><li class="nav-list-item"><a href="/trustweave/contributing/testing-guidelines/" class="nav-list-link">Testing Guidelines</a></li><li class="nav-list-item"><a href="/trustweave/advanced/testing-strategies/" class="nav-list-link">Testing Strategies</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/trust-registry/" class="nav-list-link">Trust Registry</a></li><li class="nav-list-item"><a href="/trustweave/GLOSSARY/" class="nav-list-link">TrustWeave Glossary</a></li><li class="nav-list-item"><a href="/trustweave/TRUSTWEAVE_WHITEPAPER/" class="nav-list-link">TrustWeave SDK: Decentralized Trust Infrastructure</a></li><li class="nav-list-item"><a href="/trustweave/scenarios/README/" class="nav-list-link">Use Case Scenarios</a></li><li class="nav-list-item"><a href="/trustweave/advanced/verification-policies/" class="nav-list-link">Verification Policies</a></li><li class="nav-list-item"><a href="/trustweave/tutorials/wallet-api-tutorial/" class="nav-list-link">Wallet API Tutorial</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="configuration-reference">
+  
+  
+    <a href="#configuration-reference" class="anchor-heading" aria-labelledby="configuration-reference"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Configuration Reference
+  
+  
+</h1>
+    
+
+<p>Complete reference for configuring TrustWeave.</p>
+<h2 id="configuration-methods">
+  
+  
+    <a href="#configuration-methods" class="anchor-heading" aria-labelledby="configuration-methods"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Configuration Methods
+  
+  
+</h2>
+    
+
+<p>TrustWeave supports three configuration methods:</p>
+
+<ol>
+  <li><strong>Defaults</strong>: <code class="language-plaintext highlighter-rouge">TrustWeave.create()</code> - Uses testkit defaults</li>
+  <li><strong>Builder DSL</strong>: <code class="language-plaintext highlighter-rouge">TrustWeave.create { }</code> - Recommended for most cases</li>
+  <li><strong>Config Object</strong>: <code class="language-plaintext highlighter-rouge">TrustWeave.create(config)</code> - For programmatic configuration</li>
+</ol>
+<h2 id="configuration-components">
+  
+  
+    <a href="#configuration-components" class="anchor-heading" aria-labelledby="configuration-components"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Configuration Components
+  
+  
+</h2>
+    
+<h3 id="key-management-service-kms">
+  
+  
+    <a href="#key-management-service-kms" class="anchor-heading" aria-labelledby="key-management-service-kms"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Management Service (KMS)
+  
+  
+</h3>
+    
+
+<p><strong>Purpose:</strong> Manages cryptographic keys for signing and verification.</p>
+
+<p><strong>Default:</strong> <code class="language-plaintext highlighter-rouge">InMemoryKeyManagementService</code> (testing only)</p>
+
+<p><strong>Production Options:</strong></p>
+<ul>
+  <li>AWS KMS: <code class="language-plaintext highlighter-rouge">AwsKeyManagementService</code></li>
+  <li>Azure Key Vault: <code class="language-plaintext highlighter-rouge">AzureKeyManagementService</code></li>
+  <li>Google Cloud KMS: <code class="language-plaintext highlighter-rouge">GoogleKeyManagementService</code></li>
+  <li>HashiCorp Vault: <code class="language-plaintext highlighter-rouge">HashiCorpKeyManagementService</code></li>
+</ul>
+
+<p><strong>Configuration:</strong></p>
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
+    <span class="n">kms</span> <span class="p">=</span> <span class="nc">AwsKeyManagementService</span><span class="p">(</span>
+        <span class="n">region</span> <span class="p">=</span> <span class="s">"us-east-1"</span><span class="p">,</span>
+        <span class="n">credentials</span> <span class="p">=</span> <span class="n">awsCredentials</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>See Also:</strong></p>
+<ul>
+  <li><a href="/trustweave/integrations/README/#key-management-service-kms-integrations">KMS Integration Guides</a></li>
+  <li><a href="/trustweave/core-concepts/key-management/">Key Management</a></li>
+</ul>
+<h3 id="did-methods">
+  
+  
+    <a href="#did-methods" class="anchor-heading" aria-labelledby="did-methods"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> DID Methods
+  
+  
+</h3>
+    
+
+<p><strong>Purpose:</strong> DID creation and resolution methods.</p>
+
+<p><strong>Default:</strong> <code class="language-plaintext highlighter-rouge">did:key</code> (DidKeyMockMethod) - testing only</p>
+
+<p><strong>Available Methods:</strong></p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">did:key</code> - Native implementation</li>
+  <li><code class="language-plaintext highlighter-rouge">did:web</code> - Web-based resolution</li>
+  <li><code class="language-plaintext highlighter-rouge">did:ion</code> - Microsoft ION</li>
+  <li><code class="language-plaintext highlighter-rouge">did:ethr</code> - Ethereum-based</li>
+  <li>And more… (see <a href="/trustweave/plugins/#did-method-plugins">DID Methods</a>)</li>
+</ul>
+
+<p><strong>Configuration:</strong></p>
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
+    <span class="nf">didMethods</span> <span class="p">{</span>
+        <span class="p">+</span> <span class="nc">DidKeyMethod</span><span class="p">(</span><span class="n">kms</span><span class="p">)</span>
+        <span class="p">+</span> <span class="nc">DidWebMethod</span><span class="p">(</span><span class="n">kms</span><span class="p">)</span> <span class="p">{</span> <span class="n">domain</span> <span class="p">=</span> <span class="s">"example.com"</span> <span class="p">}</span>
+        <span class="p">+</span> <span class="nc">DidIonMethod</span><span class="p">(</span><span class="n">kms</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>See Also:</strong></p>
+<ul>
+  <li><a href="/trustweave/integrations/README/#did-method-integrations">DID Integration Guides</a></li>
+  <li><a href="/trustweave/core-concepts/dids/">DIDs</a></li>
+</ul>
+<h3 id="blockchain-clients">
+  
+  
+    <a href="#blockchain-clients" class="anchor-heading" aria-labelledby="blockchain-clients"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Blockchain Clients
+  
+  
+</h3>
+    
+
+<p><strong>Purpose:</strong> Blockchain anchoring for tamper-proof timestamps.</p>
+
+<p><strong>Default:</strong> None registered (must be added)</p>
+
+<p><strong>Available Clients:</strong></p>
+<ul>
+  <li>Algorand: <code class="language-plaintext highlighter-rouge">AlgorandBlockchainAnchorClient</code></li>
+  <li>Ethereum: <code class="language-plaintext highlighter-rouge">EthereumBlockchainAnchorClient</code></li>
+  <li>Polygon: <code class="language-plaintext highlighter-rouge">PolygonBlockchainAnchorClient</code></li>
+  <li>Base: <code class="language-plaintext highlighter-rouge">BaseBlockchainAnchorClient</code></li>
+  <li>Arbitrum: <code class="language-plaintext highlighter-rouge">ArbitrumBlockchainAnchorClient</code></li>
+  <li>And more… (see <a href="/trustweave/plugins/#blockchain-anchor-plugins">Blockchain Plugins</a>)</li>
+</ul>
+
+<p><strong>Configuration:</strong></p>
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
+    <span class="nf">blockchains</span> <span class="p">{</span>
+        <span class="s">"algorand:testnet"</span> <span class="n">to</span> <span class="nc">AlgorandBlockchainAnchorClient</span><span class="p">(</span>
+            <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span><span class="p">,</span>
+            <span class="n">options</span> <span class="p">=</span> <span class="nc">AlgorandOptions</span><span class="p">(</span><span class="o">..</span><span class="p">.)</span>
+        <span class="p">)</span>
+        <span class="s">"ethereum:mainnet"</span> <span class="n">to</span> <span class="nc">EthereumBlockchainAnchorClient</span><span class="p">(</span><span class="o">..</span><span class="p">.)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>See Also:</strong></p>
+<ul>
+  <li><a href="/trustweave/integrations/README/#blockchain-anchor-integrations">Blockchain Integration Guides</a></li>
+  <li><a href="/trustweave/core-concepts/blockchain-anchoring/">Blockchain Anchoring</a></li>
+</ul>
+<h3 id="wallet-factory">
+  
+  
+    <a href="#wallet-factory" class="anchor-heading" aria-labelledby="wallet-factory"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Wallet Factory
+  
+  
+</h3>
+    
+
+<p><strong>Purpose:</strong> Creates wallet instances for credential storage.</p>
+
+<p><strong>Default:</strong> <code class="language-plaintext highlighter-rouge">TestkitWalletFactory</code> (in-memory, testing only)</p>
+
+<p><strong>Available Factories:</strong></p>
+<ul>
+  <li>In-Memory: <code class="language-plaintext highlighter-rouge">TestkitWalletFactory</code> (testing)</li>
+  <li>Database: <code class="language-plaintext highlighter-rouge">DatabaseWalletFactory</code> (production)</li>
+  <li>File: <code class="language-plaintext highlighter-rouge">FileWalletFactory</code> (production)</li>
+  <li>Cloud: <code class="language-plaintext highlighter-rouge">CloudWalletFactory</code> (production)</li>
+</ul>
+
+<p><strong>Configuration:</strong></p>
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
+    <span class="n">walletFactory</span> <span class="p">=</span> <span class="nc">DatabaseWalletFactory</span><span class="p">(</span>
+        <span class="n">dataSource</span> <span class="p">=</span> <span class="n">dataSource</span><span class="p">,</span>
+        <span class="n">enableOrganization</span> <span class="p">=</span> <span class="k">true</span><span class="p">,</span>
+        <span class="n">enablePresentation</span> <span class="p">=</span> <span class="k">true</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>See Also:</strong></p>
+<ul>
+  <li><a href="/trustweave/api-reference/wallet-api/">Wallet API</a></li>
+  <li><a href="/trustweave/core-concepts/wallets/">Wallets</a></li>
+</ul>
+<h3 id="credential-services">
+  
+  
+    <a href="#credential-services" class="anchor-heading" aria-labelledby="credential-services"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Credential Services
+  
+  
+</h3>
+    
+
+<p><strong>Purpose:</strong> Credential issuance and verification services.</p>
+
+<p><strong>Default:</strong> <code class="language-plaintext highlighter-rouge">CredentialServiceRegistry.create()</code> (default service)</p>
+
+<p><strong>Configuration:</strong></p>
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
+    <span class="nf">credentialServices</span> <span class="p">{</span>
+        <span class="p">+</span> <span class="nc">MyCustomCredentialService</span><span class="p">()</span>
+        <span class="p">+</span> <span class="nc">HttpCredentialService</span><span class="p">(</span><span class="n">endpoint</span> <span class="p">=</span> <span class="s">"https://issuer.example.com"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>See Also:</strong></p>
+<ul>
+  <li><a href="/trustweave/api-reference/credential-service-api/">Credential Service API</a></li>
+</ul>
+<h3 id="proof-generators">
+  
+  
+    <a href="#proof-generators" class="anchor-heading" aria-labelledby="proof-generators"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Proof Generators
+  
+  
+</h3>
+    
+
+<p><strong>Purpose:</strong> Generate cryptographic proofs for credentials.</p>
+
+<p><strong>Default:</strong> <code class="language-plaintext highlighter-rouge">Ed25519ProofGenerator</code></p>
+
+<p><strong>Available Generators:</strong></p>
+<ul>
+  <li>Ed25519: <code class="language-plaintext highlighter-rouge">Ed25519ProofGenerator</code> (default)</li>
+  <li>JWT: <code class="language-plaintext highlighter-rouge">JwtProofGenerator</code></li>
+  <li>BBS+: <code class="language-plaintext highlighter-rouge">BbsProofGenerator</code></li>
+  <li>LD-Proof: <code class="language-plaintext highlighter-rouge">LdProofGenerator</code></li>
+</ul>
+
+<p><strong>Configuration:</strong></p>
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
+    <span class="c1">// Proof generators configured via CredentialServiceRegistry</span>
+    <span class="c1">// Default Ed25519ProofGenerator is registered automatically</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>See Also:</strong></p>
+<ul>
+  <li><a href="/trustweave/core-concepts/verifiable-credentials/">Verifiable Credentials</a></li>
+</ul>
+<h2 id="configuration-validation">
+  
+  
+    <a href="#configuration-validation" class="anchor-heading" aria-labelledby="configuration-validation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Configuration Validation
+  
+  
+</h2>
+    
+
+<p>TrustWeave validates configuration during creation:</p>
+<h3 id="validation-rules">
+  
+  
+    <a href="#validation-rules" class="anchor-heading" aria-labelledby="validation-rules"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Validation Rules
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>KMS Required</strong>: KMS must be provided (defaults to in-memory)</li>
+  <li><strong>DID Method Required</strong>: At least one DID method must be registered</li>
+  <li><strong>Wallet Factory Required</strong>: Wallet factory must be provided (defaults to testkit)</li>
+  <li><strong>Chain ID Format</strong>: Blockchain chain IDs must match CAIP-2 format</li>
+  <li><strong>DID Method Format</strong>: DID method names must be valid identifiers</li>
+</ol>
+<h3 id="validation-errors">
+  
+  
+    <a href="#validation-errors" class="anchor-heading" aria-labelledby="validation-errors"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Validation Errors
+  
+  
+</h3>
+    
+
+<p>Configuration validation errors are returned as <code class="language-plaintext highlighter-rouge">TrustWeaveError.ValidationFailed</code>:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="nf">runCatching</span> <span class="p">{</span>
+    <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
+        <span class="c1">// Invalid configuration</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">result</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
+    <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="nc">TrustWeave</span> <span class="p">-&gt;</span> <span class="cm">/* success */</span> <span class="p">},</span>
+    <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
+        <span class="k">when</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">is</span> <span class="nc">TrustWeaveError</span><span class="p">.</span><span class="nc">ValidationFailed</span> <span class="p">-&gt;</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Configuration invalid: ${error.reason}"</span><span class="p">)</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Field: ${error.field}"</span><span class="p">)</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Value: ${error.value}"</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="k">else</span> <span class="p">-&gt;</span> <span class="nf">println</span><span class="p">(</span><span class="s">"Error: ${error.message}"</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="environment-specific-configuration">
+  
+  
+    <a href="#environment-specific-configuration" class="anchor-heading" aria-labelledby="environment-specific-configuration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Environment-Specific Configuration
+  
+  
+</h2>
+    
+<h3 id="development-configuration">
+  
+  
+    <a href="#development-configuration" class="anchor-heading" aria-labelledby="development-configuration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Development Configuration
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">devVericore</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
+    <span class="c1">// Use testkit defaults</span>
+    <span class="c1">// No additional configuration needed</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="testing-configuration">
+  
+  
+    <a href="#testing-configuration" class="anchor-heading" aria-labelledby="testing-configuration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Testing Configuration
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">testVericore</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
+    <span class="n">kms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
+    <span class="nf">didMethods</span> <span class="p">{</span>
+        <span class="p">+</span> <span class="nc">DidKeyMockMethod</span><span class="p">(</span><span class="n">kms</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="nf">blockchains</span> <span class="p">{</span>
+        <span class="s">"inmemory:test"</span> <span class="n">to</span> <span class="nc">InMemoryBlockchainAnchorClient</span><span class="p">(</span><span class="s">"inmemory:test"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h3 id="production-configuration">
+  
+  
+    <a href="#production-configuration" class="anchor-heading" aria-labelledby="production-configuration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Production Configuration
+  
+  
+</h3>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+</pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">prodVericore</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
+    <span class="n">kms</span> <span class="p">=</span> <span class="nc">AwsKeyManagementService</span><span class="p">(</span>
+        <span class="n">region</span> <span class="p">=</span> <span class="nc">System</span><span class="p">.</span><span class="nf">getenv</span><span class="p">(</span><span class="s">"AWS_REGION"</span><span class="p">),</span>
+        <span class="n">credentials</span> <span class="p">=</span> <span class="n">awsCredentials</span>
+    <span class="p">)</span>
+    
+    <span class="nf">didMethods</span> <span class="p">{</span>
+        <span class="p">+</span> <span class="nc">DidWebMethod</span><span class="p">(</span><span class="n">kms</span><span class="p">)</span> <span class="p">{</span> <span class="n">domain</span> <span class="p">=</span> <span class="s">"yourcompany.com"</span> <span class="p">}</span>
+        <span class="p">+</span> <span class="nc">DidIonMethod</span><span class="p">(</span><span class="n">kms</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="nf">blockchains</span> <span class="p">{</span>
+        <span class="s">"algorand:mainnet"</span> <span class="n">to</span> <span class="nc">AlgorandBlockchainAnchorClient</span><span class="p">(</span>
+            <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:mainnet"</span><span class="p">,</span>
+            <span class="n">options</span> <span class="p">=</span> <span class="nc">AlgorandOptions</span><span class="p">(</span>
+                <span class="n">algodUrl</span> <span class="p">=</span> <span class="nc">System</span><span class="p">.</span><span class="nf">getenv</span><span class="p">(</span><span class="s">"ALGOD_URL"</span><span class="p">),</span>
+                <span class="n">privateKey</span> <span class="p">=</span> <span class="nc">System</span><span class="p">.</span><span class="nf">getenv</span><span class="p">(</span><span class="s">"ALGORAND_PRIVATE_KEY"</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="n">walletFactory</span> <span class="p">=</span> <span class="nc">DatabaseWalletFactory</span><span class="p">(</span>
+        <span class="n">dataSource</span> <span class="p">=</span> <span class="n">dataSource</span><span class="p">,</span>
+        <span class="n">enableOrganization</span> <span class="p">=</span> <span class="k">true</span><span class="p">,</span>
+        <span class="n">enablePresentation</span> <span class="p">=</span> <span class="k">true</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="configuration-best-practices">
+  
+  
+    <a href="#configuration-best-practices" class="anchor-heading" aria-labelledby="configuration-best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Configuration Best Practices
+  
+  
+</h2>
+    
+
+<ol>
+  <li><strong>Use Environment Variables</strong>: Store sensitive configuration in environment variables</li>
+  <li><strong>Validate Early</strong>: Validate configuration at startup, not at runtime</li>
+  <li><strong>Use Type-Safe Options</strong>: Prefer typed options over maps</li>
+  <li><strong>Document Configuration</strong>: Document your configuration choices</li>
+  <li><strong>Test Configuration</strong>: Test configuration in staging before production</li>
+</ol>
+<h2 id="related-documentation">
+  
+  
+    <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
+  
+  
+</h2>
+    
+
+<ul>
+  <li><a href="/trustweave/configuration/defaults/">Default Configuration</a> - What defaults are used</li>
+  <li><a href="/trustweave/introduction/architecture-overview/">Architecture Overview</a> - Component architecture</li>
+  <li><a href="../deployment/production-checklist.md">Production Deployment</a> - Production setup</li>
+  <li><a href="/trustweave/getting-started/installation/">Installation</a> - Initial setup</li>
+</ul>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

@@ -44,6 +44,9 @@ _book/
 node_modules/
 package-lock.json
 
+# Ruby/Jekyll
+Gemfile.lock
+
 # Gradle Node Plugin downloads
 build/nodejs/
 build/npm/

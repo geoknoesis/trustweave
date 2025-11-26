@@ -460,24 +460,8 @@ nav:
         url: core-concepts/blockchain-anchoring.md
       - title: Smart Contracts
         url: core-concepts/smart-contracts.md
-      - title: Trust Registry
-        url: core-concepts/trust-registry.md
       - title: Key Management
         url: core-concepts/key-management.md
-      - title: Credential Exchange Protocols
-        url: core-concepts/credential-exchange-protocols.md
-      - title: Delegation
-        url: core-concepts/delegation.md
-      - title: Evaluation Engines
-        url: core-concepts/evaluation-engines.md
-      - title: Proof Purpose Validation
-        url: core-concepts/proof-purpose-validation.md
-      - title: Blockchain-Anchored Revocation
-        url: core-concepts/blockchain-anchored-revocation.md
-      - title: JSON Canonicalization
-        url: core-concepts/json-canonicalization.md
-      - title: Algorithm Compatibility
-        url: core-concepts/algorithm-compatibility-table.md
 
   # ============================================
   # PART 3: TUTORIALS & EXAMPLES
@@ -488,18 +472,6 @@ nav:
     children:
       - title: Overview
         url: tutorials/README.md
-      - title: Beginner Tutorial Series
-        url: tutorials/beginner-tutorial-series.md
-      - title: Your First DID
-        url: tutorials/did-operations-tutorial.md
-      - title: Credential Issuance
-        url: tutorials/credential-issuance-tutorial.md
-      - title: Wallet API
-        url: tutorials/wallet-api-tutorial.md
-      - title: Use Case Scenarios
-        url: scenarios/README.md
-      - title: Credential Exchange Protocols
-        url: features/credential-exchange-protocols/README.md
 
   # ============================================
   # PART 4: API REFERENCE
@@ -538,22 +510,8 @@ nav:
     children:
       - title: Overview
         url: advanced/README.md
-      - title: Key Rotation
-        url: advanced/key-rotation.md
-      - title: Verification Policies
-        url: advanced/verification-policies.md
-      - title: Service Provider Interface (SPI)
-        url: advanced/spi.md
-      - title: Creating Custom Adapters
-        url: advanced/custom-adapters.md
-      - title: Plugin Lifecycle
-        url: advanced/plugin-lifecycle.md
       - title: Error Handling
         url: advanced/error-handling.md
-      - title: Testing Strategies
-        url: advanced/testing-strategies.md
-      - title: Performance Considerations
-        url: advanced/performance.md
 
   # ============================================
   # PART 7: REFERENCE
@@ -564,22 +522,8 @@ nav:
     children:
       - title: Core Modules
         url: modules/core-modules.md
-      - title: Configuration
-        url: configuration/README.md
-      - title: Migration Guides
-        url: migration/README.md
-      - title: Security
-        url: security/README.md
-      - title: Licensing
-        url: licensing/README.md
-      - title: Comparison
-        url: comparison/README.md
       - title: FAQ
         url: faq.md
-      - title: Glossary
-        url: GLOSSARY.md
-      - title: Plugins
-        url: plugins.md
       - title: Whitepaper
         url: TRUSTWEAVE_WHITEPAPER.md
 
@@ -592,16 +536,6 @@ nav:
     children:
       - title: Overview
         url: contributing/README.md
-      - title: Development Setup
-        url: contributing/development-setup.md
-      - title: Code Style
-        url: contributing/code-style.md
-      - title: Testing Guidelines
-        url: contributing/testing-guidelines.md
-      - title: Pull Request Process
-        url: contributing/pull-request-process.md
-      - title: Creating Plugins
-        url: contributing/creating-plugins.md
 
 # Kramdown settings for markdown processing
 kramdown:

@@ -303,6 +303,30 @@ layout: null
             display: block;
         }
 
+        /* Code block responsive styles */
+        .code-block {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .code-block::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .code-block::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        .code-block::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+
+        .code-block::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .hero h1 {
@@ -333,6 +357,33 @@ layout: null
             .benefits-grid,
             .trust-grid {
                 grid-template-columns: 1fr;
+            }
+
+            /* Real Example section mobile styles */
+            .real-example-section {
+                padding: 1.5rem !important;
+            }
+
+            .real-example-section h2 {
+                font-size: 1.5rem !important;
+            }
+
+            .example-grid {
+                grid-template-columns: 1fr !important;
+                gap: 1.5rem !important;
+            }
+
+            .code-block {
+                padding: 1rem !important;
+                font-size: 0.75rem !important;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                min-width: 0;
+            }
+
+            .code-block > div {
+                white-space: pre;
+                min-width: max-content;
             }
         }
     </style>
@@ -438,14 +489,14 @@ layout: null
                 </div>
 
                 <!-- Real Example -->
-                <div style="background: white; padding: 3rem; border-radius: 1.5rem; box-shadow: 0 8px 24px rgba(0,0,0,0.1); margin-bottom: 4rem;">
+                <div class="real-example-section" style="background: white; padding: 3rem; border-radius: 1.5rem; box-shadow: 0 8px 24px rgba(0,0,0,0.1); margin-bottom: 4rem;">
                     <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem; color: var(--text); text-align: center;">
                         Real Example: The Difference
                     </h2>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                    <div class="example-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; margin-top: 2rem;">
                         <div>
                             <h3 style="color: #dc2626; margin-bottom: 1rem; font-size: 1.25rem;">❌ Before TrustWeave</h3>
-                            <div style="background: #fef2f2; padding: 1.5rem; border-radius: 0.75rem; font-family: 'Courier New', monospace; font-size: 0.85rem; line-height: 1.6; overflow-x: auto;">
+                            <div class="code-block" style="background: #fef2f2; padding: 1.5rem; border-radius: 0.75rem; font-family: 'Courier New', monospace; font-size: 0.85rem; line-height: 1.6; overflow-x: auto;">
                                 <div style="color: #dc2626; margin-bottom: 0.5rem;">// You're locked into Ethereum</div>
                                 <div style="color: var(--text);">val ethereumClient = EthereumClient(...)</div>
                                 <div style="color: var(--text);">val credential = issueCredential(</div>
@@ -458,7 +509,7 @@ layout: null
                         </div>
                         <div>
                             <h3 style="color: var(--accent); margin-bottom: 1rem; font-size: 1.25rem;">✅ With TrustWeave</h3>
-                            <div style="background: #d1fae5; padding: 1.5rem; border-radius: 0.75rem; font-family: 'Courier New', monospace; font-size: 0.85rem; line-height: 1.6; overflow-x: auto;">
+                            <div class="code-block" style="background: #d1fae5; padding: 1.5rem; border-radius: 0.75rem; font-family: 'Courier New', monospace; font-size: 0.85rem; line-height: 1.6; overflow-x: auto;">
                                 <div style="color: var(--accent); margin-bottom: 0.5rem;">// Your code stays the same</div>
                                 <div style="color: var(--text);">val credential = trustLayer.issueCredential(...)</div>
                                 <div style="margin-top: 1rem; color: var(--accent);">// Switch blockchains? Change config:</div>

@@ -1,5 +1,6 @@
 ---
 title: Use Case Scenarios
+nav_exclude: true
 keywords:
   - scenarios
   - use cases

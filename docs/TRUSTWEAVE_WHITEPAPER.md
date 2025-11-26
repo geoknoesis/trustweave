@@ -1,5 +1,6 @@
 ---
 title: "TrustWeave SDK: Decentralized Trust Infrastructure"
+nav_exclude: true
 ---
 
 # TrustWeave SDK: Decentralized Trust Infrastructure

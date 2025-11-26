@@ -179,10 +179,6 @@ defaults:
       path: "faq.md"
     values:
       nav_exclude: false
-  - scope:
-      path: "TRUSTWEAVE_WHITEPAPER.md"
-    values:
-      nav_exclude: false
 
 # Theme: Just the Docs (GitBook-like appearance)
 theme: just-the-docs
@@ -392,8 +388,6 @@ nav:
         url: modules/core-modules.md
       - title: FAQ
         url: faq.md
-      - title: Whitepaper
-        url: TRUSTWEAVE_WHITEPAPER.md
 
   # ============================================
   # PART 8: CONTRIBUTING

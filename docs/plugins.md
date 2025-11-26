@@ -1,5 +1,6 @@
 ---
 title: Supported Plugins
+nav_exclude: true
 ---
 
 # Supported Plugins

@@ -1,5 +1,6 @@
 ---
 title: Credential Exchange Protocols
+nav_exclude: true
 ---
 
 # Credential Exchange Protocols

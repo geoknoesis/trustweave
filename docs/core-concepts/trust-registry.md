@@ -1,5 +1,6 @@
 ---
 title: Trust Registry
+nav_exclude: true
 ---
 
 # Trust Registry

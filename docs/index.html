@@ -4,6 +4,7 @@ layout: null
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% include main-nav-head.html %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TrustWeave - Build Trusted Domains Without Vendor Lock-In | Open Source</title>
@@ -46,97 +47,6 @@ layout: null
             overflow-x: hidden;
         }
 
-        /* Navigation */
-        nav {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border);
-            z-index: 1000;
-            padding: 1rem 0;
-        }
-
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        
-        .logo img {
-            height: 80px;
-            width: auto;
-            transition: opacity 0.3s;
-        }
-        
-        .logo:hover img {
-            opacity: 0.8;
-        }
-        
-        .logo:hover {
-            text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            color: var(--text);
-            font-weight: 500;
-            transition: color 0.3s;
-            padding: 0.5rem 1rem;
-        }
-
-        .nav-links a:hover {
-            color: var(--primary);
-        }
-        
-        .nav-links a.btn {
-            padding: 0.75rem 1.5rem;
-            display: inline-flex;
-            align-items: center;
-        }
-        
-        .nav-links a.btn svg {
-            flex-shrink: 0;
-        }
-
-        .github-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 0.5rem;
-            transition: all 0.3s;
-            padding: 0.5rem;
-        }
-
-        .github-icon:hover {
-            background: var(--bg-light);
-            transform: translateY(-2px);
-        }
-
-        .github-icon svg {
-            width: 24px;
-            height: 24px;
-        }
-
         .btn {
             padding: 0.75rem 1.5rem;
             border-radius: 0.5rem;
@@ -171,20 +81,9 @@ layout: null
             color: white;
         }
 
-        .btn-outline {
-            background: white;
-            color: var(--text);
-            border: 2px solid var(--border);
-        }
-
-        .btn-outline:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
         /* Hero Section */
         .hero {
-            margin-top: 80px;
+            margin-top: 0;
             padding: 6rem 2rem;
             background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
             text-align: center;
@@ -222,10 +121,9 @@ layout: null
             flex-wrap: wrap;
         }
 
-        /* Features Section */
-        .features {
-            padding: 6rem 2rem;
-            background: var(--bg);
+        /* Section Styling */
+        section {
+            padding: 5rem 2rem;
         }
 
         .container {
@@ -234,86 +132,132 @@ layout: null
         }
 
         .section-title {
-            text-align: center;
             font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 1rem;
+            text-align: center;
+            color: var(--text);
         }
 
         .section-subtitle {
-            text-align: center;
-            color: var(--text-light);
             font-size: 1.125rem;
-            margin-bottom: 4rem;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
+            color: var(--text-light);
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            line-height: 1.8;
         }
 
-        .features-grid {
+        /* The Essence Section */
+        .essence {
+            background: var(--bg);
+        }
+
+        /* Benefits Section */
+        .benefits {
+            background: var(--bg-light);
+        }
+
+        .benefits-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
             margin-top: 3rem;
         }
 
-        .feature-card {
+        .benefit-item {
             padding: 2rem;
+            background: white;
             border-radius: 1rem;
             border: 1px solid var(--border);
-            background: white;
             transition: all 0.3s;
         }
 
-        .feature-card:hover {
+        .benefit-item:hover {
             transform: translateY(-4px);
             box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
             border-color: var(--primary);
         }
 
-        .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .feature-card h3 {
+        .benefit-item h3 {
             font-size: 1.5rem;
             margin-bottom: 0.75rem;
             color: var(--text);
         }
 
-        .feature-card p {
+        .benefit-item p {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        /* Trust Signals */
+        .trust-signals {
+            background: var(--bg);
+        }
+
+        .trust-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .trust-item {
+            padding: 1.5rem;
+            background: var(--bg-light);
+            border-radius: 0.75rem;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .trust-item strong {
+            display: block;
+            font-size: 1.125rem;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .trust-item span {
+            font-size: 0.875rem;
             color: var(--text-light);
         }
 
-        /* CTA Sections */
-        .cta-section {
-            padding: 6rem 2rem;
-            background: var(--bg-light);
+        /* Final CTA */
+        .final-cta {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            text-align: center;
         }
 
         .cta-container {
             max-width: 800px;
             margin: 0 auto;
-            text-align: center;
         }
 
-        .cta-box {
-            background: white;
-            padding: 3rem;
-            border-radius: 1.5rem;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
-        }
-
-        .cta-box h2 {
-            font-size: 2rem;
+        .final-cta h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
             margin-bottom: 1rem;
+            color: var(--text);
         }
 
-        .cta-box p {
-            color: var(--text-light);
-            margin-bottom: 2rem;
+        .final-cta p {
             font-size: 1.125rem;
+            color: var(--text-light);
+            margin-bottom: 2.5rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .cta-note {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-top: 1rem;
         }
 
         /* Waitlist Form */
@@ -321,7 +265,7 @@ layout: null
             display: flex;
             gap: 1rem;
             max-width: 500px;
-            margin: 0 auto;
+            margin: 2rem auto 0;
             flex-wrap: wrap;
         }
 
@@ -359,116 +303,22 @@ layout: null
             display: block;
         }
 
-        .error-message {
-            display: none;
-            margin-top: 1rem;
-            padding: 1rem;
-            background: #fee;
-            color: #c33;
-            border-radius: 0.5rem;
-            border: 1px solid #fcc;
-        }
-
-        .waitlist-form button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        /* Open Source Section */
-        .opensource {
-            padding: 6rem 2rem;
-            background: var(--bg);
-        }
-
-        .opensource-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-        }
-
-        .opensource-card {
-            padding: 2.5rem;
-            border-radius: 1rem;
-            background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);
-            border: 1px solid var(--border);
-            text-align: center;
-            transition: all 0.3s;
-        }
-
-        .opensource-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-        }
-
-        .opensource-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .opensource-card p {
-            color: var(--text-light);
-            margin-bottom: 1.5rem;
-        }
-
-        /* Footer */
-        footer {
-            background: var(--text);
-            color: white;
-            padding: 3rem 2rem;
-            text-align: center;
-        }
-
-        .footer-content {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .footer-links a {
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .footer-links a:hover {
-            color: white;
-        }
-
-        .footer-text {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.875rem;
-        }
-
         /* Responsive */
         @media (max-width: 768px) {
             .hero h1 {
-                font-size: 2rem;
+                font-size: 2.5rem;
             }
 
             .hero p {
-                font-size: 1rem;
+                font-size: 1.125rem;
             }
 
-            .nav-links {
-                gap: 0.5rem;
-                font-size: 0.9rem;
+            .section-title {
+                font-size: 2rem;
             }
-            
-            .nav-links a {
-                padding: 0.25rem 0.5rem;
-            }
-            
-            .nav-links a.btn {
-                padding: 0.5rem 1rem;
-                font-size: 0.85rem;
+
+            .final-cta h2 {
+                font-size: 2rem;
             }
 
             .waitlist-form {
@@ -479,52 +329,22 @@ layout: null
             .waitlist-form button {
                 width: 100%;
             }
-            
-            .section-title {
-                font-size: 2rem;
-            }
-            
-            .section-subtitle {
-                font-size: 1rem;
-            }
-            
-            .hero-buttons {
-                flex-direction: column;
-            }
-            
-            .hero-buttons .btn {
-                width: 100%;
+
+            .benefits-grid,
+            .trust-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav>
-        <div class="nav-container">
-            <a href="{{ site.baseurl }}/" class="logo">
-                <img src="{{ site.baseurl }}/assets/images/trustweave-logo.jpg" alt="TrustWeave Logo">
-            </a>
-            <div class="nav-links">
-                <a href="{{ site.baseurl }}/">Home</a>
-                <a href="{{ site.baseurl }}/#features">Features</a>
-                <a href="{{ site.baseurl }}/use-scenarios.html">Use Scenarios</a>
-                <a href="{{ site.baseurl }}/partnership.html">Partners</a>
-                <a href="{{ site.baseurl }}/about.html">About</a>
-                <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" class="github-icon" title="GitHub">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                    </svg>
-                </a>
-            </div>
-        </div>
-    </nav>
+    {% include site-header.html %}
 
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-container">
             <h1>Build Trusted Domains Without Vendor Lock-In</h1>
-            <p>Switch technologies anytime. No code rewrites. Never locked in.</p>
+            <p>Write once. Switch blockchains, DID methods, or KMS providers with configuration—not code rewrites. Never locked in. Always future-proof.</p>
             
             <!-- Quality Indicators -->
             <div style="display: flex; justify-content: center; gap: 2rem; margin: 2rem 0; flex-wrap: wrap; font-size: 0.9rem; color: var(--text-light);">
@@ -532,7 +352,7 @@ layout: null
                     <span style="color: var(--accent);">✅</span> W3C Standards Compliant
                 </span>
                 <span style="display: flex; align-items: center; gap: 0.5rem;">
-                    <span style="color: var(--accent);">✅</span> Apache 2.0 Open Source
+                    <span style="color: var(--accent);">✅</span> AGPL v3.0 Open Source
                 </span>
                 <span style="display: flex; align-items: center; gap: 0.5rem;">
                     <span style="color: var(--accent);">✅</span> Production-Ready
@@ -558,14 +378,12 @@ layout: null
     </section>
 
     <!-- The Essence Section -->
-    <section class="essence" style="padding: 6rem 2rem; background: var(--bg);">
+    <section class="essence">
         <div class="container">
             <div style="max-width: 1000px; margin: 0 auto;">
                 <!-- Problem Statement -->
                 <div style="text-align: center; margin-bottom: 4rem;">
-                    <h2 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text);">
-                        The Problem Every Developer Faces
-                    </h2>
+                    <h2 class="section-title">The Problem Every Developer Faces</h2>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
                         <div style="background: #fef2f2; padding: 1.5rem; border-radius: 1rem; border-left: 4px solid #dc2626;">
                             <p style="color: var(--text); font-weight: 600; margin-bottom: 0.5rem;">You build on Ethereum.</p>
@@ -587,9 +405,7 @@ layout: null
 
                 <!-- The Promise -->
                 <div style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); padding: 4rem 3rem; border-radius: 2rem; text-align: center; margin-bottom: 4rem; border: 2px solid var(--primary);">
-                    <h2 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text);">
-                        The TrustWeave Promise
-                    </h2>
+                    <h2 class="section-title">The TrustWeave Promise</h2>
                     <p style="font-size: 1.5rem; color: var(--text); font-weight: 600; margin-bottom: 2rem; line-height: 1.6;">
                         Write your trust layer once. Switch technologies with configuration, not code.
                     </p>
@@ -660,330 +476,111 @@ layout: null
                         Same code. Different technology. Zero rewrites.
                     </p>
                 </div>
-
             </div>
         </div>
     </section>
 
-
-    <!-- Features Section -->
-    <section class="features" id="features">
+    <!-- Benefits -->
+    <section class="benefits" id="benefits">
         <div class="container">
             <h2 class="section-title">Why TrustWeave?</h2>
-            <p class="section-subtitle">Production-ready Kotlin library for building decentralized identity and trust systems</p>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🎯</div>
-                    <h3>Domain-Agnostic</h3>
-                    <p>Works for any use case - education, healthcare, IoT, supply chain, and more</p>
+            <div class="benefits-grid">
+                <div class="benefit-item">
+                    <h3>🚫 No Vendor Lock-In</h3>
+                    <p>Switch from Ethereum to Algorand to Polygon with one config change. Your code never changes.</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔗</div>
-                    <h3>Chain-Agnostic</h3>
-                    <p>Supports any blockchain via pluggable adapters</p>
+                <div class="benefit-item">
+                    <h3>🔮 Future-Proof</h3>
+                    <p>New blockchains or DID methods? Add them as plugins. Your application code stays the same.</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🆔</div>
-                    <h3>DID-Method-Agnostic</h3>
-                    <p>Works with any DID method (did:key, did:web, did:ion, etc.)</p>
+                <div class="benefit-item">
+                    <h3>⚡ Faster Development</h3>
+                    <p>Focus on your business logic, not infrastructure. Production-ready APIs with sensible defaults.</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔐</div>
-                    <h3>KMS-Agnostic</h3>
-                    <p>Supports any Key Management Service</p>
+                <div class="benefit-item">
+                    <h3>💰 Lower Costs</h3>
+                    <p>Switch when costs change, not when contracts expire. No rewrites mean no hidden migration costs.</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🛡️</div>
-                    <h3>Type-Safe</h3>
-                    <p>Leverages Kotlin's type system for compile-time safety</p>
+                <div class="benefit-item">
+                    <h3>✅ Production-Ready</h3>
+                    <p>Type-safe Kotlin APIs, W3C standards-compliant, 25+ real-world examples, comprehensive documentation.</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3>Coroutine-Based</h3>
-                    <p>Built for modern async/await patterns</p>
+                <div class="benefit-item">
+                    <h3>🌐 Standards-Based</h3>
+                    <p>Built on W3C Verifiable Credentials and DIDs. Works seamlessly with any standards-compliant system.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Quick Links Section -->
-    <section class="quick-links" style="padding: 6rem 2rem; background: var(--bg);">
+    <!-- Technical Excellence Section -->
+    <section class="trust-signals" id="trust">
         <div class="container">
-            <h2 class="section-title">Explore Documentation</h2>
-            <p class="section-subtitle">Everything you need to build with TrustWeave</p>
-            <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
-                <div class="feature-card">
-                    <div class="feature-icon">📖</div>
-                    <h3>API Reference</h3>
-                    <p>Complete API documentation</p>
-                    <a href="{{ site.baseurl }}/api-reference/" class="btn btn-primary" style="margin-top: 1rem;">View API Docs</a>
+            <h2 class="section-title">Developer-First Architecture</h2>
+            <p class="section-subtitle">Built for developers who value clean code, type safety, and maintainability</p>
+            <div class="trust-grid">
+                <div class="trust-item">
+                    <strong>🔧 Pluggable Architecture</strong>
+                    <span>Swap implementations via configuration. No code changes needed.</span>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🎓</div>
-                    <h3>Tutorials</h3>
-                    <p>Step-by-step learning guides</p>
-                    <a href="{{ site.baseurl }}/tutorials/" class="btn btn-primary" style="margin-top: 1rem;">View Tutorials</a>
+                <div class="trust-item">
+                    <strong>📝 Type-Safe DSL</strong>
+                    <span>Fluent APIs with compile-time safety. Catch errors before runtime.</span>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔧</div>
-                    <h3>Common Patterns</h3>
-                    <p>Solutions for common tasks</p>
-                    <a href="{{ site.baseurl }}/getting-started/common-patterns/" class="btn btn-primary" style="margin-top: 1rem;">View Patterns</a>
+                <div class="trust-item">
+                    <strong>⚡ Coroutine-Based</strong>
+                    <span>Modern async/await patterns. Built for Kotlin's concurrency model.</span>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">❓</div>
-                    <h3>FAQ</h3>
-                    <p>Frequently asked questions</p>
-                    <a href="{{ site.baseurl }}/faq/" class="btn btn-primary" style="margin-top: 1rem;">View FAQ</a>
+                <div class="trust-item">
+                    <strong>🧩 Modular Design</strong>
+                    <span>Use only what you need. Lightweight and composable modules.</span>
+                </div>
+                <div class="trust-item">
+                    <strong>📚 Comprehensive Docs</strong>
+                    <span>25+ examples, tutorials, API reference. Everything you need to succeed.</span>
+                </div>
+                <div class="trust-item">
+                    <strong>🔌 Protocol Agnostic</strong>
+                    <span>DIDComm, OIDC4VCI, CHAPI - all supported through unified APIs.</span>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Open Source vs SaaS Section -->
-    <section class="opensource" id="opensource" style="background: var(--bg-light);">
-        <div class="container">
-            <h2 class="section-title">Choose Your Path</h2>
-            <p class="section-subtitle">TrustWeave is available as open source today, with managed SaaS coming soon</p>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; margin-top: 3rem; max-width: 1000px; margin-left: auto; margin-right: auto;">
-                <!-- Open Source Card -->
-                <div style="background: white; padding: 3rem; border-radius: 1.5rem; border: 2px solid var(--primary); box-shadow: 0 8px 24px rgba(0,0,0,0.1); position: relative;">
-                    <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 0.5rem 1.5rem; border-radius: 2rem; font-size: 0.9rem; font-weight: 600;">
-                        🆓 Free Forever
-                    </div>
-                    <h3 style="font-size: 1.75rem; margin-bottom: 1rem; margin-top: 1rem; color: var(--text);">Open Source</h3>
-                    <p style="color: var(--text-light); margin-bottom: 2rem; font-size: 1.05rem;">
-                        <strong>Perfect for:</strong> Developers building custom solutions, organizations with existing infrastructure, teams that want full control
-                    </p>
-                    
-                    <div style="margin-bottom: 2rem;">
-                        <h4 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text);">Includes:</h4>
-                        <ul style="list-style: none; padding: 0; color: var(--text-light); line-height: 2;">
-                            <li style="display: flex; align-items: start; gap: 0.5rem;">
-                                <span style="color: var(--accent);">✅</span>
-                                <span>Complete SDK and libraries</span>
-                            </li>
-                            <li style="display: flex; align-items: start; gap: 0.5rem;">
-                                <span style="color: var(--accent);">✅</span>
-                                <span>25+ real-world examples</span>
-                            </li>
-                            <li style="display: flex; align-items: start; gap: 0.5rem;">
-                                <span style="color: var(--accent);">✅</span>
-                                <span>Comprehensive documentation</span>
-                            </li>
-                            <li style="display: flex; align-items: start; gap: 0.5rem;">
-                                <span style="color: var(--accent);">✅</span>
-                                <span>Community support</span>
-                            </li>
-                            <li style="display: flex; align-items: start; gap: 0.5rem;">
-                                <span style="color: var(--accent);">✅</span>
-                                <span>Apache 2.0 license</span>
-                            </li>
-                        </ul>
-                    </div>
-                    
-                    <a href="{{ site.baseurl }}/introduction/README/" class="btn btn-primary" style="width: 100%; text-align: center; display: block;">
-                        Explore Documentation →
-                    </a>
-                </div>
-                
-                <!-- SaaS Card -->
-                <div style="background: white; padding: 3rem; border-radius: 1.5rem; border: 2px solid var(--border); box-shadow: 0 8px 24px rgba(0,0,0,0.1); position: relative;">
-                    <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: var(--secondary); color: white; padding: 0.5rem 1.5rem; border-radius: 2rem; font-size: 0.9rem; font-weight: 600;">
-                        💼 Coming Soon
-                    </div>
-                    <h3 style="font-size: 1.75rem; margin-bottom: 1rem; margin-top: 1rem; color: var(--text);">Managed SaaS</h3>
-                    <p style="color: var(--text-light); margin-bottom: 2rem; font-size: 1.05rem;">
-                        <strong>Perfect for:</strong> Teams that want managed infrastructure, organizations needing SLAs and support, companies that want to focus on product, not ops
-                    </p>
-                    
-                    <div style="margin-bottom: 2rem;">
-                        <h4 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text);">Everything in Open Source, plus:</h4>
-                        <ul style="list-style: none; padding: 0; color: var(--text-light); line-height: 2;">
-                            <li style="display: flex; align-items: start; gap: 0.5rem;">
-                                <span style="color: var(--accent);">✅</span>
-                                <span>Managed infrastructure</span>
-                            </li>
-                            <li style="display: flex; align-items: start; gap: 0.5rem;">
-                                <span style="color: var(--accent);">✅</span>
-                                <span>99.9% uptime SLA</span>
-                            </li>
-                            <li style="display: flex; align-items: start; gap: 0.5rem;">
-                                <span style="color: var(--accent);">✅</span>
-                                <span>Priority support</span>
-                            </li>
-                            <li style="display: flex; align-items: start; gap: 0.5rem;">
-                                <span style="color: var(--accent);">✅</span>
-                                <span>Advanced monitoring</span>
-                            </li>
-                            <li style="display: flex; align-items: start; gap: 0.5rem;">
-                                <span style="color: var(--accent);">✅</span>
-                                <span>Compliance certifications</span>
-                            </li>
-                        </ul>
-                    </div>
-                    
-                    <a href="#waitlist" class="btn btn-secondary" style="width: 100%; text-align: center; display: block;">
-                        Join Waitlist →
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-    
-    <!-- What's Included Section -->
-    <section class="features" style="padding: 6rem 2rem; background: var(--bg);">
-        <div class="container">
-            <h2 class="section-title">Everything You Need to Get Started</h2>
-            <p class="section-subtitle">Complete developer experience with production-ready examples</p>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 3rem;">
-                <div style="background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%); padding: 2rem; border-radius: 1rem; border: 1px solid var(--border);">
-                    <h3 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text);">📚 Complete Developer Experience</h3>
-                    <ul style="list-style: none; padding: 0; color: var(--text-light); line-height: 2;">
-                        <li>✅ Complete Use Case Scenarios</li>
-                        <li>✅ Step-by-Step Tutorials</li>
-                        <li>✅ Comprehensive API Documentation</li>
-                        <li>✅ Runnable Code Examples</li>
-                        <li>✅ Common Patterns & Best Practices</li>
-                        <li>✅ FAQ & Troubleshooting Guides</li>
-                    </ul>
-                </div>
-                
-                <div style="background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%); padding: 2rem; border-radius: 1rem; border: 1px solid var(--border);">
-                    <h3 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text);">🚀 Production-Ready Features</h3>
-                    <ul style="list-style: none; padding: 0; color: var(--text-light); line-height: 2;">
-                        <li>✅ 10+ Supported Blockchains</li>
-                        <li>✅ 15+ DID Methods Supported</li>
-                        <li>✅ Multiple KMS Integrations</li>
-                        <li>✅ Type-Safe Kotlin APIs</li>
-                        <li>✅ Coroutine-Based Async Operations</li>
-                        <li>✅ Comprehensive Test Coverage</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-    
-    <!-- Company Credibility Section -->
-    <section class="features" style="padding: 6rem 2rem; background: var(--bg-light);">
-        <div class="container">
-            <h2 class="section-title">Built by Geoknoesis LLC</h2>
-            <p class="section-subtitle">TrustWeave represents Geoknoesis' reference architecture for decentralized trust</p>
-            
-            <div style="max-width: 800px; margin: 2rem auto; background: white; padding: 3rem; border-radius: 1.5rem; box-shadow: 0 4px 24px rgba(0,0,0,0.1);">
-                <p style="color: var(--text-light); line-height: 1.8; margin-bottom: 2rem; font-size: 1.05rem;">
-                    Built by a team with deep expertise in decentralized identity systems, blockchain technology, 
-                    enterprise software architecture, and standards compliance (W3C, CAIP-2).
-                </p>
-                
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
-                    <div style="text-align: center;">
-                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔐</div>
-                        <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--text);">Decentralized Identity</h4>
-                        <p style="color: var(--text-light); font-size: 0.9rem;">Deep expertise in DID and VC standards</p>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">⛓️</div>
-                        <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--text);">Blockchain Technology</h4>
-                        <p style="color: var(--text-light); font-size: 0.9rem;">Multi-chain integration experience</p>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🏢</div>
-                        <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--text);">Enterprise Architecture</h4>
-                        <p style="color: var(--text-light); font-size: 0.9rem;">Production-ready system design</p>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">✅</div>
-                        <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--text);">Standards Compliance</h4>
-                        <p style="color: var(--text-light); font-size: 0.9rem;">W3C, CAIP-2 certified</p>
-                    </div>
-                </div>
-                
-                <div style="text-align: center; margin-top: 2rem;">
-                    <a href="https://www.geoknoesis.com" target="_blank" class="btn btn-outline">Learn More About Geoknoesis →</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- SaaS Waitlist Section -->
-    <section class="cta-section" id="waitlist">
+    <!-- Final CTA -->
+    <section class="final-cta" id="waitlist">
         <div class="cta-container">
-            <div class="cta-box">
-                <h2>Get Early Access to Managed TrustWeave Infrastructure</h2>
-                <p style="font-size: 1.125rem; margin-bottom: 1.5rem;">
-                    Be among the first to access our managed SaaS platform when it launches.
-                </p>
-                
-                <div style="background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%); padding: 1.5rem; border-radius: 1rem; margin-bottom: 2rem; border: 1px solid var(--border);">
-                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text);">Early adopters get:</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                        <div style="display: flex; align-items: start; gap: 0.5rem;">
-                            <span style="color: var(--accent); font-size: 1.25rem;">🎁</span>
-                            <span style="color: var(--text-light); font-size: 0.95rem;">Exclusive launch pricing (save up to 50%)</span>
-                        </div>
-                        <div style="display: flex; align-items: start; gap: 0.5rem;">
-                            <span style="color: var(--accent); font-size: 1.25rem;">🚀</span>
-                            <span style="color: var(--text-light); font-size: 0.95rem;">Priority onboarding and setup</span>
-                        </div>
-                        <div style="display: flex; align-items: start; gap: 0.5rem;">
-                            <span style="color: var(--accent); font-size: 1.25rem;">📞</span>
-                            <span style="color: var(--text-light); font-size: 0.95rem;">Direct access to our engineering team</span>
-                        </div>
-                        <div style="display: flex; align-items: start; gap: 0.5rem;">
-                            <span style="color: var(--accent); font-size: 1.25rem;">💡</span>
-                            <span style="color: var(--text-light); font-size: 0.95rem;">Opportunity to influence product roadmap</span>
-                        </div>
-                    </div>
-                </div>
-                <form class="waitlist-form" id="waitlistForm" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
-                    <input 
-                        type="email" 
-                        id="emailInput" 
-                        name="email"
-                        placeholder="Enter your email address" 
-                        required
-                        aria-label="Email address"
-                    >
-                    <input type="hidden" name="_subject" value="TrustWeave SaaS Waitlist Signup">
-                    <input type="hidden" name="_next" value="#waitlist">
-                    <button type="submit" class="btn btn-primary" id="submitButton">Join Waitlist</button>
-                </form>
-                <div class="success-message" id="successMessage">
-                    ✅ Thank you! We've added you to the waitlist. You'll receive an email confirmation shortly.
-                </div>
-                <div class="error-message" id="errorMessage" style="display: none; margin-top: 1rem; padding: 1rem; background: #fee; color: #c33; border-radius: 0.5rem; border: 1px solid #fcc;">
-                    ❌ Something went wrong. Please try again or contact us directly.
-                </div>
+            <h2>Start Building Today</h2>
+            <p>Free. Open Source. No strings attached.</p>
+            <div class="cta-buttons">
+                <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" class="btn btn-primary">Get Started on GitHub</a>
+                <a href="{{ site.baseurl }}/introduction/README/" class="btn btn-secondary">View Documentation</a>
+            </div>
+            <p class="cta-note">Get started in 5 minutes with our quick start guide</p>
+            
+            <form class="waitlist-form" id="waitlistForm">
+                <input 
+                    type="email" 
+                    id="emailInput" 
+                    placeholder="Enter your email for SaaS waitlist" 
+                    required
+                    aria-label="Email address"
+                >
+                <button type="submit" class="btn btn-primary">Join Waitlist</button>
+            </form>
+            <div class="success-message" id="successMessage">
+                ✅ Thank you! We've added you to the waitlist. You'll receive an email confirmation shortly.
             </div>
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer>
-        <div class="footer-content">
-            <div class="footer-links">
-                <a href="{{ site.baseurl }}/">Home</a>
-                <a href="{{ site.baseurl }}/partnership.html">Partners</a>
-                <a href="{{ site.baseurl }}/about.html">About</a>
-                <a href="https://github.com/geoknoesis/TrustWeave" target="_blank">GitHub</a>
-                <a href="{{ site.baseurl }}/introduction/README/">Documentation</a>
-                <a href="https://github.com/geoknoesis/TrustWeave/blob/main/LICENSE" target="_blank">License</a>
-                <a href="https://www.geoknoesis.com" target="_blank">Geoknoesis LLC</a>
-            </div>
-            <p class="footer-text">Made with ❤️ by Geoknoesis LLC</p>
-        </div>
-    </footer>
+    {% include site-footer.html %}
 
     <script>
-        // Waitlist form handling with Formspree integration
+        // Waitlist form handling
         const waitlistForm = document.getElementById('waitlistForm');
         const emailInput = document.getElementById('emailInput');
-        const submitButton = document.getElementById('submitButton');
         const successMessage = document.getElementById('successMessage');
-        const errorMessage = document.getElementById('errorMessage');
 
         waitlistForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -994,51 +591,36 @@ layout: null
                 return;
             }
 
-            // Hide previous messages
-            successMessage.classList.remove('show');
-            errorMessage.style.display = 'none';
-            
-            // Disable submit button and show loading state
-            submitButton.disabled = true;
-            submitButton.textContent = 'Submitting...';
-
+            // Here you would typically send the email to your backend API
+            // For now, we'll just show a success message
+            // Example API call:
+            /*
             try {
-                const formData = new FormData(waitlistForm);
-                
-                const response = await fetch(waitlistForm.action, {
+                const response = await fetch('/api/waitlist', {
                     method: 'POST',
-                    body: formData,
                     headers: {
-                        'Accept': 'application/json'
-                    }
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
                 });
                 
                 if (response.ok) {
                     successMessage.classList.add('show');
                     emailInput.value = '';
-                    waitlistForm.reset();
-                    
-                    // Scroll to success message
-                    successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
-                    const data = await response.json();
-                    if (data.error) {
-                        errorMessage.textContent = '❌ ' + data.error;
-                    } else {
-                        errorMessage.textContent = '❌ Something went wrong. Please try again.';
-                    }
-                    errorMessage.style.display = 'block';
-                    errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    alert('Something went wrong. Please try again.');
                 }
             } catch (error) {
-                errorMessage.textContent = '❌ Network error. Please check your connection and try again.';
-                errorMessage.style.display = 'block';
-                errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            } finally {
-                // Re-enable submit button
-                submitButton.disabled = false;
-                submitButton.textContent = 'Join Waitlist';
+                alert('Network error. Please try again.');
             }
+            */
+
+            // Demo: Show success message
+            successMessage.classList.add('show');
+            emailInput.value = '';
+            
+            // Scroll to success message
+            successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         });
 
         // Smooth scrolling for anchor links
@@ -1051,6 +633,11 @@ layout: null
                         behavior: 'smooth',
                         block: 'start'
                     });
+                    // Close mobile menu if open
+                    const navLinks = document.getElementById('navLinks');
+                    if (navLinks) {
+                        navLinks.classList.remove('active');
+                    }
                 }
             });
         });

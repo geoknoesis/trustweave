@@ -5,15 +5,17 @@ plugins {
 
 group = "com.trustweave.chains"
 dependencies {
+    implementation(project(":common"))
     implementation(project(":credentials:credential-core"))
     implementation(project(":anchors:anchor-core"))
-    implementation(project(":common"))
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.serialization.json)
     implementation("org.web3j:core:5.0.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
     // Test dependencies
     testImplementation(project(":testkit"))
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     testImplementation(kotlin("test"))
+    // junit-platform-launcher is automatically added as testRuntimeOnly by root build.gradle.kts
 }
 

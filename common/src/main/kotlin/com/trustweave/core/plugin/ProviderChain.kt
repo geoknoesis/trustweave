@@ -3,25 +3,18 @@ package com.trustweave.core.plugin
 import com.trustweave.core.exception.TrustWeaveException
 
 /**
- * Provider chain with fallback support.
+ * Internal provider chain with fallback support.
  *
- * Executes operations across multiple providers in order,
- * trying each provider until one succeeds. This enables
- * automatic failover and provider redundancy.
- *
- * **Example Usage**:
- * ```kotlin
- * val chain = ProviderChain(listOf(provider1, provider2, provider3))
- *
- * val result = chain.execute { provider ->
- *     provider.issueCredential(credential)
- * }
- * ```
+ * This is an internal infrastructure component. Use domain-specific chain classes instead:
+ * - `CredentialIssuerChain` for credential issuer chains
+ * - `DidResolverChain` for DID resolver chains
+ * - `KeyManagementChain` for key management service chains
  *
  * @param providers List of providers to try in order
  * @param selector Optional function to filter providers (default: all providers)
+ * @suppress This is an internal API
  */
-class ProviderChain<T>(
+internal class ProviderChain<T>(
     private val providers: List<T>,
     private val selector: (T) -> Boolean = { true }
 ) {
@@ -143,16 +136,11 @@ class ProviderChain<T>(
 }
 
 /**
- * Create provider chain from plugin IDs.
+ * Internal function to create provider chain from plugin IDs.
  *
- * Looks up plugins from the registry and creates a chain.
- * Uses reified generics to enable type-safe plugin retrieval.
- *
- * @param pluginIds List of plugin IDs in order of preference
- * @param registry Plugin registry to lookup plugins
- * @return Provider chain
+ * @suppress This is an internal API
  */
-inline fun <reified T> createProviderChain(
+internal inline fun <reified T> createProviderChain(
     pluginIds: List<String>,
     registry: PluginRegistry
 ): ProviderChain<T> {
@@ -196,17 +184,11 @@ inline fun <reified T> createProviderChain(
 }
 
 /**
- * Create provider chain from configuration.
+ * Internal function to create provider chain from configuration.
  *
- * Uses provider chains defined in PluginConfiguration.
- * Uses reified generics to enable type-safe plugin retrieval.
- *
- * @param chainName Name of the provider chain (e.g., "credential-service")
- * @param config Plugin configuration
- * @param registry Plugin registry
- * @return Provider chain, or null if chain not found
+ * @suppress This is an internal API
  */
-inline fun <reified T> createProviderChainFromConfig(
+internal inline fun <reified T> createProviderChainFromConfig(
     chainName: String,
     config: PluginConfiguration,
     registry: PluginRegistry

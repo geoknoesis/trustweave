@@ -156,7 +156,7 @@ class TrustRegistryTest {
         registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
         registry.addTrustAnchor("did:key:anchor2", TrustAnchorMetadata())
 
-        val allIssuers = registry.getTrustedIssuers(null)
+        val allIssuers: List<String> = registry.getTrustedIssuers(null as String?)
         assertEquals(2, allIssuers.size)
     }
 

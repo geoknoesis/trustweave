@@ -4,12 +4,17 @@ import com.trustweave.core.exception.TrustWeaveException
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Interface for plugin registry operations.
+ * Internal interface for plugin registry operations.
  *
- * This interface allows for dependency injection and test isolation
- * by enabling the use of test-specific registry instances.
+ * This is an internal infrastructure component. Use domain-specific registries instead:
+ * - `DidMethodRegistry` for DID method registration
+ * - `BlockchainAnchorRegistry` for blockchain anchor client registration
+ * - `TrustRegistry` for trust anchor management
+ * - `CredentialServiceRegistry` for credential service registration
+ *
+ * @suppress This is an internal API
  */
-interface PluginRegistry {
+internal interface PluginRegistry {
     /**
      * Register a plugin with metadata.
      *
@@ -111,35 +116,11 @@ interface PluginRegistry {
 }
 
 /**
- * Default implementation of [PluginRegistry] interface.
+ * Internal default implementation of [PluginRegistry] interface.
  *
- * Provides capability-based discovery and provider selection.
- * This registry is the central hub for all plugins in TrustWeave,
- * enabling dynamic discovery and selection of providers based on capabilities.
- *
- * **Thread Safety**: This registry is thread-safe for concurrent access.
- *
- * **Dependency Injection**: This class implements [PluginRegistry] and should be
- * instantiated for dependency injection and test isolation.
- *
- * **Example Usage**:
- * ```kotlin
- * // Using dependency injection
- * class MyService(private val registry: PluginRegistry) {
- *     fun findPlugins() = registry.findByCapability("credential-storage")
- * }
- *
- * // Create registry instance
- * val registry = DefaultPluginRegistry()
- * val metadata = PluginMetadata(...)
- * registry.register(metadata, credentialService)
- *
- * // In tests, use isolated instances
- * val testRegistry = DefaultPluginRegistry()
- * val service = MyService(testRegistry)
- * ```
+ * @suppress This is an internal API
  */
-class DefaultPluginRegistry : PluginRegistry {
+internal class DefaultPluginRegistry : PluginRegistry {
 
     private val plugins = ConcurrentHashMap<String, PluginMetadata>()
     private val instances = ConcurrentHashMap<String, Any>()
@@ -265,26 +246,11 @@ class DefaultPluginRegistry : PluginRegistry {
 }
 
 /**
- * Get plugin instance with type safety check using reified type parameter.
+ * Internal extension function for plugin instance retrieval with type safety.
  *
- * This is a convenience extension function that provides type-safe retrieval using
- * reified generics. It calls the interface method [PluginRegistry.getInstance] with
- * the reified class, eliminating the need to manually pass Class objects.
- *
- * **Type Safety**: Uses stored class information to verify type compatibility at runtime,
- * eliminating unsafe unchecked casts. Handles inheritance correctly (e.g., ArrayList
- * is compatible with List).
- *
- * **Example Usage**:
- * ```kotlin
- * val credentialService = registry.getInstance<CredentialService>("plugin-id")
- * // credentialService is of type CredentialService? with full type safety
- * ```
- *
- * @param pluginId Plugin ID to retrieve
- * @return Plugin instance of type T, or null if not found or type mismatch
+ * @suppress This is an internal API
  */
-inline fun <reified T> PluginRegistry.getInstance(pluginId: String): T? {
+internal inline fun <reified T> PluginRegistry.getInstance(pluginId: String): T? {
     // Access the reified type parameter's class at runtime and call the interface method
     return getInstance(pluginId, T::class.java)
 }

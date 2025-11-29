@@ -116,7 +116,7 @@ class TrustRegistryEdgeCasesTest {
     fun `test get trusted issuers with empty registry`() = runBlocking {
         val registry = InMemoryTrustRegistry()
 
-        val issuers = registry.getTrustedIssuers(null)
+        val issuers: List<String> = registry.getTrustedIssuers(null as String?)
         assertTrue(issuers.isEmpty())
     }
 

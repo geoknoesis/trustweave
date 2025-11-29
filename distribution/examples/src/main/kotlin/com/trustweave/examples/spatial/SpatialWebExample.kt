@@ -4,7 +4,7 @@ import kotlinx.coroutines.runBlocking
 
 /**
  * Spatial Web Authorization Scenario Example
- * 
+ *
  * This example demonstrates DID-based authorization for spatial entities.
  * Full implementation coming soon - see docs/getting-started/spatial-web-authorization-scenario.md
  */

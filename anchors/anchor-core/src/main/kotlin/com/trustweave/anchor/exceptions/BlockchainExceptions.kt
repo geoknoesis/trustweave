@@ -4,7 +4,7 @@ import com.trustweave.core.exception.TrustWeaveException
 
 /**
  * Blockchain-related exception types.
- * 
+ *
  * These exceptions provide structured error codes and context for blockchain operations.
  */
 sealed class BlockchainException(
@@ -13,7 +13,7 @@ sealed class BlockchainException(
     override val context: Map<String, Any?> = emptyMap(),
     override val cause: Throwable? = null
 ) : TrustWeaveException(code, message, context, cause) {
-    
+
     data class TransactionFailed(
         val chainId: String? = null,
         val txHash: String? = null,
@@ -38,7 +38,7 @@ sealed class BlockchainException(
             "reason" to reason
         ).filterValues { it != null }
     )
-    
+
     data class ConnectionFailed(
         val chainId: String? = null,
         val endpoint: String? = null,
@@ -56,7 +56,7 @@ sealed class BlockchainException(
             "reason" to reason
         ).filterValues { it != null }
     )
-    
+
     data class ConfigurationFailed(
         val chainId: String? = null,
         val configKey: String? = null,
@@ -74,7 +74,7 @@ sealed class BlockchainException(
             "reason" to reason
         ).filterValues { it != null }
     )
-    
+
     data class UnsupportedOperation(
         val chainId: String? = null,
         val operation: String? = null,
@@ -92,7 +92,7 @@ sealed class BlockchainException(
             "reason" to reason
         ).filterValues { it != null }
     )
-    
+
     data class ChainNotRegistered(
         val chainId: String,
         val availableChains: List<String>

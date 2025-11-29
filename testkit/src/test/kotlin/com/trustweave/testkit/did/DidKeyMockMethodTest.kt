@@ -1,9 +1,12 @@
 package com.trustweave.testkit.did
 
 import com.trustweave.did.*
+import com.trustweave.did.VerificationMethod
+import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.did.resolver.getDocumentOrNull
 import com.trustweave.kms.KeyManagementService
 import com.trustweave.kms.KeyHandle
-import com.trustweave.kms.KeyNotFoundException
+import com.trustweave.kms.exception.KmsException
 import kotlinx.coroutines.runBlocking
 import kotlin.test.*
 
@@ -75,20 +78,21 @@ class DidKeyMockMethodTest {
 
         val result = didMethod.resolveDid(did)
 
-        assertNotNull(result.document)
-        assertEquals(document, result.document)
-        assertNotNull(result.documentMetadata.created)
-        assertNotNull(result.documentMetadata.updated)
-        assertEquals("key", result.resolutionMetadata["method"])
-        assertEquals(true, result.resolutionMetadata["mock"])
+        assertTrue(result is DidResolutionResult.Success)
+        val successResult = result as DidResolutionResult.Success
+        assertEquals(document, successResult.document)
+        assertNotNull(successResult.documentMetadata.created)
+        assertNotNull(successResult.documentMetadata.updated)
+        assertEquals("key", successResult.resolutionMetadata["method"])
+        assertEquals(true, successResult.resolutionMetadata["mock"])
     }
 
     @Test
     fun `test resolve non-existent DID`() = runBlocking {
         val result = didMethod.resolveDid("did:key:zNonexistent")
 
-        assertNull(result.document)
-        assertEquals("key", result.resolutionMetadata["method"])
+        assertNull(result.getDocumentOrNull())
+        assertTrue(result is DidResolutionResult.Failure)
     }
 
     @Test
@@ -98,7 +102,7 @@ class DidKeyMockMethodTest {
 
         val updated = didMethod.updateDid(did) { doc ->
             doc.copy(
-                verificationMethod = doc.verificationMethod + VerificationMethodRef(
+                verificationMethod = doc.verificationMethod + VerificationMethod(
                     id = "$did#key-2",
                     type = "Ed25519VerificationKey2020",
                     controller = did,
@@ -109,7 +113,9 @@ class DidKeyMockMethodTest {
 
         assertEquals(2, updated.verificationMethod.size)
         val resolved = didMethod.resolveDid(did)
-        assertEquals(2, resolved.document?.verificationMethod?.size)
+        val resolvedDoc = resolved.getDocumentOrNull()
+        assertNotNull(resolvedDoc)
+        assertEquals(2, resolvedDoc.verificationMethod.size)
     }
 
     @Test
@@ -128,7 +134,7 @@ class DidKeyMockMethodTest {
 
         assertTrue(result)
         val resolved = didMethod.resolveDid(did)
-        assertNull(resolved.document)
+        assertNull(resolved.getDocumentOrNull())
     }
 
     @Test
@@ -145,8 +151,8 @@ class DidKeyMockMethodTest {
 
         didMethod.clear()
 
-        assertNull(didMethod.resolveDid(doc1.id).document)
-        assertNull(didMethod.resolveDid(doc2.id).document)
+        assertNull(didMethod.resolveDid(doc1.id).getDocumentOrNull())
+        assertNull(didMethod.resolveDid(doc2.id).getDocumentOrNull())
     }
 
     @Test
@@ -184,7 +190,7 @@ class DidKeyMockMethodTest {
         override suspend fun generateKey(algorithm: com.trustweave.kms.Algorithm, options: Map<String, Any?>): KeyHandle {
             val keyId = options["keyId"] as? String ?: "key-${System.currentTimeMillis()}"
             val handle = KeyHandle(
-                id = keyId,
+                id = com.trustweave.core.types.KeyId(keyId),
                 algorithm = algorithm.name,
                 publicKeyJwk = when (algorithm) {
                     is com.trustweave.kms.Algorithm.Ed25519 -> mapOf(
@@ -215,23 +221,23 @@ class DidKeyMockMethodTest {
             keys[keyId] = handle
             return handle
         }
-        
+
         override suspend fun generateKey(algorithmName: String, options: Map<String, Any?>): KeyHandle {
             val algorithm = com.trustweave.kms.Algorithm.parse(algorithmName)
                 ?: throw com.trustweave.kms.UnsupportedAlgorithmException("Unsupported algorithm: $algorithmName")
             return generateKey(algorithm, options)
         }
 
-        override suspend fun getPublicKey(keyId: String): KeyHandle {
-            return keys[keyId] ?: throw KeyNotFoundException("Key not found: $keyId")
+        override suspend fun getPublicKey(keyId: com.trustweave.core.types.KeyId): KeyHandle {
+            return keys[keyId.value] ?: throw KmsException.KeyNotFound(keyId = keyId.value)
         }
 
-        override suspend fun sign(keyId: String, data: ByteArray, algorithm: com.trustweave.kms.Algorithm?): ByteArray {
+        override suspend fun sign(keyId: com.trustweave.core.types.KeyId, data: ByteArray, algorithm: com.trustweave.kms.Algorithm?): ByteArray {
             return "signature".toByteArray()
         }
 
-        override suspend fun deleteKey(keyId: String): Boolean {
-            return keys.remove(keyId) != null
+        override suspend fun deleteKey(keyId: com.trustweave.core.types.KeyId): Boolean {
+            return keys.remove(keyId.value) != null
         }
     }
 }

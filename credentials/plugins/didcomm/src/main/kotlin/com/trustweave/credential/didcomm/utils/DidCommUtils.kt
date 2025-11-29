@@ -9,7 +9,7 @@ import com.trustweave.did.VerificationMethod
 object DidCommUtils {
     /**
      * Finds a key agreement key from a DID document.
-     * 
+     *
      * @param document The DID document
      * @param preferredKeyId Optional preferred key ID
      * @return The key agreement verification method, or null if not found
@@ -27,7 +27,7 @@ object DidCommUtils {
                 return preferred
             }
         }
-        
+
         // Find first key agreement key
         val keyAgreementIds = document.keyAgreement
         if (keyAgreementIds.isEmpty()) {
@@ -40,17 +40,17 @@ object DidCommUtils {
             }
             return null
         }
-        
+
         // Find verification method for key agreement
         return document.verificationMethod.find { vm ->
-            keyAgreementIds.contains(vm.id) || 
+            keyAgreementIds.contains(vm.id) ||
             keyAgreementIds.any { id -> vm.id.endsWith(id) }
         } ?: document.verificationMethod.firstOrNull()
     }
 
     /**
      * Extracts key ID from a verification method reference.
-     * 
+     *
      * @param vmId Verification method ID (e.g., "did:key:abc#key-1" or "#key-1")
      * @param did The DID (for resolving relative references)
      * @return The key ID (fragment part)
@@ -67,7 +67,7 @@ object DidCommUtils {
 
     /**
      * Resolves a verification method reference to a full ID.
-     * 
+     *
      * @param vmId Verification method ID (may be relative or absolute)
      * @param did The DID (for resolving relative references)
      * @return The full verification method ID
@@ -84,29 +84,29 @@ object DidCommUtils {
 
     /**
      * Checks if a DID document has DIDComm messaging service.
-     * 
+     *
      * @param document The DID document
      * @return True if the document has a DIDComm messaging service
      */
     fun hasDidCommService(document: DidDocument): Boolean {
         return document.service.any { service ->
-            service.type == "DIDCommMessaging" || 
+            service.type == "DIDCommMessaging" ||
             service.type.contains("DIDComm", ignoreCase = true)
         }
     }
 
     /**
      * Gets the DIDComm service endpoint from a DID document.
-     * 
+     *
      * @param document The DID document
      * @return The service endpoint URL, or null if not found
      */
     fun getDidCommServiceEndpoint(document: DidDocument): String? {
         val service = document.service.find { service ->
-            service.type == "DIDCommMessaging" || 
+            service.type == "DIDCommMessaging" ||
             service.type.contains("DIDComm", ignoreCase = true)
         }
-        
+
         return when (val endpoint = service?.serviceEndpoint) {
             is String -> endpoint
             is Map<*, *> -> {

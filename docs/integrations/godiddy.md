@@ -25,7 +25,7 @@ dependencies {
     implementation("com.trustweave.did:godiddy:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    
+
     // HTTP client (OkHttp recommended)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }

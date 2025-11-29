@@ -11,7 +11,7 @@ import java.util.ServiceLoader
 
 /**
  * SPI provider for did:web method.
- * 
+ *
  * Automatically discovers did:web method when this module is on the classpath.
  */
 class WebDidMethodProvider : DidMethodProvider {
@@ -51,20 +51,20 @@ class WebDidMethodProvider : DidMethodProvider {
      */
     private fun createHttpClient(options: DidCreationOptions): OkHttpClient {
         val builder = OkHttpClient.Builder()
-        
+
         // Configure timeout from options
         val timeoutSeconds = options.additionalProperties["timeoutSeconds"] as? Int ?: 30
         val timeoutMs = timeoutSeconds * 1000L
-        
+
         builder.connectTimeout(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS)
         builder.readTimeout(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS)
         builder.writeTimeout(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS)
-        
+
         // Configure redirect following
         val followRedirects = options.additionalProperties["followRedirects"] as? Boolean ?: true
         builder.followRedirects(followRedirects)
         builder.followSslRedirects(followRedirects)
-        
+
         return builder.build()
     }
 
@@ -75,11 +75,11 @@ class WebDidMethodProvider : DidMethodProvider {
         val configMap = options.additionalProperties.filterKeys {
             it in setOf("requireHttps", "documentPath", "timeoutSeconds", "followRedirects")
         }
-        
+
         if (configMap.isEmpty()) {
             return WebDidConfig.default()
         }
-        
+
         return WebDidConfig.fromMap(
             configMap + options.additionalProperties.filterKeys {
                 it !in setOf("requireHttps", "documentPath", "timeoutSeconds", "followRedirects", "kms")

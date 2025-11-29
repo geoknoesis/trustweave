@@ -7,15 +7,15 @@ title: Proposed Layout Improvements
 ## 1. Module-Level Adjustments
 
 ### A. Extract Cross-Cutting Infrastructure ✅
-- **Module `TrustWeave-trust`**  
+- **Module `TrustWeave-trust`**
   Trust-layer runtime lives here; `TrustWeave-core` now focuses on credential domain APIs.
-- **Module `TrustWeave-spi`**  
+- **Module `TrustWeave-spi`**
   Plugin/SPI definitions and adapter loaders now reside here; other modules depend on it.
-- **Refined `TrustWeave-core` scope**  
+- **Refined `TrustWeave-core` scope**
   Contains credential issuance, verification, wallet DSLs, and models only.
 
 ### B. Group Integrations
-- Consolidate blockchain adapters (`chains/plugins/algorand`, `chains/plugins/polygon`, `chains/plugins/ganache`) into a `TrustWeave-anchor-integrations` composite module using Gradle source sets, or at minimum introduce a shared `anchor-integrations` package to hold common helper code.  
+- Consolidate blockchain adapters (`chains/plugins/algorand`, `chains/plugins/polygon`, `chains/plugins/ganache`) into a `TrustWeave-anchor-integrations` composite module using Gradle source sets, or at minimum introduce a shared `anchor-integrations` package to hold common helper code.
 - Apply a similar pattern for DID/KMS provider modules (e.g., `godiddy`, `waltid`) to reduce boilerplate and surface a clear extension point.
 
 ## 2. Package-Level Realignment

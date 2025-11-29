@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,34 +591,34 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="did-method-registration-json-specification">
-  
-  
+
+
     <a href="#did-method-registration-json-specification" class="anchor-heading" aria-labelledby="did-method-registration-json-specification"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> DID Method Registration JSON Specification
-  
-  
+
+
 </h1>
-    
+
 
 <p>This document explains how JSON registration files following the <strong>official DID Registration specification</strong> (https://identity.foundation/did-registration/) are used to create <code class="language-plaintext highlighter-rouge">DidMethod</code> implementations in Trustweave.</p>
 <h2 id="overview">
-  
-  
+
+
     <a href="#overview" class="anchor-heading" aria-labelledby="overview"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Overview
-  
-  
+
+
 </h2>
-    
+
 
 <p>Trustweave supports the <strong>official DID Method Registry format</strong> from identity.foundation/did-registration. The JSON file defines:</p>
 <ol>
@@ -627,21 +627,21 @@
   <li><strong>Automatic Mapping</strong>: Trustweave automatically maps registry entries to <code class="language-plaintext highlighter-rouge">HttpDidMethod</code> implementations</li>
 </ol>
 <h2 id="json-to-didmethod-mapping">
-  
-  
+
+
     <a href="#json-to-didmethod-mapping" class="anchor-heading" aria-labelledby="json-to-didmethod-mapping"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> JSON to DidMethod Mapping
-  
-  
+
+
 </h2>
-    
+
 <h3 id="1-method-identity">
-  
-  
+
+
     <a href="#1-method-identity" class="anchor-heading" aria-labelledby="1-method-identity"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Method Identity
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -670,13 +670,13 @@
 
 <p>The <code class="language-plaintext highlighter-rouge">name</code> field becomes the method identifier used in DID strings: <code class="language-plaintext highlighter-rouge">did:example:123</code></p>
 <h3 id="2-driver-configuration">
-  
-  
+
+
     <a href="#2-driver-configuration" class="anchor-heading" aria-labelledby="2-driver-configuration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Driver Configuration
-  
-  
+
+
 </h3>
-    
+
 
 <p>The <code class="language-plaintext highlighter-rouge">driver</code> object determines how the DID method operations are implemented:</p>
 
@@ -722,7 +722,7 @@
     <span class="kd">val</span> <span class="py">baseUrl</span> <span class="p">=</span> <span class="n">driver</span><span class="p">.</span><span class="n">baseUrl</span>  <span class="c1">// "https://dev.uniresolver.io"</span>
     <span class="kd">val</span> <span class="py">protocolAdapter</span> <span class="p">=</span> <span class="nf">createProtocolAdapter</span><span class="p">(</span><span class="n">driver</span><span class="p">.</span><span class="n">protocolAdapter</span><span class="p">)</span>  <span class="c1">// "standard"</span>
     <span class="kd">val</span> <span class="py">timeout</span> <span class="p">=</span> <span class="n">driver</span><span class="p">.</span><span class="n">timeout</span> <span class="o">?:</span> <span class="mi">30</span>
-    
+
     <span class="k">return</span> <span class="nc">DefaultUniversalResolver</span><span class="p">(</span>
         <span class="n">baseUrl</span> <span class="p">=</span> <span class="n">baseUrl</span><span class="p">,</span>
         <span class="n">timeout</span> <span class="p">=</span> <span class="n">timeout</span><span class="p">,</span>
@@ -738,13 +738,13 @@
   <li><code class="language-plaintext highlighter-rouge">custom</code>: Requires additional configuration (not supported via JSON)</li>
 </ul>
 <h3 id="3-capabilities-mapping">
-  
-  
+
+
     <a href="#3-capabilities-mapping" class="anchor-heading" aria-labelledby="3-capabilities-mapping"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Capabilities Mapping
-  
-  
+
+
 </h3>
-    
+
 
 <p>The <code class="language-plaintext highlighter-rouge">capabilities</code> object maps directly to <code class="language-plaintext highlighter-rouge">DidMethod</code> interface methods:</p>
 
@@ -820,32 +820,32 @@
     <span class="k">if</span> <span class="p">(</span><span class="n">capabilities</span><span class="o">?.</span><span class="n">resolve</span> <span class="p">!=</span> <span class="k">true</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">throw</span> <span class="nc">TrustWeaveException</span><span class="p">(</span><span class="s">"DID method does not support resolution."</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Validate DID format matches method name</span>
     <span class="nf">require</span><span class="p">(</span><span class="n">did</span><span class="p">.</span><span class="nf">startsWith</span><span class="p">(</span><span class="s">"did:${registrationSpec.name}:"</span><span class="p">))</span> <span class="p">{</span>
         <span class="s">"Invalid DID format for method '${registrationSpec.name}': $did"</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Delegate to Universal Resolver</span>
     <span class="k">return</span> <span class="n">universalResolver</span><span class="p">.</span><span class="nf">resolveDid</span><span class="p">(</span><span class="n">did</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="complete-flow-json--didmethod">
-  
-  
+
+
     <a href="#complete-flow-json--didmethod" class="anchor-heading" aria-labelledby="complete-flow-json--didmethod"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Complete Flow: JSON → DidMethod
-  
-  
+
+
 </h2>
-    
+
 <h3 id="step-1-parse-json">
-  
-  
+
+
     <a href="#step-1-parse-json" class="anchor-heading" aria-labelledby="step-1-parse-json"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Parse JSON
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -879,13 +879,13 @@
 <span class="c1">// Creates: DidRegistrationSpec(name="web", driver=DriverConfig(...), capabilities=MethodCapabilities(resolve=true))</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-2-create-didmethod-instance">
-  
-  
+
+
     <a href="#step-2-create-didmethod-instance" class="anchor-heading" aria-labelledby="step-2-create-didmethod-instance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Create DidMethod Instance
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -899,13 +899,13 @@
 <span class="c1">// - capabilities = MethodCapabilities(resolve=true)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-3-register-and-use">
-  
-  
+
+
     <a href="#step-3-register-and-use" class="anchor-heading" aria-labelledby="step-3-register-and-use"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Register and Use
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -921,21 +921,21 @@
 <span class="c1">// Which calls: universalResolver.resolveDid("did:web:example.com")</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="field-reference">
-  
-  
+
+
     <a href="#field-reference" class="anchor-heading" aria-labelledby="field-reference"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Field Reference
-  
-  
+
+
 </h2>
-    
+
 <h3 id="required-fields">
-  
-  
+
+
     <a href="#required-fields" class="anchor-heading" aria-labelledby="required-fields"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Required Fields
-  
-  
+
+
 </h3>
-    
+
 
 <div class="table-wrapper"><table>
   <thead>
@@ -962,13 +962,13 @@
   </tbody>
 </table></div>
 <h3 id="optional-fields">
-  
-  
+
+
     <a href="#optional-fields" class="anchor-heading" aria-labelledby="optional-fields"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Optional Fields
-  
-  
+
+
 </h3>
-    
+
 
 <div class="table-wrapper"><table>
   <thead>
@@ -1031,21 +1031,21 @@
   </tbody>
 </table></div>
 <h2 id="implementation-details">
-  
-  
+
+
     <a href="#implementation-details" class="anchor-heading" aria-labelledby="implementation-details"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Implementation Details
-  
-  
+
+
 </h2>
-    
+
 <h3 id="httpdidmethod-class">
-  
-  
+
+
     <a href="#httpdidmethod-class" class="anchor-heading" aria-labelledby="httpdidmethod-class"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> HttpDidMethod Class
-  
-  
+
+
 </h3>
-    
+
 
 <p>The <code class="language-plaintext highlighter-rouge">HttpDidMethod</code> class implements the <code class="language-plaintext highlighter-rouge">DidMethod</code> interface:</p>
 
@@ -1075,33 +1075,33 @@
     <span class="kd">val</span> <span class="py">registrationSpec</span><span class="p">:</span> <span class="nc">DidRegistrationSpec</span><span class="p">,</span>
     <span class="n">kms</span><span class="p">:</span> <span class="nc">KeyManagementService</span>
 <span class="p">)</span> <span class="p">:</span> <span class="nc">AbstractDidMethod</span><span class="p">(</span><span class="n">registrationSpec</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="n">kms</span><span class="p">)</span> <span class="p">{</span>
-    
+
     <span class="c1">// Created from driver.baseUrl and driver.protocolAdapter</span>
     <span class="k">private</span> <span class="kd">val</span> <span class="py">resolver</span><span class="p">:</span> <span class="nc">UniversalResolver</span> <span class="p">=</span> <span class="nf">createResolver</span><span class="p">()</span>
-    
+
     <span class="c1">// Implements DidMethod.resolveDid() if capabilities.resolve == true</span>
     <span class="k">override</span> <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">resolveDid</span><span class="p">(</span><span class="n">did</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">DidResolutionResult</span> <span class="p">{</span>
         <span class="c1">// Validates capabilities.resolve</span>
         <span class="c1">// Validates DID format matches method name</span>
         <span class="c1">// Delegates to resolver.resolveDid() (HTTP endpoint)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Throws exception if capabilities.create == false</span>
     <span class="k">override</span> <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">createDid</span><span class="p">(</span><span class="n">options</span><span class="p">:</span> <span class="nc">DidCreationOptions</span><span class="p">):</span> <span class="nc">DidDocument</span> <span class="p">{</span>
         <span class="c1">// Currently not implemented for JSON-registered methods</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Similar for updateDid() and deactivateDid()</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="protocol-adapters">
-  
-  
+
+
     <a href="#protocol-adapters" class="anchor-heading" aria-labelledby="protocol-adapters"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Protocol Adapters
-  
-  
+
+
 </h3>
-    
+
 
 <p>The <code class="language-plaintext highlighter-rouge">driver.protocolAdapter</code> field determines which protocol adapter is used:</p>
 
@@ -1120,13 +1120,13 @@
   </li>
 </ul>
 <h2 id="limitations">
-  
-  
+
+
     <a href="#limitations" class="anchor-heading" aria-labelledby="limitations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Limitations
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li>
@@ -1140,13 +1140,13 @@
   </li>
 </ol>
 <h2 id="example-complete-json--didmethod">
-  
-  
+
+
     <a href="#example-complete-json--didmethod" class="anchor-heading" aria-labelledby="example-complete-json--didmethod"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Example: Complete JSON → DidMethod
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>Input JSON:</strong></p>
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1220,27 +1220,27 @@
 <span class="c1">// method.resolveDid("did:ion:...") delegates to Universal Resolver</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="validation">
-  
-  
+
+
     <a href="#validation" class="anchor-heading" aria-labelledby="validation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Validation
-  
-  
+
+
 </h2>
-    
+
 
 <p>The JSON is validated against the schema (<code class="language-plaintext highlighter-rouge">schema.json</code>) when parsed. Invalid JSON will throw an <code class="language-plaintext highlighter-rouge">IllegalArgumentException</code> with details about the validation error.</p>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -1272,7 +1272,7 @@
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -1282,12 +1282,12 @@
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -1309,12 +1309,12 @@
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -1323,12 +1323,12 @@
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -1336,7 +1336,7 @@
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -1344,31 +1344,31 @@
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -1380,7 +1380,7 @@
 
 
 
-  
+
 </body>
 </html>
 

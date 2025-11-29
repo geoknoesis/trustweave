@@ -10,7 +10,7 @@ import java.util.ServiceLoader
 
 /**
  * SPI provider for did:peer method.
- * 
+ *
  * Automatically discovers did:peer method when this module is on the classpath.
  */
 class PeerDidMethodProvider : DidMethodProvider {
@@ -47,7 +47,7 @@ class PeerDidMethodProvider : DidMethodProvider {
      */
     private fun createConfig(options: DidCreationOptions): PeerDidConfig {
         val configMap = options.additionalProperties
-        
+
         // Use defaults if not specified
         return PeerDidConfig.fromMap(configMap)
     }

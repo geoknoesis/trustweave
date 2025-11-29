@@ -2,6 +2,9 @@ package com.trustweave.waltid.did
 
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.VerificationMethod
+import com.trustweave.did.DidService
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.spi.DidMethodProvider
 import com.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
@@ -38,12 +41,12 @@ abstract class WaltIdDidMethodBase(
      */
     protected fun convertWaltIdDocument(waltIdDoc: JsonObject): DidDocument {
         val id = waltIdDoc["id"]?.jsonPrimitive?.content ?: ""
-        
+
         val verificationMethods = waltIdDoc["verificationMethod"]
             ?.jsonArray
             ?.mapNotNull { vm ->
                 val vmObj = vm.jsonObject
-                VerificationMethodRef(
+                VerificationMethod(
                     id = vmObj["id"]?.jsonPrimitive?.content ?: return@mapNotNull null,
                     type = vmObj["type"]?.jsonPrimitive?.content ?: "",
                     controller = vmObj["controller"]?.jsonPrimitive?.content ?: id,
@@ -71,7 +74,7 @@ abstract class WaltIdDidMethodBase(
             ?.jsonArray
             ?.mapNotNull { s ->
                 val sObj = s.jsonObject
-                Service(
+                DidService(
                     id = sObj["id"]?.jsonPrimitive?.content ?: return@mapNotNull null,
                     type = sObj["type"]?.jsonPrimitive?.content ?: "",
                     serviceEndpoint = sObj["serviceEndpoint"]?.toString() ?: ""
@@ -91,16 +94,19 @@ abstract class WaltIdDidMethodBase(
     private fun JsonObject.toMap(): Map<String, Any?> {
         return entries.associate { entry ->
             entry.key to when (val value = entry.value) {
-                is JsonPrimitive -> when {
-                    value.isString -> value.content
-                    value.booleanOrNull != null -> value.boolean
-                    value.longOrNull != null -> value.long
-                    value.doubleOrNull != null -> value.double
-                    else -> value.content
+                is JsonPrimitive -> {
+                    when {
+                        value.isString -> value.content
+                        value.contentOrNull?.toBooleanStrictOrNull() != null -> value.content.toBoolean()
+                        value.contentOrNull?.toLongOrNull() != null -> value.content.toLong()
+                        value.contentOrNull?.toDoubleOrNull() != null -> value.content.toDouble()
+                        else -> value.content
+                    }
                 }
                 is JsonObject -> value.toMap()
                 is JsonArray -> value.map { (it as? JsonObject)?.toMap() ?: it.toString() }
                 JsonNull -> null
+                else -> value.toString()
             }
         }
     }
@@ -123,11 +129,11 @@ class WaltIdKeyMethod(
             // Use walt.id to create did:key
             // val waltIdDid = WaltIdDid.create("key", keyHandle.publicKeyJwk)
             // For now, create a simplified did:key format
-            val didId = "z${keyHandle.id.replace("-", "").take(32)}"
+            val didId = "z${keyHandle.id.value.replace("-", "").take(32)}"
             val did = "did:$method:$didId"
 
             val verificationMethodId = "$did#${keyHandle.id}"
-            val verificationMethod = VerificationMethodRef(
+            val verificationMethod = VerificationMethod(
                 id = verificationMethodId,
                 type = when (algorithm.uppercase()) {
                     "ED25519" -> "Ed25519VerificationKey2020"
@@ -160,21 +166,29 @@ class WaltIdKeyMethod(
             // Use walt.id to resolve did:key
             // val waltIdDoc = WaltIdDid.resolve(did)
             // val document = convertWaltIdDocument(waltIdDoc)
-            
+
             // For now, return from local cache or create resolution result
             val document = documents[did]
             val now = java.time.Instant.now()
-            DidResolutionResult(
-                document = document,
-                documentMetadata = com.trustweave.did.DidDocumentMetadata(
-                    created = now,
-                    updated = now
-                ),
-                resolutionMetadata = mapOf(
-                    "method" to method,
-                    "provider" to "waltid"
+            if (document != null) {
+                DidResolutionResult.Success(
+                    document = document,
+                    documentMetadata = com.trustweave.did.DidDocumentMetadata(
+                        created = now,
+                        updated = now
+                    ),
+                    resolutionMetadata = mapOf(
+                        "method" to method,
+                        "provider" to "waltid"
+                    )
                 )
-            )
+            } else {
+                DidResolutionResult.Failure.NotFound(
+                    did = com.trustweave.core.types.Did(did),
+                    reason = "DID not found in cache",
+                    resolutionMetadata = mapOf("method" to method, "provider" to "waltid")
+                )
+            }
         } catch (e: Exception) {
             throw com.trustweave.core.exception.TrustWeaveException.Unknown(
                 message = "Failed to resolve did:key: ${e.message ?: "Unknown error"}",
@@ -198,7 +212,7 @@ class WaltIdWebMethod(
         try {
             val domain = options.additionalProperties["domain"] as? String
                 ?: throw IllegalArgumentException("did:web requires 'domain' option")
-            
+
             val algorithm = options.algorithm.algorithmName
             val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
 
@@ -207,7 +221,7 @@ class WaltIdWebMethod(
             val did = "did:$method:$domain"
 
             val verificationMethodId = "$did#${keyHandle.id}"
-            val verificationMethod = VerificationMethodRef(
+            val verificationMethod = VerificationMethod(
                 id = verificationMethodId,
                 type = when (algorithm.uppercase()) {
                     "ED25519" -> "Ed25519VerificationKey2020"
@@ -240,20 +254,28 @@ class WaltIdWebMethod(
             // Use walt.id to resolve did:web
             // val waltIdDoc = WaltIdDid.resolve(did)
             // val document = convertWaltIdDocument(waltIdDoc)
-            
+
             val document = documents[did]
             val now = java.time.Instant.now()
-            DidResolutionResult(
-                document = document,
-                documentMetadata = com.trustweave.did.DidDocumentMetadata(
-                    created = now,
-                    updated = now
-                ),
-                resolutionMetadata = mapOf(
-                    "method" to method,
-                    "provider" to "waltid"
+            if (document != null) {
+                DidResolutionResult.Success(
+                    document = document,
+                    documentMetadata = com.trustweave.did.DidDocumentMetadata(
+                        created = now,
+                        updated = now
+                    ),
+                    resolutionMetadata = mapOf(
+                        "method" to method,
+                        "provider" to "waltid"
+                    )
                 )
-            )
+            } else {
+                DidResolutionResult.Failure.NotFound(
+                    did = com.trustweave.core.types.Did(did),
+                    reason = "DID not found in cache",
+                    resolutionMetadata = mapOf("method" to method, "provider" to "waltid")
+                )
+            }
         } catch (e: Exception) {
             throw com.trustweave.core.exception.TrustWeaveException.Unknown(
                 message = "Failed to resolve did:web: ${e.message ?: "Unknown error"}",

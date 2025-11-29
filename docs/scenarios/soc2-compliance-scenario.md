@@ -115,7 +115,7 @@ flowchart TD
     B -->|presents| E["System Access<br/>Verifies credential<br/>Enforces permissions<br/>Logs access"]
     E -->|triggers| D
     D -->|anchored| F["Blockchain<br/>Immutable proof<br/>Auditor verification<br/>Compliance evidence"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
     style C fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
@@ -138,16 +138,16 @@ flowchart TD
 dependencies {
     // Core TrustWeave modules
     implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
-    
+
     // Test kit for in-memory implementations
     testImplementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
-    
+
     // Optional: Algorand adapter for real blockchain anchoring
     implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -172,11 +172,11 @@ fun main() = runBlocking {
     println("=".repeat(70))
     println("SOC2 Compliance Scenario - Complete Example")
     println("=".repeat(70))
-    
+
     // Step 1: Create TrustWeave instance
     val TrustWeave = TrustWeave.create()
     println("\n✅ TrustWeave initialized")
-    
+
     // Step 2: Create DIDs for organization, employees, and auditors
     val organizationDid = TrustWeave.dids.create()
     val result = Result.success(organizationDid).fold(
@@ -186,7 +186,7 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     val adminDid = TrustWeave.dids.create()
     Result.success(adminDid).fold(
         onSuccess = { it },
@@ -195,7 +195,7 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     val employeeDid = TrustWeave.dids.create()
     Result.success(employeeDid).fold(
         onSuccess = { it },
@@ -204,7 +204,7 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     val auditorDid = TrustWeave.dids.create()
     Result.success(auditorDid).fold(
         onSuccess = { it },
@@ -213,16 +213,16 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     println("✅ Organization DID: ${organizationDid.id}")
     println("✅ Admin DID: ${adminDid.id}")
     println("✅ Employee DID: ${employeeDid.id}")
     println("✅ Auditor DID: ${auditorDid.id}")
-    
+
     // Step 3: Issue access control credentials (CC6.1, CC6.2, CC6.3)
     val orgKeyId = organizationDid.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     // Admin access credential
     val adminAccessCredential = TrustWeave.issueCredential(
         issuerDid = organizationDid.id,
@@ -250,9 +250,9 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     println("✅ Admin Access Credential issued: ${adminAccessCredential.id}")
-    
+
     // Employee access credential
     val employeeAccessCredential = TrustWeave.issueCredential(
         issuerDid = organizationDid.id,
@@ -276,9 +276,9 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     println("✅ Employee Access Credential issued: ${employeeAccessCredential.id}")
-    
+
     // Step 4: Create audit log entry (CC7.1, CC7.2)
     val auditLogEntry = buildJsonObject {
         put("id", "audit-log-${Instant.now().toEpochMilli()}")
@@ -295,7 +295,7 @@ fun main() = runBlocking {
             put("role", "Administrator")
         })
     }
-    
+
     // Anchor audit log to blockchain for immutability
     val auditAnchorResult = TrustWeave.blockchains.anchor(
         data = auditLogEntry,
@@ -312,9 +312,9 @@ fun main() = runBlocking {
             null
         }
     )
-    
+
     println("✅ Audit log entry created and anchored")
-    
+
     // Step 5: Verify access control (CC6.3)
     val adminVerification = TrustWeave.verifyCredential(adminAccessCredential).fold(
         onSuccess = { it },
@@ -323,16 +323,16 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     if (!adminVerification.valid) {
         println("❌ Admin credential invalid: ${adminVerification.errors}")
         return@runBlocking
     }
-    
+
     println("✅ Admin access credential verified")
     println("   Proof valid: ${adminVerification.proofValid}")
     println("   Issuer valid: ${adminVerification.issuerValid}")
-    
+
     // Step 6: Key rotation with history preservation (CC7.3)
     val newAdminDid = TrustWeave.dids.create()
     Result.success(newAdminDid).fold(
@@ -342,7 +342,7 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     // Issue key rotation credential
     val keyRotationCredential = TrustWeave.issueCredential(
         issuerDid = organizationDid.id,
@@ -365,9 +365,9 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     println("✅ Key rotation credential issued: ${keyRotationCredential.id}")
-    
+
     // Anchor key rotation to blockchain
     val keyRotationAnchor = TrustWeave.blockchains.anchor(
         data = keyRotationCredential,
@@ -383,7 +383,7 @@ fun main() = runBlocking {
             null
         }
     )
-    
+
     // Step 7: Change management credential (CC7.4)
     val changeManagementCredential = TrustWeave.issueCredential(
         issuerDid = organizationDid.id,
@@ -408,9 +408,9 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     println("✅ Change management credential issued: ${changeManagementCredential.id}")
-    
+
     // Step 8: Incident response credential
     val incidentCredential = TrustWeave.issueCredential(
         issuerDid = organizationDid.id,
@@ -434,9 +434,9 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     println("✅ Incident response credential issued: ${incidentCredential.id}")
-    
+
     // Step 9: Compliance report generation
     val complianceReport = buildJsonObject {
         put("reportId", "SOC2-REPORT-${Instant.now().toEpochMilli()}")
@@ -476,7 +476,7 @@ fun main() = runBlocking {
             put("open", 0)
         })
     }
-    
+
     // Anchor compliance report
     val reportAnchor = TrustWeave.blockchains.anchor(
         data = complianceReport,
@@ -492,7 +492,7 @@ fun main() = runBlocking {
             null
         }
     )
-    
+
     println("\n📊 SOC2 Compliance Summary:")
     println("   Access Control: ✅ Compliant")
     println("   Audit Logging: ✅ Compliant (${auditAnchorResult?.ref?.txHash?.take(20)}...)")
@@ -500,7 +500,7 @@ fun main() = runBlocking {
     println("   Change Management: ✅ Compliant")
     println("   Incident Response: ✅ Compliant")
     println("   Compliance Reporting: ✅ Compliant (${reportAnchor?.ref?.txHash?.take(20)}...)")
-    
+
     println("\n" + "=".repeat(70))
     println("✅ SOC2 Compliance Scenario Complete!")
     println("=".repeat(70))
@@ -557,19 +557,19 @@ suspend fun checkAccess(
     // Verify credential
     val verification = TrustWeave.verifyCredential(accessCredential).getOrThrow()
     if (!verification.valid) return false
-    
+
     // Check expiration
     val expirationDate = accessCredential.expirationDate
     if (expirationDate != null && Instant.parse(expirationDate).isBefore(Instant.now())) {
         return false
     }
-    
+
     // Extract permissions
     val permissions = accessCredential.credentialSubject
         .jsonObject["permissions"]?.jsonArray
         ?.map { it.jsonPrimitive.content }
         ?: emptyList()
-    
+
     // Check if user has permission
     return permissions.contains(action) || permissions.contains("*")
 }
@@ -602,10 +602,10 @@ suspend fun logAuditEvent(
             }
         })
     }
-    
+
     // Store in database for querying
     saveAuditLogToDatabase(auditEntry)
-    
+
     // Anchor to blockchain for immutability
     val anchorResult = TrustWeave.blockchains.anchor(
         data = auditEntry,
@@ -619,12 +619,12 @@ suspend fun logAuditEvent(
             null
         }
     )
-    
+
     if (anchorResult != null) {
         val entryId = auditEntry["id"]?.jsonPrimitive?.content ?: error("Missing audit entry ID")
         updateAuditLogWithAnchor(entryId, anchorResult.ref)
     }
-    
+
     return auditEntry["id"]?.jsonPrimitive?.content ?: error("Missing audit entry ID")
 }
 ```
@@ -642,7 +642,7 @@ suspend fun rotateKeyWithHistory(
     val newDid = TrustWeave.dids.create()
     val newKeyId = newDid.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     // Issue rotation credential
     val rotationCredential = TrustWeave.issueCredential(
         issuerDid = issuerDid,
@@ -656,7 +656,7 @@ suspend fun rotateKeyWithHistory(
         },
         types = listOf("VerifiableCredential", "KeyRotationCredential")
     ).getOrThrow()
-    
+
     // Anchor rotation to blockchain
     TrustWeave.blockchains.anchor(
         data = rotationCredential,
@@ -670,10 +670,10 @@ suspend fun rotateKeyWithHistory(
             println("❌ Key rotation anchoring failed: ${error.message}")
         }
     )
-    
+
     // Keep old key active for 90 days (grace period for credential verification)
     scheduleKeyDeactivation(oldKeyId, Instant.now().plus(90, ChronoUnit.DAYS))
-    
+
     return newKeyId
 }
 ```
@@ -689,12 +689,12 @@ suspend fun generateComplianceReport(
 ): JsonObject {
     // Query audit logs
     val auditLogs = queryAuditLogs(startDate, endDate)
-    
+
     // Count operations by type
-    val operationsByType = auditLogs.groupBy { 
+    val operationsByType = auditLogs.groupBy {
         (it as? JsonObject)?.get("action")?.jsonPrimitive?.content ?: "unknown"
     }
-    
+
     // Check control compliance
     val controls = buildJsonObject {
         put("CC6", buildJsonObject {
@@ -709,7 +709,7 @@ suspend fun generateComplianceReport(
         })
         // ... additional controls
     }
-    
+
     val report = buildJsonObject {
         put("reportId", "SOC2-REPORT-${Instant.now().toEpochMilli()}")
         put("reportDate", Instant.now().toString())
@@ -724,7 +724,7 @@ suspend fun generateComplianceReport(
             put("complianceStatus", "Compliant")
         })
     }
-    
+
     // Anchor report to blockchain
     TrustWeave.blockchains.anchor(
         data = report,
@@ -738,7 +738,7 @@ suspend fun generateComplianceReport(
             println("❌ Report anchoring failed: ${error.message}")
         }
     )
-    
+
     return report
 }
 ```

@@ -33,17 +33,17 @@ class CredentialIssuerAdditionalBranchesTest {
         SchemaRegistry.clear()
         SchemaValidatorRegistry.clear()
         SchemaValidatorRegistry.register(JsonSchemaValidator())
-        
+
         val signer: suspend (ByteArray, String) -> ByteArray = { data, _ ->
             "mock-signature-${UUID.randomUUID()}".toByteArray()
         }
-        
+
         val proofGenerator = Ed25519ProofGenerator(
             signer = signer,
             getPublicKeyId = { "did:key:issuer123#key-1" }
         )
         proofRegistry.register(proofGenerator)
-        
+
         issuer = CredentialIssuer(
             proofGenerator = proofGenerator,
             resolveDid = { did -> did == issuerDid },
@@ -64,9 +64,9 @@ class CredentialIssuerAdditionalBranchesTest {
     fun `test issue with options containing proofType`() = runBlocking {
         val credential = createTestCredential()
         val options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-        
+
         val result = issuer.issue(credential, issuerDid, "key-1", options)
-        
+
         assertNotNull(result.proof)
         assertEquals("Ed25519Signature2020", result.proof?.type)
     }
@@ -75,9 +75,9 @@ class CredentialIssuerAdditionalBranchesTest {
     fun `test issue with options containing challenge`() = runBlocking {
         val credential = createTestCredential()
         val options = CredentialIssuanceOptions(challenge = "challenge-123")
-        
+
         val result = issuer.issue(credential, issuerDid, "key-1", options)
-        
+
         assertEquals("challenge-123", result.proof?.challenge)
     }
 
@@ -85,9 +85,9 @@ class CredentialIssuerAdditionalBranchesTest {
     fun `test issue with options containing domain`() = runBlocking {
         val credential = createTestCredential()
         val options = CredentialIssuanceOptions(domain = "example.com")
-        
+
         val result = issuer.issue(credential, issuerDid, "key-1", options)
-        
+
         assertEquals("example.com", result.proof?.domain)
     }
 
@@ -99,9 +99,9 @@ class CredentialIssuerAdditionalBranchesTest {
             challenge = "challenge-123",
             domain = "example.com"
         )
-        
+
         val result = issuer.issue(credential, issuerDid, "key-1", options)
-        
+
         assertNotNull(result.proof)
         assertEquals("Ed25519Signature2020", result.proof?.type)
         assertEquals("challenge-123", result.proof?.challenge)
@@ -115,9 +115,9 @@ class CredentialIssuerAdditionalBranchesTest {
         val credential = createTestCredential(
             expirationDate = Instant.now().plusSeconds(86400).toString()
         )
-        
+
         val result = issuer.issue(credential, issuerDid, "key-1")
-        
+
         assertNotNull(result.proof)
         assertEquals(credential.expirationDate, result.expirationDate)
     }
@@ -132,9 +132,9 @@ class CredentialIssuerAdditionalBranchesTest {
                 statusListCredential = "https://example.com/status/1"
             )
         )
-        
+
         val result = issuer.issue(credential, issuerDid, "key-1")
-        
+
         assertNotNull(result.proof)
         assertNotNull(result.credentialStatus)
     }
@@ -150,9 +150,9 @@ class CredentialIssuerAdditionalBranchesTest {
                 )
             )
         )
-        
+
         val result = issuer.issue(credential, issuerDid, "key-1")
-        
+
         assertNotNull(result.proof)
         assertNotNull(result.evidence)
         assertEquals(1, result.evidence?.size)
@@ -170,9 +170,9 @@ class CredentialIssuerAdditionalBranchesTest {
         val credential = createTestCredential(
             termsOfUse = termsOfUse
         )
-        
+
         val result = issuer.issue(credential, issuerDid, "key-1")
-        
+
         assertNotNull(result.proof)
         assertNotNull(result.termsOfUse)
     }
@@ -186,9 +186,9 @@ class CredentialIssuerAdditionalBranchesTest {
                 serviceEndpoint = "https://example.com/refresh"
             )
         )
-        
+
         val result = issuer.issue(credential, issuerDid, "key-1")
-        
+
         assertNotNull(result.proof)
         assertNotNull(result.refreshService)
     }
@@ -202,12 +202,12 @@ class CredentialIssuerAdditionalBranchesTest {
             resolveDid = { false },
             proofRegistry = proofRegistry
         )
-        
+
         val credential = createTestCredential()
-        
+
         // Should still issue, but DID resolution might affect validation
         val result = issuerWithFailedDidResolution.issue(credential, issuerDid, "key-1")
-        
+
         assertNotNull(result.proof)
     }
 
@@ -218,9 +218,9 @@ class CredentialIssuerAdditionalBranchesTest {
             resolveDid = { throw RuntimeException("DID resolution failed") },
             proofRegistry = proofRegistry
         )
-        
+
         val credential = createTestCredential()
-        
+
         assertFailsWith<RuntimeException> {
             issuerWithThrowingDidResolution.issue(credential, issuerDid, "key-1")
         }
@@ -235,27 +235,27 @@ class CredentialIssuerAdditionalBranchesTest {
             resolveDid = { did -> did == issuerDid },
             proofRegistry = proofRegistry
         )
-        
+
         val credential = createTestCredential()
-        
+
         // Should use registry
         val result = issuerWithoutDirectGenerator.issue(credential, issuerDid, "key-1")
-        
+
         assertNotNull(result.proof)
     }
 
     @Test
     fun `test issue with proofGenerator not in registry`() = runBlocking {
         val emptyRegistry = ProofGeneratorRegistry()
-        
+
         val issuerWithoutGenerator = CredentialIssuer(
             proofGenerator = null,
             resolveDid = { did -> did == issuerDid },
             proofRegistry = emptyRegistry
         )
-        
+
         val credential = createTestCredential()
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuerWithoutGenerator.issue(credential, issuerDid, "key-1")
         }
@@ -280,17 +280,17 @@ class CredentialIssuerAdditionalBranchesTest {
                 })
             })
         }
-        
+
         runBlocking {
             SchemaRegistry.registerSchema(schema, schemaDefinition)
         }
-        
+
         val credential = createTestCredential(
             schema = schema
         )
-        
+
         val result = issuer.issue(credential, issuerDid, "key-1")
-        
+
         assertNotNull(result.proof)
     }
 

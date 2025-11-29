@@ -54,7 +54,7 @@ The `RegistryEntryMapper` automatically converts registry entries to Trustweave 
 
 1. **Selects Best Implementation**: Chooses non-testnet implementation with `driverUrl`
 2. **Extracts Resolver URL**: Uses `implementations[].driverUrl` as the resolver endpoint
-3. **Determines Protocol Adapter**: 
+3. **Determines Protocol Adapter**:
    - URLs containing "godiddy" → GoDiddy adapter
    - Otherwise → Standard Universal Resolver adapter
 4. **Creates HttpDidMethod**: Wraps the resolver in an `HttpDidMethod` instance
@@ -93,7 +93,7 @@ The protocol adapter is automatically determined:
 Currently, JSON-registered methods support:
 - ✅ **Resolution**: Automatically enabled if `driverUrl` is provided
 - ❌ **Create**: Requires native implementation
-- ❌ **Update**: Requires native implementation  
+- ❌ **Update**: Requires native implementation
 - ❌ **Deactivate**: Requires native implementation
 
 ## Examples

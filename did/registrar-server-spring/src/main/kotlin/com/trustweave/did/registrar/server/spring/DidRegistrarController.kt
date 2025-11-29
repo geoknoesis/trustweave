@@ -37,7 +37,7 @@ import java.util.*
 class DidRegistrarController(
     private val service: DidRegistrarService
 ) {
-    
+
     /**
      * POST /1.0/dids
      *

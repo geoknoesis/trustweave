@@ -124,7 +124,7 @@ class CredentialVerifier(
         } else {
             try {
                 println("[DEBUG CredentialVerifier] Resolving issuer DID: ${credential.issuer}")
-                val resolution = didResolver.resolve(credential.issuer)
+                val resolution = didResolver.resolve(com.trustweave.core.types.Did(credential.issuer))
                 issuerValid = resolution is DidResolutionResult.Success
                 println("[DEBUG CredentialVerifier] Issuer DID resolution result: document=${issuerValid}")
                 if (!issuerValid) {

@@ -31,7 +31,7 @@ FREE → STARTER → PRO → ENTERPRISE
  │        │       │         │
  │        │       │         └─> Custom Pricing
  │        │       └─> $149/month
- │        └─> $49/month  
+ │        └─> $49/month
  └─> $0 (forever)
 ```
 
@@ -54,36 +54,36 @@ FREE → STARTER → PRO → ENTERPRISE
 object FreeTier {
     const val monthlyPrice = 0
     const val annualPrice = 0
-    
+
     // Identity Operations
     const val didsPerMonth = 10
     const val didResolutionsPerMonth = 1000
     const val didMethodsSupported = listOf("key", "web")
-    
+
     // Credential Operations
     const val credentialsIssuedPerMonth = 100
     const val credentialsVerifiedPerMonth = 1000
     const val credentialsStored = 500 // Total storage
-    
+
     // Wallet Operations
     const val walletsCreated = 3
     const val queriesPerMonth = 10000
-    
+
     // Blockchain Anchoring
     const val blockchainAnchoring = false
     const val anchoringNetworks = emptyList<String>()
-    
+
     // Infrastructure
     const val apiCallsPerMonth = 10000
     const val storageGB = 0.5
     const val dataTransferGB = 1
     const val rateLimitPerSecond = 5
-    
+
     // Support & SLA
     const val support = "Community (GitHub Discussions)"
     const val sla = "None"
     const val responseTime = "Best effort"
-    
+
     // Features
     const val webhooks = false
     const val customDomains = false
@@ -126,39 +126,39 @@ object StarterTier {
     const val monthlyPrice = 49 // USD
     const val annualPrice = 470 // 2 months free: 49 * 10
     const val annualDiscount = 0.20 // 20% off
-    
+
     // Identity Operations
     const val didsPerMonth = 100
     const val didResolutionsPerMonth = 10000
     const val didMethodsSupported = listOf("key", "web", "ion")
-    
+
     // Credential Operations
     const val credentialsIssuedPerMonth = 1000
     const val credentialsVerifiedPerMonth = 10000
     const val credentialsStored = 5000
-    
+
     // Wallet Operations
     const val walletsCreated = 25
     const val queriesPerMonth = 100000
-    
+
     // Blockchain Anchoring
     const val blockchainAnchoring = true
     const val anchoringNetworks = listOf("algorand:testnet", "polygon:mumbai")
     const val anchoringOperationsPerMonth = 100
     const val anchoringCostIncluded = true // Gas fees included up to limit
-    
+
     // Infrastructure
     const val apiCallsPerMonth = 100000
     const val storageGB = 5
     const val dataTransferGB = 10
     const val rateLimitPerSecond = 25
     const val availability = 0.99 // 99% uptime
-    
+
     // Support & SLA
     const val support = "Email Support"
     const val sla = "99% uptime"
     const val responseTime = "2 business days"
-    
+
     // Features
     const val webhooks = true
     const val webhooksEndpoints = 5
@@ -209,21 +209,21 @@ object ProTier {
     const val monthlyPrice = 149 // USD
     const val annualPrice = 1430 // 2 months free: 149 * 10 + (149 * 0.8 * 2)
     const val annualDiscount = 0.20 // 20% off
-    
+
     // Identity Operations
     const val didsPerMonth = 1000
     const val didResolutionsPerMonth = 100000
     const val didMethodsSupported = listOf("key", "web", "ion", "ethr", "polygonid")
-    
+
     // Credential Operations
     const val credentialsIssuedPerMonth = 10000
     const val credentialsVerifiedPerMonth = 100000
     const val credentialsStored = 50000
-    
+
     // Wallet Operations
     const val walletsCreated = 250
     const val queriesPerMonth = 1000000
-    
+
     // Blockchain Anchoring
     const val blockchainAnchoring = true
     const val anchoringNetworks = listOf(
@@ -233,20 +233,20 @@ object ProTier {
     )
     const val anchoringOperationsPerMonth = 1000
     const val anchoringCostIncluded = true // Up to $100/month gas fees
-    
+
     // Infrastructure
     const val apiCallsPerMonth = 1000000
     const val storageGB = 50
     const val dataTransferGB = 100
     const val rateLimitPerSecond = 100
     const val availability = 0.995 // 99.5% uptime
-    
+
     // Support & SLA
     const val support = "Priority Email + Chat Support"
     const val sla = "99.5% uptime"
     const val responseTime = "4 hours (business hours)"
     const val dedicatedSlackChannel = false
-    
+
     // Features
     const val webhooks = true
     const val webhooksEndpoints = 25
@@ -305,41 +305,41 @@ object EnterpriseTier {
     const val typicalRange = 1500..10000 // USD/month
     const val annualContract = true // Minimum 1 year
     const val volumeDiscounts = true
-    
+
     // Identity Operations
     const val didsPerMonth = Int.MAX_VALUE // Unlimited
     const val didResolutionsPerMonth = Int.MAX_VALUE
     const val didMethodsSupported = listOf("ALL") // All supported methods
-    
+
     // Credential Operations
     const val credentialsIssuedPerMonth = Int.MAX_VALUE
     const val credentialsVerifiedPerMonth = Int.MAX_VALUE
     const val credentialsStored = Int.MAX_VALUE
-    
+
     // Wallet Operations
     const val walletsCreated = Int.MAX_VALUE
     const val queriesPerMonth = Int.MAX_VALUE
-    
+
     // Blockchain Anchoring
     const val blockchainAnchoring = true
     const val anchoringNetworks = listOf("ALL") // All chains + custom chains
     const val anchoringOperationsPerMonth = Int.MAX_VALUE
     const val anchoringCostNegotiated = true // Custom gas fee handling
-    
+
     // Infrastructure
     const val apiCallsPerMonth = Int.MAX_VALUE
     const val storageGB = Int.MAX_VALUE // Or dedicated storage
     const val dataTransferGB = Int.MAX_VALUE
     const val rateLimitPerSecond = Int.MAX_VALUE // Or custom limits
     const val availability = 0.999 // 99.9% uptime SLA
-    
+
     // Deployment Options
     const val cloudHosted = true
     const val onPremise = true // Self-hosted option
     const val hybridDeployment = true
     const val dedicatedInfrastructure = true // Isolated cluster
     const val privateCloud = true // AWS/Azure/GCP dedicated VPC
-    
+
     // Support & SLA
     const val support = "Dedicated Support Engineer + 24/7 Coverage"
     const val sla = "99.9% uptime (contractual)"
@@ -347,7 +347,7 @@ object EnterpriseTier {
     const val dedicatedSlackChannel = true
     const val quarterlBusinessReviews = true
     const val technicalAccountManager = true
-    
+
     // Features
     const val webhooks = true
     const val webhooksEndpoints = Int.MAX_VALUE
@@ -364,7 +364,7 @@ object EnterpriseTier {
     const val ipWhitelisting = true
     const val ssoIntegration = true // SAML, OIDC
     const val advancedSecurity = true // Penetration testing, SOC2
-    
+
     // Enterprise Features
     const val customIntegrations = true // Build custom adapters
     const val priorityFeatureRequests = true
@@ -402,7 +402,7 @@ object EnterpriseAddOns {
         val operations: Int = 10000, // per month
         val price: Int = 500 // USD/month
     )
-    
+
     // Dedicated Infrastructure
     data class DedicatedCluster(
         val cores: Int = 8,
@@ -410,21 +410,21 @@ object EnterpriseAddOns {
         val storageGB: Int = 500,
         val price: Int = 1000 // USD/month
     )
-    
+
     // Professional Services
     data class ProfessionalServices(
         val hoursPerMonth: Int = 20,
         val hourlyRate: Int = 250, // USD/hour
         val monthlyPackagePrice: Int = 4000 // 20% discount for package
     )
-    
+
     // Training
     data class TrainingPackage(
         val developers: Int = 10,
         val days: Int = 2,
         val price: Int = 5000 // USD one-time
     )
-    
+
     // Compliance Certification Assistance
     data class CompliancePackage(
         val certifications: List<String> = listOf("SOC2", "HIPAA"),
@@ -489,26 +489,26 @@ object OverageRates {
         val didsCreated: Double = 0.10, // USD per DID
         val didResolutions: Double = 0.001 // USD per 100 resolutions
     )
-    
+
     // Credential Operations
     data class CredentialOverages(
         val credentialsIssued: Double = 0.05, // USD per credential
         val credentialsVerified: Double = 0.005 // USD per 100 verifications
     )
-    
+
     // Blockchain Anchoring
     data class AnchoringOverages(
         val anchoringOperation: Double = 1.00, // USD per operation (+ actual gas)
         val gasFeesPassthrough: Boolean = true // Pass actual gas costs
     )
-    
+
     // Infrastructure
     data class InfrastructureOverages(
         val apiCalls: Double = 0.01, // USD per 1000 calls
         val storage: Double = 0.50, // USD per GB/month
         val dataTransfer: Double = 0.12 // USD per GB
     )
-    
+
     // Example Calculations
     fun calculateOverage(tier: String, usage: Usage): Double {
         return when (tier) {
@@ -584,21 +584,21 @@ object AddOns {
         val monthlyFee: Int = 200, // Ongoing
         val availableFor: List<String> = listOf("PRO", "ENTERPRISE")
     )
-    
+
     // Extended Audit Log Retention
     data class ExtendedAuditLogs(
         val retentionDays: Int = 365, // 1 year
         val price: Int = 50, // USD/month
         val availableFor: List<String> = listOf("STARTER", "PRO")
     )
-    
+
     // Advanced DID Methods
     data class PremiumDidMethods(
         val methods: List<String> = listOf("did:ion", "did:ethr", "did:polygonid"),
         val price: Int = 25, // USD/month
         val availableFor: List<String> = listOf("STARTER")
     )
-    
+
     // Dedicated Support
     data class DedicatedSupport(
         val slackChannel: Boolean = true,
@@ -606,14 +606,14 @@ object AddOns {
         val price: Int = 500, // USD/month
         val availableFor: List<String> = listOf("PRO")
     )
-    
+
     // Additional Team Members
     data class ExtraTeamMembers(
         val membersPerPack: Int = 5,
         val price: Int = 15, // USD/month per pack
         val availableFor: List<String> = listOf("STARTER", "PRO")
     )
-    
+
     // White Labeling
     data class WhiteLabelingAddOn(
         val customBranding: Boolean = true,
@@ -634,21 +634,21 @@ object ProfessionalServices {
         val hourlyRate: Int = 250,
         val fixedPrice: Int = 15000 // Average
     )
-    
+
     data class CustomIntegration(
         val description: String = "Build custom blockchain adapter or DID method",
         val estimatedHours: IntRange = 80..160,
         val hourlyRate: Int = 250,
         val fixedPrice: Int = 30000 // Average
     )
-    
+
     data class TrainingWorkshop(
         val description: String = "2-day onsite training for up to 20 developers",
         val duration: Int = 2, // days
         val price: Int = 8000,
         val travel: String = "Additional if outside major cities"
     )
-    
+
     data class ArchitectureReview(
         val description: String = "Review SSI architecture and provide recommendations",
         val duration: Int = 1, // day
@@ -682,7 +682,7 @@ object SelfHostedVsSaaS {
             "Variable workloads"
         )
     )
-    
+
     data class SelfHostedBenefits(
         val benefits: List<String> = listOf(
             "Full data control & sovereignty",
@@ -721,7 +721,7 @@ object SelfHostedLicensing {
         val updates: Boolean = true,
         val sourceCode: Boolean = false
     )
-    
+
     data class ProfessionalLicense(
         val price: Int = 15000, // USD/year
         val cores: Int = 32,
@@ -731,7 +731,7 @@ object SelfHostedLicensing {
         val sourceCode: Boolean = false,
         val indemnification: Boolean = true
     )
-    
+
     data class EnterpriseLicense(
         val price: Int = 50000, // USD/year (negotiable)
         val cores: Int = Int.MAX_VALUE,
@@ -842,7 +842,7 @@ object CompetitorPricing {
         val proPrice: Int?,
         val enterprisePrice: String
     )
-    
+
     val competitors = listOf(
         Competitor("Auth0", true, 35, 240, "Custom (~$2K+)"),
         Competitor("Okta", false, null, null, "~$2K-$15K/month"),
@@ -901,35 +901,35 @@ object DiscountingRules {
         val alwaysAvailable: Boolean = true,
         val messaging: String = "Save 20% with annual billing"
     )
-    
+
     data class StartupProgram(
         val eligibility: String = "Funded startups < $1M ARR",
         val discount: Double = 0.50, // 50% off for 1 year
         val duration: Int = 12, // months
         val requiresApplication: Boolean = true
     )
-    
+
     data class NonProfitProgram(
         val eligibility: String = "Registered 501(c)(3) or equivalent",
         val discount: Double = 0.50, // 50% off
         val duration: String = "Ongoing",
         val requiresApplication: Boolean = true
     )
-    
+
     data class EducationProgram(
         val eligibility: String = "Students, teachers, researchers",
         val discount: Double = 1.0, // 100% off (free Pro tier)
         val duration: String = "During education",
         val requiresVerification: Boolean = true
     )
-    
+
     data class MigrationIncentive(
         val eligibility: String = "Migrating from competitor",
         val discount: Double = 0.30, // 30% off for 6 months
         val duration: Int = 6,
         val requires: String = "Proof of existing service"
     )
-    
+
     // NEVER discount:
     val noDiscountRules = listOf(
         "Never discount in first sales call (shows desperation)",
@@ -956,7 +956,7 @@ object LaunchPromotions {
             "Featured in case studies"
         )
     )
-    
+
     data class LaunchWeekSpecial(
         val window: String = "First week only",
         val benefit: String = "First 3 months free on Annual Pro plan",
@@ -979,7 +979,7 @@ object Year1Projections {
         val pro: Int = 5, // 1% conversion
         val enterprise: Int = 1
     )
-    
+
     fun calculateMRR(): Int {
         return (
             Customers().starter * 49 +
@@ -989,18 +989,18 @@ object Year1Projections {
     }
     // MRR = $735 + $745 + $3,000 = $4,480
     // ARR = $53,760
-    
+
     data class Overages(
         val estimatedMonthly: Int = 200 // From starter/pro overages
     )
-    
+
     data class ProfessionalServices(
         val estimatedQuarterly: Int = 10000 // Custom integrations, training
     )
-    
+
     fun totalAnnualRevenue(): Int {
-        return calculateMRR() * 12 + 
-               Overages().estimatedMonthly * 12 + 
+        return calculateMRR() * 12 +
+               Overages().estimatedMonthly * 12 +
                ProfessionalServices().estimatedQuarterly * 4
     }
     // Total = $53,760 + $2,400 + $40,000 = ~$96,160
@@ -1017,7 +1017,7 @@ object Year1OptimisticProjections {
         val pro: Int = 15, // 1.5% conversion
         val enterprise: Int = 3
     )
-    
+
     fun calculateMRR(): Int {
         return (
             Customers().starter * 49 +
@@ -1027,7 +1027,7 @@ object Year1OptimisticProjections {
     }
     // MRR = $1,960 + $2,235 + $15,000 = $19,195
     // ARR = $230,340
-    
+
     fun totalAnnualRevenue(): Int {
         return calculateMRR() * 12 + 5000 * 12 + 80000
         // Overages + Services
@@ -1046,7 +1046,7 @@ object Year3Projections {
         val pro: Int = 75,
         val enterprise: Int = 15
     )
-    
+
     fun calculateMRR(): Int {
         return (
             Customers().starter * 49 +
@@ -1056,7 +1056,7 @@ object Year3Projections {
     }
     // MRR = $9,800 + $11,175 + $105,000 = $125,975
     // ARR = $1,511,700
-    
+
     // With overages, services, self-hosted licenses:
     // Total ARR Target: $2,000,000
 }
@@ -1071,7 +1071,7 @@ object Year3Projections {
 # Pricing
 ## Start free. Scale as you grow. Go enterprise when ready.
 
-All plans include W3C-compliant DIDs, Verifiable Credentials, 
+All plans include W3C-compliant DIDs, Verifiable Credentials,
 and Wallet APIs. No credit card required for Free tier.
 ```
 
@@ -1094,25 +1094,25 @@ object CTAButtons {
 Yes! Upgrade or downgrade anytime. Prorated credits applied immediately.
 
 ### What happens if I exceed my plan limits?
-Your service continues without interruption. We charge fair overage rates 
+Your service continues without interruption. We charge fair overage rates
 and send alerts at 80% usage. Or upgrade to the next tier anytime.
 
 ### Do you offer discounts for startups or nonprofits?
-Yes! We offer 50% off for funded startups (<$1M ARR) and registered 
+Yes! We offer 50% off for funded startups (<$1M ARR) and registered
 nonprofits. [Apply here](https://geoknoesis.com/programs)
 
 ### Can I self-host instead of using the cloud?
-Absolutely. TrustWeave is open source (AGPL v3.0). For commercial 
+Absolutely. TrustWeave is open source (AGPL v3.0). For commercial
 self-hosting, you need a commercial license starting at $5,000/year.
 [Learn more](https://geoknoesis.com/self-hosted)
 
 ### What's included in Enterprise support?
-24/7 dedicated support with 1-hour SLA, technical account manager, 
+24/7 dedicated support with 1-hour SLA, technical account manager,
 quarterly business reviews, custom SLA, and priority feature requests.
 
 ### How does blockchain anchoring work?
-We anchor credential digests to blockchains like Algorand, Ethereum, 
-and Polygon for tamper-proof verification. Gas fees included up to 
+We anchor credential digests to blockchains like Algorand, Ethereum,
+and Polygon for tamper-proof verification. Gas fees included up to
 plan limits. [Technical details](https://docs.geoknoesis.com/anchoring)
 
 ### Can I try Pro or Enterprise features first?
@@ -1165,7 +1165,7 @@ object PricingKPIs {
         val proToEnterpriseConversion: Double = 0.10, // Target: 10-15%
         val trialToConversion: Double = 0.25 // Target: 25%+
     )
-    
+
     data class RevenueMetrics(
         val mrr: Double, // Monthly Recurring Revenue
         val arr: Double, // Annual Recurring Revenue
@@ -1174,13 +1174,13 @@ object PricingKPIs {
         val customerAcquisitionCost: Double, // CAC
         val ltvCacRatio: Double // Target: 3:1+
     )
-    
+
     data class RetentionMetrics(
         val monthlyChurn: Double = 0.05, // Target: <5%
         val netRevenueRetention: Double = 1.20, // Target: 120%+
         val expansionRevenue: Double // Upgrades - Downgrades
     )
-    
+
     data class UsageMetrics(
         val averageAPICallsPerCustomer: Int,
         val averageCredentialsPerCustomer: Int,
@@ -1208,31 +1208,31 @@ object PricingKPIs {
 1. ✅ **Launch with all 4 tiers immediately**
    - Free drives adoption
    - Paid tiers prove business model
-   
+
 2. ✅ **Be generous with Free tier**
    - 100 credentials/month is enough to learn
    - Tight enough to force production upgrades
-   
+
 3. ✅ **Make Starter ($49) attractive**
    - Blockchain anchoring only in paid tiers
    - This is your main conversion target
-   
+
 4. ✅ **Highlight Pro ($149) as "Popular"**
    - Most companies will land here
    - Best margin tier
-   
+
 5. ✅ **Use overage pricing for safety**
    - Never block customers
    - Overages drive upgrade conversations
-   
+
 6. ✅ **Annual discount (20%) always available**
    - Improves cash flow
    - Reduces churn
-   
+
 7. ✅ **Enterprise pricing starts at $1,500**
    - Sets floor for enterprise deals
    - Custom pricing above that
-   
+
 8. ✅ **Self-hosted licenses separate**
    - Doesn't compete with SaaS
    - Captures regulated market

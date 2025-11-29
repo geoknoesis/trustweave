@@ -11,17 +11,17 @@ import kotlinx.coroutines.runBlocking
 
 /**
  * Base class for EO integration tests using TestContainers.
- * 
+ *
  * Provides common setup and teardown for EO integration tests.
  * Subclasses should implement the blockchain-specific anchor client creation.
- * 
+ *
  * Example usage:
  * ```kotlin
  * class MyBlockchainEoIntegrationTest : BaseEoIntegrationTest() {
  *     override fun createAnchorClient(chainId: String, options: Map<String, Any?>): BlockchainAnchorClient {
  *         return MyBlockchainAnchorClient(chainId, options)
  *     }
- *     
+ *
  *     @Test
  *     fun `test EO scenario`() = runBlocking {
  *         val result = runEoTestScenario(chainId, options)
@@ -39,7 +39,7 @@ abstract class BaseEoIntegrationTest {
     /**
      * Creates a blockchain anchor client for the test.
      * Subclasses must implement this to provide their specific blockchain client.
-     * 
+     *
      * @param chainId The chain ID
      * @param options Configuration options (e.g., RPC URL, private key from TestContainers)
      * @return A configured BlockchainAnchorClient
@@ -81,7 +81,7 @@ abstract class BaseEoIntegrationTest {
 
     /**
      * Runs a complete EO test scenario.
-     * 
+     *
      * @param chainId Optional chain ID (uses getChainId() if not provided)
      * @param options Optional anchor client options (uses getAnchorClientOptions() if not provided)
      * @param datasetId Optional dataset ID
@@ -98,7 +98,7 @@ abstract class BaseEoIntegrationTest {
     ): EoTestResult = runBlocking {
         // Setup DID method
         val didMethod = setupDidMethod()
-        
+
         // Create issuer DID
         val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id

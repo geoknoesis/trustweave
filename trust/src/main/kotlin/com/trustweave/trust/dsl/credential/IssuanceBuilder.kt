@@ -16,10 +16,10 @@ import kotlinx.coroutines.withContext
 
 /**
  * Issuance Builder DSL.
- * 
+ *
  * Provides a fluent API for issuing credentials.
  * Focused only on credential-specific operations.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val issuedCredential = issuer.issue {
@@ -53,7 +53,7 @@ class IssuanceBuilder(
     private var challenge: String? = null
     private var domain: String? = null
     private var autoRevocation: Boolean = false
-    
+
     /**
      * Set the credential to issue (can be built inline).
      */
@@ -62,53 +62,65 @@ class IssuanceBuilder(
         builder.block()
         credential = builder.build()
     }
-    
+
     /**
      * Set the credential directly.
      */
     fun credential(credential: VerifiableCredential) {
         this.credential = credential
     }
-    
+
     /**
      * Set issuer identity for signing.
-     * 
+     *
      * @param issuer The issuer identity containing DID and key ID
      */
     fun signedBy(issuer: IssuerIdentity) {
         this.issuerIdentity = issuer
     }
-    
+
+    /**
+     * Convenience method to set issuer identity from DID and key ID strings.
+     *
+     * @param issuerDid The issuer DID
+     * @param keyId The key ID (can be just the fragment or full key ID)
+     */
+    fun by(issuerDid: String, keyId: String) {
+        require(issuerDid.isNotBlank()) { "Issuer DID cannot be blank" }
+        require(keyId.isNotBlank()) { "Key ID cannot be blank" }
+        this.issuerIdentity = IssuerIdentity.from(issuerDid, keyId)
+    }
+
     /**
      * Set proof type.
-     * 
+     *
      * @param type The proof type to use for signing
      */
     fun withProof(type: ProofType) {
         this.proofType = type
     }
-    
+
     /**
      * Set challenge for proof.
      */
     fun challenge(challenge: String) {
         this.challenge = challenge
     }
-    
+
     /**
      * Set domain for proof.
      */
     fun domain(domain: String) {
         this.domain = domain
     }
-    
+
     /**
      * Enable automatic revocation support (creates status list if needed).
      */
     fun withRevocation() {
         this.autoRevocation = true
     }
-    
+
     /**
      * Build and issue the credential.
      */
@@ -117,7 +129,7 @@ class IssuanceBuilder(
         val resolvedIssuerIdentity = issuerIdentity ?: throw IllegalStateException(
             "Issuer identity is required. Use signedBy(IssuerIdentity.from(issuerDid, keyId))"
         )
-        
+
         // Handle auto-revocation if enabled
         var credentialToIssue = cred
         if (autoRevocation && cred.credentialStatus == null) {
@@ -136,7 +148,7 @@ class IssuanceBuilder(
                         e
                     )
                 }
-                
+
                 // Add credential status to credential
                 val credentialStatus = CredentialStatus(
                     id = "${statusList.id}#0",
@@ -145,7 +157,7 @@ class IssuanceBuilder(
                     statusListIndex = "0",
                     statusListCredential = statusList.id
                 )
-                
+
                 credentialToIssue = cred.copy(credentialStatus = credentialStatus)
             } else {
                 throw IllegalStateException(
@@ -154,9 +166,9 @@ class IssuanceBuilder(
                 )
             }
         }
-        
+
         val proofTypeToUse = proofType ?: defaultProofType
-        
+
         val options = CredentialIssuanceOptions(
             proofType = proofTypeToUse.value,
             keyId = resolvedIssuerIdentity.keyId.value,
@@ -167,7 +179,7 @@ class IssuanceBuilder(
             chainId = null,
             additionalOptions = mapOf("verificationMethod" to resolvedIssuerIdentity.verificationMethodId)
         )
-        
+
         // Issue credential - use the class property issuer (CredentialIssuer instance)
         val issuedCredential = issuer.issue(
             credential = credentialToIssue,

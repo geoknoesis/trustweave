@@ -41,3 +41,5 @@ See [Supported Plugins](docs/plugins.md) for a comprehensive table view of all p
 - **[walt.id Integration](INTEGRATIONS.md#waltid-integration)** - walt.id-based implementations
 - **[godiddy Integration](INTEGRATIONS.md#godiddy-integration)** - HTTP-based integration with godiddy services
 
+
+

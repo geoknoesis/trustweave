@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,34 +591,34 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="iot--device-identity-scenario">
-  
-  
+
+
     <a href="#iot--device-identity-scenario" class="anchor-heading" aria-labelledby="iot--device-identity-scenario"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> IoT &amp; Device Identity Scenario
-  
-  
+
+
 </h1>
-    
+
 
 <p>This guide demonstrates how to build an IoT device identity system using TrustWeave that enables device authentication, secure device-to-device communication, device attestation, and network authorization.</p>
 <h2 id="what-youll-build">
-  
-  
+
+
     <a href="#what-youll-build" class="anchor-heading" aria-labelledby="what-youll-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Build
-  
-  
+
+
 </h2>
-    
+
 
 <p>By the end of this tutorial, you’ll have:</p>
 
@@ -632,21 +632,21 @@
   <li>✅ Built device lifecycle management</li>
 </ul>
 <h2 id="big-picture--significance">
-  
-  
+
+
     <a href="#big-picture--significance" class="anchor-heading" aria-labelledby="big-picture--significance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Big Picture &amp; Significance
-  
-  
+
+
 </h2>
-    
+
 <h3 id="the-iot-identity-challenge">
-  
-  
+
+
     <a href="#the-iot-identity-challenge" class="anchor-heading" aria-labelledby="the-iot-identity-challenge"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The IoT Identity Challenge
-  
-  
+
+
 </h3>
-    
+
 
 <p>The Internet of Things (IoT) is rapidly expanding, with billions of devices connecting to networks. Each device needs a secure, verifiable identity to enable trusted communication, prevent unauthorized access, and ensure device authenticity.</p>
 
@@ -669,13 +669,13 @@
   <li><strong>Device Lifecycle</strong>: Manage device identity throughout lifecycle</li>
 </ol>
 <h3 id="the-iot-device-problem">
-  
-  
+
+
     <a href="#the-iot-device-problem" class="anchor-heading" aria-labelledby="the-iot-device-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The IoT Device Problem
-  
-  
+
+
 </h3>
-    
+
 
 <p>Traditional IoT device management faces critical issues:</p>
 <ul>
@@ -687,21 +687,21 @@
   <li><strong>Lifecycle Management</strong>: Difficult to manage device identity over time</li>
 </ul>
 <h2 id="value-proposition">
-  
-  
+
+
     <a href="#value-proposition" class="anchor-heading" aria-labelledby="value-proposition"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Value Proposition
-  
-  
+
+
 </h2>
-    
+
 <h3 id="problems-solved">
-  
-  
+
+
     <a href="#problems-solved" class="anchor-heading" aria-labelledby="problems-solved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Problems Solved
-  
-  
+
+
 </h3>
-    
+
 
 <ol>
   <li><strong>Device Authentication</strong>: Cryptographic proof of device identity</li>
@@ -713,13 +713,13 @@
   <li><strong>Network Authorization</strong>: Control which devices can join networks</li>
 </ol>
 <h3 id="business-benefits">
-  
-  
+
+
     <a href="#business-benefits" class="anchor-heading" aria-labelledby="business-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Business Benefits
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>For Device Manufacturers</strong>:</p>
 <ul>
@@ -745,13 +745,13 @@
   <li><strong>Transparency</strong>: See device capabilities and status</li>
 </ul>
 <h3 id="roi-considerations">
-  
-  
+
+
     <a href="#roi-considerations" class="anchor-heading" aria-labelledby="roi-considerations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ROI Considerations
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>Security</strong>: Prevents costly security breaches</li>
@@ -761,13 +761,13 @@
   <li><strong>Customer Trust</strong>: Increases device adoption</li>
 </ul>
 <h2 id="understanding-the-problem">
-  
-  
+
+
     <a href="#understanding-the-problem" class="anchor-heading" aria-labelledby="understanding-the-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Understanding the Problem
-  
-  
+
+
 </h2>
-    
+
 
 <p>IoT device identity management faces several critical challenges:</p>
 
@@ -781,13 +781,13 @@
   <li><strong>Scalability</strong>: How to handle millions of devices</li>
 </ol>
 <h3 id="real-world-pain-points">
-  
-  
+
+
     <a href="#real-world-pain-points" class="anchor-heading" aria-labelledby="real-world-pain-points"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Pain Points
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Example 1: Smart Home Security</strong></p>
 <ul>
@@ -810,40 +810,40 @@
   <li>Solution: Verifiable vehicle device identity</li>
 </ul>
 <h2 id="how-it-works-iot-device-identity-flow">
-  
-  
+
+
     <a href="#how-it-works-iot-device-identity-flow" class="anchor-heading" aria-labelledby="how-it-works-iot-device-identity-flow"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How It Works: IoT Device Identity Flow
-  
-  
+
+
 </h2>
-    
+
 
 <pre><code class="language-mermaid">flowchart TD
     A["Device Manufacturer&lt;br/&gt;Creates Device DID&lt;br/&gt;Issues Device Attestation&lt;br/&gt;Certifies Device Capabilities"] --&gt;|issues credentials| B["Device Credentials&lt;br/&gt;Device Attestation&lt;br/&gt;Capability Credentials&lt;br/&gt;Network Authorization&lt;br/&gt;Proof cryptographic"]
     B --&gt;|device uses credentials| C["IoT Device&lt;br/&gt;Stores Credentials&lt;br/&gt;Authenticates to Network&lt;br/&gt;Communicates with Other Devices"]
     C --&gt;|verifies before allowing| D["Network Gateway&lt;br/&gt;Verifies Device Identity&lt;br/&gt;Checks Authorization&lt;br/&gt;Grants Network Access"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
     style D fill:#c2185b,stroke:#880e4f,stroke-width:2px,color:#fff
 </code></pre>
 <h2 id="key-concepts">
-  
-  
+
+
     <a href="#key-concepts" class="anchor-heading" aria-labelledby="key-concepts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Concepts
-  
-  
+
+
 </h2>
-    
+
 <h3 id="device-identity-types">
-  
-  
+
+
     <a href="#device-identity-types" class="anchor-heading" aria-labelledby="device-identity-types"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Device Identity Types
-  
-  
+
+
 </h3>
-    
+
 
 <ol>
   <li><strong>Device Attestation Credential</strong>: Proves device authenticity from manufacturer</li>
@@ -853,13 +853,13 @@
   <li><strong>Lifecycle Credential</strong>: Tracks device status and updates</li>
 </ol>
 <h3 id="device-capabilities">
-  
-  
+
+
     <a href="#device-capabilities" class="anchor-heading" aria-labelledby="device-capabilities"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Device Capabilities
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>Sensors</strong>: What sensors the device has</li>
@@ -869,13 +869,13 @@
   <li><strong>Storage</strong>: Storage capacity</li>
 </ul>
 <h3 id="network-authorization">
-  
-  
+
+
     <a href="#network-authorization" class="anchor-heading" aria-labelledby="network-authorization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Network Authorization
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>Network Access</strong>: Which networks device can join</li>
@@ -884,13 +884,13 @@
   <li><strong>Time Restrictions</strong>: When device can access network</li>
 </ul>
 <h2 id="prerequisites">
-  
-  
+
+
     <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li>Java 21+</li>
@@ -900,13 +900,13 @@
   <li>Familiarity with IoT concepts (helpful but not required)</li>
 </ul>
 <h2 id="step-1-add-dependencies">
-  
-  
+
+
     <a href="#step-1-add-dependencies" class="anchor-heading" aria-labelledby="step-1-add-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Add Dependencies
-  
-  
+
+
 </h2>
-    
+
 
 <p>Add TrustWeave dependencies to your <code class="language-plaintext highlighter-rouge">build.gradle.kts</code>. These provide DID/credential APIs plus the in-memory services used for the IoT identity walkthrough.</p>
 
@@ -979,13 +979,13 @@
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    
+
     <span class="c1">// Test kit for in-memory implementations</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    
+
     <span class="c1">// Kotlinx Serialization</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
-    
+
     <span class="c1">// Coroutines</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"</span><span class="p">)</span>
 <span class="p">}</span>
@@ -1012,37 +1012,37 @@
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"=== IoT &amp; Device Identity Scenario ===\n"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 1: Setup services</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Step 1: Setting up services..."</span><span class="p">)</span>
-    
+
     <span class="c1">// Separate KMS for manufacturer ensures manufacturer has independent keys</span>
     <span class="c1">// This is critical for security - manufacturer keys must be isolated</span>
     <span class="kd">val</span> <span class="py">manufacturerKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
-    
+
     <span class="c1">// Device KMS represents the device's own key management</span>
     <span class="c1">// In production, this would be a hardware security module (HSM) or secure element</span>
     <span class="kd">val</span> <span class="py">deviceKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
-    
+
     <span class="c1">// Network gateway KMS for network authorization</span>
     <span class="kd">val</span> <span class="py">gatewayKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
-    
+
     <span class="c1">// Register DID method for creating device identities</span>
     <span class="c1">// In production, use a real DID method like did:key or did:web</span>
     <span class="kd">val</span> <span class="py">didMethod</span> <span class="p">=</span> <span class="nc">DidKeyMockMethod</span><span class="p">(</span><span class="n">manufacturerKms</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">didRegistry</span> <span class="p">=</span> <span class="nc">DidMethodRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span> <span class="nf">register</span><span class="p">(</span><span class="n">didMethod</span><span class="p">)</span> <span class="p">}</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Services initialized"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="step-3-create-manufacturer-and-device-dids">
-  
-  
+
+
     <a href="#step-3-create-manufacturer-and-device-dids" class="anchor-heading" aria-labelledby="step-3-create-manufacturer-and-device-dids"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Create Manufacturer and Device DIDs
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>Purpose</strong>: Establish verifiable identities for the device manufacturer and the IoT device itself.</p>
 
@@ -1082,38 +1082,38 @@
 25
 </pre></td><td class="rouge-code"><pre>    <span class="c1">// Step 2: Create manufacturer DID</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 2: Creating manufacturer DID..."</span><span class="p">)</span>
-    
+
     <span class="c1">// Manufacturer DID serves as trust anchor</span>
     <span class="c1">// All device attestation credentials will be issued by this DID</span>
     <span class="c1">// This proves devices are from legitimate manufacturer</span>
     <span class="kd">val</span> <span class="py">manufacturerDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Manufacturer DID: ${manufacturerDid.id}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 3: Create device DID</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 3: Creating device DID..."</span><span class="p">)</span>
-    
+
     <span class="c1">// Device DID provides persistent identity for the IoT device</span>
     <span class="c1">// This DID will be used throughout device lifecycle</span>
     <span class="c1">// Even if device changes networks or owners, DID persists</span>
     <span class="kd">val</span> <span class="py">deviceDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Device DID: ${deviceDid.id}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 4: Create network gateway DID</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 4: Creating network gateway DID..."</span><span class="p">)</span>
-    
+
     <span class="c1">// Gateway DID represents the network gateway that controls access</span>
     <span class="c1">// This DID will issue network authorization credentials</span>
     <span class="kd">val</span> <span class="py">gatewayDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Gateway DID: ${gatewayDid.id}"</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="step-4-create-device-attestation-credential">
-  
-  
+
+
     <a href="#step-4-create-device-attestation-credential" class="anchor-heading" aria-labelledby="step-4-create-device-attestation-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Create Device Attestation Credential
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>Purpose</strong>: Issue a credential that proves the device is authentic and came from the manufacturer.</p>
 
@@ -1179,7 +1179,7 @@
 
     <span class="c1">// Step 5: Create device attestation credential</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 5: Creating device attestation credential..."</span><span class="p">)</span>
-    
+
     <span class="c1">// Device attestation proves device is authentic and from manufacturer</span>
     <span class="c1">// This credential will be used to verify device authenticity throughout its lifecycle</span>
     <span class="kd">val</span> <span class="py">deviceAttestation</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
@@ -1204,20 +1204,20 @@
             <span class="n">schemaFormat</span> <span class="p">=</span> <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">spi</span><span class="p">.</span><span class="nc">SchemaFormat</span><span class="p">.</span><span class="nc">JSON_SCHEMA</span>
         <span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Device attestation credential created:"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Model: SmartSensor Pro"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Serial: SSP-2024-001234"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Manufacturer: ${manufacturerDid.id}"</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="step-5-issue-attestation-credential-with-proof">
-  
-  
+
+
     <a href="#step-5-issue-attestation-credential-with-proof" class="anchor-heading" aria-labelledby="step-5-issue-attestation-credential-with-proof"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Issue Attestation Credential with Proof
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>Purpose</strong>: Cryptographically sign the device attestation credential to make it verifiable.</p>
 
@@ -1278,29 +1278,29 @@
 45
 </pre></td><td class="rouge-code"><pre>    <span class="c1">// Step 6: Issue device attestation credential</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 6: Issuing device attestation credential..."</span><span class="p">)</span>
-    
+
     <span class="c1">// Generate manufacturer's signing key</span>
     <span class="c1">// In production, this key would be stored in a hardware security module (HSM)</span>
     <span class="c1">// The key must be kept secure - if compromised, all device attestations are at risk</span>
     <span class="kd">val</span> <span class="py">manufacturerKey</span> <span class="p">=</span> <span class="n">manufacturerKms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span>
-    
+
     <span class="c1">// Create proof generator that uses manufacturer's KMS for signing</span>
     <span class="c1">// Ed25519 is chosen for its security and efficiency</span>
     <span class="c1">// The signer function wraps the KMS sign operation</span>
     <span class="kd">val</span> <span class="py">manufacturerProofGenerator</span> <span class="p">=</span> <span class="nc">Ed25519ProofGenerator</span><span class="p">(</span>
-        <span class="n">signer</span> <span class="p">=</span> <span class="p">{</span> <span class="n">data</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">-&gt;</span> 
+        <span class="n">signer</span> <span class="p">=</span> <span class="p">{</span> <span class="n">data</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">-&gt;</span>
             <span class="c1">// Sign the credential data with manufacturer's key</span>
             <span class="c1">// This creates cryptographic proof that manufacturer issued this credential</span>
-            <span class="n">manufacturerKms</span><span class="p">.</span><span class="nf">sign</span><span class="p">(</span><span class="n">keyId</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span> 
+            <span class="n">manufacturerKms</span><span class="p">.</span><span class="nf">sign</span><span class="p">(</span><span class="n">keyId</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
         <span class="p">},</span>
         <span class="n">getPublicKeyId</span> <span class="p">=</span> <span class="p">{</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">manufacturerKey</span><span class="p">.</span><span class="n">id</span> <span class="p">}</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// Register proof generator in a local registry</span>
     <span class="kd">val</span> <span class="py">manufacturerProofRegistry</span> <span class="p">=</span> <span class="nc">ProofGeneratorRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
         <span class="nf">register</span><span class="p">(</span><span class="n">manufacturerProofGenerator</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Create credential issuer that uses the proof generator</span>
     <span class="c1">// The resolveDid function checks if DIDs are valid (simplified for example)</span>
     <span class="kd">val</span> <span class="py">manufacturerIssuer</span> <span class="p">=</span> <span class="nc">CredentialIssuer</span><span class="p">(</span>
@@ -1308,7 +1308,7 @@
         <span class="n">resolveDid</span> <span class="p">=</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span> <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">)</span> <span class="p">!=</span> <span class="k">null</span> <span class="p">},</span>
         <span class="n">proofRegistry</span> <span class="p">=</span> <span class="n">manufacturerProofRegistry</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// Issue the credential with cryptographic proof</span>
     <span class="c1">// The proof is attached to the credential and can be verified by anyone</span>
     <span class="kd">val</span> <span class="py">issuedAttestation</span> <span class="p">=</span> <span class="n">manufacturerIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
@@ -1317,19 +1317,19 @@
         <span class="n">keyId</span> <span class="p">=</span> <span class="n">manufacturerKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Device attestation credential issued:"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Has proof: ${issuedAttestation.proof != null}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Proof type: ${issuedAttestation.proof?.type}"</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="step-6-create-device-capability-credential">
-  
-  
+
+
     <a href="#step-6-create-device-capability-credential" class="anchor-heading" aria-labelledby="step-6-create-device-capability-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 6: Create Device Capability Credential
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>Purpose</strong>: Issue a credential that describes what the device can do (sensors, actuators, communication protocols).</p>
 
@@ -1410,7 +1410,7 @@
 64
 </pre></td><td class="rouge-code"><pre>    <span class="c1">// Step 7: Create device capability credential</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 7: Creating device capability credential..."</span><span class="p">)</span>
-    
+
     <span class="c1">// Capability credential describes what the device can do</span>
     <span class="c1">// This enables other systems to understand device capabilities</span>
     <span class="c1">// Without this, systems would need to query device directly</span>
@@ -1428,27 +1428,27 @@
                     <span class="s">"motion"</span><span class="p">,</span>
                     <span class="s">"light"</span>
                 <span class="p">))</span>
-                
+
                 <span class="c1">// Actuators: What the device can control</span>
                 <span class="nf">put</span><span class="p">(</span><span class="s">"actuators"</span><span class="p">,</span> <span class="nf">listOf</span><span class="p">(</span>
                     <span class="s">"led"</span><span class="p">,</span>
                     <span class="s">"buzzer"</span>
                 <span class="p">))</span>
-                
+
                 <span class="c1">// Communication protocols the device supports</span>
                 <span class="nf">put</span><span class="p">(</span><span class="s">"communication"</span><span class="p">,</span> <span class="nf">listOf</span><span class="p">(</span>
                     <span class="s">"WiFi"</span><span class="p">,</span>
                     <span class="s">"Bluetooth"</span><span class="p">,</span>
                     <span class="s">"Zigbee"</span>
                 <span class="p">))</span>
-                
+
                 <span class="c1">// Processing capabilities</span>
                 <span class="nf">put</span><span class="p">(</span><span class="s">"processing"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
                     <span class="nf">put</span><span class="p">(</span><span class="s">"cpu"</span><span class="p">,</span> <span class="s">"ARM Cortex-M4"</span><span class="p">)</span>
                     <span class="nf">put</span><span class="p">(</span><span class="s">"ram"</span><span class="p">,</span> <span class="s">"256KB"</span><span class="p">)</span>
                     <span class="nf">put</span><span class="p">(</span><span class="s">"storage"</span><span class="p">,</span> <span class="s">"1MB"</span><span class="p">)</span>
                 <span class="p">})</span>
-                
+
                 <span class="c1">// Security features</span>
                 <span class="nf">put</span><span class="p">(</span><span class="s">"security"</span><span class="p">,</span> <span class="nf">listOf</span><span class="p">(</span>
                     <span class="s">"secure-boot"</span><span class="p">,</span>
@@ -1460,7 +1460,7 @@
         <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">(),</span>
         <span class="n">expirationDate</span> <span class="p">=</span> <span class="k">null</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// Issue capability credential</span>
     <span class="kd">val</span> <span class="py">issuedCapability</span> <span class="p">=</span> <span class="n">manufacturerIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
         <span class="n">credential</span> <span class="p">=</span> <span class="n">capabilityCredential</span><span class="p">,</span>
@@ -1468,19 +1468,19 @@
         <span class="n">keyId</span> <span class="p">=</span> <span class="n">manufacturerKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Device capability credential issued:"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Sensors: temperature, humidity, motion, light"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Communication: WiFi, Bluetooth, Zigbee"</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="step-7-create-network-authorization-credential">
-  
-  
+
+
     <a href="#step-7-create-network-authorization-credential" class="anchor-heading" aria-labelledby="step-7-create-network-authorization-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 7: Create Network Authorization Credential
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>Purpose</strong>: Issue a credential that grants the device permission to join a specific network.</p>
 
@@ -1553,7 +1553,7 @@
 57
 </pre></td><td class="rouge-code"><pre>    <span class="c1">// Step 8: Create network authorization credential</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 8: Creating network authorization credential..."</span><span class="p">)</span>
-    
+
     <span class="c1">// Network authorization grants device permission to join network</span>
     <span class="c1">// This is issued by network gateway, not manufacturer</span>
     <span class="c1">// Gateway verifies device attestation before issuing authorization</span>
@@ -1581,7 +1581,7 @@
         <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">(),</span>
         <span class="n">expirationDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">plus</span><span class="p">(</span><span class="mi">365</span><span class="p">,</span> <span class="n">java</span><span class="p">.</span><span class="n">time</span><span class="p">.</span><span class="n">temporal</span><span class="p">.</span><span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">DAYS</span><span class="p">).</span><span class="nf">toString</span><span class="p">()</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// Issue network authorization</span>
     <span class="kd">val</span> <span class="py">gatewayKey</span> <span class="p">=</span> <span class="n">gatewayKms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">gatewayProofGenerator</span> <span class="p">=</span> <span class="nc">Ed25519ProofGenerator</span><span class="p">(</span>
@@ -1591,32 +1591,32 @@
     <span class="kd">val</span> <span class="py">gatewayProofRegistry</span> <span class="p">=</span> <span class="nc">ProofGeneratorRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
         <span class="nf">register</span><span class="p">(</span><span class="n">gatewayProofGenerator</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="kd">val</span> <span class="py">gatewayIssuer</span> <span class="p">=</span> <span class="nc">CredentialIssuer</span><span class="p">(</span>
         <span class="n">proofGenerator</span> <span class="p">=</span> <span class="n">gatewayProofGenerator</span><span class="p">,</span>
         <span class="n">resolveDid</span> <span class="p">=</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span> <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">)</span> <span class="p">!=</span> <span class="k">null</span> <span class="p">},</span>
         <span class="n">proofRegistry</span> <span class="p">=</span> <span class="n">gatewayProofRegistry</span>
     <span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">issuedNetworkAuth</span> <span class="p">=</span> <span class="n">gatewayIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
         <span class="n">credential</span> <span class="p">=</span> <span class="n">networkAuthorization</span><span class="p">,</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">gatewayDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">keyId</span> <span class="p">=</span> <span class="n">gatewayKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Network authorization credential issued:"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Network: Smart Home Network"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Authorized resources: sensor-data, device-control"</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="step-8-verify-device-before-network-access">
-  
-  
+
+
     <a href="#step-8-verify-device-before-network-access" class="anchor-heading" aria-labelledby="step-8-verify-device-before-network-access"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 8: Verify Device Before Network Access
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>Purpose</strong>: Verify device identity and authorization before allowing network access.</p>
 
@@ -1692,7 +1692,7 @@
 
     <span class="c1">// Step 9: Verify device before network access</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 9: Verifying device before network access..."</span><span class="p">)</span>
-    
+
     <span class="c1">// Create verifier to check device credentials</span>
     <span class="c1">// This verifier will check cryptographic proofs and credential validity</span>
     <span class="kd">val</span> <span class="py">verifier</span> <span class="p">=</span> <span class="nc">CredentialVerifier</span><span class="p">(</span>
@@ -1700,7 +1700,7 @@
             <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">).</span><span class="nf">toCredentialDidResolution</span><span class="p">()</span>
         <span class="p">}</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// First, verify device attestation</span>
     <span class="c1">// This proves device is authentic and from legitimate manufacturer</span>
     <span class="kd">val</span> <span class="py">attestationVerification</span> <span class="p">=</span> <span class="n">verifier</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span>
@@ -1711,15 +1711,15 @@
             <span class="n">validateSchema</span> <span class="p">=</span> <span class="k">true</span>
         <span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="k">if</span> <span class="p">(!</span><span class="n">attestationVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Device attestation verification failed:"</span><span class="p">)</span>
         <span class="n">attestationVerification</span><span class="p">.</span><span class="n">errors</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="nf">println</span><span class="p">(</span><span class="s">"  - $it"</span><span class="p">)</span> <span class="p">}</span>
         <span class="k">return</span><span class="nd">@runBlocking</span>
     <span class="p">}</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Device attestation verified"</span><span class="p">)</span>
-    
+
     <span class="c1">// Second, verify network authorization</span>
     <span class="c1">// This proves device has permission to join network</span>
     <span class="kd">val</span> <span class="py">authorizationVerification</span> <span class="p">=</span> <span class="n">verifier</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span>
@@ -1730,24 +1730,24 @@
             <span class="n">validateSchema</span> <span class="p">=</span> <span class="k">true</span>
         <span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="k">if</span> <span class="p">(!</span><span class="n">authorizationVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Network authorization verification failed:"</span><span class="p">)</span>
         <span class="n">authorizationVerification</span><span class="p">.</span><span class="n">errors</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="nf">println</span><span class="p">(</span><span class="s">"  - $it"</span><span class="p">)</span> <span class="p">}</span>
         <span class="k">return</span><span class="nd">@runBlocking</span>
     <span class="p">}</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Network authorization verified"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Device can join network"</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="step-9-device-to-device-communication">
-  
-  
+
+
     <a href="#step-9-device-to-device-communication" class="anchor-heading" aria-labelledby="step-9-device-to-device-communication"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 9: Device-to-Device Communication
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>Purpose</strong>: Enable secure communication between IoT devices using their DIDs.</p>
 
@@ -1804,11 +1804,11 @@
 41
 </pre></td><td class="rouge-code"><pre>    <span class="c1">// Step 10: Device-to-device communication</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 10: Setting up device-to-device communication..."</span><span class="p">)</span>
-    
+
     <span class="c1">// Create second device for communication example</span>
     <span class="kd">val</span> <span class="py">device2Did</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Second device DID: ${device2Did.id}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Device 1 wants to communicate with Device 2</span>
     <span class="c1">// First, Device 1 verifies Device 2's attestation</span>
     <span class="c1">// In a real scenario, Device 2 would present its attestation credential</span>
@@ -1824,20 +1824,20 @@
         <span class="p">},</span>
         <span class="n">issuanceDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">()</span>
     <span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">issuedDevice2Attestation</span> <span class="p">=</span> <span class="n">manufacturerIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
         <span class="n">credential</span> <span class="p">=</span> <span class="n">device2Attestation</span><span class="p">,</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">manufacturerDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">keyId</span> <span class="p">=</span> <span class="n">manufacturerKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// Verify Device 2's attestation</span>
     <span class="kd">val</span> <span class="py">device2Verification</span> <span class="p">=</span> <span class="n">verifier</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span>
         <span class="n">credential</span> <span class="p">=</span> <span class="n">issuedDevice2Attestation</span><span class="p">,</span>
         <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialVerificationOptions</span><span class="p">(</span><span class="n">checkRevocation</span> <span class="p">=</span> <span class="k">true</span><span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">device2Verification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Device 2 verified - secure communication can proceed"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"  - Device 1 can trust Device 2"</span><span class="p">)</span>
@@ -1845,13 +1845,13 @@
     <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="step-10-anchor-device-identity-to-blockchain">
-  
-  
+
+
     <a href="#step-10-anchor-device-identity-to-blockchain" class="anchor-heading" aria-labelledby="step-10-anchor-device-identity-to-blockchain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 10: Anchor Device Identity to Blockchain
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>Purpose</strong>: Create immutable record of device identity on blockchain.</p>
 
@@ -1941,13 +1941,13 @@
 
     <span class="c1">// Step 11: Anchor device identity to blockchain</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 11: Anchoring device identity to blockchain..."</span><span class="p">)</span>
-    
+
     <span class="c1">// Setup blockchain client</span>
     <span class="kd">val</span> <span class="py">anchorClient</span> <span class="p">=</span> <span class="nc">InMemoryBlockchainAnchorClient</span><span class="p">(</span><span class="s">"eip155:1"</span><span class="p">,</span> <span class="nf">emptyMap</span><span class="p">())</span>
     <span class="kd">val</span> <span class="py">blockchainRegistry</span> <span class="p">=</span> <span class="nc">BlockchainAnchorRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
         <span class="nf">register</span><span class="p">(</span><span class="s">"eip155:1"</span><span class="p">,</span> <span class="n">anchorClient</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Compute digest of device attestation credential</span>
     <span class="c1">// This digest uniquely identifies the credential</span>
     <span class="kd">val</span> <span class="py">attestationDigest</span> <span class="p">=</span> <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">json</span><span class="p">.</span><span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span>
@@ -1956,7 +1956,7 @@
             <span class="n">issuedAttestation</span>
         <span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// Create device identity record</span>
     <span class="c1">// This record will be permanently stored on blockchain</span>
     <span class="kd">val</span> <span class="py">deviceIdentityRecord</span> <span class="p">=</span> <span class="nc">DeviceIdentityRecord</span><span class="p">(</span>
@@ -1966,7 +1966,7 @@
         <span class="n">serialNumber</span> <span class="p">=</span> <span class="s">"SSP-2024-001234"</span><span class="p">,</span>
         <span class="n">attestationDigest</span> <span class="p">=</span> <span class="n">attestationDigest</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// Anchor to blockchain</span>
     <span class="c1">// This creates immutable record that cannot be tampered with</span>
     <span class="kd">val</span> <span class="py">anchorResult</span> <span class="p">=</span> <span class="n">blockchainRegistry</span><span class="p">.</span><span class="nf">anchorTyped</span><span class="p">(</span>
@@ -1974,28 +1974,28 @@
         <span class="n">serializer</span> <span class="p">=</span> <span class="nc">DeviceIdentityRecord</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
         <span class="n">targetChainId</span> <span class="p">=</span> <span class="s">"eip155:137"</span>
     <span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Device identity anchored to blockchain:"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Transaction hash: ${anchorResult.ref.txHash}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Provides immutable device identity record"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Can be verified by anyone"</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="extensive-step-by-step-breakdown">
-  
-  
+
+
     <a href="#extensive-step-by-step-breakdown" class="anchor-heading" aria-labelledby="extensive-step-by-step-breakdown"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Extensive Step-by-Step Breakdown
-  
-  
+
+
 </h2>
-    
+
 <h3 id="step-1-setup-and-initialization">
-  
-  
+
+
     <a href="#step-1-setup-and-initialization" class="anchor-heading" aria-labelledby="step-1-setup-and-initialization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Setup and Initialization
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Initialize IoT device identity system with proper key management.</p>
 
@@ -2020,13 +2020,13 @@
   </li>
 </ol>
 <h3 id="step-2-create-manufacturer-did">
-  
-  
+
+
     <a href="#step-2-create-manufacturer-did" class="anchor-heading" aria-labelledby="step-2-create-manufacturer-did"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Create Manufacturer DID
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Establish manufacturer as trust anchor.</p>
 
@@ -2040,13 +2040,13 @@
 
 <p><strong>Why This Matters</strong>: The manufacturer DID is the foundation of device trust. All device attestations reference this DID, so it must be well-known and trusted.</p>
 <h3 id="step-3-create-device-did">
-  
-  
+
+
     <a href="#step-3-create-device-did" class="anchor-heading" aria-labelledby="step-3-create-device-did"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Create Device DID
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Provide persistent identity for IoT device.</p>
 
@@ -2066,13 +2066,13 @@
   <li>Device firmware is updated</li>
 </ul>
 <h3 id="step-4-create-device-attestation-credential-1">
-  
-  
+
+
     <a href="#step-4-create-device-attestation-credential-1" class="anchor-heading" aria-labelledby="step-4-create-device-attestation-credential-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Create Device Attestation Credential
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Prove device is authentic and from manufacturer.</p>
 
@@ -2108,13 +2108,13 @@
   <li><strong>Permanent</strong>: Attestation doesn’t expire (device is always from manufacturer)</li>
 </ul>
 <h3 id="step-5-issue-attestation-credential">
-  
-  
+
+
     <a href="#step-5-issue-attestation-credential" class="anchor-heading" aria-labelledby="step-5-issue-attestation-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Issue Attestation Credential
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Cryptographically sign device attestation.</p>
 
@@ -2145,13 +2145,13 @@
 
 <p><strong>Why This Matters</strong>: The cryptographic proof is what makes the credential trustworthy. Without it, anyone could create fake device attestations.</p>
 <h3 id="step-6-create-capability-credential">
-  
-  
+
+
     <a href="#step-6-create-capability-credential" class="anchor-heading" aria-labelledby="step-6-create-capability-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 6: Create Capability Credential
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Describe device capabilities.</p>
 
@@ -2192,13 +2192,13 @@
   <li><strong>Resource Planning</strong>: Systems can plan resource usage</li>
 </ul>
 <h3 id="step-7-create-network-authorization-credential-1">
-  
-  
+
+
     <a href="#step-7-create-network-authorization-credential-1" class="anchor-heading" aria-labelledby="step-7-create-network-authorization-credential-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 7: Create Network Authorization Credential
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Grant device permission to join network.</p>
 
@@ -2233,13 +2233,13 @@
   <li><strong>Security</strong>: Prevents unauthorized access</li>
 </ul>
 <h3 id="step-8-verify-device-before-network-access-1">
-  
-  
+
+
     <a href="#step-8-verify-device-before-network-access-1" class="anchor-heading" aria-labelledby="step-8-verify-device-before-network-access-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 8: Verify Device Before Network Access
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Security checkpoint before allowing network access.</p>
 
@@ -2275,13 +2275,13 @@
 
 <p><strong>Why This Matters</strong>: This verification is the critical security checkpoint. Without it, any device could join the network.</p>
 <h3 id="step-9-device-to-device-communication-1">
-  
-  
+
+
     <a href="#step-9-device-to-device-communication-1" class="anchor-heading" aria-labelledby="step-9-device-to-device-communication-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 9: Device-to-Device Communication
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Enable secure communication between devices.</p>
 
@@ -2317,13 +2317,13 @@
   <li><strong>Resilience</strong>: Works even if cloud is down</li>
 </ul>
 <h3 id="step-10-anchor-device-identity-to-blockchain-1">
-  
-  
+
+
     <a href="#step-10-anchor-device-identity-to-blockchain-1" class="anchor-heading" aria-labelledby="step-10-anchor-device-identity-to-blockchain-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 10: Anchor Device Identity to Blockchain
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Create immutable record of device identity.</p>
 
@@ -2359,21 +2359,21 @@
   <li><strong>Transparency</strong>: Public verification</li>
 </ul>
 <h2 id="advanced-features">
-  
-  
+
+
     <a href="#advanced-features" class="anchor-heading" aria-labelledby="advanced-features"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Advanced Features
-  
-  
+
+
 </h2>
-    
+
 <h3 id="secure-boot-verification">
-  
-  
+
+
     <a href="#secure-boot-verification" class="anchor-heading" aria-labelledby="secure-boot-verification"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Secure Boot Verification
-  
-  
+
+
 </h3>
-    
+
 
 <p>Verify device booted securely:</p>
 
@@ -2423,13 +2423,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="device-lifecycle-management">
-  
-  
+
+
     <a href="#device-lifecycle-management" class="anchor-heading" aria-labelledby="device-lifecycle-management"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Device Lifecycle Management
-  
-  
+
+
 </h3>
-    
+
 
 <p>Track device through lifecycle:</p>
 
@@ -2477,13 +2477,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="device-update-credentials">
-  
-  
+
+
     <a href="#device-update-credentials" class="anchor-heading" aria-labelledby="device-update-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Device Update Credentials
-  
-  
+
+
 </h3>
-    
+
 
 <p>Track firmware updates:</p>
 
@@ -2535,21 +2535,21 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="real-world-use-cases">
-  
-  
+
+
     <a href="#real-world-use-cases" class="anchor-heading" aria-labelledby="real-world-use-cases"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Use Cases
-  
-  
+
+
 </h2>
-    
+
 <h3 id="1-smart-home-device-authentication">
-  
-  
+
+
     <a href="#1-smart-home-device-authentication" class="anchor-heading" aria-labelledby="1-smart-home-device-authentication"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Smart Home Device Authentication
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Scenario</strong>: Smart home hub verifies devices before allowing them to join network.</p>
 
@@ -2592,32 +2592,32 @@
             <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">).</span><span class="nf">toCredentialDidResolution</span><span class="p">()</span>
         <span class="p">}</span>
     <span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">verifier</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span>
         <span class="n">credential</span> <span class="p">=</span> <span class="n">deviceAttestation</span><span class="p">,</span>
         <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialVerificationOptions</span><span class="p">(</span><span class="n">checkRevocation</span> <span class="p">=</span> <span class="k">true</span><span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="k">if</span> <span class="p">(!</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="k">return</span> <span class="k">false</span>
-    
+
     <span class="c1">// Check if device is from trusted manufacturer</span>
     <span class="kd">val</span> <span class="py">manufacturerDid</span> <span class="p">=</span> <span class="n">deviceAttestation</span><span class="p">.</span><span class="n">issuer</span>
     <span class="kd">val</span> <span class="py">trustedManufacturers</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span>
         <span class="s">"did:example:manufacturer1"</span><span class="p">,</span>
         <span class="s">"did:example:manufacturer2"</span>
     <span class="p">)</span>
-    
+
     <span class="k">return</span> <span class="n">manufacturerDid</span> <span class="k">in</span> <span class="n">trustedManufacturers</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="2-industrial-iot-device-management">
-  
-  
+
+
     <a href="#2-industrial-iot-device-management" class="anchor-heading" aria-labelledby="2-industrial-iot-device-management"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Industrial IoT Device Management
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Scenario</strong>: Industrial system verifies device capabilities before deployment.</p>
 
@@ -2643,23 +2643,23 @@
 <span class="p">):</span> <span class="nc">Boolean</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">capabilities</span> <span class="p">=</span> <span class="n">capabilityCredential</span><span class="p">.</span><span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"capabilities"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
         <span class="o">?:</span> <span class="k">return</span> <span class="k">false</span>
-    
+
     <span class="kd">val</span> <span class="py">deviceSensors</span> <span class="p">=</span> <span class="n">capabilities</span><span class="p">[</span><span class="s">"sensors"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonArray</span>
         <span class="o">?.</span><span class="nf">map</span> <span class="p">{</span> <span class="n">it</span><span class="p">.</span><span class="n">jsonPrimitive</span><span class="p">.</span><span class="n">content</span> <span class="p">}</span>
         <span class="o">?:</span> <span class="k">return</span> <span class="k">false</span>
-    
+
     <span class="c1">// Check if device has all required capabilities</span>
     <span class="k">return</span> <span class="n">requiredCapabilities</span><span class="p">.</span><span class="nf">all</span> <span class="p">{</span> <span class="n">it</span> <span class="k">in</span> <span class="n">deviceSensors</span> <span class="p">}</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="3-vehicle-to-vehicle-communication">
-  
-  
+
+
     <a href="#3-vehicle-to-vehicle-communication" class="anchor-heading" aria-labelledby="3-vehicle-to-vehicle-communication"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Vehicle-to-Vehicle Communication
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Scenario</strong>: Vehicles verify each other’s identity before communicating.</p>
 
@@ -2702,30 +2702,30 @@
             <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">).</span><span class="nf">toCredentialDidResolution</span><span class="p">()</span>
         <span class="p">}</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// Verify both vehicle attestations</span>
     <span class="kd">val</span> <span class="py">v1Verification</span> <span class="p">=</span> <span class="n">verifier</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span>
         <span class="n">credential</span> <span class="p">=</span> <span class="n">vehicle1Attestation</span><span class="p">,</span>
         <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialVerificationOptions</span><span class="p">(</span><span class="n">checkRevocation</span> <span class="p">=</span> <span class="k">true</span><span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">v2Verification</span> <span class="p">=</span> <span class="n">verifier</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span>
         <span class="n">credential</span> <span class="p">=</span> <span class="n">vehicle2Attestation</span><span class="p">,</span>
         <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialVerificationOptions</span><span class="p">(</span><span class="n">checkRevocation</span> <span class="p">=</span> <span class="k">true</span><span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// Both vehicles must be verified</span>
     <span class="k">return</span> <span class="n">v1Verification</span><span class="p">.</span><span class="n">valid</span> <span class="p">&amp;&amp;</span> <span class="n">v2Verification</span><span class="p">.</span><span class="n">valid</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="benefits">
-  
-  
+
+
     <a href="#benefits" class="anchor-heading" aria-labelledby="benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Benefits
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Device Authentication</strong>: Cryptographic proof of device identity</li>
@@ -2740,13 +2740,13 @@
   <li><strong>Audit Trail</strong>: Immutable records of device identity</li>
 </ol>
 <h2 id="best-practices">
-  
-  
+
+
     <a href="#best-practices" class="anchor-heading" aria-labelledby="best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Best Practices
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Secure Key Storage</strong>: Use HSMs or secure elements for device keys</li>
@@ -2761,13 +2761,13 @@
   <li><strong>Audit Logging</strong>: Log all device authentication events</li>
 </ol>
 <h2 id="next-steps">
-  
-  
+
+
     <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li>Learn about <a href="/trustweave/scenarios/spatial-web-authorization-scenario/">Spatial Web Authorization Scenario</a> for related authorization concepts</li>
@@ -2776,17 +2776,17 @@
   <li>Review <a href="/trustweave/core-concepts/dids/">Core Concepts: DIDs</a> for identity management</li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -2818,7 +2818,7 @@
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -2828,12 +2828,12 @@
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -2855,12 +2855,12 @@
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -2869,12 +2869,12 @@
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -2882,7 +2882,7 @@
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -2890,31 +2890,31 @@
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -2926,7 +2926,7 @@
 
 
 
-  
+
 </body>
 </html>
 

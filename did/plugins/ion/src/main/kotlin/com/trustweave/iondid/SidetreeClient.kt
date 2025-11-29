@@ -2,6 +2,7 @@ package com.trustweave.iondid
 
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.DidDocument
+import com.trustweave.did.DidService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -12,13 +13,13 @@ import java.io.IOException
 
 /**
  * Client for interacting with Sidetree protocol (used by ION).
- * 
+ *
  * Implements Sidetree operations:
  * - Create: Create a new DID
  * - Update: Update an existing DID
  * - Recover: Recover a DID with new keys
  * - Deactivate: Deactivate a DID
- * 
+ *
  * Operations are submitted to ION nodes which batch and anchor them to Bitcoin.
  */
 class SidetreeClient(
@@ -125,15 +126,15 @@ class SidetreeClient(
             val json = Json.encodeToString(JsonObject.serializer(), operation)
             val mediaType = "application/json".toMediaType()
             val body = json.toRequestBody(mediaType)
-            
+
             val request = Request.Builder()
                 .url(url)
                 .post(body)
                 .addHeader("Content-Type", "application/json")
                 .build()
-            
+
             val response = httpClient.newCall(request).execute()
-            
+
             if (!response.isSuccessful) {
                 val errorBody = response.body?.string() ?: "Unknown error"
                 return@withContext OperationResponse(
@@ -143,14 +144,14 @@ class SidetreeClient(
                     error = "HTTP ${response.code}: $errorBody"
                 )
             }
-            
+
             val responseBody = response.body?.string() ?: "{}"
             val responseJson = Json.parseToJsonElement(responseBody).jsonObject
-            
+
             // Extract long-form DID and operation hash from response
             val longFormDid = responseJson["didDocument"]?.jsonObject?.get("id")?.jsonPrimitive?.content
             val operationHash = responseJson["operationHash"]?.jsonPrimitive?.content
-            
+
             OperationResponse(
                 longFormDid = longFormDid,
                 operationHash = operationHash,
@@ -179,15 +180,15 @@ class SidetreeClient(
     suspend fun resolveDid(did: String): ResolutionResponse = withContext(Dispatchers.IO) {
         try {
             val url = "${config.ionNodeUrl}/identifiers/$did"
-            
+
             val request = Request.Builder()
                 .url(url)
                 .get()
                 .addHeader("Accept", "application/json")
                 .build()
-            
+
             val response = httpClient.newCall(request).execute()
-            
+
             if (!response.isSuccessful) {
                 if (response.code == 404) {
                     return@withContext ResolutionResponse(
@@ -197,7 +198,7 @@ class SidetreeClient(
                         error = "DID not found"
                     )
                 }
-                
+
                 val errorBody = response.body?.string() ?: "Unknown error"
                 return@withContext ResolutionResponse(
                     document = null,
@@ -206,13 +207,13 @@ class SidetreeClient(
                     error = "HTTP ${response.code}: $errorBody"
                 )
             }
-            
+
             val responseBody = response.body?.string() ?: "{}"
             val responseJson = Json.parseToJsonElement(responseBody).jsonObject
-            
+
             val document = responseJson["didDocument"]?.jsonObject
             val metadata = responseJson["didDocumentMetadata"]?.jsonObject?.let { jsonObjectToMap(it) }
-            
+
             ResolutionResponse(
                 document = document,
                 metadata = metadata,
@@ -243,9 +244,9 @@ class SidetreeClient(
         if (!did.startsWith("did:ion:")) {
             throw IllegalArgumentException("Invalid did:ion format: $did")
         }
-        
+
         val suffix = did.substringAfter("did:ion:")
-        
+
         // Handle long-form DID (contains additional data)
         val colonIndex = suffix.indexOf(':')
         return if (colonIndex >= 0) {
@@ -264,7 +265,7 @@ class SidetreeClient(
         return buildJsonObject {
             put("@context", JsonArray(document.context.map { JsonPrimitive(it) }))
             put("id", document.id)
-            
+
             if (document.verificationMethod.isNotEmpty()) {
                 put("verificationMethod", JsonArray(document.verificationMethod.map { vmToJsonObject(it) }))
             }
@@ -279,8 +280,8 @@ class SidetreeClient(
             }
         }
     }
-    
-    private fun vmToJsonObject(vm: com.trustweave.did.VerificationMethodRef): JsonObject {
+
+    private fun vmToJsonObject(vm: com.trustweave.did.VerificationMethod): JsonObject {
         return buildJsonObject {
             put("id", vm.id)
             put("type", vm.type)
@@ -293,8 +294,8 @@ class SidetreeClient(
             }
         }
     }
-    
-    private fun serviceToJsonObject(service: com.trustweave.did.Service): JsonObject {
+
+    private fun serviceToJsonObject(service: DidService): JsonObject {
         return buildJsonObject {
             put("id", service.id)
             put("type", service.type)
@@ -304,7 +305,7 @@ class SidetreeClient(
             })
         }
     }
-    
+
     private fun mapToJsonObject(map: Map<String, Any?>): JsonObject {
         return buildJsonObject {
             map.forEach { (key, value) ->
@@ -327,7 +328,7 @@ class SidetreeClient(
             }
         }
     }
-    
+
     private fun jsonObjectToMap(obj: JsonObject): Map<String, Any?> {
         return obj.entries.associate { (key, value) ->
             key to when (value) {

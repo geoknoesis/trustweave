@@ -2,10 +2,10 @@ package com.trustweave.testkit.config
 
 /**
  * Plugin-specific test configurations.
- * 
+ *
  * Provides configuration for individual plugins including mock vs real service flags,
  * TestContainers configuration, and timeout settings.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val awsConfig = PluginTestConfig.aws()
@@ -17,7 +17,7 @@ package com.trustweave.testkit.config
  * ```
  */
 object PluginTestConfig {
-    
+
     /**
      * Base configuration for all plugins.
      */
@@ -26,7 +26,7 @@ object PluginTestConfig {
         open val useRealService: Boolean = TestConfig.useRealServices(),
         open val timeoutSeconds: Long = TestConfig.operationTimeout()
     )
-    
+
     /**
      * AWS KMS plugin test configuration.
      */
@@ -37,7 +37,7 @@ object PluginTestConfig {
         override val useRealService: Boolean = TestConfig.useRealServices(),
         override val timeoutSeconds: Long = TestConfig.operationTimeout()
     ) : PluginConfig("aws", useRealService, timeoutSeconds)
-    
+
     /**
      * Azure Key Vault plugin test configuration.
      */
@@ -47,7 +47,7 @@ object PluginTestConfig {
         override val useRealService: Boolean = TestConfig.useRealServices(),
         override val timeoutSeconds: Long = TestConfig.operationTimeout()
     ) : PluginConfig("azure", useRealService, timeoutSeconds)
-    
+
     /**
      * Google Cloud KMS plugin test configuration.
      */
@@ -58,7 +58,7 @@ object PluginTestConfig {
         override val useRealService: Boolean = TestConfig.useRealServices(),
         override val timeoutSeconds: Long = TestConfig.operationTimeout()
     ) : PluginConfig("google", useRealService, timeoutSeconds)
-    
+
     /**
      * HashiCorp Vault plugin test configuration.
      */
@@ -69,7 +69,7 @@ object PluginTestConfig {
         override val useRealService: Boolean = TestConfig.useRealServices(),
         override val timeoutSeconds: Long = TestConfig.operationTimeout()
     ) : PluginConfig("hashicorp", useRealService, timeoutSeconds)
-    
+
     /**
      * Ethereum chain plugin test configuration.
      */
@@ -80,7 +80,7 @@ object PluginTestConfig {
         override val useRealService: Boolean = TestConfig.useRealServices(),
         override val timeoutSeconds: Long = TestConfig.operationTimeout()
     ) : PluginConfig("ethereum", useRealService, timeoutSeconds)
-    
+
     /**
      * Polygon chain plugin test configuration.
      */
@@ -90,7 +90,7 @@ object PluginTestConfig {
         override val useRealService: Boolean = TestConfig.useRealServices(),
         override val timeoutSeconds: Long = TestConfig.operationTimeout()
     ) : PluginConfig("polygon", useRealService, timeoutSeconds)
-    
+
     /**
      * Algorand chain plugin test configuration.
      */
@@ -100,37 +100,37 @@ object PluginTestConfig {
         override val useRealService: Boolean = TestConfig.useRealServices(),
         override val timeoutSeconds: Long = TestConfig.operationTimeout()
     ) : PluginConfig("algorand", useRealService, timeoutSeconds)
-    
+
     /**
      * Gets AWS KMS test configuration.
      */
     fun aws(): AwsConfig = AwsConfig()
-    
+
     /**
      * Gets Azure Key Vault test configuration.
      */
     fun azure(): AzureConfig = AzureConfig()
-    
+
     /**
      * Gets Google Cloud KMS test configuration.
      */
     fun google(): GoogleConfig = GoogleConfig()
-    
+
     /**
      * Gets HashiCorp Vault test configuration.
      */
     fun vault(): VaultConfig = VaultConfig()
-    
+
     /**
      * Gets Ethereum chain test configuration.
      */
     fun ethereum(): EthereumConfig = EthereumConfig()
-    
+
     /**
      * Gets Polygon chain test configuration.
      */
     fun polygon(): PolygonConfig = PolygonConfig()
-    
+
     /**
      * Gets Algorand chain test configuration.
      */

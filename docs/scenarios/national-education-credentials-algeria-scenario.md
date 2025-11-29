@@ -135,7 +135,7 @@ flowchart TD
     B -->|stored in student wallet| C["Student National Wallet<br/>Stores AlgeroPass credentials<br/>Manages all education credentials<br/>Creates presentations"]
     C -->|presents to institution| D["Educational Institution<br/>Verifies national credential<br/>Checks institution reference<br/>Grants access or credit"]
     C -->|presents to employer| E["Employer<br/>Verifies national credential<br/>Checks authenticity<br/>Validates education level"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -187,13 +187,13 @@ dependencies {
     implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    
+
     // Test kit for in-memory implementations
     implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -221,19 +221,19 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     println("=== National Education Credentials (AlgeroPass) Scenario ===\n")
-    
+
     // Step 1: Setup services
     println("Step 1: Setting up services...")
-    
+
     // Separate KMS for different participants
     // National authority, institutions, and students each have their own keys
     val authorityKms = InMemoryKeyManagementService() // For national education authority
     val institutionKms = InMemoryKeyManagementService() // For educational institutions
     val studentKms = InMemoryKeyManagementService() // For students
-    
+
     val didMethod = DidKeyMockMethod(authorityKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
-    
+
     println("Services initialized")
 }
 ```
@@ -253,19 +253,19 @@ fun main() = runBlocking {
 ```kotlin
     // Step 2: Create national authority and institution DIDs
     println("\nStep 2: Creating national authority and institution DIDs...")
-    
+
     // National Education Authority DID
     // Represents the Ministry of Higher Education and Scientific Research
     // This is the trusted issuer of national credentials
     val authorityDid = didMethod.createDid()
     println("National Education Authority DID: ${authorityDid.id}")
-    
+
     // Educational Institution DID
     // Example: University of Algiers, University of Oran, etc.
     // Institutions are registered with the national authority
     val institutionDid = didMethod.createDid()
     println("Educational Institution DID: ${institutionDid.id}")
-    
+
     // Create institution registration credential
     // This proves the institution is recognized by the national authority
     val institutionRegistrationCredential = createInstitutionRegistrationCredential(
@@ -275,7 +275,7 @@ fun main() = runBlocking {
         institutionCode = "UA-001",
         recognitionDate = Instant.now().toString()
     )
-    
+
     println("Institution registration credential created:")
     println("  - Institution: University of Algiers")
     println("  - Code: UA-001")
@@ -302,13 +302,13 @@ import java.time.Instant
 
     // Step 3: Create student DID and enrollment credential
     println("\nStep 3: Creating student DID and enrollment credential...")
-    
+
     // Student DID
     // Represents individual student
     // Students own their DIDs and credentials
     val studentDid = didMethod.createDid()
     println("Student DID: ${studentDid.id}")
-    
+
     // Create AlgeroPass enrollment credential
     // This is the national-level credential proving student enrollment
     // It references the institution but is issued by national authority
@@ -340,7 +340,7 @@ import java.time.Instant
         issuanceDate = Instant.now().toString(),
         expirationDate = null
     )
-    
+
     println("AlgeroPass enrollment credential created:")
     println("  - Student ID: STU-2024-001234")
     println("  - Institution: University of Algiers")
@@ -367,28 +367,28 @@ import com.trustweave.credential.CredentialIssuanceOptions
 
     // Step 4: Issue enrollment credential with proof
     println("\nStep 4: Issuing AlgeroPass enrollment credential...")
-    
+
     // Generate authority's signing key
     // This key will be used to sign all national credentials
     // In production, use hardware security module (HSM)
     val authorityKey = authorityKms.generateKey("Ed25519")
-    
+
     // Create proof generator for authority
     val authorityProofGenerator = Ed25519ProofGenerator(
         signer = { data, keyId -> authorityKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> authorityKey.id }
     )
-    
+
     val didResolver = CredentialDidResolver { did ->
         didRegistry.resolve(did).toCredentialDidResolution()
     }
-    
+
     // Create credential issuer
     val authorityIssuer = CredentialIssuer(
         proofGenerator = authorityProofGenerator,
         resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
     )
-    
+
     // Issue enrollment credential
     // This proves the student is enrolled at national level
     val issuedEnrollmentCredential = authorityIssuer.issue(
@@ -397,7 +397,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
         keyId = authorityKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("AlgeroPass enrollment credential issued:")
     println("  - Proof: ${issuedEnrollmentCredential.proof != null}")
     println("  - Issuer: ${authorityDid.id}")
@@ -418,7 +418,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
 ```kotlin
     // Step 5: Create academic achievement credential
     println("\nStep 5: Creating academic achievement credential...")
-    
+
     // Academic achievement credential records student performance
     // This is issued by the institution but recognized nationally
     val achievementCredential = VerifiableCredential(
@@ -461,26 +461,26 @@ import com.trustweave.credential.CredentialIssuanceOptions
         issuanceDate = Instant.now().toString(),
         expirationDate = null
     )
-    
+
     // Issue achievement credential
     val institutionKey = institutionKms.generateKey("Ed25519")
     val institutionProofGenerator = Ed25519ProofGenerator(
         signer = { data, keyId -> institutionKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> institutionKey.id }
     )
-    
+
     val institutionIssuer = CredentialIssuer(
         proofGenerator = institutionProofGenerator,
         resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
     )
-    
+
     val issuedAchievementCredential = institutionIssuer.issue(
         credential = achievementCredential,
         issuerDid = institutionDid.id,
         keyId = institutionKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Academic achievement credential created:")
     println("  - Semester GPA: 3.75")
     println("  - Courses: 2")
@@ -504,33 +504,33 @@ import com.trustweave.testkit.credential.InMemoryWallet
 
     // Step 6: Store credentials in student wallet
     println("\nStep 6: Storing credentials in student wallet...")
-    
+
     // Create student's national credential wallet
     // This wallet stores all AlgeroPass credentials
     val studentWallet = InMemoryWallet(
         walletDid = studentDid.id,
         holderDid = studentDid.id
     )
-    
+
     // Store enrollment credential
     val enrollmentCredentialId = studentWallet.store(issuedEnrollmentCredential)
     println("Enrollment credential stored: $enrollmentCredentialId")
-    
+
     // Store achievement credential
     val achievementCredentialId = studentWallet.store(issuedAchievementCredential)
     println("Achievement credential stored: $achievementCredentialId")
-    
+
     // Create collections for organization
     val enrollmentCollection = studentWallet.createCollection("AlgeroPass Enrollment")
     val achievementCollection = studentWallet.createCollection("Academic Achievements")
-    
+
     studentWallet.addToCollection(enrollmentCredentialId, enrollmentCollection)
     studentWallet.addToCollection(achievementCredentialId, achievementCollection)
-    
+
     // Tag credentials for easy searching
     studentWallet.tagCredential(enrollmentCredentialId, setOf("algeropass", "enrollment", "national"))
     studentWallet.tagCredential(achievementCredentialId, setOf("algeropass", "achievement", "grades"))
-    
+
     println("Credentials organized in wallet:")
     println("  - Collections: 2")
     println("  - Total credentials: ${studentWallet.listCredentials().size}")
@@ -554,9 +554,9 @@ import com.trustweave.credential.CredentialVerificationOptions
 
     // Step 7: Verify credentials
     println("\nStep 7: Verifying credentials...")
-    
+
     val verifier = CredentialVerifier(didResolver)
-    
+
     // Verify enrollment credential
     val enrollmentVerification = verifier.verify(
         credential = issuedEnrollmentCredential,
@@ -566,7 +566,7 @@ import com.trustweave.credential.CredentialVerificationOptions
             didResolver = didResolver
         )
     )
-    
+
     if (enrollmentVerification.valid) {
         println("✅ Enrollment credential verified")
         println("  - Issuer: ${authorityDid.id}")
@@ -575,7 +575,7 @@ import com.trustweave.credential.CredentialVerificationOptions
         println("❌ Enrollment credential verification failed:")
         enrollmentVerification.errors.forEach { println("  - $it") }
     }
-    
+
     // Verify achievement credential
     val achievementVerification = verifier.verify(
         credential = issuedAchievementCredential,
@@ -585,7 +585,7 @@ import com.trustweave.credential.CredentialVerificationOptions
             didResolver = didResolver
         )
     )
-    
+
     if (achievementVerification.valid) {
         println("✅ Achievement credential verified")
         println("  - Issuer: ${institutionDid.id}")
@@ -611,10 +611,10 @@ import com.trustweave.credential.CredentialVerificationOptions
 ```kotlin
     // Step 8: Create transfer credential
     println("\nStep 8: Creating transfer credential...")
-    
+
     // Target institution for transfer
     val targetInstitutionDid = didMethod.createDid()
-    
+
     // Transfer credential enables student to transfer
     // This is issued by the national authority and references both institutions
     val transferCredential = VerifiableCredential(
@@ -642,7 +642,7 @@ import com.trustweave.credential.CredentialVerificationOptions
         issuanceDate = Instant.now().toString(),
         expirationDate = null
     )
-    
+
     // Issue transfer credential
     val issuedTransferCredential = authorityIssuer.issue(
         credential = transferCredential,
@@ -650,11 +650,11 @@ import com.trustweave.credential.CredentialVerificationOptions
         keyId = authorityKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     // Store in wallet
     val transferCredentialId = studentWallet.store(issuedTransferCredential)
     studentWallet.tagCredential(transferCredentialId, setOf("algeropass", "transfer"))
-    
+
     println("Transfer credential created:")
     println("  - From: University of Algiers")
     println("  - To: University of Oran")
@@ -693,12 +693,12 @@ data class AlgeroPassRecord(
 
     // Step 9: Anchor critical credentials to blockchain
     println("\nStep 9: Anchoring credentials to blockchain...")
-    
+
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
     val blockchainRegistry = BlockchainAnchorRegistry().apply {
         register("eip155:1", anchorClient)
     }
-    
+
     // Compute digest of enrollment credential
     val enrollmentDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
@@ -706,7 +706,7 @@ data class AlgeroPassRecord(
             issuedEnrollmentCredential
         )
     )
-    
+
     // Create AlgeroPass record
     val algeroPassRecord = AlgeroPassRecord(
         studentDid = studentDid.id,
@@ -716,14 +716,14 @@ data class AlgeroPassRecord(
         credentialDigest = enrollmentDigest,
         timestamp = Instant.now().toString()
     )
-    
+
     // Anchor to blockchain
     val anchorResult = blockchainRegistry.anchorTyped(
         value = algeroPassRecord,
         serializer = AlgeroPassRecord.serializer(),
         targetChainId = "eip155:1"
     )
-    
+
     println("AlgeroPass credential anchored to blockchain:")
     println("  - Transaction hash: ${anchorResult.ref.txHash}")
     println("  - Provides immutable credential record")
@@ -772,15 +772,15 @@ fun verifyCreditTransfer(
         credential = sourceCredential,
         options = CredentialVerificationOptions(checkRevocation = true)
     )
-    
+
     if (!verification.valid) return false
-    
+
     // Check if target institution recognizes source institution
     // This would check against national registry
     val sourceInstitution = sourceCredential.credentialSubject.jsonObject["algeroPass"]?.jsonObject
         ?.get("institution")?.jsonObject
         ?.get("institutionDid")?.jsonPrimitive?.content
-    
+
     // Verify institutions are both registered
     return sourceInstitution != null && targetInstitutionDid.isNotEmpty()
 }

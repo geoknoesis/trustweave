@@ -10,18 +10,18 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class GoogleKmsProviderTest {
-    
+
     @Test
     fun `test provider name`() {
         val provider = GoogleKmsProvider()
         assertEquals("google-cloud-kms", provider.name)
     }
-    
+
     @Test
     fun `test supported algorithms`() {
         val provider = GoogleKmsProvider()
         val supported = provider.supportedAlgorithms
-        
+
         assertTrue(supported.contains(Algorithm.Ed25519))
         assertTrue(supported.contains(Algorithm.Secp256k1))
         assertTrue(supported.contains(Algorithm.P256))
@@ -31,7 +31,7 @@ class GoogleKmsProviderTest {
         assertTrue(supported.contains(Algorithm.RSA.RSA_3072))
         assertTrue(supported.contains(Algorithm.RSA.RSA_4096))
     }
-    
+
     @Test
     @RequiresPlugin("google-cloud-kms")
     fun `test create with valid options`() {
@@ -41,7 +41,7 @@ class GoogleKmsProviderTest {
             "location" to "us-east1",
             "keyRing" to "test-key-ring"
         )
-        
+
         // This test will be skipped if GOOGLE_CLOUD_PROJECT is not set
         // If it runs, it means credentials are available
         try {
@@ -51,16 +51,16 @@ class GoogleKmsProviderTest {
         } catch (e: Exception) {
             // If credentials are required and not available, that's expected
             // This test verifies the provider can be instantiated with options when credentials exist
-            assertTrue(e.message?.contains("credentials") == true || 
+            assertTrue(e.message?.contains("credentials") == true ||
                       e.message?.contains("authentication") == true ||
                       e is IOException)
         }
     }
-    
+
     @Test
     fun `test supportsAlgorithm`() {
         val provider = GoogleKmsProvider()
-        
+
         assertTrue(provider.supportsAlgorithm(Algorithm.Ed25519))
         assertTrue(provider.supportsAlgorithm(Algorithm.Secp256k1))
         assertTrue(provider.supportsAlgorithm(Algorithm.P256))

@@ -32,32 +32,32 @@ The `trustweave-did-registrar` module provides:
 graph TB
     subgraph "trustweave-did-registrar Module"
         DidRegistrar[DidRegistrar Interface]
-        
+
         subgraph "Clients"
             DefaultUR[DefaultUniversalRegistrar]
             KmsRegistrar[KmsBasedRegistrar]
         end
-        
+
         subgraph "Protocol Adapters"
             StandardAdapter[StandardUniversalRegistrarAdapter]
             ProtocolAdapter[UniversalRegistrarProtocolAdapter]
         end
-        
+
         subgraph "Utilities"
             JobTracker[JobTracker]
         end
     end
-    
+
     subgraph "External Services"
         UniversalRegistrar[Universal Registrar Service]
         KMS[Key Management Service]
     end
-    
+
     subgraph "Core Module"
         DidRegistrarInterface[DidRegistrar Interface]
         Models[Registration Models]
     end
-    
+
     DidRegistrar --> DefaultUR
     DidRegistrar --> KmsRegistrar
     DefaultUR --> StandardAdapter
@@ -65,10 +65,10 @@ graph TB
     ProtocolAdapter --> UniversalRegistrar
     KmsRegistrar --> KMS
     DefaultUR --> JobTracker
-    
+
     DidRegistrarInterface -.-> DidRegistrar
     Models -.-> DidRegistrar
-    
+
     style DidRegistrar fill:#e1f5ff
     style DefaultUR fill:#fff4e1
     style KmsRegistrar fill:#fff4e1
@@ -154,20 +154,20 @@ interface UniversalRegistrarProtocolAdapter {
         method: String,
         options: CreateDidOptions
     ): DidRegistrationResponse
-    
+
     suspend fun updateDid(
         baseUrl: String,
         did: String,
         document: DidDocument,
         options: UpdateDidOptions
     ): DidRegistrationResponse
-    
+
     suspend fun deactivateDid(
         baseUrl: String,
         did: String,
         options: DeactivateDidOptions
     ): DidRegistrationResponse
-    
+
     suspend fun getOperationStatus(
         baseUrl: String,
         jobId: String
@@ -262,14 +262,14 @@ sequenceDiagram
     participant Registrar as DefaultUniversalRegistrar
     participant Adapter as ProtocolAdapter
     participant Service as Universal Registrar Service
-    
+
     Client->>Registrar: createDid(method, options)
     Registrar->>Adapter: createDid(baseUrl, method, options)
     Adapter->>Service: POST /1.0/operations
     Service-->>Adapter: DidRegistrationResponse (with jobId)
     Adapter-->>Registrar: DidRegistrationResponse
     Registrar-->>Client: DidRegistrationResponse
-    
+
     alt Long-Running Operation
         Client->>Registrar: waitForCompletion(response)
         loop Polling
@@ -374,16 +374,16 @@ graph TD
         A --> B[client/]
         A --> C[adapter/]
         A --> D[util/]
-        
+
         B --> B1[DefaultUniversalRegistrar.kt]
         B --> B2[KmsBasedRegistrar.kt]
-        
+
         C --> C1[UniversalRegistrarProtocolAdapter.kt]
         C --> C2[StandardUniversalRegistrarAdapter.kt]
-        
+
         D --> D1[JobTracker.kt]
     end
-    
+
     style A fill:#e1f5ff
     style B fill:#fff4e1
     style C fill:#e8f5e9

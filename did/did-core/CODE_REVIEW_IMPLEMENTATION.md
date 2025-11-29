@@ -10,7 +10,7 @@ This document summarizes the improvements implemented based on the detailed code
 - **Rationale**: The class represents a full verification method object, not just a reference
 - **Location**: `did/core/src/main/kotlin/com/trustweave/did/model/DidModels.kt`
 - **Breaking Change**: No backward compatibility - all references updated
-- **Updated References**: 
+- **Updated References**:
   - `DefaultUniversalResolver.kt`
   - `DidDocument` model
   - All test files in `did/core/src/test`
@@ -83,7 +83,7 @@ This document summarizes the improvements implemented based on the detailed code
 ### 2. Update Plugin Modules
 - **Status**: Pending
 - **Files Affected**: All plugin modules that use `VerificationMethodRef` and `Service`
-- **Approach**: 
+- **Approach**:
   - Type aliases provide backward compatibility
   - Can be updated incrementally
   - Deprecation warnings will guide migration
@@ -104,7 +104,7 @@ This document summarizes the improvements implemented based on the detailed code
    // Old (no longer available)
    import com.trustweave.did.VerificationMethodRef
    import com.trustweave.did.Service
-   
+
    // New (required)
    import com.trustweave.did.VerificationMethod
    import com.trustweave.did.DidService
@@ -115,7 +115,7 @@ This document summarizes the improvements implemented based on the detailed code
    // Old (will not compile)
    val vm: VerificationMethodRef = ...
    val service: Service = ...
-   
+
    // New (required)
    val vm: VerificationMethod = ...
    val service: DidService = ...
@@ -125,11 +125,11 @@ This document summarizes the improvements implemented based on the detailed code
    ```kotlin
    // Option 1: Use registry convenience method (still works)
    val result = registry.resolve("did:key:...")
-   
+
    // Option 2: Use RegistryBasedResolver (recommended for better separation)
    val resolver = RegistryBasedResolver(registry)
    val result = resolver.resolve("did:key:...")
-   
+
    // Option 3: Use extension function
    val resolver = registry.asResolver()
    val result = resolver.resolve("did:key:...")

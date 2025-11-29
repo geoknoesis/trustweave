@@ -11,14 +11,14 @@ import kotlinx.serialization.json.JsonElement
  * Integrates with TrustWeave for verifiable credentials and blockchain anchoring.
  */
 interface SmartContractService {
-    
+
     /**
      * Create a contract draft.
      */
     suspend fun createDraft(
         request: ContractDraftRequest
     ): Result<SmartContract>
-    
+
     /**
      * Issue verifiable credential for the contract.
      */
@@ -27,7 +27,7 @@ interface SmartContractService {
         issuerDid: String,
         issuerKeyId: String
     ): Result<VerifiableCredential>
-    
+
     /**
      * Anchor contract to blockchain for audit trail.
      */
@@ -36,7 +36,7 @@ interface SmartContractService {
         credential: VerifiableCredential,
         chainId: String = "algorand:mainnet"
     ): Result<AnchorRef>
-    
+
     /**
      * Bind a contract (issue credential and anchor to blockchain).
      */
@@ -46,14 +46,14 @@ interface SmartContractService {
         issuerKeyId: String,
         chainId: String = "algorand:mainnet"
     ): Result<BoundContract>
-    
+
     /**
      * Activate a contract (move from PENDING to ACTIVE).
      */
     suspend fun activateContract(
         contractId: String
     ): Result<SmartContract>
-    
+
     /**
      * Execute contract based on execution model.
      */
@@ -61,7 +61,7 @@ interface SmartContractService {
         contract: SmartContract,
         executionContext: ExecutionContext
     ): Result<ExecutionResult>
-    
+
     /**
      * Evaluate contract conditions.
      */
@@ -69,7 +69,7 @@ interface SmartContractService {
         contract: SmartContract,
         inputData: JsonElement
     ): Result<ConditionEvaluation>
-    
+
     /**
      * Update contract status.
      */
@@ -79,12 +79,12 @@ interface SmartContractService {
         reason: String? = null,
         metadata: JsonElement? = null
     ): Result<SmartContract>
-    
+
     /**
      * Get contract by ID.
      */
     suspend fun getContract(contractId: String): Result<SmartContract>
-    
+
     /**
      * Verify contract credential.
      */

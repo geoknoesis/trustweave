@@ -1,0 +1,187 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.2.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build
+> Task :kms:kms-core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :did:did-core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :kms:plugins:hashicorp:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :credentials:credential-core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :common:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :credentials:credential-core:processResources NO-SOURCE
+> Task :kms:kms-core:processResources NO-SOURCE
+> Task :did:did-core:processResources UP-TO-DATE
+> Task :common:compileKotlin UP-TO-DATE
+> Task :common:compileJava NO-SOURCE
+> Task :common:processResources NO-SOURCE
+> Task :common:classes UP-TO-DATE
+> Task :common:jar UP-TO-DATE
+> Task :kms:kms-core:compileKotlin UP-TO-DATE
+> Task :kms:kms-core:compileJava NO-SOURCE
+> Task :kms:kms-core:classes UP-TO-DATE
+> Task :kms:kms-core:jar UP-TO-DATE
+> Task :did:did-core:compileKotlin UP-TO-DATE
+> Task :did:did-core:compileJava NO-SOURCE
+> Task :did:did-core:classes UP-TO-DATE
+> Task :did:did-core:jar UP-TO-DATE
+> Task :credentials:credential-core:compileKotlin UP-TO-DATE
+> Task :credentials:credential-core:compileJava NO-SOURCE
+> Task :credentials:credential-core:classes UP-TO-DATE
+> Task :credentials:credential-core:jar UP-TO-DATE
+
+> Task :kms:plugins:hashicorp:compileKotlin FAILED
+./gradlew : e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src
+/main/kotlin/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:6:23
+Unresolved reference 'core'.
+At line:1 char:1
++ ./gradlew :kms:plugins:hashicorp:compileKotlin --no-daemon 2>&1 > has ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (e: file:///C:/U...ference 'core'.
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:12:8 Unresolved
+reference 'kotlinx'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:13:8 Unresolved
+reference 'kotlinx'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:62:20 Unresolved
+reference 'withContext'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:62:32 Unresolved
+reference 'Dispatchers'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:63:14 Suspension
+functions can only be called within coroutine body.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:99:24 Unresolved
+reference 'TrustWeaveException'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:99:24 Type mismatch:
+inferred type is 'ERROR CLASS: Unresolved name: TrustWeaveException', but
+'Throwable' was expected.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:115:19 Unresolved
+reference 'TrustWeaveException'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:115:19 Type
+mismatch: inferred type is 'ERROR CLASS: Unresolved name:
+TrustWeaveException', but 'Throwable' was expected.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:119:67 Unresolved
+reference 'withContext'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:119:79 Unresolved
+reference 'Dispatchers'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:127:23 Overload
+resolution ambiguity between candidates:
+constructor(message: String, cause: Throwable? = ...): KeyNotFoundException
+constructor(keyId: String, keyType: String? = ...): KeyNotFoundException
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:127:23 Type
+mismatch: inferred type is 'ERROR CLASS: Ambiguity: KeyNotFoundException,
+[com/trustweave/kms/KeyNotFoundException.KeyNotFoundException,
+com/trustweave/kms/KeyNotFoundException.KeyNotFoundException]', but
+'Throwable' was expected.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:131:26 Unresolved
+reference 'TrustWeaveException'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:131:26 Type
+mismatch: inferred type is 'ERROR CLASS: Unresolved name:
+TrustWeaveException', but 'Throwable' was expected.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:134:26 Unresolved
+reference 'TrustWeaveException'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:134:26 Type
+mismatch: inferred type is 'ERROR CLASS: Unresolved name:
+TrustWeaveException', but 'Throwable' was expected.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:140:26 Unresolved
+reference 'TrustWeaveException'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:140:26 Type
+mismatch: inferred type is 'ERROR CLASS: Unresolved name:
+TrustWeaveException', but 'Throwable' was expected.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:156:19 Unresolved
+reference 'TrustWeaveException'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:156:19 Type
+mismatch: inferred type is 'ERROR CLASS: Unresolved name:
+TrustWeaveException', but 'Throwable' was expected.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:164:20 Unresolved
+reference 'withContext'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:164:32 Unresolved
+reference 'Dispatchers'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:173:30 Unresolved
+reference 'TrustWeaveException'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:173:30 Type
+mismatch: inferred type is 'ERROR CLASS: Unresolved name:
+TrustWeaveException', but 'Throwable' was expected.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:175:30 Unresolved
+reference 'TrustWeaveException'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:175:30 Type
+mismatch: inferred type is 'ERROR CLASS: Unresolved name:
+TrustWeaveException', but 'Throwable' was expected.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:193:26 Unresolved
+reference 'TrustWeaveException'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:193:26 Type
+mismatch: inferred type is 'ERROR CLASS: Unresolved name:
+TrustWeaveException', but 'Throwable' was expected.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:207:19 Unresolved
+reference 'TrustWeaveException'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:207:19 Type
+mismatch: inferred type is 'ERROR CLASS: Unresolved name:
+TrustWeaveException', but 'Throwable' was expected.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:211:62 Unresolved
+reference 'withContext'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:211:74 Unresolved
+reference 'Dispatchers'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:279:20 Unresolved
+reference 'TrustWeaveException'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:282:20 Unresolved
+reference 'TrustWeaveException'.
+e: file:///C:/Users/steph/work/trustweave/kms/plugins/hashicorp/src/main/kotlin
+/com/trustweave/hashicorpkms/VaultKeyManagementService.kt:285:21 Unresolved
+reference 'TrustWeaveException'.
+
+[Incubating] Problems report is available at: file:///C:/Users/steph/work/trustweave/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':kms:plugins:hashicorp:compileKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.Gradle
+CompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.2.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 44s
+10 actionable tasks: 1 executed, 9 up-to-date

@@ -119,14 +119,14 @@ The `trustweave-common` module is organized into logical packages:
 - **`com.trustweave.core.exception`** – Exception types and error handling
   - `TrustWeaveException`, `NotFoundException`, `InvalidOperationException`
   - `TrustWeaveError` (sealed class hierarchy with 13+ specific error types)
-  
+
 - **`com.trustweave.core.plugin`** – Plugin infrastructure
   - `PluginRegistry` (thread-safe, capability-based discovery)
   - `PluginMetadata`, `PluginCapabilities` (domain-agnostic)
   - `PluginConfiguration`, `PluginType` (framework-level plugin types)
   - `ProviderChain` (fallback support)
   - `PluginLifecycle` (lifecycle management)
-  
+
 - **`com.trustweave.core.util`** – General utilities
   - `DigestUtils` (JSON canonicalization and SHA-256 digest computation)
   - `ResultExtensions` (Result<T> extension functions)

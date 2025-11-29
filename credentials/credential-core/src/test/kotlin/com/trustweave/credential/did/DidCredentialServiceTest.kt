@@ -31,23 +31,23 @@ class DidLinkedCredentialServiceTest {
     @BeforeEach
     fun setup() {
         proofRegistry = ProofGeneratorRegistry()
-        
+
         val signer: suspend (ByteArray, String) -> ByteArray = { data, _ ->
             "signature-${UUID.randomUUID()}".toByteArray()
         }
-        
+
         val proofGenerator = Ed25519ProofGenerator(
             signer = signer,
             getPublicKeyId = { "did:key:issuer#key-1" }
         )
         proofRegistry.register(proofGenerator)
-        
+
         credentialIssuer = CredentialIssuer(
             proofGenerator = proofGenerator,
             resolveDid = { did -> did.startsWith("did:key:") },
             proofRegistry = proofRegistry
         )
-        
+
         didRegistry = DefaultDidMethodRegistry().also { registry ->
             registry.register(object : DidMethod {
                 override val method: String = "key"
@@ -58,7 +58,7 @@ class DidLinkedCredentialServiceTest {
                 }
 
                 override suspend fun resolveDid(did: String): DidResolutionResult {
-                    return DidResolutionResult(
+                    return DidResolutionResult.Success(
                         document = DidDocument(id = did)
                     )
                 }
@@ -91,12 +91,12 @@ class DidLinkedCredentialServiceTest {
             issuerDid = "did:key:issuer",
             keyId = "key-1"
         )
-        
+
         assertNotNull(credential)
         assertEquals("did:key:issuer", credential.issuer)
         assertTrue(credential.type.contains("PersonCredential"))
         assertNotNull(credential.proof)
-        
+
         val subject = credential.credentialSubject.jsonObject
         assertEquals("did:key:subject", subject["id"]?.jsonPrimitive?.content)
         assertEquals("John Doe", subject["name"]?.jsonPrimitive?.content)
@@ -116,7 +116,7 @@ class DidLinkedCredentialServiceTest {
                 challenge = "challenge-123"
             )
         )
-        
+
         assertNotNull(credential)
         assertNotNull(credential.proof)
     }
@@ -132,9 +132,9 @@ class DidLinkedCredentialServiceTest {
             },
             issuanceDate = "2024-01-01T00:00:00Z"
         )
-        
+
         val subjectDid = didCredentialService.resolveCredentialSubject(credential)
-        
+
         assertEquals("did:key:subject", subjectDid)
     }
 
@@ -149,9 +149,9 @@ class DidLinkedCredentialServiceTest {
             },
             issuanceDate = "2024-01-01T00:00:00Z"
         )
-        
+
         val subjectDid = didCredentialService.resolveCredentialSubject(credential)
-        
+
         assertNull(subjectDid)
     }
 
@@ -166,9 +166,9 @@ class DidLinkedCredentialServiceTest {
             },
             issuanceDate = "2024-01-01T00:00:00Z"
         )
-        
+
         val subjectDid = didCredentialService.resolveCredentialSubject(credential)
-        
+
         assertNull(subjectDid)
     }
 
@@ -180,9 +180,9 @@ class DidLinkedCredentialServiceTest {
             credentialSubject = buildJsonObject { put("id", "did:key:subject") },
             issuanceDate = "2024-01-01T00:00:00Z"
         )
-        
+
         val isValid = didCredentialService.verifyIssuerDid(credential)
-        
+
         // Placeholder implementation - method executes
         assertNotNull(isValid)
     }
@@ -202,7 +202,7 @@ class DidLinkedCredentialServiceTest {
             issuerDid = "did:key:issuer",
             keyId = "key-1"
         )
-        
+
         assertNotNull(credential)
         val subject = credential.credentialSubject.jsonObject
         assertEquals("value", subject["string"]?.jsonPrimitive?.content)

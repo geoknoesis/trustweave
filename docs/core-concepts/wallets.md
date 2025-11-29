@@ -203,13 +203,13 @@ if (wallet is CredentialOrganization) {
         name = "Work Credentials",
         description = "Professional credentials"
     )
-    
+
     // Add credentials to collection
     wallet.addToCollection(credentialId, workCollection)
-    
+
     // Tag credentials
     wallet.tagCredential(credentialId, setOf("important", "verified"))
-    
+
     // Add metadata
     wallet.addMetadata(credentialId, mapOf(
         "source" to "issuer.com",
@@ -252,7 +252,7 @@ if (wallet is CredentialPresentation) {
             challenge = "random-challenge-string"
         )
     )
-    
+
     // Selective disclosure
     val selective = wallet.createSelectiveDisclosure(
         credentialIds = listOf(credentialId),

@@ -76,34 +76,34 @@ class KeyEncryption(
     private val keyLength = 256
     private val ivLength = 12 // 96 bits for GCM
     private val tagLength = 128 // 16 bytes
-    
+
     fun encrypt(plaintext: ByteArray): EncryptedData {
         val iv = ByteArray(ivLength).apply {
             SecureRandom().nextBytes(this)
         }
-        
+
         val secretKey = SecretKeySpec(masterKey, "AES")
         val parameterSpec = GCMParameterSpec(tagLength, iv)
-        
+
         val cipher = Cipher.getInstance(algorithm)
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, parameterSpec)
-        
+
         val ciphertext = cipher.doFinal(plaintext)
-        
+
         return EncryptedData(
             iv = iv,
             ciphertext = ciphertext,
             algorithm = algorithm
         )
     }
-    
+
     fun decrypt(encrypted: EncryptedData): ByteArray {
         val secretKey = SecretKeySpec(masterKey, "AES")
         val parameterSpec = GCMParameterSpec(tagLength, encrypted.iv)
-        
+
         val cipher = Cipher.getInstance(algorithm)
         cipher.init(Cipher.DECRYPT_MODE, secretKey, parameterSpec)
-        
+
         return cipher.doFinal(encrypted.ciphertext)
     }
 }
@@ -158,13 +158,13 @@ import kotlin.concurrent.write
 
 /**
  * Encrypted file-based local key store for production use.
- * 
+ *
  * Stores keys in an encrypted file with the following format:
- * 
+ *
  * File Structure:
  * - Header (JSON): version, salt, algorithm, metadata
  * - Key Blocks (encrypted): Each key stored as encrypted JSON
- * 
+ *
  * Security:
  * - Keys encrypted with AES-256-GCM
  * - Master key derived from password using PBKDF2
@@ -176,10 +176,10 @@ class EncryptedFileLocalKeyStore(
     private val masterKey: ByteArray, // Should be derived from password
     private val keyEncryption: KeyEncryption = KeyEncryption(masterKey)
 ) : LocalKeyStore {
-    
+
     private val lock = ReentrantReadWriteLock()
     private val json = Json { prettyPrint = false; encodeDefaults = false }
-    
+
     init {
         // Ensure file exists and has correct permissions
         if (!keyFile.exists()) {
@@ -189,14 +189,14 @@ class EncryptedFileLocalKeyStore(
             setSecurePermissions(keyFile)
         }
     }
-    
+
     override suspend fun get(keyId: String): Secret? = withContext(Dispatchers.IO) {
         lock.read {
             val keys = loadKeys()
             keys[keyId]
         }
     }
-    
+
     override suspend fun store(keyId: String, secret: Secret) = withContext(Dispatchers.IO) {
         lock.write {
             val keys = loadKeys().toMutableMap()
@@ -204,7 +204,7 @@ class EncryptedFileLocalKeyStore(
             saveKeys(keys)
         }
     }
-    
+
     override suspend fun delete(keyId: String): Boolean = withContext(Dispatchers.IO) {
         lock.write {
             val keys = loadKeys().toMutableMap()
@@ -215,26 +215,26 @@ class EncryptedFileLocalKeyStore(
             removed
         }
     }
-    
+
     override suspend fun list(): List<String> = withContext(Dispatchers.IO) {
         lock.read {
             val keys = loadKeys()
             keys.keys.toList()
         }
     }
-    
+
     private fun loadKeys(): Map<String, Secret> {
         if (!keyFile.exists() || keyFile.length() == 0L) {
             return emptyMap()
         }
-        
+
         try {
             val fileContent = keyFile.readBytes()
             val encryptedData = parseEncryptedFile(fileContent)
             val decryptedContent = keyEncryption.decrypt(encryptedData)
             val jsonString = String(decryptedContent, Charsets.UTF_8)
             val keysJson = json.parseToJsonElement(jsonString).jsonObject
-            
+
             return keysJson.entries.associate { (keyId, secretJson) ->
                 keyId to json.decodeFromJsonElement(Secret.serializer(), secretJson)
             }
@@ -242,7 +242,7 @@ class EncryptedFileLocalKeyStore(
             throw IllegalStateException("Failed to load keys from encrypted file", e)
         }
     }
-    
+
     private fun saveKeys(keys: Map<String, Secret>) {
         try {
             val keysJson = buildJsonObject {
@@ -253,14 +253,14 @@ class EncryptedFileLocalKeyStore(
             val jsonString = json.encodeToString(JsonObject.serializer(), keysJson)
             val plaintext = jsonString.toByteArray(Charsets.UTF_8)
             val encryptedData = keyEncryption.encrypt(plaintext)
-            
+
             val fileContent = serializeEncryptedFile(encryptedData)
-            
+
             // Atomic write: write to temp file, then rename
             val tempFile = File(keyFile.parent, "${keyFile.name}.tmp")
             tempFile.writeBytes(fileContent)
             setSecurePermissions(tempFile)
-            
+
             // Atomic rename
             if (keyFile.exists()) {
                 keyFile.delete()
@@ -270,31 +270,31 @@ class EncryptedFileLocalKeyStore(
             throw IllegalStateException("Failed to save keys to encrypted file", e)
         }
     }
-    
+
     private fun parseEncryptedFile(content: ByteArray): EncryptedData {
         // Parse file format:
         // [4 bytes: version][4 bytes: iv length][iv][ciphertext]
         var offset = 0
-        
+
         val version = content.sliceArray(offset until offset + 4)
         offset += 4
-        
+
         val ivLength = content.sliceArray(offset until offset + 4)
             .fold(0) { acc, byte -> (acc shl 8) or (byte.toInt() and 0xFF) }
         offset += 4
-        
+
         val iv = content.sliceArray(offset until offset + ivLength)
         offset += ivLength
-        
+
         val ciphertext = content.sliceArray(offset until content.size)
-        
+
         return EncryptedData(
             iv = iv,
             ciphertext = ciphertext,
             algorithm = "AES/GCM/NoPadding"
         )
     }
-    
+
     private fun serializeEncryptedFile(encrypted: EncryptedData): ByteArray {
         val version = byteArrayOf(0x01, 0x00, 0x00, 0x00) // Version 1
         val ivLength = byteArrayOf(
@@ -303,10 +303,10 @@ class EncryptedFileLocalKeyStore(
             ((encrypted.iv.size shr 8) and 0xFF).toByte(),
             (encrypted.iv.size and 0xFF).toByte()
         )
-        
+
         return version + ivLength + encrypted.iv + encrypted.ciphertext
     }
-    
+
     private fun setSecurePermissions(file: File) {
         try {
             // Set permissions to 600 (owner read/write only)
@@ -336,7 +336,7 @@ class EncryptedFileLocalKeyStore(
 object EncryptedFileLocalKeyStoreFactory {
     /**
      * Creates an encrypted file key store from a password.
-     * 
+     *
      * @param keyFile File to store keys
      * @param password Password for encryption
      * @param salt Salt for key derivation (optional, will be generated)
@@ -350,13 +350,13 @@ object EncryptedFileLocalKeyStoreFactory {
         val actualSalt = salt ?: ByteArray(16).apply {
             java.security.SecureRandom().nextBytes(this)
         }
-        
+
         val masterKey = MasterKeyDerivation.deriveKey(
             password = password,
             salt = actualSalt,
             iterations = 100000
         )
-        
+
         return EncryptedFileLocalKeyStore(keyFile, masterKey)
     }
 }
@@ -411,7 +411,7 @@ import java.util.Base64
 
 /**
  * Encrypts/decrypts DIDComm messages at rest.
- * 
+ *
  * Supports:
  * - Full message encryption
  * - Field-level encryption (selective fields)
@@ -422,12 +422,12 @@ interface MessageEncryption {
      * Encrypts a message for storage.
      */
     suspend fun encrypt(message: DidCommMessage): EncryptedMessage
-    
+
     /**
      * Decrypts a message from storage.
      */
     suspend fun decrypt(encrypted: EncryptedMessage): DidCommMessage
-    
+
     /**
      * Gets the current encryption key version.
      */
@@ -448,11 +448,11 @@ class AesMessageEncryption(
     private val encryptionKey: ByteArray,
     private val keyVersion: Int = 1
 ) : MessageEncryption {
-    
+
     private val algorithm = "AES/GCM/NoPadding"
     private val ivLength = 12
     private val tagLength = 128
-    
+
     override suspend fun encrypt(message: DidCommMessage): EncryptedMessage {
         val json = Json { prettyPrint = false; encodeDefaults = false }
         val messageJson = json.encodeToString(
@@ -460,19 +460,19 @@ class AesMessageEncryption(
             message
         )
         val plaintext = messageJson.toByteArray(Charsets.UTF_8)
-        
+
         val iv = ByteArray(ivLength).apply {
             SecureRandom().nextBytes(this)
         }
-        
+
         val secretKey = SecretKeySpec(encryptionKey, "AES")
         val parameterSpec = GCMParameterSpec(tagLength, iv)
-        
+
         val cipher = Cipher.getInstance(algorithm)
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, parameterSpec)
-        
+
         val ciphertext = cipher.doFinal(plaintext)
-        
+
         return EncryptedMessage(
             keyVersion = keyVersion,
             encryptedData = ciphertext,
@@ -480,21 +480,21 @@ class AesMessageEncryption(
             algorithm = algorithm
         )
     }
-    
+
     override suspend fun decrypt(encrypted: EncryptedMessage): DidCommMessage {
         val secretKey = SecretKeySpec(encryptionKey, "AES")
         val parameterSpec = GCMParameterSpec(tagLength, encrypted.iv)
-        
+
         val cipher = Cipher.getInstance(algorithm)
         cipher.init(Cipher.DECRYPT_MODE, secretKey, parameterSpec)
-        
+
         val plaintext = cipher.doFinal(encrypted.encryptedData)
         val jsonString = String(plaintext, Charsets.UTF_8)
-        
+
         val json = Json { ignoreUnknownKeys = true }
         return json.decodeFromString(DidCommMessage.serializer(), jsonString)
     }
-    
+
     override suspend fun getKeyVersion(): Int = keyVersion
 }
 ```
@@ -507,10 +507,10 @@ Add optional encryption parameter:
 ```kotlin
 interface DidCommMessageStorage {
     // ... existing methods ...
-    
+
     /**
      * Sets message encryption (optional).
-     * 
+     *
      * @param encryption Message encryption service
      */
     fun setEncryption(encryption: MessageEncryption?)
@@ -527,11 +527,11 @@ class PostgresDidCommMessageStorage(
     private val dataSource: DataSource,
     private val encryption: MessageEncryption? = null
 ) : DidCommMessageStorage {
-    
+
     override fun setEncryption(encryption: MessageEncryption?) {
         // Update encryption instance
     }
-    
+
     override suspend fun store(message: DidCommMessage): String = withContext(Dispatchers.IO) {
         val messageToStore = if (encryption != null) {
             // Encrypt message
@@ -545,7 +545,7 @@ class PostgresDidCommMessageStorage(
             return message.id
         }
     }
-    
+
     private suspend fun storeEncrypted(
         encrypted: EncryptedMessage,
         messageId: String
@@ -640,7 +640,7 @@ import org.bson.Document
 
 /**
  * MongoDB-backed message storage.
- * 
+ *
  * Uses MongoDB for flexible document storage with efficient queries.
  */
 class MongoDidCommMessageStorage(
@@ -648,21 +648,21 @@ class MongoDidCommMessageStorage(
     private val databaseName: String = "trustweave",
     private val collectionName: String = "didcomm_messages"
 ) : DidCommMessageStorage {
-    
+
     private val database: MongoDatabase = mongoClient.getDatabase(databaseName)
     private val collection: MongoCollection<Document> = database.getCollection(collectionName)
-    
+
     init {
         createIndexes()
     }
-    
+
     override suspend fun store(message: DidCommMessage): String = withContext(Dispatchers.IO) {
         val json = Json { prettyPrint = false; encodeDefaults = false }
         val messageJson = json.encodeToString(
             DidCommMessage.serializer(),
             message
         )
-        
+
         val document = Document.parse(messageJson).apply {
             put("_id", message.id)
             put("from_did", message.from)
@@ -672,22 +672,22 @@ class MongoDidCommMessageStorage(
             put("created_time", message.created)
             put("expires_time", message.expiresTime)
         }
-        
+
         collection.insertOne(document)
         message.id
     }
-    
+
     override suspend fun get(messageId: String): DidCommMessage? = withContext(Dispatchers.IO) {
         val document = collection.find(Filters.eq("_id", messageId)).first()
             ?: return@withContext null
-        
+
         val json = Json { ignoreUnknownKeys = true }
         json.decodeFromString(
             DidCommMessage.serializer(),
             document.toJson()
         )
     }
-    
+
     override suspend fun getMessagesForDid(
         did: String,
         limit: Int,
@@ -697,7 +697,7 @@ class MongoDidCommMessageStorage(
             Filters.eq("from_did", did),
             Filters.in("to_dids", did)
         )
-        
+
         collection.find(filter)
             .sort(Sorts.descending("created_time"))
             .skip(offset)
@@ -711,7 +711,7 @@ class MongoDidCommMessageStorage(
                 )
             }
     }
-    
+
     override suspend fun getThreadMessages(thid: String): List<DidCommMessage> = withContext(Dispatchers.IO) {
         collection.find(Filters.eq("thid", thid))
             .sort(Sorts.ascending("created_time"))
@@ -724,12 +724,12 @@ class MongoDidCommMessageStorage(
                 )
             }
     }
-    
+
     override suspend fun delete(messageId: String): Boolean = withContext(Dispatchers.IO) {
         val result = collection.deleteOne(Filters.eq("_id", messageId))
         result.deletedCount > 0
     }
-    
+
     override suspend fun deleteMessagesForDid(did: String): Int = withContext(Dispatchers.IO) {
         val filter = Filters.or(
             Filters.eq("from_did", did),
@@ -738,12 +738,12 @@ class MongoDidCommMessageStorage(
         val result = collection.deleteMany(filter)
         result.deletedCount.toInt()
     }
-    
+
     override suspend fun deleteThreadMessages(thid: String): Int = withContext(Dispatchers.IO) {
         val result = collection.deleteMany(Filters.eq("thid", thid))
         result.deletedCount.toInt()
     }
-    
+
     override suspend fun countMessagesForDid(did: String): Int = withContext(Dispatchers.IO) {
         val filter = Filters.or(
             Filters.eq("from_did", did),
@@ -751,14 +751,14 @@ class MongoDidCommMessageStorage(
         )
         collection.countDocuments(filter).toInt()
     }
-    
+
     override suspend fun search(
         filter: MessageFilter,
         limit: Int,
         offset: Int
     ): List<DidCommMessage> = withContext(Dispatchers.IO) {
         val mongoFilter = buildMongoFilter(filter)
-        
+
         collection.find(mongoFilter)
             .sort(Sorts.descending("created_time"))
             .skip(offset)
@@ -772,10 +772,10 @@ class MongoDidCommMessageStorage(
                 )
             }
     }
-    
+
     private fun buildMongoFilter(filter: MessageFilter): Document {
         val conditions = mutableListOf<Document>()
-        
+
         filter.fromDid?.let {
             conditions.add(Document("from_did", it))
         }
@@ -794,14 +794,14 @@ class MongoDidCommMessageStorage(
         filter.createdBefore?.let {
             conditions.add(Document("created_time", Document("\$lte", it)))
         }
-        
+
         return if (conditions.isEmpty()) {
             Document()
         } else {
             Document("\$and", conditions)
         }
     }
-    
+
     private fun createIndexes() {
         // Create indexes for performance
         collection.createIndex(Indexes.ascending("from_did"))
@@ -809,7 +809,7 @@ class MongoDidCommMessageStorage(
         collection.createIndex(Indexes.ascending("thid"))
         collection.createIndex(Indexes.ascending("created_time"))
         collection.createIndex(Indexes.ascending("type"))
-        
+
         // Compound indexes
         collection.createIndex(Indexes.compoundIndex(
             Indexes.ascending("from_did"),
@@ -871,7 +871,7 @@ interface ArchivePolicy {
 class AgeBasedArchivePolicy(
     private val maxAgeDays: Int = 90
 ) : ArchivePolicy {
-    
+
     override suspend fun shouldArchive(message: DidCommMessage): Boolean {
         val created = message.created?.let {
             try {
@@ -880,7 +880,7 @@ class AgeBasedArchivePolicy(
                 null
             }
         } ?: return false
-        
+
         val age = ChronoUnit.DAYS.between(created, Instant.now())
         return age > maxAgeDays
     }
@@ -892,7 +892,7 @@ class AgeBasedArchivePolicy(
 class CompositeArchivePolicy(
     private val policies: List<ArchivePolicy>
 ) : ArchivePolicy {
-    
+
     override suspend fun shouldArchive(message: DidCommMessage): Boolean {
         return policies.any { it.shouldArchive(message) }
     }
@@ -921,7 +921,7 @@ interface MessageArchiver {
      * Archives messages matching the policy.
      */
     suspend fun archiveMessages(policy: ArchivePolicy): ArchiveResult
-    
+
     /**
      * Restores archived messages.
      */
@@ -949,11 +949,11 @@ class S3MessageArchiver(
     private val bucketName: String,
     private val prefix: String = "archives/"
 ) : MessageArchiver {
-    
+
     override suspend fun archiveMessages(policy: ArchivePolicy): ArchiveResult = withContext(Dispatchers.IO) {
         // Find messages to archive
         val messagesToArchive = findMessagesToArchive(policy)
-        
+
         if (messagesToArchive.isEmpty()) {
             return@withContext ArchiveResult(
                 archiveId = "",
@@ -962,18 +962,18 @@ class S3MessageArchiver(
                 storageLocation = ""
             )
         }
-        
+
         // Create archive file (compressed JSONL)
         val archiveId = generateArchiveId()
         val archiveData = createArchiveFile(messagesToArchive)
-        
+
         // Upload to S3
         val s3Key = "$prefix$archiveId.jsonl.gz"
         uploadToS3(s3Key, archiveData)
-        
+
         // Mark messages as archived in database
         markAsArchived(messagesToArchive.map { it.id })
-        
+
         ArchiveResult(
             archiveId = archiveId,
             messageCount = messagesToArchive.size,
@@ -981,17 +981,17 @@ class S3MessageArchiver(
             storageLocation = "s3://$bucketName/$s3Key"
         )
     }
-    
+
     private suspend fun findMessagesToArchive(policy: ArchivePolicy): List<DidCommMessage> {
         // Query all messages and filter by policy
         // In production, use efficient query based on policy
         return emptyList() // Implementation
     }
-    
+
     private fun createArchiveFile(messages: List<DidCommMessage>): ByteArray {
         val json = Json { prettyPrint = false; encodeDefaults = false }
         val output = ByteArrayOutputStream()
-        
+
         GZIPOutputStream(output).use { gzip ->
             messages.forEach { message ->
                 val line = json.encodeToString(
@@ -1001,20 +1001,20 @@ class S3MessageArchiver(
                 gzip.write(line.toByteArray(Charsets.UTF_8))
             }
         }
-        
+
         return output.toByteArray()
     }
-    
+
     private suspend fun uploadToS3(key: String, data: ByteArray) {
         // Upload to S3
         // Implementation depends on S3 client
     }
-    
+
     private suspend fun markAsArchived(messageIds: List<String>) {
         // Update database to mark messages as archived
         // Add 'archived' flag to messages table
     }
-    
+
     private fun generateArchiveId(): String {
         return java.util.UUID.randomUUID().toString()
     }
@@ -1077,17 +1077,17 @@ class ReplicationManager(
     private val replicas: List<DidCommMessageStorage>,
     private val replicationMode: ReplicationMode = ReplicationMode.ASYNC
 ) : DidCommMessageStorage {
-    
+
     enum class ReplicationMode {
         SYNC,  // Wait for all replicas
         ASYNC, // Fire and forget
         QUORUM // Wait for majority
     }
-    
+
     override suspend fun store(message: DidCommMessage): String = coroutineScope {
         // Write to primary
         val messageId = primary.store(message)
-        
+
         // Replicate to replicas
         when (replicationMode) {
             ReplicationMode.SYNC -> {
@@ -1112,10 +1112,10 @@ class ReplicationManager(
                     .awaitAll()
             }
         }
-        
+
         messageId
     }
-    
+
     override suspend fun get(messageId: String): DidCommMessage? {
         // Try primary first
         return primary.get(messageId) ?: run {
@@ -1123,7 +1123,7 @@ class ReplicationManager(
             replicas.firstNotNullOfOrNull { it.get(messageId) }
         }
     }
-    
+
     // Implement other methods with replication logic...
 }
 ```
@@ -1193,7 +1193,7 @@ interface AdvancedSearch {
         limit: Int = 100,
         offset: Int = 0
     ): List<DidCommMessage>
-    
+
     /**
      * Faceted search with aggregations.
      */
@@ -1201,7 +1201,7 @@ interface AdvancedSearch {
         query: SearchQuery,
         facets: List<Facet>
     ): FacetedSearchResult
-    
+
     /**
      * Complex query with boolean operators.
      */
@@ -1264,7 +1264,7 @@ enum class ComparisonOperator {
 class PostgresFullTextSearch(
     private val storage: PostgresDidCommMessageStorage
 ) : AdvancedSearch {
-    
+
     override suspend fun fullTextSearch(
         query: String,
         limit: Int,
@@ -1274,7 +1274,7 @@ class PostgresFullTextSearch(
         // Add GIN index on searchable fields
         return emptyList() // Implementation
     }
-    
+
     // Implement other methods...
 }
 ```
@@ -1286,7 +1286,7 @@ class PostgresFullTextSearch(
 ALTER TABLE didcomm_messages ADD COLUMN IF NOT EXISTS search_vector tsvector;
 
 -- Create GIN index for full-text search
-CREATE INDEX IF NOT EXISTS idx_messages_search_vector 
+CREATE INDEX IF NOT EXISTS idx_messages_search_vector
 ON didcomm_messages USING GIN(search_vector);
 
 -- Create trigger to update search vector
@@ -1356,7 +1356,7 @@ interface MessageAnalytics {
         endTime: Instant,
         groupBy: GroupBy = GroupBy.HOUR
     ): MessageStatistics
-    
+
     /**
      * Gets traffic patterns.
      */
@@ -1364,7 +1364,7 @@ interface MessageAnalytics {
         startTime: Instant,
         endTime: Instant
     ): TrafficPatterns
-    
+
     /**
      * Gets top DIDs by message count.
      */
@@ -1373,7 +1373,7 @@ interface MessageAnalytics {
         startTime: Instant? = null,
         endTime: Instant? = null
     ): List<DidStatistics>
-    
+
     /**
      * Gets message type distribution.
      */
@@ -1424,7 +1424,7 @@ data class DidStatistics(
 class PostgresMessageAnalytics(
     private val storage: PostgresDidCommMessageStorage
 ) : MessageAnalytics {
-    
+
     override suspend fun getStatistics(
         startTime: Instant,
         endTime: Instant,
@@ -1440,7 +1440,7 @@ class PostgresMessageAnalytics(
             timeSeries = emptyList()
         )
     }
-    
+
     // Implement other methods...
 }
 ```
@@ -1505,7 +1505,7 @@ data class KeyMetadata(
 class TimeBasedRotationPolicy(
     private val maxAgeDays: Int = 90
 ) : KeyRotationPolicy {
-    
+
     override suspend fun shouldRotate(
         keyId: String,
         keyMetadata: KeyMetadata
@@ -1524,7 +1524,7 @@ class TimeBasedRotationPolicy(
 class UsageBasedRotationPolicy(
     private val maxUsageCount: Int = 10000
 ) : KeyRotationPolicy {
-    
+
     override suspend fun shouldRotate(
         keyId: String,
         keyMetadata: KeyMetadata
@@ -1554,23 +1554,23 @@ class KeyRotationManager(
     private val kms: KeyManagementService,
     private val policy: KeyRotationPolicy
 ) {
-    
+
     /**
      * Checks and rotates keys if needed.
      */
     suspend fun checkAndRotate(): RotationResult = withContext(Dispatchers.IO) {
         val keysToRotate = findKeysToRotate()
-        
+
         val results = keysToRotate.map { keyId ->
             rotateKey(keyId)
         }
-        
+
         RotationResult(
             rotatedCount = results.size,
             results = results
         )
     }
-    
+
     /**
      * Rotates a specific key.
      */
@@ -1578,27 +1578,27 @@ class KeyRotationManager(
         // 1. Get current key
         val oldKey = keyStore.get(keyId)
             ?: throw IllegalArgumentException("Key not found: $keyId")
-        
+
         // 2. Generate new key
         val newKeyId = generateNewKeyId(keyId)
         val newKey = generateNewKey(newKeyId)
-        
+
         // 3. Store new key
         keyStore.store(newKeyId, newKey)
-        
+
         // 4. Update DID document (if applicable)
         updateDidDocument(keyId, newKeyId)
-        
+
         // 5. Archive old key
         archiveOldKey(keyId, oldKey)
-        
+
         KeyRotationResult(
             oldKeyId = keyId,
             newKeyId = newKeyId,
             success = true
         )
     }
-    
+
     private suspend fun findKeysToRotate(): List<String> {
         val allKeys = keyStore.list()
         return allKeys.filter { keyId ->
@@ -1606,7 +1606,7 @@ class KeyRotationManager(
             policy.shouldRotate(keyId, metadata)
         }
     }
-    
+
     private suspend fun getKeyMetadata(keyId: String): KeyMetadata {
         // Get metadata from key store or separate metadata store
         return KeyMetadata(
@@ -1616,23 +1616,23 @@ class KeyRotationManager(
             usageCount = 0
         )
     }
-    
+
     private fun generateNewKeyId(oldKeyId: String): String {
         // Generate new key ID (e.g., increment version)
         return "$oldKeyId-v2"
     }
-    
+
     private suspend fun generateNewKey(keyId: String): Secret {
         // Generate new key using KMS
         // Implementation depends on key type
         throw NotImplementedError("Key generation to be implemented")
     }
-    
+
     private suspend fun updateDidDocument(oldKeyId: String, newKeyId: String) {
         // Update DID document with new key
         // Implementation depends on DID method
     }
-    
+
     private suspend fun archiveOldKey(keyId: String, key: Secret) {
         // Archive old key (don't delete immediately)
         // Keep for decryption of old messages
@@ -1664,7 +1664,7 @@ class ScheduledKeyRotation(
     private val interval: java.time.Duration = java.time.Duration.ofDays(1)
 ) {
     private var rotationJob: kotlinx.coroutines.Job? = null
-    
+
     fun start() {
         rotationJob = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default).launch {
             while (true) {
@@ -1677,7 +1677,7 @@ class ScheduledKeyRotation(
             }
         }
     }
-    
+
     fun stop() {
         rotationJob?.cancel()
     }

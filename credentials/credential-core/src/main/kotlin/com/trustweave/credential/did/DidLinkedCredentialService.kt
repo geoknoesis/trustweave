@@ -4,6 +4,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
 import com.trustweave.credential.issuer.CredentialIssuer
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.did.registry.DidMethodRegistry
+import com.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.buildJsonObject
@@ -13,18 +14,18 @@ import kotlinx.serialization.json.put
 
 /**
  * DID-linked credential service.
- * 
+ *
  * Integrates credential issuance with DID resolution and management.
  * Provides high-level API for issuing credentials to DIDs and
  * resolving credential subjects.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val service = DidLinkedCredentialService(
  *     didRegistry = didRegistry,
  *     credentialIssuer = credentialIssuer
  * )
- * 
+ *
  * // Issue credential for a DID
  * val credential = service.issueCredentialForDid(
  *     subjectDid = "did:key:...",
@@ -36,7 +37,7 @@ import kotlinx.serialization.json.put
  *     issuerDid = "did:key:issuer",
  *     keyId = "key-1"
  * )
- * 
+ *
  * // Resolve credential subject DID
  * val subjectDid = service.resolveCredentialSubject(credential)
  * ```
@@ -47,9 +48,9 @@ open class DidLinkedCredentialService(
 ) {
     /**
      * Issue a credential for a DID subject.
-     * 
+     *
      * Creates a credential with the DID as the subject and issues it.
-     * 
+     *
      * @param subjectDid DID of the credential subject
      * @param credentialType Credential type (e.g., "PersonCredential")
      * @param claims Claims to include in credentialSubject
@@ -68,7 +69,7 @@ open class DidLinkedCredentialService(
     ): VerifiableCredential = withContext(Dispatchers.IO) {
         // Resolve subject DID to verify it exists
         resolveDid(subjectDid)
-        
+
         // Build credentialSubject with DID as id
         val credentialSubject = buildJsonObject {
             put("id", subjectDid)
@@ -81,7 +82,7 @@ open class DidLinkedCredentialService(
                 }
             }
         }
-        
+
         // Create credential
         val credential = VerifiableCredential(
             id = null,
@@ -97,7 +98,7 @@ open class DidLinkedCredentialService(
             termsOfUse = null,
             refreshService = null
         )
-        
+
         // Issue credential
         credentialIssuer.issue(
             credential = credential,
@@ -106,24 +107,24 @@ open class DidLinkedCredentialService(
             options = options
         )
     }
-    
+
     /**
      * Resolve credential subject DID.
-     * 
+     *
      * Extracts the DID from credentialSubject.id and resolves it.
-     * 
+     *
      * @param credential Credential to extract subject from
      * @return Resolved DID document, or null if subject is not a DID
      */
     suspend fun resolveCredentialSubject(credential: VerifiableCredential): String? = withContext(Dispatchers.IO) {
         val subjectId = credential.credentialSubject.jsonObject["id"]?.jsonPrimitive?.content
             ?: return@withContext null
-        
+
         // Check if subject is a DID
         if (!subjectId.startsWith("did:")) {
             return@withContext null
         }
-        
+
         // Resolve DID
         try {
             resolveDid(subjectId)
@@ -132,10 +133,10 @@ open class DidLinkedCredentialService(
             null
         }
     }
-    
+
     /**
      * Verify issuer DID is valid.
-     * 
+     *
      * @param credential Credential to check
      * @return true if issuer DID is valid and resolvable
      */
@@ -147,17 +148,22 @@ open class DidLinkedCredentialService(
             false
         }
     }
-    
+
     /**
      * Resolve DID using registry.
-     * 
+     *
      * @param did DID to resolve
      * @throws IllegalArgumentException if DID cannot be resolved
      */
     private suspend fun resolveDid(did: String) {
         val result = didRegistry.resolve(did)
-        if (result.document == null) {
-            throw IllegalArgumentException("DID not found: $did")
+        when (result) {
+            is DidResolutionResult.Success -> {
+                // DID resolved successfully
+            }
+            else -> {
+                throw IllegalArgumentException("DID not found: $did")
+            }
         }
     }
 }

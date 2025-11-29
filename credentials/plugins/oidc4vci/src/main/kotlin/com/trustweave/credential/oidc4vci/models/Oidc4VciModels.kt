@@ -38,7 +38,7 @@ data class Oidc4VciIssueResult(
 
 /**
  * Credential issuer metadata.
- * 
+ *
  * Retrieved from /.well-known/openid-credential-issuer
  */
 @Serializable

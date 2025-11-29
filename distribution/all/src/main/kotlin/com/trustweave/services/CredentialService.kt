@@ -1,8 +1,8 @@
 package com.trustweave.services
 
 import com.trustweave.TrustWeaveContext
-import com.trustweave.core.*
-import com.trustweave.core.util.ValidationResult
+import com.trustweave.core.util.ValidationResult as CoreValidationResult
+import com.trustweave.credential.validation.CredentialValidator
 import com.trustweave.did.util.normalizeKeyId
 import com.trustweave.did.exception.DidException
 import com.trustweave.did.validation.DidValidator
@@ -14,9 +14,10 @@ import com.trustweave.credential.models.VerifiablePresentation
 import com.trustweave.credential.issuer.CredentialIssuer
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.verifier.CredentialVerifier
-import com.trustweave.credential.did.CredentialDidResolver
+import com.trustweave.did.resolver.DidResolver
+import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.trust.dsl.did.DidDslProvider
 import com.trustweave.credential.presentation.PresentationService
-import com.trustweave.did.toCredentialDidResolution
 import com.trustweave.anchor.AnchorRef
 import com.trustweave.kms.KeyManagementService
 import kotlinx.serialization.json.JsonElement
@@ -29,9 +30,9 @@ import java.util.UUID
 
 /**
  * Focused service for credential operations.
- * 
+ *
  * Provides a clean, focused API for issuing, verifying credentials and creating presentations.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val TrustWeave = TrustWeave.create()
@@ -47,7 +48,7 @@ class CredentialService(
 ) {
     /**
      * Issues a verifiable credential.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * val credential = trustweave.credentials.issue(
@@ -63,7 +64,7 @@ class CredentialService(
      *     )
      * )
      * ```
-     * 
+     *
      * @param issuer DID of the credential issuer
      * @param subject The credential subject as JSON
      * @param config Issuance configuration
@@ -87,7 +88,7 @@ class CredentialService(
                 )
             }
         }
-        
+
         // Validate issuer DID method is registered
         val availableMethods = context.getAvailableDidMethods()
         DidValidator.validateMethod(issuer, availableMethods).let {
@@ -98,9 +99,9 @@ class CredentialService(
                 )
             }
         }
-        
+
         val normalizedKeyId = normalizeKeyId(config.keyId)
-        
+
         // Build verification method ID - use the original keyId if it's a full URL, otherwise construct from issuer DID
         val verificationMethodId = if (config.keyId.contains("#")) {
             // Key ID is already a full verification method URL (e.g., "did:key:z6Mk...#key-1")
@@ -112,7 +113,7 @@ class CredentialService(
             // Key ID is just a fragment (e.g., "key-1"), construct full URL from issuer DID
             "$issuer#${normalizedKeyId}"
         }
-        
+
         val credentialId = "urn:uuid:${UUID.randomUUID()}"
         val credential = VerifiableCredential(
             id = credentialId,
@@ -122,24 +123,24 @@ class CredentialService(
             issuanceDate = java.time.Instant.now().toString(),
             expirationDate = expirationDate
         )
-        
+
         // Validate credential structure
         CredentialValidator.validateStructure(credential).let {
             if (!it.isValid()) {
                 throw CredentialException.CredentialInvalid(
                     reason = it.errorMessage() ?: "Invalid credential structure",
                     credentialId = credentialId,
-                    field = (it as? ValidationResult.Invalid)?.field
+                    field = (it as? CoreValidationResult.Invalid)?.field
                 )
             }
         }
-        
+
         val proofGenerator = Ed25519ProofGenerator(
-            signer = { data, keyId -> context.kms.sign(normalizeKeyId(keyId), data) }
+            signer = { data, keyId -> context.kms.sign(com.trustweave.core.types.KeyId(normalizeKeyId(keyId)), data) }
         )
-        
+
         val issuerService = CredentialIssuer(proofGenerator)
-        
+
         // Create issuance options with verification method ID
         val issuanceOptions = CredentialIssuanceOptions(
             proofType = config.proofType.identifier,
@@ -151,23 +152,23 @@ class CredentialService(
             chainId = config.chainId,
             additionalOptions = config.additionalOptions + mapOf("verificationMethod" to verificationMethodId)
         )
-        
+
         return issuerService.issue(credential, issuer, normalizedKeyId, issuanceOptions)
     }
-    
+
     /**
      * Verifies a verifiable credential.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * val result = trustweave.credentials.verify(credential)
      * if (result.valid) {
      *     println("Credential is valid")
      * } else {
-     *     println("Errors: ${result.errors}")
+     *     println("Errors: ${result.allErrors}")
      * }
      * ```
-     * 
+     *
      * @param credential The credential to verify
      * @param config Verification configuration
      * @return Verification result with detailed status
@@ -176,13 +177,21 @@ class CredentialService(
         credential: VerifiableCredential,
         config: VerificationConfig = VerificationConfig()
     ): CredentialVerificationResult {
-        val effectiveResolver = CredentialDidResolver { did ->
-            runCatching { context.resolveDid(did) }
-                .getOrNull()
-                ?.toCredentialDidResolution()
+        val effectiveResolver = if (context is DidDslProvider) {
+            context.getDidResolver()
+        } else {
+            DidResolver { did ->
+                runCatching { 
+                    val resolution = context.resolveDid(did.value)
+                    when (resolution) {
+                        is DidResolutionResult.Success -> resolution
+                        else -> null
+                    }
+                }.getOrNull()
+            }
         }
         val verifier = CredentialVerifier(defaultDidResolver = effectiveResolver)
-        
+
         val options = CredentialVerificationOptions(
             checkRevocation = config.checkRevocation,
             checkExpiration = config.checkExpiration,
@@ -192,18 +201,18 @@ class CredentialService(
             chainId = config.chainId,
             additionalOptions = config.additionalOptions
         )
-        
+
         var result = verifier.verify(credential, options)
-        
+
         // Enhance blockchain anchor verification if enabled
         val chainId = config.chainId
         if (config.verifyBlockchainAnchor && chainId != null && credential.evidence != null) {
             result = verifyBlockchainAnchorEvidence(credential, chainId, result)
         }
-        
+
         return result
     }
-    
+
     private suspend fun verifyBlockchainAnchorEvidence(
         credential: VerifiableCredential,
         chainId: String,
@@ -212,41 +221,74 @@ class CredentialService(
         val anchorEvidence = credential.evidence?.find { evidence ->
             evidence.type.contains("BlockchainAnchorEvidence")
         } ?: return currentResult
-        
+
         val evidenceDoc = anchorEvidence.evidenceDocument?.jsonObject ?: return currentResult
         val evidenceChainId = evidenceDoc["chainId"]?.jsonPrimitive?.content
         val txHash = evidenceDoc["txHash"]?.jsonPrimitive?.content
-        
+
         if (evidenceChainId != chainId || txHash == null) {
-            return currentResult.copy(
-                valid = false,
-                blockchainAnchorValid = false,
-                errors = currentResult.errors + "Blockchain anchor evidence chainId mismatch or missing txHash"
-            )
+            val error = "Blockchain anchor evidence chainId mismatch or missing txHash"
+            return when (currentResult) {
+                is CredentialVerificationResult.Valid -> {
+                    CredentialVerificationResult.Invalid.InvalidBlockchainAnchor(
+                        credential, error, listOf(error)
+                    )
+                }
+                is CredentialVerificationResult.Invalid -> {
+                    // If already invalid, add to existing errors
+                    CredentialVerificationResult.Invalid.MultipleFailures(
+                        credential,
+                        currentResult.allErrors + error,
+                        currentResult.allWarnings
+                    )
+                }
+            }
         }
-        
+
         val client = context.getBlockchainClient(chainId)
         if (client == null) {
-            return currentResult.copy(
-                warnings = currentResult.warnings + "Blockchain client not available for chain: $chainId",
-                blockchainAnchorValid = false
-            )
+            val warning = "Blockchain client not available for chain: $chainId"
+            return when (currentResult) {
+                is CredentialVerificationResult.Valid -> {
+                    // Keep as valid but add warning
+                    CredentialVerificationResult.Valid(credential, currentResult.allWarnings + warning)
+                }
+                is CredentialVerificationResult.Invalid -> {
+                    // Add warning to existing errors
+                    CredentialVerificationResult.Invalid.MultipleFailures(
+                        credential,
+                        currentResult.allErrors,
+                        currentResult.allWarnings + warning
+                    )
+                }
+            }
         }
-        
+
         return try {
             val anchorRef = AnchorRef(
                 chainId = chainId,
                 txHash = txHash
             )
             client.readPayload(anchorRef)
-            
-            currentResult.copy(blockchainAnchorValid = true)
+
+            // Verification succeeded - return current result (unchanged if valid, or keep existing errors)
+            currentResult
         } catch (e: Exception) {
-            currentResult.copy(
-                valid = false,
-                blockchainAnchorValid = false,
-                errors = currentResult.errors + "Blockchain anchor verification failed: ${e.message}"
-            )
+            val error = "Blockchain anchor verification failed: ${e.message}"
+            when (currentResult) {
+                is CredentialVerificationResult.Valid -> {
+                    CredentialVerificationResult.Invalid.InvalidBlockchainAnchor(
+                        credential, error, listOf(error)
+                    )
+                }
+                is CredentialVerificationResult.Invalid -> {
+                    CredentialVerificationResult.Invalid.MultipleFailures(
+                        credential,
+                        currentResult.allErrors + error,
+                        currentResult.allWarnings
+                    )
+                }
+            }
         }
     }
 }

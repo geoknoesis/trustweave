@@ -12,10 +12,10 @@ import kotlinx.serialization.json.*
 
 /**
  * Earth Observation (EO) test integration utility.
- * 
+ *
  * Provides reusable test scenarios for EO data integrity verification workflows.
  * Works with any blockchain adapter via TestContainers or in-memory implementations.
- * 
+ *
  * Usage example:
  * ```kotlin
  * val scenario = EoTestIntegration.createScenario(
@@ -23,7 +23,7 @@ import kotlinx.serialization.json.*
  *     anchorClient = anchorClient,
  *     chainId = chainId
  * )
- * 
+ *
  * val result = scenario.execute()
  * assertTrue(result.verificationResult.valid)
  * ```
@@ -32,7 +32,7 @@ object EoTestIntegration {
 
     /**
      * Creates a complete EO test scenario with all artifacts, linkset, VC, and anchoring.
-     * 
+     *
      * @param issuerDid The DID of the issuer
      * @param anchorClient The blockchain anchor client to use
      * @param chainId The chain ID for anchoring
@@ -144,7 +144,7 @@ object EoTestIntegration {
 
     /**
      * Executes a complete EO test scenario: anchors VC digest and verifies integrity chain.
-     * 
+     *
      * @param scenario The EO test scenario to execute
      * @return EoTestResult containing anchor result and verification result
      */
@@ -176,7 +176,7 @@ object EoTestIntegration {
     /**
      * Creates a complete EO test scenario and executes it in one call.
      * Convenience method for simple test cases.
-     * 
+     *
      * @param issuerDid The DID of the issuer
      * @param anchorClient The blockchain anchor client to use
      * @param chainId The chain ID for anchoring

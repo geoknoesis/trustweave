@@ -73,16 +73,16 @@ Plugin names match the provider name:
 ```kotlin
 class AwsKeyManagementServiceProvider : KeyManagementServiceProvider {
     override val name: String = "aws"
-    
+
     override val requiredEnvironmentVariables: List<String> = listOf(
         "AWS_REGION",  // Required
         "?AWS_ACCESS_KEY_ID",  // Optional (can use IAM roles)
         "?AWS_SECRET_ACCESS_KEY"  // Optional (can use IAM roles)
     )
-    
+
     override fun hasRequiredEnvironmentVariables(): Boolean {
         // Custom logic: Check for region OR IAM role availability
-        return (System.getenv("AWS_REGION") != null || 
+        return (System.getenv("AWS_REGION") != null ||
                 System.getenv("AWS_DEFAULT_REGION") != null) ||
                // Check if running on AWS (IAM role available)
                try {
@@ -100,7 +100,7 @@ class AwsKeyManagementServiceProvider : KeyManagementServiceProvider {
 ```kotlin
 class EthrDidMethodProvider : DidMethodProvider {
     override val name: String = "ethr"
-    
+
     override val requiredEnvironmentVariables: List<String> = listOf(
         "ETHEREUM_RPC_URL",
         "?ETHEREUM_PRIVATE_KEY"  // Optional if only resolving
@@ -113,7 +113,7 @@ class EthrDidMethodProvider : DidMethodProvider {
 ```kotlin
 class AlgorandBlockchainAnchorClientProvider : BlockchainAnchorClientProvider {
     override val name: String = "algorand"
-    
+
     override val requiredEnvironmentVariables: List<String> = listOf(
         "ALGORAND_ALGOD_URL",
         "?ALGORAND_ALGOD_TOKEN",
@@ -175,25 +175,25 @@ fun `test with manual check`() = runBlocking {
 // kms/plugins/myplugin/src/main/kotlin/MyKmsProvider.kt
 class MyKmsProvider : KeyManagementServiceProvider {
     override val name: String = "my-kms"
-    
+
     override val supportedAlgorithms: Set<Algorithm> = setOf(
         Algorithm.Ed25519,
         Algorithm.Secp256k1
     )
-    
+
     // Declare required environment variables
     override val requiredEnvironmentVariables: List<String> = listOf(
         "MY_KMS_API_KEY",
         "MY_KMS_ENDPOINT",
         "?MY_KMS_REGION"  // Optional
     )
-    
+
     // Optional: Override for custom credential checking logic
     override fun hasRequiredEnvironmentVariables(): Boolean {
         return System.getenv("MY_KMS_API_KEY") != null &&
                System.getenv("MY_KMS_ENDPOINT") != null
     }
-    
+
     override fun create(options: Map<String, Any?>): KeyManagementService {
         // Implementation
     }
@@ -205,7 +205,7 @@ class MyKmsProvider : KeyManagementServiceProvider {
 ```kotlin
 // kms/plugins/myplugin/src/test/kotlin/MyKmsProviderTest.kt
 class MyKmsProviderTest {
-    
+
     @Test
     @RequiresPlugin("my-kms")
     fun `test with credentials`() = runBlocking {

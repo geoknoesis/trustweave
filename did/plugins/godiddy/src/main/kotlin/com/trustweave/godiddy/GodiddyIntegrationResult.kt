@@ -20,23 +20,23 @@ data class GodiddyIntegrationResult(
      * List of DID methods that were registered.
      */
     val registeredDidMethods: List<String>,
-    
+
     /**
      * Universal Resolver client instance.
      * Exposed as [UniversalResolver] interface for better abstraction.
      */
     val resolver: UniversalResolver? = null,
-    
+
     /**
      * Universal Registrar client instance.
      */
     val registrar: GodiddyRegistrar? = null,
-    
+
     /**
      * Universal Issuer client instance.
      */
     val issuer: GodiddyIssuer? = null,
-    
+
     /**
      * Universal Verifier client instance.
      */

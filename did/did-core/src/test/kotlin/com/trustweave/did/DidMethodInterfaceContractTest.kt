@@ -17,16 +17,16 @@ class DidMethodInterfaceContractTest {
     @Test
     fun `test DidMethod method returns method name`() = runBlocking {
         val method = createMockMethod("key")
-        
+
         assertEquals("key", method.method)
     }
 
     @Test
     fun `test DidMethod createDid returns DID document`() = runBlocking {
         val method = createMockMethod("key")
-        
+
         val document = method.createDid()
-        
+
         assertNotNull(document)
         assertTrue(document.id.startsWith("did:key:"))
     }
@@ -37,9 +37,9 @@ class DidMethodInterfaceContractTest {
         val options = didCreationOptions {
             property("keyType", "Ed25519")
         }
-        
+
         val document = method.createDid(options)
-        
+
         assertNotNull(document)
     }
 
@@ -48,22 +48,23 @@ class DidMethodInterfaceContractTest {
         val method = createMockMethod("key")
         val document = method.createDid()
         val did = document.id
-        
+
         val result = method.resolveDid(did)
-        
+
         assertNotNull(result)
+        assertTrue(result is DidResolutionResult.Success)
         assertNotNull(result.document)
-        assertEquals(did, result.document?.id)
+        assertEquals(did, result.document.id)
     }
 
     @Test
     fun `test DidMethod resolveDid returns null document for non-existent DID`() = runBlocking {
         val method = createMockMethod("key")
         val did = "did:key:nonexistent"
-        
+
         val result = method.resolveDid(did)
-        
-        assertNull(result.document)
+
+        assertTrue(result is DidResolutionResult.Failure.NotFound)
         assertTrue(result.resolutionMetadata.containsKey("error"))
     }
 
@@ -72,7 +73,7 @@ class DidMethodInterfaceContractTest {
         val method = createMockMethod("key")
         val document = method.createDid()
         val did = document.id
-        
+
         val updated = method.updateDid(did) { doc ->
             doc.copy(
                 service = doc.service + DidService(
@@ -82,7 +83,7 @@ class DidMethodInterfaceContractTest {
                 )
             )
         }
-        
+
         assertNotNull(updated)
         assertTrue(updated.service.isNotEmpty())
     }
@@ -92,18 +93,18 @@ class DidMethodInterfaceContractTest {
         val method = createMockMethod("key")
         val document = method.createDid()
         val did = document.id
-        
+
         val deactivated = method.deactivateDid(did)
-        
+
         assertTrue(deactivated)
     }
 
     @Test
     fun `test DidMethod deactivateDid returns false for non-existent DID`() = runBlocking {
         val method = createMockMethod("key")
-        
+
         val deactivated = method.deactivateDid("did:key:nonexistent")
-        
+
         assertFalse(deactivated)
     }
 
@@ -112,11 +113,12 @@ class DidMethodInterfaceContractTest {
         val method = createMockMethod("key")
         val document = method.createDid()
         val did = document.id
-        
+
         val result = method.resolveDid(did)
-        
+
+        assertTrue(result is DidResolutionResult.Success)
         assertNotNull(result.document)
-        assertEquals(document.id, result.document?.id)
+        assertEquals(document.id, result.document.id)
     }
 
     @Test
@@ -124,9 +126,9 @@ class DidMethodInterfaceContractTest {
         val method = createMockMethod("key")
         val document = method.createDid()
         val did = document.id
-        
+
         val updated = method.updateDid(did) { it }
-        
+
         assertNotNull(updated)
     }
 
@@ -135,7 +137,7 @@ class DidMethodInterfaceContractTest {
         val method = createMockMethod("key")
         val document = method.createDid()
         val did = document.id
-        
+
         val updated = method.updateDid(did) { doc ->
             doc.copy(
                 verificationMethod = doc.verificationMethod + VerificationMethod(
@@ -145,7 +147,7 @@ class DidMethodInterfaceContractTest {
                 )
             )
         }
-        
+
         assertTrue(updated.verificationMethod.size > document.verificationMethod.size)
     }
 
@@ -154,7 +156,7 @@ class DidMethodInterfaceContractTest {
             override val method: String = methodName
             private val documents = mutableMapOf<String, DidDocument>()
             private val deactivated = mutableSetOf<String>()
-            
+
             override suspend fun createDid(options: DidCreationOptions): DidDocument {
                 val id = "did:$methodName:${java.util.UUID.randomUUID().toString().take(8)}"
                 val doc = DidDocument(
@@ -170,30 +172,32 @@ class DidMethodInterfaceContractTest {
                 documents[id] = doc
                 return doc
             }
-            
+
             override suspend fun resolveDid(did: String): DidResolutionResult {
                 if (deactivated.contains(did)) {
-                    return DidResolutionResult(
-                        document = null,
+                    return DidResolutionResult.Failure.NotFound(
+                        did = com.trustweave.core.types.Did(did),
+                        reason = "deactivated",
                         resolutionMetadata = mapOf("error" to "deactivated")
                     )
                 }
-                
+
                 val doc = documents[did]
                 return if (doc != null) {
-                    DidResolutionResult(
+                    DidResolutionResult.Success(
                         document = doc,
                         documentMetadata = DidDocumentMetadata(),
                         resolutionMetadata = emptyMap()
                     )
                 } else {
-                    DidResolutionResult(
-                        document = null,
+                    DidResolutionResult.Failure.NotFound(
+                        did = com.trustweave.core.types.Did(did),
+                        reason = "notFound",
                         resolutionMetadata = mapOf("error" to "notFound")
                     )
                 }
             }
-            
+
             override suspend fun updateDid(
                 did: String,
                 updater: (DidDocument) -> DidDocument
@@ -203,7 +207,7 @@ class DidMethodInterfaceContractTest {
                 documents[did] = updated
                 return updated
             }
-            
+
             override suspend fun deactivateDid(did: String): Boolean {
                 return if (documents.containsKey(did)) {
                     deactivated.add(did)

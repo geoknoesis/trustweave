@@ -21,7 +21,7 @@ private fun ExecutionModel.getEngineId(): String? = when (this) {
 
 /**
  * Get an engine or throw with a clear error message.
- * 
+ *
  * @param engineId The engine identifier
  * @return The engine
  * @throws IllegalStateException if engine is not registered
@@ -35,7 +35,7 @@ fun EvaluationEngines.require(engineId: String): ContractEvaluationEngine {
 
 /**
  * Verify engine integrity or throw SecurityException.
- * 
+ *
  * @param engineId The engine identifier
  * @param expectedHash The expected implementation hash
  * @throws IllegalStateException if engine is not registered
@@ -62,7 +62,7 @@ fun EvaluationEngines.verifyOrThrow(engineId: String, expectedHash: String) {
 
 /**
  * Add engine hash and version to execution model from registered engines.
- * 
+ *
  * @param engines The evaluation engines collection
  * @return Execution model with engine hash and version populated
  */
@@ -71,7 +71,7 @@ fun ExecutionModel.withEngineHash(engines: EvaluationEngines): ExecutionModel {
     val engine = engines[engineId]
     val engineVersion = engine?.version
     val engineHash = engine?.implementationHash
-    
+
     return when (this) {
         is ExecutionModel.Parametric -> copy(
             engineVersion = engineVersion,
@@ -95,10 +95,10 @@ fun ExecutionModel.withEngineHash(engines: EvaluationEngines): ExecutionModel {
 
 /**
  * Evaluate a condition using an engine with error handling.
- * 
+ *
  * Catches expected exceptions (IllegalArgumentException, UnsupportedOperationException)
  * and converts them to error results. Re-throws unexpected errors (OutOfMemoryError, etc.).
- * 
+ *
  * @param engine The evaluation engine to use
  * @param inputData Input data for evaluation
  * @param context Evaluation context
@@ -145,7 +145,7 @@ suspend fun ContractCondition.evaluateWith(
 
 /**
  * Get an engine or return default value.
- * 
+ *
  * @param engineId The engine identifier
  * @param defaultValue Function to compute default value
  * @return The engine or default value
@@ -157,7 +157,7 @@ inline fun EvaluationEngines.getOrElse(
 
 /**
  * Filter engines by a predicate.
- * 
+ *
  * @param predicate Function to test each engine
  * @return List of engines matching the predicate
  */
@@ -167,7 +167,7 @@ fun EvaluationEngines.filter(
 
 /**
  * Transform engines using a mapping function.
- * 
+ *
  * @param transform Function to transform each engine
  * @return List of transformed values
  */

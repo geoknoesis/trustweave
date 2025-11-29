@@ -6,18 +6,18 @@ import kotlinx.serialization.json.*
 
 /**
  * Test data builders for creating VC, Linkset, and artifact structures for integrity verification tests.
- * 
+ *
  * Provides fluent builders for creating test data structures commonly used in TrustWeave tests.
  * All builders follow consistent patterns and include proper digest computation.
- * 
+ *
  * **Example Usage**:
  * ```
  * // Create artifacts
  * val (metadata, metadataDigest) = TestDataBuilders.createMetadataArtifact("id", "Title", "Desc")
- * 
+ *
  * // Build VC
  * val vc = TestDataBuilders.buildVc(issuerDid, subject, digestMultibase)
- * 
+ *
  * // Build Linkset
  * val linkset = TestDataBuilders.buildLinkset(digest, links)
  * ```

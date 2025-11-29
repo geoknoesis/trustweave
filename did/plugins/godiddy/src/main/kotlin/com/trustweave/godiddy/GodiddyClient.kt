@@ -25,7 +25,7 @@ class GodiddyClient(
                 isLenient = true
             })
         }
-        
+
         engine {
             requestTimeout = config.timeout
         }
@@ -89,7 +89,11 @@ class GodiddyClient(
                 setBody(body)
             }
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to POST $path: ${e.message}", e)
+            throw TrustWeaveException.Unknown(
+                message = "Failed to POST $path: ${e.message ?: "Unknown error"}",
+                context = mapOf("path" to path, "method" to "POST"),
+                cause = e
+            )
         }
     }
 

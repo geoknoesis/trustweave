@@ -8,18 +8,18 @@ import kotlinx.serialization.json.*
 
 /**
  * StarkNet blockchain anchor client implementation.
- * 
+ *
  * Supports StarkNet mainnet and testnet chains.
  * Uses StarkNet's Cairo-based smart contracts to store payload data.
- * 
+ *
  * Chain ID format: "starknet:<network>"
  * Examples:
  * - "starknet:mainnet" (StarkNet mainnet)
  * - "starknet:testnet" (StarkNet testnet)
- * 
+ *
  * **Note:** StarkNet uses Cairo (not EVM), so requires different SDK and approach.
  * This implementation provides the structure for StarkNet integration.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val client = StarkNetBlockchainAnchorClient(
@@ -36,11 +36,11 @@ class StarkNetBlockchainAnchorClient(
     chainId: String,
     options: Map<String, Any?> = emptyMap()
 ) : AbstractBlockchainAnchorClient(chainId, options), java.io.Closeable {
-    
+
     companion object {
         const val MAINNET = "starknet:mainnet"
         const val TESTNET = "starknet:testnet"
-        
+
         // Network RPC endpoints
         private const val MAINNET_RPC_URL = "https://starknet-mainnet.public.blastapi.io"
         private const val TESTNET_RPC_URL = "https://starknet-testnet.public.blastapi.io"
@@ -58,7 +58,7 @@ class StarkNetBlockchainAnchorClient(
 
     override protected fun canSubmitTransaction(): Boolean {
         // Check if credentials and contract are provided
-        return options["rpcUrl"] != null && 
+        return options["rpcUrl"] != null &&
                options["privateKey"] != null &&
                options["contractAddress"] != null
     }
@@ -72,7 +72,7 @@ class StarkNetBlockchainAnchorClient(
         // 2. Create Cairo contract call to store payload
         // 3. Sign and submit transaction
         // 4. Return transaction hash
-        
+
         throw TrustWeaveException.Unknown(
             message = "StarkNet blockchain anchoring requires StarkNet SDK and Cairo contract. " +
             "Structure is ready for implementation."
@@ -86,7 +86,7 @@ class StarkNetBlockchainAnchorClient(
         // 2. Get transaction by hash
         // 3. Read data from contract storage
         // 4. Parse and return AnchorResult
-        
+
         throw TrustWeaveException.Unknown(
             message = "StarkNet blockchain reading requires StarkNet SDK. " +
             "Structure is ready for implementation."

@@ -128,14 +128,14 @@ import java.time.Instant
 
 /**
  * SAR Flood Parametric Product using Smart Contracts
- * 
+ *
  * Uses Sentinel-1 SAR data to detect flood depth and trigger automatic payouts
  */
 class SarFloodProduct(
     private val TrustWeave: TrustWeave,
     private val eoProviderDid: String
 ) {
-    
+
     /**
      * Create a flood insurance contract
      */
@@ -145,7 +145,7 @@ class SarFloodProduct(
         coverageAmount: Double,
         location: Location
     ): SmartContract {
-        
+
         val contract = TrustWeave.contracts.draft(
             request = ContractDraftRequest(
                 contractType = ContractType.Insurance,
@@ -213,11 +213,11 @@ class SarFloodProduct(
                 }
             )
         ).getOrThrow()
-        
+
         println("✅ Flood contract draft created: ${contract.id}")
         return contract
     }
-    
+
     /**
      * Bind contract (issue VC and anchor to blockchain)
      */
@@ -226,18 +226,18 @@ class SarFloodProduct(
         insurerDid: String,
         insurerKeyId: String
     ): BoundContract {
-        
+
         val bound = TrustWeave.contracts.bindContract(
             contractId = contract.id,
             issuerDid = insurerDid,
             issuerKeyId = insurerKeyId,
             chainId = "algorand:mainnet"
         ).getOrThrow()
-        
+
         println("✅ Contract bound: ${bound.credentialId}, anchored: ${bound.anchorRef.txHash}")
         return bound
     }
-    
+
     /**
      * Process SAR flood data and issue verifiable credential
      */
@@ -246,7 +246,7 @@ class SarFloodProduct(
         sarData: SarFloodMeasurement,
         timestamp: Instant
     ): Result<VerifiableCredential> = trustweaveCatching {
-        
+
         // Step 1: Create EO data payload
         val floodData = buildJsonObject {
             put("id", "sar-flood-${location.id}-${timestamp.toEpochMilli()}")
@@ -271,17 +271,17 @@ class SarFloodProduct(
                 put("dataQuality", sarData.quality)
             })
         }
-        
+
         // Step 2: Compute data digest for integrity
         val dataDigest = DigestUtils.sha256DigestMultibase(floodData)
-        
+
         // Step 3: Issue verifiable credential for EO data
         val eoProviderKeyId = TrustWeave.dids.resolve(eoProviderDid)
             .getOrThrow()
             .verificationMethod
             .firstOrNull()?.id
             ?: error("No verification method found")
-        
+
         val floodCredential = TrustWeave.credentials.issue(
             issuer = eoProviderDid,
             subject = buildJsonObject {
@@ -303,19 +303,19 @@ class SarFloodProduct(
                 "SarFloodCredential"
             )
         ).getOrThrow()
-        
+
         // Step 4: Anchor to blockchain for tamper-proof record
         val anchorResult = TrustWeave.blockchains.anchor(
             data = floodCredential,
             serializer = VerifiableCredential.serializer(),
             chainId = "algorand:mainnet"
         ).getOrThrow()
-        
+
         println("✅ SAR Flood Credential issued and anchored: ${anchorResult.ref.txHash}")
-        
+
         floodCredential
     }
-    
+
     /**
      * Execute contract with flood data
      */
@@ -323,7 +323,7 @@ class SarFloodProduct(
         contract: SmartContract,
         floodCredential: VerifiableCredential
     ): ExecutionResult {
-        
+
         // Extract flood depth from credential
         val credentialSubject = floodCredential.credentialSubject
         val floodDepthCm = credentialSubject.jsonObject["data"]
@@ -331,7 +331,7 @@ class SarFloodProduct(
             ?.jsonObject?.get("floodDepthCm")
             ?.jsonPrimitive?.content?.toDouble()
             ?: error("Flood depth not found in credential")
-        
+
         // Create execution context with trigger data
         val executionContext = ExecutionContext(
             triggerData = buildJsonObject {
@@ -340,13 +340,13 @@ class SarFloodProduct(
                 put("timestamp", Instant.now().toString())
             }
         )
-        
+
         // Execute contract
         val result = TrustWeave.contracts.executeContract(
             contract = contract,
             executionContext = executionContext
         ).getOrThrow()
-        
+
         if (result.executed) {
             println("✅ Contract executed! Payout triggered for flood depth: ${floodDepthCm}cm")
             result.outcomes.forEach { outcome ->
@@ -358,7 +358,7 @@ class SarFloodProduct(
         } else {
             println("⚠️  Contract conditions not met (flood depth: ${floodDepthCm}cm)")
         }
-        
+
         return result
     }
 }
@@ -405,7 +405,7 @@ class HeatwaveProduct(
     private val TrustWeave: TrustWeave,
     private val eoProviderDid: String
 ) {
-    
+
     /**
      * Process heatwave data from MODIS LST
      */
@@ -414,10 +414,10 @@ class HeatwaveProduct(
         lstData: List<LstMeasurement>,
         threshold: HeatwaveThreshold
     ): Result<VerifiableCredential> = trustweaveCatching {
-        
+
         // Calculate consecutive days above threshold
         val consecutiveDays = calculateConsecutiveDays(lstData, threshold.temperatureC)
-        
+
         val heatwaveData = buildJsonObject {
             put("id", "heatwave-${location.id}-${Instant.now().toEpochMilli()}")
             put("type", "HeatwaveMeasurement")
@@ -436,15 +436,15 @@ class HeatwaveProduct(
                 put("timestamp", Instant.now().toString())
             })
         }
-        
+
         val dataDigest = DigestUtils.sha256DigestMultibase(heatwaveData)
-        
+
         val eoProviderKeyId = TrustWeave.dids.resolve(eoProviderDid)
             .getOrThrow()
             .verificationMethod
             .firstOrNull()?.id
             ?: error("No verification method found")
-        
+
         val heatwaveCredential = TrustWeave.credentials.issue(
             issuerDid = eoProviderDid,
             issuerKeyId = eoProviderKeyId,
@@ -463,17 +463,17 @@ class HeatwaveProduct(
                 "HeatwaveCredential"
             )
         ).getOrThrow()
-        
+
         // Anchor to blockchain
         TrustWeave.blockchains.anchor(
             data = heatwaveCredential,
             serializer = VerifiableCredential.serializer(),
             chainId = "algorand:mainnet"
         ).getOrThrow()
-        
+
         heatwaveCredential
     }
-    
+
     /**
      * Create heatwave insurance contract
      */
@@ -484,7 +484,7 @@ class HeatwaveProduct(
         threshold: HeatwaveThreshold,
         location: Location
     ): SmartContract {
-        
+
         val contract = TrustWeave.contracts.draft(
             request = ContractDraftRequest(
                 contractType = ContractType.Insurance,
@@ -531,10 +531,10 @@ class HeatwaveProduct(
                 }
             )
         ).getOrThrow()
-        
+
         return contract
     }
-    
+
     /**
      * Execute heatwave contract
      */
@@ -542,20 +542,20 @@ class HeatwaveProduct(
         contract: SmartContract,
         heatwaveCredential: VerifiableCredential
     ): ExecutionResult {
-        
+
         val credentialSubject = heatwaveCredential.credentialSubject
         val consecutiveDays = credentialSubject.jsonObject["data"]
             ?.jsonObject?.get("measurement")
             ?.jsonObject?.get("consecutiveDays")
             ?.jsonPrimitive?.content?.toInt()
             ?: error("Consecutive days not found")
-        
+
         val maxTemp = credentialSubject.jsonObject["data"]
             ?.jsonObject?.get("measurement")
             ?.jsonObject?.get("maxTemperatureC")
             ?.jsonPrimitive?.content?.toDouble()
             ?: error("Max temperature not found")
-        
+
         val executionContext = ExecutionContext(
             triggerData = buildJsonObject {
                 put("consecutiveDays", consecutiveDays)
@@ -563,20 +563,20 @@ class HeatwaveProduct(
                 put("credentialId", heatwaveCredential.id)
             }
         )
-        
+
         return TrustWeave.contracts.executeContract(
             contract = contract,
             executionContext = executionContext
         ).getOrThrow()
     }
-    
+
     private fun calculateConsecutiveDays(
         lstData: List<LstMeasurement>,
         thresholdC: Double
     ): Int {
         var maxConsecutive = 0
         var currentConsecutive = 0
-        
+
         for (measurement in lstData.sortedBy { it.timestamp }) {
             if (measurement.temperatureC > thresholdC) {
                 currentConsecutive++
@@ -585,7 +585,7 @@ class HeatwaveProduct(
                 currentConsecutive = 0
             }
         }
-        
+
         return maxConsecutive
     }
 }
@@ -632,7 +632,7 @@ class SolarAttenuationProduct(
     private val TrustWeave: TrustWeave,
     private val eoProviderDid: String
 ) {
-    
+
     /**
      * Process solar attenuation data
      */
@@ -641,12 +641,12 @@ class SolarAttenuationProduct(
         aodData: AodMeasurement,
         irradianceData: IrradianceMeasurement
     ): Result<VerifiableCredential> = trustweaveCatching {
-        
+
         // Calculate attenuation percentage
         val baselineIrradiance = irradianceData.baselineWattPerSqM
         val currentIrradiance = irradianceData.currentWattPerSqM
         val attenuationPercent = ((baselineIrradiance - currentIrradiance) / baselineIrradiance) * 100.0
-        
+
         val solarData = buildJsonObject {
             put("id", "solar-attenuation-${location.id}-${Instant.now().toEpochMilli()}")
             put("type", "SolarAttenuationMeasurement")
@@ -664,15 +664,15 @@ class SolarAttenuationProduct(
                 put("timestamp", Instant.now().toString())
             })
         }
-        
+
         val dataDigest = DigestUtils.sha256DigestMultibase(solarData)
-        
+
         val eoProviderKeyId = TrustWeave.dids.resolve(eoProviderDid)
             .getOrThrow()
             .verificationMethod
             .firstOrNull()?.id
             ?: error("No verification method found")
-        
+
         val solarCredential = TrustWeave.credentials.issue(
             issuerDid = eoProviderDid,
             issuerKeyId = eoProviderKeyId,
@@ -691,17 +691,17 @@ class SolarAttenuationProduct(
                 "SolarAttenuationCredential"
             )
         ).getOrThrow()
-        
+
         // Anchor to blockchain
         TrustWeave.blockchains.anchor(
             data = solarCredential,
             serializer = VerifiableCredential.serializer(),
             chainId = "algorand:mainnet"
         ).getOrThrow()
-        
+
         solarCredential
     }
-    
+
     /**
      * Evaluate solar attenuation trigger
      */
@@ -709,28 +709,28 @@ class SolarAttenuationProduct(
         policy: SolarPolicy,
         solarCredential: VerifiableCredential
     ): TriggerResult {
-        
+
         val verification = TrustWeave.credentials.verify(solarCredential)
         if (!verification.valid) {
             return TriggerResult(triggered = false, reason = "Credential invalid")
         }
-        
+
         val credentialSubject = solarCredential.credentialSubject
         val attenuationPercent = credentialSubject.jsonObject["data"]
             ?.jsonObject?.get("measurement")
             ?.jsonObject?.get("attenuationPercent")
             ?.jsonPrimitive?.content?.toDouble()
             ?: return TriggerResult(triggered = false, reason = "Attenuation not found")
-        
+
         val thresholdPercent = policy.thresholdPercent
-        
+
         if (attenuationPercent < thresholdPercent) {
             return TriggerResult(
                 triggered = false,
                 reason = "Attenuation ($attenuationPercent%) below threshold ($thresholdPercent%)"
             )
         }
-        
+
         // Calculate payout based on attenuation severity
         val excessAttenuation = attenuationPercent - thresholdPercent
         val payoutAmount = when {
@@ -738,7 +738,7 @@ class SolarAttenuationProduct(
             excessAttenuation >= 10 -> policy.coverageAmount * 0.75
             else -> policy.coverageAmount * 0.50
         }
-        
+
         return TriggerResult(
             triggered = true,
             attenuationPercent = attenuationPercent,
@@ -779,17 +779,17 @@ suspend fun completeFloodInsuranceWorkflow() {
             "algorand:mainnet" to algorandClient
         }
     }
-    
+
     // Step 2: Create DIDs for parties
     val insurerDid = TrustWeave.dids.create(method = "key")
     val insuredDid = TrustWeave.dids.create(method = "key")
     val eoProviderDid = TrustWeave.dids.create(method = "key")
     val insurerKeyId = TrustWeave.dids.resolve(insurerDid.id)
         .verificationMethod.firstOrNull()?.id ?: error("No key found")
-    
+
     // Step 3: Initialize product
     val floodProduct = SarFloodProduct(TrustWeave, eoProviderDid.id)
-    
+
     // Step 4: Create contract
     val contract = floodProduct.createFloodContract(
         insurerDid = insurerDid.id,
@@ -803,17 +803,17 @@ suspend fun completeFloodInsuranceWorkflow() {
             region = "North Carolina"
         )
     )
-    
+
     // Step 5: Bind contract (issue VC and anchor)
     val bound = floodProduct.bindFloodContract(
         contract = contract,
         insurerDid = insurerDid.id,
         insurerKeyId = insurerKeyId
     )
-    
+
     // Step 6: Activate contract
     val active = TrustWeave.contracts.activateContract(bound.contract.id).getOrThrow()
-    
+
     // Step 7: Process EO data (in production, this comes from EO provider)
     val floodCredential = floodProduct.processSarFloodData(
         location = Location(
@@ -832,13 +832,13 @@ suspend fun completeFloodInsuranceWorkflow() {
         ),
         timestamp = Instant.now()
     ).getOrThrow()
-    
+
     // Step 8: Execute contract
     val executionResult = floodProduct.executeFloodContract(
         contract = active,
         floodCredential = floodCredential
     )
-    
+
     // Step 9: Process payout (application-specific)
     if (executionResult.executed) {
         processPayout(executionResult)
@@ -862,16 +862,16 @@ import kotlinx.coroutines.runBlocking
 
 /**
  * Atlas Parametric MGA Platform
- * 
+ *
  * Main application entry point
  */
 class AtlasParametricPlatform {
-    
+
     private val TrustWeave: TrustWeave
     private val sarFloodProduct: SarFloodProduct
     private val heatwaveProduct: HeatwaveProduct
     private val solarProduct: SolarAttenuationProduct
-    
+
     init {
         // Initialize TrustWeave with blockchain anchoring
         TrustWeave = TrustWeave.create {
@@ -882,18 +882,18 @@ class AtlasParametricPlatform {
                 )
             }
         }
-        
+
         // Create DIDs for EO providers
         val eoProviderDid = runBlocking {
             TrustWeave.dids.create(method = "key")
         }
-        
+
         // Initialize products
         sarFloodProduct = SarFloodProduct(TrustWeave, eoProviderDid.id)
         heatwaveProduct = HeatwaveProduct(TrustWeave, eoProviderDid.id)
         solarProduct = SolarAttenuationProduct(TrustWeave, eoProviderDid.id)
     }
-    
+
     /**
      * Process EO data and execute contracts
      */
@@ -902,7 +902,7 @@ class AtlasParametricPlatform {
         eoData: Any,
         contracts: List<SmartContract>
     ): List<ExecutionResult> {
-        
+
         return when (productType) {
             ProductType.SAR_FLOOD -> {
                 val floodData = eoData as SarFloodMeasurement
@@ -918,16 +918,16 @@ class AtlasParametricPlatform {
             }
         }
     }
-    
+
     private suspend fun processFloodExecutions(
         floodData: SarFloodMeasurement,
         contracts: List<SmartContract>
     ): List<ExecutionResult> {
-        
+
         val results = mutableListOf<ExecutionResult>()
-        
-        for (contract in contracts.filter { 
-            it.contractData.jsonObject["productType"]?.jsonPrimitive?.content == "SarFlood" 
+
+        for (contract in contracts.filter {
+            it.contractData.jsonObject["productType"]?.jsonPrimitive?.content == "SarFlood"
         }) {
             // Process SAR data and issue credential
             val location = extractLocation(contract)
@@ -936,28 +936,28 @@ class AtlasParametricPlatform {
                 sarData = floodData,
                 timestamp = Instant.now()
             ).getOrThrow()
-            
+
             // Execute contract
             val executionResult = sarFloodProduct.executeFloodContract(
                 contract = contract,
                 floodCredential = floodCredential
             )
-            
+
             if (executionResult.executed) {
                 // Process payout
                 processPayout(executionResult)
             }
-            
+
             results.add(executionResult)
         }
-        
+
         return results
     }
-    
+
     private fun extractLocation(contract: SmartContract): Location {
         val locationData = contract.contractData.jsonObject["location"]?.jsonObject
             ?: error("Location not found in contract")
-        
+
         return Location(
             id = locationData["address"]?.jsonPrimitive?.content ?: "unknown",
             latitude = locationData["latitude"]?.jsonPrimitive?.content?.toDouble() ?: 0.0,
@@ -966,7 +966,7 @@ class AtlasParametricPlatform {
             region = locationData["region"]?.jsonPrimitive?.content ?: ""
         )
     }
-    
+
     private suspend fun processPayout(executionResult: ExecutionResult) {
         // Integrate with banking API (Stripe, Plaid, etc.)
         // Extract payout amount from executionResult.outcomes
@@ -1007,40 +1007,40 @@ One of TrustWeave's key advantages is accepting EO data from multiple providers:
 class MultiProviderEoDataService(
     private val TrustWeave: TrustWeave
 ) {
-    
+
     private val certifiedProviders = setOf(
         "did:key:esa-provider",
         "did:key:planet-provider",
         "did:key:nasa-provider",
         "did:key:noaa-provider"
     )
-    
+
     /**
      * Accept EO data credential from any certified provider
      */
     suspend fun acceptEoDataCredential(
         dataCredential: VerifiableCredential
     ): Result<EoData> = trustweaveCatching {
-        
+
         // Step 1: Verify credential
         val verification = TrustWeave.verifyCredential(dataCredential).getOrThrow()
         if (!verification.valid) {
             error("Credential verification failed: ${verification.errors}")
         }
-        
+
         // Step 2: Check if provider is certified
         val issuerDid = dataCredential.issuer.firstOrNull()?.id
             ?: error("No issuer found in credential")
-        
+
         if (!certifiedProviders.contains(issuerDid)) {
             error("Provider $issuerDid is not certified")
         }
-        
+
         // Step 3: Extract and return data
         val credentialSubject = dataCredential.credentialSubject
         val dataType = credentialSubject.jsonObject["dataType"]?.jsonPrimitive?.content
         val data = credentialSubject.jsonObject["data"]?.jsonObject
-        
+
         EoData(
             type = dataType ?: "Unknown",
             data = data ?: buildJsonObject {},
@@ -1070,7 +1070,7 @@ class BrokerPortalController(
     private val platform: AtlasParametricPlatform,
     private val pricingEngine: PricingEngine
 ) {
-    
+
     /**
      * Get quote for parametric insurance
      */
@@ -1078,20 +1078,20 @@ class BrokerPortalController(
     suspend fun getQuote(
         @RequestBody request: QuoteRequest
     ): QuoteResponse {
-        
+
         val premium = pricingEngine.calculatePremium(
             productType = request.productType,
             location = request.location,
             coverageAmount = request.coverageAmount
         )
-        
+
         return QuoteResponse(
             premium = premium,
             coverageAmount = request.coverageAmount,
             productType = request.productType
         )
     }
-    
+
     /**
      * Bind policy
      */
@@ -1099,13 +1099,13 @@ class BrokerPortalController(
     suspend fun bindPolicy(
         @RequestBody request: BindRequest
     ): PolicyResponse {
-        
+
         // Create policy
         val policy = createPolicy(request)
-        
+
         // Issue policy credential
         val policyCredential = issuePolicyCredential(policy)
-        
+
         return PolicyResponse(
             policyId = policy.id,
             policyCredentialId = policyCredential.id,
@@ -1124,14 +1124,14 @@ class BrokerPortalController(
 class AuditTrailService(
     private val TrustWeave: TrustWeave
 ) {
-    
+
     /**
      * Record audit event and anchor to blockchain
      */
     suspend fun recordAuditEvent(
         event: AuditEvent
     ): AuditRecord {
-        
+
         // Create audit record
         val auditRecord = buildJsonObject {
             put("id", event.id)
@@ -1141,34 +1141,34 @@ class AuditTrailService(
             put("resource", event.resource)
             put("details", event.details)
         }
-        
+
         // Anchor to blockchain for immutability
         val anchorResult = TrustWeave.blockchains.anchor(
             data = auditRecord,
             serializer = JsonObject.serializer(),
             chainId = "algorand:mainnet"
         ).getOrThrow()
-        
+
         return AuditRecord(
             eventId = event.id,
             anchorRef = anchorResult.ref,
             timestamp = event.timestamp
         )
     }
-    
+
     /**
      * Verify audit record integrity
      */
     suspend fun verifyAuditRecord(
         record: AuditRecord
     ): Boolean {
-        
+
         // Read from blockchain
         val client = TrustWeave.getBlockchainClient(record.anchorRef.chainId)
             ?: return false
-        
+
         val anchorResult = client.readPayload(record.anchorRef)
-        
+
         // Verify integrity
         return anchorResult.payload.jsonObject["id"]?.jsonPrimitive?.content == record.eventId
     }

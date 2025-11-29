@@ -17,17 +17,17 @@ class TestkitKmsService : KmsService {
     ): Any = withContext(Dispatchers.IO) {
         val keyManagementService = kms as? KeyManagementService
             ?: throw IllegalArgumentException("Expected KeyManagementService, got ${kms.javaClass.name}")
-        
+
         val keyHandle = keyManagementService.generateKey(algorithm, options)
         return@withContext keyHandle as Any
     }
-    
+
     override fun getKeyId(keyHandle: Any): String {
         val handle = keyHandle as? KeyHandle
             ?: throw IllegalArgumentException("Expected KeyHandle, got ${keyHandle.javaClass.name}")
-        return handle.id
+        return handle.id.value
     }
-    
+
     override fun getPublicKeyJwk(keyHandle: Any): Map<String, Any?>? {
         val handle = keyHandle as? KeyHandle
             ?: throw IllegalArgumentException("Expected KeyHandle, got ${keyHandle.javaClass.name}")

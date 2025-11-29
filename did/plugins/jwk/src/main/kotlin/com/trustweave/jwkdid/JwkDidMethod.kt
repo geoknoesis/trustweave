@@ -2,6 +2,7 @@ package com.trustweave.jwkdid
 
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractDidMethod
 import com.trustweave.did.base.DidMethodUtils
 import com.trustweave.kms.KeyManagementService
@@ -13,24 +14,24 @@ import java.util.Base64
 
 /**
  * Implementation of did:jwk method.
- * 
+ *
  * did:jwk uses JSON Web Keys (JWK) directly:
  * - Format: `did:jwk:{base64url-encoded-jwk}`
  * - Public key is encoded as a JWK and then base64url-encoded
  * - Document is derived from the JWK itself
  * - No external registry required
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val kms = InMemoryKeyManagementService()
  * val method = JwkDidMethod(kms)
- * 
+ *
  * // Create DID
  * val options = didCreationOptions {
  *     algorithm = KeyAlgorithm.ED25519
  * }
  * val document = method.createDid(options)
- * 
+ *
  * // Resolve DID (derived from JWK)
  * val result = method.resolveDid(document.id)
  * ```
@@ -44,14 +45,17 @@ class JwkDidMethod(
             // Generate key using KMS
             val algorithm = options.algorithm.algorithmName
             val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
-            
+
             // Get JWK from key handle
             val jwk = keyHandle.publicKeyJwk
-                ?: throw TrustWeaveException("KeyHandle must have publicKeyJwk for did:jwk")
-            
+                ?: throw TrustWeaveException.Unknown(
+                    code = "MISSING_JWK",
+                    message = "KeyHandle must have publicKeyJwk for did:jwk"
+                )
+
             // Normalize JWK (remove private key fields, sort keys)
             val normalizedJwk = normalizeJwk(jwk)
-            
+
             // Convert JWK to JSON string
             val jwkJson = buildJsonObject {
                 normalizedJwk.forEach { (key, value) ->
@@ -74,24 +78,24 @@ class JwkDidMethod(
                     }
                 }
             }
-            
+
             val jwkString = Json.encodeToString(JsonElement.serializer(), jwkJson)
-            
+
             // Encode JWK as base64url (no padding)
             val base64urlEncoded = Base64.getUrlEncoder().withoutPadding().encodeToString(
                 jwkString.toByteArray(Charsets.UTF_8)
             )
-            
+
             // Create did:jwk identifier
             val did = "did:jwk:$base64urlEncoded"
-            
+
             // Create verification method
             val verificationMethod = DidMethodUtils.createVerificationMethod(
                 did = did,
                 keyHandle = keyHandle,
                 algorithm = options.algorithm
             )
-            
+
             // Build DID document
             val document = DidMethodUtils.buildDidDocument(
                 did = did,
@@ -101,19 +105,20 @@ class JwkDidMethod(
                     listOf(verificationMethod.id)
                 } else null
             )
-            
+
             // Store locally (did:jwk documents are derived, not stored externally)
             storeDocument(document.id, document)
-            
+
             document
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: IllegalArgumentException) {
             throw e
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to create did:jwk: ${e.message}",
-                e
+            throw TrustWeaveException.Unknown(
+                code = "CREATE_FAILED",
+                message = "Failed to create did:jwk: ${e.message}",
+                cause = e
             )
         }
     }
@@ -121,10 +126,10 @@ class JwkDidMethod(
     override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            
+
             // Extract base64url-encoded JWK from DID
             val base64urlEncoded = did.substringAfter("did:jwk:")
-            
+
             // Decode base64url to get JWK JSON string
             val jwkString = try {
                 String(Base64.getUrlDecoder().decode(base64urlEncoded), Charsets.UTF_8)
@@ -135,7 +140,7 @@ class JwkDidMethod(
                     method
                 )
             }
-            
+
             // Parse JWK JSON
             val jwkJson = try {
                 Json.parseToJsonElement(jwkString).jsonObject
@@ -146,7 +151,7 @@ class JwkDidMethod(
                     method
                 )
             }
-            
+
             // Convert JSON to map
             val jwk = jwkJson.entries.associate { entry ->
                 entry.key to when (val value = entry.value) {
@@ -163,7 +168,7 @@ class JwkDidMethod(
                     else -> value.toString()
                 }
             }
-            
+
             // Validate JWK has required fields
             if (!jwk.containsKey("kty")) {
                 return@withContext DidMethodUtils.createErrorResolutionResult(
@@ -172,7 +177,7 @@ class JwkDidMethod(
                     method
                 )
             }
-            
+
             // Check local storage first (for keys we generated)
             val stored = getStoredDocument(did)
             if (stored != null) {
@@ -183,7 +188,7 @@ class JwkDidMethod(
                     getDocumentMetadata(did)?.updated
                 )
             }
-            
+
             // For did:jwk, we can derive the document from the JWK
             // Build a minimal DID document from the JWK
             val verificationMethodId = "$did#0"
@@ -196,24 +201,24 @@ class JwkDidMethod(
                 "RSA" -> "RsaVerificationKey2018"
                 else -> "JsonWebKey2020"
             }
-            
-            val verificationMethod = VerificationMethodRef(
+
+            val verificationMethod = VerificationMethod(
                 id = verificationMethodId,
                 type = verificationMethodType,
                 controller = did,
                 publicKeyJwk = jwk as Map<String, Any?>
             )
-            
+
             val document = DidMethodUtils.buildDidDocument(
                 did = did,
                 verificationMethod = listOf(verificationMethod),
                 authentication = listOf(verificationMethodId),
                 assertionMethod = listOf(verificationMethodId)
             )
-            
+
             // Store for caching
             storeDocument(document.id, document)
-            
+
             DidMethodUtils.createSuccessResolutionResult(document, method)
         } catch (e: TrustWeaveException) {
             DidMethodUtils.createErrorResolutionResult(
@@ -236,7 +241,7 @@ class JwkDidMethod(
     private fun normalizeJwk(jwk: Map<String, Any?>): Map<String, Any?> {
         // Private key fields to remove
         val privateKeyFields = setOf("d", "p", "q", "dp", "dq", "qi", "oth")
-        
+
         return jwk.filterKeys { it !in privateKeyFields }
     }
 }

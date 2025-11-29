@@ -4,7 +4,7 @@ import com.trustweave.core.exception.TrustWeaveException
 
 /**
  * DID-related exception types.
- * 
+ *
  * These exceptions provide structured error codes and context for DID operations.
  */
 sealed class DidException(
@@ -13,7 +13,7 @@ sealed class DidException(
     override val context: Map<String, Any?> = emptyMap(),
     override val cause: Throwable? = null
 ) : TrustWeaveException(code, message, context, cause) {
-    
+
     data class DidNotFound(
         val did: String,
         val availableMethods: List<String> = emptyList()
@@ -25,7 +25,7 @@ sealed class DidException(
             "availableMethods" to availableMethods
         )
     )
-    
+
     data class DidMethodNotRegistered(
         val method: String,
         val availableMethods: List<String>
@@ -37,7 +37,7 @@ sealed class DidException(
             "availableMethods" to availableMethods
         )
     )
-    
+
     data class InvalidDidFormat(
         val did: String,
         val reason: String
@@ -48,6 +48,20 @@ sealed class DidException(
             "did" to did,
             "reason" to reason
         )
+    )
+
+    data class DidResolutionFailed(
+        val did: String,
+        val reason: String,
+        override val cause: Throwable? = null
+    ) : DidException(
+        code = "DID_RESOLUTION_FAILED",
+        message = "DID resolution failed for '$did': $reason",
+        context = mapOf(
+            "did" to did,
+            "reason" to reason
+        ),
+        cause = cause
     )
 }
 

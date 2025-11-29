@@ -13,10 +13,10 @@ import java.time.Instant
 
 /**
  * LD-Proof (JSON-LD Signature) proof generator plugin implementation.
- * 
+ *
  * Generates Linked Data Proofs for verifiable credentials using JSON-LD signatures.
  * Supports multiple signature suites (Ed25519Signature2020, EcdsaSecp256k1Signature2019, etc.).
- * 
+ *
  * **Note**: This is a placeholder implementation. Full implementation requires
  * JSON-LD canonicalization and signature suite libraries.
  */
@@ -26,27 +26,27 @@ class LdProofGeneratorPlugin(
     private val signatureSuite: String = "Ed25519Signature2020"
 ) : ProofGenerator {
     override val proofType: String = signatureSuite
-    
+
     override suspend fun generateProof(
         credential: VerifiableCredential,
         keyId: String,
         options: ProofOptions
     ): Proof = withContext(Dispatchers.IO) {
-        val verificationMethod = options.verificationMethod 
+        val verificationMethod = options.verificationMethod
             ?: (getPublicKeyId(keyId)?.let { "did:key:$it#$keyId" } ?: "did:key:$keyId")
-        
+
         // Build proof document (credential + proof options without signature)
         val proofDocument = buildProofDocument(credential, verificationMethod, options)
-        
+
         // Canonicalize proof document using JSON-LD
         val canonicalDocument = canonicalizeDocument(proofDocument)
-        
+
         // Generate signature using signer function
         val signature = signer(canonicalDocument.toByteArray(Charsets.UTF_8), keyId)
-        
+
         // Encode signature as multibase (base64url)
         val proofValue = encodeMultibase(signature)
-        
+
         Proof(
             type = proofType,
             created = Instant.now().toString(),
@@ -57,7 +57,7 @@ class LdProofGeneratorPlugin(
             domain = options.domain
         )
     }
-    
+
     /**
      * Build proof document (credential + proof options without signature).
      */
@@ -71,13 +71,13 @@ class LdProofGeneratorPlugin(
             encodeDefaults = false
             ignoreUnknownKeys = true
         }
-        
+
         // Serialize credential to JSON
         val credentialJson = json.encodeToJsonElement(
             com.trustweave.credential.models.VerifiableCredential.serializer(),
             credential
         ).jsonObject
-        
+
         // Build proof options (without proofValue)
         val proofOptions = buildJsonObject {
             put("type", proofType)
@@ -87,7 +87,7 @@ class LdProofGeneratorPlugin(
             options.challenge?.let { put("challenge", it) }
             options.domain?.let { put("domain", it) }
         }
-        
+
         // Combine credential and proof options
         return buildJsonObject {
             credentialJson.entries.forEach { (key, value) ->
@@ -96,7 +96,7 @@ class LdProofGeneratorPlugin(
             put("proof", proofOptions)
         }
     }
-    
+
     /**
      * Canonicalize document using JSON-LD.
      */
@@ -106,18 +106,18 @@ class LdProofGeneratorPlugin(
             encodeDefaults = false
             ignoreUnknownKeys = true
         }
-        
+
         // Convert JsonObject to Map for jsonld-java
         val documentMap = jsonElementToMap(document)
-        
+
         // Canonicalize using JSON-LD
         val options = JsonLdOptions()
         options.format = "application/n-quads"
         val canonical = JsonLdProcessor.normalize(documentMap, options)
-        
+
         return canonical.toString()
     }
-    
+
     /**
      * Convert JsonObject to Map for jsonld-java.
      */
@@ -145,7 +145,7 @@ class LdProofGeneratorPlugin(
             }
         }
     }
-    
+
     /**
      * Encode signature as multibase (base58btc encoding with 'z' prefix).
      */
@@ -153,7 +153,7 @@ class LdProofGeneratorPlugin(
         val base58 = encodeBase58(data)
         return "z$base58" // 'z' prefix indicates base58btc encoding
     }
-    
+
     /**
      * Encode bytes as base58.
      */
@@ -161,13 +161,13 @@ class LdProofGeneratorPlugin(
         val alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
         var num = java.math.BigInteger(1, bytes)
         val sb = StringBuilder()
-        
+
         while (num > java.math.BigInteger.ZERO) {
             val remainder = num.mod(java.math.BigInteger.valueOf(58))
             sb.append(alphabet[remainder.toInt()])
             num = num.divide(java.math.BigInteger.valueOf(58))
         }
-        
+
         // Add leading zeros
         for (byte in bytes) {
             if (byte.toInt() == 0) {
@@ -176,7 +176,7 @@ class LdProofGeneratorPlugin(
                 break
             }
         }
-        
+
         return sb.reverse().toString()
     }
 }

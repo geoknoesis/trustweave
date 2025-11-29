@@ -134,10 +134,10 @@ The **Trust Layer** is TrustWeave's configuration DSL that lets you declarativel
 
 ```kotlin
 val trustLayer = trustLayer {
-    keys { 
+    keys {
         provider("inMemory")  // KMS configuration
     }
-    did { 
+    did {
         method("key")          // DID method configuration
     }
     blockchains {

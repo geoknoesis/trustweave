@@ -15,7 +15,7 @@ class AnchorOptionsTest {
             includeProof = true,
             addEvidenceToCredential = false
         )
-        
+
         assertTrue(options.includeProof)
         assertFalse(options.addEvidenceToCredential)
     }
@@ -23,7 +23,7 @@ class AnchorOptionsTest {
     @Test
     fun `test AnchorOptions with defaults`() {
         val options = AnchorOptions()
-        
+
         assertFalse(options.includeProof)
         assertTrue(options.addEvidenceToCredential)
     }
@@ -37,13 +37,13 @@ class AnchorOptionsTest {
             credentialSubject = buildJsonObject { put("id", "did:key:subject") },
             issuanceDate = "2024-01-01T00:00:00Z"
         )
-        
+
         val result = CredentialAnchorResult(
             anchorRef = anchorRef,
             credential = credential,
             digest = "digest-123"
         )
-        
+
         assertEquals(anchorRef, result.anchorRef)
         assertEquals(credential, result.credential)
         assertEquals("digest-123", result.digest)

@@ -12,10 +12,10 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
 
     .site-nav > ul.nav-list:first-child > li > a,
-    
+
     .site-nav > ul.nav-list:first-child > li > ul > li:not(:nth-child(7)) > a,
     .site-nav > ul.nav-list:first-child > li > ul > li > ul > li a {
       background-image: none;
@@ -38,17 +38,17 @@
     }
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -97,7 +97,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -106,7 +106,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -136,13 +136,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -153,7 +153,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -358,7 +358,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -406,14 +406,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -421,7 +421,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -434,21 +434,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -516,7 +516,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -531,8 +531,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -549,10 +549,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -565,8 +565,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -582,25 +582,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -610,9 +610,9 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
@@ -626,27 +626,27 @@
 
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="the-web-of-trust-foundation-for-decentralized-trust">
-  
-  
+
+
     <a href="#the-web-of-trust-foundation-for-decentralized-trust" class="anchor-heading" aria-labelledby="the-web-of-trust-foundation-for-decentralized-trust"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Web of Trust: Foundation for Decentralized Trust
-  
-  
+
+
 </h1>
-    
+
 
 <blockquote>
   <p>TrustWeave is built and supported by <a href="https://www.geoknoesis.com">Geoknoesis LLC</a>, a standards-focused identity company. This introduction reflects Geoknoesis’ vision for building a thriving, interoperable trust ecosystem based on open standards.</p>
 </blockquote>
 <h2 id="what-is-the-web-of-trust">
-  
-  
+
+
     <a href="#what-is-the-web-of-trust" class="anchor-heading" aria-labelledby="what-is-the-web-of-trust"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What is the Web of Trust?
-  
-  
+
+
 </h2>
-    
+
 
 <p>The <strong>Web of Trust</strong> is a decentralized model for establishing trust relationships between parties without relying on a single central authority. Instead of a hierarchical trust model where all trust flows from one root certificate authority or central registry, the web of trust creates a network where trust is established through relationships between entities, much like how trust works in human social networks.</p>
 
@@ -659,21 +659,21 @@
   <li><strong>Transitive Trust</strong>: Trust that flows through multiple hops, allowing parties to trust issuers they’ve never directly interacted with</li>
 </ul>
 <h2 id="the-problem-it-solves">
-  
-  
+
+
     <a href="#the-problem-it-solves" class="anchor-heading" aria-labelledby="the-problem-it-solves"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Problem It Solves
-  
-  
+
+
 </h2>
-    
+
 <h3 id="the-centralization-problem">
-  
-  
+
+
     <a href="#the-centralization-problem" class="anchor-heading" aria-labelledby="the-centralization-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Centralization Problem
-  
-  
+
+
 </h3>
-    
+
 
 <p>Traditional trust systems rely on centralized authorities, governments, corporations, certificate authorities, or platform providers, to vouch for the authenticity of identities, credentials, and information. This creates several critical problems:</p>
 
@@ -698,13 +698,13 @@
   </li>
 </ul>
 <h3 id="the-fragmentation-problem">
-  
-  
+
+
     <a href="#the-fragmentation-problem" class="anchor-heading" aria-labelledby="the-fragmentation-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Fragmentation Problem
-  
-  
+
+
 </h3>
-    
+
 
 <p>The decentralized identity ecosystem itself suffers from fragmentation:</p>
 
@@ -723,105 +723,105 @@
   </li>
 </ul>
 <h2 id="challenges-the-web-of-trust-addresses">
-  
-  
+
+
     <a href="#challenges-the-web-of-trust-addresses" class="anchor-heading" aria-labelledby="challenges-the-web-of-trust-addresses"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Challenges the Web of Trust Addresses
-  
-  
+
+
 </h2>
-    
+
 
 <p>The web of trust model addresses these fundamental challenges:</p>
 <h3 id="1-decentralization-without-chaos">
-  
-  
+
+
     <a href="#1-decentralization-without-chaos" class="anchor-heading" aria-labelledby="1-decentralization-without-chaos"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Decentralization Without Chaos
-  
-  
+
+
 </h3>
-    
+
 
 <p>The web of trust provides structure and governance without requiring a single central authority. Trust anchors serve as recognized starting points, but the network can grow organically through delegation and transitive trust relationships. This creates a resilient system where no single point of failure can bring down the entire network.</p>
 <h3 id="2-interoperability-across-technologies">
-  
-  
+
+
     <a href="#2-interoperability-across-technologies" class="anchor-heading" aria-labelledby="2-interoperability-across-technologies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Interoperability Across Technologies
-  
-  
+
+
 </h3>
-    
+
 
 <p>By focusing on trust relationships rather than specific technologies, the web of trust enables interoperability across different blockchains, DID methods, and key management systems. A credential issued using one technology stack can be verified by a system using a completely different stack, as long as both systems understand the same trust relationships.</p>
 <h3 id="3-scalability-through-distribution">
-  
-  
+
+
     <a href="#3-scalability-through-distribution" class="anchor-heading" aria-labelledby="3-scalability-through-distribution"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Scalability Through Distribution
-  
-  
+
+
 </h3>
-    
+
 
 <p>Unlike centralized systems that must scale vertically, the web of trust scales horizontally. Each participant maintains their own trust relationships and can verify credentials independently. This distributed model eliminates bottlenecks and allows the system to scale to millions of participants.</p>
 <h3 id="4-privacy-through-selective-disclosure">
-  
-  
+
+
     <a href="#4-privacy-through-selective-disclosure" class="anchor-heading" aria-labelledby="4-privacy-through-selective-disclosure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Privacy Through Selective Disclosure
-  
-  
+
+
 </h3>
-    
+
 
 <p>The web of trust enables privacy-preserving verification. Verifiers can check trust relationships without learning sensitive information about the holder. Credentials can be verified without revealing their full contents, and trust paths can be validated without exposing the entire network structure.</p>
 <h3 id="5-flexibility-and-adaptability">
-  
-  
+
+
     <a href="#5-flexibility-and-adaptability" class="anchor-heading" aria-labelledby="5-flexibility-and-adaptability"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5. Flexibility and Adaptability
-  
-  
+
+
 </h3>
-    
+
 
 <p>Trust relationships can be established, modified, and revoked dynamically. New trust anchors can be added, delegation chains can be created, and trust policies can evolve over time. This flexibility allows the system to adapt to changing requirements, regulations, and use cases.</p>
 <h3 id="6-user-control-and-sovereignty">
-  
-  
+
+
     <a href="#6-user-control-and-sovereignty" class="anchor-heading" aria-labelledby="6-user-control-and-sovereignty"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6. User Control and Sovereignty
-  
-  
+
+
 </h3>
-    
+
 
 <p>The web of trust puts users in control of their own identity and credentials. Users can choose which credentials to present, which verifiers to interact with, and which trust relationships to participate in. This user-centric model aligns with principles of self-sovereign identity.</p>
 <h2 id="why-open-standards-matter">
-  
-  
+
+
     <a href="#why-open-standards-matter" class="anchor-heading" aria-labelledby="why-open-standards-matter"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Why Open Standards Matter
-  
-  
+
+
 </h2>
-    
+
 
 <p>Open standards are fundamental to the success of the web of trust. They provide the common language and protocols that enable interoperability, innovation, and ecosystem growth.</p>
 <h3 id="interoperability">
-  
-  
+
+
     <a href="#interoperability" class="anchor-heading" aria-labelledby="interoperability"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Interoperability
-  
-  
+
+
 </h3>
-    
+
 
 <p>Open standards ensure that different systems can communicate and work together. When all participants follow the same standards, such as W3C Verifiable Credentials and Decentralized Identifiers, credentials issued by one system can be verified by another, regardless of the underlying technology stack.</p>
 
 <p><strong>Example</strong>: A university issues a degree credential using Ethereum-based DIDs. A potential employer using Algorand-based DIDs can still verify the credential because both systems implement the same W3C Verifiable Credentials standard.</p>
 <h3 id="innovation">
-  
-  
+
+
     <a href="#innovation" class="anchor-heading" aria-labelledby="innovation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Innovation
-  
-  
+
+
 </h3>
-    
+
 
 <p>Open standards enable innovation by providing a stable foundation that developers can build upon. When standards are open and well-documented, developers can:</p>
 
@@ -832,13 +832,13 @@
   <li>Contribute improvements back to the standards community</li>
 </ul>
 <h3 id="competition-and-choice">
-  
-  
+
+
     <a href="#competition-and-choice" class="anchor-heading" aria-labelledby="competition-and-choice"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Competition and Choice
-  
-  
+
+
 </h3>
-    
+
 
 <p>Open standards create a competitive marketplace where organizations can choose the best implementation for their needs. Instead of being locked into a single vendor’s solution, organizations can:</p>
 
@@ -849,13 +849,13 @@
   <li>Avoid vendor lock-in and maintain flexibility</li>
 </ul>
 <h3 id="transparency-and-auditability">
-  
-  
+
+
     <a href="#transparency-and-auditability" class="anchor-heading" aria-labelledby="transparency-and-auditability"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Transparency and Auditability
-  
-  
+
+
 </h3>
-    
+
 
 <p>Open standards enable transparency and auditability. Anyone can:</p>
 
@@ -866,13 +866,13 @@
   <li>Build tools to monitor and analyze trust relationships</li>
 </ul>
 <h3 id="long-term-sustainability">
-  
-  
+
+
     <a href="#long-term-sustainability" class="anchor-heading" aria-labelledby="long-term-sustainability"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Long-Term Sustainability
-  
-  
+
+
 </h3>
-    
+
 
 <p>Open standards are maintained by standards organizations (like W3C, IETF, ISO) rather than individual companies. This ensures:</p>
 
@@ -883,71 +883,71 @@
   <li>Stability and predictability for long-term investments</li>
 </ul>
 <h2 id="why-not-closed-systems-or-proprietary-blockchains">
-  
-  
+
+
     <a href="#why-not-closed-systems-or-proprietary-blockchains" class="anchor-heading" aria-labelledby="why-not-closed-systems-or-proprietary-blockchains"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Why Not Closed Systems or Proprietary Blockchains?
-  
-  
+
+
 </h2>
-    
+
 
 <p>Closed systems and proprietary blockchains create fundamental problems that undermine the goals of decentralized trust:</p>
 <h3 id="vendor-lock-in">
-  
-  
+
+
     <a href="#vendor-lock-in" class="anchor-heading" aria-labelledby="vendor-lock-in"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Vendor Lock-In
-  
-  
+
+
 </h3>
-    
+
 
 <p>Proprietary systems create vendor lock-in, where organizations become dependent on a specific provider’s technology, APIs, and business model. When requirements change or better solutions emerge, organizations face expensive migrations or are forced to continue using suboptimal solutions.</p>
 
 <p><strong>Example</strong>: A company builds their identity system on a proprietary blockchain. When that blockchain’s fees increase or performance degrades, the company cannot easily migrate to a different blockchain without rewriting their entire system.</p>
 <h3 id="limited-interoperability">
-  
-  
+
+
     <a href="#limited-interoperability" class="anchor-heading" aria-labelledby="limited-interoperability"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Limited Interoperability
-  
-  
+
+
 </h3>
-    
+
 
 <p>Closed systems cannot interoperate with the broader ecosystem. Credentials issued in a proprietary system cannot be verified by systems using different technologies, creating isolated silos that prevent the flow of trust signals across the web.</p>
 
 <p><strong>Example</strong>: A government issues digital identity credentials on a proprietary blockchain. These credentials cannot be verified by international organizations or other governments using different systems, limiting their usefulness.</p>
 <h3 id="reduced-innovation">
-  
-  
+
+
     <a href="#reduced-innovation" class="anchor-heading" aria-labelledby="reduced-innovation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Reduced Innovation
-  
-  
+
+
 </h3>
-    
+
 
 <p>Proprietary systems limit innovation by restricting access to APIs, protocols, and development tools. Only the vendor can innovate, and they may not prioritize features that the broader community needs.</p>
 
 <p><strong>Example</strong>: A proprietary identity platform doesn’t support a new credential type that the community needs. The community must wait for the vendor to add support, or build workarounds that reduce security and interoperability.</p>
 <h3 id="single-points-of-failure">
-  
-  
+
+
     <a href="#single-points-of-failure" class="anchor-heading" aria-labelledby="single-points-of-failure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Single Points of Failure
-  
-  
+
+
 </h3>
-    
+
 
 <p>Proprietary systems often create single points of failure. If the vendor experiences technical issues, business problems, or regulatory challenges, all users of the system are affected.</p>
 
 <p><strong>Example</strong>: A proprietary blockchain identity service experiences an outage. All organizations using that service cannot issue or verify credentials until the vendor resolves the issue.</p>
 <h3 id="higher-costs">
-  
-  
+
+
     <a href="#higher-costs" class="anchor-heading" aria-labelledby="higher-costs"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Higher Costs
-  
-  
+
+
 </h3>
-    
+
 
 <p>Proprietary systems often have higher costs due to:</p>
 
@@ -958,13 +958,13 @@
   <li>Costs of vendor-specific training and tooling</li>
 </ul>
 <h3 id="reduced-trust">
-  
-  
+
+
     <a href="#reduced-trust" class="anchor-heading" aria-labelledby="reduced-trust"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Reduced Trust
-  
-  
+
+
 </h3>
-    
+
 
 <p>Proprietary systems reduce trust because:</p>
 
@@ -975,23 +975,23 @@
   <li>Changes to the system are controlled by the vendor, not the community</li>
 </ul>
 <h2 id="benefits-of-a-common-framework-based-on-open-standards">
-  
-  
+
+
     <a href="#benefits-of-a-common-framework-based-on-open-standards" class="anchor-heading" aria-labelledby="benefits-of-a-common-framework-based-on-open-standards"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Benefits of a Common Framework Based on Open Standards
-  
-  
+
+
 </h2>
-    
+
 
 <p>A common framework that is agnostic to technologies but based on open standards provides significant benefits:</p>
 <h3 id="technology-agnosticism">
-  
-  
+
+
     <a href="#technology-agnosticism" class="anchor-heading" aria-labelledby="technology-agnosticism"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Technology Agnosticism
-  
-  
+
+
 </h3>
-    
+
 
 <p>A technology-agnostic framework allows organizations to:</p>
 
@@ -1004,13 +1004,13 @@
 
 <p><strong>Example</strong>: An organization starts with Ethereum-based DIDs but later needs to support Algorand for lower transaction costs. With a technology-agnostic framework, they can add Algorand support without changing their credential issuance or verification logic.</p>
 <h3 id="domain-agnosticism">
-  
-  
+
+
     <a href="#domain-agnosticism" class="anchor-heading" aria-labelledby="domain-agnosticism"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Domain Agnosticism
-  
-  
+
+
 </h3>
-    
+
 
 <p>A domain-agnostic framework enables:</p>
 
@@ -1023,13 +1023,13 @@
 
 <p><strong>Example</strong>: A developer learns to build trust systems for academic credentials. With a domain-agnostic framework, they can apply the same knowledge to build trust systems for professional certifications, employment credentials, or IoT device identity.</p>
 <h3 id="standards-compliance">
-  
-  
+
+
     <a href="#standards-compliance" class="anchor-heading" aria-labelledby="standards-compliance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Standards Compliance
-  
-  
+
+
 </h3>
-    
+
 
 <p>A standards-based framework ensures:</p>
 
@@ -1042,13 +1042,13 @@
 
 <p><strong>Example</strong>: A government requires compliance with W3C Verifiable Credentials standards. A standards-based framework ensures that all credentials issued are compliant, enabling interoperability with other compliant systems.</p>
 <h3 id="reduced-complexity">
-  
-  
+
+
     <a href="#reduced-complexity" class="anchor-heading" aria-labelledby="reduced-complexity"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Reduced Complexity
-  
-  
+
+
 </h3>
-    
+
 
 <p>A common framework reduces complexity by:</p>
 
@@ -1061,13 +1061,13 @@
 
 <p><strong>Example</strong>: A developer needs to issue credentials using different DID methods. Instead of learning separate APIs for each method, they use a unified API that works with all methods.</p>
 <h3 id="lower-costs">
-  
-  
+
+
     <a href="#lower-costs" class="anchor-heading" aria-labelledby="lower-costs"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Lower Costs
-  
-  
+
+
 </h3>
-    
+
 
 <p>A common framework reduces costs through:</p>
 
@@ -1080,13 +1080,13 @@
 
 <p><strong>Example</strong>: An organization builds a credential issuance system. Instead of building separate systems for each blockchain they need to support, they build one system using a technology-agnostic framework and configure it for different blockchains.</p>
 <h3 id="faster-development">
-  
-  
+
+
     <a href="#faster-development" class="anchor-heading" aria-labelledby="faster-development"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Faster Development
-  
-  
+
+
 </h3>
-    
+
 
 <p>A common framework accelerates development by:</p>
 
@@ -1099,23 +1099,23 @@
 
 <p><strong>Example</strong>: A developer needs to build a trust registry. Instead of building from scratch, they use a framework that provides trust registry functionality out of the box, significantly reducing development time.</p>
 <h2 id="implications-for-ecosystem-growth">
-  
-  
+
+
     <a href="#implications-for-ecosystem-growth" class="anchor-heading" aria-labelledby="implications-for-ecosystem-growth"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Implications for Ecosystem Growth
-  
-  
+
+
 </h2>
-    
+
 
 <p>A common framework based on open standards creates a thriving ecosystem where innovation and economy can flourish:</p>
 <h3 id="innovation-1">
-  
-  
+
+
     <a href="#innovation-1" class="anchor-heading" aria-labelledby="innovation-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Innovation
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Lower Barriers to Entry</strong>: Developers can build new applications and services without deep expertise in specific blockchains or DID methods. The framework abstracts away complexity, enabling faster innovation.</p>
 
@@ -1125,13 +1125,13 @@
 
 <p><strong>Community Contributions</strong>: Open frameworks enable community contributions, new plugins, integrations, and improvements that benefit everyone.</p>
 <h3 id="economic-growth">
-  
-  
+
+
     <a href="#economic-growth" class="anchor-heading" aria-labelledby="economic-growth"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Economic Growth
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Market Expansion</strong>: A thriving ecosystem creates new markets and opportunities. As more organizations adopt the framework, new services, tools, and applications emerge.</p>
 
@@ -1141,13 +1141,13 @@
 
 <p><strong>Job Creation</strong>: A growing ecosystem creates demand for developers, architects, consultants, and other professionals with expertise in decentralized identity and trust.</p>
 <h3 id="trust-and-reliability">
-  
-  
+
+
     <a href="#trust-and-reliability" class="anchor-heading" aria-labelledby="trust-and-reliability"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Trust and Reliability
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Cryptographic Proof</strong>: The framework provides cryptographic proof of authenticity, integrity, and provenance, enabling trust without relying on reputation alone.</p>
 
@@ -1157,13 +1157,13 @@
 
 <p><strong>Resilience</strong>: A distributed, standards-based ecosystem is more resilient than centralized or proprietary systems. No single point of failure can bring down the entire network.</p>
 <h3 id="process-and-information-trust">
-  
-  
+
+
     <a href="#process-and-information-trust" class="anchor-heading" aria-labelledby="process-and-information-trust"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Process and Information Trust
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Verifiable Processes</strong>: The framework enables verifiable processes, credential issuance, verification, delegation, and revocation, with cryptographic proof of each step.</p>
 
@@ -1173,103 +1173,103 @@
 
 <p><strong>Audit Trails</strong>: All trust operations can be recorded and audited, providing complete transparency and accountability.</p>
 <h2 id="building-a-thriving-ecosystem">
-  
-  
+
+
     <a href="#building-a-thriving-ecosystem" class="anchor-heading" aria-labelledby="building-a-thriving-ecosystem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Building a Thriving Ecosystem
-  
-  
+
+
 </h2>
-    
+
 
 <p>To build a thriving ecosystem where innovation and economy can thrive, and where processes and information can be trusted, we need:</p>
 <h3 id="1-open-standards">
-  
-  
+
+
     <a href="#1-open-standards" class="anchor-heading" aria-labelledby="1-open-standards"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Open Standards
-  
-  
+
+
 </h3>
-    
+
 
 <p>Adopt and implement open standards from recognized standards organizations (W3C, IETF, ISO). These standards provide the common language and protocols that enable interoperability.</p>
 <h3 id="2-technology-agnosticism">
-  
-  
+
+
     <a href="#2-technology-agnosticism" class="anchor-heading" aria-labelledby="2-technology-agnosticism"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Technology Agnosticism
-  
-  
+
+
 </h3>
-    
+
 
 <p>Build frameworks and tools that work across different technologies. Don’t lock organizations into specific blockchains, DID methods, or key management systems.</p>
 <h3 id="3-domain-agnosticism">
-  
-  
+
+
     <a href="#3-domain-agnosticism" class="anchor-heading" aria-labelledby="3-domain-agnosticism"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Domain Agnosticism
-  
-  
+
+
 </h3>
-    
+
 
 <p>Create reusable frameworks that work across different domains. Enable innovation in education, healthcare, finance, supply chain, and beyond.</p>
 <h3 id="4-developer-experience">
-  
-  
+
+
     <a href="#4-developer-experience" class="anchor-heading" aria-labelledby="4-developer-experience"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Developer Experience
-  
-  
+
+
 </h3>
-    
+
 
 <p>Provide excellent developer experience, clear APIs, comprehensive documentation, testing tools, and examples. Make it easy for developers to build on the framework.</p>
 <h3 id="5-community-engagement">
-  
-  
+
+
     <a href="#5-community-engagement" class="anchor-heading" aria-labelledby="5-community-engagement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5. Community Engagement
-  
-  
+
+
 </h3>
-    
+
 
 <p>Foster an active community of developers, organizations, and users. Encourage contributions, provide support, and recognize achievements.</p>
 <h3 id="6-governance">
-  
-  
+
+
     <a href="#6-governance" class="anchor-heading" aria-labelledby="6-governance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6. Governance
-  
-  
+
+
 </h3>
-    
+
 
 <p>Establish transparent, inclusive governance processes. Enable the community to participate in decisions about standards adoption, framework evolution, and ecosystem direction.</p>
 <h3 id="7-education-and-training">
-  
-  
+
+
     <a href="#7-education-and-training" class="anchor-heading" aria-labelledby="7-education-and-training"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7. Education and Training
-  
-  
+
+
 </h3>
-    
+
 
 <p>Provide education and training resources. Help developers, organizations, and users understand the web of trust, open standards, and how to build on the framework.</p>
 <h3 id="8-real-world-applications">
-  
-  
+
+
     <a href="#8-real-world-applications" class="anchor-heading" aria-labelledby="8-real-world-applications"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8. Real-World Applications
-  
-  
+
+
 </h3>
-    
+
 
 <p>Demonstrate real-world applications and use cases. Show how the framework solves real problems and creates value for organizations and users.</p>
 <h2 id="conclusion">
-  
-  
+
+
     <a href="#conclusion" class="anchor-heading" aria-labelledby="conclusion"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Conclusion
-  
-  
+
+
 </h2>
-    
+
 
 <p>The web of trust represents a fundamental shift from centralized, proprietary trust systems to decentralized, standards-based trust networks. By establishing trust through relationships rather than central authorities, the web of trust creates a resilient, scalable, and flexible foundation for digital trust.</p>
 
@@ -1281,13 +1281,13 @@
 
 <p>As we build the web of trust, we must remain committed to open standards, technology agnosticism, and ecosystem growth. Only through these principles can we create a truly decentralized, interoperable, and thriving trust ecosystem that serves organizations and users worldwide.</p><hr />
 <h2 id="next-steps">
-  
-  
+
+
     <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><a href="what-is-TrustWeave.md">What is TrustWeave?</a> - Learn how TrustWeave implements the web of trust</li>
@@ -1296,17 +1296,17 @@
   <li><a href="/trustweave/scenarios/web-of-trust-scenario/">Web of Trust Scenario</a> - See the web of trust in action</li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -1338,7 +1338,7 @@
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -1348,12 +1348,12 @@
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -1375,12 +1375,12 @@
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -1389,12 +1389,12 @@
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -1402,7 +1402,7 @@
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -1410,31 +1410,31 @@
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -1446,7 +1446,7 @@
 
 
 
-  
+
 </body>
 </html>
 

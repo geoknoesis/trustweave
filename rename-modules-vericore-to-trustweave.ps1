@@ -42,17 +42,17 @@ $settingsFile = "settings.gradle.kts"
 if (Test-Path $settingsFile) {
     $content = Get-Content $settingsFile -Raw
     $originalContent = $content
-    
+
     # Update rootProject.name
     $content = $content -replace 'rootProject\.name\s*=\s*"vericore"', 'rootProject.name = "trustweave"'
-    
+
     # Update module includes (e.g., include("core:vericore-core"))
     foreach ($oldName in $moduleMappings.Keys) {
         $newName = $moduleMappings[$oldName]
         # Match include("core:vericore-core") or include("distribution:vericore-all")
         $content = $content -replace "include\(`"([^`"]*):$oldName`"\)", "include(`"`$1:$newName`")"
     }
-    
+
     # Update project directory mappings (e.g., project(":core:vericore-core"))
     foreach ($oldName in $moduleMappings.Keys) {
         $newName = $moduleMappings[$oldName]
@@ -60,7 +60,7 @@ if (Test-Path $settingsFile) {
         $content = $content -replace "project\(`":([^`"]*):$oldName`"\)", "project(`":`$1:$newName`")"
         $content = $content -replace "file\(`"([^`"]*)/$oldName`"\)", "file(`"`$1/$newName`")"
     }
-    
+
     if ($content -ne $originalContent) {
         if ($DryRun) {
             Write-Host "  [DRY RUN] Would update: $settingsFile" -ForegroundColor Cyan
@@ -83,10 +83,10 @@ $buildFileCount = 0
 foreach ($file in $buildFiles) {
     $content = Get-Content $file.FullName -Raw -ErrorAction SilentlyContinue
     if ($null -eq $content) { continue }
-    
+
     $originalContent = $content
     $modified = $false
-    
+
     foreach ($oldName in $moduleMappings.Keys) {
         $newName = $moduleMappings[$oldName]
         # Update project references like :vericore-core, :vericore-spi, etc.
@@ -105,7 +105,7 @@ foreach ($file in $buildFiles) {
             $modified = $true
         }
     }
-    
+
     if ($modified) {
         $buildFileCount++
         if ($DryRun) {
@@ -169,14 +169,14 @@ $rootBuildFile = "build.gradle.kts"
 if (Test-Path $rootBuildFile) {
     $content = Get-Content $rootBuildFile -Raw
     $originalContent = $content
-    
+
     foreach ($oldName in $moduleMappings.Keys) {
         $newName = $moduleMappings[$oldName]
         if ($content -match $oldName) {
             $content = $content -replace $oldName, $newName
         }
     }
-    
+
     if ($content -ne $originalContent) {
         if ($DryRun) {
             Write-Host "  [DRY RUN] Would update: $rootBuildFile" -ForegroundColor Cyan

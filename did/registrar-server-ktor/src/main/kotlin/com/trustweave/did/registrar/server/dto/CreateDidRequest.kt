@@ -5,9 +5,9 @@ import kotlinx.serialization.Serializable
 
 /**
  * Request DTO for DID creation operations.
- * 
+ *
  * Used by RESTful endpoint: POST /1.0/dids
- * 
+ *
  * **Example:**
  * ```json
  * {
@@ -25,7 +25,7 @@ data class CreateDidRequest(
      * DID method name (e.g., "web", "key", "ion").
      */
     val method: String,
-    
+
     /**
      * Creation options.
      */

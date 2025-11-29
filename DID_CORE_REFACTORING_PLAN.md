@@ -327,7 +327,7 @@ dependencies {
        fun getDocument(result: Any): Any?
        fun getVerificationMethod(doc: Any): List<Any>
    }
-   
+
    // AFTER: Remove interface, use types directly
    // In DelegationService:
    private fun getVerificationMethod(doc: DidDocument): List<VerificationMethodRef> {
@@ -343,7 +343,7 @@ dependencies {
        private val documentAccess: DidDocumentAccess,  // Remove
        private val verificationMethodAccess: VerificationMethodAccess  // Remove
    )
-   
+
    // AFTER:
    class DelegationService(
        private val didResolver: DidResolver
@@ -372,7 +372,7 @@ dependencies {
    ```kotlin
    // FROM:
    package com.trustweave.did.dsl
-   
+
    // TO:
    package com.trustweave.trust.dsl.did
    ```

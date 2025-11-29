@@ -25,7 +25,7 @@ dependencies {
     implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    
+
     // HTTP client for AT Protocol integration
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }
@@ -183,7 +183,7 @@ val config = PlcDidConfig.default()
 
 val TrustWeave = TrustWeave.create {
     kms = InMemoryKeyManagementService()
-    
+
     didMethods {
         + PlcDidMethod(kms!!, config)
     }

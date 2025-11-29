@@ -108,16 +108,16 @@ Parametric insurance needs:
 dependencies {
     // Core TrustWeave modules
     implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
-    
+
     // Test kit for in-memory implementations
     testImplementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
-    
+
     // Optional: Algorand adapter for real blockchain anchoring
     implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -142,11 +142,11 @@ fun main() = runBlocking {
     println("=".repeat(70))
     println("Parametric Insurance with EO Data - Complete Example")
     println("=".repeat(70))
-    
+
     // Step 1: Create TrustWeave instance
     val TrustWeave = TrustWeave.create()
     println("\n✅ TrustWeave initialized")
-    
+
     // Step 2: Create DIDs for insurance company and EO data provider
     val insuranceDid = TrustWeave.dids.create()
     Result.success(insuranceDid).fold(
@@ -156,7 +156,7 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     val eoProviderDid = TrustWeave.dids.create()
     Result.success(eoProviderDid).fold(
         onSuccess = { it },
@@ -165,14 +165,14 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     println("✅ Insurance Company DID: ${insuranceDid.id}")
     println("✅ EO Data Provider DID: ${eoProviderDid.id}")
-    
+
     // Step 3: EO Data Provider issues credential for rainfall data
     val eoProviderKeyId = eoProviderDid.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     // Create EO data payload (rainfall measurement)
     val rainfallData = buildJsonObject {
         put("id", "rainfall-measurement-2024-06-15")
@@ -194,10 +194,10 @@ fun main() = runBlocking {
             put("validationStatus", "validated")
         })
     }
-    
+
     // Compute digest for data integrity
     val dataDigest = DigestUtils.sha256DigestMultibase(rainfallData)
-    
+
     // Issue verifiable credential for EO data
     val eoDataCredential = TrustWeave.credentials.issue(
         issuerDid = eoProviderDid.id,
@@ -218,10 +218,10 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     println("✅ EO Data Credential issued: ${eoDataCredential.id}")
     println("   Data digest: $dataDigest")
-    
+
     // Step 4: Verify EO data credential (insurance company verifies before using)
     val verification = TrustWeave.credentials.verify(eoDataCredential)
     if (verification.valid) {
@@ -231,16 +231,16 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     if (!verification.valid) {
         println("❌ EO data credential invalid: ${verification.errors}")
         return@runBlocking
     }
-    
+
     println("✅ EO Data Credential verified")
     println("   Proof valid: ${verification.proofValid}")
     println("   Issuer valid: ${verification.issuerValid}")
-    
+
     // Step 5: Extract data and check parametric trigger
     val credentialSubject = eoDataCredential.credentialSubject
     val rainfallValue = credentialSubject.jsonObject["data"]
@@ -248,22 +248,22 @@ fun main() = runBlocking {
         ?.jsonObject?.get("value")
         ?.jsonPrimitive?.content?.toDouble()
         ?: error("Rainfall value not found")
-    
+
     println("\n📊 Parametric Trigger Check:")
     println("   Rainfall value: $rainfallValue inches")
-    
+
     // Insurance policy: Payout if rainfall < 1.0 inches
     val triggerThreshold = 1.0
     val shouldPayout = rainfallValue < triggerThreshold
-    
+
     if (shouldPayout) {
         println("   ✅ TRIGGER MET: Rainfall below threshold ($triggerThreshold inches)")
         println("   💰 Insurance payout should be triggered")
-        
+
         // Step 6: Create payout credential (insurance company issues)
         val insuranceKeyId = insuranceDid.verificationMethod.firstOrNull()?.id
             ?: error("No verification method found")
-        
+
         val payoutCredential = TrustWeave.credentials.issue(
             issuerDid = insuranceDid.id,
             issuerKeyId = insuranceKeyId,
@@ -287,7 +287,7 @@ fun main() = runBlocking {
                 return@runBlocking
             }
         )
-        
+
         println("✅ Payout Credential issued: ${payoutCredential.id}")
         println("   Payout amount: $50,000 USD")
         println("   Data credential: ${eoDataCredential.id}")
@@ -295,12 +295,12 @@ fun main() = runBlocking {
         println("   ❌ TRIGGER NOT MET: Rainfall above threshold")
         println("   No payout triggered")
     }
-    
+
     // Step 7: Verify data integrity (prevent replay attacks)
     val currentDataDigest = DigestUtils.sha256DigestMultibase(rainfallData)
     val credentialDataDigest = credentialSubject.jsonObject["dataDigest"]
         ?.jsonPrimitive?.content ?: ""
-    
+
     if (currentDataDigest == credentialDataDigest) {
         println("\n✅ Data Integrity Verified")
         println("   Data digest matches credential")
@@ -310,7 +310,7 @@ fun main() = runBlocking {
         println("   Data may have been tampered with")
         println("   DO NOT TRUST THIS DATA")
     }
-    
+
     println("\n" + "=".repeat(70))
     println("✅ Parametric Insurance Scenario Complete!")
     println("=".repeat(70))
@@ -364,11 +364,11 @@ suspend fun acceptEODataFromAnyProvider(
     // Verify credential
     val verification = TrustWeave.credentials.verify(dataCredential)
     if (!verification.valid) return false
-    
+
     // Check if provider is certified
     val isCertified = checkProviderCertification(providerDid)
     if (!isCertified) return false
-    
+
     // Extract and use data
     val data = extractDataFromCredential(dataCredential)
     return processDataForInsurance(data)

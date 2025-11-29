@@ -24,7 +24,7 @@ interface DidMethod {
 
     /**
      * Resolves a DID to its DID Document.
-     * 
+     *
      * **Implementation Note:** Implementations should validate the DID format
      * before processing. The DID must start with "did:{method}:" where {method}
      * matches this method's name. Use [DidValidator.validateFormat] for validation.

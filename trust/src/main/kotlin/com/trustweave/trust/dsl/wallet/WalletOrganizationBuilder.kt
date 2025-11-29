@@ -8,10 +8,10 @@ import kotlinx.coroutines.withContext
 
 /**
  * Wallet Organization Builder DSL.
- * 
+ *
  * Provides a fluent API for organizing credentials in wallets without manual type checks.
  * Automatically handles capability detection and provides helpful error messages.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * wallet.organize {
@@ -20,7 +20,7 @@ import kotlinx.coroutines.withContext
  *         tag(bachelorId, "education", "degree", "bachelor")
  *         tag(masterId, "education", "degree", "master")
  *     }
- *     
+ *
  *     collection("Work Experience") {
  *         add(job1Id, job2Id)
  *         tag(job1Id, "work", "employment", "completed")
@@ -35,7 +35,7 @@ class WalletOrganizationBuilder(
     private val collections = mutableListOf<CollectionOperation>()
     private val tags = mutableListOf<TagOperation>()
     private val metadata = mutableListOf<MetadataOperation>()
-    
+
     /**
      * Create a collection and configure it.
      */
@@ -49,21 +49,21 @@ class WalletOrganizationBuilder(
             tags = builder.tags
         ))
     }
-    
+
     /**
      * Add tags to a credential.
      */
     fun tag(credentialId: String, vararg tags: String) {
         this.tags.add(TagOperation.Add(credentialId, tags.toSet()))
     }
-    
+
     /**
      * Remove tags from a credential.
      */
     fun untag(credentialId: String, vararg tags: String) {
         this.tags.add(TagOperation.Remove(credentialId, tags.toSet()))
     }
-    
+
     /**
      * Add metadata to a credential.
      */
@@ -72,14 +72,14 @@ class WalletOrganizationBuilder(
         builder.block()
         metadata.add(MetadataOperation.Add(credentialId, builder.metadata))
     }
-    
+
     /**
      * Update notes for a credential.
      */
     fun notes(credentialId: String, notes: String?) {
         metadata.add(MetadataOperation.Notes(credentialId, notes))
     }
-    
+
     /**
      * Execute all organization operations.
      */
@@ -89,10 +89,10 @@ class WalletOrganizationBuilder(
                 "Wallet does not support organization features. " +
                 "Create wallet with enableOrganization() in trustLayer.wallet { }"
             )
-        
+
         val createdCollections = mutableListOf<String>()
         val errors = mutableListOf<String>()
-        
+
         // Create collections and add credentials
         for (collectionOp in collections) {
             when (collectionOp) {
@@ -103,7 +103,7 @@ class WalletOrganizationBuilder(
                             collectionOp.description
                         )
                         createdCollections.add(collectionId)
-                        
+
                         // Add credentials to collection
                         for (credId in collectionOp.credentialIds) {
                             try {
@@ -112,7 +112,7 @@ class WalletOrganizationBuilder(
                                 errors.add("Failed to add credential $credId to collection ${collectionOp.name}: ${e.message}")
                             }
                         }
-                        
+
                         // Apply tags
                         for (tagOp in collectionOp.tags) {
                             try {
@@ -127,7 +127,7 @@ class WalletOrganizationBuilder(
                 }
             }
         }
-        
+
         // Apply standalone tags
         for (tagOp in tags) {
             try {
@@ -139,7 +139,7 @@ class WalletOrganizationBuilder(
                 errors.add("Failed to ${if (tagOp is TagOperation.Add) "tag" else "untag"} credential ${tagOp.credentialId}: ${e.message}")
             }
         }
-        
+
         // Apply metadata
         for (metaOp in metadata) {
             try {
@@ -151,13 +151,13 @@ class WalletOrganizationBuilder(
                 errors.add("Failed to update metadata for credential ${metaOp.credentialId}: ${e.message}")
             }
         }
-        
+
         OrganizationResult(
             collectionsCreated = createdCollections.size,
             errors = errors
         )
     }
-    
+
     /**
      * Collection builder for configuring a collection.
      */
@@ -167,14 +167,14 @@ class WalletOrganizationBuilder(
     ) {
         val credentialIds = mutableListOf<String>()
         val tags = mutableListOf<TagOperation>()
-        
+
         /**
          * Add credentials to this collection.
          */
         fun add(vararg credentialIds: String) {
             this.credentialIds.addAll(credentialIds)
         }
-        
+
         /**
          * Tag credentials in this collection.
          */
@@ -182,13 +182,13 @@ class WalletOrganizationBuilder(
             this.tags.add(TagOperation.Add(credentialId, tags.toSet()))
         }
     }
-    
+
     /**
      * Metadata builder for configuring metadata.
      */
     inner class MetadataBuilder {
         val metadata = mutableMapOf<String, Any>()
-        
+
         /**
          * Add a metadata entry.
          */
@@ -196,7 +196,7 @@ class WalletOrganizationBuilder(
             metadata[this] = value
         }
     }
-    
+
     /**
      * Collection operation.
      */
@@ -208,24 +208,24 @@ class WalletOrganizationBuilder(
             val tags: List<TagOperation>
         ) : CollectionOperation()
     }
-    
+
     /**
      * Tag operation.
      */
     sealed class TagOperation {
         abstract val credentialId: String
         abstract val tags: Set<String>
-        
+
         data class Add(override val credentialId: String, override val tags: Set<String>) : TagOperation()
         data class Remove(override val credentialId: String, override val tags: Set<String>) : TagOperation()
     }
-    
+
     /**
      * Metadata operation.
      */
     private sealed class MetadataOperation {
         abstract val credentialId: String
-        
+
         data class Add(override val credentialId: String, val metadata: Map<String, Any>) : MetadataOperation()
         data class Notes(override val credentialId: String, val notes: String?) : MetadataOperation()
     }

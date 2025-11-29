@@ -16,7 +16,7 @@ class DidModelsTest {
     @Test
     fun `test Did parse`() {
         val did = Did.parse("did:web:example.com")
-        
+
         assertEquals("web", did.method)
         assertEquals("example.com", did.id)
         assertEquals("did:web:example.com", did.toString())
@@ -25,7 +25,7 @@ class DidModelsTest {
     @Test
     fun `test Did parse with complex id`() {
         val did = Did.parse("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
-        
+
         assertEquals("key", did.method)
         assertTrue(did.id.startsWith("z6Mk"))
     }
@@ -53,7 +53,7 @@ class DidModelsTest {
             publicKeyJwk = mapOf("kty" to "OKP", "crv" to "Ed25519"),
             publicKeyMultibase = "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
         )
-        
+
         assertEquals("did:key:issuer#key-1", vm.id)
         assertEquals("Ed25519VerificationKey2020", vm.type)
         assertEquals("did:key:issuer", vm.controller)
@@ -68,7 +68,7 @@ class DidModelsTest {
             type = "Ed25519VerificationKey2020",
             controller = "did:key:issuer"
         )
-        
+
         assertNull(vm.publicKeyJwk)
         assertNull(vm.publicKeyMultibase)
     }
@@ -80,7 +80,7 @@ class DidModelsTest {
             type = "LinkedDomains",
             serviceEndpoint = "https://example.com"
         )
-        
+
         assertEquals("did:web:example.com#service-1", service.id)
         assertEquals("LinkedDomains", service.type)
         assertEquals("https://example.com", service.serviceEndpoint)
@@ -94,7 +94,7 @@ class DidModelsTest {
             type = "DIDCommMessaging",
             serviceEndpoint = endpoint
         )
-        
+
         assertTrue(service.serviceEndpoint is Map<*, *>)
     }
 
@@ -110,7 +110,7 @@ class DidModelsTest {
             type = "LinkedDomains",
             serviceEndpoint = "https://example.com"
         )
-        
+
         val doc = DidDocument(
             id = "did:key:issuer",
             alsoKnownAs = listOf("did:web:example.com"),
@@ -121,7 +121,7 @@ class DidModelsTest {
             keyAgreement = listOf("did:key:issuer#key-2"),
             service = listOf(service)
         )
-        
+
         assertEquals("did:key:issuer", doc.id)
         assertEquals(1, doc.alsoKnownAs.size)
         assertEquals(1, doc.verificationMethod.size)
@@ -131,7 +131,7 @@ class DidModelsTest {
     @Test
     fun `test DidDocument with defaults`() {
         val doc = DidDocument(id = "did:key:issuer")
-        
+
         assertTrue(doc.alsoKnownAs.isEmpty())
         assertTrue(doc.controller.isEmpty())
         assertTrue(doc.verificationMethod.isEmpty())
@@ -144,14 +144,14 @@ class DidModelsTest {
     @Test
     fun `test DidResolutionResult with document`() {
         val doc = DidDocument(id = "did:key:issuer")
-        val result = DidResolutionResult(
+        val result = DidResolutionResult.Success(
             document = doc,
             documentMetadata = DidDocumentMetadata(
                 created = Instant.parse("2024-01-01T00:00:00Z")
             ),
             resolutionMetadata = mapOf("duration" to 100L)
         )
-        
+
         assertNotNull(result.document)
         assertNotNull(result.documentMetadata.created)
         assertEquals(1, result.resolutionMetadata.size)
@@ -159,10 +159,12 @@ class DidModelsTest {
 
     @Test
     fun `test DidResolutionResult with defaults`() {
-        val result = DidResolutionResult(document = null)
-        
-        assertNull(result.document)
-        assertNull(result.documentMetadata.created)
+        val result = DidResolutionResult.Failure.NotFound(
+            did = com.trustweave.core.types.Did("did:key:test"),
+            resolutionMetadata = emptyMap()
+        )
+
+        assertTrue(result is DidResolutionResult.Failure.NotFound)
         assertTrue(result.resolutionMetadata.isEmpty())
     }
 }

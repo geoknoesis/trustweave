@@ -21,13 +21,13 @@ class DidKeyMockMethod(
     override suspend fun createDid(options: DidCreationOptions): DidDocument {
         val algorithm = options.algorithm.algorithmName
         val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
-        
+
         // Create a simplified did:key identifier
         val didId = "z${UUID.randomUUID().toString().replace("-", "")}"
         val did = "did:$method:$didId"
-        
+
         val verificationMethodId = "$did#${keyHandle.id}"
-        
+
         val verificationMethod = VerificationMethod(
             id = verificationMethodId,
             type = when (algorithm.uppercase()) {
@@ -53,17 +53,25 @@ class DidKeyMockMethod(
     override suspend fun resolveDid(did: String): DidResolutionResult {
         val document = documents[did]
         val now = Instant.now()
-        return DidResolutionResult(
-            document = document,
-            documentMetadata = DidDocumentMetadata(
-                created = now,
-                updated = now
-            ),
-            resolutionMetadata = mapOf(
-                "method" to method,
-                "mock" to true
+        return if (document != null) {
+            DidResolutionResult.Success(
+                document = document,
+                documentMetadata = DidDocumentMetadata(
+                    created = now,
+                    updated = now
+                ),
+                resolutionMetadata = mapOf(
+                    "method" to method,
+                    "mock" to true
+                )
             )
-        )
+        } else {
+            DidResolutionResult.Failure.NotFound(
+                did = com.trustweave.core.types.Did(did),
+                reason = "DID not found in mock registry",
+                resolutionMetadata = mapOf("method" to method, "mock" to true)
+            )
+        }
     }
 
     override suspend fun updateDid(

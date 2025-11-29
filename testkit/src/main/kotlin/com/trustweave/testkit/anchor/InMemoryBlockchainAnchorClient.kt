@@ -1,7 +1,7 @@
 package com.trustweave.testkit.anchor
 
 import com.trustweave.anchor.*
-import com.trustweave.core.exception.NotFoundException
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.serialization.json.JsonElement
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
@@ -43,7 +43,7 @@ class InMemoryBlockchainAnchorClient(
             throw IllegalArgumentException("Chain ID mismatch: expected $chainId, got ${ref.chainId}")
         }
         return storage[ref.txHash]
-            ?: throw NotFoundException("Anchor not found: ${ref.txHash}")
+            ?: throw TrustWeaveException.NotFound(resource = "Anchor ${ref.txHash}")
     }
 
     /**

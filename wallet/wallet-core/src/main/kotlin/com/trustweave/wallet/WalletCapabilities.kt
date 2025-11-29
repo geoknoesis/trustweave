@@ -2,19 +2,19 @@ package com.trustweave.wallet
 
 /**
  * Wallet capabilities for runtime discovery.
- * 
+ *
  * Useful for UI that needs to show/hide features dynamically.
  * For compile-time type safety, use `wallet is CredentialOrganization` instead.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val wallet: Wallet = createWallet()
- * 
+ *
  * // Runtime discovery (for UI)
  * if (wallet.capabilities.collections) {
  *     // Show collection UI
  * }
- * 
+ *
  * // Compile-time type safety (preferred)
  * if (wallet is CredentialOrganization) {
  *     wallet.createCollection("My Collection")
@@ -37,7 +37,7 @@ data class WalletCapabilities(
 ) {
     /**
      * Check if a capability is supported by feature name.
-     * 
+     *
      * @param feature Feature name (e.g., "collections", "tags")
      * @return true if supported
      */

@@ -197,7 +197,7 @@ val config = PeerDidConfig.numalgo2()
 
 val TrustWeave = TrustWeave.create {
     kms = InMemoryKeyManagementService()
-    
+
     didMethods {
         + PeerDidMethod(kms!!, config)
     }

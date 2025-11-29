@@ -37,7 +37,7 @@ dependencies {
     // RESTORED: Original configuration
     implementation(project(":common"))
     implementation(project(":did:core"))
-    
+
     testImplementation(project(":testkit"))
     testImplementation(project(":kms:core"))
 }
@@ -49,19 +49,19 @@ afterEvaluate {
     val jarTask = tasks.named<org.gradle.api.tasks.bundling.Jar>("jar")
     val classesTask = tasks.named("classes")
     val compileJavaTask = tasks.named<JavaCompile>("compileJava")
-    
+
     // Workaround 1: Disable compileJava since there are no Java sources
     compileJavaTask.configure {
         enabled = false
     }
-    
+
     // Workaround 2: Remove compileJava from classes dependencies
     classesTask.configure {
         val deps = dependsOn.toMutableSet()
         deps.remove(compileJavaTask.get())
         setDependsOn(deps)
     }
-    
+
     // Workaround 3: Remove compileJava from compileKotlin dependencies (if present)
     compileKotlinTask.configure {
         val deps = dependsOn.toMutableSet()
@@ -69,7 +69,7 @@ afterEvaluate {
         deps.remove(jarTask.get())
         setDependsOn(deps)
     }
-    
+
     // Workaround 4: Remove jar from compileKotlin dependencies (most critical)
     compileKotlinTask.configure {
         val jarTaskRef = tasks.findByName("jar")
@@ -79,19 +79,19 @@ afterEvaluate {
             setDependsOn(deps)
         }
     }
-    
+
     // Workaround 5: Make jar depend on output files instead of classes/compileKotlin tasks
     jarTask.configure {
         val deps = dependsOn.toMutableSet()
         deps.remove(classesTask.get())
         deps.remove(compileKotlinTask.get())
         setDependsOn(deps)
-        
+
         // Use file inputs from compileKotlin output
         from(compileKotlinTask.get().destinationDirectory)
         mustRunAfter(compileKotlinTask)
     }
-    
+
     // Workaround 6: Configure all tasks to use ordering instead of dependencies
     tasks.all {
         if (this == jarTask.get()) {
@@ -114,7 +114,7 @@ afterEvaluate {
     if (compileJavaTask != null) {
         // Disable compileJava
         compileJavaTask.enabled = false
-        
+
         // Remove compileJava from all tasks that depend on it
         tasks.all {
             val deps = dependsOn.toMutableSet()

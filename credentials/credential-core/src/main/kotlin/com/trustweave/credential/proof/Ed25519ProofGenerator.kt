@@ -10,17 +10,17 @@ import java.time.Instant
 
 /**
  * Ed25519 proof generator implementation.
- * 
+ *
  * Generates Ed25519Signature2020 proofs for verifiable credentials.
  * Uses Ed25519 signatures for credential signing.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val generator = Ed25519ProofGenerator { data, keyId ->
  *     kms.sign(keyId, data)
  * }
  * ProofGeneratorRegistry.register(generator)
- * 
+ *
  * val proof = generator.generateProof(
  *     credential = credential,
  *     keyId = "key-1",
@@ -33,7 +33,7 @@ class Ed25519ProofGenerator(
     private val getPublicKeyId: suspend (String) -> String? = { null }
 ) : ProofGenerator {
     override val proofType = "Ed25519Signature2020"
-    
+
     override suspend fun generateProof(
         credential: VerifiableCredential,
         keyId: String,
@@ -41,26 +41,26 @@ class Ed25519ProofGenerator(
     ): Proof = withContext(Dispatchers.IO) {
         // Build verification method URL first (needed for proof document)
         val publicKeyId = getPublicKeyId(keyId)
-        val verificationMethod = options.verificationMethod 
+        val verificationMethod = options.verificationMethod
             ?: (publicKeyId?.let { "did:key:$it#$keyId" } ?: "did:key:$keyId")
-        
+
         val created = Instant.now().toString()
-        
+
         // Build proof document (credential + proof metadata without proofValue)
         // This matches what the verifier expects per Ed25519Signature2020 spec
         val proofDocument = buildProofDocument(credential, proofType, created, verificationMethod, options)
         println("[DEBUG Ed25519ProofGenerator] Proof document (first 200 chars): ${proofDocument.take(200)}")
-        
+
         // Sign the proof document
         val documentBytes = proofDocument.toByteArray(Charsets.UTF_8)
         println("[DEBUG Ed25519ProofGenerator] Document bytes length: ${documentBytes.size}")
         val signature = signer(documentBytes, keyId)
         println("[DEBUG Ed25519ProofGenerator] Signature bytes length: ${signature.size}")
-        
+
         // Encode signature as multibase
         val proofValue = encodeMultibase(signature)
         println("[DEBUG Ed25519ProofGenerator] Proof value (first 50 chars): ${proofValue.take(50)}")
-        
+
         // Create proof
         Proof(
             type = proofType,
@@ -72,7 +72,7 @@ class Ed25519ProofGenerator(
             domain = options.domain
         )
     }
-    
+
     /**
      * Build proof document (credential + proof metadata without proofValue).
      * This is what gets signed per Ed25519Signature2020 spec.
@@ -90,11 +90,11 @@ class Ed25519ProofGenerator(
             encodeDefaults = false
             ignoreUnknownKeys = true
         }
-        
+
         // Serialize credential without proof - use same approach as verifier
         // This ensures identical JSON structure between issuance and verification
         val credentialJson = json.encodeToJsonElement(credential.copy(proof = null))
-        
+
         // Add proof options (without proofValue) - matches verifier exactly
         val proofOptions = buildJsonObject {
             put("type", proofType)
@@ -104,7 +104,7 @@ class Ed25519ProofGenerator(
             options.challenge?.let { put("challenge", it) }
             options.domain?.let { put("domain", it) }
         }
-        
+
         // Build proof document - matches verifier structure exactly
         val proofDocument = buildJsonObject {
             // Add all credential fields from serialized credential
@@ -114,14 +114,14 @@ class Ed25519ProofGenerator(
             // Add proof metadata (without proofValue)
             put("proof", proofOptions)
         }
-        
+
         // Encode to JSON string (same as verifier)
         val jsonString = json.encodeToString(JsonObject.serializer(), proofDocument)
-        
+
         // Canonicalize using DigestUtils (same as verifier)
         return DigestUtils.canonicalizeJson(jsonString)
     }
-    
+
     /**
      * Encode bytes as multibase (base58btc).
      */
@@ -130,7 +130,7 @@ class Ed25519ProofGenerator(
         val base58 = encodeBase58(bytes)
         return "z$base58" // 'z' prefix indicates base58btc
     }
-    
+
     /**
      * Encode bytes as base58.
      */
@@ -138,13 +138,13 @@ class Ed25519ProofGenerator(
         val alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
         var num = java.math.BigInteger(1, bytes)
         val sb = StringBuilder()
-        
+
         while (num > java.math.BigInteger.ZERO) {
             val remainder = num.mod(java.math.BigInteger.valueOf(58))
             sb.append(alphabet[remainder.toInt()])
             num = num.divide(java.math.BigInteger.valueOf(58))
         }
-        
+
         for (byte in bytes) {
             if (byte.toInt() == 0) {
                 sb.append('1')
@@ -152,7 +152,7 @@ class Ed25519ProofGenerator(
                 break
             }
         }
-        
+
         return sb.reverse().toString()
     }
 }

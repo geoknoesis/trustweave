@@ -5,7 +5,6 @@ import com.trustweave.anchor.exceptions.BlockchainException
 import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.parseToJsonElement
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.http.HttpService
 import org.web3j.tx.RawTransactionManager
@@ -15,10 +14,10 @@ import java.nio.charset.StandardCharsets
 
 /**
  * Base (Coinbase L2) blockchain anchor client implementation.
- * 
+ *
  * Supports Base mainnet and Base Sepolia testnet chains.
  * Uses Ethereum-compatible transaction data fields to store payload data.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val options = mapOf(
@@ -32,11 +31,11 @@ class BaseBlockchainAnchorClient(
     chainId: String,
     options: Map<String, Any?> = emptyMap()
 ) : AbstractBlockchainAnchorClient(chainId, options), java.io.Closeable {
-    
+
     companion object {
         const val MAINNET = "eip155:8453"  // Base mainnet
         const val BASE_SEPOLIA = "eip155:84532" // Base Sepolia testnet
-        
+
         // Network RPC endpoints
         private const val MAINNET_RPC_URL = "https://mainnet.base.org"
         private const val BASE_SEPOLIA_RPC_URL = "https://sepolia.base.org"
@@ -54,7 +53,7 @@ class BaseBlockchainAnchorClient(
         require(chainIdNum == 8453 || chainIdNum == 84532) {
             "Unsupported Base chain ID: $chainId. Use 'eip155:8453' (mainnet) or 'eip155:84532' (Base Sepolia testnet)"
         }
-        
+
         // Initialize Web3j client based on chain
         val rpcUrl = when (chainId) {
             MAINNET -> options["rpcUrl"] as? String ?: MAINNET_RPC_URL
@@ -141,7 +140,7 @@ class BaseBlockchainAnchorClient(
 
         val signedTransaction = org.web3j.crypto.TransactionEncoder.signMessage(rawTransaction, creds)
         val hexValue = org.web3j.utils.Numeric.toHexString(signedTransaction)
-        
+
         val ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send()
         if (ethSendTransaction.hasError()) {
             val error = ethSendTransaction.error
@@ -182,13 +181,13 @@ class BaseBlockchainAnchorClient(
         val dataBytes = org.web3j.utils.Numeric.hexStringToByteArray(input)
         val payloadJson = String(dataBytes, StandardCharsets.UTF_8)
         val payload: JsonElement = Json.parseToJsonElement(payloadJson)
-        
+
         val blockNumber = try {
             receipt.blockNumber?.toLong()
         } catch (e: Exception) {
             null
         }
-        
+
         return AnchorResult(
             ref = buildAnchorRef(
                 txHash = txHash,

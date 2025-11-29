@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,34 +591,34 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="software-supply-chain-security-scenario">
-  
-  
+
+
     <a href="#software-supply-chain-security-scenario" class="anchor-heading" aria-labelledby="software-supply-chain-security-scenario"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Software Supply Chain Security Scenario
-  
-  
+
+
 </h1>
-    
+
 
 <p>This guide demonstrates how to build a software supply chain security system using TrustWeave. You’ll learn how software publishers can issue provenance credentials, how build systems can attest to software integrity, and how consumers can verify software authenticity to prevent supply chain attacks.</p>
 <h2 id="what-youll-build">
-  
-  
+
+
     <a href="#what-youll-build" class="anchor-heading" aria-labelledby="what-youll-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Build
-  
-  
+
+
 </h2>
-    
+
 
 <p>By the end of this tutorial, you’ll have:</p>
 
@@ -633,21 +633,21 @@
   <li>✅ Implemented tamper-proof software provenance</li>
 </ul>
 <h2 id="big-picture--significance">
-  
-  
+
+
     <a href="#big-picture--significance" class="anchor-heading" aria-labelledby="big-picture--significance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Big Picture &amp; Significance
-  
-  
+
+
 </h2>
-    
+
 <h3 id="the-software-supply-chain-challenge">
-  
-  
+
+
     <a href="#the-software-supply-chain-challenge" class="anchor-heading" aria-labelledby="the-software-supply-chain-challenge"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Software Supply Chain Challenge
-  
-  
+
+
 </h3>
-    
+
 
 <p>Software supply chain attacks are increasing, with attackers compromising build systems, injecting malicious code, and distributing tainted software. Verifiable credentials enable cryptographic proof of software provenance, build integrity, and dependency authenticity.</p>
 
@@ -670,13 +670,13 @@
   <li><strong>Dependencies</strong>: Verify dependency authenticity</li>
 </ol>
 <h3 id="the-software-supply-chain-problem">
-  
-  
+
+
     <a href="#the-software-supply-chain-problem" class="anchor-heading" aria-labelledby="the-software-supply-chain-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Software Supply Chain Problem
-  
-  
+
+
 </h3>
-    
+
 
 <p>Traditional software distribution faces critical issues:</p>
 <ul>
@@ -688,21 +688,21 @@
   <li><strong>Trust Issues</strong>: Can’t verify software authenticity</li>
 </ul>
 <h2 id="value-proposition">
-  
-  
+
+
     <a href="#value-proposition" class="anchor-heading" aria-labelledby="value-proposition"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Value Proposition
-  
-  
+
+
 </h2>
-    
+
 <h3 id="problems-solved">
-  
-  
+
+
     <a href="#problems-solved" class="anchor-heading" aria-labelledby="problems-solved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Problems Solved
-  
-  
+
+
 </h3>
-    
+
 
 <ol>
   <li><strong>Provenance Verification</strong>: Verify software source and build process</li>
@@ -714,13 +714,13 @@
   <li><strong>Trust</strong>: Cryptographic proof of software authenticity</li>
 </ol>
 <h3 id="business-benefits">
-  
-  
+
+
     <a href="#business-benefits" class="anchor-heading" aria-labelledby="business-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Business Benefits
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>For Software Consumers:</strong></p>
 <ul>
@@ -747,13 +747,13 @@
   <li><strong>Trust</strong>: Enhanced trust in build outputs</li>
 </ul>
 <h3 id="roi-considerations">
-  
-  
+
+
     <a href="#roi-considerations" class="anchor-heading" aria-labelledby="roi-considerations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ROI Considerations
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>Security</strong>: Prevents supply chain attacks</li>
@@ -763,13 +763,13 @@
   <li><strong>Cost Savings</strong>: Prevents costly breaches</li>
 </ul>
 <h2 id="understanding-the-problem">
-  
-  
+
+
     <a href="#understanding-the-problem" class="anchor-heading" aria-labelledby="understanding-the-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Understanding the Problem
-  
-  
+
+
 </h2>
-    
+
 
 <p>Traditional software distribution has several problems:</p>
 
@@ -791,20 +791,20 @@
   <li><strong>SBOM support</strong>: Software Bill of Materials credentials</li>
 </ul>
 <h2 id="how-it-works-the-software-supply-chain-security-flow">
-  
-  
+
+
     <a href="#how-it-works-the-software-supply-chain-security-flow" class="anchor-heading" aria-labelledby="how-it-works-the-software-supply-chain-security-flow"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How It Works: The Software Supply Chain Security Flow
-  
-  
+
+
 </h2>
-    
+
 
 <pre><code class="language-mermaid">flowchart TD
     A["Software Publisher&lt;br/&gt;Issues Provenance&lt;br/&gt;Credential"] --&gt;|issues| B["Software Provenance Credential&lt;br/&gt;Software DID&lt;br/&gt;Source Code Digest&lt;br/&gt;Build Attestation&lt;br/&gt;Cryptographic Proof"]
     B --&gt;|stored in| C["Build System&lt;br/&gt;Attests Build Process&lt;br/&gt;Issues Build Credential&lt;br/&gt;Creates SBOM"]
     C --&gt;|issues| D["Build Attestation Credential&lt;br/&gt;Build Process Proof&lt;br/&gt;SBOM Credential&lt;br/&gt;Dependency Verification"]
     D --&gt;|consumers verify| E["Software Consumer&lt;br/&gt;Verifies Provenance&lt;br/&gt;Checks Build Attestation&lt;br/&gt;Validates Dependencies&lt;br/&gt;Grants Installation"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -812,13 +812,13 @@
     style E fill:#c2185b,stroke:#880e4f,stroke-width:2px,color:#fff
 </code></pre>
 <h2 id="prerequisites">
-  
-  
+
+
     <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li>Java 21+</li>
@@ -828,13 +828,13 @@
   <li>Understanding of software build processes</li>
 </ul>
 <h2 id="step-1-add-dependencies">
-  
-  
+
+
     <a href="#step-1-add-dependencies" class="anchor-heading" aria-labelledby="step-1-add-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Add Dependencies
-  
-  
+
+
 </h2>
-    
+
 
 <p>Add TrustWeave dependencies to your <code class="language-plaintext highlighter-rouge">build.gradle.kts</code>:</p>
 
@@ -851,22 +851,22 @@
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
     <span class="c1">// Core TrustWeave modules</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-all:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    
+
     <span class="c1">// Kotlinx Serialization</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
-    
+
     <span class="c1">// Coroutines</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="step-2-complete-runnable-example">
-  
-  
+
+
     <a href="#step-2-complete-runnable-example" class="anchor-heading" aria-labelledby="step-2-complete-runnable-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Complete Runnable Example
-  
-  
+
+
 </h2>
-    
+
 
 <p>Here’s the full software supply chain security flow using the TrustWeave facade API:</p>
 
@@ -1215,47 +1215,47 @@
     <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Software Supply Chain Security Scenario - Complete End-to-End Example"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
-    
+
     <span class="c1">// Step 1: Create TrustWeave instance</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ TrustWeave initialized"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 2: Create DIDs for software publisher, build system, and consumer</span>
     <span class="kd">val</span> <span class="py">publisherDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">publisherDid</span> <span class="p">=</span> <span class="n">publisherDidDoc</span><span class="p">.</span><span class="n">id</span>
     <span class="kd">val</span> <span class="py">publisherKeyId</span> <span class="p">=</span> <span class="n">publisherDidDoc</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
         <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">buildSystemDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">buildSystemDid</span> <span class="p">=</span> <span class="n">buildSystemDidDoc</span><span class="p">.</span><span class="n">id</span>
     <span class="kd">val</span> <span class="py">buildSystemKeyId</span> <span class="p">=</span> <span class="n">buildSystemDidDoc</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
         <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">consumerDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">consumerDid</span> <span class="p">=</span> <span class="n">consumerDidDoc</span><span class="p">.</span><span class="n">id</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Software Publisher DID: $publisherDid"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Build System DID: $buildSystemDid"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Consumer DID: $consumerDid"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 3: Simulate source code and compute digest</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n📦 Software Provenance:"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">sourceCode</span> <span class="p">=</span> <span class="s">"""
         package com.example.secureapp
-        
+
         fun main() {
             println("Secure Application v1.0.0")
         }
     """</span><span class="p">.</span><span class="nf">trimIndent</span><span class="p">()</span>
-    
+
     <span class="kd">val</span> <span class="py">sourceCodeBytes</span> <span class="p">=</span> <span class="n">sourceCode</span><span class="p">.</span><span class="nf">toByteArray</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">sourceCodeDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">sourceCodeBytes</span><span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Source code digest: ${sourceCodeDigest.take(20)}..."</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Source repository: https://github.com/example/secureapp"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Commit hash: abc123def456"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 4: Issue software provenance credential</span>
     <span class="kd">val</span> <span class="py">provenanceCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">publisherDid</span><span class="p">,</span>
@@ -1276,19 +1276,19 @@
         <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"SoftwareProvenanceCredential"</span><span class="p">,</span> <span class="s">"SoftwareCredential"</span><span class="p">),</span>
         <span class="n">expirationDate</span> <span class="p">=</span> <span class="k">null</span> <span class="c1">// Provenance doesn't expire</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ Software provenance credential issued: ${provenanceCredential.id}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 5: Simulate build process and create build attestation</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔨 Build Process:"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">buildArtifact</span> <span class="p">=</span> <span class="s">"secureapp-1.0.0.jar"</span><span class="p">.</span><span class="nf">toByteArray</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">buildArtifactDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">buildArtifact</span><span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Build artifact digest: ${buildArtifactDigest.take(20)}..."</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Build system: GitHub Actions"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Build environment: Isolated, verified"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 6: Issue build attestation credential</span>
     <span class="kd">val</span> <span class="py">buildAttestationCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">buildSystemDid</span><span class="p">,</span>
@@ -1318,22 +1318,22 @@
         <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"BuildAttestationCredential"</span><span class="p">,</span> <span class="s">"SLSACredential"</span><span class="p">),</span>
         <span class="n">expirationDate</span> <span class="p">=</span> <span class="k">null</span> <span class="c1">// Build attestation doesn't expire</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Build attestation credential issued: ${buildAttestationCredential.id}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 7: Create SBOM (Software Bill of Materials)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n📋 Software Bill of Materials (SBOM):"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">dependencies</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span>
         <span class="nf">mapOf</span><span class="p">(</span><span class="s">"name"</span> <span class="n">to</span> <span class="s">"kotlin-stdlib"</span><span class="p">,</span> <span class="s">"version"</span> <span class="n">to</span> <span class="s">"1.9.0"</span><span class="p">,</span> <span class="s">"digest"</span> <span class="n">to</span> <span class="s">"sha256:abc123..."</span><span class="p">),</span>
         <span class="nf">mapOf</span><span class="p">(</span><span class="s">"name"</span> <span class="n">to</span> <span class="s">"kotlinx-coroutines"</span><span class="p">,</span> <span class="s">"version"</span> <span class="n">to</span> <span class="s">"1.7.3"</span><span class="p">,</span> <span class="s">"digest"</span> <span class="n">to</span> <span class="s">"sha256:def456..."</span><span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Dependencies: ${dependencies.size}"</span><span class="p">)</span>
     <span class="n">dependencies</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="n">dep</span> <span class="p">-&gt;</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"     - ${dep["</span><span class="n">name</span><span class="s">"]} v${dep["</span><span class="n">version</span><span class="s">"]}"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 8: Issue SBOM credential</span>
     <span class="kd">val</span> <span class="py">sbomCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">buildSystemDid</span><span class="p">,</span>
@@ -1357,9 +1357,9 @@
         <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"SBOMCredential"</span><span class="p">,</span> <span class="s">"SoftwareCredential"</span><span class="p">),</span>
         <span class="n">expirationDate</span> <span class="p">=</span> <span class="k">null</span> <span class="c1">// SBOM doesn't expire</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ SBOM credential issued: ${sbomCredential.id}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 9: Create consumer wallet and store credentials</span>
     <span class="kd">val</span> <span class="py">consumerWallet</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">createWallet</span><span class="p">(</span>
         <span class="n">holderDid</span> <span class="p">=</span> <span class="n">consumerDid</span><span class="p">,</span>
@@ -1368,45 +1368,45 @@
             <span class="n">enablePresentation</span> <span class="p">=</span> <span class="k">true</span>
         <span class="p">}.</span><span class="nf">build</span><span class="p">()</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="kd">val</span> <span class="py">provenanceCredentialId</span> <span class="p">=</span> <span class="n">consumerWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">provenanceCredential</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">buildAttestationCredentialId</span> <span class="p">=</span> <span class="n">consumerWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">buildAttestationCredential</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">sbomCredentialId</span> <span class="p">=</span> <span class="n">consumerWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">sbomCredential</span><span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ All software credentials stored in wallet"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 10: Organize credentials</span>
     <span class="n">consumerWallet</span><span class="p">.</span><span class="nf">withOrganization</span> <span class="p">{</span> <span class="n">org</span> <span class="p">-&gt;</span>
         <span class="kd">val</span> <span class="py">softwareCollectionId</span> <span class="p">=</span> <span class="n">org</span><span class="p">.</span><span class="nf">createCollection</span><span class="p">(</span><span class="s">"Software"</span><span class="p">,</span> <span class="s">"Software provenance and build credentials"</span><span class="p">)</span>
-        
+
         <span class="n">org</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">provenanceCredentialId</span><span class="p">,</span> <span class="n">softwareCollectionId</span><span class="p">)</span>
         <span class="n">org</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">buildAttestationCredentialId</span><span class="p">,</span> <span class="n">softwareCollectionId</span><span class="p">)</span>
         <span class="n">org</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">sbomCredentialId</span><span class="p">,</span> <span class="n">softwareCollectionId</span><span class="p">)</span>
-        
+
         <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">provenanceCredentialId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"software"</span><span class="p">,</span> <span class="s">"provenance"</span><span class="p">,</span> <span class="s">"source"</span><span class="p">,</span> <span class="s">"security"</span><span class="p">))</span>
         <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">buildAttestationCredentialId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"software"</span><span class="p">,</span> <span class="s">"build"</span><span class="p">,</span> <span class="s">"attestation"</span><span class="p">,</span> <span class="s">"slsa"</span><span class="p">,</span> <span class="s">"security"</span><span class="p">))</span>
         <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">sbomCredentialId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"software"</span><span class="p">,</span> <span class="s">"sbom"</span><span class="p">,</span> <span class="s">"dependencies"</span><span class="p">,</span> <span class="s">"security"</span><span class="p">))</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Software credentials organized"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 11: Consumer verification - Software provenance</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔍 Consumer Verification - Software Provenance:"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">provenanceVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">provenanceCredential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">provenanceVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
         <span class="kd">val</span> <span class="py">credentialSubject</span> <span class="p">=</span> <span class="n">provenanceCredential</span><span class="p">.</span><span class="n">credentialSubject</span>
         <span class="kd">val</span> <span class="py">software</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"software"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
         <span class="kd">val</span> <span class="py">softwareName</span> <span class="p">=</span> <span class="n">software</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"name"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
         <span class="kd">val</span> <span class="py">publisher</span> <span class="p">=</span> <span class="n">software</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"publisher"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
         <span class="kd">val</span> <span class="py">sourceCodeDigest</span> <span class="p">=</span> <span class="n">software</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"sourceCodeDigest"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Provenance Credential: VALID"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Software: $softwareName"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Publisher: ${publisher?.take(20)}..."</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Source Code Digest: ${sourceCodeDigest?.take(20)}..."</span><span class="p">)</span>
-        
+
         <span class="k">if</span> <span class="p">(</span><span class="n">publisher</span> <span class="p">==</span> <span class="n">publisherDid</span><span class="p">)</span> <span class="p">{</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Publisher verified"</span><span class="p">)</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Provenance VERIFIED"</span><span class="p">)</span>
@@ -1418,24 +1418,24 @@
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Provenance Credential: INVALID"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Provenance NOT VERIFIED"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 12: Consumer verification - Build attestation</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔍 Consumer Verification - Build Attestation:"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">buildVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">buildAttestationCredential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">buildVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
         <span class="kd">val</span> <span class="py">credentialSubject</span> <span class="p">=</span> <span class="n">buildAttestationCredential</span><span class="p">.</span><span class="n">credentialSubject</span>
         <span class="kd">val</span> <span class="py">build</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"build"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
         <span class="kd">val</span> <span class="py">buildSystem</span> <span class="p">=</span> <span class="n">build</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"buildSystem"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
         <span class="kd">val</span> <span class="py">slsaLevel</span> <span class="p">=</span> <span class="n">build</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"buildEnvironment"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonObject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"slsaLevel"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
         <span class="kd">val</span> <span class="py">isolated</span> <span class="p">=</span> <span class="n">build</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"buildEnvironment"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonObject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"isolated"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toBoolean</span><span class="p">()</span> <span class="o">?:</span> <span class="k">false</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Build Attestation Credential: VALID"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Build System: $buildSystem"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   SLSA Level: $slsaLevel"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Isolated Environment: $isolated"</span><span class="p">)</span>
-        
+
         <span class="k">if</span> <span class="p">(</span><span class="n">slsaLevel</span> <span class="p">==</span> <span class="s">"L3"</span> <span class="p">&amp;&amp;</span> <span class="n">isolated</span><span class="p">)</span> <span class="p">{</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ SLSA Level 3 verified"</span><span class="p">)</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Build environment verified"</span><span class="p">)</span>
@@ -1448,31 +1448,31 @@
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Build Attestation Credential: INVALID"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Build Attestation NOT VERIFIED"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 13: Consumer verification - Dependency verification</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔍 Consumer Verification - Dependency Verification:"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">sbomVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">sbomCredential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">sbomVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
         <span class="kd">val</span> <span class="py">credentialSubject</span> <span class="p">=</span> <span class="n">sbomCredential</span><span class="p">.</span><span class="n">credentialSubject</span>
         <span class="kd">val</span> <span class="py">sbom</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"sbom"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
         <span class="kd">val</span> <span class="py">dependencies</span> <span class="p">=</span> <span class="n">sbom</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"dependencies"</span><span class="p">)</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ SBOM Credential: VALID"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Dependencies: ${dependencies?.jsonArray?.size ?: 0}"</span><span class="p">)</span>
-        
+
         <span class="c1">// In production, verify each dependency's digest</span>
         <span class="kd">var</span> <span class="py">allDependenciesVerified</span> <span class="p">=</span> <span class="k">true</span>
         <span class="n">dependencies</span><span class="o">?.</span><span class="n">jsonArray</span><span class="o">?.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="n">dep</span> <span class="p">-&gt;</span>
             <span class="kd">val</span> <span class="py">depObj</span> <span class="p">=</span> <span class="n">dep</span><span class="p">.</span><span class="n">jsonObject</span>
             <span class="kd">val</span> <span class="py">name</span> <span class="p">=</span> <span class="n">depObj</span><span class="p">[</span><span class="s">"name"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
             <span class="kd">val</span> <span class="py">digest</span> <span class="p">=</span> <span class="n">depObj</span><span class="p">[</span><span class="s">"digest"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
-            
+
             <span class="nf">println</span><span class="p">(</span><span class="s">"     - $name: ${digest?.take(20)}..."</span><span class="p">)</span>
             <span class="c1">// In production, verify digest matches actual dependency</span>
         <span class="p">}</span>
-        
+
         <span class="k">if</span> <span class="p">(</span><span class="n">allDependenciesVerified</span><span class="p">)</span> <span class="p">{</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ All dependencies verified"</span><span class="p">)</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Dependency Verification PASSED"</span><span class="p">)</span>
@@ -1484,14 +1484,14 @@
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ SBOM Credential: INVALID"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Dependency Verification FAILED"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 14: Complete software verification workflow</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔍 Complete Software Verification Workflow:"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">provenanceValid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">provenanceCredential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">().</span><span class="n">valid</span>
     <span class="kd">val</span> <span class="py">buildValid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">buildAttestationCredential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">().</span><span class="n">valid</span>
     <span class="kd">val</span> <span class="py">sbomValid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">sbomCredential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">().</span><span class="n">valid</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">provenanceValid</span> <span class="p">&amp;&amp;</span> <span class="n">buildValid</span> <span class="p">&amp;&amp;</span> <span class="n">sbomValid</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Software Provenance: VERIFIED"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Build Attestation: VERIFIED"</span><span class="p">)</span>
@@ -1503,7 +1503,7 @@
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Software is NOT SAFE to install"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Installation BLOCKED"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 15: Display wallet statistics</span>
     <span class="kd">val</span> <span class="py">stats</span> <span class="p">=</span> <span class="n">consumerWallet</span><span class="p">.</span><span class="nf">getStatistics</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n📊 Consumer Wallet Statistics:"</span><span class="p">)</span>
@@ -1511,7 +1511,7 @@
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Valid credentials: ${stats.validCredentials}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Collections: ${stats.collectionsCount}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Tags: ${stats.tagsCount}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 16: Summary</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n"</span> <span class="p">+</span> <span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ SOFTWARE SUPPLY CHAIN SECURITY SYSTEM COMPLETE"</span><span class="p">)</span>
@@ -1671,13 +1671,13 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
 ======================================================================
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="key-features-demonstrated">
-  
-  
+
+
     <a href="#key-features-demonstrated" class="anchor-heading" aria-labelledby="key-features-demonstrated"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Features Demonstrated
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Software Provenance</strong>: Verify software source and publisher</li>
@@ -1688,13 +1688,13 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
   <li><strong>Tamper Detection</strong>: Detect software tampering</li>
 </ol>
 <h2 id="real-world-extensions">
-  
-  
+
+
     <a href="#real-world-extensions" class="anchor-heading" aria-labelledby="real-world-extensions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Extensions
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><strong>Code Signing Integration</strong>: Integrate with code signing certificates</li>
@@ -1706,13 +1706,13 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
   <li><strong>Blockchain Anchoring</strong>: Anchor software credentials for audit trails</li>
 </ul>
 <h2 id="related-documentation">
-  
-  
+
+
     <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><a href="/trustweave/getting-started/quick-start/">Quick Start</a> - Get started with TrustWeave</li>
@@ -1722,17 +1722,17 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
   <li><a href="/trustweave/getting-started/troubleshooting/">Troubleshooting</a> - Common issues and solutions</li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -1764,7 +1764,7 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -1774,12 +1774,12 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -1801,12 +1801,12 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -1815,12 +1815,12 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -1828,7 +1828,7 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -1836,31 +1836,31 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -1872,7 +1872,7 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
 
 
 
-  
+
 </body>
 </html>
 

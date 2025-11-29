@@ -12,7 +12,7 @@ class WalletsTest {
     @Test
     fun `test inMemory creates wallet with holder DID`() {
         val wallet = Wallets.inMemory(holderDid = "did:key:holder")
-        
+
         assertNotNull(wallet)
         assertTrue(wallet is InMemoryWallet)
         assertEquals("did:key:holder", (wallet as InMemoryWallet).holderDid)
@@ -25,7 +25,7 @@ class WalletsTest {
             walletId = "my-wallet-123",
             holderDid = "did:key:holder"
         )
-        
+
         assertNotNull(wallet)
         assertEquals("my-wallet-123", wallet.walletId)
         assertTrue(wallet is InMemoryWallet)
@@ -36,7 +36,7 @@ class WalletsTest {
     fun `test inMemory auto-generates wallet ID if not provided`() {
         val wallet1 = Wallets.inMemory(holderDid = "did:key:holder1")
         val wallet2 = Wallets.inMemory(holderDid = "did:key:holder2")
-        
+
         assertNotEquals(wallet1.walletId, wallet2.walletId)
         assertTrue(wallet1.walletId.isNotEmpty())
         assertTrue(wallet2.walletId.isNotEmpty())
@@ -48,7 +48,7 @@ class WalletsTest {
             walletDid = "did:key:institution",
             holderDid = "did:key:employee"
         )
-        
+
         assertNotNull(wallet)
         assertTrue(wallet is InMemoryWallet)
         assertEquals("did:key:employee", (wallet as InMemoryWallet).holderDid)
@@ -61,7 +61,7 @@ class WalletsTest {
             walletDid = "did:key:institution",
             holderDid = "did:key:employee"
         )
-        
+
         assertEquals("did:key:institution", wallet.walletId)
     }
 
@@ -72,7 +72,7 @@ class WalletsTest {
             holderDid = "did:key:employee",
             walletId = "custom-id"
         )
-        
+
         assertEquals("custom-id", wallet.walletId)
     }
 }

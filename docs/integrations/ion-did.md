@@ -209,7 +209,7 @@ val config = IonDidConfig.testnet()
 
 val TrustWeave = TrustWeave.create {
     kms = InMemoryKeyManagementService()
-    
+
     didMethods {
         + IonDidMethod(kms!!, config)
     }

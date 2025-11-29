@@ -5,13 +5,13 @@ import java.time.Instant
 
 /**
  * Message analytics and reporting.
- * 
+ *
  * Provides statistics, traffic patterns, and reporting capabilities.
  */
 interface MessageAnalytics {
     /**
      * Gets message statistics for a time period.
-     * 
+     *
      * @param startTime Start time
      * @param endTime End time
      * @param groupBy Grouping granularity
@@ -22,10 +22,10 @@ interface MessageAnalytics {
         endTime: Instant,
         groupBy: GroupBy = GroupBy.HOUR
     ): MessageStatistics
-    
+
     /**
      * Gets traffic patterns.
-     * 
+     *
      * @param startTime Start time
      * @param endTime End time
      * @return Traffic patterns
@@ -34,10 +34,10 @@ interface MessageAnalytics {
         startTime: Instant,
         endTime: Instant
     ): TrafficPatterns
-    
+
     /**
      * Gets top DIDs by message count.
-     * 
+     *
      * @param limit Number of top DIDs to return
      * @param startTime Optional start time filter
      * @param endTime Optional end time filter
@@ -48,10 +48,10 @@ interface MessageAnalytics {
         startTime: Instant? = null,
         endTime: Instant? = null
     ): List<DidStatistics>
-    
+
     /**
      * Gets message type distribution.
-     * 
+     *
      * @param startTime Optional start time filter
      * @param endTime Optional end time filter
      * @return Map of message type to count

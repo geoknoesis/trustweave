@@ -8,9 +8,9 @@ import kotlinx.coroutines.runBlocking
 
 /**
  * Base class for integration tests.
- * 
+ *
  * Provides TestContainers support, retry logic for flaky tests, and test isolation helpers.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * @Testcontainers
@@ -22,29 +22,29 @@ import kotlinx.coroutines.runBlocking
  *     }
  * }
  * ```
- * 
+ *
  * **Note**: Integration tests should be tagged with `@Tag("integration")` to allow
  * running them separately from unit tests.
  */
 @Tag("integration")
 abstract class BaseIntegrationTest : BasePluginTest() {
-    
+
     /**
      * Maximum number of retries for flaky tests.
      * Override in subclasses if needed.
      */
     protected open val maxRetries: Int = 3
-    
+
     /**
      * Delay between retries in milliseconds.
      */
     protected open val retryDelayMs: Long = 1000
-    
+
     /**
      * Timeout for integration test operations in seconds.
      */
     protected open val operationTimeoutSeconds: Long = 30
-    
+
     /**
      * Sets up integration test environment.
      * Override to add custom setup logic.
@@ -54,7 +54,7 @@ abstract class BaseIntegrationTest : BasePluginTest() {
         setUp()
         // Additional integration test setup can be added here
     }
-    
+
     /**
      * Cleans up integration test environment.
      * Override to add custom cleanup logic.
@@ -64,7 +64,7 @@ abstract class BaseIntegrationTest : BasePluginTest() {
         tearDown()
         // Additional integration test cleanup can be added here
     }
-    
+
     /**
      * Retries a test operation if it fails.
      * Useful for flaky tests that may fail due to timing issues.
@@ -75,7 +75,7 @@ abstract class BaseIntegrationTest : BasePluginTest() {
         block: suspend () -> T
     ): T {
         var lastException: Throwable? = null
-        
+
         repeat(maxAttempts) { attempt ->
             try {
                 return block()
@@ -86,10 +86,10 @@ abstract class BaseIntegrationTest : BasePluginTest() {
                 }
             }
         }
-        
+
         throw lastException ?: AssertionError("Retry failed after $maxAttempts attempts")
     }
-    
+
     /**
      * Waits for a condition to become true, with timeout.
      */
@@ -100,17 +100,17 @@ abstract class BaseIntegrationTest : BasePluginTest() {
     ): Boolean {
         val timeoutMs = timeoutSeconds * 1000
         val startTime = System.currentTimeMillis()
-        
+
         while (System.currentTimeMillis() - startTime < timeoutMs) {
             if (condition()) {
                 return true
             }
             kotlinx.coroutines.delay(intervalMs)
         }
-        
+
         return false
     }
-    
+
     /**
      * Asserts that a condition becomes true within the timeout period.
      */
@@ -125,7 +125,7 @@ abstract class BaseIntegrationTest : BasePluginTest() {
             throw AssertionError(message)
         }
     }
-    
+
     /**
      * Helper to run a test with automatic retry on failure.
      */

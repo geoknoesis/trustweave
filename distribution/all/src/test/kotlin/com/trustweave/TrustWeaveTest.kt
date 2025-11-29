@@ -16,7 +16,7 @@ class TrustWeaveTest {
     @Test
     fun `test TrustWeave create`() {
         val trustweave = TrustWeave.create()
-        
+
         assertNotNull(trustweave)
     }
 
@@ -24,7 +24,7 @@ class TrustWeaveTest {
     fun `test createDid with default options`() = runBlocking {
         val trustweave = TrustWeave.create()
         val didDoc = trustweave.dids.create()
-        
+
         assertNotNull(didDoc)
         assertNotNull(didDoc.id)
         assertTrue(didDoc.id.startsWith("did:"))
@@ -34,12 +34,13 @@ class TrustWeaveTest {
     fun `test resolveDid`() = runBlocking {
         val trustweave = TrustWeave.create()
         val didDoc = trustweave.dids.create()
-        
-        val result = trustweave.dids.resolve(didDoc.id)
-        
+
+        val result: com.trustweave.did.resolver.DidResolutionResult = trustweave.dids.resolve(didDoc.id)
+
         assertNotNull(result)
-        assertNotNull(result.document)
-        assertEquals(didDoc.id, result.document?.id)
+        assertTrue(result is com.trustweave.did.resolver.DidResolutionResult.Success)
+        val successResult = result as com.trustweave.did.resolver.DidResolutionResult.Success
+        assertEquals(didDoc.id, successResult.document.id)
     }
 
     @Test
@@ -47,7 +48,7 @@ class TrustWeaveTest {
         val trustweave = TrustWeave.create()
         val did = trustweave.dids.create()
         val issuerKeyId = did.verificationMethod.first().id
-        
+
         val credential = trustweave.credentials.issue(
             issuer = did.id,
             subject = buildJsonObject {
@@ -61,7 +62,7 @@ class TrustWeaveTest {
             ),
             types = listOf("TestCredential")
         )
-        
+
         assertNotNull(credential)
         assertEquals(did.id, credential.issuer)
         assertTrue(credential.type.contains("TestCredential"))
@@ -72,10 +73,10 @@ class TrustWeaveTest {
         val trustweave = TrustWeave.create()
         val did = trustweave.dids.create()
         val issuerKeyId = did.verificationMethod.first().id
-        
+
         println("[DEBUG] Created DID: ${did.id}")
         println("[DEBUG] Verification Method ID: $issuerKeyId")
-        
+
         val credential = trustweave.credentials.issue(
             issuer = did.id,
             subject = buildJsonObject {
@@ -89,12 +90,12 @@ class TrustWeaveTest {
             ),
             types = listOf("TestCredential")
         )
-        
+
         println("[DEBUG] Issued credential with proof: ${credential.proof}")
         println("[DEBUG] Proof verificationMethod: ${credential.proof?.verificationMethod}")
-        
+
         val result = trustweave.credentials.verify(credential)
-        
+
         println("[DEBUG] Verification result:")
         println("[DEBUG]   valid: ${result.valid}")
         println("[DEBUG]   proofValid: ${result.proofValid}")
@@ -103,12 +104,11 @@ class TrustWeaveTest {
         println("[DEBUG]   notRevoked: ${result.notRevoked}")
         println("[DEBUG]   schemaValid: ${result.schemaValid}")
         println("[DEBUG]   blockchainAnchorValid: ${result.blockchainAnchorValid}")
-        println("[DEBUG]   trustRegistryValid: ${result.trustRegistryValid}")
-        println("[DEBUG]   delegationValid: ${result.delegationValid}")
-        println("[DEBUG]   proofPurposeValid: ${result.proofPurposeValid}")
-        println("[DEBUG]   errors: ${result.errors}")
-        println("[DEBUG]   warnings: ${result.warnings}")
-        
+        // Note: trustRegistryValid, delegationValid, and proofPurposeValid are not available on CredentialVerificationResult
+        // They are only available on VerificationResult (from trust module)
+        println("[DEBUG]   errors: ${result.allErrors}")
+        println("[DEBUG]   warnings: ${result.allWarnings}")
+
         assertNotNull(result)
         assertTrue(result.valid)
     }
@@ -117,9 +117,9 @@ class TrustWeaveTest {
     fun `test createWallet`() = runBlocking {
         val trustweave = TrustWeave.create()
         val did = trustweave.dids.create()
-        
+
         val wallet = trustweave.wallets.create(holderDid = did.id)
-        
+
         assertNotNull(wallet)
         assertNotNull(wallet.walletId)
     }
@@ -128,12 +128,12 @@ class TrustWeaveTest {
     fun `test createWallet with custom ID`() = runBlocking {
         val trustweave = TrustWeave.create()
         val did = trustweave.dids.create()
-        
+
         val wallet = trustweave.wallets.create(
             holderDid = did.id,
             walletId = "my-custom-wallet"
         )
-        
+
         assertNotNull(wallet)
         assertEquals("my-custom-wallet", wallet.walletId)
     }
@@ -142,12 +142,12 @@ class TrustWeaveTest {
     fun `test end-to-end workflow`() = runBlocking {
         // Create TrustWeave instance
         val trustweave = TrustWeave.create()
-        
+
         // Create DIDs for issuer and holder
         val issuerDid = trustweave.dids.create()
         val issuerKeyId = issuerDid.verificationMethod.first().id
         val holderDid = trustweave.dids.create()
-        
+
         // Issue a credential
         val credential = trustweave.credentials.issue(
             issuer = issuerDid.id,
@@ -163,16 +163,16 @@ class TrustWeaveTest {
             ),
             types = listOf("UniversityDegreeCredential")
         )
-        
+
         // Verify the credential
         val verificationResult = trustweave.credentials.verify(credential)
         assertTrue(verificationResult.valid)
-        
+
         // Create wallet and store credential
         val wallet = trustweave.wallets.create(holderDid = holderDid.id)
         val credentialId = requireNotNull(credential.id) { "Issued credential should contain an id" }
         wallet.store(credential)
-        
+
         // Retrieve credential from wallet
         val stored = wallet.get(credentialId)
         assertNotNull(stored)

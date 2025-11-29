@@ -16,9 +16,9 @@ class CredentialTransformerTest {
     @Test
     fun `test to JWT`() = runBlocking {
         val credential = createTestCredential()
-        
+
         val jwt = transformer.toJwt(credential)
-        
+
         assertNotNull(jwt)
         // Placeholder returns JSON string
         assertTrue(jwt.isNotEmpty())
@@ -28,9 +28,9 @@ class CredentialTransformerTest {
     fun `test from JWT`() = runBlocking {
         val credential = createTestCredential()
         val jsonString = kotlinx.serialization.json.Json.encodeToString(VerifiableCredential.serializer(), credential)
-        
+
         val parsed = transformer.fromJwt(jsonString)
-        
+
         assertEquals(credential.id, parsed.id)
         assertEquals(credential.issuer, parsed.issuer)
     }
@@ -38,9 +38,9 @@ class CredentialTransformerTest {
     @Test
     fun `test to JSON-LD`() = runBlocking {
         val credential = createTestCredential()
-        
+
         val jsonLd = transformer.toJsonLd(credential)
-        
+
         assertNotNull(jsonLd)
         assertTrue(jsonLd.containsKey("type"))
         assertTrue(jsonLd.containsKey("issuer"))
@@ -50,9 +50,9 @@ class CredentialTransformerTest {
     fun `test from JSON-LD`() = runBlocking {
         val credential = createTestCredential()
         val jsonLd = transformer.toJsonLd(credential)
-        
+
         val parsed = transformer.fromJsonLd(jsonLd)
-        
+
         assertEquals(credential.id, parsed.id)
         assertEquals(credential.issuer, parsed.issuer)
         assertEquals(credential.type, parsed.type)
@@ -61,9 +61,9 @@ class CredentialTransformerTest {
     @Test
     fun `test to CBOR`() = runBlocking {
         val credential = createTestCredential()
-        
+
         val cbor = transformer.toCbor(credential)
-        
+
         assertNotNull(cbor)
         assertTrue(cbor.isNotEmpty())
     }
@@ -72,9 +72,9 @@ class CredentialTransformerTest {
     fun `test from CBOR`() = runBlocking {
         val credential = createTestCredential()
         val cbor = transformer.toCbor(credential)
-        
+
         val parsed = transformer.fromCbor(cbor)
-        
+
         assertEquals(credential.id, parsed.id)
         assertEquals(credential.issuer, parsed.issuer)
     }
@@ -82,10 +82,10 @@ class CredentialTransformerTest {
     @Test
     fun `test round trip JSON-LD`() = runBlocking {
         val original = createTestCredential()
-        
+
         val jsonLd = transformer.toJsonLd(original)
         val restored = transformer.fromJsonLd(jsonLd)
-        
+
         assertEquals(original.id, restored.id)
         assertEquals(original.issuer, restored.issuer)
         assertEquals(original.type, restored.type)
@@ -94,10 +94,10 @@ class CredentialTransformerTest {
     @Test
     fun `test round trip CBOR`() = runBlocking {
         val original = createTestCredential()
-        
+
         val cbor = transformer.toCbor(original)
         val restored = transformer.fromCbor(cbor)
-        
+
         assertEquals(original.id, restored.id)
         assertEquals(original.issuer, restored.issuer)
     }
@@ -112,9 +112,9 @@ class CredentialTransformerTest {
                 proofPurpose = "assertionMethod"
             )
         )
-        
+
         val jsonLd = transformer.toJsonLd(credential)
-        
+
         assertTrue(jsonLd.containsKey("proof"))
     }
 
@@ -122,9 +122,9 @@ class CredentialTransformerTest {
     fun `test transform credential with expiration`() = runBlocking {
         val expirationDate = java.time.Instant.now().plusSeconds(86400).toString()
         val credential = createTestCredential(expirationDate = expirationDate)
-        
+
         val jsonLd = transformer.toJsonLd(credential)
-        
+
         assertTrue(jsonLd.containsKey("expirationDate"))
     }
 

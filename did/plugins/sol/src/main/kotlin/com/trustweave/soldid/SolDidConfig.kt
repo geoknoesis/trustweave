@@ -2,9 +2,9 @@ package com.trustweave.soldid
 
 /**
  * Configuration for did:sol method implementation.
- * 
+ *
  * Supports Solana DID method for Solana blockchain.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val config = SolDidConfig.builder()
@@ -20,33 +20,33 @@ data class SolDidConfig(
      * Solana RPC endpoint URL (required).
      */
     val rpcUrl: String,
-    
+
     /**
      * Solana network (mainnet-beta, devnet, testnet, localhost).
      */
     val network: String = "mainnet-beta",
-    
+
     /**
      * DID registry program ID (optional, uses default if not provided).
      */
     val programId: String? = null,
-    
+
     /**
      * Private key for signing transactions (base58 encoded, optional).
      */
     val privateKey: String? = null,
-    
+
     /**
      * Commitment level for transactions (finalized, confirmed, processed).
      */
     val commitment: String = "finalized",
-    
+
     /**
      * Additional configuration properties.
      */
     val additionalProperties: Map<String, Any?> = emptyMap()
 ) {
-    
+
     companion object {
         /**
          * Solana network constants.
@@ -55,21 +55,21 @@ data class SolDidConfig(
         const val DEVNET = "devnet"
         const val TESTNET = "testnet"
         const val LOCALHOST = "localhost"
-        
+
         /**
          * Common Solana RPC endpoints.
          */
         const val MAINNET_RPC_URL = "https://api.mainnet-beta.solana.com"
         const val DEVNET_RPC_URL = "https://api.devnet.solana.com"
         const val TESTNET_RPC_URL = "https://api.testnet.solana.com"
-        
+
         /**
          * Commitment levels.
          */
         const val COMMITMENT_FINALIZED = "finalized"
         const val COMMITMENT_CONFIRMED = "confirmed"
         const val COMMITMENT_PROCESSED = "processed"
-        
+
         /**
          * Creates configuration for Solana mainnet.
          */
@@ -80,7 +80,7 @@ data class SolDidConfig(
                 privateKey = privateKey
             )
         }
-        
+
         /**
          * Creates configuration for Solana devnet.
          */
@@ -91,7 +91,7 @@ data class SolDidConfig(
                 privateKey = privateKey
             )
         }
-        
+
         /**
          * Creates configuration from a map (for backward compatibility).
          */
@@ -108,7 +108,7 @@ data class SolDidConfig(
                 }
             )
         }
-        
+
         /**
          * Builder for SolDidConfig.
          */
@@ -116,7 +116,7 @@ data class SolDidConfig(
             return Builder()
         }
     }
-    
+
     /**
      * Builder for SolDidConfig.
      */
@@ -127,40 +127,40 @@ data class SolDidConfig(
         private var privateKey: String? = null
         private var commitment: String = COMMITMENT_FINALIZED
         private val additionalProperties = mutableMapOf<String, Any?>()
-        
+
         fun rpcUrl(value: String): Builder {
             this.rpcUrl = value
             return this
         }
-        
+
         fun network(value: String): Builder {
             this.network = value
             return this
         }
-        
+
         fun programId(value: String?): Builder {
             this.programId = value
             return this
         }
-        
+
         fun privateKey(value: String?): Builder {
             this.privateKey = value
             return this
         }
-        
+
         fun commitment(value: String): Builder {
             this.commitment = value
             return this
         }
-        
+
         fun property(key: String, value: Any?): Builder {
             this.additionalProperties[key] = value
             return this
         }
-        
+
         fun build(): SolDidConfig {
             require(rpcUrl != null) { "rpcUrl is required" }
-            
+
             return SolDidConfig(
                 rpcUrl = rpcUrl!!,
                 network = network,
@@ -171,7 +171,7 @@ data class SolDidConfig(
             )
         }
     }
-    
+
     /**
      * Converts to map format.
      */

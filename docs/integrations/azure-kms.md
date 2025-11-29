@@ -198,24 +198,24 @@ val fipsKey = kms.generateKey(
 ### Signing Data
 
 ```kotlin
-// Sign with key name
-val signature = kms.sign(keyId, data.toByteArray())
+// Sign with key name (KeyId value class)
+val signature = kms.sign(KeyId(keyId), data.toByteArray())
 
 // Sign with full key URL
 val signature = kms.sign(
-    "https://myvault.vault.azure.net/keys/mykey",
+    KeyId("https://myvault.vault.azure.net/keys/mykey"),
     data.toByteArray()
 )
 
 // Sign with key name and version
 val signature = kms.sign(
-    "mykey/abc123def456",
+    KeyId("mykey/abc123def456"),
     data.toByteArray()
 )
 
 // Sign with algorithm override
 val signature = kms.sign(
-    keyId = keyId,
+    keyId = KeyId(keyId),
     data = data.toByteArray(),
     algorithm = Algorithm.P256
 )
@@ -224,16 +224,16 @@ val signature = kms.sign(
 ### Retrieving Public Keys
 
 ```kotlin
-// Get public key by key name
-val publicKey = kms.getPublicKey("mykey")
+// Get public key by key name (KeyId value class)
+val publicKey = kms.getPublicKey(KeyId("mykey"))
 
 // Get public key by full URL
 val publicKey = kms.getPublicKey(
-    "https://myvault.vault.azure.net/keys/mykey"
+    KeyId("https://myvault.vault.azure.net/keys/mykey")
 )
 
 // Get public key by name and version
-val publicKey = kms.getPublicKey("mykey/abc123def456")
+val publicKey = kms.getPublicKey(KeyId("mykey/abc123def456"))
 
 // Access JWK format
 val jwk = publicKey.publicKeyJwk
@@ -244,7 +244,7 @@ println("Public key JWK: $jwk")
 
 ```kotlin
 // Schedule key deletion (soft delete)
-val deleted = kms.deleteKey(keyId)
+val deleted = kms.deleteKey(KeyId(keyId))
 
 // Note: Azure Key Vault uses soft delete by default
 // Keys are recoverable for a retention period (default 90 days)

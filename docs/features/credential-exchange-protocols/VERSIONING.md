@@ -126,7 +126,7 @@ val offer = registry.offerCredential(
        "fromKeyId" to "did:key:issuer#key-1",
        "toKeyId" to "did:key:holder#key-1"
    )
-   
+
    // After (OIDC4VCI)
    options = mapOf(
        "credentialIssuer" to "https://issuer.example.com"
@@ -137,7 +137,7 @@ val offer = registry.offerCredential(
    ```kotlin
    // Before
    registry.offerCredential("didcomm", request)
-   
+
    // After
    registry.offerCredential("oidc4vci", request)
    ```
@@ -170,7 +170,7 @@ val offer = registry.offerCredential(
    options = mapOf(
        "credentialIssuer" to "https://issuer.example.com"
    )
-   
+
    // After (DIDComm)
    options = mapOf(
        "fromKeyId" to "did:key:issuer#key-1",
@@ -182,7 +182,7 @@ val offer = registry.offerCredential(
    ```kotlin
    // Before
    registry.offerCredential("oidc4vci", request)
-   
+
    // After
    registry.offerCredential("didcomm", request)
    ```

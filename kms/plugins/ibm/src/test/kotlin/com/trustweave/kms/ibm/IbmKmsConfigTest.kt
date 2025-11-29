@@ -13,7 +13,7 @@ class IbmKmsConfigTest {
             .instanceId("test-instance-id")
             .region("us-south")
             .build()
-        
+
         assertEquals("test-api-key", config.apiKey)
         assertEquals("test-instance-id", config.instanceId)
         assertEquals("us-south", config.region)
@@ -44,7 +44,7 @@ class IbmKmsConfigTest {
             "instanceId" to "test-instance",
             "region" to "eu-gb"
         ))
-        
+
         assertEquals("test-key", config.apiKey)
         assertEquals("test-instance", config.instanceId)
         assertEquals("eu-gb", config.region)
@@ -56,7 +56,7 @@ class IbmKmsConfigTest {
             "apiKey" to "test-key",
             "instanceId" to "test-instance"
         ))
-        
+
         assertEquals("us-south", config.region)
     }
 
@@ -66,7 +66,7 @@ class IbmKmsConfigTest {
             "api_key" to "test-key",
             "instance_id" to "test-instance"
         ))
-        
+
         assertEquals("test-key", config.apiKey)
         assertEquals("test-instance", config.instanceId)
     }

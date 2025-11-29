@@ -12,7 +12,7 @@ class DidParseBranchCoverageTest {
     @Test
     fun `test branch parse with valid DID`() {
         val did = Did.parse("did:web:example.com")
-        
+
         assertEquals("web", did.method)
         assertEquals("example.com", did.id)
     }
@@ -64,7 +64,7 @@ class DidParseBranchCoverageTest {
     @Test
     fun `test branch parse with complex id containing colons`() {
         val did = Did.parse("did:web:example.com:path:to:resource")
-        
+
         assertEquals("web", did.method)
         assertEquals("example.com:path:to:resource", did.id)
     }
@@ -72,7 +72,7 @@ class DidParseBranchCoverageTest {
     @Test
     fun `test branch parse with id containing special characters`() {
         val did = Did.parse("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
-        
+
         assertEquals("key", did.method)
         assertTrue(did.id.startsWith("z6Mk"))
     }
@@ -96,7 +96,7 @@ class DidParseBranchCoverageTest {
     @Test
     fun `test branch parse with whitespace in method`() {
         val did = Did.parse("did:web:example.com")
-        
+
         assertEquals("web", did.method)
     }
 
@@ -104,7 +104,7 @@ class DidParseBranchCoverageTest {
     fun `test branch parse with very long DID`() {
         val longId = "a".repeat(1000)
         val did = Did.parse("did:web:$longId")
-        
+
         assertEquals("web", did.method)
         assertEquals(longId, did.id)
     }
@@ -112,14 +112,14 @@ class DidParseBranchCoverageTest {
     @Test
     fun `test branch toString formats correctly`() {
         val did = Did(method = "web", id = "example.com")
-        
+
         assertEquals("did:web:example.com", did.toString())
     }
 
     @Test
     fun `test branch toString with complex id`() {
         val did = Did(method = "key", id = "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
-        
+
         assertEquals("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK", did.toString())
     }
 }

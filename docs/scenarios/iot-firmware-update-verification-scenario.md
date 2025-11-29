@@ -117,7 +117,7 @@ flowchart TD
     B -->|authorizes| C["Update Server<br/>Issues Update<br/>Authorization Credential"]
     C -->|issues| D["Update Authorization Credential<br/>Firmware Reference<br/>Update Policy<br/>Authorization<br/>Cryptographic Proof"]
     D -->|device verifies| E["IoT Device<br/>Verifies Firmware Attestation<br/>Checks Update Authorization<br/>Validates Firmware Integrity<br/>Installs Update"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -141,10 +141,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 dependencies {
     // Core TrustWeave modules
     implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -174,32 +174,32 @@ fun main() = runBlocking {
     println("=".repeat(70))
     println("IoT Firmware Update Verification Scenario - Complete End-to-End Example")
     println("=".repeat(70))
-    
+
     // Step 1: Create TrustWeave instance
     val TrustWeave = TrustWeave.create()
     println("\n✅ TrustWeave initialized")
-    
+
     // Step 2: Create DIDs for manufacturer, update server, and IoT device
     val manufacturerDidDoc = TrustWeave.dids.create()
     val manufacturerDid = manufacturerDidDoc.id
     val manufacturerKeyId = manufacturerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val updateServerDidDoc = TrustWeave.dids.create()
     val updateServerDid = updateServerDidDoc.id
     val updateServerKeyId = updateServerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val deviceDidDoc = TrustWeave.dids.create()
     val deviceDid = deviceDidDoc.id
-    
+
     println("✅ Manufacturer DID: $manufacturerDid")
     println("✅ Update Server DID: $updateServerDid")
     println("✅ IoT Device DID: $deviceDid")
-    
+
     // Step 3: Simulate firmware creation and compute digest
     println("\n📦 Firmware Creation:")
-    
+
     val firmwareVersion = "2.1.0"
     val firmwareContent = """
         // IoT Device Firmware v2.1.0
@@ -207,15 +207,15 @@ fun main() = runBlocking {
         // Build date: ${Instant.now()}
         // Manufacturer: SecureIoT Inc
     """.trimIndent()
-    
+
     val firmwareBytes = firmwareContent.toByteArray()
     val firmwareDigest = DigestUtils.sha256DigestMultibase(firmwareBytes)
     val firmwareSize = firmwareBytes.size
-    
+
     println("   Firmware Version: $firmwareVersion")
     println("   Firmware Size: $firmwareSize bytes")
     println("   Firmware Digest: ${firmwareDigest.take(20)}...")
-    
+
     // Step 4: Issue firmware attestation credential
     val firmwareAttestation = TrustWeave.issueCredential(
         issuerDid = manufacturerDid,
@@ -246,9 +246,9 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "FirmwareAttestationCredential", "SoftwareCredential"),
         expirationDate = null // Firmware attestation doesn't expire
     ).getOrThrow()
-    
+
     println("\n✅ Firmware attestation credential issued: ${firmwareAttestation.id}")
-    
+
     // Step 5: Issue firmware update authorization credential
     val updateAuthorization = TrustWeave.issueCredential(
         issuerDid = updateServerDid,
@@ -280,9 +280,9 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "FirmwareUpdateAuthorizationCredential", "UpdateCredential"),
         expirationDate = Instant.now().plus(30, ChronoUnit.DAYS).toString() // Authorization expires
     ).getOrThrow()
-    
+
     println("✅ Firmware update authorization credential issued: ${updateAuthorization.id}")
-    
+
     // Step 6: Create device wallet and store credentials
     val deviceWallet = TrustWeave.createWallet(
         holderDid = deviceDid,
@@ -291,42 +291,42 @@ fun main() = runBlocking {
             enablePresentation = true
         }.build()
     ).getOrThrow()
-    
+
     val firmwareAttestationId = deviceWallet.store(firmwareAttestation)
     val updateAuthorizationId = deviceWallet.store(updateAuthorization)
-    
+
     println("\n✅ Firmware credentials stored in device wallet")
-    
+
     // Step 7: Organize credentials
     deviceWallet.withOrganization { org ->
         val firmwareCollectionId = org.createCollection("Firmware", "Firmware attestation and update credentials")
-        
+
         org.addToCollection(firmwareAttestationId, firmwareCollectionId)
         org.addToCollection(updateAuthorizationId, firmwareCollectionId)
-        
+
         org.tagCredential(firmwareAttestationId, setOf("firmware", "attestation", "security", "update"))
         org.tagCredential(updateAuthorizationId, setOf("firmware", "authorization", "update", "policy"))
-        
+
         println("✅ Firmware credentials organized")
     }
-    
+
     // Step 8: Device verification - Firmware attestation
     println("\n🔍 Device Verification - Firmware Attestation:")
-    
+
     val firmwareVerification = TrustWeave.verifyCredential(firmwareAttestation).getOrThrow()
-    
+
     if (firmwareVerification.valid) {
         val credentialSubject = firmwareAttestation.credentialSubject
         val firmware = credentialSubject.jsonObject["firmware"]?.jsonObject
         val version = firmware?.get("version")?.jsonPrimitive?.content
         val manufacturer = firmware?.get("manufacturer")?.jsonPrimitive?.content
         val firmwareDigestFromCredential = firmware?.get("firmwareDigest")?.jsonPrimitive?.content
-        
+
         println("✅ Firmware Attestation Credential: VALID")
         println("   Version: $version")
         println("   Manufacturer: ${manufacturer?.take(20)}...")
         println("   Firmware Digest: ${firmwareDigestFromCredential?.take(20)}...")
-        
+
         // Verify firmware digest matches actual firmware
         if (firmwareDigestFromCredential == firmwareDigest) {
             println("✅ Firmware digest matches")
@@ -340,12 +340,12 @@ fun main() = runBlocking {
         println("❌ Firmware Attestation Credential: INVALID")
         println("❌ Firmware authenticity NOT VERIFIED")
     }
-    
+
     // Step 9: Device verification - Update authorization
     println("\n🔍 Device Verification - Update Authorization:")
-    
+
     val authorizationVerification = TrustWeave.verifyCredential(updateAuthorization).getOrThrow()
-    
+
     if (authorizationVerification.valid) {
         val credentialSubject = updateAuthorization.credentialSubject
         val updateAuth = credentialSubject.jsonObject["updateAuthorization"]?.jsonObject
@@ -353,12 +353,12 @@ fun main() = runBlocking {
         val updatePolicy = updateAuth?.get("updatePolicy")?.jsonObject
         val updateType = updatePolicy?.get("updateType")?.jsonPrimitive?.content
         val rollbackAllowed = updatePolicy?.get("rollbackAllowed")?.jsonPrimitive?.content?.toBoolean() ?: false
-        
+
         println("✅ Update Authorization Credential: VALID")
         println("   Authorized: $authorized")
         println("   Update Type: $updateType")
         println("   Rollback Allowed: $rollbackAllowed")
-        
+
         if (authorized) {
             println("✅ Update authorization VERIFIED")
             println("✅ Update is authorized for installation")
@@ -370,19 +370,19 @@ fun main() = runBlocking {
         println("❌ Update Authorization Credential: INVALID")
         println("❌ Update authorization NOT VERIFIED")
     }
-    
+
     // Step 10: Complete firmware update verification workflow
     println("\n🔍 Complete Firmware Update Verification Workflow:")
-    
+
     val firmwareValid = TrustWeave.verifyCredential(firmwareAttestation).getOrThrow().valid
     val authorizationValid = TrustWeave.verifyCredential(updateAuthorization).getOrThrow().valid
-    
+
     if (firmwareValid && authorizationValid) {
         // Verify firmware digest matches
         val credentialSubject = firmwareAttestation.credentialSubject
         val firmware = credentialSubject.jsonObject["firmware"]?.jsonObject
         val firmwareDigestFromCredential = firmware?.get("firmwareDigest")?.jsonPrimitive?.content
-        
+
         if (firmwareDigestFromCredential == firmwareDigest) {
             println("✅ Firmware Attestation: VERIFIED")
             println("✅ Update Authorization: VERIFIED")
@@ -400,20 +400,20 @@ fun main() = runBlocking {
         println("❌ Firmware update is NOT SAFE to install")
         println("❌ Update installation BLOCKED")
     }
-    
+
     // Step 11: Firmware rollback scenario
     println("\n🔄 Firmware Rollback Scenario:")
-    
+
     val currentFirmwareVersion = "2.0.0"
     val newFirmwareVersion = firmwareVersion
-    
+
     println("   Current Firmware: $currentFirmwareVersion")
     println("   New Firmware: $newFirmwareVersion")
-    
+
     // Check if rollback is allowed
     val updateAuth = updateAuthorization.credentialSubject.jsonObject["updateAuthorization"]?.jsonObject
     val rollbackAllowed = updateAuth?.get("updatePolicy")?.jsonObject?.get("rollbackAllowed")?.jsonPrimitive?.content?.toBoolean() ?: false
-    
+
     if (rollbackAllowed) {
         println("✅ Rollback is allowed")
         println("✅ Device can rollback to previous firmware version if needed")
@@ -421,7 +421,7 @@ fun main() = runBlocking {
         println("❌ Rollback is not allowed")
         println("❌ Device cannot rollback to previous firmware version")
     }
-    
+
     // Step 12: Display wallet statistics
     val stats = deviceWallet.getStatistics()
     println("\n📊 Device Wallet Statistics:")
@@ -429,7 +429,7 @@ fun main() = runBlocking {
     println("   Valid credentials: ${stats.validCredentials}")
     println("   Collections: ${stats.collectionsCount}")
     println("   Tags: ${stats.tagsCount}")
-    
+
     // Step 13: Summary
     println("\n" + "=".repeat(70))
     println("✅ IoT FIRMWARE UPDATE VERIFICATION SYSTEM COMPLETE")

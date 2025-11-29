@@ -156,7 +156,7 @@ IllegalArgumentException: Invalid DID format: invalid-did
    fun isValidDid(did: String): Boolean {
        return did.matches(Regex("^did:[a-z0-9]+:.+$"))
    }
-   
+
    val issuerDid = "did:key:issuer"
    if (!isValidDid(issuerDid)) {
        println("Invalid DID format")

@@ -16,31 +16,31 @@ import java.time.Instant
 
 /**
  * Default implementation of [UniversalResolver] using Java's built-in HTTP client.
- * 
+ *
  * This implementation works with any Universal Resolver instance through a pluggable
  * protocol adapter pattern. Different providers can use different endpoint patterns,
  * authentication mechanisms, and response formats.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * // Use public dev.uniresolver.io instance with standard adapter (default)
  * val resolver = DefaultUniversalResolver("https://dev.uniresolver.io")
- * 
+ *
  * // Use self-hosted instance with standard adapter
  * val resolver = DefaultUniversalResolver(
  *     baseUrl = "https://resolver.example.com",
  *     protocolAdapter = StandardUniversalResolverAdapter()
  * )
- * 
+ *
  * // Use GoDiddy with custom adapter
  * val resolver = DefaultUniversalResolver(
  *     baseUrl = "https://api.godiddy.com",
  *     protocolAdapter = GodiddyProtocolAdapter()
  * )
- * 
+ *
  * val result = resolver.resolveDid("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
  * ```
- * 
+ *
  * @param baseUrl Base URL of the Universal Resolver instance (e.g., "https://dev.uniresolver.io")
  * @param timeout Request timeout in seconds (default: 30)
  * @param apiKey Optional API key for authentication (if required by the resolver)
@@ -53,32 +53,32 @@ class DefaultUniversalResolver(
     private val apiKey: String? = null,
     private val protocolAdapter: UniversalResolverProtocolAdapter = StandardUniversalResolverAdapter()
 ) : UniversalResolver {
-    
+
     private val httpClient: HttpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(timeout.toLong()))
         .build()
-    
+
     override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             // Use protocol adapter to build URL
             val url = protocolAdapter.buildResolveUrl(baseUrl, did)
-            
+
             val requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .timeout(Duration.ofSeconds(timeout.toLong()))
                 .header("Accept", "application/json")
-            
+
             // Use protocol adapter to configure authentication
             protocolAdapter.configureAuth(requestBuilder, apiKey)
-            
+
             val request = requestBuilder.build()
             val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-            
+
             when (response.statusCode()) {
                 200 -> {
                     // Parse JSON response
                     val jsonResponse = parseJsonResponse(response.body())
-                    
+
                     // Use protocol adapter to extract data
                     val didDocumentJson = protocolAdapter.extractDidDocument(jsonResponse)
                     val document = didDocumentJson?.let { parseDidDocumentFromJson(it) }
@@ -88,17 +88,25 @@ class DefaultUniversalResolver(
                     val resolutionMetadata = parseResolutionMetadata(
                         protocolAdapter.extractResolutionMetadata(jsonResponse)
                     )
-                    
-                    DidResolutionResult(
-                        document = document,
-                        documentMetadata = documentMetadata,
-                        resolutionMetadata = resolutionMetadata.plus("provider" to protocolAdapter.providerName)
-                    )
+
+                    if (document != null) {
+                        DidResolutionResult.Success(
+                            document = document,
+                            documentMetadata = documentMetadata,
+                            resolutionMetadata = resolutionMetadata.plus("provider" to protocolAdapter.providerName)
+                        )
+                    } else {
+                        DidResolutionResult.Failure.NotFound(
+                            did = com.trustweave.core.types.Did(did),
+                            reason = "DID document not found in response",
+                            resolutionMetadata = resolutionMetadata.plus("provider" to protocolAdapter.providerName)
+                        )
+                    }
                 }
                 404 -> {
-                    DidResolutionResult(
-                        document = null,
-                        documentMetadata = DidDocumentMetadata(),
+                    DidResolutionResult.Failure.NotFound(
+                        did = com.trustweave.core.types.Did(did),
+                        reason = "DID not found",
                         resolutionMetadata = mapOf(
                             "error" to "notFound",
                             "provider" to protocolAdapter.providerName
@@ -127,23 +135,23 @@ class DefaultUniversalResolver(
             )
         }
     }
-    
+
     override suspend fun getSupportedMethods(): List<String>? {
         // Use protocol adapter to build methods URL
         val methodsUrl = protocolAdapter.buildMethodsUrl(baseUrl) ?: return null
-        
+
         return try {
             val requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(methodsUrl))
                 .timeout(Duration.ofSeconds(timeout.toLong()))
                 .header("Accept", "application/json")
-            
+
             // Use protocol adapter to configure authentication
             protocolAdapter.configureAuth(requestBuilder, apiKey)
-            
+
             val request = requestBuilder.build()
             val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-            
+
             if (response.statusCode() == 200) {
                 parseMethodsList(response.body())
             } else {
@@ -154,29 +162,29 @@ class DefaultUniversalResolver(
             null
         }
     }
-    
+
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
     }
-    
+
     /**
      * Parses the Universal Resolver JSON response.
      */
     private fun parseJsonResponse(jsonString: String): JsonObject {
         return json.parseToJsonElement(jsonString).jsonObject
     }
-    
+
     /**
      * Parses a DID document from a JsonObject.
      */
     private fun parseDidDocumentFromJson(json: JsonObject): DidDocument {
-        val id = json["id"]?.jsonPrimitive?.content 
+        val id = json["id"]?.jsonPrimitive?.content
             ?: throw com.trustweave.did.exception.DidException.InvalidDidFormat(
                 did = "unknown",
                 reason = "DID document missing 'id' field"
             )
-        
+
         // Extract @context (can be string or array in JSON-LD)
         val context = when {
             json["@context"] != null -> {
@@ -188,7 +196,7 @@ class DefaultUniversalResolver(
             }
             else -> listOf("https://www.w3.org/ns/did/v1")
         }
-        
+
         // Extract verification methods
         val verificationMethod = json["verificationMethod"]?.jsonArray?.mapNotNull { vmJson ->
             val vmObj = vmJson.jsonObject
@@ -199,7 +207,7 @@ class DefaultUniversalResolver(
                 jwk.entries.associate { it.key to convertJsonElement(it.value) }
             }
             val publicKeyMultibase = vmObj["publicKeyMultibase"]?.jsonPrimitive?.content
-            
+
             if (vmId != null && vmType != null) {
                 VerificationMethod(
                     id = vmId,
@@ -210,39 +218,39 @@ class DefaultUniversalResolver(
                 )
             } else null
         } ?: emptyList()
-        
+
         // Extract authentication references
         val authentication = json["authentication"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
             ?: json["authentication"]?.jsonPrimitive?.content?.let { listOf(it) }
             ?: emptyList()
-        
+
         // Extract assertion method references
         val assertionMethod = json["assertionMethod"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
             ?: json["assertionMethod"]?.jsonPrimitive?.content?.let { listOf(it) }
             ?: emptyList()
-        
+
         // Extract key agreement references
         val keyAgreement = json["keyAgreement"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
             ?: json["keyAgreement"]?.jsonPrimitive?.content?.let { listOf(it) }
             ?: emptyList()
-        
+
         // Extract capability invocation references
         val capabilityInvocation = json["capabilityInvocation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
             ?: json["capabilityInvocation"]?.jsonPrimitive?.content?.let { listOf(it) }
             ?: emptyList()
-        
+
         // Extract capability delegation references
         val capabilityDelegation = json["capabilityDelegation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
             ?: json["capabilityDelegation"]?.jsonPrimitive?.content?.let { listOf(it) }
             ?: emptyList()
-        
+
         // Extract services
         val service = json["service"]?.jsonArray?.mapNotNull { sJson ->
             val sObj = sJson.jsonObject
             val sId = sObj["id"]?.jsonPrimitive?.content
             val sType = sObj["type"]?.jsonPrimitive?.content
             val sEndpoint = sObj["serviceEndpoint"]
-            
+
             if (sId != null && sType != null && sEndpoint != null) {
                 val endpoint = convertJsonElement(sEndpoint) ?: return@mapNotNull null
                 DidService(
@@ -252,7 +260,7 @@ class DefaultUniversalResolver(
                 )
             } else null
         } ?: emptyList()
-        
+
         return DidDocument(
             id = id,
             context = context,
@@ -265,26 +273,26 @@ class DefaultUniversalResolver(
             service = service
         )
     }
-    
+
     /**
      * Parses DID document metadata from JSON.
      */
     private fun parseDidDocumentMetadata(metadataJson: JsonObject?): DidDocumentMetadata {
         if (metadataJson == null) return DidDocumentMetadata()
-        
-        val created = metadataJson["created"]?.jsonPrimitive?.content?.let { 
+
+        val created = metadataJson["created"]?.jsonPrimitive?.content?.let {
             try { Instant.parse(it) } catch (e: Exception) { null }
         }
-        val updated = metadataJson["updated"]?.jsonPrimitive?.content?.let { 
+        val updated = metadataJson["updated"]?.jsonPrimitive?.content?.let {
             try { Instant.parse(it) } catch (e: Exception) { null }
         }
         val versionId = metadataJson["versionId"]?.jsonPrimitive?.content
-        val nextUpdate = metadataJson["nextUpdate"]?.jsonPrimitive?.content?.let { 
+        val nextUpdate = metadataJson["nextUpdate"]?.jsonPrimitive?.content?.let {
             try { Instant.parse(it) } catch (e: Exception) { null }
         }
         val canonicalId = metadataJson["canonicalId"]?.jsonPrimitive?.content
         val equivalentId = metadataJson["equivalentId"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content } ?: emptyList()
-        
+
         return DidDocumentMetadata(
             created = created,
             updated = updated,
@@ -294,14 +302,14 @@ class DefaultUniversalResolver(
             equivalentId = equivalentId
         )
     }
-    
+
     /**
      * Parses resolution metadata from JSON.
      */
     private fun parseResolutionMetadata(metadataJson: JsonObject): Map<String, Any?> {
         return metadataJson.entries.associate { it.key to convertJsonElement(it.value) }
     }
-    
+
     /**
      * Converts JsonElement to Any for metadata maps.
      */
@@ -321,7 +329,7 @@ class DefaultUniversalResolver(
             is JsonNull -> null
         }
     }
-    
+
     /**
      * Parses a list of supported methods from JSON response.
      */

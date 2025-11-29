@@ -11,30 +11,30 @@ import java.util.zip.GZIPOutputStream
 
 /**
  * Archives messages to cold storage.
- * 
+ *
  * Moves old messages to cold storage (S3, Azure Blob, etc.) to reduce
  * database size and costs.
  */
 interface MessageArchiver {
     /**
      * Archives messages matching the policy.
-     * 
+     *
      * @param policy Archive policy to determine which messages to archive
      * @return Archive result
      */
     suspend fun archiveMessages(policy: ArchivePolicy): ArchiveResult
-    
+
     /**
      * Restores archived messages.
-     * 
+     *
      * @param archiveId Archive ID to restore
      * @return Restore result
      */
     suspend fun restoreMessages(archiveId: String): RestoreResult
-    
+
     /**
      * Lists available archives.
-     * 
+     *
      * @return List of archive IDs
      */
     suspend fun listArchives(): List<String>
@@ -62,9 +62,9 @@ data class RestoreResult(
 
 /**
  * S3-based message archiver.
- * 
+ *
  * Archives messages to AWS S3 in compressed JSONL format.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * // Note: Requires AWS SDK
@@ -82,16 +82,16 @@ class S3MessageArchiver(
     private val bucketName: String,
     private val prefix: String = "archives/"
 ) : MessageArchiver {
-    
-    private val json = Json { 
+
+    private val json = Json {
         prettyPrint = false
         encodeDefaults = false
     }
-    
+
     override suspend fun archiveMessages(policy: ArchivePolicy): ArchiveResult = withContext(Dispatchers.IO) {
         // Find messages to archive
         val messagesToArchive = findMessagesToArchive(policy)
-        
+
         if (messagesToArchive.isEmpty()) {
             return@withContext ArchiveResult(
                 archiveId = "",
@@ -101,18 +101,18 @@ class S3MessageArchiver(
                 archivedAt = java.time.Instant.now().toString()
             )
         }
-        
+
         // Create archive file (compressed JSONL)
         val archiveId = generateArchiveId()
         val archiveData = createArchiveFile(messagesToArchive)
-        
+
         // Upload to S3
         val s3Key = "$prefix$archiveId.jsonl.gz"
         uploadToS3(s3Key, archiveData)
-        
+
         // Mark messages as archived in database
         markAsArchived(messagesToArchive.map { it.id })
-        
+
         ArchiveResult(
             archiveId = archiveId,
             messageCount = messagesToArchive.size,
@@ -121,20 +121,20 @@ class S3MessageArchiver(
             archivedAt = java.time.Instant.now().toString()
         )
     }
-    
+
     override suspend fun restoreMessages(archiveId: String): RestoreResult = withContext(Dispatchers.IO) {
         val s3Key = "$prefix$archiveId.jsonl.gz"
-        
+
         // Download from S3
         val archiveData = downloadFromS3(s3Key)
-        
+
         // Parse archive file
         val messages = parseArchiveFile(archiveData)
-        
+
         // Restore messages to storage
         val restoredIds = mutableListOf<String>()
         val errors = mutableListOf<String>()
-        
+
         messages.forEach { message ->
             try {
                 storage.store(message)
@@ -143,19 +143,19 @@ class S3MessageArchiver(
                 errors.add("Failed to restore ${message.id}: ${e.message}")
             }
         }
-        
+
         RestoreResult(
             messageCount = messages.size,
             restoredIds = restoredIds,
             errors = errors
         )
     }
-    
+
     override suspend fun listArchives(): List<String> = withContext(Dispatchers.IO) {
         // List objects in S3 with prefix
         listS3Objects(prefix)
     }
-    
+
     private suspend fun findMessagesToArchive(policy: ArchivePolicy): List<DidCommMessage> {
         // Query all messages and filter by policy
         // In production, use efficient query based on policy
@@ -165,15 +165,15 @@ class S3MessageArchiver(
             limit = 10000,
             offset = 0
         )
-        
+
         return allMessages.filter { message ->
             policy.shouldArchive(message)
         }
     }
-    
+
     private fun createArchiveFile(messages: List<DidCommMessage>): ByteArray {
         val output = ByteArrayOutputStream()
-        
+
         GZIPOutputStream(output).use { gzip ->
             messages.forEach { message ->
                 val line = json.encodeToString(
@@ -183,13 +183,13 @@ class S3MessageArchiver(
                 gzip.write(line.toByteArray(Charsets.UTF_8))
             }
         }
-        
+
         return output.toByteArray()
     }
-    
+
     private fun parseArchiveFile(data: ByteArray): List<DidCommMessage> {
         val messages = mutableListOf<DidCommMessage>()
-        
+
         // Decompress and parse JSONL
         java.util.zip.GZIPInputStream(data.inputStream()).use { gzip ->
             gzip.bufferedReader().useLines { lines ->
@@ -208,10 +208,10 @@ class S3MessageArchiver(
                 }
             }
         }
-        
+
         return messages
     }
-    
+
     private suspend fun uploadToS3(key: String, data: ByteArray) {
         // Upload to S3 using AWS SDK
         // Implementation depends on S3 client
@@ -222,25 +222,25 @@ class S3MessageArchiver(
         //     .build()
         // s3Client.putObject(request, RequestBody.fromBytes(data))
     }
-    
+
     private suspend fun downloadFromS3(key: String): ByteArray {
         // Download from S3 using AWS SDK
         // Implementation depends on S3 client
         return ByteArray(0) // Placeholder
     }
-    
+
     private suspend fun listS3Objects(prefix: String): List<String> {
         // List objects in S3 with prefix
         // Implementation depends on S3 client
         return emptyList() // Placeholder
     }
-    
+
     private suspend fun markAsArchived(messageIds: List<String>) {
         // Update database to mark messages as archived
         // This would require adding 'archived' flag to storage interface
         // For now, this is a placeholder
     }
-    
+
     private fun generateArchiveId(): String {
         return UUID.randomUUID().toString()
     }

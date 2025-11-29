@@ -27,7 +27,7 @@ class StatusListManagerTest {
             issuerDid = "did:key:issuer",
             purpose = StatusPurpose.REVOCATION
         )
-        
+
         assertNotNull(statusList)
         assertEquals("did:key:issuer", statusList.issuer)
         assertEquals(StatusPurpose.REVOCATION.name.lowercase(), statusList.credentialSubject.statusPurpose)
@@ -40,7 +40,7 @@ class StatusListManagerTest {
             purpose = StatusPurpose.REVOCATION,
             size = 1000
         )
-        
+
         assertNotNull(statusList)
         assertTrue(statusList.credentialSubject.encodedList.isNotBlank())
     }
@@ -51,7 +51,7 @@ class StatusListManagerTest {
             issuerDid = "did:key:issuer",
             purpose = StatusPurpose.SUSPENSION
         )
-        
+
         assertEquals(StatusPurpose.SUSPENSION.name.lowercase(), statusList.credentialSubject.statusPurpose)
     }
 
@@ -61,9 +61,9 @@ class StatusListManagerTest {
             issuerDid = "did:key:issuer",
             purpose = StatusPurpose.REVOCATION
         )
-        
+
         val result = manager.revokeCredential("cred-123", statusList.id)
-        
+
         assertTrue(result)
     }
 
@@ -73,9 +73,9 @@ class StatusListManagerTest {
             issuerDid = "did:key:issuer",
             purpose = StatusPurpose.SUSPENSION
         )
-        
+
         val result = manager.suspendCredential("cred-123", statusList.id)
-        
+
         assertTrue(result)
     }
 
@@ -87,7 +87,7 @@ class StatusListManagerTest {
         )
         val credentialId = "https://example.com/credentials/revoked-123"
         manager.revokeCredential(credentialId, statusList.id)
-        
+
         val credential = createTestCredential(
             id = credentialId,
             credentialStatus = CredentialStatus(
@@ -96,9 +96,9 @@ class StatusListManagerTest {
                 statusListIndex = "0"
             )
         )
-        
+
         val status = manager.checkRevocationStatus(credential)
-        
+
         assertTrue(status.revoked)
         assertEquals(statusList.id, status.statusListId)
     }
@@ -109,7 +109,7 @@ class StatusListManagerTest {
             issuerDid = "did:key:issuer",
             purpose = StatusPurpose.REVOCATION
         )
-        
+
         val credential = createTestCredential(
             credentialStatus = CredentialStatus(
                 id = statusList.id,
@@ -117,18 +117,18 @@ class StatusListManagerTest {
                 statusListIndex = "1"
             )
         )
-        
+
         val status = manager.checkRevocationStatus(credential)
-        
+
         assertFalse(status.revoked)
     }
 
     @Test
     fun `test StatusListManager checkRevocationStatus with no credential status`() = runBlocking {
         val credential = createTestCredential(credentialStatus = null)
-        
+
         val status = manager.checkRevocationStatus(credential)
-        
+
         assertFalse(status.revoked)
         assertFalse(status.suspended)
     }
@@ -139,9 +139,9 @@ class StatusListManagerTest {
             issuerDid = "did:key:issuer",
             purpose = StatusPurpose.REVOCATION
         )
-        
+
         val updated = manager.updateStatusList(statusList.id, listOf(0, 5, 10))
-        
+
         assertNotNull(updated)
         assertEquals(statusList.id, updated.id)
     }
@@ -152,9 +152,9 @@ class StatusListManagerTest {
             issuerDid = "did:key:issuer",
             purpose = StatusPurpose.REVOCATION
         )
-        
+
         val retrieved = manager.getStatusList(statusList.id)
-        
+
         assertNotNull(retrieved)
         assertEquals(statusList.id, retrieved?.id)
     }
@@ -162,21 +162,21 @@ class StatusListManagerTest {
     @Test
     fun `test StatusListManager getStatusList returns null for nonexistent`() = runBlocking {
         val result = manager.getStatusList("nonexistent")
-        
+
         assertNull(result)
     }
 
     @Test
     fun `test StatusListManager revokeCredential returns false for nonexistent status list`() = runBlocking {
         val result = manager.revokeCredential("cred-123", "nonexistent")
-        
+
         assertFalse(result)
     }
 
     @Test
     fun `test StatusListManager suspendCredential returns false for nonexistent status list`() = runBlocking {
         val result = manager.suspendCredential("cred-123", "nonexistent")
-        
+
         assertFalse(result)
     }
 
@@ -188,7 +188,7 @@ class StatusListManagerTest {
         )
         val credentialId = "https://example.com/credentials/suspended-123"
         manager.suspendCredential(credentialId, statusList.id)
-        
+
         val credential = createTestCredential(
             id = credentialId,
             credentialStatus = CredentialStatus(
@@ -197,9 +197,9 @@ class StatusListManagerTest {
                 statusListIndex = "0"
             )
         )
-        
+
         val status = manager.checkRevocationStatus(credential)
-        
+
         assertTrue(status.suspended)
     }
 
@@ -209,9 +209,9 @@ class StatusListManagerTest {
             issuerDid = "did:key:issuer",
             purpose = StatusPurpose.REVOCATION
         )
-        
+
         val updated = manager.updateStatusList(statusList.id, emptyList())
-        
+
         assertNotNull(updated)
     }
 

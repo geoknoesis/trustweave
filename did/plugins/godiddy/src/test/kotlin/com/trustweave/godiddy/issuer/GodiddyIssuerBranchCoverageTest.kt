@@ -18,7 +18,7 @@ class GodiddyIssuerBranchCoverageTest {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val issuer = GodiddyIssuer(client)
-        
+
         val credential = buildJsonObject {
             put("id", "credential-1")
             put("type", buildJsonArray { add("VerifiableCredential") })
@@ -27,7 +27,7 @@ class GodiddyIssuerBranchCoverageTest {
                 put("id", "did:key:subject")
             })
         }
-        
+
         // This will fail in real scenario, but we test the branch
         try {
             val result = issuer.issueCredential(credential)
@@ -36,7 +36,7 @@ class GodiddyIssuerBranchCoverageTest {
             // Expected to fail without mock
             assertIs<TrustWeaveException>(e)
         }
-        
+
         client.close()
     }
 
@@ -45,7 +45,7 @@ class GodiddyIssuerBranchCoverageTest {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val issuer = GodiddyIssuer(client)
-        
+
         val credential = buildJsonObject {
             put("id", "credential-1")
             put("type", buildJsonArray { add("VerifiableCredential") })
@@ -54,12 +54,12 @@ class GodiddyIssuerBranchCoverageTest {
                 put("id", "did:key:subject")
             })
         }
-        
+
         val options = mapOf<String, Any?>(
             "proofType" to "Ed25519Signature2020",
             "keyId" to "key-1"
         )
-        
+
         // This will fail in real scenario, but we test the branch
         try {
             val result = issuer.issueCredential(credential, options)
@@ -68,7 +68,7 @@ class GodiddyIssuerBranchCoverageTest {
             // Expected to fail without mock
             assertIs<TrustWeaveException>(e)
         }
-        
+
         client.close()
     }
 
@@ -77,7 +77,7 @@ class GodiddyIssuerBranchCoverageTest {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val issuer = GodiddyIssuer(client)
-        
+
         val credential = buildJsonObject {
             put("id", "credential-1")
             put("type", buildJsonArray { add("VerifiableCredential") })
@@ -86,7 +86,7 @@ class GodiddyIssuerBranchCoverageTest {
                 put("id", "did:key:subject")
             })
         }
-        
+
         // This will fail in real scenario, but we test the branch
         try {
             val result = issuer.issueCredential(credential)
@@ -95,7 +95,7 @@ class GodiddyIssuerBranchCoverageTest {
             // Expected to fail without mock
             assertIs<TrustWeaveException>(e)
         }
-        
+
         client.close()
     }
 
@@ -104,7 +104,7 @@ class GodiddyIssuerBranchCoverageTest {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val issuer = GodiddyIssuer(client)
-        
+
         val credential = buildJsonObject {
             put("id", "credential-1")
             put("type", buildJsonArray { add("VerifiableCredential") })
@@ -113,7 +113,7 @@ class GodiddyIssuerBranchCoverageTest {
                 put("id", "did:key:subject")
             })
         }
-        
+
         // This will fail in real scenario, but we test the branch
         try {
             val result = issuer.issueCredential(credential, emptyMap())
@@ -122,7 +122,7 @@ class GodiddyIssuerBranchCoverageTest {
             // Expected to fail without mock
             assertIs<TrustWeaveException>(e)
         }
-        
+
         client.close()
     }
 
@@ -131,7 +131,7 @@ class GodiddyIssuerBranchCoverageTest {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val issuer = GodiddyIssuer(client)
-        
+
         val credential = buildJsonObject {
             put("id", "credential-1")
             put("type", buildJsonArray { add("VerifiableCredential") })
@@ -140,7 +140,7 @@ class GodiddyIssuerBranchCoverageTest {
                 put("id", "did:key:subject")
             })
         }
-        
+
         val options = mapOf<String, Any?>(
             "string" to "value",
             "number" to 123,
@@ -149,7 +149,7 @@ class GodiddyIssuerBranchCoverageTest {
             "list" to listOf("item1", "item2"),
             "null" to null
         )
-        
+
         // This will fail in real scenario, but we test the branch
         try {
             val result = issuer.issueCredential(credential, options)
@@ -158,7 +158,7 @@ class GodiddyIssuerBranchCoverageTest {
             // Expected to fail without mock
             assertIs<TrustWeaveException>(e)
         }
-        
+
         client.close()
     }
 }

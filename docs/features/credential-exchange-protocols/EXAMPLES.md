@@ -35,11 +35,11 @@ fun main() = runBlocking {
     val resolveDid: suspend (String) -> DidDocument? = { did ->
         DidDocument(id = did, verificationMethod = emptyList())
     }
-    
+
     val registry = CredentialExchangeProtocolRegistry()
     val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
     registry.register(DidCommExchangeProtocol(didCommService))
-    
+
     // Create offer
     val offer = registry.offerCredential(
         protocolName = "didcomm",
@@ -57,7 +57,7 @@ fun main() = runBlocking {
             )
         )
     )
-    
+
     println("Offer ID: ${offer.offerId}")
 }
 ```
@@ -76,10 +76,10 @@ import kotlinx.serialization.json.put
 fun main() = runBlocking {
     // Setup (same as Example 1)
     val registry = setupRegistry()
-    
+
     val issuerDid = "did:key:issuer"
     val holderDid = "did:key:holder"
-    
+
     // Step 1: Offer
     val offer = registry.offerCredential(
         protocolName = "didcomm",
@@ -98,7 +98,7 @@ fun main() = runBlocking {
             )
         )
     )
-    
+
     // Step 2: Request
     val request = registry.requestCredential(
         protocolName = "didcomm",
@@ -112,7 +112,7 @@ fun main() = runBlocking {
             )
         )
     )
-    
+
     // Step 3: Issue
     val credential = VerifiableCredential(
         type = listOf("VerifiableCredential", "PersonCredential"),
@@ -124,7 +124,7 @@ fun main() = runBlocking {
         },
         issuanceDate = java.time.Instant.now().toString()
     )
-    
+
     val issue = registry.issueCredential(
         protocolName = "didcomm",
         request = CredentialIssueRequest(
@@ -138,7 +138,7 @@ fun main() = runBlocking {
             )
         )
     )
-    
+
     println("✅ Credential issued: ${issue.credential.id}")
 }
 ```
@@ -152,10 +152,10 @@ fun main() = runBlocking {
 ```kotlin
 fun proofWorkflow() = runBlocking {
     val registry = setupRegistry()
-    
+
     val verifierDid = "did:key:verifier"
     val proverDid = "did:key:prover"
-    
+
     // Step 1: Request proof
     val proofRequest = registry.requestProof(
         protocolName = "didcomm",
@@ -184,10 +184,10 @@ fun proofWorkflow() = runBlocking {
             )
         )
     )
-    
+
     // Step 2: Create presentation (prover side)
     val presentation = createPresentation(proofRequest)
-    
+
     // Step 3: Present proof
     val presentationResponse = registry.presentProof(
         protocolName = "didcomm",
@@ -202,7 +202,7 @@ fun proofWorkflow() = runBlocking {
             )
         )
     )
-    
+
     println("✅ Proof presented: ${presentationResponse.presentationId}")
 }
 ```
@@ -268,17 +268,17 @@ fun validateAndOffer(
     if (!isValidDid(request.holderDid)) {
         return Result.failure(IllegalArgumentException("Invalid holder DID"))
     }
-    
+
     // Validate preview
     if (request.credentialPreview.attributes.isEmpty()) {
         return Result.failure(IllegalArgumentException("Preview must have attributes"))
     }
-    
+
     // Validate protocol options
     if (!registry.isRegistered("didcomm")) {
         return Result.failure(IllegalStateException("Protocol not registered"))
     }
-    
+
     // All valid, proceed
     return runBlocking {
         try {
@@ -312,7 +312,7 @@ suspend fun offerWithProtocolSelection(
         context.isBrowser -> "chapi"
         else -> "didcomm"  // Default
     }
-    
+
     return registry.offerCredential(protocol, request)
 }
 
@@ -332,31 +332,31 @@ data class ExchangeContext(
 ```kotlin
 fun multipleProtocolsExample() = runBlocking {
     val registry = CredentialExchangeProtocolRegistry()
-    
+
     // Register multiple protocols
     val kms = InMemoryKeyManagementService()
     val resolveDid: suspend (String) -> DidDocument? = { did ->
         DidDocument(id = did, verificationMethod = emptyList())
     }
-    
+
     // DIDComm
     val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
     registry.register(DidCommExchangeProtocol(didCommService))
-    
+
     // OIDC4VCI
     val oidc4vciService = Oidc4VciService(
         credentialIssuerUrl = "https://issuer.example.com",
         kms = kms
     )
     registry.register(Oidc4VciExchangeProtocol(oidc4vciService))
-    
+
     // CHAPI
     val chapiService = ChapiService()
     registry.register(ChapiExchangeProtocol(chapiService))
-    
+
     println("Registered protocols: ${registry.getAllProtocolNames()}")
     // Output: [didcomm, oidc4vci, chapi]
-    
+
     // Use any protocol
     val didCommOffer = registry.offerCredential("didcomm", request)
     val oidcOffer = registry.offerCredential("oidc4vci", request)
@@ -374,7 +374,7 @@ suspend fun offerWithFallbackChain(
     request: CredentialOfferRequest
 ): CredentialOfferResponse {
     val protocols = listOf("didcomm", "oidc4vci", "chapi")
-    
+
     for (protocol in protocols) {
         if (registry.isRegistered(protocol)) {
             try {
@@ -385,7 +385,7 @@ suspend fun offerWithFallbackChain(
             }
         }
     }
-    
+
     throw IllegalStateException("All protocols failed")
 }
 ```
@@ -402,11 +402,11 @@ fun setupRegistry(): CredentialExchangeProtocolRegistry {
     val resolveDid: suspend (String) -> DidDocument? = { did ->
         DidDocument(id = did, verificationMethod = emptyList())
     }
-    
+
     val registry = CredentialExchangeProtocolRegistry()
     val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
     registry.register(DidCommExchangeProtocol(didCommService))
-    
+
     return registry
 }
 ```

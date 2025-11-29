@@ -7,13 +7,13 @@ import java.io.Closeable
 
 /**
  * Factory for creating HashiCorp Vault clients.
- * 
+ *
  * Handles authentication (token or AppRole) and client configuration.
  */
 object VaultKmsClientFactory {
     /**
      * Creates a Vault client from configuration.
-     * 
+     *
      * @param config Vault configuration
      * @return Configured Vault client
      */
@@ -21,12 +21,12 @@ object VaultKmsClientFactory {
         val vaultConfig = VaultConfig()
             .address(config.address)
             .engineVersion(config.engineVersion)
-        
+
         // Set namespace if provided (Vault Enterprise)
         config.namespace?.let {
             vaultConfig.nameSpace(it)
         }
-        
+
         // Configure authentication
         if (config.token != null) {
             vaultConfig.token(config.token)
@@ -34,12 +34,12 @@ object VaultKmsClientFactory {
             // AppRole authentication
             val appRolePath = config.appRolePath ?: "approle"
             vaultConfig.build()
-            
+
             // Authenticate using AppRole
             val tempVault = Vault(vaultConfig)
             val authResponse: AuthResponse = tempVault.auth()
                 .loginByAppRole(appRolePath, config.roleId, config.secretId)
-            
+
             // Update config with the token from AppRole authentication
             vaultConfig.token(authResponse.authClientToken)
         } else {
@@ -47,7 +47,7 @@ object VaultKmsClientFactory {
                 "Vault authentication requires either 'token' or 'roleId' + 'secretId' (AppRole)"
             )
         }
-        
+
         return Vault(vaultConfig.build())
     }
 }

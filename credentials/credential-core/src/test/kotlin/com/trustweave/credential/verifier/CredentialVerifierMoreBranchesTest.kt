@@ -51,11 +51,11 @@ class CredentialVerifierMoreBranchesTest {
             expirationDate = Instant.now().minusSeconds(86400).toString() // Expired
         )
         val options = CredentialVerificationOptions(checkExpiration = false)
-        
+
         val result = verifier.verify(credential, options)
-        
+
         // Should not check expiration
-        assertTrue(result.valid || !result.errors.any { it.contains("expired") || it.contains("expiration") })
+        assertTrue(result.valid || !result.allErrors.any { it.contains("expired") || it.contains("expiration") })
     }
 
     @Test
@@ -69,11 +69,11 @@ class CredentialVerifierMoreBranchesTest {
             )
         )
         val options = CredentialVerificationOptions(checkRevocation = false)
-        
+
         val result = verifier.verify(credential, options)
-        
+
         // Should not check revocation
-        assertTrue(result.valid || !result.errors.any { it.contains("revoked") || it.contains("revocation") })
+        assertTrue(result.valid || !result.allErrors.any { it.contains("revoked") || it.contains("revocation") })
     }
 
     @Test
@@ -86,11 +86,11 @@ class CredentialVerifierMoreBranchesTest {
         )
         val credential = createTestCredential(schema = schema)
         val options = CredentialVerificationOptions(validateSchema = false)
-        
+
         val result = verifier.verify(credential, options)
-        
+
         // Should not validate schema
-        assertTrue(result.valid || !result.errors.any { it.contains("schema") })
+        assertTrue(result.valid || !result.allErrors.any { it.contains("schema") })
     }
 
     @Test
@@ -107,11 +107,11 @@ class CredentialVerifierMoreBranchesTest {
             )
         )
         val options = CredentialVerificationOptions(verifyBlockchainAnchor = false)
-        
+
         val result = verifier.verify(credential, options)
-        
+
         // Should not verify blockchain anchor
-        assertTrue(result.valid || !result.errors.any { it.contains("blockchain") || it.contains("anchor") })
+        assertTrue(result.valid || !result.allErrors.any { it.contains("blockchain") || it.contains("anchor") })
     }
 
     @Test
@@ -123,9 +123,9 @@ class CredentialVerifierMoreBranchesTest {
             validateSchema = false,
             verifyBlockchainAnchor = false
         )
-        
+
         val result = verifier.verify(credential, options)
-        
+
         assertNotNull(result)
     }
 
@@ -136,10 +136,10 @@ class CredentialVerifierMoreBranchesTest {
         val credential = createTestCredential(
             expirationDate = Instant.now().plusSeconds(86400).toString()
         )
-        
+
         val result = verifier.verify(credential)
-        
-        assertTrue(result.valid || !result.errors.any { it.contains("expired") })
+
+        assertTrue(result.valid || !result.allErrors.any { it.contains("expired") })
     }
 
     @Test
@@ -147,9 +147,9 @@ class CredentialVerifierMoreBranchesTest {
         val credential = createTestCredential(
             expirationDate = Instant.now().toString()
         )
-        
+
         val result = verifier.verify(credential)
-        
+
         assertNotNull(result)
     }
 
@@ -158,11 +158,11 @@ class CredentialVerifierMoreBranchesTest {
         val credential = createTestCredential(
             expirationDate = Instant.now().minusSeconds(86400).toString()
         )
-        
+
         val result = verifier.verify(credential)
-        
+
         assertFalse(result.valid)
-        assertTrue(result.errors.any { it.contains("expired") || it.contains("expiration") })
+        assertTrue(result.allErrors.any { it.contains("expired") || it.contains("expiration") })
     }
 
     @Test
@@ -170,9 +170,9 @@ class CredentialVerifierMoreBranchesTest {
         val credential = createTestCredential(
             expirationDate = "invalid-date-format"
         )
-        
+
         val result = verifier.verify(credential)
-        
+
         // Should handle gracefully
         assertNotNull(result)
     }
@@ -189,9 +189,9 @@ class CredentialVerifierMoreBranchesTest {
                 statusListCredential = "https://example.com/status/1"
             )
         )
-        
+
         val result = verifier.verify(credential)
-        
+
         assertNotNull(result)
     }
 
@@ -205,9 +205,9 @@ class CredentialVerifierMoreBranchesTest {
                 statusListCredential = "https://example.com/status/1"
             )
         )
-        
+
         val result = verifier.verify(credential)
-        
+
         assertNotNull(result)
     }
 
@@ -221,9 +221,9 @@ class CredentialVerifierMoreBranchesTest {
                 statusListCredential = null
             )
         )
-        
+
         val result = verifier.verify(credential)
-        
+
         assertNotNull(result)
     }
 
@@ -238,9 +238,9 @@ class CredentialVerifierMoreBranchesTest {
             schemaFormat = SchemaFormat.JSON_SCHEMA
         )
         val credential = createTestCredential(schema = schema)
-        
+
         val result = verifier.verify(credential)
-        
+
         // Should handle gracefully
         assertNotNull(result)
     }
@@ -253,15 +253,15 @@ class CredentialVerifierMoreBranchesTest {
             type = "JsonSchemaValidator2018",
             schemaFormat = SchemaFormat.JSON_SCHEMA
         )
-        
+
         runBlocking {
             SchemaRegistry.registerSchema(schema, buildJsonObject { })
         }
-        
+
         val credential = createTestCredential(schema = schema)
-        
+
         val result = verifier.verify(credential)
-        
+
         // Should handle gracefully
         assertNotNull(result)
     }
@@ -273,11 +273,11 @@ class CredentialVerifierMoreBranchesTest {
         val verifierWithFailedResolution = CredentialVerifier(
             booleanDidResolver { false }
         )
-        
+
         val credential = createTestCredential()
-        
+
         val result = verifierWithFailedResolution.verify(credential)
-        
+
         assertFalse(result.valid)
         assertFalse(result.issuerValid)
     }
@@ -287,11 +287,11 @@ class CredentialVerifierMoreBranchesTest {
         val verifierWithDifferentResolution = CredentialVerifier(
             booleanDidResolver { did -> did == "did:key:different" }
         )
-        
+
         val credential = createTestCredential()
-        
+
         val result = verifierWithDifferentResolution.verify(credential)
-        
+
         assertFalse(result.valid)
         assertFalse(result.issuerValid)
     }
@@ -310,9 +310,9 @@ class CredentialVerifierMoreBranchesTest {
                 jws = "jws-value-123"
             )
         )
-        
+
         val result = verifier.verify(credential)
-        
+
         assertNotNull(result)
     }
 
@@ -328,9 +328,9 @@ class CredentialVerifierMoreBranchesTest {
                 jws = null
             )
         )
-        
+
         val result = verifier.verify(credential)
-        
+
         assertNotNull(result)
     }
 
@@ -346,9 +346,9 @@ class CredentialVerifierMoreBranchesTest {
                 jws = "jws-value-123"
             )
         )
-        
+
         val result = verifier.verify(credential)
-        
+
         assertNotNull(result)
     }
 

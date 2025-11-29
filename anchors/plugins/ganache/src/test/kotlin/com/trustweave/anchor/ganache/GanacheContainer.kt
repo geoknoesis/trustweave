@@ -6,10 +6,10 @@ import org.testcontainers.utility.DockerImageName
 
 /**
  * Testcontainers wrapper for Ganache CLI Docker container.
- * 
+ *
  * Automatically downloads and runs Ganache in a Docker container for testing.
  * Uses the official trufflesuite/ganache-cli image.
- * 
+ *
  * @see https://hub.docker.com/r/trufflesuite/ganache-cli/
  */
 class GanacheContainer : GenericContainer<GanacheContainer>(

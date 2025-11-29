@@ -17,18 +17,18 @@ import kotlinx.serialization.json.longOrNull
 
 /**
  * JSON Schema validator implementation.
- * 
+ *
  * Supports JSON Schema Draft 7 and Draft 2020-12.
  * Validates credential structure and credentialSubject against JSON Schema.
- * 
+ *
  * **Note**: This is a placeholder implementation. A full implementation would
  * require a JSON Schema validation library (e.g., everit-json-schema, networknt/json-schema-validator).
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val validator = JsonSchemaValidator()
  * SchemaValidatorRegistry.register(validator)
- * 
+ *
  * val schema = buildJsonObject {
  *     put("\$schema", "http://json-schema.org/draft-07/schema#")
  *     put("type", "object")
@@ -36,25 +36,25 @@ import kotlinx.serialization.json.longOrNull
  *         put("name", buildJsonObject { put("type", "string") })
  *     })
  * }
- * 
+ *
  * val result = validator.validate(credential, schema)
  * ```
  */
 class JsonSchemaValidator : SchemaValidator {
     override val schemaFormat = SchemaFormat.JSON_SCHEMA
-    
+
     override suspend fun validate(
         credential: VerifiableCredential,
         schema: JsonObject
     ): SchemaValidationResult {
         val errors = mutableListOf<SchemaValidationError>()
-        
+
         // TODO: Implement JSON Schema validation
         // 1. Validate credential structure (issuer, type, etc.)
         // 2. Validate credentialSubject against schema
         // 3. Check required fields
         // 4. Validate types and constraints
-        
+
         // Placeholder: Basic structure validation
         if (!credential.type.contains("VerifiableCredential")) {
             errors.add(SchemaValidationError(
@@ -63,7 +63,7 @@ class JsonSchemaValidator : SchemaValidator {
                 code = "missing_type"
             ))
         }
-        
+
         if (credential.issuer.isBlank()) {
             errors.add(SchemaValidationError(
                 path = "/issuer",
@@ -71,32 +71,32 @@ class JsonSchemaValidator : SchemaValidator {
                 code = "missing_issuer"
             ))
         }
-        
+
         // Validate credentialSubject if schema has properties
         val schemaProperties = schema["properties"]?.jsonObject
         if (schemaProperties != null) {
             val subjectResult = validateCredentialSubject(credential.credentialSubject, schema)
             errors.addAll(subjectResult.errors)
         }
-        
+
         return SchemaValidationResult(
             valid = errors.isEmpty(),
             errors = errors
         )
     }
-    
+
     override suspend fun validateCredentialSubject(
         subject: kotlinx.serialization.json.JsonElement,
         schema: JsonObject
     ): SchemaValidationResult {
         val errors = mutableListOf<SchemaValidationError>()
-        
+
         // TODO: Implement JSON Schema validation for credentialSubject
         // 1. Parse schema properties
         // 2. Validate each field in credentialSubject
         // 3. Check required fields
         // 4. Validate types and constraints
-        
+
         // Enhanced validation with required fields and type checking
         val schemaProperties = schema["properties"]?.jsonObject
         val requiredFields = schema["required"]?.let {
@@ -109,7 +109,7 @@ class JsonSchemaValidator : SchemaValidator {
                 else -> emptyList()
             }
         } ?: emptyList()
-        
+
         if (schemaProperties != null && subject is kotlinx.serialization.json.JsonObject) {
             // Check required fields
             for (field in requiredFields) {
@@ -121,7 +121,7 @@ class JsonSchemaValidator : SchemaValidator {
                     ))
                 }
             }
-            
+
             // Validate each property in credentialSubject against schema
             for ((fieldName, fieldValue) in subject.entries) {
                 val fieldSchema = schemaProperties[fieldName]?.jsonObject
@@ -131,13 +131,13 @@ class JsonSchemaValidator : SchemaValidator {
                 }
             }
         }
-        
+
         return SchemaValidationResult(
             valid = errors.isEmpty(),
             errors = errors
         )
     }
-    
+
     /**
      * Validate a single field against its schema.
      */
@@ -147,7 +147,7 @@ class JsonSchemaValidator : SchemaValidator {
         path: String
     ): List<SchemaValidationError> {
         val errors = mutableListOf<SchemaValidationError>()
-        
+
         // Check type
         val expectedType = fieldSchema["type"]?.jsonPrimitive?.contentOrNull
         if (expectedType != null) {
@@ -164,7 +164,7 @@ class JsonSchemaValidator : SchemaValidator {
                 }
                 else -> "unknown"
             }
-            
+
             if (actualType != expectedType && !isTypeCompatible(actualType, expectedType)) {
                 errors.add(SchemaValidationError(
                     path = path,
@@ -173,7 +173,7 @@ class JsonSchemaValidator : SchemaValidator {
                 ))
             }
         }
-        
+
         // Check enum values
         val enumValues = fieldSchema["enum"]?.jsonArray
         if (enumValues != null && !enumValues.contains(value)) {
@@ -183,12 +183,12 @@ class JsonSchemaValidator : SchemaValidator {
                 code = "enum_mismatch"
             ))
         }
-        
+
         // Check string format constraints
         if (expectedType == "string") {
             val format = fieldSchema["format"]?.jsonPrimitive?.contentOrNull
             val stringValue = value.jsonPrimitive.contentOrNull
-            
+
             if (format != null && stringValue != null) {
                 when (format) {
                     "email" -> {
@@ -211,11 +211,11 @@ class JsonSchemaValidator : SchemaValidator {
                     }
                 }
             }
-            
+
             // Check string length constraints
             val minLength = fieldSchema["minLength"]?.jsonPrimitive?.intOrNull
             val maxLength = fieldSchema["maxLength"]?.jsonPrimitive?.intOrNull
-            
+
             if (stringValue != null) {
                 if (minLength != null && stringValue.length < minLength) {
                     errors.add(SchemaValidationError(
@@ -233,14 +233,14 @@ class JsonSchemaValidator : SchemaValidator {
                 }
             }
         }
-        
+
         // Check number constraints
         if (expectedType == "number" || expectedType == "integer") {
             val numValue = value.jsonPrimitive.doubleOrNull
             if (numValue != null) {
                 val minimum = fieldSchema["minimum"]?.jsonPrimitive?.doubleOrNull
                 val maximum = fieldSchema["maximum"]?.jsonPrimitive?.doubleOrNull
-                
+
                 if (minimum != null && numValue < minimum) {
                     errors.add(SchemaValidationError(
                         path = path,
@@ -257,10 +257,10 @@ class JsonSchemaValidator : SchemaValidator {
                 }
             }
         }
-        
+
         return errors
     }
-    
+
     /**
      * Check if types are compatible (e.g., integer is compatible with number).
      */

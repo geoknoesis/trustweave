@@ -12,35 +12,35 @@ import java.nio.file.Paths
 
 /**
  * Loads DID methods from JSON registration files.
- * 
+ *
  * This allows DID methods to be registered by simply adding a JSON file
  * that follows the DID Registration specification, making it easy to add
  * new method support without writing code.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * // Load from a directory
  * val loader = JsonDidMethodLoader()
  * val methods = loader.loadFromDirectory(Paths.get("did-methods"))
- * 
+ *
  * // Register all methods
  * methods.forEach { registry.register(it) }
- * 
+ *
  * // Or load a single file
  * val method = loader.loadFromFile(Paths.get("did-methods/example.json"))
  * registry.register(method)
  * ```
  */
 class JsonDidMethodLoader {
-    
+
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
     }
-    
+
     /**
      * Loads a DID method from a JSON file.
-     * 
+     *
      * @param filePath Path to the JSON registration file
      * @return A DidMethod instance
      * @throws IllegalArgumentException if the file is invalid
@@ -49,14 +49,14 @@ class JsonDidMethodLoader {
         val jsonString = Files.readString(filePath)
         return loadFromString(jsonString)
     }
-    
+
     /**
      * Loads a DID method from a JSON string.
-     * 
+     *
      * Supports both:
      * 1. Official DID Method Registry format (from identity.foundation/did-registration)
      * 2. Legacy Trustweave format (with driver/capabilities fields)
-     * 
+     *
      * @param jsonString JSON registration string
      * @return A DidMethod instance
      * @throws IllegalArgumentException if the JSON is invalid
@@ -68,7 +68,7 @@ class JsonDidMethodLoader {
         } catch (e: Exception) {
             null
         }
-        
+
         if (registryEntry != null) {
             // Map from official registry format to DidMethod
             return RegistryEntryMapper.mapToDidMethod(registryEntry)
@@ -77,7 +77,7 @@ class JsonDidMethodLoader {
                     context = mapOf("method" to registryEntry.name)
                 )
         }
-        
+
         // Fall back to legacy format
         val spec = try {
             DidRegistrationSpecParser.parse(jsonString)
@@ -87,13 +87,13 @@ class JsonDidMethodLoader {
                 jsonString = jsonString
             ).apply { initCause(e) }
         }
-        
+
         return createMethodFromSpec(spec)
     }
-    
+
     /**
      * Loads a DID method from an InputStream.
-     * 
+     *
      * @param inputStream Input stream containing JSON registration data
      * @return A DidMethod instance
      */
@@ -101,12 +101,12 @@ class JsonDidMethodLoader {
         val jsonString = inputStream.bufferedReader().use { it.readText() }
         return loadFromString(jsonString)
     }
-    
+
     /**
      * Loads all DID methods from a directory.
-     * 
+     *
      * Scans the directory for JSON files and loads each as a DID method.
-     * 
+     *
      * @param directory Path to directory containing JSON registration files
      * @return List of DidMethod instances
      */
@@ -114,7 +114,7 @@ class JsonDidMethodLoader {
         if (!Files.exists(directory) || !Files.isDirectory(directory)) {
             return emptyList()
         }
-        
+
         return Files.list(directory).use { stream ->
             stream
                 .filter { it.toString().endsWith(".json", ignoreCase = true) }
@@ -132,22 +132,22 @@ class JsonDidMethodLoader {
                 .collect(java.util.stream.Collectors.toList())
         }
     }
-    
+
     /**
      * Loads all DID methods from a classpath resource directory.
-     * 
+     *
      * Useful for bundling method registrations with the application.
-     * 
+     *
      * @param resourcePath Classpath resource path (e.g., "did-methods")
      * @return List of DidMethod instances
      */
     fun loadFromClasspath(resourcePath: String): List<DidMethod> {
         val classLoader = Thread.currentThread().contextClassLoader
             ?: JsonDidMethodLoader::class.java.classLoader
-        
+
         val resourceUrl = classLoader.getResource(resourcePath)
             ?: return emptyList()
-        
+
         return when {
             resourceUrl.protocol == "file" -> {
                 val path = Paths.get(resourceUrl.toURI())
@@ -163,24 +163,24 @@ class JsonDidMethodLoader {
             }
         }
     }
-    
+
     private fun loadFromJarResource(classLoader: ClassLoader, resourcePath: String): List<DidMethod> {
         val methods = mutableListOf<DidMethod>()
         val resourceEnum = classLoader.getResources(resourcePath)
-        
+
         while (resourceEnum.hasMoreElements()) {
             val url = resourceEnum.nextElement()
             val connection = url.openConnection()
-            
+
             if (connection.javaClass.name.contains("JarURLConnection")) {
                 val jarConnection = connection as java.net.JarURLConnection
                 val jarFile = jarConnection.jarFile
-                
+
                 val entries = jarFile.entries()
                 while (entries.hasMoreElements()) {
                     val entry = entries.nextElement()
                     val name = entry.name
-                    
+
                     if (name.startsWith(resourcePath) && name.endsWith(".json")) {
                         try {
                             jarFile.getInputStream(entry).use { inputStream ->
@@ -193,10 +193,10 @@ class JsonDidMethodLoader {
                 }
             }
         }
-        
+
         return methods
     }
-    
+
     /**
      * Loads registry entries from a directory (for JsonDidMethodProvider).
      */
@@ -204,7 +204,7 @@ class JsonDidMethodLoader {
         if (!Files.exists(directory) || !Files.isDirectory(directory)) {
             return emptyList()
         }
-        
+
         return Files.list(directory).use { stream ->
             stream
                 .filter { it.toString().endsWith(".json", ignoreCase = true) }
@@ -230,17 +230,17 @@ class JsonDidMethodLoader {
                 .collect(java.util.stream.Collectors.toList())
         }
     }
-    
+
     /**
      * Loads registry entries from classpath (for JsonDidMethodProvider).
      */
     fun loadRegistryEntriesFromClasspath(resourcePath: String): List<DidMethodRegistryEntry> {
         val classLoader = Thread.currentThread().contextClassLoader
             ?: JsonDidMethodLoader::class.java.classLoader
-        
+
         val resourceUrl = classLoader.getResource(resourcePath)
             ?: return emptyList()
-        
+
         return when {
             resourceUrl.protocol == "file" -> {
                 val path = Paths.get(resourceUrl.toURI())
@@ -255,24 +255,24 @@ class JsonDidMethodLoader {
             }
         }
     }
-    
+
     private fun loadRegistryEntriesFromJarResource(classLoader: ClassLoader, resourcePath: String): List<DidMethodRegistryEntry> {
         val entries = mutableListOf<DidMethodRegistryEntry>()
         val resourceEnum = classLoader.getResources(resourcePath)
-        
+
         while (resourceEnum.hasMoreElements()) {
             val url = resourceEnum.nextElement()
             val connection = url.openConnection()
-            
+
             if (connection.javaClass.name.contains("JarURLConnection")) {
                 val jarConnection = connection as java.net.JarURLConnection
                 val jarFile = jarConnection.jarFile
-                
+
                 val jarEntries = jarFile.entries()
                 while (jarEntries.hasMoreElements()) {
                     val entry = jarEntries.nextElement()
                     val name = entry.name
-                    
+
                     if (name.startsWith(resourcePath) && name.endsWith(".json")) {
                         try {
                             jarFile.getInputStream(entry).use { inputStream ->
@@ -295,10 +295,10 @@ class JsonDidMethodLoader {
                 }
             }
         }
-        
+
         return entries
     }
-    
+
     /**
      * Converts legacy DidRegistrationSpec to DidMethodRegistryEntry for backward compatibility.
      */
@@ -310,7 +310,7 @@ class JsonDidMethodLoader {
                 testNet = false
             )
         }
-        
+
         return DidMethodRegistryEntry(
             name = spec.name,
             status = spec.status,
@@ -319,7 +319,7 @@ class JsonDidMethodLoader {
             implementations = listOfNotNull(implementation)
         )
     }
-    
+
     /**
      * Creates a DidMethod instance from a registration spec (legacy format).
      */
@@ -329,7 +329,7 @@ class JsonDidMethodLoader {
                 message = "Driver configuration is required",
                 context = mapOf("method" to spec.name)
             )
-        
+
         return when (driver.type) {
             "universal-resolver" -> {
                 HttpDidMethod(spec)

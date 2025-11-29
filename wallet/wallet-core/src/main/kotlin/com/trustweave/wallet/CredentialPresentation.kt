@@ -5,13 +5,13 @@ import com.trustweave.credential.PresentationOptions
 
 /**
  * Credential presentation capabilities.
- * 
+ *
  * Optional interface for wallets that can create presentations from stored credentials.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val wallet: Wallet = createWallet()
- * 
+ *
  * if (wallet is CredentialPresentation) {
  *     // Create presentation
  *     val presentation = wallet.createPresentation(
@@ -22,7 +22,7 @@ import com.trustweave.credential.PresentationOptions
  *             proofType = "Ed25519Signature2020"
  *         )
  *     )
- *     
+ *
  *     // Create selective disclosure
  *     val selective = wallet.createSelectiveDisclosure(
  *         credentialIds = listOf("cred1"),
@@ -36,7 +36,7 @@ import com.trustweave.credential.PresentationOptions
 interface CredentialPresentation {
     /**
      * Create a verifiable presentation from stored credentials.
-     * 
+     *
      * @param credentialIds List of credential IDs to include
      * @param holderDid DID of the presentation holder
      * @param options Presentation options (proof type, challenge, domain, etc.)
@@ -48,12 +48,12 @@ interface CredentialPresentation {
         holderDid: String,
         options: PresentationOptions
     ): VerifiablePresentation
-    
+
     /**
      * Create a selective disclosure presentation.
-     * 
+     *
      * Only discloses specified fields from the credentials.
-     * 
+     *
      * @param credentialIds List of credential IDs to include
      * @param disclosedFields List of field paths to disclose (e.g., "name", "credentialSubject.email")
      * @param holderDid DID of the presentation holder

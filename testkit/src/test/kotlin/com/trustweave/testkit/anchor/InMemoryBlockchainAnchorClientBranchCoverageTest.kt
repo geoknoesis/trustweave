@@ -2,7 +2,7 @@ package com.trustweave.testkit.anchor
 
 import com.trustweave.anchor.AnchorRef
 import com.trustweave.anchor.AnchorResult
-import com.trustweave.core.exception.NotFoundException
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.BeforeEach
@@ -24,7 +24,7 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
     @Test
     fun `test InMemoryBlockchainAnchorClient constructor with chainId and contract`() {
         val client = InMemoryBlockchainAnchorClient("algorand:testnet", "contract-123")
-        
+
         assertNotNull(client)
         assertEquals(0, client.size())
     }
@@ -32,7 +32,7 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
     @Test
     fun `test InMemoryBlockchainAnchorClient constructor with chainId only`() {
         val client = InMemoryBlockchainAnchorClient("algorand:testnet")
-        
+
         assertNotNull(client)
     }
 
@@ -41,9 +41,9 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
         val payload = buildJsonObject {
             put("test", "data")
         }
-        
+
         val result = client.writePayload(payload, "application/json")
-        
+
         assertNotNull(result)
         assertNotNull(result.ref)
         assertEquals("algorand:testnet", result.ref.chainId)
@@ -56,10 +56,10 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
         val payload = buildJsonObject {
             put("test", "data")
         }
-        
+
         val result1 = client.writePayload(payload, "application/json")
         val result2 = client.writePayload(payload, "application/json")
-        
+
         assertNotEquals(result1.ref.txHash, result2.ref.txHash)
     }
 
@@ -68,10 +68,10 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
         val payload = buildJsonObject {
             put("test", "data")
         }
-        
+
         val result1 = client.writePayload(payload, "application/json")
         val result2 = client.writePayload(payload, "application/json")
-        
+
         assertTrue(result2.ref.txHash > result1.ref.txHash)
     }
 
@@ -80,10 +80,10 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
         val payload = buildJsonObject {
             put("test", "data")
         }
-        
+
         val writeResult = client.writePayload(payload, "application/json")
         val readResult = client.readPayload(writeResult.ref)
-        
+
         assertEquals(writeResult.ref.txHash, readResult.ref.txHash)
         assertEquals(payload, readResult.payload)
     }
@@ -95,8 +95,8 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
             txHash = "nonexistent",
             contract = "contract-123"
         )
-        
-        assertFailsWith<NotFoundException> {
+
+        assertFailsWith<TrustWeaveException.NotFound> {
             client.readPayload(ref)
         }
     }
@@ -107,13 +107,13 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
             put("test", "data")
         }
         val writeResult = client.writePayload(payload, "application/json")
-        
+
         val wrongRef = AnchorRef(
             chainId = "polygon:mainnet",
             txHash = writeResult.ref.txHash,
             contract = writeResult.ref.contract
         )
-        
+
         assertFailsWith<IllegalArgumentException> {
             client.readPayload(wrongRef)
         }
@@ -127,22 +127,22 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
         client.writePayload(payload, "application/json")
         client.writePayload(payload, "application/json")
         assertEquals(2, client.size())
-        
+
         client.clear()
-        
+
         assertEquals(0, client.size())
     }
 
     @Test
     fun `test InMemoryBlockchainAnchorClient size returns correct count`() = runBlocking {
         assertEquals(0, client.size())
-        
+
         val payload = buildJsonObject {
             put("test", "data")
         }
         client.writePayload(payload, "application/json")
         assertEquals(1, client.size())
-        
+
         client.writePayload(payload, "application/json")
         assertEquals(2, client.size())
     }
@@ -155,10 +155,10 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
         val payload2 = buildJsonObject {
             put("test", "data2")
         }
-        
+
         val result1 = client.writePayload(payload1, "application/json")
         val result2 = client.writePayload(payload2, "application/cbor")
-        
+
         assertEquals("application/json", result1.mediaType)
         assertEquals("application/cbor", result2.mediaType)
     }
@@ -169,9 +169,9 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
         val payload = buildJsonObject {
             put("test", "data")
         }
-        
+
         val result = client.writePayload(payload, "application/json")
-        
+
         assertNull(result.ref.contract)
     }
 }

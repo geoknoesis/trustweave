@@ -5,15 +5,15 @@ import java.net.URI
 
 /**
  * Factory for creating IBM Key Protect HTTP clients.
- * 
+ *
  * Handles authentication (IAM API key) and client configuration.
- * 
+ *
  * Note: This uses OkHttp directly. For production, use IBM Cloud SDK when available.
  */
 object IbmKmsClientFactory {
     /**
      * Creates an HTTP client for IBM Key Protect API.
-     * 
+     *
      * @param config IBM Key Protect configuration
      * @return Configured HTTP client
      */
@@ -29,7 +29,7 @@ object IbmKmsClientFactory {
             }
             .build()
     }
-    
+
     /**
      * Gets the service URL for the given region.
      */

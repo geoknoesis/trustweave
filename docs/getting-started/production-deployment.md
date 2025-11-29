@@ -212,20 +212,20 @@ suspend fun <T> retryOperation(
 ): T {
     var lastError: Exception? = null
     var delay = initialDelay.toDouble()
-    
+
     repeat(maxRetries) { attempt ->
         try {
             return operation()
         } catch (error: Exception) {
             lastError = error
-            
+
             // Don't retry on validation errors
             if (error is TrustWeaveError.ValidationFailed ||
                 error is TrustWeaveError.CredentialInvalid ||
                 error is TrustWeaveError.InvalidDidFormat) {
                 throw error
             }
-            
+
             if (attempt < maxRetries - 1) {
                 val jitter = Random.nextLong(0, (delay * 0.1).toLong())
                 delay((delay + jitter).toLong())
@@ -233,7 +233,7 @@ suspend fun <T> retryOperation(
             }
         }
     }
-    
+
     throw lastError ?: Exception("Operation failed after $maxRetries retries")
 }
 ```
@@ -269,7 +269,7 @@ class CachedDidResolver(
     private val delegate: DidResolver,
     private val cache: Cache<String, DidResolutionResult>
 ) : DidResolver by delegate {
-    
+
     override suspend fun resolve(did: String): DidResolutionResult {
         return cache.get(did) {
             delegate.resolve(did)
@@ -404,19 +404,19 @@ private val logger = LoggerFactory.getLogger(MyService::class.java)
 suspend fun issueCredential(...) {
     MDC.put("operation", "issueCredential")
     MDC.put("issuerDid", issuerDid)
-    
+
     try {
         logger.info("Issuing credential", mapOf(
             "issuerDid" to issuerDid,
             "holderDid" to holderDid
         ))
-        
+
         val credential = trustLayer.issue { ... }
-        
+
         logger.info("Credential issued successfully", mapOf(
             "credentialId" to credential.id
         ))
-        
+
         return credential
     } catch (error: TrustWeaveError) {
         logger.error("Failed to issue credential", mapOf(
@@ -468,7 +468,7 @@ import org.springframework.boot.actuate.health.HealthIndicator
 class TrustLayerHealthIndicator(
     private val trustLayer: TrustLayer
 ) : HealthIndicator {
-    
+
     override fun health(): Health {
         return try {
             runBlocking {
@@ -477,7 +477,7 @@ class TrustLayerHealthIndicator(
                     method("key")
                     algorithm("Ed25519")
                 }
-                
+
                 Health.up()
                     .withDetail("status", "operational")
                     .withDetail("testDid", testDid)

@@ -17,12 +17,12 @@ Integration tests verify that multiple components work together correctly. They 
 ```kotlin
 @Testcontainers
 class AwsKmsIntegrationTest : KmsIntegrationTest() {
-    
+
     companion object {
         @JvmStatic
         val localStack = LocalStackContainer.create()
     }
-    
+
     override fun getKms(): KeyManagementService {
         val config = AwsKmsConfig.builder()
             .region("us-east-1")
@@ -38,12 +38,12 @@ class AwsKmsIntegrationTest : KmsIntegrationTest() {
 ```kotlin
 @Testcontainers
 class VaultKmsIntegrationTest : KmsIntegrationTest() {
-    
+
     companion object {
         @JvmStatic
         val vault = VaultContainer.create()
     }
-    
+
     override fun getKms(): KeyManagementService {
         val config = VaultKmsConfig.builder()
             .vaultUrl(vault.getVaultUrl())
@@ -59,12 +59,12 @@ class VaultKmsIntegrationTest : KmsIntegrationTest() {
 ```kotlin
 @Testcontainers
 class EthereumIntegrationTest : ChainIntegrationTest() {
-    
+
     companion object {
         @JvmStatic
         val ganache = GanacheContainer.create()
     }
-    
+
     override fun getChainClient(): BlockchainAnchorClient {
         val config = EthereumOptions(
             rpcUrl = ganache.rpcEndpoint

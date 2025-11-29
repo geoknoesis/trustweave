@@ -22,26 +22,26 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * In-memory full-featured wallet for testing.
- * 
+ *
  * Implements all capability interfaces: CredentialOrganization, CredentialLifecycle,
  * CredentialPresentation, and DidManagement. Perfect for testing and development.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val wallet = InMemoryWallet()
- * 
+ *
  * // Core operations
  * val id = wallet.store(credential)
- * 
+ *
  * // Organization features
  * val collectionId = wallet.createCollection("My Collection")
  * wallet.addToCollection(id, collectionId)
  * wallet.tagCredential(id, setOf("important"))
- * 
+ *
  * // Lifecycle features
  * wallet.archive(id)
  * val archived = wallet.getArchived()
- * 
+ *
  * // Presentation features
  * val presentation = wallet.createPresentation(
  *     credentialIds = listOf(id),
@@ -59,18 +59,18 @@ class InMemoryWallet(
     CredentialLifecycle,
     CredentialPresentation,
     DidManagement {
-    
+
     // Storage
     private val credentials = ConcurrentHashMap<String, VerifiableCredential>()
     private val archivedCredentials = ConcurrentHashMap<String, VerifiableCredential>()
-    
+
     // Organization
     private val collections = ConcurrentHashMap<String, CredentialCollection>()
     private val credentialCollections = ConcurrentHashMap<String, MutableSet<String>>() // credentialId -> collectionIds
     private val collectionCredentials = ConcurrentHashMap<String, MutableSet<String>>() // collectionId -> credentialIds
     private val credentialTags = ConcurrentHashMap<String, MutableSet<String>>()
     private val credentialMetadata = ConcurrentHashMap<String, CredentialMetadata>()
-    
+
     // Storage implementation
     override suspend fun store(credential: VerifiableCredential): String {
         val id = credential.id ?: UUID.randomUUID().toString()
@@ -84,11 +84,11 @@ class InMemoryWallet(
         }
         return id
     }
-    
+
     override suspend fun get(credentialId: String): VerifiableCredential? {
         return credentials[credentialId] ?: archivedCredentials[credentialId]
     }
-    
+
     override suspend fun list(filter: CredentialFilter?): List<VerifiableCredential> {
         val allCredentials = credentials.values.toList()
         return if (filter == null) {
@@ -119,7 +119,7 @@ class InMemoryWallet(
             }
         }
     }
-    
+
     override suspend fun delete(credentialId: String): Boolean {
         val removed = credentials.remove(credentialId) != null || archivedCredentials.remove(credentialId) != null
         if (removed) {
@@ -130,7 +130,7 @@ class InMemoryWallet(
         }
         return removed
     }
-    
+
     override suspend fun query(query: CredentialQueryBuilder.() -> Unit): List<VerifiableCredential> {
         val builder = CredentialQueryBuilder()
         builder.query()
@@ -140,7 +140,7 @@ class InMemoryWallet(
         val predicate = predicateMethod.invoke(builder) as (VerifiableCredential) -> Boolean
         return credentials.values.filter(predicate)
     }
-    
+
     // Organization implementation
     override suspend fun createCollection(name: String, description: String?): String {
         val id = UUID.randomUUID().toString()
@@ -154,19 +154,19 @@ class InMemoryWallet(
         collectionCredentials[id] = mutableSetOf()
         return id
     }
-    
+
     override suspend fun getCollection(collectionId: String): CredentialCollection? {
         val collection = collections[collectionId] ?: return null
         // Update credentialCount dynamically to match listCollections() behavior
         return collection.copy(credentialCount = collectionCredentials[collectionId]?.size ?: 0)
     }
-    
+
     override suspend fun listCollections(): List<CredentialCollection> {
         return collections.values.map { collection ->
             collection.copy(credentialCount = collectionCredentials[collection.id]?.size ?: 0)
         }
     }
-    
+
     override suspend fun deleteCollection(collectionId: String): Boolean {
         val removed = collections.remove(collectionId) != null
         if (removed) {
@@ -177,7 +177,7 @@ class InMemoryWallet(
         }
         return removed
     }
-    
+
     override suspend fun addToCollection(credentialId: String, collectionId: String): Boolean {
         if (!credentials.containsKey(credentialId) && !archivedCredentials.containsKey(credentialId)) {
             return false
@@ -189,18 +189,18 @@ class InMemoryWallet(
         collectionCredentials.getOrPut(collectionId) { mutableSetOf() }.add(credentialId)
         return true
     }
-    
+
     override suspend fun removeFromCollection(credentialId: String, collectionId: String): Boolean {
         credentialCollections[credentialId]?.remove(collectionId)
         collectionCredentials[collectionId]?.remove(credentialId)
         return true
     }
-    
+
     override suspend fun getCredentialsInCollection(collectionId: String): List<VerifiableCredential> {
         val credentialIds = collectionCredentials[collectionId] ?: return emptyList()
         return credentialIds.mapNotNull { id -> credentials[id] ?: archivedCredentials[id] }
     }
-    
+
     override suspend fun tagCredential(credentialId: String, tags: Set<String>): Boolean {
         if (!credentials.containsKey(credentialId) && !archivedCredentials.containsKey(credentialId)) {
             return false
@@ -209,27 +209,27 @@ class InMemoryWallet(
         updateMetadata(credentialId) { it.copy(tags = credentialTags[credentialId] ?: emptySet()) }
         return true
     }
-    
+
     override suspend fun untagCredential(credentialId: String, tags: Set<String>): Boolean {
         credentialTags[credentialId]?.removeAll(tags)
         updateMetadata(credentialId) { it.copy(tags = credentialTags[credentialId] ?: emptySet()) }
         return true
     }
-    
+
     override suspend fun getTags(credentialId: String): Set<String> {
         return credentialTags[credentialId] ?: emptySet()
     }
-    
+
     override suspend fun getAllTags(): Set<String> {
         return credentialTags.values.flatten().toSet()
     }
-    
+
     override suspend fun findByTag(tag: String): List<VerifiableCredential> {
         return credentialTags.entries
             .filter { tag in it.value }
             .mapNotNull { (id, _) -> credentials[id] ?: archivedCredentials[id] }
     }
-    
+
     override suspend fun addMetadata(credentialId: String, metadata: Map<String, Any>): Boolean {
         if (!credentials.containsKey(credentialId) && !archivedCredentials.containsKey(credentialId)) {
             return false
@@ -242,11 +242,11 @@ class InMemoryWallet(
         }
         return true
     }
-    
+
     override suspend fun getMetadata(credentialId: String): CredentialMetadata? {
         return credentialMetadata[credentialId]
     }
-    
+
     override suspend fun updateNotes(credentialId: String, notes: String?): Boolean {
         if (!credentials.containsKey(credentialId) && !archivedCredentials.containsKey(credentialId)) {
             return false
@@ -254,30 +254,30 @@ class InMemoryWallet(
         updateMetadata(credentialId) { it.copy(notes = notes, updatedAt = Instant.now()) }
         return true
     }
-    
+
     // Lifecycle implementation
     override suspend fun archive(credentialId: String): Boolean {
         val credential = credentials.remove(credentialId) ?: return false
         archivedCredentials[credentialId] = credential
         return true
     }
-    
+
     override suspend fun unarchive(credentialId: String): Boolean {
         val credential = archivedCredentials.remove(credentialId) ?: return false
         credentials[credentialId] = credential
         return true
     }
-    
+
     override suspend fun getArchived(): List<VerifiableCredential> {
         return archivedCredentials.values.toList()
     }
-    
+
     override suspend fun refreshCredential(credentialId: String): VerifiableCredential? {
         // In-memory implementation: just return the credential as-is
         // Real implementation would call refresh service
         return credentials[credentialId] ?: archivedCredentials[credentialId]
     }
-    
+
     // Presentation implementation
     override suspend fun createPresentation(
         credentialIds: List<String>,
@@ -287,11 +287,11 @@ class InMemoryWallet(
         val credentialsToInclude = credentialIds.mapNotNull { id ->
             credentials[id] ?: archivedCredentials[id]
         }
-        
+
         if (credentialsToInclude.size != credentialIds.size) {
             throw IllegalArgumentException("One or more credential IDs not found")
         }
-        
+
         return VerifiablePresentation(
             id = UUID.randomUUID().toString(),
             type = listOf("VerifiablePresentation"),
@@ -302,7 +302,7 @@ class InMemoryWallet(
             domain = options.domain
         )
     }
-    
+
     override suspend fun createSelectiveDisclosure(
         credentialIds: List<String>,
         disclosedFields: List<String>,
@@ -312,29 +312,29 @@ class InMemoryWallet(
         // Simplified implementation - real selective disclosure would filter fields
         return createPresentation(credentialIds, holderDid, options)
     }
-    
+
     // DidManagement implementation
     private val managedDids = mutableSetOf<String>()
-    
+
     init {
         managedDids.add(walletDid)
         managedDids.add(holderDid)
     }
-    
+
     override suspend fun createDid(method: String, options: DidCreationOptions): String {
         val did = "did:$method:test-${UUID.randomUUID()}"
         managedDids.add(did)
         return did
     }
-    
+
     override suspend fun getDids(): List<String> {
         return managedDids.toList()
     }
-    
+
     override suspend fun getPrimaryDid(): String {
         return holderDid
     }
-    
+
     override suspend fun setPrimaryDid(did: String): Boolean {
         return if (managedDids.contains(did)) {
             managedDids.add(did) // Add if not present
@@ -343,7 +343,7 @@ class InMemoryWallet(
             false
         }
     }
-    
+
     override suspend fun resolveDid(did: String): DidDocument? {
         // Simplified - return null for now, real implementation would resolve DID
         return if (managedDids.contains(did)) {
@@ -358,7 +358,7 @@ class InMemoryWallet(
             null
         }
     }
-    
+
     // Helper methods
     private fun updateMetadata(credentialId: String, updater: (CredentialMetadata) -> CredentialMetadata) {
         val existing = credentialMetadata[credentialId] ?: CredentialMetadata(
@@ -368,7 +368,7 @@ class InMemoryWallet(
         )
         credentialMetadata[credentialId] = updater(existing)
     }
-    
+
     /**
      * Clear all data. Useful for testing.
      */
@@ -381,7 +381,7 @@ class InMemoryWallet(
         credentialTags.clear()
         credentialMetadata.clear()
     }
-    
+
     /**
      * Get total number of credentials (including archived).
      */

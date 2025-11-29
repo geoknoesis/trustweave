@@ -6,7 +6,7 @@ import java.time.Instant
 
 /**
  * Core SmartContract models for trustweave.
- * 
+ *
  * These models provide a domain-agnostic abstraction for executable contracts
  * with verifiable credentials and blockchain anchoring support.
  */
@@ -33,19 +33,19 @@ enum class ContractStatus {
 sealed class ContractType {
     @Serializable
     object Insurance : ContractType()
-    
+
     @Serializable
     object Legal : ContractType()
-    
+
     @Serializable
     object Financial : ContractType()
-    
+
     @Serializable
     object ServiceLevelAgreement : ContractType()
-    
+
     @Serializable
     object SupplyChain : ContractType()
-    
+
     @Serializable
     data class Custom(val name: String, val domain: String) : ContractType()
 }
@@ -65,7 +65,7 @@ sealed class ExecutionModel {
         val engineVersion: String? = null, // Engine version for compatibility checks
         val engineHash: String? = null // Engine implementation hash for tamper detection
     ) : ExecutionModel()
-    
+
     /**
      * Conditional execution - if/then logic.
      */
@@ -76,7 +76,7 @@ sealed class ExecutionModel {
         val engineVersion: String? = null, // Engine version for compatibility checks
         val engineHash: String? = null // Engine implementation hash for tamper detection
     ) : ExecutionModel()
-    
+
     /**
      * Time-based execution - scheduled actions.
      */
@@ -87,7 +87,7 @@ sealed class ExecutionModel {
         val engineVersion: String? = null, // Engine version for compatibility checks
         val engineHash: String? = null // Engine implementation hash for tamper detection
     ) : ExecutionModel()
-    
+
     /**
      * Event-driven execution - responds to events.
      */
@@ -98,7 +98,7 @@ sealed class ExecutionModel {
         val engineVersion: String? = null, // Engine version for compatibility checks
         val engineHash: String? = null // Engine implementation hash for tamper detection
     ) : ExecutionModel()
-    
+
     /**
      * Manual execution - requires human intervention.
      */
@@ -113,19 +113,19 @@ sealed class ExecutionModel {
 sealed class TriggerType {
     @Serializable
     object EarthObservation : TriggerType() // EO data triggers
-    
+
     @Serializable
     object Weather : TriggerType()           // Weather data
-    
+
     @Serializable
     object Financial : TriggerType()         // Market data
-    
+
     @Serializable
     object IoT : TriggerType()               // IoT sensor data
-    
+
     @Serializable
     object API : TriggerType()               // External API data
-    
+
     @Serializable
     data class Custom(val name: String) : TriggerType()
 }
@@ -280,7 +280,7 @@ data class DisputeResolution(
 
 /**
  * Generic SmartContract abstraction.
- * 
+ *
  * Represents an executable agreement between parties with:
  * - Verifiable identity (DIDs)
  * - Cryptographic proof (Verifiable Credentials)
@@ -300,11 +300,11 @@ data class SmartContract(
     val expirationDate: String? = null, // ISO 8601 timestamp
     val createdAt: String,
     val updatedAt: String,
-    
+
     // TrustWeave integration
     val credentialId: String? = null, // Verifiable Credential ID
     val anchorRef: AnchorRefData? = null, // Blockchain anchor reference
-    
+
     // Contract-specific data (domain-specific)
     val contractData: JsonElement
 )

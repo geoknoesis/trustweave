@@ -47,7 +47,7 @@ fun main() = runBlocking {
             provider("inMemory")
             algorithm("Ed25519")
         }
-        
+
         did {
             method("key") {
                 algorithm("Ed25519")
@@ -56,18 +56,18 @@ fun main() = runBlocking {
                 domain("example.com")
             }
         }
-        
+
         anchor {
             chain("algorand:testnet") {
                 provider("algorand")
             }
         }
-        
+
         trust {
             provider("inMemory")
         }
     }
-    
+
     // Use the configured TrustWeave instance
     val did = trustWeave.createDid { method("key") }
     println("Created DID: $did")
@@ -113,7 +113,7 @@ val trustWeave = TrustWeave.build {
         provider("inMemory")
         algorithm("Ed25519")
     }
-    
+
     did {
         method("key") {
             algorithm("Ed25519")
@@ -141,7 +141,7 @@ val trustWeave = TrustWeave.build {
         provider("inMemory")
         algorithm("Ed25519")
     }
-    
+
     did {
         method("key") {
             algorithm("Ed25519")
@@ -178,13 +178,13 @@ val trustWeave = TrustWeave.build {
         provider("inMemory")
         algorithm("Ed25519")
     }
-    
+
     did {
         method("key") {
             algorithm("Ed25519")
         }
     }
-    
+
     anchor {
         chain("algorand:testnet") {
             provider("algorand")
@@ -217,19 +217,19 @@ val trustWeave = TrustWeave.build {
         provider("inMemory")
         algorithm("Ed25519")
     }
-    
+
     did {
         method("key") {
             algorithm("Ed25519")
         }
     }
-    
+
     anchor {
         chain("algorand:testnet") {
             provider("algorand")
         }
     }
-    
+
     trust {
         provider("inMemory")
     }
@@ -255,7 +255,7 @@ val trustWeave = TrustWeave.build {
         provider("inMemory")  // Use "awsKms" or "azureKeyVault" in production
         algorithm("Ed25519")
     }
-    
+
     did {
         method("key") {
             algorithm("Ed25519")
@@ -264,7 +264,7 @@ val trustWeave = TrustWeave.build {
             domain("example.com")
         }
     }
-    
+
     anchor {
         chain("algorand:testnet") {
             provider("algorand")
@@ -273,11 +273,11 @@ val trustWeave = TrustWeave.build {
             provider("polygon")
         }
     }
-    
+
     trust {
         provider("inMemory")
     }
-    
+
     credentials {
         defaultProofType(com.trustweave.trust.types.ProofType.Ed25519Signature2020)
         autoAnchor(false)

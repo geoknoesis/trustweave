@@ -84,7 +84,7 @@ suspend fun createFloodInsuranceContract(
     coverageAmount: Double,
     location: Location
 ): SmartContract {
-    
+
     val contract = TrustWeave.contracts.draft(
         request = ContractDraftRequest(
             contractType = ContractType.Insurance,
@@ -154,11 +154,11 @@ suspend fun createFloodInsuranceContract(
             }
         )
     ).getOrThrow()
-    
+
     println("✅ Contract draft created: ${contract.id}")
     println("   Contract Number: ${contract.contractNumber}")
     println("   Status: ${contract.status}")
-    
+
     return contract
 }
 
@@ -181,20 +181,20 @@ suspend fun bindInsuranceContract(
     insurerDid: String,
     insurerKeyId: String
 ): BoundContract {
-    
+
     val bound = TrustWeave.contracts.bindContract(
         contractId = contract.id,
         issuerDid = insurerDid,
         issuerKeyId = insurerKeyId,
         chainId = "algorand:mainnet"
     ).getOrThrow()
-    
+
     println("✅ Contract bound:")
     println("   Credential ID: ${bound.credentialId}")
     println("   Anchor TX: ${bound.anchorRef.txHash}")
     println("   Chain: ${bound.anchorRef.chainId}")
     println("   Status: ${bound.contract.status}")
-    
+
     return bound
 }
 ```
@@ -206,14 +206,14 @@ suspend fun activateContract(
     TrustWeave: TrustWeave,
     contractId: String
 ): SmartContract {
-    
+
     val active = TrustWeave.contracts.activateContract(contractId).getOrThrow()
-    
+
     println("✅ Contract activated: ${active.id}")
     println("   Status: ${active.status}")
     println("   Effective: ${active.effectiveDate}")
     println("   Expires: ${active.expirationDate}")
-    
+
     return active
 }
 ```
@@ -229,7 +229,7 @@ suspend fun processFloodDataAndExecute(
     floodDepthCm: Double,
     eoDataCredential: VerifiableCredential
 ): ExecutionResult {
-    
+
     // Create execution context with trigger data
     val executionContext = ExecutionContext(
         triggerData = buildJsonObject {
@@ -238,18 +238,18 @@ suspend fun processFloodDataAndExecute(
             put("timestamp", Instant.now().toString())
         }
     )
-    
+
     // Execute contract
     val result = TrustWeave.contracts.executeContract(
         contract = contract,
         executionContext = executionContext
     ).getOrThrow()
-    
+
     if (result.executed) {
         println("✅ Contract executed!")
         println("   Execution Type: ${result.executionType}")
         println("   Outcomes: ${result.outcomes.size}")
-        
+
         result.outcomes.forEach { outcome ->
             println("   - ${outcome.description}")
             outcome.monetaryImpact?.let {
@@ -262,7 +262,7 @@ suspend fun processFloodDataAndExecute(
             println("   - ${outcome.description}")
         }
     }
-    
+
     return result
 }
 ```
@@ -276,13 +276,13 @@ suspend fun completeParametricInsuranceWorkflow() {
             "algorand:mainnet" to algorandClient
         }
     }
-    
+
     // Step 1: Create DIDs
     val insurerDid = TrustWeave.dids.create(method = "key")
     val insuredDid = TrustWeave.dids.create(method = "key")
     val insurerKeyId = TrustWeave.dids.resolve(insurerDid.id)
         .verificationMethod.firstOrNull()?.id ?: error("No key found")
-    
+
     // Step 2: Create contract draft
     val contract = createFloodInsuranceContract(
         TrustWeave = TrustWeave,
@@ -296,7 +296,7 @@ suspend fun completeParametricInsuranceWorkflow() {
             region = "North Carolina"
         )
     )
-    
+
     // Step 3: Bind contract
     val bound = bindInsuranceContract(
         TrustWeave = TrustWeave,
@@ -304,14 +304,14 @@ suspend fun completeParametricInsuranceWorkflow() {
         insurerDid = insurerDid.id,
         insurerKeyId = insurerKeyId
     )
-    
+
     // Step 4: Activate contract
     val active = activateContract(TrustWeave, bound.contract.id)
-    
+
     // Step 5: Simulate flood event
     // In production, this would come from EO data provider
     val floodDepth = 75.0 // cm
-    
+
     // Issue EO data credential (simplified - in production, EO provider issues this)
     val eoDataCredential = TrustWeave.credentials.issue(
         issuer = eoProviderDid.id,
@@ -325,7 +325,7 @@ suspend fun completeParametricInsuranceWorkflow() {
         ),
         types = listOf("VerifiableCredential", "EarthObservationCredential")
     )
-    
+
     // Step 6: Execute contract
     val executionResult = processFloodDataAndExecute(
         TrustWeave = TrustWeave,
@@ -333,7 +333,7 @@ suspend fun completeParametricInsuranceWorkflow() {
         floodDepthCm = floodDepth,
         eoDataCredential = eoDataCredential
     )
-    
+
     // Step 7: Process payout (application-specific)
     if (executionResult.executed) {
         processPayout(executionResult)
@@ -363,13 +363,13 @@ class FloodConditionEvaluator : ConditionEvaluator {
             )
         }
     }
-    
+
     private fun extractThreshold(expression: String): Double {
         // Parse expression like "$.floodDepthCm >= 50"
         val match = Regex(">= (\\d+\\.?\\d*)").find(expression)
         return match?.groupValues?.get(1)?.toDouble() ?: 0.0
     }
-    
+
     private fun extractValue(data: JsonElement, key: String): Double {
         return data.jsonObject[key]?.jsonPrimitive?.content?.toDouble() ?: 0.0
     }

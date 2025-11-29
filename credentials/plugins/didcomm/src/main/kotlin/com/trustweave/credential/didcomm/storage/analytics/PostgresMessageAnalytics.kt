@@ -13,7 +13,7 @@ import javax.sql.DataSource
 class PostgresMessageAnalytics(
     private val dataSource: DataSource
 ) : MessageAnalytics {
-    
+
     override suspend fun getStatistics(
         startTime: Instant,
         endTime: Instant,
@@ -26,10 +26,10 @@ class PostgresMessageAnalytics(
                 GroupBy.WEEK -> "YYYY-\"W\"WW"
                 GroupBy.MONTH -> "YYYY-MM"
             }
-            
+
             // Get total statistics
             conn.prepareStatement("""
-                SELECT 
+                SELECT
                     COUNT(*) as total,
                     COUNT(CASE WHEN from_did IS NOT NULL THEN 1 END) as sent,
                     COUNT(CASE WHEN from_did IS NULL THEN 1 END) as received,
@@ -45,10 +45,10 @@ class PostgresMessageAnalytics(
                         val sent = rs.getInt("sent")
                         val received = rs.getInt("received")
                         val avgSize = rs.getLong("avg_size")
-                        
+
                         // Get time series
                         val timeSeries = getTimeSeries(conn, startTime, endTime, dateFormat)
-                        
+
                         MessageStatistics(
                             totalMessages = total,
                             sentMessages = sent,
@@ -63,7 +63,7 @@ class PostgresMessageAnalytics(
             }
         }
     }
-    
+
     override suspend fun getTrafficPatterns(
         startTime: Instant,
         endTime: Instant
@@ -71,7 +71,7 @@ class PostgresMessageAnalytics(
         dataSource.connection.use { conn ->
             // Get hourly distribution
             conn.prepareStatement("""
-                SELECT 
+                SELECT
                     EXTRACT(HOUR FROM created_time::timestamp) as hour,
                     COUNT(*) as count
                 FROM didcomm_messages
@@ -88,7 +88,7 @@ class PostgresMessageAnalytics(
                             add(rs.getInt("hour"))
                         }
                     }
-                    
+
                     // Get average messages per hour
                     val totalHours = ChronoUnit.HOURS.between(startTime, endTime).coerceAtLeast(1)
                     val totalMessages = conn.prepareStatement("""
@@ -101,12 +101,12 @@ class PostgresMessageAnalytics(
                             if (rs2.next()) rs2.getInt(1) else 0
                         }
                     }
-                    
+
                     val avgPerHour = totalMessages.toDouble() / totalHours
-                    
+
                     // Get busiest day
                     val busiestDay = conn.prepareStatement("""
-                        SELECT 
+                        SELECT
                             TO_CHAR(created_time::date, 'Day') as day,
                             COUNT(*) as count
                         FROM didcomm_messages
@@ -121,7 +121,7 @@ class PostgresMessageAnalytics(
                             if (rs2.next()) rs2.getString("day").trim() else "Unknown"
                         }
                     }
-                    
+
                     TrafficPatterns(
                         peakHours = peakHours,
                         averageMessagesPerHour = avgPerHour,
@@ -131,7 +131,7 @@ class PostgresMessageAnalytics(
             }
         }
     }
-    
+
     override suspend fun getTopDids(
         limit: Int,
         startTime: Instant?,
@@ -147,9 +147,9 @@ class PostgresMessageAnalytics(
                     append(conditions.joinToString(" AND "))
                 }
             }
-            
+
             conn.prepareStatement("""
-                SELECT 
+                SELECT
                     did,
                     COUNT(*) as total,
                     COUNT(CASE WHEN role = 'from' THEN 1 END) as sent,
@@ -168,7 +168,7 @@ class PostgresMessageAnalytics(
                     stmt.setTimestamp(paramIndex++, Timestamp.from(endTime))
                 }
                 stmt.setInt(paramIndex, limit)
-                
+
                 stmt.executeQuery().use { rs ->
                     buildList {
                         while (rs.next()) {
@@ -184,7 +184,7 @@ class PostgresMessageAnalytics(
             }
         }
     }
-    
+
     override suspend fun getTypeDistribution(
         startTime: Instant?,
         endTime: Instant?
@@ -199,7 +199,7 @@ class PostgresMessageAnalytics(
                     append(conditions.joinToString(" AND "))
                 }
             }
-            
+
             conn.prepareStatement("""
                 SELECT type, COUNT(*) as count
                 FROM didcomm_messages
@@ -214,7 +214,7 @@ class PostgresMessageAnalytics(
                 if (endTime != null) {
                     stmt.setTimestamp(paramIndex++, Timestamp.from(endTime))
                 }
-                
+
                 stmt.executeQuery().use { rs ->
                     buildMap {
                         while (rs.next()) {
@@ -225,15 +225,15 @@ class PostgresMessageAnalytics(
             }
         }
     }
-    
+
     private fun getTimeSeries(
         conn: java.sql.Connection,
         startTime: Instant,
         endTime: Instant,
         dateFormat: String
     ): List<TimeSeriesPoint> {
-        conn.prepareStatement("""
-            SELECT 
+        return conn.prepareStatement("""
+            SELECT
                 TO_CHAR(created_time::timestamp, ?) as time_bucket,
                 COUNT(*) as count
             FROM didcomm_messages

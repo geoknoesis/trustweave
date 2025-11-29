@@ -242,12 +242,12 @@ val prodVericore = TrustWeave.create {
         region = System.getenv("AWS_REGION"),
         credentials = awsCredentials
     )
-    
+
     didMethods {
         + DidWebMethod(kms) { domain = "yourcompany.com" }
         + DidIonMethod(kms)
     }
-    
+
     blockchains {
         "algorand:mainnet" to AlgorandBlockchainAnchorClient(
             chainId = "algorand:mainnet",
@@ -257,7 +257,7 @@ val prodVericore = TrustWeave.create {
             )
         )
     }
-    
+
     walletFactory = DatabaseWalletFactory(
         dataSource = dataSource,
         enableOrganization = true,

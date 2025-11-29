@@ -14,7 +14,7 @@ import java.util.Base64
 object AlgorithmMapping {
     /**
      * Maps TrustWeave Algorithm to Thales CipherTrust key algorithm.
-     * 
+     *
      * @param algorithm TrustWeave algorithm
      * @return Thales CipherTrust key algorithm string
      * @throws IllegalArgumentException if algorithm is not supported by Thales CipherTrust
@@ -37,10 +37,10 @@ object AlgorithmMapping {
             else -> throw IllegalArgumentException("Algorithm ${algorithm.name} is not supported by Thales CipherTrust")
         }
     }
-    
+
     /**
      * Parses Thales CipherTrust key algorithm to TrustWeave Algorithm.
-     * 
+     *
      * @param keyAlgorithm Thales CipherTrust key algorithm string
      * @return TrustWeave Algorithm, or null if not recognized
      */
@@ -57,10 +57,10 @@ object AlgorithmMapping {
             else -> null
         }
     }
-    
+
     /**
      * Maps TrustWeave Algorithm to Thales CipherTrust signing algorithm.
-     * 
+     *
      * @param algorithm TrustWeave algorithm
      * @return Thales CipherTrust signing algorithm string
      */
@@ -75,10 +75,10 @@ object AlgorithmMapping {
             else -> "ECDSA"
         }
     }
-    
+
     /**
      * Converts Thales CipherTrust public key to JWK format.
-     * 
+     *
      * @param publicKeyBytes Public key bytes from Thales CipherTrust
      * @param algorithm The algorithm type
      * @return JWK map representation
@@ -92,7 +92,7 @@ object AlgorithmMapping {
                     } else {
                         publicKeyBytes.takeLast(32).toByteArray()
                     }
-                    
+
                     mapOf(
                         "kty" to "OKP",
                         "crv" to "Ed25519",
@@ -110,7 +110,7 @@ object AlgorithmMapping {
                         is Algorithm.P521 -> "P-521"
                         else -> throw IllegalArgumentException("Unsupported EC algorithm")
                     }
-                    
+
                     val affineX = point.affineX
                     val affineY = point.affineY
                     val coordinateLength = when (algorithm) {
@@ -119,7 +119,7 @@ object AlgorithmMapping {
                         is Algorithm.P521 -> 66
                         else -> 32
                     }
-                    
+
                     fun toUnsignedByteArray(bigInt: BigInteger, length: Int): ByteArray {
                         val bytes = bigInt.toByteArray()
                         val result = ByteArray(length)
@@ -131,10 +131,10 @@ object AlgorithmMapping {
                         }
                         return result
                     }
-                    
+
                     val x = toUnsignedByteArray(affineX, coordinateLength)
                     val y = toUnsignedByteArray(affineY, coordinateLength)
-                    
+
                     mapOf(
                         "kty" to "EC",
                         "crv" to curveName,
@@ -147,7 +147,7 @@ object AlgorithmMapping {
                     val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(publicKeyBytes)) as RSAPublicKey
                     val modulus = publicKey.modulus
                     val exponent = publicKey.publicExponent
-                    
+
                     fun toUnsignedByteArray(bigInt: BigInteger): ByteArray {
                         val signed = bigInt.toByteArray()
                         if (signed.isNotEmpty() && signed[0] == 0.toByte()) {
@@ -155,7 +155,7 @@ object AlgorithmMapping {
                         }
                         return signed
                     }
-                    
+
                     mapOf(
                         "kty" to "RSA",
                         "n" to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(modulus)),
@@ -168,10 +168,10 @@ object AlgorithmMapping {
             throw IllegalArgumentException("Failed to convert Thales CipherTrust public key to JWK: ${e.message}", e)
         }
     }
-    
+
     /**
      * Resolves a key identifier to Thales CipherTrust key ID.
-     * 
+     *
      * @param keyId Key identifier
      * @return Resolved key identifier for Thales API
      */

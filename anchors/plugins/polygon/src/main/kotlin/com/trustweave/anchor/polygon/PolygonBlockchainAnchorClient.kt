@@ -15,10 +15,10 @@ import java.nio.charset.StandardCharsets
 
 /**
  * Polygon blockchain anchor client implementation.
- * 
+ *
  * Supports Polygon mainnet and Mumbai testnet chains.
  * Uses Ethereum-compatible transaction data fields to store payload data.
- * 
+ *
  * **Type-Safe Options**: Use [PolygonOptions] for type-safe configuration:
  * ```
  * val options = PolygonOptions(
@@ -32,7 +32,7 @@ class PolygonBlockchainAnchorClient(
     chainId: String,
     options: Map<String, Any?> = emptyMap()
 ) : AbstractBlockchainAnchorClient(chainId, options), java.io.Closeable {
-    
+
     /**
      * Convenience constructor using type-safe [PolygonOptions].
      */
@@ -41,7 +41,7 @@ class PolygonBlockchainAnchorClient(
     companion object {
         const val MAINNET = "eip155:137"  // Polygon mainnet
         const val MUMBAI = "eip155:80001" // Mumbai testnet
-        
+
         // Network RPC endpoints
         private const val MAINNET_RPC_URL = "https://polygon-rpc.com"
         private const val MUMBAI_RPC_URL = "https://rpc-mumbai.maticvigil.com"
@@ -59,7 +59,7 @@ class PolygonBlockchainAnchorClient(
         require(chainIdNum == 137 || chainIdNum == 80001) {
             "Unsupported Polygon chain ID: $chainId. Use 'eip155:137' (mainnet) or 'eip155:80001' (Mumbai testnet)"
         }
-        
+
         // Initialize Web3j client based on chain
         val rpcUrl = when (chainId) {
             MAINNET -> options["rpcUrl"] as? String ?: MAINNET_RPC_URL
@@ -146,7 +146,7 @@ class PolygonBlockchainAnchorClient(
 
         val signedTransaction = org.web3j.crypto.TransactionEncoder.signMessage(rawTransaction, creds)
         val hexValue = org.web3j.utils.Numeric.toHexString(signedTransaction)
-        
+
         val ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send()
         if (ethSendTransaction.hasError()) {
             val error = ethSendTransaction.error
@@ -181,14 +181,14 @@ class PolygonBlockchainAnchorClient(
         val dataBytes = org.web3j.utils.Numeric.hexStringToByteArray(input)
         val payloadJson = String(dataBytes, StandardCharsets.UTF_8)
         val payload = Json.parseToJsonElement(payloadJson)
-        
+
         // Extract block number - Web3j 5.0.1 API may differ
         val blockNumber = try {
             receipt.blockNumber?.toLong()
         } catch (e: Exception) {
             null
         }
-        
+
         return AnchorResult(
             ref = buildAnchorRef(
                 txHash = txHash,

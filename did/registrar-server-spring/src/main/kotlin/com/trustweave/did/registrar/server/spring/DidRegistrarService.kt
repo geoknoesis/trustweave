@@ -18,9 +18,9 @@ class DidRegistrarService(
 ) {
     /**
      * Creates a new DID.
-     * 
+     *
      * Used by RESTful endpoint: POST /1.0/dids
-     * 
+     *
      * @param method DID method name (e.g., "web", "key", "ion")
      * @param options Creation options
      * @return Registration response
@@ -31,12 +31,12 @@ class DidRegistrarService(
     ): DidRegistrationResponse {
         return handleCreateOperation(method, options)
     }
-    
+
     /**
      * Updates an existing DID.
-     * 
+     *
      * Used by RESTful endpoint: PUT /1.0/dids/{did}
-     * 
+     *
      * @param did DID to update
      * @param document Updated DID Document
      * @param options Update options
@@ -49,12 +49,12 @@ class DidRegistrarService(
     ): DidRegistrationResponse {
         return handleUpdateOperation(did, document, options)
     }
-    
+
     /**
      * Deactivates a DID.
-     * 
+     *
      * Used by RESTful endpoint: DELETE /1.0/dids/{did}
-     * 
+     *
      * @param did DID to deactivate
      * @param options Deactivation options
      * @return Registration response
@@ -65,7 +65,7 @@ class DidRegistrarService(
     ): DidRegistrationResponse {
         return handleDeactivateOperation(did, options)
     }
-    
+
     /**
      * Gets the status of a job.
      */

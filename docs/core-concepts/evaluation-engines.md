@@ -76,13 +76,13 @@ interface ContractEvaluationEngine {
     val version: String
     val implementationHash: String
     val supportedConditionTypes: Set<ConditionType>
-    
+
     suspend fun evaluateCondition(
         condition: ContractCondition,
         inputData: JsonElement,
         context: EvaluationContext
     ): Boolean
-    
+
     suspend fun evaluateConditions(
         conditions: List<ContractCondition>,
         inputData: JsonElement,
@@ -110,7 +110,7 @@ Using `JsonElement` maintains consistency across the entire framework, making th
 
 All external data sources in TrustWeave are JSON-native:
 - **Earth Observation APIs** (ESA, NASA, Planet) → JSON responses
-- **Weather APIs** (NOAA, Weather.com) → JSON responses  
+- **Weather APIs** (NOAA, Weather.com) → JSON responses
 - **IoT Sensors** → JSON payloads (MQTT, HTTP)
 - **Financial APIs** → JSON market data
 - **Verifiable Credentials** → JSON-LD format
@@ -296,7 +296,7 @@ class MyCustomEngine : BaseEvaluationEngine() {
         ConditionType.THRESHOLD,
         ConditionType.RANGE
     )
-    
+
     override suspend fun evaluateCondition(
         condition: ContractCondition,
         inputData: JsonElement,
@@ -310,7 +310,7 @@ class MyCustomEngine : BaseEvaluationEngine() {
             )
         }
     }
-    
+
     private fun evaluateThreshold(
         condition: ContractCondition,
         inputData: JsonElement
@@ -318,7 +318,7 @@ class MyCustomEngine : BaseEvaluationEngine() {
         // Your implementation
         TODO()
     }
-    
+
     private fun evaluateRange(
         condition: ContractCondition,
         inputData: JsonElement
@@ -563,11 +563,11 @@ fun `test threshold evaluation`() {
         expression = "$.value >= 50"
     )
     val inputData = buildJsonObject { put("value", 75.0) }
-    
+
     val result = runBlocking {
         engine.evaluateCondition(condition, inputData, context)
     }
-    
+
     assertTrue(result)
 }
 ```

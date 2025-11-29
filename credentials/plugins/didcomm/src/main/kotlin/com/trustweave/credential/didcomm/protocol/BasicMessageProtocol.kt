@@ -8,13 +8,13 @@ import java.util.*
 
 /**
  * Helper functions for Basic Message Protocol.
- * 
+ *
  * Basic messages are simple text messages for general communication.
  */
 object BasicMessageProtocol {
     /**
      * Creates a basic message.
-     * 
+     *
      * @param fromDid Sender DID
      * @param toDid Recipient DID
      * @param content Message content
@@ -33,7 +33,7 @@ object BasicMessageProtocol {
             put("content", content)
             locale?.let { put("locale", it) }
         }
-        
+
         return DidCommMessage(
             id = UUID.randomUUID().toString(),
             type = DidCommMessageTypes.BASIC_MESSAGE,
@@ -47,7 +47,7 @@ object BasicMessageProtocol {
 
     /**
      * Extracts content from a basic message.
-     * 
+     *
      * @param message The basic message
      * @return The message content, or null if not found
      */

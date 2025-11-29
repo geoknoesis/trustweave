@@ -257,10 +257,10 @@ TrustWeave implements multiple layers of security:
 
 ### 5.1 Token Overview
 
-**Token Name:** TrustWeave Token  
-**Token Symbol:** VCT  
-**Total Supply:** 1,000,000,000 VCT  
-**Token Type:** ERC-20 (Ethereum) / Native tokens on other chains  
+**Token Name:** TrustWeave Token
+**Token Symbol:** VCT
+**Total Supply:** 1,000,000,000 VCT
+**Token Type:** ERC-20 (Ethereum) / Native tokens on other chains
 **Decimals:** 18
 
 ### 5.2 Token Utility
@@ -909,8 +909,8 @@ We invite developers, organizations, and investors to join us in building the fo
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** [Date]  
+**Document Version:** 1.0
+**Last Updated:** [Date]
 **Next Review:** [Date]
 
 ---

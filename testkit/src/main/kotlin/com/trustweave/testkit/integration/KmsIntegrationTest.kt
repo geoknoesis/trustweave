@@ -9,12 +9,12 @@ import kotlin.test.assertTrue
 
 /**
  * Base class for KMS integration tests.
- * 
+ *
  * Provides common test scenarios for KMS plugins including:
  * - Tests with real KMS services (using TestContainers where possible)
  * - Key lifecycle tests
  * - Multi-provider tests
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * @Testcontainers
@@ -23,7 +23,7 @@ import kotlin.test.assertTrue
  *         @JvmStatic
  *         val localStack = LocalStackContainer.create()
  *     }
- *     
+ *
  *     override fun getKms(): KeyManagementService {
  *         val config = AwsKmsConfig.builder()
  *             .region("us-east-1")
@@ -31,7 +31,7 @@ import kotlin.test.assertTrue
  *             .build()
  *         return AwsKeyManagementService(config)
  *     }
- *     
+ *
  *     @Test
  *     fun testKeyLifecycle() = runBlocking {
  *         testGenerateAndSign()
@@ -40,13 +40,13 @@ import kotlin.test.assertTrue
  * ```
  */
 abstract class KmsIntegrationTest : BaseIntegrationTest() {
-    
+
     /**
      * Gets the KMS service to test.
      * Must be implemented by subclasses.
      */
     abstract override fun getKms(): KeyManagementService
-    
+
     /**
      * Gets the supported algorithms for this KMS.
      * Defaults to common algorithms. Override to specify.
@@ -54,51 +54,51 @@ abstract class KmsIntegrationTest : BaseIntegrationTest() {
     open fun getSupportedAlgorithms(): List<Algorithm> {
         return listOf(Algorithm.Ed25519, Algorithm.Secp256k1)
     }
-    
+
     /**
      * Tests key generation and signing.
      */
     protected suspend fun testGenerateAndSign() {
         val kms = getKms()
         val algorithm = getSupportedAlgorithms().first()
-        
+
         val keyHandle = kms.generateKey(algorithm)
         kotlin.test.assertNotNull(keyHandle)
         kotlin.test.assertNotNull(keyHandle.id)
-        
+
         val message = "test message".toByteArray()
         val signature = kms.sign(keyHandle.id, message)
         kotlin.test.assertNotNull(signature)
         kotlin.test.assertTrue(signature.isNotEmpty())
     }
-    
+
     /**
      * Tests key retrieval.
      */
     protected suspend fun testRetrieveKey() {
         val kms = getKms()
         val algorithm = getSupportedAlgorithms().first()
-        
+
         val keyHandle = kms.generateKey(algorithm)
         val retrieved = kms.getPublicKey(keyHandle.id)
-        
+
         kotlin.test.assertNotNull(retrieved)
         kotlin.test.assertEquals(keyHandle.id, retrieved.id)
         kotlin.test.assertEquals(keyHandle.algorithm, retrieved.algorithm)
     }
-    
+
     /**
      * Tests key deletion.
      */
     protected suspend fun testDeleteKey() {
         val kms = getKms()
         val algorithm = getSupportedAlgorithms().first()
-        
+
         val keyHandle = kms.generateKey(algorithm)
         val deleted = kms.deleteKey(keyHandle.id)
-        
+
         kotlin.test.assertTrue(deleted)
-        
+
         // Attempting to retrieve deleted key should fail
         try {
             kms.getPublicKey(keyHandle.id)
@@ -107,39 +107,39 @@ abstract class KmsIntegrationTest : BaseIntegrationTest() {
             // Expected behavior
         }
     }
-    
+
     /**
      * Tests multiple algorithms.
      */
     protected suspend fun testMultipleAlgorithms() {
         val kms = getKms()
         val algorithms = getSupportedAlgorithms()
-        
+
         val keyHandles = algorithms.map { algorithm ->
             kms.generateKey(algorithm)
         }
-        
+
         assertTrue(keyHandles.size == algorithms.size)
         keyHandles.forEach { handle ->
             assertNotNull(handle.id)
         }
     }
-    
+
     /**
      * Tests signing with different algorithms.
      */
     protected suspend fun testSigningWithDifferentAlgorithms() {
         val kms = getKms()
         val message = "test message".toByteArray()
-        
+
         getSupportedAlgorithms().forEach { algorithm ->
             val keyHandle = kms.generateKey(algorithm)
             val signature = kms.sign(keyHandle.id, message)
-            
+
             kotlin.test.assertNotNull(signature)
             kotlin.test.assertTrue(signature.isNotEmpty())
         }
     }
-    
+
 }
 

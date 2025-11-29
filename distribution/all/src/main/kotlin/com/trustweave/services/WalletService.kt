@@ -3,6 +3,7 @@ package com.trustweave.services
 import com.trustweave.TrustWeaveContext
 import com.trustweave.core.*
 import com.trustweave.wallet.WalletType
+import com.trustweave.wallet.exception.WalletException
 import com.trustweave.wallet.Wallet
 import com.trustweave.wallet.services.WalletFactory
 import com.trustweave.wallet.services.WalletCreationOptions
@@ -10,15 +11,15 @@ import java.util.UUID
 
 /**
  * Focused service for wallet operations.
- * 
+ *
  * Provides wallet creation only. All other wallet operations should be performed
  * directly on the wallet instance (no unnecessary wrappers).
- * 
+ *
  * **Example:**
  * ```kotlin
  * val TrustWeave = TrustWeave.create()
  * val wallet = trustweave.wallets.create(holderDid = "did:key:holder")
- * 
+ *
  * // Use wallet directly - no wrapper methods
  * wallet.store(credential)
  * wallet.get(credentialId)
@@ -30,12 +31,12 @@ class WalletService(
 ) {
     /**
      * Creates a wallet with the specified configuration.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * // Simple usage
      * val wallet = trustweave.wallets.create(holderDid = "did:key:holder")
-     * 
+     *
      * // With custom type and options
      * val wallet = trustweave.wallets.create(
      *     holderDid = "did:key:holder",
@@ -46,13 +47,13 @@ class WalletService(
      *     )
      * )
      * ```
-     * 
+     *
      * @param holderDid DID of the wallet holder (required)
      * @param walletId Optional wallet identifier (generated if not provided)
      * @param type Wallet type (default: InMemory)
      * @param options Provider-specific configuration
      * @return The created wallet instance
-     * @throws TrustWeaveError.WalletCreationFailed if wallet creation fails
+     * @throws WalletException.WalletCreationFailed if wallet creation fails
      */
     suspend fun create(
         holderDid: String,
@@ -61,7 +62,7 @@ class WalletService(
         options: WalletCreationOptions = WalletCreationOptions()
     ): Wallet {
         require(holderDid.isNotBlank()) { "Holder DID is required" }
-        
+
         return try {
             val wallet = context.walletFactory.create(
                 providerName = type.id,
@@ -69,12 +70,12 @@ class WalletService(
                 holderDid = holderDid,
                 options = options
             )
-            
+
             wallet as? Wallet ?: throw IllegalStateException(
                 "WalletFactory returned unsupported instance: ${wallet?.let { w: Any -> w::class.qualifiedName }}"
             )
         } catch (e: Exception) {
-            throw TrustWeaveError.WalletCreationFailed(
+            throw WalletException.WalletCreationFailed(
                 reason = e.message ?: "Unknown error",
                 provider = type.id,
                 walletId = walletId

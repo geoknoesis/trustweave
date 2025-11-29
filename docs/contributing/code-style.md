@@ -209,12 +209,12 @@ class DidMethodTest {
     fun testCreateDid() = runBlocking {
         // ...
     }
-    
+
     @Test
     fun testResolveDid() = runBlocking {
         // ...
     }
-    
+
     @Test
     fun testUpdateDid() = runBlocking {
         // ...

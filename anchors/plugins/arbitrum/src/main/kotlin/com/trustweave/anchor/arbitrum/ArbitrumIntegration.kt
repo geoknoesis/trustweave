@@ -12,7 +12,7 @@ import com.trustweave.anchor.spi.BlockchainIntegrationHelper
 class ArbitrumBlockchainAnchorClientProvider : BlockchainAnchorClientProvider {
 
     override val name: String = "arbitrum"
-    
+
     override val supportedChains: List<String> = listOf(
         ArbitrumBlockchainAnchorClient.MAINNET,
         ArbitrumBlockchainAnchorClient.ARBITRUM_SEPOLIA

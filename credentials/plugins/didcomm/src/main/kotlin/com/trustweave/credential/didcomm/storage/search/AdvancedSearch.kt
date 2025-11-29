@@ -4,13 +4,13 @@ import com.trustweave.credential.didcomm.models.DidCommMessage
 
 /**
  * Advanced search interface for DIDComm messages.
- * 
+ *
  * Provides full-text search, faceted search, and complex query capabilities.
  */
 interface AdvancedSearch {
     /**
      * Full-text search across message content.
-     * 
+     *
      * @param query Search query string
      * @param limit Maximum number of results
      * @param offset Pagination offset
@@ -21,10 +21,10 @@ interface AdvancedSearch {
         limit: Int = 100,
         offset: Int = 0
     ): List<DidCommMessage>
-    
+
     /**
      * Faceted search with aggregations.
-     * 
+     *
      * @param query Search query
      * @param facets Facets to compute
      * @return Faceted search results
@@ -33,10 +33,10 @@ interface AdvancedSearch {
         query: SearchQuery,
         facets: List<Facet>
     ): FacetedSearchResult
-    
+
     /**
      * Complex query with boolean operators.
-     * 
+     *
      * @param query Complex query
      * @param limit Maximum number of results
      * @param offset Pagination offset

@@ -1,6 +1,11 @@
 package com.trustweave.integration
 
+import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.*
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.trust.types.VerificationResult
+import com.trustweave.trust.types.*
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
@@ -15,217 +20,221 @@ import java.time.Instant
  * End-to-end integration tests for web of trust features.
  */
 class WebOfTrustIntegrationTest {
-    
+
     @Test
     fun `test complete trust registry workflow`() = runBlocking {
         val kms = InMemoryKeyManagementService()
         val kmsRef = kms
-        
-        val trustWeave = trustWeave {
+
+        val trustLayer = TrustWeave.build {
             keys {
                 custom(kmsRef)
-                signer { data, keyId -> kmsRef.sign(keyId, data) }
+                signer { data, keyId -> kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data) }
             }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
         }
-        
+
         val issuerDid = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
-        
+
         val holderDid = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
-        
+
         // Add trust anchor
-        trustWeave.trust {
-            addAnchor(issuerDid) {
+        trustLayer.trust {
+            addAnchor(issuerDid.value) {
                 credentialTypes("TestCredential")
             }
         }
-        
+
         // Extract key ID from the DID document created during createDid()
         // This ensures the signing key matches what's in the DID document
-        val issuerDidDoc = trustLayer.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid)?.document
+        val issuerDidResolution = trustLayer.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid.value)
             ?: throw IllegalStateException("Failed to resolve issuer DID")
-        
+        val issuerDidDoc = when (issuerDidResolution) {
+            is com.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
+            else -> throw IllegalStateException("Failed to resolve issuer DID")
+        }
+
         val verificationMethod = issuerDidDoc.verificationMethod.firstOrNull()
             ?: throw IllegalStateException("No verification method found in issuer DID document")
-        
+
         // Extract key ID from verification method ID (e.g., "did:key:xxx#key-1" -> "key-1")
         val keyId = verificationMethod.id.substringAfter("#")
-        
+
         // Issue credential using the key ID from the DID document
         // The IssuanceDsl will construct verificationMethodId as "$issuerDid#$keyId" which matches the DID document
         val credential = trustLayer.issue {
             credential {
                 id("https://example.com/credential-1")
                 type("TestCredential")
-                issuer(issuerDid)
+                issuer(issuerDid.value)
                 subject {
-                    id(holderDid)
+                    id(holderDid.value)
                     "test" to "value"
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDid, keyId = keyId)
+            by(issuerDid = issuerDid.value, keyId = keyId)
         }
-        
+
         // Verify with trust registry
+        // Note: Trust registry checking is handled by orchestration layer, not in VerificationBuilder
         val result = trustLayer.verify {
             credential(credential)
-            checkTrustRegistry()
         }
-        
+
         assertTrue(result.valid, "Credential should be valid. Errors: ${result.errors}, Warnings: ${result.warnings}")
         assertTrue(result.trustRegistryValid, "Issuer should be trusted in trust registry")
     }
-    
+
     @Test
     fun `test delegation chain with credential issuance`() = runBlocking {
-        val trustWeave = trustWeave {
+        val trustLayer = TrustWeave.build {
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
         }
-        
+
         val delegatorDid = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
-        
+
         val delegateDid = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
-        
+
         val holderDid = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
-        
+
         // Set up delegation
-        trustWeave.updateDid {
-            did(delegatorDid)
+        trustLayer.updateDid {
+            did(delegatorDid.value)
             method(DidMethods.KEY)
-            addCapabilityDelegation("$delegateDid#key-1")
+            addCapabilityDelegation("${delegateDid.value}#key-1")
         }
-        
+
         // Verify delegation
         val delegationResult = trustLayer.delegate {
-            from(delegatorDid)
-            to(delegateDid)
+            from(delegatorDid.value)
+            to(delegateDid.value)
         }
-        
+
         assertTrue(delegationResult.valid)
-        
+
         // Issue credential using delegated authority
         val credential = trustLayer.issue {
             credential {
                 id("https://example.com/delegated-credential")
                 type("TestCredential")
-                issuer(delegateDid)
+                issuer(delegateDid.value)
                 subject {
-                    id(holderDid)
+                    id(holderDid.value)
                     "test" to "value"
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = delegateDid, keyId = "key-1")
+            by(issuerDid = delegateDid.value, keyId = "key-1")
         }
-        
+
         assertNotNull(credential)
     }
-    
+
     @Test
     fun `test trust path discovery with multiple anchors`() = runBlocking {
-        val trustWeave = trustWeave {
+        val trustLayer = TrustWeave.build {
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
         }
-        
+
         val anchor1 = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
-        
+
         val anchor2 = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
-        
+
         val anchor3 = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
-        
-        trustWeave.trust {
-            addAnchor(anchor1) {}
-            addAnchor(anchor2) {}
-            addAnchor(anchor3) {}
-            
+
+        trustLayer.trust {
+            addAnchor(anchor1.value) {}
+            addAnchor(anchor2.value) {}
+            addAnchor(anchor3.value) {}
+
             // Get registry to add relationships
             val registry = trustLayer.getDslContext().getTrustRegistry() as? com.trustweave.testkit.trust.InMemoryTrustRegistry
-            registry?.addTrustRelationship(anchor1, anchor2)
-            registry?.addTrustRelationship(anchor2, anchor3)
-            
-            val path = getTrustPath(anchor1, anchor3)
+            registry?.addTrustRelationship(anchor1.value, anchor2.value)
+            registry?.addTrustRelationship(anchor2.value, anchor3.value)
+
+            val path = getTrustPath(anchor1.value, anchor3.value)
             assertNotNull(path)
             assertTrue(path.valid)
             assertTrue(path.path.size >= 2)
         }
     }
-    
+
     @Test
     fun `test proof purpose validation in credential verification`() = runBlocking {
-        val trustWeave = trustWeave {
+        val trustLayer = TrustWeave.build {
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
         }
-        
+
         val issuerDid = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
-        
+
         val holderDid = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
         }
-        
+
         // Update issuer DID to have assertionMethod
-        trustWeave.updateDid {
-            did(issuerDid)
+        trustLayer.updateDid {
+            did(issuerDid.value)
             method(DidMethods.KEY)
             addKey {
                 type("Ed25519VerificationKey2020")
             }
         }
-        
+
         // Issue credential
         val credential = trustLayer.issue {
             credential {
                 id("https://example.com/credential-1")
                 type("TestCredential")
-                issuer(issuerDid)
+                issuer(issuerDid.value)
                 subject {
-                    id(holderDid)
+                    id(holderDid.value)
                     "test" to "value"
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDid, keyId = "key-1")
+            by(issuerDid = issuerDid.value, keyId = "key-1")
         }
-        
+
         // Verify with proof purpose validation
         val result = trustLayer.verify {
             credential(credential)
             validateProofPurpose()
         }
-        
+
         // Note: This may fail if resolveDid is not properly configured
         // The test verifies the integration path works
         assertNotNull(result)

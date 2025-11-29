@@ -26,7 +26,7 @@ dependencies {
     implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-core:1.0.0-SNAPSHOT")
-    
+
     // HTTP client for Cheqd network integration
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }
@@ -232,11 +232,11 @@ val anchorClient = InMemoryBlockchainAnchorClient("cheqd:mainnet")
 
 val TrustWeave = TrustWeave.create {
     kms = InMemoryKeyManagementService()
-    
+
     blockchain {
         register("cheqd:mainnet", anchorClient)
     }
-    
+
     didMethods {
         + CheqdDidMethod(kms!!, anchorClient, config)
     }

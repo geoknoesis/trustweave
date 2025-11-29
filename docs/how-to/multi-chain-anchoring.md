@@ -56,7 +56,7 @@ fun main() = runBlocking {
     anchorRegistry.register("algorand:testnet", InMemoryBlockchainAnchorClient("algorand:testnet"))
     anchorRegistry.register("polygon:mainnet", InMemoryBlockchainAnchorClient("polygon:mainnet"))
     anchorRegistry.register("ethereum:sepolia", InMemoryBlockchainAnchorClient("ethereum:sepolia"))
-    
+
     // Step 2: Create payload
     val digest = CredentialDigest(
         credentialId = "cred-123",
@@ -64,14 +64,14 @@ fun main() = runBlocking {
         issuer = "did:key:issuer"
     )
     val payload = Json.encodeToJsonElement(digest)
-    
+
     // Step 3: Anchor to multiple chains
     val results = listOf(
         anchorRegistry.anchor("algorand:testnet", payload),
         anchorRegistry.anchor("polygon:mainnet", payload),
         anchorRegistry.anchor("ethereum:sepolia", payload)
     )
-    
+
     println("✅ Anchored to ${results.size} chains")
     results.forEach { result ->
         println("   ${result.ref.chainId}: ${result.ref.txHash}")
@@ -290,7 +290,7 @@ suspend fun anchorWithFallback(
     } catch (error: BlockchainException) {
         println("Primary chain failed: ${error.message}")
     }
-    
+
     // Try backup chains
     for (backupChain in backupChains) {
         try {
@@ -299,7 +299,7 @@ suspend fun anchorWithFallback(
             println("Backup chain $backupChain failed: ${error.message}")
         }
     }
-    
+
     return null // All chains failed
 }
 ```
@@ -322,7 +322,7 @@ fun selectChains(criteria: ChainCriteria): List<String> {
         "ethereum:sepolia",    // High security
         "bitcoin:mainnet"      // Maximum security
     )
-    
+
     return allChains.filter { chainId ->
         // Apply selection criteria
         when (chainId) {
@@ -356,12 +356,12 @@ suspend fun anchorWithMinimumSuccess(
     minimumSuccess: Int = 2
 ): List<AnchorResult> {
     val results = mutableListOf<AnchorResult>()
-    
+
     for (chainId in chains) {
         if (results.size >= minimumSuccess) {
             break // Already have enough successful anchors
         }
-        
+
         try {
             val result = anchorRegistry.anchor(chainId, payload)
             results.add(result)
@@ -370,14 +370,14 @@ suspend fun anchorWithMinimumSuccess(
             println("❌ Failed to anchor to $chainId: ${error.message}")
         }
     }
-    
+
     if (results.size < minimumSuccess) {
         throw IllegalStateException(
             "Failed to anchor to minimum $minimumSuccess chains. " +
             "Only ${results.size} succeeded."
         )
     }
-    
+
     return results
 }
 

@@ -8,18 +8,18 @@ import kotlinx.serialization.json.*
 
 /**
  * Cardano blockchain anchor client implementation.
- * 
+ *
  * Supports Cardano mainnet and testnet chains.
  * Uses Cardano's metadata feature to store payload data in transactions.
- * 
+ *
  * Chain ID format: "cardano:<network>"
  * Examples:
  * - "cardano:mainnet" (Cardano mainnet)
  * - "cardano:testnet" (Cardano testnet/preview)
- * 
+ *
  * **Note:** Cardano uses UTXO model (not account-based), so requires different approach.
  * Metadata can be attached to transactions (up to 16KB per transaction).
- * 
+ *
  * **Example:**
  * ```kotlin
  * val client = CardanoBlockchainAnchorClient(
@@ -36,11 +36,11 @@ class CardanoBlockchainAnchorClient(
     chainId: String,
     options: Map<String, Any?> = emptyMap()
 ) : AbstractBlockchainAnchorClient(chainId, options), java.io.Closeable {
-    
+
     companion object {
         const val MAINNET = "cardano:mainnet"
         const val TESTNET = "cardano:testnet"
-        
+
         // Network node endpoints
         private const val MAINNET_NODE_URL = "https://cardano-mainnet.blockfrost.io/api/v0"
         private const val TESTNET_NODE_URL = "https://cardano-testnet.blockfrost.io/api/v0"
@@ -61,7 +61,7 @@ class CardanoBlockchainAnchorClient(
 
     override protected fun canSubmitTransaction(): Boolean {
         // Check if credentials are provided
-        return options["nodeUrl"] != null && 
+        return options["nodeUrl"] != null &&
                (options["apiKey"] != null || options["mnemonic"] != null)
     }
 
@@ -78,7 +78,7 @@ class CardanoBlockchainAnchorClient(
                 payloadSize = payloadBytes.size.toLong()
             )
         }
-        
+
         // TODO: Implement Cardano transaction creation
         // This requires:
         // 1. Connect to Cardano node (Blockfrost API or local node)
@@ -86,7 +86,7 @@ class CardanoBlockchainAnchorClient(
         // 3. Sign transaction using mnemonic/private key
         // 4. Submit transaction
         // 5. Return transaction hash
-        
+
         throw TrustWeaveException.Unknown(
             message = "Cardano blockchain anchoring requires Cardano SDK and node access. " +
             "Structure is ready for implementation."
@@ -100,7 +100,7 @@ class CardanoBlockchainAnchorClient(
         // 2. Get transaction by hash
         // 3. Extract metadata from transaction
         // 4. Parse and return AnchorResult
-        
+
         throw TrustWeaveException.Unknown(
             message = "Cardano blockchain reading requires Cardano SDK. " +
             "Structure is ready for implementation."

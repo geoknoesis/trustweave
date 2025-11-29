@@ -42,17 +42,17 @@ fun main() = runBlocking {
             provider("inMemory")
             algorithm(KeyAlgorithms.ED25519)
         }
-        
+
         did {
             method(DidMethods.KEY) {
                 algorithm(KeyAlgorithms.ED25519)
             }
         }
-        
+
         credentials {
             defaultProofType(ProofTypes.ED25519)
         }
-        
+
         trust {
             provider("inMemory")
         }
@@ -102,13 +102,13 @@ trustLayer.trust {
         credentialTypes("EducationCredential", "DegreeCredential")
         description("Trusted university for education credentials")
     }
-    
+
     // Add company as trusted anchor for employment credentials
     addAnchor(companyDid) {
         credentialTypes("EmploymentCredential")
         description("Trusted company for employment credentials")
     }
-    
+
     // Verify trust anchors were added
     val isUniversityTrusted = isTrusted(universityDid, "EducationCredential")
     println("University trusted for EducationCredential: $isUniversityTrusted")
@@ -242,7 +242,7 @@ trustLayer.trust {
     // Get all trusted issuers for a credential type
     val educationIssuers = getTrustedIssuers("EducationCredential")
     println("Trusted education issuers: ${educationIssuers.joinToString(", ")}")
-    
+
     // Find trust path between two DIDs (if trust relationships exist)
     val trustPath = getTrustPath(universityDid, companyDid)
     if (trustPath != null) {
@@ -266,13 +266,13 @@ trustLayer.trust {
 trustLayer.updateDid {
     did(studentDid)
     method(DidMethods.KEY)
-    
+
     // Add capability invocation for signing documents
     addCapabilityInvocation("$studentDid#key-1")
-    
+
     // Add capability delegation for delegating to assistants
     addCapabilityDelegation("$studentDid#key-2")
-    
+
     // Set JSON-LD context
     context("https://www.w3.org/ns/did/v1", "https://example.com/context/v1")
 }
@@ -339,25 +339,25 @@ fun completeWebOfTrustWorkflow() = runBlocking {
         did { method(DidMethods.KEY) }
         trust { provider("inMemory") }
     }
-    
+
     // 1. Create DIDs
     val issuerDid = trustLayer.createDid { method(DidMethods.KEY) }
     val holderDid = trustLayer.createDid { method(DidMethods.KEY) }
-    
+
     // 2. Set up trust anchor
     trustLayer.trust {
         addAnchor(issuerDid) {
             credentialTypes("TestCredential")
         }
     }
-    
+
     // 3. Update issuer DID with assertionMethod
     trustLayer.updateDid {
         did(issuerDid)
         method(DidMethods.KEY)
         addAssertionMethod("$issuerDid#key-1")
     }
-    
+
     // 4. Issue credential
     val credential = trustLayer.issue {
         credential {
@@ -373,7 +373,7 @@ fun completeWebOfTrustWorkflow() = runBlocking {
         by(issuerDid = issuerDid, keyId = "key-1")
         proofPurpose(ProofPurposes.ASSERTION_METHOD)
     }
-    
+
     // 5. Verify with all checks enabled
     val result = trustLayer.verify {
         credential(credential)
@@ -381,7 +381,7 @@ fun completeWebOfTrustWorkflow() = runBlocking {
         validateProofPurpose(true)
         checkExpiration(true)
     }
-    
+
     // 6. Check results
     println("Complete Verification Results:")
     println("  Valid: ${result.valid}")
@@ -389,7 +389,7 @@ fun completeWebOfTrustWorkflow() = runBlocking {
     println("  Proof Purpose Valid: ${result.proofPurposeValid}")
     println("  Proof Valid: ${result.proofValid}")
     println("  Not Expired: ${result.notExpired}")
-    
+
     if (result.valid && result.trustRegistryValid && result.proofPurposeValid) {
         println("✅ Credential verified successfully with all checks!")
     }
@@ -453,7 +453,7 @@ trustLayer.trust {
     addAnchor(organization3Did) {
         credentialTypes("PartnershipCredential")
     }
-    
+
     // Get all trusted partners
     val partners = getTrustedIssuers("PartnershipCredential")
     println("Trusted partners: ${partners.joinToString(", ")}")
@@ -482,7 +482,7 @@ try {
         validateProofPurpose(true)
         verifyDelegation(true)
     }
-    
+
     if (!result.valid) {
         println("Verification failed:")
         result.errors.forEach { println("  - $it") }

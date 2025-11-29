@@ -11,7 +11,7 @@ class DidCreationOptionsTest {
     @Test
     fun `test default options`() {
         val options = DidCreationOptions()
-        
+
         assertEquals(DidCreationOptions.KeyAlgorithm.ED25519, options.algorithm)
         assertEquals(1, options.purposes.size)
         assertTrue(options.purposes.contains(DidCreationOptions.KeyPurpose.AUTHENTICATION))
@@ -23,7 +23,7 @@ class DidCreationOptionsTest {
         val options = DidCreationOptions(
             algorithm = DidCreationOptions.KeyAlgorithm.SECP256K1
         )
-        
+
         assertEquals(DidCreationOptions.KeyAlgorithm.SECP256K1, options.algorithm)
     }
 
@@ -35,7 +35,7 @@ class DidCreationOptionsTest {
                 DidCreationOptions.KeyPurpose.KEY_AGREEMENT
             )
         )
-        
+
         assertEquals(2, options.purposes.size)
         assertTrue(options.purposes.contains(DidCreationOptions.KeyPurpose.AUTHENTICATION))
         assertTrue(options.purposes.contains(DidCreationOptions.KeyPurpose.KEY_AGREEMENT))
@@ -49,7 +49,7 @@ class DidCreationOptionsTest {
                 "number" to 42
             )
         )
-        
+
         assertEquals(2, options.additionalProperties.size)
         assertEquals("value", options.additionalProperties["custom"])
         assertEquals(42, options.additionalProperties["number"])
@@ -62,9 +62,9 @@ class DidCreationOptionsTest {
             purposes = listOf(DidCreationOptions.KeyPurpose.AUTHENTICATION),
             additionalProperties = mapOf("custom" to "value")
         )
-        
+
         val map = options.toMap()
-        
+
         assertEquals("Ed25519", map["algorithm"])
         assertTrue(map.containsKey("purposes"))
         assertEquals("value", map["custom"])
@@ -77,9 +77,9 @@ class DidCreationOptionsTest {
             "purposes" to listOf("authentication", "assertionMethod"),
             "custom" to "value"
         )
-        
+
         val options = DidCreationOptions.fromMap(map)
-        
+
         assertEquals(DidCreationOptions.KeyAlgorithm.SECP256K1, options.algorithm)
         assertEquals(2, options.purposes.size)
         assertTrue(options.purposes.contains(DidCreationOptions.KeyPurpose.AUTHENTICATION))
@@ -92,9 +92,9 @@ class DidCreationOptionsTest {
         val map = mapOf(
             "purposes" to listOf("authentication")
         )
-        
+
         val options = DidCreationOptions.fromMap(map)
-        
+
         assertEquals(DidCreationOptions.KeyAlgorithm.ED25519, options.algorithm)
     }
 
@@ -106,7 +106,7 @@ class DidCreationOptionsTest {
             purpose(DidCreationOptions.KeyPurpose.ASSERTION)
             property("custom", "value")
         }
-        
+
         assertEquals(DidCreationOptions.KeyAlgorithm.SECP256K1, options.algorithm)
         assertEquals(2, options.purposes.size)
         assertTrue(options.purposes.contains(DidCreationOptions.KeyPurpose.AUTHENTICATION))
@@ -116,22 +116,22 @@ class DidCreationOptionsTest {
 
     @Test
     fun `test KeyAlgorithm fromName`() {
-        assertEquals(DidCreationOptions.KeyAlgorithm.ED25519, 
+        assertEquals(DidCreationOptions.KeyAlgorithm.ED25519,
             DidCreationOptions.KeyAlgorithm.fromName("Ed25519"))
-        assertEquals(DidCreationOptions.KeyAlgorithm.ED25519, 
+        assertEquals(DidCreationOptions.KeyAlgorithm.ED25519,
             DidCreationOptions.KeyAlgorithm.fromName("ed25519"))
-        assertEquals(DidCreationOptions.KeyAlgorithm.SECP256K1, 
+        assertEquals(DidCreationOptions.KeyAlgorithm.SECP256K1,
             DidCreationOptions.KeyAlgorithm.fromName("SECP256K1"))
         assertNull(DidCreationOptions.KeyAlgorithm.fromName("invalid"))
     }
 
     @Test
     fun `test KeyPurpose fromName`() {
-        assertEquals(DidCreationOptions.KeyPurpose.AUTHENTICATION, 
+        assertEquals(DidCreationOptions.KeyPurpose.AUTHENTICATION,
             DidCreationOptions.KeyPurpose.fromName("authentication"))
-        assertEquals(DidCreationOptions.KeyPurpose.AUTHENTICATION, 
+        assertEquals(DidCreationOptions.KeyPurpose.AUTHENTICATION,
             DidCreationOptions.KeyPurpose.fromName("AUTHENTICATION"))
-        assertEquals(DidCreationOptions.KeyPurpose.ASSERTION, 
+        assertEquals(DidCreationOptions.KeyPurpose.ASSERTION,
             DidCreationOptions.KeyPurpose.fromName("assertionMethod"))
         assertNull(DidCreationOptions.KeyPurpose.fromName("invalid"))
     }

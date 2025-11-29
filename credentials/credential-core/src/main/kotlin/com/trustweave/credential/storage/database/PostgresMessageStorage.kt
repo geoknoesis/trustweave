@@ -14,9 +14,9 @@ import javax.sql.DataSource
 
 /**
  * Generic PostgreSQL-backed message storage.
- * 
+ *
  * Works with any protocol message that implements ProtocolMessage.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * // DIDComm
@@ -25,7 +25,7 @@ import javax.sql.DataSource
  *     dataSource = dataSource,
  *     tableName = "didcomm_messages"
  * )
- * 
+ *
  * // OIDC4VCI
  * val oidcStorage = PostgresMessageStorage(
  *     serializer = Oidc4VciOffer.serializer(),
@@ -40,26 +40,26 @@ class PostgresMessageStorage<T : ProtocolMessage>(
     private val tableName: String = "protocol_messages",
     private val encryption: MessageEncryption? = null
 ) : ProtocolMessageStorage<T> {
-    
-    private val json = Json { 
+
+    private val json = Json {
         prettyPrint = false
         encodeDefaults = false
         ignoreUnknownKeys = true
     }
-    
+
     init {
         createTables()
     }
-    
+
     override suspend fun store(message: T): String = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             val messageJson = json.encodeToString(serializer, message)
-            
+
             if (encryption != null) {
                 // Encrypt message
                 val plaintext = messageJson.toByteArray(Charsets.UTF_8)
                 val encrypted = encryption.encrypt(plaintext)
-                
+
                 conn.prepareStatement("""
                     INSERT INTO $tableName (
                         id, type, from_participant, to_participants, body, created_time,
@@ -93,18 +93,18 @@ class PostgresMessageStorage<T : ProtocolMessage>(
                     stmt.executeUpdate()
                 }
             }
-            
+
             // Index by participant
             message.from?.let { indexMessageForParticipant(conn, message.messageId, it, "from") }
             message.to.forEach { indexMessageForParticipant(conn, message.messageId, it, "to") }
-            
+
             // Index by thread
             message.threadId?.let { indexMessageForThread(conn, message.messageId, it) }
-            
+
             message.messageId
         }
     }
-    
+
     override suspend fun get(messageId: String): T? = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             conn.prepareStatement("""
@@ -115,19 +115,19 @@ class PostgresMessageStorage<T : ProtocolMessage>(
                 stmt.executeQuery().use { rs ->
                     if (rs.next()) {
                         val isEncrypted = rs.getBoolean("is_encrypted")
-                        
+
                         if (isEncrypted && encryption != null) {
                             // Decrypt message
                             val encryptedData = rs.getBytes("encrypted_data")
                             val keyVersion = rs.getInt("key_version")
                             val iv = rs.getBytes("iv")
-                            
+
                             val encrypted = EncryptedMessage(
                                 keyVersion = keyVersion,
                                 encryptedData = encryptedData,
                                 iv = iv
                             )
-                            
+
                             val plaintext = encryption.decrypt(encrypted)
                             val jsonString = String(plaintext, Charsets.UTF_8)
                             json.decodeFromString(serializer, jsonString)
@@ -143,7 +143,7 @@ class PostgresMessageStorage<T : ProtocolMessage>(
             }
         }
     }
-    
+
     override suspend fun getMessagesForParticipant(
         participantId: String,
         limit: Int,
@@ -172,7 +172,7 @@ class PostgresMessageStorage<T : ProtocolMessage>(
             }
         }
     }
-    
+
     override suspend fun getThreadMessages(threadId: String): List<T> = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             conn.prepareStatement("""
@@ -193,7 +193,7 @@ class PostgresMessageStorage<T : ProtocolMessage>(
             }
         }
     }
-    
+
     override suspend fun delete(messageId: String): Boolean = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             conn.prepareStatement("DELETE FROM $tableName WHERE id = ?").use { stmt ->
@@ -202,7 +202,7 @@ class PostgresMessageStorage<T : ProtocolMessage>(
             }
         }
     }
-    
+
     override suspend fun deleteMessagesForParticipant(participantId: String): Int = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             conn.prepareStatement("""
@@ -216,7 +216,7 @@ class PostgresMessageStorage<T : ProtocolMessage>(
             }
         }
     }
-    
+
     override suspend fun deleteThreadMessages(threadId: String): Int = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             conn.prepareStatement("DELETE FROM $tableName WHERE thread_id = ?").use { stmt ->
@@ -225,7 +225,7 @@ class PostgresMessageStorage<T : ProtocolMessage>(
             }
         }
     }
-    
+
     override suspend fun countMessagesForParticipant(participantId: String): Int = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             conn.prepareStatement("""
@@ -240,7 +240,7 @@ class PostgresMessageStorage<T : ProtocolMessage>(
             }
         }
     }
-    
+
     override suspend fun search(
         filter: MessageFilter,
         limit: Int,
@@ -255,14 +255,14 @@ class PostgresMessageStorage<T : ProtocolMessage>(
                 ORDER BY created_time DESC NULLS LAST
                 LIMIT ? OFFSET ?
             """
-            
+
             conn.prepareStatement(sql).use { stmt ->
                 params.forEachIndexed { index, param ->
                     stmt.setObject(index + 1, param)
                 }
                 stmt.setInt(params.size + 1, limit)
                 stmt.setInt(params.size + 2, offset)
-                
+
                 stmt.executeQuery().use { rs ->
                     buildList {
                         while (rs.next()) {
@@ -274,12 +274,12 @@ class PostgresMessageStorage<T : ProtocolMessage>(
             }
         }
     }
-    
+
     override fun setEncryption(encryption: MessageEncryption?) {
         // Note: Encryption is set in constructor
         // To change encryption, create a new storage instance
     }
-    
+
     override suspend fun markAsArchived(messageIds: List<String>, archiveId: String): Unit = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             conn.prepareStatement("""
@@ -294,7 +294,7 @@ class PostgresMessageStorage<T : ProtocolMessage>(
             }
         }
     }
-    
+
     override suspend fun isArchived(messageId: String): Boolean = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             conn.prepareStatement("""
@@ -311,9 +311,9 @@ class PostgresMessageStorage<T : ProtocolMessage>(
             }
         }
     }
-    
+
     // Helper methods
-    
+
     private fun setMessageParameters(
         stmt: PreparedStatement,
         message: T,
@@ -331,7 +331,7 @@ class PostgresMessageStorage<T : ProtocolMessage>(
         stmt.setString(index++, message.threadId)
         stmt.setString(index++, message.parentThreadId)
         stmt.setString(index++, messageJson)
-        
+
         if (encrypted != null) {
             stmt.setBytes(index++, encrypted.encryptedData)
             stmt.setInt(index++, encrypted.keyVersion)
@@ -341,22 +341,22 @@ class PostgresMessageStorage<T : ProtocolMessage>(
             stmt.setBoolean(index++, false)
         }
     }
-    
+
     private suspend fun deserializeMessage(rs: ResultSet): T? {
         return try {
             val isEncrypted = rs.getBoolean("is_encrypted")
-            
+
             if (isEncrypted && encryption != null) {
                 val encryptedData = rs.getBytes("encrypted_data")
                 val keyVersion = rs.getInt("key_version")
                 val iv = rs.getBytes("iv")
-                
+
                 val encrypted = EncryptedMessage(
                     keyVersion = keyVersion,
                     encryptedData = encryptedData,
                     iv = iv
                 )
-                
+
                 val plaintext = encryption.decrypt(encrypted)
                 val jsonString = String(plaintext, Charsets.UTF_8)
                 json.decodeFromString(serializer, jsonString)
@@ -368,11 +368,11 @@ class PostgresMessageStorage<T : ProtocolMessage>(
             null
         }
     }
-    
+
     private fun buildWhereClause(filter: MessageFilter): Pair<String, List<Any>> {
         val conditions = mutableListOf<String>()
         val params = mutableListOf<Any>()
-        
+
         filter.fromParticipant?.let {
             conditions.add("from_participant = ?")
             params.add(it)
@@ -397,16 +397,16 @@ class PostgresMessageStorage<T : ProtocolMessage>(
             conditions.add("created_time <= ?")
             params.add(it)
         }
-        
+
         val whereClause = if (conditions.isNotEmpty()) {
             "WHERE ${conditions.joinToString(" AND ")}"
         } else {
             ""
         }
-        
+
         return whereClause to params
     }
-    
+
     private fun createTables() {
         dataSource.connection.use { conn ->
             // Create main messages table
@@ -432,7 +432,7 @@ class PostgresMessageStorage<T : ProtocolMessage>(
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-            
+
             // Create participants index table
             conn.createStatement().execute("""
                 CREATE TABLE IF NOT EXISTS ${tableName}_participants (
@@ -443,7 +443,7 @@ class PostgresMessageStorage<T : ProtocolMessage>(
                     FOREIGN KEY (message_id) REFERENCES $tableName(id) ON DELETE CASCADE
                 )
             """)
-            
+
             // Create threads index table
             conn.createStatement().execute("""
                 CREATE TABLE IF NOT EXISTS ${tableName}_threads (
@@ -453,7 +453,7 @@ class PostgresMessageStorage<T : ProtocolMessage>(
                     FOREIGN KEY (message_id) REFERENCES $tableName(id) ON DELETE CASCADE
                 )
             """)
-            
+
             // Create indexes
             conn.createStatement().execute("CREATE INDEX IF NOT EXISTS idx_${tableName}_from ON $tableName(from_participant)")
             conn.createStatement().execute("CREATE INDEX IF NOT EXISTS idx_${tableName}_thread ON $tableName(thread_id)")
@@ -465,7 +465,7 @@ class PostgresMessageStorage<T : ProtocolMessage>(
             conn.createStatement().execute("CREATE INDEX IF NOT EXISTS idx_${tableName}_threads_id ON ${tableName}_threads(thread_id)")
         }
     }
-    
+
     private fun indexMessageForParticipant(
         conn: Connection,
         messageId: String,
@@ -483,7 +483,7 @@ class PostgresMessageStorage<T : ProtocolMessage>(
             stmt.executeUpdate()
         }
     }
-    
+
     private fun indexMessageForThread(conn: Connection, messageId: String, threadId: String) {
         conn.prepareStatement("""
             INSERT INTO ${tableName}_threads (message_id, thread_id)

@@ -15,7 +15,7 @@ class GodiddyModelsTest {
             didDocumentMetadata = mapOf("created" to buildJsonObject { put("timestamp", "2024-01-01") }),
             didResolutionMetadata = mapOf("duration" to JsonPrimitive(100))
         )
-        
+
         assertNotNull(response.didDocument)
         assertNotNull(response.didDocumentMetadata)
         assertNotNull(response.didResolutionMetadata)
@@ -24,7 +24,7 @@ class GodiddyModelsTest {
     @Test
     fun `test GodiddyResolutionResponse with defaults`() {
         val response = GodiddyResolutionResponse()
-        
+
         assertNull(response.didDocument)
         assertNull(response.didDocumentMetadata)
         assertNull(response.didResolutionMetadata)
@@ -36,7 +36,7 @@ class GodiddyModelsTest {
             method = "key",
             options = mapOf("keyType" to JsonPrimitive("Ed25519"))
         )
-        
+
         assertEquals("key", request.method)
         assertEquals(1, request.options.size)
     }
@@ -44,7 +44,7 @@ class GodiddyModelsTest {
     @Test
     fun `test GodiddyCreateDidRequest with empty options`() {
         val request = GodiddyCreateDidRequest(method = "key")
-        
+
         assertEquals("key", request.method)
         assertTrue(request.options.isEmpty())
     }
@@ -56,7 +56,7 @@ class GodiddyModelsTest {
             didDocument = buildJsonObject { put("id", "did:key:123") },
             jobId = "job-123"
         )
-        
+
         assertEquals("did:key:123", response.did)
         assertNotNull(response.didDocument)
         assertEquals("job-123", response.jobId)
@@ -65,7 +65,7 @@ class GodiddyModelsTest {
     @Test
     fun `test GodiddyCreateDidResponse with defaults`() {
         val response = GodiddyCreateDidResponse()
-        
+
         assertNull(response.did)
         assertNull(response.didDocument)
         assertNull(response.jobId)
@@ -78,7 +78,7 @@ class GodiddyModelsTest {
             didDocument = buildJsonObject { put("id", "did:key:123") },
             options = mapOf("updateKey" to JsonPrimitive(true))
         )
-        
+
         assertEquals("did:key:123", request.did)
         assertNotNull(request.didDocument)
         assertEquals(1, request.options.size)
@@ -90,7 +90,7 @@ class GodiddyModelsTest {
             did = "did:key:123",
             didDocument = buildJsonObject { put("id", "did:key:123") }
         )
-        
+
         assertTrue(request.options.isEmpty())
     }
 
@@ -100,7 +100,7 @@ class GodiddyModelsTest {
             did = "did:key:123",
             options = mapOf("reason" to JsonPrimitive("no longer needed"))
         )
-        
+
         assertEquals("did:key:123", request.did)
         assertEquals(1, request.options.size)
     }
@@ -108,7 +108,7 @@ class GodiddyModelsTest {
     @Test
     fun `test GodiddyDeactivateDidRequest with empty options`() {
         val request = GodiddyDeactivateDidRequest(did = "did:key:123")
-        
+
         assertTrue(request.options.isEmpty())
     }
 
@@ -120,7 +120,7 @@ class GodiddyModelsTest {
             didDocument = buildJsonObject { put("id", "did:key:123") },
             jobId = "job-123"
         )
-        
+
         assertTrue(response.success)
         assertEquals("did:key:123", response.did)
         assertNotNull(response.didDocument)
@@ -134,7 +134,7 @@ class GodiddyModelsTest {
             success = false,
             error = "Operation failed"
         )
-        
+
         assertFalse(response.success)
         assertEquals("Operation failed", response.error)
         assertNull(response.did)
@@ -150,7 +150,7 @@ class GodiddyModelsTest {
             credential = credential,
             options = mapOf("proofType" to JsonPrimitive("Ed25519Signature2020"))
         )
-        
+
         assertNotNull(request.credential)
         assertEquals(1, request.options.size)
     }
@@ -161,7 +161,7 @@ class GodiddyModelsTest {
             put("type", buildJsonArray { add("VerifiableCredential") })
         }
         val request = GodiddyIssueCredentialRequest(credential = credential)
-        
+
         assertTrue(request.options.isEmpty())
     }
 
@@ -171,7 +171,7 @@ class GodiddyModelsTest {
             put("id", "cred-123")
         }
         val response = GodiddyIssueCredentialResponse(credential = credential)
-        
+
         assertNotNull(response.credential)
         assertNull(response.error)
     }
@@ -179,7 +179,7 @@ class GodiddyModelsTest {
     @Test
     fun `test GodiddyIssueCredentialResponse with error`() {
         val response = GodiddyIssueCredentialResponse(error = "Issuance failed")
-        
+
         assertNull(response.credential)
         assertEquals("Issuance failed", response.error)
     }
@@ -193,7 +193,7 @@ class GodiddyModelsTest {
             credential = credential,
             options = mapOf("checkRevocation" to JsonPrimitive(true))
         )
-        
+
         assertNotNull(request.credential)
         assertEquals(1, request.options.size)
     }
@@ -204,7 +204,7 @@ class GodiddyModelsTest {
             verified = true,
             checks = mapOf("proof" to true, "expiration" to true)
         )
-        
+
         assertTrue(response.verified)
         assertNotNull(response.checks)
         assertNull(response.error)
@@ -217,7 +217,7 @@ class GodiddyModelsTest {
             error = "Verification failed",
             checks = mapOf("proof" to false)
         )
-        
+
         assertFalse(response.verified)
         assertEquals("Verification failed", response.error)
         assertNotNull(response.checks)
@@ -230,7 +230,7 @@ class GodiddyModelsTest {
             message = "Resource not found",
             code = "404"
         )
-        
+
         assertEquals("NotFound", response.error)
         assertEquals("Resource not found", response.message)
         assertEquals("404", response.code)
@@ -239,7 +239,7 @@ class GodiddyModelsTest {
     @Test
     fun `test GodiddyErrorResponse with defaults`() {
         val response = GodiddyErrorResponse(error = "Error")
-        
+
         assertEquals("Error", response.error)
         assertNull(response.message)
         assertNull(response.code)
@@ -249,7 +249,7 @@ class GodiddyModelsTest {
     fun `test GodiddyModels equality`() {
         val response1 = GodiddyErrorResponse(error = "Error", code = "500")
         val response2 = GodiddyErrorResponse(error = "Error", code = "500")
-        
+
         assertEquals(response1, response2)
     }
 
@@ -257,7 +257,7 @@ class GodiddyModelsTest {
     fun `test GodiddyModels copy`() {
         val original = GodiddyErrorResponse(error = "Error")
         val copied = original.copy(message = "New message")
-        
+
         assertEquals(original.error, copied.error)
         assertEquals("New message", copied.message)
     }

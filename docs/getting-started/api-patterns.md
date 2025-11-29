@@ -30,7 +30,7 @@ fun main() = runBlocking {
             }
         }
     }
-    
+
     // Use trustLayer for all operations
     val did = trustLayer.createDid { method("key") }
 }
@@ -145,7 +145,7 @@ trustLayer.trust {
         credentialTypes("EducationCredential")
         description("Trusted university")
     }
-    
+
     val isTrusted = isTrusted("did:key:university", "EducationCredential")
 }
 

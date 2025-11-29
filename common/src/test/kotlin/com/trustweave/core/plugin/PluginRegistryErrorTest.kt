@@ -1,17 +1,17 @@
 package com.trustweave.core.plugin
 
-import com.trustweave.core.exception.TrustWeaveError
+import com.trustweave.core.exception.TrustWeaveException
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 
 /**
  * Error handling tests for PluginRegistry.
- * 
+ *
  * **Test Isolation**: Each test uses its own isolated PluginRegistry instance.
  */
 class PluginRegistryErrorTest {
-    
+
     private lateinit var registry: PluginRegistry
 
     @BeforeEach
@@ -28,11 +28,11 @@ class PluginRegistryErrorTest {
             provider = "test",
             capabilities = PluginCapabilities()
         )
-        
-        val exception = assertFailsWith<TrustWeaveError.BlankPluginId> {
+
+        val exception = assertFailsWith<TrustWeaveException.BlankPluginId> {
             registry.register(metadata, Any())
         }
-        
+
         assertEquals("BLANK_PLUGIN_ID", exception.code)
     }
 
@@ -45,11 +45,11 @@ class PluginRegistryErrorTest {
             provider = "test",
             capabilities = PluginCapabilities()
         )
-        
-        val exception = assertFailsWith<TrustWeaveError.BlankPluginId> {
+
+        val exception = assertFailsWith<TrustWeaveException.BlankPluginId> {
             registry.register(metadata, Any())
         }
-        
+
         assertEquals("BLANK_PLUGIN_ID", exception.code)
     }
 
@@ -62,13 +62,13 @@ class PluginRegistryErrorTest {
             provider = "test",
             capabilities = PluginCapabilities()
         )
-        
+
         registry.register(metadata, Any())
-        
-        val exception = assertFailsWith<TrustWeaveError.PluginAlreadyRegistered> {
+
+        val exception = assertFailsWith<TrustWeaveException.PluginAlreadyRegistered> {
             registry.register(metadata, Any())
         }
-        
+
         assertEquals("PLUGIN_ALREADY_REGISTERED", exception.code)
         assertEquals("test-plugin", exception.pluginId)
         assertEquals("Test Plugin", exception.existingPlugin)
@@ -83,11 +83,11 @@ class PluginRegistryErrorTest {
             provider = "test",
             capabilities = PluginCapabilities()
         )
-        
+
         registry.register(metadata, "string-instance")
-        
+
         val result = registry.getInstance<Int>("test-plugin")
-        
+
         assertNull(result)
     }
 
@@ -100,12 +100,12 @@ class PluginRegistryErrorTest {
             provider = "test",
             capabilities = PluginCapabilities()
         )
-        
+
         val instance = listOf(1, 2, 3)
         registry.register(metadata, instance)
-        
+
         val result = registry.getInstance<List<Int>>("test-plugin")
-        
+
         assertNotNull(result)
         assertEquals(instance, result)
     }
@@ -113,7 +113,7 @@ class PluginRegistryErrorTest {
     @Test
     fun `test getInstance returns null for non-existent plugin`() {
         val result = registry.getInstance<Any>("nonexistent")
-        
+
         assertNull(result)
     }
 
@@ -122,7 +122,7 @@ class PluginRegistryErrorTest {
         val exception = assertFailsWith<IllegalArgumentException> {
             registry.findByCapability("")
         }
-        
+
         assertTrue(exception.message?.contains("blank") == true)
     }
 
@@ -131,7 +131,7 @@ class PluginRegistryErrorTest {
         val exception = assertFailsWith<IllegalArgumentException> {
             registry.findByProvider("")
         }
-        
+
         assertTrue(exception.message?.contains("blank") == true)
     }
 
@@ -140,7 +140,7 @@ class PluginRegistryErrorTest {
         val exception = assertFailsWith<IllegalArgumentException> {
             registry.selectProvider("")
         }
-        
+
         assertTrue(exception.message?.contains("blank") == true)
     }
 
@@ -153,11 +153,11 @@ class PluginRegistryErrorTest {
             provider = "test",
             capabilities = PluginCapabilities(features = setOf("test-capability"))
         )
-        
+
         registry.register(metadata, Any())
-        
+
         val selected = registry.selectProvider("test-capability", listOf("", "  ", "test"))
-        
+
         assertNotNull(selected)
         assertEquals("test-plugin", selected.id)
     }

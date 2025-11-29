@@ -37,7 +37,7 @@ class GodiddyVerifier(
         try {
             // Universal Verifier endpoint: POST /1.0/credentials/verify
             val path = "/1.0/credentials/verify"
-            
+
             // Convert options to JsonElement map
             val jsonOptions = options.mapValues { (_, value) ->
                 when (value) {
@@ -50,14 +50,14 @@ class GodiddyVerifier(
                     else -> JsonNull
                 }
             }
-            
+
             val request = GodiddyVerifyCredentialRequest(
                 credential = credential,
                 options = jsonOptions
             )
-            
+
             val response: GodiddyVerifyCredentialResponse = client.post(path, request)
-            
+
             CredentialVerificationResult(
                 verified = response.verified,
                 error = response.error,
@@ -67,12 +67,11 @@ class GodiddyVerifier(
             throw com.trustweave.credential.exception.CredentialException.CredentialInvalid(
                 reason = "Verification failed: ${e.message ?: "Unknown error"}",
                 credentialId = null,
-                field = null,
-                cause = e
+                field = null
             )
         }
     }
-    
+
     /**
      * Converts Any to JsonElement.
      */
@@ -88,7 +87,7 @@ class GodiddyVerifier(
             else -> JsonPrimitive(value.toString())
         }
     }
-    
+
     /**
      * Converts JsonElement to Any.
      */

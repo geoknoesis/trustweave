@@ -22,7 +22,7 @@ This plugin implements the DIDComm V2 protocol specification, enabling:
 - ✅ Protocol message builders (Issue Credential, Present Proof, Basic Message)
 - ✅ In-memory message storage
 - ✅ Thread-based message organization
-- ⚠️ **Crypto Implementation**: 
+- ⚠️ **Crypto Implementation**:
   - Placeholder implementation included (for development)
   - Production implementation ready (requires `didcomm-java` library)
   - See [Integration Guide](./didcomm-integration-guide.md) for production setup

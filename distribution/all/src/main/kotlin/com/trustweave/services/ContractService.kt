@@ -13,9 +13,9 @@ import kotlinx.serialization.json.JsonElement
 
 /**
  * Service for SmartContract operations.
- * 
+ *
  * Provides a clean, focused API for creating, binding, and executing smart contracts.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val TrustWeave = TrustWeave.create()
@@ -37,14 +37,14 @@ class ContractService(
     private val delegate: SmartContractService by lazy {
         // Get credential service from context (optional - null is allowed)
         val credentialService = context.credentialRegistry.get()
-        
+
         // Pass blockchain registry for chain-specific client resolution
         DefaultSmartContractService(
             credentialService = credentialService,
             blockchainRegistry = context.blockchainRegistry
         )
     }
-    
+
     /**
      * Creates a contract draft.
      */
@@ -53,7 +53,7 @@ class ContractService(
     ): Result<SmartContract> {
         return delegate.createDraft(request)
     }
-    
+
     /**
      * Issue verifiable credential for the contract.
      */
@@ -64,7 +64,7 @@ class ContractService(
     ): Result<VerifiableCredential> {
         return delegate.issueContractCredential(contract, issuerDid, issuerKeyId)
     }
-    
+
     /**
      * Anchor contract to blockchain for audit trail.
      */
@@ -75,7 +75,7 @@ class ContractService(
     ): Result<AnchorRef> {
         return delegate.anchorContract(contract, credential, chainId)
     }
-    
+
     /**
      * Binds a contract (issues credential and anchors to blockchain).
      */
@@ -87,7 +87,7 @@ class ContractService(
     ): Result<BoundContract> {
         return delegate.bindContract(contractId, issuerDid, issuerKeyId, chainId)
     }
-    
+
     /**
      * Activates a contract.
      */
@@ -96,7 +96,7 @@ class ContractService(
     ): Result<SmartContract> {
         return delegate.activateContract(contractId)
     }
-    
+
     /**
      * Executes a contract.
      */
@@ -106,7 +106,7 @@ class ContractService(
     ): Result<ExecutionResult> {
         return delegate.executeContract(contract, executionContext)
     }
-    
+
     /**
      * Evaluates contract conditions.
      */
@@ -116,7 +116,7 @@ class ContractService(
     ): Result<ConditionEvaluation> {
         return delegate.evaluateConditions(contract, inputData)
     }
-    
+
     /**
      * Updates contract status.
      */
@@ -128,14 +128,14 @@ class ContractService(
     ): Result<SmartContract> {
         return delegate.updateStatus(contractId, newStatus, reason, metadata)
     }
-    
+
     /**
      * Gets a contract by ID.
      */
     override suspend fun getContract(contractId: String): Result<SmartContract> {
         return delegate.getContract(contractId)
     }
-    
+
     /**
      * Verifies a contract credential.
      */
@@ -144,14 +144,14 @@ class ContractService(
     ): Result<Boolean> {
         return delegate.verifyContract(credentialId)
     }
-    
+
     /**
      * Creates a contract draft (convenience method with simplified name).
      */
     suspend fun draft(
         request: ContractDraftRequest
     ): Result<SmartContract> = createDraft(request)
-    
+
     /**
      * Issue verifiable credential for the contract (convenience method with simplified name).
      */

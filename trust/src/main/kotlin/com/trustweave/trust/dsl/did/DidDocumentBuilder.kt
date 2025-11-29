@@ -9,23 +9,23 @@ import kotlinx.coroutines.withContext
 
 /**
  * DID Document Builder DSL.
- * 
+ *
  * Provides a fluent API for updating DID documents (adding/removing keys, services, etc.).
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val didProvider: DidDslProvider = ...
  * val updatedDoc = didProvider.updateDid {
  *     did("did:key:issuer")
  *     method("key")
- *     
+ *
  *     addKey {
  *         type("Ed25519VerificationKey2020")
  *         publicKeyJwk(newKeyHandle.publicKeyJwk)
  *     }
- *     
+ *
  *     removeKey("did:key:issuer#key-1")
- *     
+ *
  *     addService {
  *         id("did:key:issuer#service-1")
  *         type("LinkedDomains")
@@ -48,21 +48,21 @@ class DidDocumentBuilder(
     private val addedCapabilityDelegation = mutableListOf<String>()
     private val removedCapabilityDelegation = mutableListOf<String>()
     private var contextValues: List<String>? = null
-    
+
     /**
      * Set DID to update.
      */
     fun did(did: String) {
         this.did = did
     }
-    
+
     /**
      * Set DID method (auto-detected from DID if not provided).
      */
     fun method(method: String) {
         this.method = method
     }
-    
+
     /**
      * Add a new verification method (key).
      */
@@ -71,14 +71,14 @@ class DidDocumentBuilder(
         builder.block()
         newVerificationMethods.add(builder.build())
     }
-    
+
     /**
      * Remove a verification method by ID.
      */
     fun removeKey(keyId: String) {
         removedVerificationMethods.add(keyId)
     }
-    
+
     /**
      * Add a new service endpoint.
      */
@@ -87,59 +87,59 @@ class DidDocumentBuilder(
         builder.block()
         newServices.add(builder.build())
     }
-    
+
     /**
      * Remove a service by ID.
      */
     fun removeService(serviceId: String) {
         removedServices.add(serviceId)
     }
-    
+
     /**
      * Add a verification method reference to capability invocation.
      */
     fun addCapabilityInvocation(keyId: String) {
         addedCapabilityInvocation.add(keyId)
     }
-    
+
     /**
      * Remove a verification method reference from capability invocation.
      */
     fun removeCapabilityInvocation(keyId: String) {
         removedCapabilityInvocation.add(keyId)
     }
-    
+
     /**
      * Add a verification method reference to capability delegation.
      */
     fun addCapabilityDelegation(keyId: String) {
         addedCapabilityDelegation.add(keyId)
     }
-    
+
     /**
      * Remove a verification method reference from capability delegation.
      */
     fun removeCapabilityDelegation(keyId: String) {
         removedCapabilityDelegation.add(keyId)
     }
-    
+
     /**
      * Set JSON-LD context values for the DID document.
      */
     fun context(vararg contexts: String) {
         contextValues = contexts.toList()
     }
-    
+
     /**
      * Update the DID document.
-     * 
+     *
      * @return Updated DID document
      */
     suspend fun update(): DidDocument = withContext(Dispatchers.IO) {
         val targetDid = did ?: throw IllegalStateException(
             "DID is required. Use did(\"did:key:...\")"
         )
-        
+
         // Detect method from DID if not provided
         val methodName = method ?: run {
             if (targetDid.startsWith("did:")) {
@@ -149,22 +149,22 @@ class DidDocumentBuilder(
         } ?: throw IllegalStateException(
             "Could not determine DID method. Use method(\"key\") or provide a valid DID"
         )
-        
+
         // Get DID method from provider
         val didMethod = provider.getDidMethod(methodName) as? DidMethod
             ?: throw IllegalStateException(
                 "DID method '$methodName' is not configured. " +
                 "Configure it in trustLayer { did { method(\"$methodName\") { ... } } }"
             )
-        
+
         // Update DID document using proper types
         val updatedDoc = didMethod.updateDid(targetDid) { currentDoc ->
             updateDocument(currentDoc, targetDid)
         }
-        
+
         updatedDoc
     }
-    
+
     /**
      * Update document using proper types (no reflection).
      */
@@ -173,7 +173,7 @@ class DidDocumentBuilder(
         val filteredVm = currentDoc.verificationMethod.filter { vm ->
             !removedVerificationMethods.any { removed -> vm.id.contains(removed) }
         }
-        
+
         // Create new verification method objects
         val newVmObjects = newVerificationMethods.map { vmData ->
             VerificationMethod(
@@ -184,12 +184,12 @@ class DidDocumentBuilder(
                 publicKeyMultibase = vmData.publicKeyMultibase
             )
         }
-        
+
         // Filter out removed services
         val filteredServices = currentDoc.service.filter { service ->
             !removedServices.contains(service.id)
         }
-        
+
         // Create new service objects
         val newServiceObjects = newServices.map { serviceData ->
             DidService(
@@ -198,34 +198,34 @@ class DidDocumentBuilder(
                 serviceEndpoint = serviceData.endpoint
             )
         }
-        
+
         // Update authentication and assertion method lists
         val filteredAuth = currentDoc.authentication.filter { auth ->
             val authStr = auth.toString()
             !removedVerificationMethods.any { removed -> authStr.contains(removed) }
         }.plus(newVerificationMethods.map { it.id })
-        
+
         val filteredAssertion = currentDoc.assertionMethod.filter { assertion ->
             val assertionStr = assertion.toString()
             !removedVerificationMethods.any { removed -> assertionStr.contains(removed) }
         }.plus(newVerificationMethods.map { it.id })
-        
+
         // Update capability invocation and delegation
         val updatedCapabilityInvocation = currentDoc.capabilityInvocation
             .filter { !removedCapabilityInvocation.contains(it) }
             .plus(addedCapabilityInvocation)
-        
+
         val updatedCapabilityDelegation = currentDoc.capabilityDelegation
             .filter { !removedCapabilityDelegation.contains(it) }
             .plus(addedCapabilityDelegation)
-        
+
         // Use context from builder or keep current
         val updatedContext = contextValues ?: currentDoc.context
-        
+
         // Combine verification methods and services
         val updatedVm = filteredVm + newVmObjects
         val updatedServices = filteredServices + newServiceObjects
-        
+
         // Use copy method with proper types
         return currentDoc.copy(
             id = targetDid,
@@ -238,7 +238,7 @@ class DidDocumentBuilder(
             service = updatedServices
         )
     }
-    
+
     /**
      * Verification method builder.
      */
@@ -247,35 +247,35 @@ class DidDocumentBuilder(
         private var type: String = "Ed25519VerificationKey2020"
         private var publicKeyJwk: Map<String, Any?>? = null
         private var publicKeyMultibase: String? = null
-        
+
         /**
          * Set verification method ID.
          */
         fun id(id: String) {
             this.id = id
         }
-        
+
         /**
          * Set verification method type.
          */
         fun type(type: String) {
             this.type = type
         }
-        
+
         /**
          * Set public key in JWK format.
          */
         fun publicKeyJwk(jwk: Map<String, Any?>) {
             this.publicKeyJwk = jwk
         }
-        
+
         /**
          * Set public key in multibase format.
          */
         fun publicKeyMultibase(multibase: String) {
             this.publicKeyMultibase = multibase
         }
-        
+
         /**
          * Build verification method data.
          */
@@ -290,7 +290,7 @@ class DidDocumentBuilder(
             )
         }
     }
-    
+
     /**
      * Service builder.
      */
@@ -298,28 +298,28 @@ class DidDocumentBuilder(
         private var id: String? = null
         private var type: String? = null
         private var endpoint: Any? = null
-        
+
         /**
          * Set service ID.
          */
         fun id(id: String) {
             this.id = id
         }
-        
+
         /**
          * Set service type.
          */
         fun type(type: String) {
             this.type = type
         }
-        
+
         /**
          * Set service endpoint (URL, object, or array).
          */
         fun endpoint(endpoint: Any) {
             this.endpoint = endpoint
         }
-        
+
         /**
          * Build service data.
          */
@@ -327,7 +327,7 @@ class DidDocumentBuilder(
             val serviceId = id ?: throw IllegalStateException("Service ID is required")
             val serviceType = type ?: throw IllegalStateException("Service type is required")
             val serviceEndpoint = endpoint ?: throw IllegalStateException("Service endpoint is required")
-            
+
             return ServiceData(
                 id = serviceId,
                 type = serviceType,
@@ -335,7 +335,7 @@ class DidDocumentBuilder(
             )
         }
     }
-    
+
     /**
      * Verification method data.
      */
@@ -346,7 +346,7 @@ class DidDocumentBuilder(
         val publicKeyJwk: Map<String, Any?>?,
         val publicKeyMultibase: String?
     )
-    
+
     /**
      * Service data.
      */

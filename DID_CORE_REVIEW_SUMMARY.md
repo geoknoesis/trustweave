@@ -2,8 +2,8 @@
 
 ## Quick Overview
 
-**Module**: `did:core`  
-**Overall Score**: **8.2/10**  
+**Module**: `did:core`
+**Overall Score**: **8.2/10**
 **Status**: ✅ Good foundation, ⚠️ Significant refactoring needed
 
 ---

@@ -47,9 +47,9 @@ class IntegrityVerifierBranchCoverageTest {
             put("digestMultibase", digest)
         }
         val anchorResult = client.writePayload(payload, "application/json")
-        
+
         val result = IntegrityVerifier.verifyVcIntegrity(vc, anchorResult.ref, registry)
-        
+
         assertTrue(result)
     }
 
@@ -74,9 +74,9 @@ class IntegrityVerifierBranchCoverageTest {
             put("digestMultibase", digest)
         }
         val anchorResult = client.writePayload(payload, "application/json")
-        
+
         val result = IntegrityVerifier.verifyVcIntegrity(vc, anchorResult.ref, registry)
-        
+
         assertTrue(result)
     }
 
@@ -92,9 +92,9 @@ class IntegrityVerifierBranchCoverageTest {
             put("vcDigest", digest)
         }
         val anchorResult = client.writePayload(payload, "application/json")
-        
+
         val result = IntegrityVerifier.verifyVcIntegrity(vc, anchorResult.ref, registry)
-        
+
         assertTrue(result)
     }
 
@@ -104,7 +104,7 @@ class IntegrityVerifierBranchCoverageTest {
             put("id", "cred-1")
         }
         val anchorRef = AnchorRef(chainId = "nonexistent:chain", txHash = "tx-123")
-        
+
         assertFailsWith<TrustWeaveException> {
             IntegrityVerifier.verifyVcIntegrity(vc, anchorRef, BlockchainAnchorRegistry())
         }
@@ -119,7 +119,7 @@ class IntegrityVerifierBranchCoverageTest {
             put("otherField", "value")
         }
         val anchorResult = client.writePayload(payload, "application/json")
-        
+
         assertFailsWith<TrustWeaveException> {
             IntegrityVerifier.verifyVcIntegrity(vc, anchorResult.ref, registry)
         }
@@ -136,9 +136,9 @@ class IntegrityVerifierBranchCoverageTest {
         val digest = DigestUtils.sha256DigestMultibase(buildJsonObject {
             put("id", "linkset-1")
         })
-        
+
         val result = IntegrityVerifier.verifyLinksetIntegrity(linkset, digest)
-        
+
         assertTrue(result)
     }
 
@@ -148,9 +148,9 @@ class IntegrityVerifierBranchCoverageTest {
             put("id", "linkset-1")
         }
         val wrongDigest = "wrong-digest"
-        
+
         val result = IntegrityVerifier.verifyLinksetIntegrity(linkset, wrongDigest)
-        
+
         assertFalse(result)
     }
 
@@ -167,9 +167,9 @@ class IntegrityVerifierBranchCoverageTest {
         val contentDigest = DigestUtils.sha256DigestMultibase(buildJsonObject {
             put("data", "test-data")
         })
-        
+
         val result = IntegrityVerifier.verifyArtifactIntegrity(artifact, contentDigest)
-        
+
         assertTrue(result)
     }
 
@@ -180,9 +180,9 @@ class IntegrityVerifierBranchCoverageTest {
             put("data", "test-data")
         }
         val artifactDigest = DigestUtils.sha256DigestMultibase(artifact)
-        
+
         val result = IntegrityVerifier.verifyArtifactIntegrity(artifact, artifactDigest)
-        
+
         assertTrue(result)
     }
 
@@ -195,9 +195,9 @@ class IntegrityVerifierBranchCoverageTest {
             })
         }
         val wrongDigest = "wrong-digest"
-        
+
         val result = IntegrityVerifier.verifyArtifactIntegrity(artifact, wrongDigest)
-        
+
         assertFalse(result)
     }
 
@@ -214,9 +214,9 @@ class IntegrityVerifierBranchCoverageTest {
         val artifacts = emptyMap<String, JsonObject>()
         val emptyRegistry = BlockchainAnchorRegistry()
         val anchorRef = AnchorRef(chainId = chainId, txHash = "tx-123")
-        
+
         val result = IntegrityVerifier.verifyIntegrityChain(vc, linkset, artifacts, anchorRef, emptyRegistry)
-        
+
         assertFalse(result.valid)
         assertTrue(result.steps.any { !it.valid })
     }
@@ -244,9 +244,9 @@ class IntegrityVerifierBranchCoverageTest {
         }
         val anchorResult = client.writePayload(payload, "application/json")
         val artifacts = emptyMap<String, JsonObject>()
-        
+
         val result = IntegrityVerifier.verifyIntegrityChain(vc, linkset, artifacts, anchorResult.ref, registry)
-        
+
         assertNotNull(result)
     }
 
@@ -269,9 +269,9 @@ class IntegrityVerifierBranchCoverageTest {
         }
         val anchorResult = client.writePayload(payload, "application/json")
         val artifacts = emptyMap<String, JsonObject>()
-        
+
         val result = IntegrityVerifier.verifyIntegrityChain(vc, linkset, artifacts, anchorResult.ref, registry)
-        
+
         assertNotNull(result)
     }
 
@@ -298,9 +298,9 @@ class IntegrityVerifierBranchCoverageTest {
         }
         val anchorResult = client.writePayload(payload, "application/json")
         val artifacts = emptyMap<String, JsonObject>()
-        
+
         val result = IntegrityVerifier.verifyIntegrityChain(vc, linkset, artifacts, anchorResult.ref, registry)
-        
+
         assertNotNull(result)
     }
 
@@ -318,9 +318,9 @@ class IntegrityVerifierBranchCoverageTest {
         }
         val anchorResult = client.writePayload(payload, "application/json")
         val artifacts = emptyMap<String, JsonObject>()
-        
+
         val result = IntegrityVerifier.verifyIntegrityChain(vc, linkset, artifacts, anchorResult.ref, registry)
-        
+
         assertNotNull(result)
     }
 
@@ -364,9 +364,9 @@ class IntegrityVerifierBranchCoverageTest {
         }
         val anchorResult = client.writePayload(payload, "application/json")
         val artifacts = mapOf("artifact-1" to artifact)
-        
+
         val result = IntegrityVerifier.verifyIntegrityChain(vc, linksetWithDigest, artifacts, anchorResult.ref, registry)
-        
+
         assertNotNull(result)
     }
 
@@ -392,9 +392,9 @@ class IntegrityVerifierBranchCoverageTest {
         }
         val anchorResult = client.writePayload(payload, "application/json")
         val artifacts = emptyMap<String, JsonObject>()
-        
+
         val result = IntegrityVerifier.verifyIntegrityChain(vc, linkset, artifacts, anchorResult.ref, registry)
-        
+
         assertFalse(result.valid)
         assertTrue(result.steps.any { !it.valid && it.name.contains("Artifact") })
     }
@@ -406,9 +406,9 @@ class IntegrityVerifierBranchCoverageTest {
         val vc = buildJsonObject {
             put("id", "cred-1")
         }
-        
+
         val result = IntegrityVerifier.discoverAnchorFromEvidence(vc)
-        
+
         assertNull(result)
     }
 
@@ -424,9 +424,9 @@ class IntegrityVerifierBranchCoverageTest {
                 })
             })
         }
-        
+
         val result = IntegrityVerifier.discoverAnchorFromEvidence(vc)
-        
+
         assertNotNull(result)
         assertEquals(chainId, result?.chainId)
         assertEquals("tx-123", result?.txHash)
@@ -443,9 +443,9 @@ class IntegrityVerifierBranchCoverageTest {
                 })
             })
         }
-        
+
         val result = IntegrityVerifier.discoverAnchorFromEvidence(vc)
-        
+
         assertNotNull(result)
         assertEquals(chainId, result?.chainId)
     }
@@ -463,9 +463,9 @@ class IntegrityVerifierBranchCoverageTest {
                 })
             })
         }
-        
+
         val result = IntegrityVerifier.discoverAnchorFromEvidence(vc)
-        
+
         assertNotNull(result)
         assertEquals("contract-address", result?.contract)
     }
@@ -481,9 +481,9 @@ class IntegrityVerifierBranchCoverageTest {
                 })
             })
         }
-        
+
         val result = IntegrityVerifier.discoverAnchorFromEvidence(vc)
-        
+
         assertNull(result)
     }
 
@@ -498,9 +498,9 @@ class IntegrityVerifierBranchCoverageTest {
                 })
             })
         }
-        
+
         val result = IntegrityVerifier.discoverAnchorFromEvidence(vc)
-        
+
         assertNull(result)
     }
 }

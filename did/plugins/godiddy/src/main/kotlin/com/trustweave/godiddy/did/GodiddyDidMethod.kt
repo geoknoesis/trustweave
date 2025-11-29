@@ -28,7 +28,20 @@ class GodiddyDidMethod(
                 availableMethods = emptyList()
             )
         }
-        registrar.createDid(method, options)
+        // Convert DidCreationOptions to CreateDidOptions
+        val createOptions = com.trustweave.did.registrar.model.CreateDidOptions(
+            keyManagementMode = com.trustweave.did.registrar.model.KeyManagementMode.INTERNAL_SECRET,
+            storeSecrets = false,
+            returnSecrets = false,
+            didDocument = null,
+            methodSpecificOptions = emptyMap()
+        )
+        val response = registrar.createDid(method, createOptions)
+        // Extract document from response
+        response.didState.didDocument ?: throw com.trustweave.core.exception.TrustWeaveException.Unknown(
+            code = "DID_CREATION_FAILED",
+            message = "DID creation failed: ${response.didState.reason ?: "Unknown error"}"
+        )
     }
 
     override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
@@ -45,20 +58,27 @@ class GodiddyDidMethod(
                 availableMethods = emptyList()
             )
         }
-        
+
         // First resolve the current document
         val resolutionResult = resolver.resolveDid(did)
-        val currentDocument = resolutionResult.document
-            ?: throw com.trustweave.did.exception.DidException.DidNotFound(
+        val currentDocument = when (resolutionResult) {
+            is DidResolutionResult.Success -> resolutionResult.document
+            else -> throw com.trustweave.did.exception.DidException.DidNotFound(
                 did = did,
                 availableMethods = emptyList()
             )
-        
+        }
+
         // Apply the updater function
         val updatedDocument = updater(currentDocument)
-        
+
         // Update via registrar
-        registrar.updateDid(did, updatedDocument)
+        val updateOptions = com.trustweave.did.registrar.model.UpdateDidOptions(
+            methodSpecificOptions = emptyMap()
+        )
+        val updateResponse = registrar.updateDid(did, updatedDocument, updateOptions)
+        // Extract document from response
+        updateResponse.didState.didDocument ?: updatedDocument
     }
 
     override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
@@ -68,7 +88,11 @@ class GodiddyDidMethod(
                 availableMethods = emptyList()
             )
         }
-        registrar.deactivateDid(did)
+        val deactivateOptions = com.trustweave.did.registrar.model.DeactivateDidOptions(
+            methodSpecificOptions = emptyMap()
+        )
+        val response = registrar.deactivateDid(did, deactivateOptions)
+        response.didState.state == com.trustweave.did.registrar.model.OperationState.FINISHED
     }
 }
 

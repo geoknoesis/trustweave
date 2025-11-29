@@ -9,16 +9,16 @@ import java.nio.charset.StandardCharsets
 
 /**
  * Hyperledger Indy blockchain anchor client implementation.
- * 
+ *
  * Supports Indy ledger pools (mainnet, testnet, custom pools).
  * Uses Indy ledger's ATTRIB transaction type to store payload data.
- * 
+ *
  * Chain ID format: "indy:<network>:<pool-name>"
  * Examples:
  * - "indy:mainnet:sovrin" (Sovrin Mainnet)
  * - "indy:testnet:sovrin-staging" (Sovrin Staging)
  * - "indy:testnet:bcovrin" (BCovrin Testnet)
- * 
+ *
  * **Type-Safe Options**: Use [IndyOptions] for type-safe configuration:
  * ```
  * val options = IndyOptions(
@@ -34,7 +34,7 @@ class IndyBlockchainAnchorClient(
     chainId: String,
     options: Map<String, Any?> = emptyMap()
 ) : AbstractBlockchainAnchorClient(chainId, options) {
-    
+
     /**
      * Convenience constructor using type-safe [IndyOptions].
      */
@@ -45,7 +45,7 @@ class IndyBlockchainAnchorClient(
         const val SOVRIN_MAINNET = "indy:mainnet:sovrin"
         const val SOVRIN_STAGING = "indy:testnet:sovrin-staging"
         const val BCOVRIN_TESTNET = "indy:testnet:bcovrin"
-        
+
         // Default pool endpoints
         private const val DEFAULT_SOVRIN_MAINNET_POOL = "https://sovrin-mainnet.pool.sovrin.org"
         private const val DEFAULT_SOVRIN_STAGING_POOL = "https://sovrin-staging.pool.sovrin.org"
@@ -61,13 +61,13 @@ class IndyBlockchainAnchorClient(
         require(chainId.startsWith("indy:")) {
             "Invalid chain ID for Indy: $chainId. Expected format: indy:<network>:<pool-name>"
         }
-        
+
         // Parse chain ID: indy:<network>:<pool-name>
         val parts = chainId.split(":")
         require(parts.size >= 3) {
             "Invalid Indy chain ID format: $chainId. Expected: indy:<network>:<pool-name>"
         }
-        
+
         // Initialize pool endpoint
         poolEndpoint = options["poolEndpoint"] as? String ?: when (chainId) {
             SOVRIN_MAINNET -> DEFAULT_SOVRIN_MAINNET_POOL
@@ -75,7 +75,7 @@ class IndyBlockchainAnchorClient(
             BCOVRIN_TESTNET -> DEFAULT_BCOVRIN_TESTNET_POOL
             else -> throw IllegalArgumentException("Unknown Indy pool: $chainId. Provide 'poolEndpoint' in options.")
         }
-        
+
         walletName = options["walletName"] as? String
         walletKey = options["walletKey"] as? String
         did = options["did"] as? String
@@ -118,7 +118,7 @@ class IndyBlockchainAnchorClient(
         // 3. Build ATTRIB transaction (storing data in DID attribute)
         // 4. Sign and submit transaction
         // 5. Return transaction hash/sequence number
-        
+
         // For now, throw exception indicating implementation needed
         throw UnsupportedOperationException(
             "Indy transaction submission requires indy-vdr or Indy SDK integration. " +
@@ -134,7 +134,7 @@ class IndyBlockchainAnchorClient(
         // 2. Query ledger for ATTRIB transaction by hash/sequence
         // 3. Extract and parse payload data
         // 4. Return AnchorResult
-        
+
         throw UnsupportedOperationException(
             "Indy ledger reading requires indy-vdr or Indy SDK integration. " +
             "For testing, use in-memory fallback mode."

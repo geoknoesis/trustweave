@@ -115,7 +115,7 @@ TrustWeave solves this by providing:
 flowchart TD
     A["Multiple Issuers<br/>Universities<br/>Employers<br/>Certification Bodies<br/>Skills Verifiers"] -->|issue credentials| B["Professional Wallet<br/>Education Collection<br/>Work Collection<br/>Certifications Collection"]
     B -->|creates presentations| C["Targeted Presentations<br/>Job Application selective<br/>Professional Profile public<br/>Contract Negotiation detailed"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -140,13 +140,13 @@ dependencies {
     implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    
+
     // Test kit for in-memory implementations
     implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -174,16 +174,16 @@ import java.time.temporal.ChronoUnit
 
 fun main() = runBlocking {
     println("=== Professional Identity Wallet Scenario ===\n")
-    
+
     // Step 1: Setup
     println("Step 1: Setting up services...")
     val kms = InMemoryKeyManagementService()
     val didMethod = DidKeyMockMethod(kms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
-    
+
     val professionalDid = didMethod.createDid()
     println("Professional DID: ${professionalDid.id}")
-    
+
     // Step 2: Create professional wallet
     println("\nStep 2: Creating professional wallet...")
     val wallet = InMemoryWallet(
@@ -191,7 +191,7 @@ fun main() = runBlocking {
         holderDid = professionalDid.id
     )
     println("Wallet created: ${wallet.walletId}")
-    
+
     // Step 3: Store education credentials
     println("\nStep 3: Storing education credentials...")
     val bachelorDegree = createEducationCredential(
@@ -203,7 +203,7 @@ fun main() = runBlocking {
         year = "2018"
     )
     val bachelorId = wallet.store(bachelorDegree)
-    
+
     val masterDegree = createEducationCredential(
         issuerDid = "did:key:university",
         holderDid = professionalDid.id,
@@ -213,9 +213,9 @@ fun main() = runBlocking {
         year = "2020"
     )
     val masterId = wallet.store(masterDegree)
-    
+
     println("Stored ${wallet.list().size} education credentials")
-    
+
     // Step 4: Store work experience credentials
     println("\nStep 4: Storing work experience credentials...")
     val job1 = createEmploymentCredential(
@@ -232,7 +232,7 @@ fun main() = runBlocking {
         )
     )
     val job1Id = wallet.store(job1)
-    
+
     val job2 = createEmploymentCredential(
         issuerDid = "did:key:company2",
         holderDid = professionalDid.id,
@@ -246,9 +246,9 @@ fun main() = runBlocking {
         )
     )
     val job2Id = wallet.store(job2)
-    
+
     println("Stored ${wallet.list().size} total credentials")
-    
+
     // Step 5: Store certifications
     println("\nStep 5: Storing certifications...")
     val awsCert = createCertificationCredential(
@@ -261,7 +261,7 @@ fun main() = runBlocking {
         credentialId = "AWS-12345"
     )
     val awsCertId = wallet.store(awsCert)
-    
+
     val kubernetesCert = createCertificationCredential(
         issuerDid = "did:key:cncf",
         holderDid = professionalDid.id,
@@ -272,12 +272,12 @@ fun main() = runBlocking {
         credentialId = "CKA-67890"
     )
     val k8sCertId = wallet.store(kubernetesCert)
-    
+
     println("Stored ${wallet.list().size} total credentials")
-    
+
     // Step 6: Organize credentials
     println("\nStep 6: Organizing credentials...")
-    
+
     // Create collections
     val educationCollection = wallet.createCollection(
         name = "Education",
@@ -291,7 +291,7 @@ fun main() = runBlocking {
         name = "Certifications",
         description = "Professional licenses and certifications"
     )
-    
+
     // Add credentials to collections
     wallet.addToCollection(bachelorId, educationCollection)
     wallet.addToCollection(masterId, educationCollection)
@@ -299,7 +299,7 @@ fun main() = runBlocking {
     wallet.addToCollection(job2Id, workCollection)
     wallet.addToCollection(awsCertId, certificationsCollection)
     wallet.addToCollection(k8sCertId, certificationsCollection)
-    
+
     // Add tags
     wallet.tagCredential(bachelorId, setOf("education", "degree", "bachelor", "computer-science"))
     wallet.tagCredential(masterId, setOf("education", "degree", "master", "software-engineering"))
@@ -307,7 +307,7 @@ fun main() = runBlocking {
     wallet.tagCredential(job2Id, setOf("work", "employment", "senior-engineer", "current"))
     wallet.tagCredential(awsCertId, setOf("certification", "cloud", "aws", "active"))
     wallet.tagCredential(k8sCertId, setOf("certification", "kubernetes", "cncf", "active"))
-    
+
     // Add metadata
     wallet.addMetadata(bachelorId, mapOf(
         "gpa" to "3.8",
@@ -317,13 +317,13 @@ fun main() = runBlocking {
         "salary_range" to "confidential",
         "team_size" to 8
     ))
-    
+
     println("Created ${wallet.listCollections().size} collections")
     println("Total tags: ${wallet.getAllTags().size}")
-    
+
     // Step 7: Query credentials
     println("\nStep 7: Querying credentials...")
-    
+
     // Find all active certifications
     val activeCerts = wallet.query {
         byType("CertificationCredential")
@@ -331,21 +331,21 @@ fun main() = runBlocking {
         valid()
     }
     println("Active certifications: ${activeCerts.size}")
-    
+
     // Find current employment
     val currentJobs = wallet.query {
         byType("EmploymentCredential")
         // Add custom filter for current positions
     }
     println("Current positions: ${currentJobs.size}")
-    
+
     // Find credentials by tag
     val cloudCredentials = wallet.findByTag("cloud")
     println("Cloud-related credentials: ${cloudCredentials.size}")
-    
+
     // Step 8: Create targeted presentations
     println("\nStep 8: Creating targeted presentations...")
-    
+
     // Presentation for job application (selective disclosure)
     val jobApplicationPresentation = wallet.createSelectiveDisclosure(
         credentialIds = listOf(masterId, job1Id, job2Id, awsCertId),
@@ -368,7 +368,7 @@ fun main() = runBlocking {
         )
     )
     println("Job application presentation created with ${jobApplicationPresentation.verifiableCredential.size} credentials")
-    
+
     // Presentation for professional profile (public)
     val profilePresentation = wallet.createPresentation(
         credentialIds = listOf(masterId, job2Id, awsCertId, k8sCertId),
@@ -379,14 +379,14 @@ fun main() = runBlocking {
         )
     )
     println("Professional profile presentation created")
-    
+
     // Step 9: Archive old credentials
     println("\nStep 9: Archiving old credentials...")
     // Archive first job since it's completed
     wallet.archive(job1Id)
     val archived = wallet.getArchived()
     println("Archived credentials: ${archived.size}")
-    
+
     // Step 10: Wallet statistics
     println("\nStep 10: Wallet statistics...")
     val stats = wallet.getStatistics()
@@ -398,21 +398,21 @@ fun main() = runBlocking {
         Tags: ${stats.tagsCount}
         Archived: ${stats.archivedCount}
     """.trimIndent())
-    
+
     // Step 11: Export for different purposes
     println("\nStep 11: Exporting credentials for different purposes...")
-    
+
     // Export education credentials only
     val educationCreds = wallet.getCredentialsInCollection(educationCollection)
     println("Education credentials available for export: ${educationCreds.size}")
-    
+
     // Export active certifications
     val activeCertifications = wallet.query {
         byType("CertificationCredential")
         notExpired()
     }
     println("Active certifications available: ${activeCertifications.size}")
-    
+
     println("\n=== Scenario Complete ===")
 }
 
@@ -603,7 +603,7 @@ fun createJobApplicationPresentation(
 ): VerifiablePresentation {
     // Find relevant credentials based on job requirements
     val relevantCreds = findRelevantCredentials(wallet, jobRequirements)
-    
+
     return wallet.createSelectiveDisclosure(
         credentialIds = relevantCreds.map { it.id!! },
         disclosedFields = listOf(
@@ -631,7 +631,7 @@ fun createProfessionalProfile(wallet: Wallet): VerifiablePresentation {
         byTypes("EducationCredential", "CertificationCredential")
         valid()
     }
-    
+
     return wallet.createPresentation(
         credentialIds = publicCreds.mapNotNull { it.id },
         holderDid = wallet.holderDid,
@@ -650,7 +650,7 @@ Share detailed credentials:
 ```kotlin
 fun createDetailedPresentation(wallet: Wallet): VerifiablePresentation {
     val allCreds = wallet.list()
-    
+
     return wallet.createPresentation(
         credentialIds = allCreds.mapNotNull { it.id },
         holderDid = wallet.holderDid,

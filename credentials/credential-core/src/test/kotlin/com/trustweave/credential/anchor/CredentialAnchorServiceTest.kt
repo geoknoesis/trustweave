@@ -24,13 +24,13 @@ class CredentialAnchorServiceTest {
                 proofPurpose = "assertionMethod"
             )
         )
-        
+
         val result = service.anchorCredential(
             credential = credential,
             chainId = "algorand:testnet",
             options = AnchorOptions(includeProof = true)
         )
-        
+
         assertNotNull(result)
         assertEquals(credential, result.credential)
         assertNotNull(result.digest)
@@ -40,13 +40,13 @@ class CredentialAnchorServiceTest {
     @Test
     fun `test anchor credential without proof`() = runBlocking {
         val credential = createTestCredential()
-        
+
         val result = service.anchorCredential(
             credential = credential,
             chainId = "algorand:testnet",
             options = AnchorOptions(includeProof = false)
         )
-        
+
         assertNotNull(result)
         assertEquals(credential, result.credential)
     }
@@ -65,18 +65,18 @@ class CredentialAnchorServiceTest {
                 )
             )
         )
-        
+
         val verified = service.verifyAnchoredCredential(credential, "algorand:testnet")
-        
+
         assertTrue(verified)
     }
 
     @Test
     fun `test verify anchored credential without evidence`() = runBlocking {
         val credential = createTestCredential()
-        
+
         val verified = service.verifyAnchoredCredential(credential, "algorand:testnet")
-        
+
         assertFalse(verified)
     }
 
@@ -93,9 +93,9 @@ class CredentialAnchorServiceTest {
                 )
             )
         )
-        
+
         val verified = service.verifyAnchoredCredential(credential, "eip155:1")
-        
+
         assertFalse(verified)
     }
 
@@ -113,9 +113,9 @@ class CredentialAnchorServiceTest {
                 )
             )
         )
-        
+
         val ref = service.getAnchorReference(credential, "algorand:testnet")
-        
+
         // Placeholder implementation returns null
         // This test verifies the method executes without error
         assertNotNull(ref) // Will be null in placeholder, but method should execute
@@ -124,9 +124,9 @@ class CredentialAnchorServiceTest {
     @Test
     fun `test get anchor reference without evidence`() = runBlocking {
         val credential = createTestCredential()
-        
+
         val ref = service.getAnchorReference(credential, "algorand:testnet")
-        
+
         assertNull(ref)
     }
 

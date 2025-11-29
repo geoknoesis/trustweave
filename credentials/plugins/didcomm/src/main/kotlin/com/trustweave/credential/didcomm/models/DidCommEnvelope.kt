@@ -5,14 +5,14 @@ import kotlinx.serialization.json.JsonObject
 
 /**
  * DIDComm V2 encrypted envelope (JWM format).
- * 
+ *
  * The envelope contains:
  * - protected: Base64URL-encoded protected headers
  * - recipients: Array of recipient information (encrypted keys)
  * - iv: Initialization vector for encryption
  * - ciphertext: Encrypted message content
  * - tag: Authentication tag
- * 
+ *
  * This follows the JWM (JSON Web Message) specification used by DIDComm V2.
  */
 @Serializable

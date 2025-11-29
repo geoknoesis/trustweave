@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,34 +591,34 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="healthcare--medical-records-scenario">
-  
-  
+
+
     <a href="#healthcare--medical-records-scenario" class="anchor-heading" aria-labelledby="healthcare--medical-records-scenario"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Healthcare &amp; Medical Records Scenario
-  
-  
+
+
 </h1>
-    
+
 
 <p>This guide demonstrates how to build a healthcare credential system using TrustWeave that enables patient privacy, secure medical record sharing, HIPAA compliance, and cross-provider interoperability.</p>
 <h2 id="what-youll-build">
-  
-  
+
+
     <a href="#what-youll-build" class="anchor-heading" aria-labelledby="what-youll-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Build
-  
-  
+
+
 </h2>
-    
+
 
 <p>By the end of this tutorial, you’ll have:</p>
 
@@ -632,21 +632,21 @@
   <li>✅ Verified medical credentials cryptographically</li>
 </ul>
 <h2 id="big-picture--significance">
-  
-  
+
+
     <a href="#big-picture--significance" class="anchor-heading" aria-labelledby="big-picture--significance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Big Picture &amp; Significance
-  
-  
+
+
 </h2>
-    
+
 <h3 id="the-healthcare-data-challenge">
-  
-  
+
+
     <a href="#the-healthcare-data-challenge" class="anchor-heading" aria-labelledby="the-healthcare-data-challenge"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Healthcare Data Challenge
-  
-  
+
+
 </h3>
-    
+
 
 <p>Healthcare data is among the most sensitive personal information, yet current systems struggle with interoperability, privacy, and patient control. The healthcare industry faces a critical need for secure, patient-controlled medical data sharing.</p>
 
@@ -668,13 +668,13 @@
   <li><strong>Research</strong>: Enable privacy-preserving medical research with patient consent</li>
 </ol>
 <h3 id="the-current-healthcare-data-problem">
-  
-  
+
+
     <a href="#the-current-healthcare-data-problem" class="anchor-heading" aria-labelledby="the-current-healthcare-data-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Current Healthcare Data Problem
-  
-  
+
+
 </h3>
-    
+
 
 <p>Traditional healthcare systems face critical issues:</p>
 <ul>
@@ -685,21 +685,21 @@
   <li><strong>Compliance Burden</strong>: Complex HIPAA compliance requirements</li>
 </ul>
 <h2 id="value-proposition">
-  
-  
+
+
     <a href="#value-proposition" class="anchor-heading" aria-labelledby="value-proposition"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Value Proposition
-  
-  
+
+
 </h2>
-    
+
 <h3 id="problems-solved">
-  
-  
+
+
     <a href="#problems-solved" class="anchor-heading" aria-labelledby="problems-solved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Problems Solved
-  
-  
+
+
 </h3>
-    
+
 
 <ol>
   <li><strong>Patient Privacy</strong>: Selective disclosure allows sharing only necessary information</li>
@@ -711,13 +711,13 @@
   <li><strong>Portability</strong>: Medical records follow patients across providers</li>
 </ol>
 <h3 id="business-benefits">
-  
-  
+
+
     <a href="#business-benefits" class="anchor-heading" aria-labelledby="business-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Business Benefits
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>For Healthcare Providers</strong>:</p>
 <ul>
@@ -743,13 +743,13 @@
   <li><strong>Compliance</strong>: Automated regulatory compliance</li>
 </ul>
 <h3 id="roi-considerations">
-  
-  
+
+
     <a href="#roi-considerations" class="anchor-heading" aria-labelledby="roi-considerations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ROI Considerations
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>Interoperability Savings</strong>: 40-60% reduction in integration costs</li>
@@ -759,13 +759,13 @@
   <li><strong>Innovation</strong>: Enable new revenue streams from patient data applications</li>
 </ul>
 <h2 id="understanding-the-problem">
-  
-  
+
+
     <a href="#understanding-the-problem" class="anchor-heading" aria-labelledby="understanding-the-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Understanding the Problem
-  
-  
+
+
 </h2>
-    
+
 
 <p>Healthcare data management faces several critical challenges:</p>
 
@@ -779,13 +779,13 @@
   <li><strong>Consent Management</strong>: No granular consent for data sharing</li>
 </ol>
 <h3 id="real-world-pain-points">
-  
-  
+
+
     <a href="#real-world-pain-points" class="anchor-heading" aria-labelledby="real-world-pain-points"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Pain Points
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Example 1: Emergency Care</strong></p>
 <ul>
@@ -808,40 +808,40 @@
   <li>Solution: Verifiable credentials with selective disclosure</li>
 </ul>
 <h2 id="how-it-works-healthcare-credential-flow">
-  
-  
+
+
     <a href="#how-it-works-healthcare-credential-flow" class="anchor-heading" aria-labelledby="how-it-works-healthcare-credential-flow"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How It Works: Healthcare Credential Flow
-  
-  
+
+
 </h2>
-    
+
 
 <pre><code class="language-mermaid">flowchart TD
     A["Healthcare Provider&lt;br/&gt;Creates Provider DID&lt;br/&gt;Issues Medical Credentials&lt;br/&gt;Manages Patient Consent"] --&gt;|issues credentials| B["Medical Credentials&lt;br/&gt;Prescription&lt;br/&gt;Lab Results&lt;br/&gt;Vaccination Record&lt;br/&gt;Diagnosis&lt;br/&gt;Proof cryptographic"]
     B --&gt;|stored in patient wallet| C["Patient Wallet&lt;br/&gt;Stores all medical credentials&lt;br/&gt;Manages consent&lt;br/&gt;Creates selective presentations"]
     C --&gt;|shares with consent| D["Healthcare Provider New&lt;br/&gt;Receives presentation&lt;br/&gt;Verifies credentials&lt;br/&gt;Accesses authorized data"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
     style D fill:#c2185b,stroke:#880e4f,stroke-width:2px,color:#fff
 </code></pre>
 <h2 id="key-concepts">
-  
-  
+
+
     <a href="#key-concepts" class="anchor-heading" aria-labelledby="key-concepts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Concepts
-  
-  
+
+
 </h2>
-    
+
 <h3 id="medical-credential-types">
-  
-  
+
+
     <a href="#medical-credential-types" class="anchor-heading" aria-labelledby="medical-credential-types"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Medical Credential Types
-  
-  
+
+
 </h3>
-    
+
 
 <ol>
   <li><strong>Prescription Credential</strong>: Medication prescriptions with dosage, frequency, duration</li>
@@ -852,13 +852,13 @@
   <li><strong>Consent Credential</strong>: Patient consent for data sharing</li>
 </ol>
 <h3 id="patient-privacy">
-  
-  
+
+
     <a href="#patient-privacy" class="anchor-heading" aria-labelledby="patient-privacy"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Patient Privacy
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>Selective Disclosure</strong>: Share only specific fields (e.g., vaccination status without dates)</li>
@@ -867,13 +867,13 @@
   <li><strong>Revocation</strong>: Revoke consent at any time</li>
 </ul>
 <h3 id="hipaa-compliance">
-  
-  
+
+
     <a href="#hipaa-compliance" class="anchor-heading" aria-labelledby="hipaa-compliance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> HIPAA Compliance
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>Audit Trails</strong>: Immutable records of data access</li>
@@ -882,13 +882,13 @@
   <li><strong>Security</strong>: Cryptographic protection of sensitive data</li>
 </ul>
 <h2 id="prerequisites">
-  
-  
+
+
     <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li>Java 21+</li>
@@ -899,13 +899,13 @@
   <li>Understanding of HIPAA basics (helpful but not required)</li>
 </ul>
 <h2 id="step-1-add-dependencies">
-  
-  
+
+
     <a href="#step-1-add-dependencies" class="anchor-heading" aria-labelledby="step-1-add-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Add Dependencies
-  
-  
+
+
 </h2>
-    
+
 
 <p>Add TrustWeave dependencies to your <code class="language-plaintext highlighter-rouge">build.gradle.kts</code>. These cover DID management, credential issuance, wallet storage, and the in-memory services used in the healthcare walkthrough.</p>
 
@@ -933,13 +933,13 @@
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    
+
     <span class="c1">// Test kit for in-memory implementations</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    
+
     <span class="c1">// Kotlinx Serialization</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
-    
+
     <span class="c1">// Coroutines</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"</span><span class="p">)</span>
 <span class="p">}</span>
@@ -947,13 +947,13 @@
 
 <p><strong>Result:</strong> Once the dependencies sync you can run every snippet in this guide without additional setup.</p>
 <h2 id="step-2-complete-example">
-  
-  
+
+
     <a href="#step-2-complete-example" class="anchor-heading" aria-labelledby="step-2-complete-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Complete Example
-  
-  
+
+
 </h2>
-    
+
 
 <p>Here’s the full healthcare credential management flow. Execute it first to see the big picture, then read on for step-by-step explanations.</p>
 
@@ -1446,33 +1446,33 @@
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"=== Healthcare &amp; Medical Records Scenario ===\n"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 1: Setup services</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Step 1: Setting up services..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">hospitalKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">patientKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">specialistKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
-    
+
     <span class="kd">val</span> <span class="py">didMethod</span> <span class="p">=</span> <span class="nc">DidKeyMockMethod</span><span class="p">(</span><span class="n">hospitalKms</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">didRegistry</span> <span class="p">=</span> <span class="nc">DidMethodRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span> <span class="nf">register</span><span class="p">(</span><span class="n">didMethod</span><span class="p">)</span> <span class="p">}</span>
-    
+
     <span class="c1">// Setup blockchain for anchoring critical records</span>
     <span class="kd">val</span> <span class="py">anchorClient</span> <span class="p">=</span> <span class="nc">InMemoryBlockchainAnchorClient</span><span class="p">(</span><span class="s">"eip155:1"</span><span class="p">,</span> <span class="nf">emptyMap</span><span class="p">())</span>
     <span class="kd">val</span> <span class="py">blockchainRegistry</span> <span class="p">=</span> <span class="nc">BlockchainAnchorRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
         <span class="nf">register</span><span class="p">(</span><span class="s">"eip155:1"</span><span class="p">,</span> <span class="n">anchorClient</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 2: Create DIDs</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 2: Creating DIDs..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">hospitalDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Hospital DID: ${hospitalDid.id}"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">patientDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Patient DID: ${patientDid.id}"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">specialistDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Specialist DID: ${specialistDid.id}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 3: Create patient wallet</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 3: Creating patient wallet..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">patientWallet</span> <span class="p">=</span> <span class="nc">InMemoryWallet</span><span class="p">(</span>
@@ -1480,7 +1480,7 @@
         <span class="n">holderDid</span> <span class="p">=</span> <span class="n">patientDid</span><span class="p">.</span><span class="n">id</span>
     <span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Patient wallet created: ${patientWallet.walletId}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 4: Issue prescription credential</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 4: Issuing prescription credential..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">prescriptionCredential</span> <span class="p">=</span> <span class="nf">createPrescriptionCredential</span><span class="p">(</span>
@@ -1492,31 +1492,31 @@
         <span class="n">duration</span> <span class="p">=</span> <span class="s">"30 days"</span><span class="p">,</span>
         <span class="n">prescribingDoctor</span> <span class="p">=</span> <span class="s">"Dr. Smith"</span>
     <span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">hospitalKey</span> <span class="p">=</span> <span class="n">hospitalKms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">proofGenerator</span> <span class="p">=</span> <span class="nc">Ed25519ProofGenerator</span><span class="p">(</span>
         <span class="n">signer</span> <span class="p">=</span> <span class="p">{</span> <span class="n">data</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">hospitalKms</span><span class="p">.</span><span class="nf">sign</span><span class="p">(</span><span class="n">keyId</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span> <span class="p">},</span>
         <span class="n">getPublicKeyId</span> <span class="p">=</span> <span class="p">{</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">hospitalKey</span><span class="p">.</span><span class="n">id</span> <span class="p">}</span>
     <span class="p">)</span>
     <span class="kd">val</span> <span class="py">proofRegistry</span> <span class="p">=</span> <span class="nc">ProofGeneratorRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span> <span class="nf">register</span><span class="p">(</span><span class="n">proofGenerator</span><span class="p">)</span> <span class="p">}</span>
-    
+
     <span class="kd">val</span> <span class="py">credentialIssuer</span> <span class="p">=</span> <span class="nc">CredentialIssuer</span><span class="p">(</span>
         <span class="n">proofGenerator</span> <span class="p">=</span> <span class="n">proofGenerator</span><span class="p">,</span>
         <span class="n">resolveDid</span> <span class="p">=</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span> <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">)</span> <span class="p">!=</span> <span class="k">null</span> <span class="p">},</span>
         <span class="n">proofRegistry</span> <span class="p">=</span> <span class="n">proofRegistry</span>
     <span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">issuedPrescription</span> <span class="p">=</span> <span class="n">credentialIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
         <span class="n">credential</span> <span class="p">=</span> <span class="n">prescriptionCredential</span><span class="p">,</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">hospitalDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">keyId</span> <span class="p">=</span> <span class="n">hospitalKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Prescription credential issued:"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Medication: Lisinopril 10mg"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Has proof: ${issuedPrescription.proof != null}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 5: Issue lab results credential</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 5: Issuing lab results credential..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">labResultsCredential</span> <span class="p">=</span> <span class="nf">createLabResultsCredential</span><span class="p">(</span>
@@ -1537,16 +1537,16 @@
         <span class="p">),</span>
         <span class="n">labDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">()</span>
     <span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">issuedLabResults</span> <span class="p">=</span> <span class="n">credentialIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
         <span class="n">credential</span> <span class="p">=</span> <span class="n">labResultsCredential</span><span class="p">,</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">hospitalDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">keyId</span> <span class="p">=</span> <span class="n">hospitalKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Lab results credential issued"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 6: Issue vaccination credential</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 6: Issuing vaccination credential..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">vaccinationCredential</span> <span class="p">=</span> <span class="nf">createVaccinationCredential</span><span class="p">(</span>
@@ -1558,24 +1558,24 @@
         <span class="n">administrationDate</span> <span class="p">=</span> <span class="s">"2023-03-15"</span><span class="p">,</span>
         <span class="n">administeringProvider</span> <span class="p">=</span> <span class="s">"Dr. Johnson"</span>
     <span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">issuedVaccination</span> <span class="p">=</span> <span class="n">credentialIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
         <span class="n">credential</span> <span class="p">=</span> <span class="n">vaccinationCredential</span><span class="p">,</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">hospitalDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">keyId</span> <span class="p">=</span> <span class="n">hospitalKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Vaccination credential issued"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 7: Store credentials in patient wallet</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 7: Storing credentials in patient wallet..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">prescriptionId</span> <span class="p">=</span> <span class="n">patientWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">issuedPrescription</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">labResultsId</span> <span class="p">=</span> <span class="n">patientWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">issuedLabResults</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">vaccinationId</span> <span class="p">=</span> <span class="n">patientWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">issuedVaccination</span><span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Stored ${patientWallet.list().size} medical credentials"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 8: Organize credentials</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 8: Organizing credentials..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">prescriptionsCollection</span> <span class="p">=</span> <span class="n">patientWallet</span><span class="p">.</span><span class="nf">createCollection</span><span class="p">(</span>
@@ -1590,18 +1590,18 @@
         <span class="n">name</span> <span class="p">=</span> <span class="s">"Vaccinations"</span><span class="p">,</span>
         <span class="n">description</span> <span class="p">=</span> <span class="s">"Vaccination records"</span>
     <span class="p">)</span>
-    
+
     <span class="n">patientWallet</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">prescriptionId</span><span class="p">,</span> <span class="n">prescriptionsCollection</span><span class="p">)</span>
     <span class="n">patientWallet</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">labResultsId</span><span class="p">,</span> <span class="n">labResultsCollection</span><span class="p">)</span>
     <span class="n">patientWallet</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">vaccinationId</span><span class="p">,</span> <span class="n">vaccinationsCollection</span><span class="p">)</span>
-    
+
     <span class="c1">// Tag credentials</span>
     <span class="n">patientWallet</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">prescriptionId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"medication"</span><span class="p">,</span> <span class="s">"prescription"</span><span class="p">,</span> <span class="s">"active"</span><span class="p">))</span>
     <span class="n">patientWallet</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">labResultsId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"lab"</span><span class="p">,</span> <span class="s">"test-results"</span><span class="p">,</span> <span class="s">"blood-work"</span><span class="p">))</span>
     <span class="n">patientWallet</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">vaccinationId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"vaccination"</span><span class="p">,</span> <span class="s">"immunization"</span><span class="p">,</span> <span class="s">"covid-19"</span><span class="p">))</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Created ${patientWallet.listCollections().size} collections"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 9: Create consent for data sharing</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 9: Creating consent credential..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">consentCredential</span> <span class="p">=</span> <span class="nf">createConsentCredential</span><span class="p">(</span>
@@ -1611,17 +1611,17 @@
         <span class="n">purpose</span> <span class="p">=</span> <span class="s">"Specialist consultation"</span><span class="p">,</span>
         <span class="n">expirationDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">plus</span><span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">DAYS</span><span class="p">).</span><span class="nf">toString</span><span class="p">()</span>
     <span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">issuedConsent</span> <span class="p">=</span> <span class="n">credentialIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
         <span class="n">credential</span> <span class="p">=</span> <span class="n">consentCredential</span><span class="p">,</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">patientDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="c1">// Patient issues their own consent</span>
         <span class="n">keyId</span> <span class="p">=</span> <span class="n">patientKms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">).</span><span class="n">id</span><span class="p">,</span>
         <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">consentId</span> <span class="p">=</span> <span class="n">patientWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">issuedConsent</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Consent credential created and stored"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 10: Create selective disclosure presentation</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 10: Creating selective disclosure presentation..."</span><span class="p">)</span>
     <span class="c1">// Patient shares only lab results with specialist (not prescriptions or full vaccination details)</span>
@@ -1641,11 +1641,11 @@
             <span class="n">challenge</span> <span class="p">=</span> <span class="s">"specialist-consultation-${Instant.now().toEpochMilli()}"</span>
         <span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Selective disclosure presentation created:"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Shared: Lab results (partial)"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Not shared: Prescriptions, full vaccination details"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 11: Verify credentials</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 11: Verifying medical credentials..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">verifier</span> <span class="p">=</span> <span class="nc">CredentialVerifier</span><span class="p">(</span>
@@ -1653,7 +1653,7 @@
             <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">).</span><span class="nf">toCredentialDidResolution</span><span class="p">()</span>
         <span class="p">}</span>
     <span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">prescriptionVerification</span> <span class="p">=</span> <span class="n">verifier</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span>
         <span class="n">credential</span> <span class="p">=</span> <span class="n">issuedPrescription</span><span class="p">,</span>
         <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialVerificationOptions</span><span class="p">(</span>
@@ -1662,14 +1662,14 @@
             <span class="n">validateSchema</span> <span class="p">=</span> <span class="k">true</span>
         <span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">prescriptionVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Prescription credential is valid!"</span><span class="p">)</span>
     <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Prescription verification failed:"</span><span class="p">)</span>
         <span class="n">prescriptionVerification</span><span class="p">.</span><span class="n">errors</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="nf">println</span><span class="p">(</span><span class="s">"  - $it"</span><span class="p">)</span> <span class="p">}</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 12: Anchor critical records to blockchain</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 12: Anchoring critical records to blockchain..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">prescriptionDigest</span> <span class="p">=</span> <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">json</span><span class="p">.</span><span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span>
@@ -1678,7 +1678,7 @@
             <span class="n">issuedPrescription</span>
         <span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">consentRecord</span> <span class="p">=</span> <span class="nc">ConsentRecord</span><span class="p">(</span>
         <span class="n">patientDid</span> <span class="p">=</span> <span class="n">patientDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">providerDid</span> <span class="p">=</span> <span class="n">specialistDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
@@ -1687,17 +1687,17 @@
         <span class="n">expirationDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">plus</span><span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">DAYS</span><span class="p">).</span><span class="nf">toString</span><span class="p">(),</span>
         <span class="n">credentialDigest</span> <span class="p">=</span> <span class="n">prescriptionDigest</span>
     <span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">anchorResult</span> <span class="p">=</span> <span class="n">blockchainRegistry</span><span class="p">.</span><span class="nf">anchorTyped</span><span class="p">(</span>
         <span class="n">value</span> <span class="p">=</span> <span class="n">consentRecord</span><span class="p">,</span>
         <span class="n">serializer</span> <span class="p">=</span> <span class="nc">ConsentRecord</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
         <span class="n">targetChainId</span> <span class="p">=</span> <span class="s">"eip155:1"</span>
     <span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Consent record anchored:"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Transaction hash: ${anchorResult.ref.txHash}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Provides HIPAA audit trail"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 13: Query medical credentials</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 13: Querying medical credentials..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">activePrescriptions</span> <span class="p">=</span> <span class="n">patientWallet</span><span class="p">.</span><span class="nf">query</span> <span class="p">{</span>
@@ -1705,13 +1705,13 @@
         <span class="nf">valid</span><span class="p">()</span>
     <span class="p">}</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Active prescriptions: ${activePrescriptions.size}"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">recentLabResults</span> <span class="p">=</span> <span class="n">patientWallet</span><span class="p">.</span><span class="nf">query</span> <span class="p">{</span>
         <span class="nf">byType</span><span class="p">(</span><span class="s">"LabResultsCredential"</span><span class="p">)</span>
         <span class="nf">valid</span><span class="p">()</span>
     <span class="p">}</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Recent lab results: ${recentLabResults.size}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 14: Wallet statistics</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 14: Patient wallet statistics..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">stats</span> <span class="p">=</span> <span class="n">patientWallet</span><span class="p">.</span><span class="nf">getStatistics</span><span class="p">()</span>
@@ -1721,7 +1721,7 @@
         Collections: ${stats.collectionsCount}
         Tags: ${stats.tagsCount}
     """</span><span class="p">.</span><span class="nf">trimIndent</span><span class="p">())</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n=== Scenario Complete ==="</span><span class="p">)</span>
 <span class="p">}</span>
 
@@ -1865,21 +1865,21 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="extensive-step-by-step-breakdown">
-  
-  
+
+
     <a href="#extensive-step-by-step-breakdown" class="anchor-heading" aria-labelledby="extensive-step-by-step-breakdown"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Extensive Step-by-Step Breakdown
-  
-  
+
+
 </h2>
-    
+
 <h3 id="step-1-setup-and-initialization">
-  
-  
+
+
     <a href="#step-1-setup-and-initialization" class="anchor-heading" aria-labelledby="step-1-setup-and-initialization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Setup and Initialization
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Initialize healthcare credential system with proper key management.</p>
 
@@ -1892,13 +1892,13 @@
 
 <p><strong>Why This Matters</strong>: Healthcare data requires the highest security standards. Proper initialization ensures cryptographic security and auditability.</p>
 <h3 id="step-2-create-healthcare-entity-dids">
-  
-  
+
+
     <a href="#step-2-create-healthcare-entity-dids" class="anchor-heading" aria-labelledby="step-2-create-healthcare-entity-dids"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Create Healthcare Entity DIDs
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Establish verifiable identities for all healthcare participants.</p>
 
@@ -1917,13 +1917,13 @@
   <li>Cryptographic proof of identity</li>
 </ul>
 <h3 id="step-3-create-patient-wallet">
-  
-  
+
+
     <a href="#step-3-create-patient-wallet" class="anchor-heading" aria-labelledby="step-3-create-patient-wallet"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Create Patient Wallet
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Provide secure storage for patient’s medical credentials.</p>
 
@@ -1943,13 +1943,13 @@
   <li>Audit trail of data access</li>
 </ul>
 <h3 id="step-4-issue-prescription-credential">
-  
-  
+
+
     <a href="#step-4-issue-prescription-credential" class="anchor-heading" aria-labelledby="step-4-issue-prescription-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Issue Prescription Credential
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Create verifiable prescription credential.</p>
 
@@ -1969,13 +1969,13 @@
   <li>Can be revoked if needed</li>
 </ul>
 <h3 id="step-5-issue-lab-results-credential">
-  
-  
+
+
     <a href="#step-5-issue-lab-results-credential" class="anchor-heading" aria-labelledby="step-5-issue-lab-results-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Issue Lab Results Credential
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Create verifiable laboratory test results.</p>
 
@@ -1995,13 +1995,13 @@
   <li>Personal health tracking</li>
 </ul>
 <h3 id="step-6-issue-vaccination-credential">
-  
-  
+
+
     <a href="#step-6-issue-vaccination-credential" class="anchor-heading" aria-labelledby="step-6-issue-vaccination-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 6: Issue Vaccination Credential
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Create verifiable vaccination record.</p>
 
@@ -2021,13 +2021,13 @@
   <li>Public health tracking (anonymized)</li>
 </ul>
 <h3 id="step-7-store-credentials-in-patient-wallet">
-  
-  
+
+
     <a href="#step-7-store-credentials-in-patient-wallet" class="anchor-heading" aria-labelledby="step-7-store-credentials-in-patient-wallet"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 7: Store Credentials in Patient Wallet
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Enable patient to manage their medical records.</p>
 
@@ -2047,13 +2047,13 @@
   <li>Complete medical history</li>
 </ul>
 <h3 id="step-8-organize-credentials">
-  
-  
+
+
     <a href="#step-8-organize-credentials" class="anchor-heading" aria-labelledby="step-8-organize-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 8: Organize Credentials
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Enable efficient credential management.</p>
 
@@ -2072,13 +2072,13 @@
   <li>Track vaccination history</li>
 </ul>
 <h3 id="step-9-create-consent-credential">
-  
-  
+
+
     <a href="#step-9-create-consent-credential" class="anchor-heading" aria-labelledby="step-9-create-consent-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 9: Create Consent Credential
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Enable granular consent management for data sharing.</p>
 
@@ -2098,13 +2098,13 @@
   <li>Audit trail via blockchain anchoring</li>
 </ul>
 <h3 id="step-10-create-selective-disclosure-presentation">
-  
-  
+
+
     <a href="#step-10-create-selective-disclosure-presentation" class="anchor-heading" aria-labelledby="step-10-create-selective-disclosure-presentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 10: Create Selective Disclosure Presentation
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Share only necessary medical information.</p>
 
@@ -2125,13 +2125,13 @@
   <li>Enables targeted data sharing</li>
 </ul>
 <h3 id="step-11-verify-medical-credentials">
-  
-  
+
+
     <a href="#step-11-verify-medical-credentials" class="anchor-heading" aria-labelledby="step-11-verify-medical-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 11: Verify Medical Credentials
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Ensure medical credentials are valid before use.</p>
 
@@ -2152,13 +2152,13 @@
   <li>Maintains data integrity</li>
 </ul>
 <h3 id="step-12-anchor-critical-records-to-blockchain">
-  
-  
+
+
     <a href="#step-12-anchor-critical-records-to-blockchain" class="anchor-heading" aria-labelledby="step-12-anchor-critical-records-to-blockchain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 12: Anchor Critical Records to Blockchain
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Create immutable audit trail for HIPAA compliance.</p>
 
@@ -2178,13 +2178,13 @@
   <li>Meets regulatory requirements</li>
 </ul>
 <h3 id="step-13-query-medical-credentials">
-  
-  
+
+
     <a href="#step-13-query-medical-credentials" class="anchor-heading" aria-labelledby="step-13-query-medical-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 13: Query Medical Credentials
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Enable efficient credential retrieval.</p>
 
@@ -2204,13 +2204,13 @@
   <li>Retrieve medical history</li>
 </ul>
 <h3 id="step-14-wallet-statistics">
-  
-  
+
+
     <a href="#step-14-wallet-statistics" class="anchor-heading" aria-labelledby="step-14-wallet-statistics"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 14: Wallet Statistics
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Provide overview of patient’s medical credentials.</p>
 
@@ -2230,21 +2230,21 @@
   <li>Health data insights</li>
 </ul>
 <h2 id="advanced-features">
-  
-  
+
+
     <a href="#advanced-features" class="anchor-heading" aria-labelledby="advanced-features"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Advanced Features
-  
-  
+
+
 </h2>
-    
+
 <h3 id="cross-provider-data-sharing">
-  
-  
+
+
     <a href="#cross-provider-data-sharing" class="anchor-heading" aria-labelledby="cross-provider-data-sharing"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Cross-Provider Data Sharing
-  
-  
+
+
 </h3>
-    
+
 
 <p>Share medical credentials across different healthcare providers:</p>
 
@@ -2288,7 +2288,7 @@
         <span class="n">purpose</span> <span class="p">=</span> <span class="n">purpose</span><span class="p">,</span>
         <span class="n">expirationDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">plus</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">DAYS</span><span class="p">).</span><span class="nf">toString</span><span class="p">()</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// Create presentation with consent</span>
     <span class="k">return</span> <span class="n">patientWallet</span><span class="p">.</span><span class="nf">createPresentation</span><span class="p">(</span>
         <span class="n">credentialIds</span> <span class="p">=</span> <span class="n">credentialIds</span><span class="p">,</span>
@@ -2302,13 +2302,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="emergency-access">
-  
-  
+
+
     <a href="#emergency-access" class="anchor-heading" aria-labelledby="emergency-access"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Emergency Access
-  
-  
+
+
 </h3>
-    
+
 
 <p>Enable emergency access to critical medical information:</p>
 
@@ -2354,13 +2354,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="medication-adherence-tracking">
-  
-  
+
+
     <a href="#medication-adherence-tracking" class="anchor-heading" aria-labelledby="medication-adherence-tracking"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Medication Adherence Tracking
-  
-  
+
+
 </h3>
-    
+
 
 <p>Track medication adherence:</p>
 
@@ -2406,21 +2406,21 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="real-world-use-cases">
-  
-  
+
+
     <a href="#real-world-use-cases" class="anchor-heading" aria-labelledby="real-world-use-cases"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Use Cases
-  
-  
+
+
 </h2>
-    
+
 <h3 id="1-emergency-care">
-  
-  
+
+
     <a href="#1-emergency-care" class="anchor-heading" aria-labelledby="1-emergency-care"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Emergency Care
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Scenario</strong>: Patient arrives at emergency room unconscious. Medical staff needs critical information.</p>
 
@@ -2468,20 +2468,20 @@
         <span class="nf">byType</span><span class="p">(</span><span class="s">"AllergyCredential"</span><span class="p">)</span>
         <span class="nf">valid</span><span class="p">()</span>
     <span class="p">}</span>
-    
+
     <span class="kd">val</span> <span class="py">medications</span> <span class="p">=</span> <span class="n">patientWallet</span><span class="p">.</span><span class="nf">query</span> <span class="p">{</span>
         <span class="nf">byType</span><span class="p">(</span><span class="s">"PrescriptionCredential"</span><span class="p">)</span>
         <span class="nf">valid</span><span class="p">()</span>
     <span class="p">}</span>
-    
+
     <span class="kd">val</span> <span class="py">conditions</span> <span class="p">=</span> <span class="n">patientWallet</span><span class="p">.</span><span class="nf">query</span> <span class="p">{</span>
         <span class="nf">byType</span><span class="p">(</span><span class="s">"DiagnosisCredential"</span><span class="p">)</span>
         <span class="nf">valid</span><span class="p">()</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Create emergency access presentation</span>
     <span class="kd">val</span> <span class="py">credentialIds</span> <span class="p">=</span> <span class="p">(</span><span class="n">allergies</span> <span class="p">+</span> <span class="n">medications</span> <span class="p">+</span> <span class="n">conditions</span><span class="p">).</span><span class="nf">mapNotNull</span> <span class="p">{</span> <span class="n">it</span><span class="p">.</span><span class="n">id</span> <span class="p">}</span>
-    
+
     <span class="k">return</span> <span class="n">patientWallet</span><span class="p">.</span><span class="nf">createPresentation</span><span class="p">(</span>
         <span class="n">credentialIds</span> <span class="p">=</span> <span class="n">credentialIds</span><span class="p">,</span>
         <span class="n">holderDid</span> <span class="p">=</span> <span class="n">patientWallet</span><span class="p">.</span><span class="n">holderDid</span><span class="o">!!</span><span class="p">,</span>
@@ -2494,13 +2494,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="2-specialist-referral">
-  
-  
+
+
     <a href="#2-specialist-referral" class="anchor-heading" aria-labelledby="2-specialist-referral"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Specialist Referral
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Scenario</strong>: Primary care doctor refers patient to specialist. Patient shares relevant medical history.</p>
 
@@ -2551,7 +2551,7 @@
             <span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"condition"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
         <span class="n">diagnosis</span><span class="o">?.</span><span class="nf">contains</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">ignoreCase</span> <span class="p">=</span> <span class="k">true</span><span class="p">)</span> <span class="p">==</span> <span class="k">true</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Create selective disclosure presentation</span>
     <span class="k">return</span> <span class="n">patientWallet</span><span class="p">.</span><span class="nf">createSelectiveDisclosure</span><span class="p">(</span>
         <span class="n">credentialIds</span> <span class="p">=</span> <span class="n">relevantCredentials</span><span class="p">.</span><span class="nf">mapNotNull</span> <span class="p">{</span> <span class="n">it</span><span class="p">.</span><span class="n">id</span> <span class="p">},</span>
@@ -2570,13 +2570,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="3-insurance-claims">
-  
-  
+
+
     <a href="#3-insurance-claims" class="anchor-heading" aria-labelledby="3-insurance-claims"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Insurance Claims
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Scenario</strong>: Patient submits medical claim to insurance company.</p>
 
@@ -2634,12 +2634,12 @@
     <span class="p">}.</span><span class="nf">filter</span> <span class="p">{</span> <span class="n">credential</span> <span class="p">-&gt;</span>
         <span class="kd">val</span> <span class="py">treatmentDate</span> <span class="p">=</span> <span class="n">credential</span><span class="p">.</span><span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"treatment"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
             <span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"date"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
-        <span class="n">treatmentDate</span><span class="o">?.</span><span class="nf">let</span> <span class="p">{</span> 
+        <span class="n">treatmentDate</span><span class="o">?.</span><span class="nf">let</span> <span class="p">{</span>
             <span class="nc">Instant</span><span class="p">.</span><span class="nf">parse</span><span class="p">(</span><span class="n">it</span><span class="p">).</span><span class="nf">isAfter</span><span class="p">(</span><span class="nc">Instant</span><span class="p">.</span><span class="nf">parse</span><span class="p">(</span><span class="n">claimDetails</span><span class="p">.</span><span class="n">startDate</span><span class="p">))</span> <span class="p">&amp;&amp;</span>
             <span class="nc">Instant</span><span class="p">.</span><span class="nf">parse</span><span class="p">(</span><span class="n">it</span><span class="p">).</span><span class="nf">isBefore</span><span class="p">(</span><span class="nc">Instant</span><span class="p">.</span><span class="nf">parse</span><span class="p">(</span><span class="n">claimDetails</span><span class="p">.</span><span class="n">endDate</span><span class="p">))</span>
         <span class="p">}</span> <span class="o">?:</span> <span class="k">false</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Create presentation with minimal necessary information</span>
     <span class="k">return</span> <span class="n">patientWallet</span><span class="p">.</span><span class="nf">createSelectiveDisclosure</span><span class="p">(</span>
         <span class="n">credentialIds</span> <span class="p">=</span> <span class="n">treatmentCredentials</span><span class="p">.</span><span class="nf">mapNotNull</span> <span class="p">{</span> <span class="n">it</span><span class="p">.</span><span class="n">id</span> <span class="p">},</span>
@@ -2664,13 +2664,13 @@
 <span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="4-telemedicine-authentication">
-  
-  
+
+
     <a href="#4-telemedicine-authentication" class="anchor-heading" aria-labelledby="4-telemedicine-authentication"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Telemedicine Authentication
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Scenario</strong>: Patient authenticates for telemedicine appointment.</p>
 
@@ -2706,7 +2706,7 @@
         <span class="nf">byType</span><span class="p">(</span><span class="s">"IdentityCredential"</span><span class="p">)</span>
         <span class="nf">valid</span><span class="p">()</span>
     <span class="p">}.</span><span class="nf">firstOrNull</span><span class="p">()</span>
-    
+
     <span class="c1">// Create appointment-specific presentation</span>
     <span class="k">return</span> <span class="n">patientWallet</span><span class="p">.</span><span class="nf">createPresentation</span><span class="p">(</span>
         <span class="n">credentialIds</span> <span class="p">=</span> <span class="nf">listOfNotNull</span><span class="p">(</span><span class="n">identityCredential</span><span class="o">?.</span><span class="n">id</span><span class="p">),</span>
@@ -2720,13 +2720,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="benefits">
-  
-  
+
+
     <a href="#benefits" class="anchor-heading" aria-labelledby="benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Benefits
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Patient Privacy</strong>: Granular control over medical data sharing</li>
@@ -2741,13 +2741,13 @@
   <li><strong>Consent Management</strong>: Granular consent for different data types</li>
 </ol>
 <h2 id="best-practices">
-  
-  
+
+
     <a href="#best-practices" class="anchor-heading" aria-labelledby="best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Best Practices
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Privacy First</strong>: Always use selective disclosure</li>
@@ -2762,13 +2762,13 @@
   <li><strong>Patient Education</strong>: Educate patients on credential management</li>
 </ol>
 <h2 id="next-steps">
-  
-  
+
+
     <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li>Learn about <a href="/trustweave/tutorials/wallet-api-tutorial/">Wallet API Tutorial</a></li>
@@ -2778,17 +2778,17 @@
   <li>Study <a href="/trustweave/core-concepts/wallets/">Core Concepts: Wallets</a> for wallet management</li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -2820,7 +2820,7 @@
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -2830,12 +2830,12 @@
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -2857,12 +2857,12 @@
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -2871,12 +2871,12 @@
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -2884,7 +2884,7 @@
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -2892,31 +2892,31 @@
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -2928,7 +2928,7 @@
 
 
 
-  
+
 </body>
 </html>
 

@@ -9,7 +9,7 @@ import java.time.temporal.ChronoUnit
 interface KeyRotationPolicy {
     /**
      * Determines if a key should be rotated.
-     * 
+     *
      * @param keyId Key ID
      * @param keyMetadata Key metadata
      * @return true if key should be rotated
@@ -29,13 +29,13 @@ data class KeyMetadata(
 
 /**
  * Time-based rotation policy.
- * 
+ *
  * Rotates keys after a specified number of days.
  */
 class TimeBasedRotationPolicy(
     private val maxAgeDays: Int = 90
 ) : KeyRotationPolicy {
-    
+
     override suspend fun shouldRotate(
         keyId: String,
         keyMetadata: KeyMetadata
@@ -50,13 +50,13 @@ class TimeBasedRotationPolicy(
 
 /**
  * Usage-based rotation policy.
- * 
+ *
  * Rotates keys after a specified number of uses.
  */
 class UsageBasedRotationPolicy(
     private val maxUsageCount: Int = 10000
 ) : KeyRotationPolicy {
-    
+
     override suspend fun shouldRotate(
         keyId: String,
         keyMetadata: KeyMetadata
@@ -67,13 +67,13 @@ class UsageBasedRotationPolicy(
 
 /**
  * Composite rotation policy.
- * 
+ *
  * Rotates if any policy says so.
  */
 class CompositeRotationPolicy(
     private val policies: List<KeyRotationPolicy>
 ) : KeyRotationPolicy {
-    
+
     override suspend fun shouldRotate(
         keyId: String,
         keyMetadata: KeyMetadata
@@ -88,7 +88,7 @@ class CompositeRotationPolicy(
 class CustomRotationPolicy(
     private val predicate: suspend (String, KeyMetadata) -> Boolean
 ) : KeyRotationPolicy {
-    
+
     override suspend fun shouldRotate(
         keyId: String,
         keyMetadata: KeyMetadata

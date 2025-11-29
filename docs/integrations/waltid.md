@@ -43,12 +43,12 @@ import kotlinx.coroutines.runBlocking
 runBlocking {
     // Auto-discover and register walt.id providers
     val result = WaltIdIntegration.discoverAndRegister()
-    
+
     // Access registered components
     val kms = result.kms
     val registry = result.registry
     val registeredMethods = result.registeredDidMethods
-    
+
     println("Registered DID methods: $registeredMethods")
 }
 ```
@@ -89,12 +89,12 @@ val kms = WaltIdKeyManagementService()
 val key = kms.generateKey(Algorithm.Ed25519)
 println("Generated key: ${key.id}")
 
-// Sign data
+// Sign data (key.id is already a KeyId value class)
 val data = "Hello, TrustWeave!".toByteArray()
 val signature = kms.sign(key.id, data)
 println("Signature: ${signature.toHexString()}")
 
-// Get public key
+// Get public key (key.id is already a KeyId value class)
 val publicKey = kms.getPublicKey(key.id)
 println("Public key: ${publicKey.toHexString()}")
 ```
@@ -131,11 +131,11 @@ import kotlinx.coroutines.runBlocking
 runBlocking {
     // Setup walt.id integration
     WaltIdIntegration.discoverAndRegister()
-    
+
     // Use TrustWeave facade with walt.id providers
     val TrustWeave = TrustWeave.create()
     val did = TrustWeave.dids.create()
-    
+
     didResult.fold(
         onSuccess = { did -> println("Created: ${did.id}") },
         onFailure = { error -> println("Error: ${error.message}") }
@@ -172,7 +172,7 @@ val waltIdKmsProvider = kmsProviders.find { it.name == "waltid" }
 
 // Discover DID method providers
 val didProviders = ServiceLoader.load(DidMethodProvider::class.java)
-val waltIdDidProvider = didProviders.find { 
+val waltIdDidProvider = didProviders.find {
     it.supportedMethods.contains("key") || it.supportedMethods.contains("web")
 }
 ```

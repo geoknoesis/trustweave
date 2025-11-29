@@ -6,7 +6,7 @@ import com.trustweave.kms.spi.KeyManagementServiceProvider
 
 class ThalesLunaKeyManagementServiceProvider : KeyManagementServiceProvider {
     override val name: String = "thales-luna"
-    
+
     override val supportedAlgorithms: Set<Algorithm> = ThalesLunaKeyManagementService.SUPPORTED_ALGORITHMS
 
     override fun create(options: Map<String, Any?>): KeyManagementService {

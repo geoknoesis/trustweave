@@ -2,6 +2,8 @@ package com.trustweave.godiddy
 
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
 import com.trustweave.did.registry.DidMethodRegistry
+import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.did.resolver.getDocumentOrNull
 import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.testkit.integrity.IntegrityVerifier
@@ -13,13 +15,13 @@ import kotlin.test.*
 
 /**
  * Earth Observation (EO) integration test scenario for GoDiddy.
- * 
+ *
  * This test demonstrates the complete EO workflow using GoDiddy services:
  * - DID creation and resolution via Universal Resolver/Registrar
  * - Verifiable Credential issuance via Universal Issuer
  * - VC verification via Universal Verifier
  * - Integrity chain verification (Blockchain → VC → Linkset → Artifacts)
- * 
+ *
  * Note: This test uses in-memory blockchain client for anchoring, but uses
  * GoDiddy services for DID operations and VC issuance/verification.
  */
@@ -35,10 +37,10 @@ class GodiddyEoIntegrationTest {
             println("Skipping test: GoDiddy integration failed: ${e.message}")
             return@runBlocking
         }
-        
+
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
-        
+
         val blockchainRegistry = DefaultBlockchainAnchorRegistry().apply { register(chainId, anchorClient) }
 
         // Verify GoDiddy services are available
@@ -60,15 +62,13 @@ class GodiddyEoIntegrationTest {
             assertNotNull(issuerDid)
             // Continue with fallback method
             val resolutionResult = result.registry.resolve(issuerDid)
-            assertNotNull(resolutionResult.document, "DID should resolve")
-            val document = resolutionResult.document
-            if (document != null) {
-                assertEquals(issuerDid, document.id)
-            }
+            val document = resolutionResult.getDocumentOrNull()
+            assertNotNull(document, "DID should resolve")
+            assertEquals(issuerDid, document.id)
             // Skip rest of test since GoDiddy services aren't available
             return@runBlocking
         }
-        
+
         val issuerDoc = try {
             keyMethod.createDid()
         } catch (e: Exception) {
@@ -81,7 +81,7 @@ class GodiddyEoIntegrationTest {
         }
         val issuerDid = issuerDoc.id
         assertNotNull(issuerDid)
-        
+
         // Log DID creation
         println("\n=== Created Issuer DID ===")
         println("DID: $issuerDid")
@@ -97,21 +97,19 @@ class GodiddyEoIntegrationTest {
         } catch (e: Exception) {
             println("Warning: DID resolution failed (expected if service unavailable): ${e.message}")
             // Continue with test using local DID document
-            com.trustweave.did.DidResolutionResult(
+            com.trustweave.did.resolver.DidResolutionResult.Success(
                 document = issuerDoc,
                 documentMetadata = com.trustweave.did.DidDocumentMetadata(),
                 resolutionMetadata = mapOf("provider" to "local")
             )
         }
-        
-        assertNotNull(resolutionResult.document, "DID should resolve")
-        val document = resolutionResult.document
-        if (document != null) {
-            assertEquals(issuerDid, document.id)
-        }
-        
+
+        assertTrue(resolutionResult is DidResolutionResult.Success, "DID should resolve")
+        val successResult = resolutionResult as DidResolutionResult.Success
+        assertEquals(issuerDid, successResult.document.id)
+
         // Verify metadata indicates GoDiddy provider (if available)
-        val provider = resolutionResult.resolutionMetadata["provider"]
+        val provider = successResult.resolutionMetadata["provider"]
         if (provider != null) {
             // Provider might be "godiddy" or the underlying method provider
             assertTrue(
@@ -126,13 +124,13 @@ class GodiddyEoIntegrationTest {
             "Sample EO Dataset",
             "A test Earth Observation dataset for integrity verification"
         )
-        
+
         val (provenanceArtifact, provenanceDigest) = TestDataBuilders.createProvenanceArtifact(
             "provenance-1",
             "EO Data Collection",
             issuerDid
         )
-        
+
         val (qualityArtifact, qualityDigest) = TestDataBuilders.createQualityReportArtifact(
             "quality-1",
             0.95,
@@ -168,7 +166,7 @@ class GodiddyEoIntegrationTest {
             TestDataBuilders.buildLink("provenance-1", provenanceDigest, "Provenance"),
             TestDataBuilders.buildLink("quality-1", qualityDigest, "QualityReport")
         )
-        
+
         val linkset = TestDataBuilders.buildLinkset(
             digestMultibase = "", // Will compute after building
             links = links
@@ -202,7 +200,7 @@ class GodiddyEoIntegrationTest {
             put("type", "EarthObservationDataset")
             put("title", "Sample EO Dataset")
         }
-        
+
         // Build VC with linkset digest reference (use fixed timestamp for consistent digest)
         val fixedTimestamp = "2024-01-01T00:00:00Z"
         val vc = buildJsonObject {
@@ -278,7 +276,7 @@ class GodiddyEoIntegrationTest {
             put("vcDigest", vcDigest)
             put("issuer", issuerDid)
         }
-        
+
         val anchorResult = anchorClient.writePayload(digestPayload)
         assertNotNull(anchorResult.ref)
         assertEquals(chainId, anchorResult.ref.chainId)
@@ -299,7 +297,7 @@ class GodiddyEoIntegrationTest {
             "provenance-1" to provenanceArtifact,
             "quality-1" to qualityArtifact
         )
-        
+
         // Log artifacts map for verification
         println("=== Artifacts Map for Verification ===")
         artifacts.forEach { (key, artifact) ->
@@ -308,7 +306,7 @@ class GodiddyEoIntegrationTest {
             println("    Type: ${artifact["type"]?.jsonPrimitive?.content}")
         }
         println("===================================\n")
-        
+
         val verificationResult = IntegrityVerifier.verifyIntegrityChain(
             vc = issuedCredential, // Use issued credential if available, otherwise original
             linkset = linksetWithDigest,
@@ -326,21 +324,21 @@ class GodiddyEoIntegrationTest {
         }
         assertTrue(verificationResult.valid, "Integrity chain verification failed")
         assertEquals(5, verificationResult.steps.size) // VC + Linkset + 3 artifacts
-        
+
         // Verify each step
         val vcStep = verificationResult.steps.find { it.name == "VC Digest" }
         assertNotNull(vcStep)
         assertTrue(vcStep.valid, "VC digest verification failed")
-        
+
         val linksetStep = verificationResult.steps.find { it.name == "Linkset Digest" }
         assertNotNull(linksetStep)
-        
+
         println("EO Integrity chain verification successful with GoDiddy!")
         println("Issuer DID: $issuerDid")
         println("VC Digest: ${vcStep.digest}")
         println("Anchored at: ${anchorResult.ref.txHash}")
         println("Registered DID methods: ${result.registeredDidMethods}")
-        
+
         // Log verification steps summary
         println("\n=== Verification Steps Summary ===")
         verificationResult.steps.forEachIndexed { index, step ->
@@ -364,7 +362,7 @@ class GodiddyEoIntegrationTest {
             println("Skipping test: GoDiddy integration failed: ${e.message}")
             return@runBlocking
         }
-        
+
         assertNotNull(result.resolver, "GoDiddy resolver should be available")
         assertTrue(result.registeredDidMethods.isNotEmpty(), "At least one DID method should be registered")
 
@@ -374,7 +372,7 @@ class GodiddyEoIntegrationTest {
             println("Skipping test: did:key method not available")
             return@runBlocking
         }
-        
+
         val issuerDoc = try {
             keyMethod.createDid()
         } catch (e: Exception) {
@@ -390,10 +388,10 @@ class GodiddyEoIntegrationTest {
             println("Note: DID resolution failed (expected if service unavailable): ${e.message}")
             null
         }
-        
+
         // Note: Resolution might fail if the DID was just created and not yet
         // registered in the Universal Resolver's backend. This is expected behavior.
-        val document = resolutionResult?.document
+        val document = resolutionResult?.getDocumentOrNull()
         if (document != null) {
             assertEquals(issuerDid, document.id)
             println("Successfully resolved DID via GoDiddy: $issuerDid")
@@ -411,7 +409,7 @@ class GodiddyEoIntegrationTest {
             println("Skipping test: GoDiddy integration failed: ${e.message}")
             return@runBlocking
         }
-        
+
         // Skip if services are not available
         if (result.issuer == null || result.verifier == null) {
             println("Skipping test: GoDiddy Issuer or Verifier not available")
@@ -436,16 +434,16 @@ class GodiddyEoIntegrationTest {
                 credential = vc,
                 options = mapOf("format" to "json-ld")
             )
-            
+
             assertNotNull(issuedCredential, "Issued credential should not be null")
             assertTrue(issuedCredential.containsKey("id"), "Issued credential should have id")
-            
+
             // Verify VC using GoDiddy Universal Verifier
             val verificationResult = result.verifier.verifyCredential(
                 credential = issuedCredential,
                 options = emptyMap()
             )
-            
+
             println("VC verification result: verified=${verificationResult.verified}, error=${verificationResult.error}")
             // Note: Verification might fail if issuer doesn't have proper keys
             // This is expected in a test environment without proper key configuration

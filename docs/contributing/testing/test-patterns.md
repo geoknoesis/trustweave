@@ -10,7 +10,7 @@ Common test patterns and examples for TrustWeave.
 
 ```kotlin
 class MyPluginTest : BasePluginTest() {
-    
+
     @Test
     fun testBasicOperation() = runBlocking {
         val plugin = createPlugin()
@@ -26,7 +26,7 @@ class MyPluginTest : BasePluginTest() {
 @Test
 fun testInvalidInputThrowsException() = runBlocking {
     val plugin = createPlugin()
-    
+
     assertThrows<IllegalArgumentException> {
         runBlocking {
             plugin.doSomething("invalid-input")
@@ -41,17 +41,17 @@ fun testInvalidInputThrowsException() = runBlocking {
 @Testcontainers
 @Tag("integration")
 class MyIntegrationTest : BaseIntegrationTest() {
-    
+
     companion object {
         @JvmStatic
         val localStack = LocalStackContainer.create()
     }
-    
+
     @Test
     fun testWithRealService() = runBlocking {
         val config = createConfig(localStack.getEndpoint())
         val service = createService(config)
-        
+
         val result = service.operation()
         assertNotNull(result)
     }
@@ -128,7 +128,7 @@ fun testWithTestData() = runBlocking {
             "email" to "test@example.com"
         )
     )
-    
+
     assertNotNull(credentialSubject)
 }
 ```
@@ -139,7 +139,7 @@ fun testWithTestData() = runBlocking {
 @Test
 fun testAsyncOperation() = runBlocking {
     val operation = startAsyncOperation()
-    
+
     assertEventually(timeoutSeconds = 10) {
         operation.isComplete()
     }

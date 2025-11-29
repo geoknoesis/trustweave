@@ -7,7 +7,7 @@ import kotlinx.serialization.json.JsonNull
 
 /**
  * Credential-specific validation utilities for TrustWeave.
- * 
+ *
  * Common validation (DID, Chain ID) is in the root common module.
  * This module provides credential-specific validation.
  */
@@ -18,7 +18,7 @@ import kotlinx.serialization.json.JsonNull
 object CredentialValidator {
     /**
      * Validates basic credential structure.
-     * 
+     *
      * @param credential The credential to validate
      * @return ValidationResult indicating if the credential structure is valid
      */
@@ -32,7 +32,7 @@ object CredentialValidator {
                 value = credential.type
             )
         }
-        
+
         // Check issuer
         if (credential.issuer.isBlank()) {
             return ValidationResult.Invalid(
@@ -42,7 +42,7 @@ object CredentialValidator {
                 value = credential.issuer
             )
         }
-        
+
         // Validate issuer DID format
         DidValidator.validateFormat(credential.issuer).let {
             if (!it.isValid()) {
@@ -54,7 +54,7 @@ object CredentialValidator {
                 )
             }
         }
-        
+
         // Check issuance date
         if (credential.issuanceDate.isBlank()) {
             return ValidationResult.Invalid(
@@ -64,7 +64,7 @@ object CredentialValidator {
                 value = credential.issuanceDate
             )
         }
-        
+
         // Check credential subject (JsonElement can be JsonNull, but we require a valid value)
         if (credential.credentialSubject is JsonNull) {
             return ValidationResult.Invalid(
@@ -74,13 +74,13 @@ object CredentialValidator {
                 value = null
             )
         }
-        
+
         return ValidationResult.Valid
     }
-    
+
     /**
      * Validates that the credential has a proof.
-     * 
+     *
      * @param credential The credential to validate
      * @return ValidationResult indicating if the credential has a proof
      */
@@ -93,7 +93,7 @@ object CredentialValidator {
                 value = null
             )
         }
-        
+
         return ValidationResult.Valid
     }
 }

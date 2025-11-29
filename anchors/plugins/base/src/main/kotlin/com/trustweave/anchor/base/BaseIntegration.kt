@@ -12,7 +12,7 @@ import com.trustweave.anchor.spi.BlockchainIntegrationHelper
 class BaseBlockchainAnchorClientProvider : BlockchainAnchorClientProvider {
 
     override val name: String = "base"
-    
+
     override val supportedChains: List<String> = listOf(
         BaseBlockchainAnchorClient.MAINNET,
         BaseBlockchainAnchorClient.BASE_SEPOLIA

@@ -26,12 +26,12 @@ class IbmKeyManagementServiceProviderTest {
     @Test
     fun `test provider create with options`() {
         val provider = IbmKeyManagementServiceProvider()
-        
+
         val kms = provider.create(mapOf(
             "apiKey" to "test-key",
             "instanceId" to "test-instance"
         ))
-        
+
         assertNotNull(kms)
         assertTrue(kms is IbmKeyManagementService)
     }
@@ -39,7 +39,7 @@ class IbmKeyManagementServiceProviderTest {
     @Test
     fun `test provider create without required fields throws exception`() {
         val provider = IbmKeyManagementServiceProvider()
-        
+
         assertThrows<IllegalArgumentException> {
             provider.create(emptyMap())
         }

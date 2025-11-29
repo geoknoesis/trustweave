@@ -25,9 +25,9 @@ class JsonSchemaValidatorBranchCoverageTest {
     fun `test branch validate with VerifiableCredential type`() = runBlocking {
         val credential = createTestCredential(types = listOf("VerifiableCredential", "PersonCredential"))
         val schema = createTestSchema()
-        
+
         val result = validator.validate(credential, schema)
-        
+
         assertTrue(result.valid)
     }
 
@@ -35,9 +35,9 @@ class JsonSchemaValidatorBranchCoverageTest {
     fun `test branch validate without VerifiableCredential type`() = runBlocking {
         val credential = createTestCredential(types = listOf("PersonCredential"))
         val schema = createTestSchema()
-        
+
         val result = validator.validate(credential, schema)
-        
+
         assertFalse(result.valid)
         assertTrue(result.errors.any { it.path == "/type" })
     }
@@ -46,9 +46,9 @@ class JsonSchemaValidatorBranchCoverageTest {
     fun `test branch validate with blank issuer`() = runBlocking {
         val credential = createTestCredential(issuerDid = "")
         val schema = createTestSchema()
-        
+
         val result = validator.validate(credential, schema)
-        
+
         assertFalse(result.valid)
         assertTrue(result.errors.any { it.path == "/issuer" })
     }
@@ -57,9 +57,9 @@ class JsonSchemaValidatorBranchCoverageTest {
     fun `test branch validate with non-blank issuer`() = runBlocking {
         val credential = createTestCredential(issuerDid = "did:key:issuer")
         val schema = createTestSchema()
-        
+
         val result = validator.validate(credential, schema)
-        
+
         assertTrue(result.valid)
     }
 
@@ -72,9 +72,9 @@ class JsonSchemaValidatorBranchCoverageTest {
                 put("name", buildJsonObject { put("type", "string") })
             })
         }
-        
+
         val result = validator.validate(credential, schema)
-        
+
         assertNotNull(result)
     }
 
@@ -84,9 +84,9 @@ class JsonSchemaValidatorBranchCoverageTest {
         val schema = buildJsonObject {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
         }
-        
+
         val result = validator.validate(credential, schema)
-        
+
         assertTrue(result.valid)
     }
 
@@ -101,9 +101,9 @@ class JsonSchemaValidatorBranchCoverageTest {
                 put("name", buildJsonObject { put("type", "string") })
             })
         }
-        
+
         val result = validator.validateCredentialSubject(subject, schema)
-        
+
         assertNotNull(result)
     }
 
@@ -113,9 +113,9 @@ class JsonSchemaValidatorBranchCoverageTest {
             put("id", "did:key:subject")
         }
         val schema = buildJsonObject {}
-        
+
         val result = validator.validateCredentialSubject(subject, schema)
-        
+
         assertTrue(result.valid)
     }
 
@@ -130,9 +130,9 @@ class JsonSchemaValidatorBranchCoverageTest {
             })
             put("required", buildJsonArray {})
         }
-        
+
         val result = validator.validateCredentialSubject(subject, schema)
-        
+
         assertTrue(result.valid) // Required fields list is empty
     }
 
@@ -144,9 +144,9 @@ class JsonSchemaValidatorBranchCoverageTest {
                 put("name", buildJsonObject { put("type", "string") })
             })
         }
-        
+
         val result = validator.validateCredentialSubject(subject, schema)
-        
+
         assertTrue(result.valid) // Current implementation doesn't check type
     }
 
@@ -160,9 +160,9 @@ class JsonSchemaValidatorBranchCoverageTest {
                 put("name", buildJsonObject { put("type", "string") })
             })
         }
-        
+
         val result = validator.validateCredentialSubject(subject, schema)
-        
+
         assertTrue(result.valid)
     }
 

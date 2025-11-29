@@ -11,7 +11,7 @@ class TrustWeaveExceptionTest {
     @Test
     fun `test BlankPluginId exception`() {
         val error = TrustWeaveException.BlankPluginId()
-        
+
         assertEquals("BLANK_PLUGIN_ID", error.code)
         assertEquals("Plugin ID cannot be blank", error.message)
         assertTrue(error.context.isEmpty())
@@ -23,7 +23,7 @@ class TrustWeaveExceptionTest {
             pluginId = "test-plugin",
             existingPlugin = "Test Plugin"
         )
-        
+
         assertEquals("PLUGIN_ALREADY_REGISTERED", error.code)
         assertEquals("test-plugin", error.pluginId)
         assertEquals("Test Plugin", error.existingPlugin)
@@ -36,7 +36,7 @@ class TrustWeaveExceptionTest {
             pluginIds = listOf("plugin-1", "plugin-2"),
             availablePlugins = listOf("plugin-3", "plugin-4")
         )
-        
+
         assertEquals("NO_PROVIDERS_FOUND", error.code)
         assertEquals(2, error.pluginIds.size)
         assertEquals(2, error.availablePlugins.size)
@@ -51,7 +51,7 @@ class TrustWeaveExceptionTest {
             foundIds = listOf("plugin-1"),
             missingIds = listOf("plugin-2", "plugin-3")
         )
-        
+
         assertEquals("PARTIAL_PROVIDERS_FOUND", error.code)
         assertEquals(3, error.requestedIds.size)
         assertEquals(1, error.foundIds.size)
@@ -70,7 +70,7 @@ class TrustWeaveExceptionTest {
             ),
             lastException = lastException
         )
-        
+
         assertEquals("ALL_PROVIDERS_FAILED", error.code)
         assertEquals(2, error.attemptedProviders.size)
         assertEquals(2, error.providerErrors.size)
@@ -80,7 +80,7 @@ class TrustWeaveExceptionTest {
     @Test
     fun `test ConfigNotFound exception`() {
         val error = TrustWeaveException.ConfigNotFound(path = "/path/to/config.json")
-        
+
         assertEquals("CONFIG_NOT_FOUND", error.code)
         assertEquals("/path/to/config.json", error.path)
         assertEquals("/path/to/config.json", error.context["path"])
@@ -92,7 +92,7 @@ class TrustWeaveExceptionTest {
             path = "/path/to/config.json",
             reason = "Permission denied"
         )
-        
+
         assertEquals("CONFIG_READ_FAILED", error.code)
         assertEquals("/path/to/config.json", error.path)
         assertEquals("Permission denied", error.reason)
@@ -105,7 +105,7 @@ class TrustWeaveExceptionTest {
             parseError = "Expected ',' or '}'",
             field = "plugins"
         )
-        
+
         assertEquals("INVALID_CONFIG_FORMAT", error.code)
         assertEquals("{ invalid }", error.jsonString)
         assertEquals("Expected ',' or '}'", error.parseError)
@@ -120,7 +120,7 @@ class TrustWeaveExceptionTest {
             parseError = "Expected ',' or '}'",
             position = "line 1, column 10"
         )
-        
+
         assertEquals("INVALID_JSON", error.code)
         assertEquals("{ invalid }", error.jsonString?.take(500))
         assertEquals("Expected ',' or '}'", error.parseError)
@@ -134,7 +134,7 @@ class TrustWeaveExceptionTest {
             element = "{ large object }",
             reason = "Circular reference"
         )
-        
+
         assertEquals("JSON_ENCODE_FAILED", error.code)
         assertEquals("Circular reference", error.reason)
         assertEquals("{ large object }", error.element)
@@ -146,7 +146,7 @@ class TrustWeaveExceptionTest {
             algorithm = "SHA-256",
             reason = "Algorithm not available"
         )
-        
+
         assertEquals("DIGEST_FAILED", error.code)
         assertEquals("SHA-256", error.algorithm)
         assertEquals("Algorithm not available", error.reason)
@@ -158,7 +158,7 @@ class TrustWeaveExceptionTest {
             operation = "base58-encoding",
             reason = "Invalid byte array"
         )
-        
+
         assertEquals("ENCODE_FAILED", error.code)
         assertEquals("base58-encoding", error.operation)
         assertEquals("Invalid byte array", error.reason)
@@ -168,7 +168,7 @@ class TrustWeaveExceptionTest {
     fun `test toTrustWeaveException converts IllegalArgumentException`() {
         val exception = IllegalArgumentException("Test error")
         val error = exception.toTrustWeaveException()
-        
+
         assertTrue(error is TrustWeaveException.InvalidOperation)
         assertEquals("INVALID_ARGUMENT", error.code)
         assertEquals("Test error", error.message)
@@ -179,7 +179,7 @@ class TrustWeaveExceptionTest {
     fun `test toTrustWeaveException converts IllegalStateException`() {
         val exception = IllegalStateException("Invalid state")
         val error = exception.toTrustWeaveException()
-        
+
         assertTrue(error is TrustWeaveException.InvalidState)
         assertEquals("INVALID_STATE", error.code)
         assertEquals("Invalid state", error.message)
@@ -192,9 +192,9 @@ class TrustWeaveExceptionTest {
             reason = "Invalid",
             value = null
         )
-        
+
         val converted = originalError.toTrustWeaveException()
-        
+
         assertSame(originalError, converted)
     }
 
@@ -202,7 +202,7 @@ class TrustWeaveExceptionTest {
     fun `test toTrustWeaveException converts unknown exception to Unknown`() {
         val exception = RuntimeException("Unknown error")
         val error = exception.toTrustWeaveException()
-        
+
         assertTrue(error is TrustWeaveException.Unknown)
         assertEquals("UNKNOWN_ERROR", error.code)
         assertEquals("Unknown error", error.message)
@@ -212,9 +212,80 @@ class TrustWeaveExceptionTest {
     fun `test toTrustWeaveException handles null message`() {
         val exception = RuntimeException(null as String?)
         val error = exception.toTrustWeaveException()
-        
+
         assertTrue(error is TrustWeaveException.Unknown)
         assertTrue(error.message.contains("RuntimeException"))
     }
+
+    @Test
+    fun `test TrustWeaveException Unknown with message`() {
+        val exception = TrustWeaveException.Unknown(
+            message = "Test error"
+        )
+
+        assertEquals("Test error", exception.message)
+        assertNull(exception.cause)
+        assertEquals("UNKNOWN_ERROR", exception.code)
+    }
+
+    @Test
+    fun `test TrustWeaveException Unknown with message and cause`() {
+        val cause = RuntimeException("Underlying error")
+        val exception = TrustWeaveException.Unknown(
+            message = "Test error",
+            cause = cause
+        )
+
+        assertEquals("Test error", exception.message)
+        assertEquals(cause, exception.cause)
+        assertEquals("UNKNOWN_ERROR", exception.code)
+    }
+
+    @Test
+    fun `test TrustWeaveException NotFound`() {
+        val exception = TrustWeaveException.NotFound(
+            message = "Resource not found"
+        )
+
+        assertEquals("Resource not found", exception.message)
+        assertEquals("NOT_FOUND", exception.code)
+    }
+
+    @Test
+    fun `test TrustWeaveException NotFound with cause`() {
+        val cause = RuntimeException("Underlying error")
+        val exception = TrustWeaveException.NotFound(
+            message = "Resource not found",
+            cause = cause
+        )
+
+        assertEquals("Resource not found", exception.message)
+        assertEquals(cause, exception.cause)
+        assertEquals("NOT_FOUND", exception.code)
+    }
+
+    @Test
+    fun `test TrustWeaveException InvalidOperation`() {
+        val exception = TrustWeaveException.InvalidOperation(
+            message = "Invalid operation"
+        )
+
+        assertEquals("Invalid operation", exception.message)
+        assertEquals("INVALID_OPERATION", exception.code)
+    }
+
+    @Test
+    fun `test TrustWeaveException InvalidOperation with cause`() {
+        val cause = IllegalArgumentException("Invalid argument")
+        val exception = TrustWeaveException.InvalidOperation(
+            message = "Invalid operation",
+            cause = cause
+        )
+
+        assertEquals("Invalid operation", exception.message)
+        assertEquals(cause, exception.cause)
+        assertEquals("INVALID_OPERATION", exception.code)
+    }
 }
+
 

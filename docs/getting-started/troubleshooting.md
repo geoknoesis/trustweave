@@ -8,7 +8,7 @@ parent: Getting Started
 
 Common issues and solutions when working with TrustWeave.
 
-> **Version:** 1.0.0-SNAPSHOT  
+> **Version:** 1.0.0-SNAPSHOT
 > If you encounter issues not covered here, please [file an issue](https://github.com/your-org/TrustWeave/issues) or check the [FAQ](../faq.md).
 
 ## Common Issues
@@ -168,12 +168,12 @@ dependencies {
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
-    
+
     <!-- TrustWeave specific loggers -->
     <logger name="com.trustweave" level="DEBUG"/>
     <logger name="com.trustweave.core" level="TRACE"/>
     <logger name="com.trustweave.plugins" level="DEBUG"/>
-    
+
     <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>
@@ -187,22 +187,22 @@ Check all registries and available services:
 ```kotlin
 fun debugSystemState(trustweave: TrustWeave) {
     println("=== TrustWeave System State ===")
-    
+
     // Check registered DID methods
     val methods = trustweave.dids.availableMethods()
     println("Available DID methods: $methods")
     if (methods.isEmpty()) {
         println("⚠️  WARNING: No DID methods registered!")
     }
-    
+
     // Check registered blockchain chains
     val chains = trustweave.blockchains.availableChains()
     println("Available chains: $chains")
-    
+
     // Check plugin status
     println("\n=== Plugin Status ===")
     // Add plugin status checks if available
-    
+
     // Test basic operations
     println("\n=== Basic Operation Tests ===")
     val testDid = try { trustweave.dids.create() } catch (e: Exception) { null }
@@ -232,7 +232,7 @@ fun validateBeforeOperation(did: String, credential: VerifiableCredential? = nul
         println("   Value: ${error.value}")
         return
     }
-    
+
     // Validate DID method is available
     val method = did.substringAfter("did:").substringBefore(":")
     // Note: This requires a TrustWeave instance - pass it as parameter
@@ -242,7 +242,7 @@ fun validateBeforeOperation(did: String, credential: VerifiableCredential? = nul
     //     println("   Available methods: $availableMethods")
     //     return
     // }
-    
+
     // Validate credential if provided
     credential?.let {
         val credValidation = CredentialValidator.validateStructure(it)
@@ -253,7 +253,7 @@ fun validateBeforeOperation(did: String, credential: VerifiableCredential? = nul
             return
         }
     }
-    
+
     println("✅ All validations passed")
 }
 ```
@@ -266,7 +266,7 @@ Add detailed tracing to understand operation flow:
 suspend fun traceDidResolution(did: String) {
     println("=== Tracing DID Resolution ===")
     println("Input DID: $did")
-    
+
     // Step 1: Format validation
     println("\n[Step 1] Validating DID format...")
     val formatValidation = DidValidator.validateFormat(did)
@@ -275,12 +275,12 @@ suspend fun traceDidResolution(did: String) {
         return
     }
     println("✅ Format valid")
-    
+
     // Step 2: Method extraction
     println("\n[Step 2] Extracting method...")
     val method = did.substringAfter("did:").substringBefore(":")
     println("Method: $method")
-    
+
     // Step 3: Method availability
     println("\n[Step 3] Checking method availability...")
     // Note: This requires a TrustWeave instance - pass it as parameter
@@ -291,7 +291,7 @@ suspend fun traceDidResolution(did: String) {
     //     return
     // }
     // println("✅ Method available")
-    
+
     // Step 4: Resolution attempt
     println("\n[Step 4] Attempting resolution...")
     val startTime = System.currentTimeMillis()
@@ -317,12 +317,12 @@ Create a minimal reproducible example:
 ```kotlin
 suspend fun minimalReproducibleExample() {
     println("=== Minimal Reproducible Example ===")
-    
+
     // Step 1: Create TrustWeave instance
     println("\n[1] Creating TrustWeave instance...")
     val TrustWeave = TrustWeave.create()
     println("✅ TrustWeave created")
-    
+
     // Step 2: Create a DID
     println("\n[2] Creating DID...")
     val did = TrustWeave.dids.create()
@@ -330,7 +330,7 @@ suspend fun minimalReproducibleExample() {
     didResult.fold(
         onSuccess = { did ->
             println("✅ DID created: ${did.id}")
-            
+
             // Step 3: Resolve the DID
             println("\n[3] Resolving DID...")
             val resolution = TrustWeave.dids.resolve(did.id)
@@ -368,7 +368,7 @@ fun analyzeError(error: TrustWeaveError) {
     error.context.forEach { (key, value) ->
         println("  $key: $value")
     }
-    
+
     // Check for specific error types
     when (error) {
         is TrustWeaveError.DidMethodNotRegistered -> {
@@ -393,7 +393,7 @@ fun analyzeError(error: TrustWeaveError) {
             println("  - Check system state: debugSystemState(TrustWeave)")
         }
     }
-    
+
     error.cause?.let { cause ->
         println("\nUnderlying exception:")
         println("  ${cause::class.simpleName}: ${cause.message}")
@@ -409,16 +409,16 @@ For operations requiring network access:
 ```kotlin
 suspend fun checkNetworkConnectivity() {
     println("=== Network Connectivity Check ===")
-    
+
     // Test DID resolution (requires network for did:web)
     val testDid = "did:web:example.com"
     println("Testing resolution of: $testDid")
-    
+
     val startTime = System.currentTimeMillis()
     val resolution = TrustWeave.dids.resolve(testDid)
     val result = Result.success(resolution)
     val duration = System.currentTimeMillis() - startTime
-    
+
     result.fold(
         onSuccess = {
             println("✅ Network connectivity OK (${duration}ms)")
@@ -577,13 +577,13 @@ import kotlinx.coroutines.sync.withLock
 class ThreadSafeCredentialStore {
     private val mutex = Mutex()
     private val credentials = mutableMapOf<String, VerifiableCredential>()
-    
+
     suspend fun store(id: String, credential: VerifiableCredential) {
         mutex.withLock {
             credentials[id] = credential
         }
     }
-    
+
     suspend fun get(id: String): VerifiableCredential? {
         return mutex.withLock {
             credentials[id]

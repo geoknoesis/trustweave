@@ -15,7 +15,7 @@ foreach ($file in $buildFiles) {
     $content = Get-Content $file.FullName -Raw
     $originalContent = $content
     $modified = $false
-    
+
     # Update :core to :credentials:core
     if ($content -match 'project\(":core"\)') {
         $content = $content -replace 'project\(":core"\)', 'project(":credentials:core")'
@@ -25,7 +25,7 @@ foreach ($file in $buildFiles) {
         $content = $content -replace '":core"', '":credentials:core"'
         $modified = $true
     }
-    
+
     # Update wallet plugin paths
     if ($content -match '":credentials:plugins:wallet:') {
         $content = $content -replace '":credentials:plugins:wallet:database"', '":wallet:plugins:database"'
@@ -33,7 +33,7 @@ foreach ($file in $buildFiles) {
         $content = $content -replace '":credentials:plugins:wallet:cloud"', '":wallet:plugins:cloud"'
         $modified = $true
     }
-    
+
     if ($modified) {
         Set-Content -Path $file.FullName -Value $content -NoNewline
         $updatedCount++

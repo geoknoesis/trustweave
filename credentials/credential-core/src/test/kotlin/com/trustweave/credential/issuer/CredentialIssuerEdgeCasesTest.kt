@@ -33,17 +33,17 @@ class CredentialIssuerEdgeCasesTest {
         SchemaRegistry.clear()
         SchemaValidatorRegistry.clear()
         SchemaValidatorRegistry.register(JsonSchemaValidator())
-        
+
         val signer: suspend (ByteArray, String) -> ByteArray = { data, _ ->
             "mock-signature-${UUID.randomUUID()}".toByteArray()
         }
-        
+
         val proofGenerator = Ed25519ProofGenerator(
             signer = signer,
             getPublicKeyId = { "did:key:issuer123#key-1" }
         )
         proofRegistry.register(proofGenerator)
-        
+
         issuer = CredentialIssuer(
             proofGenerator = proofGenerator,
             resolveDid = { did -> did == issuerDid },
@@ -63,9 +63,9 @@ class CredentialIssuerEdgeCasesTest {
     @Test
     fun `test issue credential with null ID`() = runBlocking {
         val credential = createTestCredential(id = null)
-        
+
         val issued = issuer.issue(credential, issuerDid, keyId)
-        
+
         assertNotNull(issued.id) // Should generate an ID
         assertNotNull(issued.proof)
     }
@@ -73,7 +73,7 @@ class CredentialIssuerEdgeCasesTest {
     @Test
     fun `test issue credential with empty type list`() = runBlocking {
         val credential = createTestCredential(types = emptyList())
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuer.issue(credential, issuerDid, keyId)
         }
@@ -82,7 +82,7 @@ class CredentialIssuerEdgeCasesTest {
     @Test
     fun `test issue credential with empty issuer DID`() = runBlocking {
         val credential = createTestCredential(issuerDid = "")
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuer.issue(credential, issuerDid, keyId)
         }
@@ -91,7 +91,7 @@ class CredentialIssuerEdgeCasesTest {
     @Test
     fun `test issue credential with whitespace-only issuer DID`() = runBlocking {
         val credential = createTestCredential(issuerDid = "   ")
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuer.issue(credential, issuerDid, keyId)
         }
@@ -100,7 +100,7 @@ class CredentialIssuerEdgeCasesTest {
     @Test
     fun `test issue credential with empty issuance date`() = runBlocking {
         val credential = createTestCredential(issuanceDate = "")
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuer.issue(credential, issuerDid, keyId)
         }
@@ -109,9 +109,9 @@ class CredentialIssuerEdgeCasesTest {
     @Test
     fun `test issue credential with empty credential subject`() = runBlocking {
         val credential = createTestCredential(subject = buildJsonObject {})
-        
+
         val issued = issuer.issue(credential, issuerDid, keyId)
-        
+
         assertNotNull(issued.proof)
     }
 
@@ -124,9 +124,9 @@ class CredentialIssuerEdgeCasesTest {
                 put("age", JsonNull)
             }
         )
-        
+
         val issued = issuer.issue(credential, issuerDid, keyId)
-        
+
         assertNotNull(issued.proof)
     }
 
@@ -135,7 +135,7 @@ class CredentialIssuerEdgeCasesTest {
     @Test
     fun `test issue credential with invalid issuance date format`() = runBlocking {
         val credential = createTestCredential(issuanceDate = "not-a-date")
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuer.issue(credential, issuerDid, keyId)
         }
@@ -144,7 +144,7 @@ class CredentialIssuerEdgeCasesTest {
     @Test
     fun `test issue credential with invalid expiration date format`() = runBlocking {
         val credential = createTestCredential(expirationDate = "not-a-date")
-        
+
         // Should still issue, but expiration date may be invalid
         try {
             val issued = issuer.issue(credential, issuerDid, keyId)
@@ -158,7 +158,7 @@ class CredentialIssuerEdgeCasesTest {
     @Test
     fun `test issue credential with malformed DID`() = runBlocking {
         val credential = createTestCredential(issuerDid = "not-a-did")
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuer.issue(credential, issuerDid, keyId)
         }
@@ -167,7 +167,7 @@ class CredentialIssuerEdgeCasesTest {
     @Test
     fun `test issue credential with DID missing method`() = runBlocking {
         val credential = createTestCredential(issuerDid = "did::identifier")
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuer.issue(credential, issuerDid, keyId)
         }
@@ -179,7 +179,7 @@ class CredentialIssuerEdgeCasesTest {
     fun `test issue credential with very long issuer DID`() = runBlocking {
         val longDid = "did:key:${"a".repeat(1000)}"
         val credential = createTestCredential(issuerDid = longDid)
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuer.issue(credential, issuerDid, keyId)
         }
@@ -189,9 +189,9 @@ class CredentialIssuerEdgeCasesTest {
     fun `test issue credential with very long credential ID`() = runBlocking {
         val longId = "https://example.com/credentials/${"a".repeat(2000)}"
         val credential = createTestCredential(id = longId)
-        
+
         val issued = issuer.issue(credential, issuerDid, keyId)
-        
+
         assertEquals(longId, issued.id)
         assertNotNull(issued.proof)
     }
@@ -200,9 +200,9 @@ class CredentialIssuerEdgeCasesTest {
     fun `test issue credential with maximum number of types`() = runBlocking {
         val types = listOf("VerifiableCredential") + (1..100).map { "Type$it" }
         val credential = createTestCredential(types = types)
-        
+
         val issued = issuer.issue(credential, issuerDid, keyId)
-        
+
         assertEquals(types.size, issued.type.size)
         assertNotNull(issued.proof)
     }
@@ -211,9 +211,9 @@ class CredentialIssuerEdgeCasesTest {
     fun `test issue credential with expiration date in past`() = runBlocking {
         val pastDate = java.time.Instant.now().minusSeconds(86400).toString()
         val credential = createTestCredential(expirationDate = pastDate)
-        
+
         val issued = issuer.issue(credential, issuerDid, keyId)
-        
+
         assertEquals(pastDate, issued.expirationDate)
         assertNotNull(issued.proof)
     }
@@ -222,9 +222,9 @@ class CredentialIssuerEdgeCasesTest {
     fun `test issue credential with expiration date far in future`() = runBlocking {
         val futureDate = java.time.Instant.now().plusSeconds(31536000L * 100).toString() // 100 years
         val credential = createTestCredential(expirationDate = futureDate)
-        
+
         val issued = issuer.issue(credential, issuerDid, keyId)
-        
+
         assertEquals(futureDate, issued.expirationDate)
         assertNotNull(issued.proof)
     }
@@ -240,9 +240,9 @@ class CredentialIssuerEdgeCasesTest {
                 put("description", "Special chars: !@#$%^&*()_+-=[]{}|;':\",./<>?")
             }
         )
-        
+
         val issued = issuer.issue(credential, issuerDid, keyId)
-        
+
         assertNotNull(issued.proof)
     }
 
@@ -254,9 +254,9 @@ class CredentialIssuerEdgeCasesTest {
                 put("name", "José García 中文 العربية 🎉")
             }
         )
-        
+
         val issued = issuer.issue(credential, issuerDid, keyId)
-        
+
         assertNotNull(issued.proof)
     }
 
@@ -268,9 +268,9 @@ class CredentialIssuerEdgeCasesTest {
                 put("description", "Line 1\nLine 2\nLine 3")
             }
         )
-        
+
         val issued = issuer.issue(credential, issuerDid, keyId)
-        
+
         assertNotNull(issued.proof)
     }
 
@@ -292,9 +292,9 @@ class CredentialIssuerEdgeCasesTest {
                 })
             }
         )
-        
+
         val issued = issuer.issue(credential, issuerDid, keyId)
-        
+
         assertNotNull(issued.proof)
     }
 
@@ -308,9 +308,9 @@ class CredentialIssuerEdgeCasesTest {
                 })
             }
         )
-        
+
         val issued = issuer.issue(credential, issuerDid, keyId)
-        
+
         assertNotNull(issued.proof)
     }
 
@@ -319,11 +319,11 @@ class CredentialIssuerEdgeCasesTest {
     @Test
     fun `test issue multiple credentials concurrently`() = runBlocking {
         val credentials = (1..10).map { createTestCredential(id = "cred-$it") }
-        
+
         val issued = credentials.map { credential ->
             issuer.issue(credential, issuerDid, keyId)
         }
-        
+
         assertEquals(10, issued.size)
         issued.forEach { assertNotNull(it.proof) }
     }
@@ -336,11 +336,11 @@ class CredentialIssuerEdgeCasesTest {
             resolveDid = { false }
         )
         val credential = createTestCredential()
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuerWithFailedDid.issue(credential, issuerDid, keyId)
         }
-        
+
         // Should still work with correct issuer
         val issued = issuer.issue(credential, issuerDid, keyId)
         assertNotNull(issued.proof)
@@ -351,19 +351,19 @@ class CredentialIssuerEdgeCasesTest {
         val failingSigner: suspend (ByteArray, String) -> ByteArray = { _, _ ->
             throw RuntimeException("Signing failed")
         }
-        
+
         val failingGenerator = Ed25519ProofGenerator(
             signer = failingSigner,
             getPublicKeyId = { "did:key:issuer123#key-1" }
         )
-        
+
         val failingIssuer = CredentialIssuer(
             proofGenerator = failingGenerator,
             resolveDid = { did -> did == issuerDid }
         )
-        
+
         val credential = createTestCredential()
-        
+
         assertFailsWith<Exception> {
             failingIssuer.issue(credential, issuerDid, keyId)
         }
@@ -375,10 +375,10 @@ class CredentialIssuerEdgeCasesTest {
     fun `test issue credential with empty proof type`() = runBlocking {
         val credential = createTestCredential()
         val options = CredentialIssuanceOptions(proofType = "")
-        
+
         // Should use default proof generator
         val issued = issuer.issue(credential, issuerDid, keyId, options)
-        
+
         assertNotNull(issued.proof)
     }
 
@@ -390,9 +390,9 @@ class CredentialIssuerEdgeCasesTest {
             proofType = "Ed25519Signature2020",
             challenge = longChallenge
         )
-        
+
         val issued = issuer.issue(credential, issuerDid, keyId, options)
-        
+
         assertEquals(longChallenge, issued.proof?.challenge)
     }
 
@@ -404,9 +404,9 @@ class CredentialIssuerEdgeCasesTest {
             proofType = "Ed25519Signature2020",
             domain = longDomain
         )
-        
+
         val issued = issuer.issue(credential, issuerDid, keyId, options)
-        
+
         assertEquals(longDomain, issued.proof?.domain)
     }
 
@@ -420,7 +420,7 @@ class CredentialIssuerEdgeCasesTest {
             schemaFormat = SchemaFormat.JSON_SCHEMA
         )
         val credential = createTestCredential(schema = schema)
-        
+
         // Should fail schema validation or skip if schema not found
         try {
             val issued = issuer.issue(credential, issuerDid, keyId)
@@ -438,7 +438,7 @@ class CredentialIssuerEdgeCasesTest {
             schemaFormat = SchemaFormat.JSON_SCHEMA
         )
         val credential = createTestCredential(schema = schema)
-        
+
         try {
             val issued = issuer.issue(credential, issuerDid, keyId)
             assertNotNull(issued.proof)

@@ -49,8 +49,8 @@ println("Registered methods: $registeredMethods")
 
 // Or load from a directory
 val methods = DidMethodRegistration.registerFromDirectory(
-    registry, 
-    kms, 
+    registry,
+    kms,
     Paths.get("my-did-methods")
 )
 

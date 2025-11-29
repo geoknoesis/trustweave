@@ -4,7 +4,6 @@ import com.trustweave.anchor.BlockchainAnchorRegistry
 import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
 import com.trustweave.core.*
-import com.trustweave.credential.CredentialService
 import com.trustweave.credential.CredentialServiceRegistry
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.credential.proof.ProofGenerator
@@ -21,10 +20,10 @@ import com.trustweave.core.plugin.PluginLifecycle
 
 /**
  * Main entry point for TrustWeave library.
- * 
+ *
  * TrustWeave provides a unified, elegant API for decentralized identity and trust operations.
  * The API is organized into focused services for better discoverability and clarity.
- * 
+ *
  * **Quick Start:**
  * ```kotlin
  * val trustweave = TrustWeave.create()
@@ -37,18 +36,18 @@ import com.trustweave.core.plugin.PluginLifecycle
  * val wallet = trustweave.wallets.create(holderDid = did.id)
  * wallet.store(credential)
  * ```
- * 
+ *
  * **Custom Configuration:**
  * ```kotlin
  * val trustweave = TrustWeave.create {
  *     kms = InMemoryKeyManagementService()
  *     walletFactory = TestkitWalletFactory()
- *     
+ *
  *     didMethods {
  *         + DidKeyMethod()
  *         + DidWebMethod()
  *     }
- *     
+ *
  *     blockchains {
  *         "ethereum:mainnet" to ethereumClient
  *         "algorand:testnet" to algorandClient
@@ -61,47 +60,47 @@ class TrustWeave private constructor(
 ) {
     /**
      * DID operations service.
-     * 
+     *
      * Provides methods for creating, resolving, updating, and deactivating DIDs.
      */
     val dids: DidService = DidService(context)
-    
+
     /**
      * Credential operations service.
-     * 
+     *
      * Provides methods for issuing and verifying verifiable credentials.
      */
-    val credentials: CredentialService = CredentialService(context)
-    
+    val credentials: com.trustweave.services.CredentialService = com.trustweave.services.CredentialService(context)
+
     /**
      * Wallet operations service.
-     * 
+     *
      * Provides methods for creating wallets. All other wallet operations
      * should be performed directly on the wallet instance.
      */
     val wallets: WalletService = WalletService(context)
-    
+
     /**
      * Blockchain anchoring service.
-     * 
+     *
      * Provides methods for anchoring data to blockchains and reading anchored data.
      */
     val blockchains: BlockchainService = BlockchainService(context)
-    
+
     /**
      * Smart contract operations service.
-     * 
+     *
      * Provides methods for creating, binding, and executing smart contracts.
      */
     val contracts: ContractService = ContractService(context)
-    
+
     // ========================================
     // Plugin Lifecycle
     // ========================================
-    
+
     /**
      * Initializes all plugins that implement PluginLifecycle.
-     * 
+     *
      * This method should be called before using any plugins to ensure
      * they are properly initialized.
      */
@@ -112,10 +111,10 @@ class TrustWeave private constructor(
             }
         }
     }
-    
+
     /**
      * Starts all plugins that implement PluginLifecycle.
-     * 
+     *
      * This method should be called after initialize() and before
      * starting operations.
      */
@@ -126,10 +125,10 @@ class TrustWeave private constructor(
             }
         }
     }
-    
+
     /**
      * Stops all plugins that implement PluginLifecycle.
-     * 
+     *
      * This method should be called when shutting down to gracefully
      * stop all plugins.
      */
@@ -140,10 +139,10 @@ class TrustWeave private constructor(
             }
         }
     }
-    
+
     /**
      * Cleans up all plugins that implement PluginLifecycle.
-     * 
+     *
      * This method should be called after stop() to clean up resources.
      */
     suspend fun cleanup() {
@@ -153,7 +152,7 @@ class TrustWeave private constructor(
             }
         }
     }
-    
+
     // ========================================
     // Factory Methods
     // ========================================
@@ -161,21 +160,21 @@ class TrustWeave private constructor(
     companion object {
         /**
          * Creates a TrustWeave instance with sensible defaults.
-         * 
+         *
          * Includes:
          * - In-memory key management
          * - did:key method support
          * - No blockchain anchoring (must be configured separately)
-         * 
+         *
          * **Example:**
          * ```kotlin
          * val trustweave = TrustWeave.create()
          * ```
-         * 
+         *
          * @return TrustWeave instance with default configuration
          */
         fun create(): TrustWeave = create(TrustWeaveDefaults.inMemory())
-        
+
         /**
          * Creates a TrustWeave instance from a configuration object.
          *
@@ -184,7 +183,7 @@ class TrustWeave private constructor(
         fun create(config: TrustWeaveConfig): TrustWeave {
             return TrustWeave(TrustWeaveContext.fromConfig(config))
         }
-        
+
         /**
          * Creates a TrustWeave instance with custom configuration.
          * Starts from defaults and applies overrides.
@@ -194,17 +193,17 @@ class TrustWeave private constructor(
          * val trustweave = TrustWeave.create {
          *     kms = InMemoryKeyManagementService()
          *     walletFactory = TestkitWalletFactory()
-         *     
+         *
          *     didMethods {
          *         + DidKeyMethod()
          *         + DidWebMethod()
          *     }
-         *     
+         *
  *     blockchains {
  *         "ethereum:mainnet" to ethereumClient
  *         "algorand:testnet" to algorandClient
  *     }
-         *     
+         *
          *     credentialServices {
          *         + MyCredentialService()
          *     }
@@ -224,7 +223,7 @@ class TrustWeave private constructor(
 
 /**
  * TrustWeave context holding all registries and services.
- * 
+ *
  * This class encapsulates all dependencies and configuration,
  * making it thread-safe and testable without global state.
  */
@@ -238,22 +237,22 @@ class TrustWeaveContext private constructor(
 ) {
     /**
      * Gets all plugins that implement PluginLifecycle from all registries.
-     * 
+     *
      * @return List of all plugins that implement PluginLifecycle
      */
     fun getAllPlugins(): List<Any> {
         val plugins = mutableListOf<Any>()
-        
+
         // Add KMS if it implements PluginLifecycle
         if (kms is PluginLifecycle) {
             plugins.add(kms)
         }
-        
+
         // Add wallet factory if it implements PluginLifecycle
         if (walletFactory is PluginLifecycle) {
             plugins.add(walletFactory)
         }
-        
+
         // Add DID methods
         didRegistry.getAllMethodNames().forEach { methodName ->
             didRegistry.get(methodName)?.let { method ->
@@ -262,7 +261,7 @@ class TrustWeaveContext private constructor(
                 }
             }
         }
-        
+
         // Add blockchain clients
         blockchainRegistry.getAllChainIds().forEach { chainId ->
             blockchainRegistry.get(chainId)?.let { client ->
@@ -271,14 +270,14 @@ class TrustWeaveContext private constructor(
                 }
             }
         }
-        
+
         // Add credential services
         credentialRegistry.getAll().values.forEach { service ->
             if (service is PluginLifecycle) {
                 plugins.add(service)
             }
         }
-        
+
         // Add proof generators
         proofRegistry.getRegisteredTypes().forEach { proofType ->
             proofRegistry.get(proofType)?.let { generator ->
@@ -287,30 +286,30 @@ class TrustWeaveContext private constructor(
                 }
             }
         }
-        
+
         return plugins
     }
-    
+
     /**
      * Gets available blockchain chain IDs.
      */
     fun getAvailableChains(): List<String> = blockchainRegistry.getAllChainIds()
-    
+
     /**
      * Gets blockchain client for a chain ID.
      */
     fun getBlockchainClient(chainId: String): BlockchainAnchorClient? = blockchainRegistry.get(chainId)
-    
+
     /**
      * Gets available DID method names.
      */
     fun getAvailableDidMethods(): List<String> = didRegistry.getAllMethodNames()
-    
+
     /**
      * Gets DID method by name.
      */
     fun getDidMethod(method: String): DidMethod? = didRegistry.get(method)
-    
+
     /**
      * Resolves a DID.
      */
@@ -329,7 +328,7 @@ class TrustWeaveContext private constructor(
             )
         return method.resolveDid(did)
     }
-    
+
     companion object {
         fun fromConfig(config: TrustWeaveConfig): TrustWeaveContext {
             return TrustWeaveContext(
@@ -372,7 +371,7 @@ data class TrustWeaveConfig(
                 newRegistry
             }
         }
-        
+
         return Builder(
             _kms = kms,
             _walletFactory = walletFactory,
@@ -382,7 +381,7 @@ data class TrustWeaveConfig(
             proofRegistry = proofRegistry.snapshot()
         )
     }
-    
+
     class Builder internal constructor(
         private var _kms: KeyManagementService?,
         private var _walletFactory: WalletFactory?,
@@ -393,7 +392,7 @@ data class TrustWeaveConfig(
     ) {
         /**
          * Sets the Key Management Service.
-         * 
+         *
          * **Example:**
          * ```kotlin
          * kms = InMemoryKeyManagementService()
@@ -404,10 +403,10 @@ data class TrustWeaveConfig(
             set(value) {
                 _kms = value
             }
-        
+
         /**
          * Sets the Wallet Factory.
-         * 
+         *
          * **Example:**
          * ```kotlin
          * walletFactory = TestkitWalletFactory()
@@ -418,10 +417,10 @@ data class TrustWeaveConfig(
             set(value) {
                 _walletFactory = value
             }
-        
+
         /**
          * DSL block for registering DID methods.
-         * 
+         *
          * **Example:**
          * ```kotlin
          * didMethods {
@@ -434,7 +433,7 @@ data class TrustWeaveConfig(
             val builder = DidMethodsBuilder(didRegistry)
             builder.block()
         }
-        
+
         /**
          * Internal builder for DID methods DSL.
          */
@@ -445,10 +444,10 @@ data class TrustWeaveConfig(
                 registry.register(this)
             }
         }
-        
+
         /**
          * DSL block for registering blockchain clients.
-         * 
+         *
          * **Example:**
          * ```kotlin
          * blockchains {
@@ -464,16 +463,16 @@ data class TrustWeaveConfig(
                 blockchainRegistry.register(chainId, client)
             }
         }
-        
+
         /**
          * Internal builder for blockchains DSL.
          */
         inner class BlockchainsBuilder {
             internal val clients = mutableMapOf<String, BlockchainAnchorClient>()
-            
+
             /**
              * Register a blockchain client using the `to` operator.
-             * 
+             *
              * **Example:**
              * ```kotlin
              * blockchains {
@@ -484,10 +483,10 @@ data class TrustWeaveConfig(
             infix fun String.to(client: BlockchainAnchorClient) {
                 clients[this@to] = client
             }
-            
+
             /**
              * Support indexed access for backward compatibility.
-             * 
+             *
              * **Example:**
              * ```kotlin
              * blockchains {
@@ -498,14 +497,14 @@ data class TrustWeaveConfig(
             operator fun set(chainId: String, client: BlockchainAnchorClient) {
                 clients[chainId] = client
             }
-            
+
             /**
              * Support indexed access getter.
              */
             operator fun get(chainId: String): BlockchainAnchorClient? {
                 return clients[chainId]
             }
-            
+
             /**
              * Support put() method for backward compatibility.
              */
@@ -513,10 +512,10 @@ data class TrustWeaveConfig(
                 clients[chainId] = client
             }
         }
-        
+
         /**
          * DSL block for registering credential services.
-         * 
+         *
          * **Example:**
          * ```kotlin
          * credentialServices {
@@ -528,18 +527,18 @@ data class TrustWeaveConfig(
             val builder = CredentialServicesBuilder(credentialRegistry)
             builder.block()
         }
-        
+
         /**
          * Internal builder for credential services DSL.
          */
         inner class CredentialServicesBuilder(
             private val registry: CredentialServiceRegistry
         ) {
-            operator fun CredentialService.unaryPlus() {
+            operator fun com.trustweave.credential.CredentialService.unaryPlus() {
                 registry.register(this)
             }
         }
-        
+
         /**
          * Unregisters a credential service.
          */
@@ -549,7 +548,7 @@ data class TrustWeaveConfig(
 
         /**
          * DSL block for registering proof generators.
-         * 
+         *
          * **Example:**
          * ```kotlin
          * proofGenerators {
@@ -562,7 +561,7 @@ data class TrustWeaveConfig(
             val builder = ProofGeneratorsBuilder(proofRegistry)
             builder.block()
         }
-        
+
         /**
          * Internal builder for proof generators DSL.
          */
@@ -580,21 +579,21 @@ data class TrustWeaveConfig(
         fun unregisterProofGenerator(proofType: String) {
             proofRegistry.unregister(proofType)
         }
-        
+
         /**
          * Removes a blockchain client.
          */
         fun removeBlockchainClient(chainId: String) {
             blockchainRegistry.unregister(chainId)
         }
-        
+
         /**
          * Removes a DID method.
          */
         fun removeDidMethod(methodName: String) {
             didRegistry.unregister(methodName)
         }
-        
+
         /**
          * Builds the TrustWeaveConfig from this builder.
          */
@@ -602,7 +601,7 @@ data class TrustWeaveConfig(
             val kms = requireNotNull(_kms) { "KMS must be configured" }
             val walletFactory = requireNotNull(_walletFactory) { "WalletFactory must be configured" }
             require(didRegistry.size() > 0) { "At least one DID method must be registered" }
-            
+
         return TrustWeaveConfig(
             kms = kms,
             walletFactory = walletFactory,
@@ -613,13 +612,13 @@ data class TrustWeaveConfig(
         )
         }
     }
-    
+
     companion object
 }
 
 /**
  * Builder for constructing wallet creation options in a type-safe manner.
- * 
+ *
  * Builder for wallet creation options.
  * Use the [walletOptions] DSL function instead of constructing directly.
  */

@@ -15,9 +15,9 @@ If you want to create custom plugins for TrustWeave (DID methods, blockchain cli
 
 ## Filing Issues
 
-- **Purpose:** Capture bugs, outdated snippets, or missing context.  
-  - Open a GitHub issue tagged `docs`, include the affected page paths, and describe what readers currently experience.  
-  - Attach reproduction steps or screenshots when the problem involves runnable code or failing commands.  
+- **Purpose:** Capture bugs, outdated snippets, or missing context.
+  - Open a GitHub issue tagged `docs`, include the affected page paths, and describe what readers currently experience.
+  - Attach reproduction steps or screenshots when the problem involves runnable code or failing commands.
 - **Small fixes:** For obvious typos or broken links, feel free to submit a PR directly; call out any assumptions you made.
 
 ## Writing Style
@@ -40,8 +40,8 @@ If you want to create custom plugins for TrustWeave (DID methods, blockchain cli
 
 1. **Branching:** Fork and create a feature branch (`docs/my-improvement`) so reviewers can scope the diff easily.
 2. **Editing:** Update or add Markdown files. Keep line length under ~120 characters and follow the snippet narration rules above.
-3. **Verification:**  
-   - `./gradlew build` — ensures Kotlin samples and fixtures still compile.  
+3. **Verification:**
+   - `./gradlew build` — ensures Kotlin samples and fixtures still compile.
    - `./gradlew :TrustWeave-examples:runQuickStartSample` — required whenever you touch quick-start instructions or referenced code.
 4. **Preview:** Render Markdown locally (VS Code markdown preview, GitBook CLI, or equivalent) to check formatting.
 5. **Pull request:** Describe the change, list affected pages, mention related issues, and attach screenshots for visual updates.

@@ -7,17 +7,18 @@ import com.trustweave.did.DidDocument
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
+import kotlinx.serialization.json.putJsonArray
 import java.time.Instant
 import java.util.*
 import java.util.Base64
 
 /**
  * Packs and unpacks DIDComm V2 messages.
- * 
+ *
  * Supports:
  * - Plain messages (signed or unsigned)
  * - Encrypted messages (AuthCrypt)
- * 
+ *
  * Following DIDComm V2 specification:
  * - Messages use JWM (JSON Web Message) format
  * - Encryption uses ECDH-1PU (AuthCrypt) or ECDH-ES (AnonCrypt)
@@ -30,7 +31,7 @@ class DidCommPacker(
 ) {
     /**
      * Packs a message for sending.
-     * 
+     *
      * @param message The message to pack
      * @param fromDid Sender DID
      * @param fromKeyId Sender key ID for encryption/signing
@@ -50,7 +51,7 @@ class DidCommPacker(
         sign: Boolean = true
     ): String = withContext(Dispatchers.IO) {
         val messageJson = message.toJsonObject()
-        
+
         if (encrypt) {
             // Encrypt the message
             val envelope = crypto.encrypt(
@@ -60,7 +61,7 @@ class DidCommPacker(
                 toDid = toDid,
                 toKeyId = toKeyId
             )
-            
+
             // Serialize envelope to JSON
             val envelopeJson = buildJsonObject {
                 put("protected", envelope.protected)
@@ -80,7 +81,7 @@ class DidCommPacker(
                 put("ciphertext", envelope.ciphertext)
                 put("tag", envelope.tag)
             }
-            
+
             Json.encodeToString(JsonObject.serializer(), envelopeJson)
         } else {
             // Plain message (may be signed)
@@ -96,7 +97,7 @@ class DidCommPacker(
 
     /**
      * Unpacks a received message.
-     * 
+     *
      * @param packedMessage The packed message (JSON string)
      * @param recipientDid Recipient DID
      * @param recipientKeyId Recipient key ID
@@ -110,22 +111,22 @@ class DidCommPacker(
         senderDid: String? = null
     ): DidCommMessage = withContext(Dispatchers.IO) {
         val json = Json.parseToJsonElement(packedMessage)
-        
+
         // Check if it's an encrypted envelope
         if (json.jsonObject.containsKey("ciphertext")) {
             // Encrypted message
             val envelope = parseEnvelope(json.jsonObject)
-            
+
             val resolvedSenderDid = senderDid ?: extractSenderDid(envelope)
                 ?: throw IllegalArgumentException("Cannot determine sender DID")
-            
+
             val decryptedJson = crypto.decrypt(
                 envelope = envelope,
                 recipientDid = recipientDid,
                 recipientKeyId = recipientKeyId,
                 senderDid = resolvedSenderDid
             )
-            
+
             // Parse decrypted message
             parseMessage(decryptedJson)
         } else {
@@ -137,12 +138,12 @@ class DidCommPacker(
     private fun parseEnvelope(json: JsonObject): DidCommEnvelope {
         val protected = json["protected"]?.jsonPrimitive?.content
             ?: throw IllegalArgumentException("Missing 'protected' in envelope")
-        
+
         val recipients = json["recipients"]?.jsonArray?.map { recipientJson ->
             val recipientObj = recipientJson.jsonObject
             val headerObj = recipientObj["header"]?.jsonObject
                 ?: throw IllegalArgumentException("Missing 'header' in recipient")
-            
+
             com.trustweave.credential.didcomm.models.DidCommRecipient(
                 header = com.trustweave.credential.didcomm.models.DidCommRecipientHeader(
                     kid = headerObj["kid"]?.jsonPrimitive?.content
@@ -154,14 +155,14 @@ class DidCommPacker(
                     ?: throw IllegalArgumentException("Missing 'encrypted_key' in recipient")
             )
         } ?: throw IllegalArgumentException("Missing 'recipients' in envelope")
-        
+
         val iv = json["iv"]?.jsonPrimitive?.content
             ?: throw IllegalArgumentException("Missing 'iv' in envelope")
         val ciphertext = json["ciphertext"]?.jsonPrimitive?.content
             ?: throw IllegalArgumentException("Missing 'ciphertext' in envelope")
         val tag = json["tag"]?.jsonPrimitive?.content
             ?: throw IllegalArgumentException("Missing 'tag' in envelope")
-        
+
         return DidCommEnvelope(
             protected = protected,
             recipients = recipients,
@@ -176,22 +177,22 @@ class DidCommPacker(
             ?: throw IllegalArgumentException("Missing 'id' in message")
         val type = json["type"]?.jsonPrimitive?.content
             ?: throw IllegalArgumentException("Missing 'type' in message")
-        
+
         val from = json["from"]?.jsonPrimitive?.content
         val to = json["to"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
             ?: json["to"]?.jsonPrimitive?.content?.let { listOf(it) }
             ?: emptyList()
-        
+
         val body = json["body"]?.jsonObject ?: buildJsonObject { }
         val created = json["created_time"]?.jsonPrimitive?.content
         val expiresTime = json["expires_time"]?.jsonPrimitive?.content
-        
+
         val attachments = json["attachments"]?.jsonArray?.mapNotNull { attachmentJson ->
             val attachmentObj = attachmentJson.jsonObject
             val mediaType = attachmentObj["media_type"]?.jsonPrimitive?.content ?: "application/json"
             val dataObj = attachmentObj["data"]?.jsonObject
                 ?: throw IllegalArgumentException("Missing 'data' in attachment")
-            
+
             com.trustweave.credential.didcomm.models.DidCommAttachment(
                 id = attachmentObj["id"]?.jsonPrimitive?.content,
                 mediaType = mediaType,
@@ -202,11 +203,11 @@ class DidCommPacker(
                 )
             )
         } ?: emptyList()
-        
+
         val thid = json["thid"]?.jsonPrimitive?.content
         val pthid = json["pthid"]?.jsonPrimitive?.content
         val ack = json["ack"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-        
+
         return DidCommMessage(
             id = id,
             type = type,
@@ -228,7 +229,7 @@ class DidCommPacker(
             val protectedJson = Json.parseToJsonElement(
                 String(Base64.getUrlDecoder().decode(envelope.protected))
             ).jsonObject
-            
+
             val skid = protectedJson["skid"]?.jsonPrimitive?.content
             // Extract DID from key ID (format: did:method:id#key-id)
             skid?.substringBefore("#")
@@ -236,10 +237,10 @@ class DidCommPacker(
             null
         }
     }
-    
+
     /**
      * Signs a plain message using JWS (JSON Web Signature).
-     * 
+     *
      * Creates a compact JWS format: header.payload.signature
      */
     private suspend fun signMessage(
@@ -249,33 +250,36 @@ class DidCommPacker(
     ): JsonObject {
         val json = Json { prettyPrint = false; encodeDefaults = false }
         val messageBytes = json.encodeToString(JsonObject.serializer(), messageJson).toByteArray(Charsets.UTF_8)
-        
+
         // Sign using provided signer
         val signature = signer(messageBytes, fromKeyId)
-        
+
         // Create JWS compact format
         val header = buildJsonObject {
             put("alg", "Ed25519") // Default algorithm, should be determined from key
             put("typ", "JWS")
             put("kid", fromKeyId)
         }
-        
+
         val headerBase64 = Base64.getUrlEncoder().withoutPadding()
             .encodeToString(json.encodeToString(JsonObject.serializer(), header).toByteArray(Charsets.UTF_8))
         val payloadBase64 = Base64.getUrlEncoder().withoutPadding()
             .encodeToString(messageBytes)
         val signatureBase64 = Base64.getUrlEncoder().withoutPadding()
             .encodeToString(signature)
-        
+
         // Return signed message with JWS
         return buildJsonObject {
-            putAll(messageJson)
-            put("signatures", JsonArray(listOf(
-                buildJsonObject {
+            // Copy all entries from messageJson
+            messageJson.forEach { (key, value) ->
+                put(key, value)
+            }
+            putJsonArray("signatures") {
+                add(buildJsonObject {
                     put("protected", headerBase64)
                     put("signature", signatureBase64)
-                }
-            )))
+                })
+            }
         }
     }
 }

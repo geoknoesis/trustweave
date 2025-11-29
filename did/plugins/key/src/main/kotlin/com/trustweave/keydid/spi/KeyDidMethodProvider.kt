@@ -9,7 +9,7 @@ import java.util.ServiceLoader
 
 /**
  * SPI provider for did:key method.
- * 
+ *
  * Automatically discovers did:key method when this module is on the classpath.
  */
 class KeyDidMethodProvider : DidMethodProvider {

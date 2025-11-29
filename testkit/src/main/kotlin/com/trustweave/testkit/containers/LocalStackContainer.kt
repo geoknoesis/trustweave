@@ -7,9 +7,9 @@ import java.time.Duration
 
 /**
  * TestContainer for LocalStack (AWS services emulator).
- * 
+ *
  * Provides local AWS services including KMS, S3, and other services for testing.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * @Testcontainers
@@ -18,7 +18,7 @@ import java.time.Duration
  *         @JvmStatic
  *         val localStack = LocalStackContainer.create()
  *     }
- *     
+ *
  *     @Test
  *     fun testWithLocalStack() {
  *         val kmsEndpoint = localStack.getKmsEndpoint()
@@ -30,13 +30,13 @@ import java.time.Duration
 class LocalStackContainer private constructor(
     dockerImageName: DockerImageName
 ) : GenericContainer<LocalStackContainer>(dockerImageName) {
-    
+
     companion object {
         /**
          * Default LocalStack Docker image.
          */
         private val DEFAULT_IMAGE = DockerImageName.parse("localstack/localstack:latest")
-        
+
         /**
          * Creates a LocalStack container with default configuration.
          */
@@ -49,7 +49,7 @@ class LocalStackContainer private constructor(
                 .waitingFor(Wait.forLogMessage(".*Ready\\.\\n", 1))
                 .withStartupTimeout(Duration.ofMinutes(2))
         }
-        
+
         /**
          * Creates a LocalStack container with custom services.
          */
@@ -63,7 +63,7 @@ class LocalStackContainer private constructor(
                 .withStartupTimeout(Duration.ofMinutes(2))
         }
     }
-    
+
     /**
      * Services available in LocalStack.
      */
@@ -74,31 +74,31 @@ class LocalStackContainer private constructor(
         const val LAMBDA = "lambda"
         const val DYNAMODB = "dynamodb"
     }
-    
+
     /**
      * Gets the KMS endpoint URL.
      */
     fun getKmsEndpoint(): String {
         return "http://${host}:${getMappedPort(4566)}"
     }
-    
+
     /**
      * Gets the S3 endpoint URL.
      */
     fun getS3Endpoint(): String {
         return "http://${host}:${getMappedPort(4566)}"
     }
-    
+
     /**
      * Gets the AWS region (defaults to us-east-1).
      */
     fun getRegion(): String = "us-east-1"
-    
+
     /**
      * Gets the AWS access key ID for LocalStack (default).
      */
     fun getAccessKeyId(): String = "test"
-    
+
     /**
      * Gets the AWS secret access key for LocalStack (default).
      */

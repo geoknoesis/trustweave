@@ -16,12 +16,12 @@ class StatusListManagerInterfaceContractTest {
     @Test
     fun `test StatusListManager createStatusList returns status list credential`() = runBlocking {
         val manager = createMockManager()
-        
+
         val statusList = manager.createStatusList(
             issuerDid = "did:key:issuer",
             purpose = StatusPurpose.REVOCATION
         )
-        
+
         assertNotNull(statusList)
         assertEquals("did:key:issuer", statusList.issuer)
         assertTrue(statusList.type.contains("StatusList2021Credential"))
@@ -30,25 +30,25 @@ class StatusListManagerInterfaceContractTest {
     @Test
     fun `test StatusListManager createStatusList with custom size`() = runBlocking {
         val manager = createMockManager()
-        
+
         val statusList = manager.createStatusList(
             issuerDid = "did:key:issuer",
             purpose = StatusPurpose.REVOCATION,
             size = 1000
         )
-        
+
         assertNotNull(statusList)
     }
 
     @Test
     fun `test StatusListManager createStatusList with SUSPENSION purpose`() = runBlocking {
         val manager = createMockManager()
-        
+
         val statusList = manager.createStatusList(
             issuerDid = "did:key:issuer",
             purpose = StatusPurpose.SUSPENSION
         )
-        
+
         assertNotNull(statusList)
         assertEquals("suspension", statusList.credentialSubject.statusPurpose)
     }
@@ -57,18 +57,18 @@ class StatusListManagerInterfaceContractTest {
     fun `test StatusListManager revokeCredential returns true`() = runBlocking {
         val manager = createMockManager()
         val statusList = manager.createStatusList("did:key:issuer", StatusPurpose.REVOCATION)
-        
+
         val revoked = manager.revokeCredential("cred-1", statusList.id)
-        
+
         assertTrue(revoked)
     }
 
     @Test
     fun `test StatusListManager revokeCredential returns false for invalid status list`() = runBlocking {
         val manager = createMockManager()
-        
+
         val revoked = manager.revokeCredential("cred-1", "non-existent")
-        
+
         assertFalse(revoked)
     }
 
@@ -76,9 +76,9 @@ class StatusListManagerInterfaceContractTest {
     fun `test StatusListManager suspendCredential returns true`() = runBlocking {
         val manager = createMockManager()
         val statusList = manager.createStatusList("did:key:issuer", StatusPurpose.SUSPENSION)
-        
+
         val suspended = manager.suspendCredential("cred-1", statusList.id)
-        
+
         assertTrue(suspended)
     }
 
@@ -87,7 +87,7 @@ class StatusListManagerInterfaceContractTest {
         val manager = createMockManager()
         val statusList = manager.createStatusList("did:key:issuer", StatusPurpose.REVOCATION)
         manager.revokeCredential("cred-1", statusList.id)
-        
+
         val credential = createTestCredential(
             id = "cred-1",
             credentialStatus = CredentialStatus(
@@ -96,9 +96,9 @@ class StatusListManagerInterfaceContractTest {
                 statusListIndex = "0"
             )
         )
-        
+
         val status = manager.checkRevocationStatus(credential)
-        
+
         assertTrue(status.revoked)
         assertEquals(statusList.id, status.statusListId)
     }
@@ -107,9 +107,9 @@ class StatusListManagerInterfaceContractTest {
     fun `test StatusListManager checkRevocationStatus returns not revoked`() = runBlocking {
         val manager = createMockManager()
         val credential = createTestCredential(id = "cred-1")
-        
+
         val status = manager.checkRevocationStatus(credential)
-        
+
         assertFalse(status.revoked)
     }
 
@@ -117,9 +117,9 @@ class StatusListManagerInterfaceContractTest {
     fun `test StatusListManager updateStatusList returns updated status list`() = runBlocking {
         val manager = createMockManager()
         val statusList = manager.createStatusList("did:key:issuer", StatusPurpose.REVOCATION)
-        
+
         val updated = manager.updateStatusList(statusList.id, listOf(0, 1, 2))
-        
+
         assertNotNull(updated)
         assertEquals(statusList.id, updated.id)
     }
@@ -127,7 +127,7 @@ class StatusListManagerInterfaceContractTest {
     @Test
     fun `test StatusListManager updateStatusList returns null for non-existent`() = runBlocking {
         val manager = createMockManager()
-        
+
         // This should throw IllegalArgumentException based on InMemoryStatusListManager
         assertFailsWith<IllegalArgumentException> {
             manager.updateStatusList("non-existent", listOf(0))
@@ -138,9 +138,9 @@ class StatusListManagerInterfaceContractTest {
     fun `test StatusListManager getStatusList returns status list`() = runBlocking {
         val manager = createMockManager()
         val statusList = manager.createStatusList("did:key:issuer", StatusPurpose.REVOCATION)
-        
+
         val retrieved = manager.getStatusList(statusList.id)
-        
+
         assertNotNull(retrieved)
         assertEquals(statusList.id, retrieved?.id)
     }
@@ -148,9 +148,9 @@ class StatusListManagerInterfaceContractTest {
     @Test
     fun `test StatusListManager getStatusList returns null for non-existent`() = runBlocking {
         val manager = createMockManager()
-        
+
         val retrieved = manager.getStatusList("non-existent")
-        
+
         assertNull(retrieved)
     }
 
@@ -159,7 +159,7 @@ class StatusListManagerInterfaceContractTest {
         val manager = createMockManager()
         val statusList = manager.createStatusList("did:key:issuer", StatusPurpose.REVOCATION)
         manager.revokeCredential("cred-1", statusList.id)
-        
+
         val credential = createTestCredential(
             id = "cred-1",
             credentialStatus = CredentialStatus(
@@ -168,10 +168,10 @@ class StatusListManagerInterfaceContractTest {
                 statusListIndex = "0"
             )
         )
-        
+
         val status = manager.checkRevocationStatus(credential)
         assertTrue(status.revoked)
-        
+
         // Suspend should also work
         manager.suspendCredential("cred-2", statusList.id)
         val credential2 = createTestCredential(
@@ -192,7 +192,7 @@ class StatusListManagerInterfaceContractTest {
             private val revokedIndices = mutableMapOf<String, MutableSet<Int>>()
             private val suspendedIndices = mutableMapOf<String, MutableSet<Int>>()
             private var nextIndex = 0
-            
+
             override suspend fun createStatusList(
                 issuerDid: String,
                 purpose: StatusPurpose,
@@ -218,56 +218,56 @@ class StatusListManagerInterfaceContractTest {
                 suspendedIndices[id] = mutableSetOf()
                 return statusList
             }
-            
+
             override suspend fun revokeCredential(credentialId: String, statusListId: String): Boolean {
                 if (!statusLists.containsKey(statusListId)) return false
                 val index = nextIndex++
                 revokedIndices.getOrPut(statusListId) { mutableSetOf() }.add(index)
                 return true
             }
-            
+
             override suspend fun suspendCredential(credentialId: String, statusListId: String): Boolean {
                 if (!statusLists.containsKey(statusListId)) return false
                 val index = nextIndex++
                 suspendedIndices.getOrPut(statusListId) { mutableSetOf() }.add(index)
                 return true
             }
-            
+
             override suspend fun checkRevocationStatus(credential: VerifiableCredential): RevocationStatus {
                 val status = credential.credentialStatus ?: return RevocationStatus(revoked = false)
                 val statusListId = status.id
                 val index = status.statusListIndex?.toIntOrNull() ?: return RevocationStatus(revoked = false)
-                
+
                 val revoked = revokedIndices[statusListId]?.contains(index) ?: false
                 val suspended = suspendedIndices[statusListId]?.contains(index) ?: false
-                
+
                 return RevocationStatus(
                     revoked = revoked,
                     suspended = suspended,
                     statusListId = statusListId
                 )
             }
-            
+
             override suspend fun updateStatusList(
                 statusListId: String,
                 revokedIndices: List<Int>
             ): StatusListCredential {
                 val statusList = statusLists[statusListId]
                     ?: throw IllegalArgumentException("Status list not found: $statusListId")
-                
+
                 this.revokedIndices[statusListId] = revokedIndices.toMutableSet()
-                
+
                 return statusList.copy(
                     credentialSubject = statusList.credentialSubject.copy(
                         encodedList = "updated" // Simplified
                     )
                 )
             }
-            
+
             override suspend fun getStatusList(statusListId: String): StatusListCredential? {
                 return statusLists[statusListId]
             }
-            
+
             override suspend fun listStatusLists(issuerDid: String?): List<StatusListCredential> {
                 return if (issuerDid != null) {
                     statusLists.values.filter { it.issuer == issuerDid }
@@ -275,7 +275,7 @@ class StatusListManagerInterfaceContractTest {
                     statusLists.values.toList()
                 }
             }
-            
+
             override suspend fun deleteStatusList(statusListId: String): Boolean {
                 val removed = statusLists.remove(statusListId) != null
                 if (removed) {
@@ -284,7 +284,7 @@ class StatusListManagerInterfaceContractTest {
                 }
                 return removed
             }
-            
+
             override suspend fun getStatusListStatistics(statusListId: String): StatusListStatistics? {
                 val statusList = statusLists[statusListId] ?: return null
                 val revoked = revokedIndices[statusListId]?.size ?: 0
@@ -301,17 +301,17 @@ class StatusListManagerInterfaceContractTest {
                     lastUpdated = java.time.Instant.now()
                 )
             }
-            
+
             override suspend fun unrevokeCredential(credentialId: String, statusListId: String): Boolean {
                 val index = getCredentialIndex(credentialId, statusListId) ?: return false
                 return revokedIndices[statusListId]?.remove(index) ?: false
             }
-            
+
             override suspend fun unsuspendCredential(credentialId: String, statusListId: String): Boolean {
                 val index = getCredentialIndex(credentialId, statusListId) ?: return false
                 return suspendedIndices[statusListId]?.remove(index) ?: false
             }
-            
+
             override suspend fun checkStatusByIndex(statusListId: String, index: Int): RevocationStatus {
                 val revoked = revokedIndices[statusListId]?.contains(index) ?: false
                 val suspended = suspendedIndices[statusListId]?.contains(index) ?: false
@@ -321,34 +321,34 @@ class StatusListManagerInterfaceContractTest {
                     statusListId = statusListId
                 )
             }
-            
+
             override suspend fun checkStatusByCredentialId(credentialId: String, statusListId: String): RevocationStatus {
                 val index = getCredentialIndex(credentialId, statusListId) ?: return RevocationStatus(revoked = false)
                 return checkStatusByIndex(statusListId, index)
             }
-            
+
             private val credentialIndexMap = mutableMapOf<Pair<String, String>, Int>()
-            
+
             override suspend fun getCredentialIndex(credentialId: String, statusListId: String): Int? {
                 return credentialIndexMap[Pair(credentialId, statusListId)]
             }
-            
+
             override suspend fun assignCredentialIndex(credentialId: String, statusListId: String, index: Int?): Int {
                 val assignedIndex = index ?: nextIndex++
                 credentialIndexMap[Pair(credentialId, statusListId)] = assignedIndex
                 return assignedIndex
             }
-            
+
             override suspend fun revokeCredentials(credentialIds: List<String>, statusListId: String): Map<String, Boolean> {
                 return credentialIds.associateWith { credentialId ->
                     revokeCredential(credentialId, statusListId)
                 }
             }
-            
+
             override suspend fun updateStatusListBatch(statusListId: String, updates: List<StatusUpdate>): StatusListCredential {
                 val statusList = statusLists[statusListId]
                     ?: throw IllegalArgumentException("Status list not found: $statusListId")
-                
+
                 updates.forEach { update ->
                     update.revoked?.let { revoked ->
                         if (revoked) {
@@ -365,17 +365,17 @@ class StatusListManagerInterfaceContractTest {
                         }
                     }
                 }
-                
+
                 return statusList
             }
-            
+
             override suspend fun expandStatusList(statusListId: String, additionalSize: Int): StatusListCredential {
                 val statusList = statusLists[statusListId]
                     ?: throw IllegalArgumentException("Status list not found: $statusListId")
-                
+
                 val currentEncoded = statusList.credentialSubject.encodedList
                 val expandedEncoded = currentEncoded + "0".repeat(additionalSize / 8)
-                
+
                 val updated = statusList.copy(
                     credentialSubject = statusList.credentialSubject.copy(
                         encodedList = expandedEncoded

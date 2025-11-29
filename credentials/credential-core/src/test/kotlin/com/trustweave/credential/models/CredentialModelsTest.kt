@@ -1,5 +1,6 @@
 package com.trustweave.credential.models
 
+import com.trustweave.credential.SchemaFormat
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -21,7 +22,7 @@ class CredentialModelsTest {
             verifier = "did:key:verifier",
             evidenceDate = "2024-01-01T00:00:00Z"
         )
-        
+
         assertEquals("evidence-1", evidence.id)
         assertEquals(2, evidence.type.size)
         assertNotNull(evidence.evidenceDocument)
@@ -34,7 +35,7 @@ class CredentialModelsTest {
         val evidence = Evidence(
             type = listOf("DocumentVerification")
         )
-        
+
         assertNull(evidence.id)
         assertNull(evidence.evidenceDocument)
         assertNull(evidence.verifier)
@@ -50,7 +51,7 @@ class CredentialModelsTest {
             statusListIndex = "0",
             statusListCredential = "https://example.com/status-list/1"
         )
-        
+
         assertEquals("https://example.com/status/1", status.id)
         assertEquals("StatusList2021Entry", status.type)
         assertEquals("revocation", status.statusPurpose)
@@ -64,7 +65,7 @@ class CredentialModelsTest {
             id = "https://example.com/status/1",
             type = "StatusList2021Entry"
         )
-        
+
         assertEquals("revocation", status.statusPurpose)
         assertNull(status.statusListIndex)
         assertNull(status.statusListCredential)
@@ -77,10 +78,10 @@ class CredentialModelsTest {
             type = "JsonSchemaValidator2018",
             schemaFormat = SchemaFormat.JSON_SCHEMA
         )
-        
+
         assertEquals("https://example.com/schemas/person", schema.id)
         assertEquals("JsonSchemaValidator2018", schema.type)
-        assertEquals(com.trustweave.core.SchemaFormat.JSON_SCHEMA, schema.schemaFormat)
+        assertEquals(SchemaFormat.JSON_SCHEMA, schema.schemaFormat)
     }
 
     @Test
@@ -89,8 +90,8 @@ class CredentialModelsTest {
             id = "https://example.com/schemas/person",
             type = "JsonSchemaValidator2018"
         )
-        
-        assertEquals(com.trustweave.core.SchemaFormat.JSON_SCHEMA, schema.schemaFormat)
+
+        assertEquals(SchemaFormat.JSON_SCHEMA, schema.schemaFormat)
     }
 
     @Test
@@ -103,7 +104,7 @@ class CredentialModelsTest {
                 put("version", "1.0")
             }
         )
-        
+
         assertEquals("terms-1", terms.id)
         assertEquals("IssuerPolicy", terms.type)
         assertNotNull(terms.termsOfUse)
@@ -114,7 +115,7 @@ class CredentialModelsTest {
         val terms = TermsOfUse(
             termsOfUse = buildJsonObject { put("url", "https://example.com/terms") }
         )
-        
+
         assertNull(terms.id)
         assertNull(terms.type)
         assertNotNull(terms.termsOfUse)
@@ -127,7 +128,7 @@ class CredentialModelsTest {
             type = "CredentialRefreshService2020",
             serviceEndpoint = "https://example.com/refresh"
         )
-        
+
         assertEquals("refresh-1", refreshService.id)
         assertEquals("CredentialRefreshService2020", refreshService.type)
         assertEquals("https://example.com/refresh", refreshService.serviceEndpoint)

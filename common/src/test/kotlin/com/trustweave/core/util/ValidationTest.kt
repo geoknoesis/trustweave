@@ -11,7 +11,7 @@ class ValidationTest {
     @Test
     fun `test ValidationResult Valid`() {
         val result = ValidationResult.Valid
-        
+
         assertTrue(result.isValid())
         assertNull(result.errorMessage())
     }
@@ -24,7 +24,7 @@ class ValidationTest {
             field = "testField",
             value = "testValue"
         )
-        
+
         assertFalse(result.isValid())
         assertEquals("Test validation failed", result.errorMessage())
         assertEquals("TEST_ERROR", result.code)
@@ -40,7 +40,7 @@ class ValidationTest {
             field = "testField",
             value = null
         )
-        
+
         assertFalse(result.isValid())
         assertNull(result.value)
     }
@@ -48,7 +48,7 @@ class ValidationTest {
     @Test
     fun `test isValid returns true for Valid`() {
         val result = ValidationResult.Valid
-        
+
         assertTrue(result.isValid())
     }
 
@@ -60,14 +60,14 @@ class ValidationTest {
             field = "field",
             value = null
         )
-        
+
         assertFalse(result.isValid())
     }
 
     @Test
     fun `test errorMessage returns null for Valid`() {
         val result = ValidationResult.Valid
-        
+
         assertNull(result.errorMessage())
     }
 
@@ -79,7 +79,7 @@ class ValidationTest {
             field = "field",
             value = null
         )
-        
+
         assertEquals("Test error message", result.errorMessage())
     }
 }

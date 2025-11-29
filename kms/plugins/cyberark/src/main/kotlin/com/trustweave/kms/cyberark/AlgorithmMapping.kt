@@ -10,14 +10,14 @@ import java.util.Base64
 
 /**
  * Utilities for mapping between TrustWeave Algorithm types and CyberArk Conjur types.
- * 
+ *
  * Note: Conjur is primarily a secrets management system. This mapping supports
  * storing and retrieving cryptographic keys as secrets.
  */
 object AlgorithmMapping {
     /**
      * Maps TrustWeave Algorithm to a string identifier for Conjur secret storage.
-     * 
+     *
      * @param algorithm TrustWeave algorithm
      * @return Algorithm identifier string
      */
@@ -39,10 +39,10 @@ object AlgorithmMapping {
             else -> throw IllegalArgumentException("Algorithm ${algorithm.name} is not supported")
         }
     }
-    
+
     /**
      * Parses Conjur algorithm identifier to TrustWeave Algorithm.
-     * 
+     *
      * @param algorithm Conjur algorithm identifier
      * @return TrustWeave Algorithm, or null if not recognized
      */
@@ -59,10 +59,10 @@ object AlgorithmMapping {
             else -> null
         }
     }
-    
+
     /**
      * Converts public key bytes to JWK format.
-     * 
+     *
      * @param publicKeyBytes Public key bytes
      * @param algorithm The algorithm type
      * @return JWK map representation
@@ -76,7 +76,7 @@ object AlgorithmMapping {
                     } else {
                         publicKeyBytes.takeLast(32).toByteArray()
                     }
-                    
+
                     mapOf(
                         "kty" to "OKP",
                         "crv" to "Ed25519",
@@ -94,7 +94,7 @@ object AlgorithmMapping {
                         is Algorithm.P521 -> "P-521"
                         else -> throw IllegalArgumentException("Unsupported EC algorithm")
                     }
-                    
+
                     val affineX = point.affineX
                     val affineY = point.affineY
                     val coordinateLength = when (algorithm) {
@@ -103,7 +103,7 @@ object AlgorithmMapping {
                         is Algorithm.P521 -> 66
                         else -> 32
                     }
-                    
+
                     fun toUnsignedByteArray(bigInt: BigInteger, length: Int): ByteArray {
                         val bytes = bigInt.toByteArray()
                         val result = ByteArray(length)
@@ -115,10 +115,10 @@ object AlgorithmMapping {
                         }
                         return result
                     }
-                    
+
                     val x = toUnsignedByteArray(affineX, coordinateLength)
                     val y = toUnsignedByteArray(affineY, coordinateLength)
-                    
+
                     mapOf(
                         "kty" to "EC",
                         "crv" to curveName,
@@ -131,7 +131,7 @@ object AlgorithmMapping {
                     val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(publicKeyBytes)) as RSAPublicKey
                     val modulus = publicKey.modulus
                     val exponent = publicKey.publicExponent
-                    
+
                     fun toUnsignedByteArray(bigInt: BigInteger): ByteArray {
                         val signed = bigInt.toByteArray()
                         if (signed.isNotEmpty() && signed[0] == 0.toByte()) {
@@ -139,7 +139,7 @@ object AlgorithmMapping {
                         }
                         return signed
                     }
-                    
+
                     mapOf(
                         "kty" to "RSA",
                         "n" to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(modulus)),
@@ -152,10 +152,10 @@ object AlgorithmMapping {
             throw IllegalArgumentException("Failed to convert public key to JWK: ${e.message}", e)
         }
     }
-    
+
     /**
      * Resolves a key identifier to Conjur secret path.
-     * 
+     *
      * @param keyId Key identifier
      * @return Conjur secret path
      */

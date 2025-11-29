@@ -134,10 +134,10 @@ To use a plugin, simply add it as a dependency to your project:
 dependencies {
     // DID method plugin
     implementation("com.trustweave.did:key:1.0.0-SNAPSHOT")
-    
+
     // Blockchain anchor plugin
     implementation("com.trustweave.chains:ethereum:1.0.0-SNAPSHOT")
-    
+
     // KMS plugin
     implementation("com.trustweave.kms:aws:1.0.0-SNAPSHOT")
 }

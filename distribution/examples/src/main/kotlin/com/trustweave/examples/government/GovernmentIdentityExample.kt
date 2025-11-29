@@ -4,7 +4,7 @@ import kotlinx.coroutines.runBlocking
 
 /**
  * Government Digital Identity Scenario Example
- * 
+ *
  * This example demonstrates government identity credentials.
  * Full implementation coming soon - see docs/getting-started/government-digital-identity-scenario.md
  */

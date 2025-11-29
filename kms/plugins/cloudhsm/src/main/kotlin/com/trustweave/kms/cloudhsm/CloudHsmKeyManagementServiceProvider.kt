@@ -6,7 +6,7 @@ import com.trustweave.kms.spi.KeyManagementServiceProvider
 
 class CloudHsmKeyManagementServiceProvider : KeyManagementServiceProvider {
     override val name: String = "cloudhsm"
-    
+
     override val supportedAlgorithms: Set<Algorithm> = CloudHsmKeyManagementService.SUPPORTED_ALGORITHMS
 
     override fun create(options: Map<String, Any?>): KeyManagementService {
@@ -20,7 +20,7 @@ class CloudHsmKeyManagementServiceProvider : KeyManagementServiceProvider {
                     e
                 )
         }
-        
+
         return CloudHsmKeyManagementService(config)
     }
 }

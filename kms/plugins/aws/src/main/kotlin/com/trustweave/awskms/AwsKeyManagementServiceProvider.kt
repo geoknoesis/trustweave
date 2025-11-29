@@ -6,9 +6,9 @@ import com.trustweave.kms.spi.KeyManagementServiceProvider
 
 /**
  * SPI provider for AWS KMS KeyManagementService.
- * 
+ *
  * Automatically discovered via Java ServiceLoader when the module is on the classpath.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val providers = ServiceLoader.load(KeyManagementServiceProvider::class.java)
@@ -18,9 +18,9 @@ import com.trustweave.kms.spi.KeyManagementServiceProvider
  */
 class AwsKeyManagementServiceProvider : KeyManagementServiceProvider {
     override val name: String = "aws"
-    
+
     override val supportedAlgorithms: Set<Algorithm> = AwsKeyManagementService.SUPPORTED_ALGORITHMS
-    
+
     /**
      * AWS KMS required environment variables.
      * At minimum, AWS_REGION or AWS_DEFAULT_REGION is required.
@@ -31,17 +31,17 @@ class AwsKeyManagementServiceProvider : KeyManagementServiceProvider {
         "?AWS_ACCESS_KEY_ID",  // Optional if using IAM roles
         "?AWS_SECRET_ACCESS_KEY"  // Optional if using IAM roles
     )
-    
+
     override fun hasRequiredEnvironmentVariables(): Boolean {
         // AWS_REGION or AWS_DEFAULT_REGION must be set
         // Credentials can come from env vars OR IAM roles OR credential files
-        val hasRegion = System.getenv("AWS_REGION") != null || 
+        val hasRegion = System.getenv("AWS_REGION") != null ||
                        System.getenv("AWS_DEFAULT_REGION") != null
-        
+
         if (hasRegion) {
             return true
         }
-        
+
         // Check if we're running on AWS (IAM role available via default credential provider)
         return try {
             Class.forName("software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider")
@@ -63,7 +63,7 @@ class AwsKeyManagementServiceProvider : KeyManagementServiceProvider {
                     e
                 )
         }
-        
+
         return AwsKeyManagementService(config)
     }
 }

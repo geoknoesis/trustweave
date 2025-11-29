@@ -147,7 +147,7 @@ This document provides a comprehensive guide to the user experience for creating
 
 **User Action:** Selects "Employee Onboarding"
 
-**System Response:** 
+**System Response:**
 - Loads Employee Onboarding template configuration
 - Pre-populates credential types and suggested trust anchors
 - Shows template preview
@@ -445,23 +445,23 @@ sequenceDiagram
     U->>UI: Click "Create Domain"
     UI->>API: POST /api/v1/domains
     API->>DS: createDomain(domainData)
-    
+
     DS->>DB: Check domain name uniqueness
     DB-->>DS: Name available
-    
+
     DS->>KMS: Generate domain key pair
     KMS-->>DS: {publicKey, privateKeyId}
-    
+
     DS->>DS: Generate domain DID
     DS->>TR: Initialize trust registry
     TR-->>DS: Registry initialized
-    
+
     DS->>DB: Save domain entity
     DB-->>DS: Domain saved (domainId)
-    
+
     DS->>DB: Save domain configuration
     DB-->>DS: Configuration saved
-    
+
     DS-->>API: Domain created (domainId, domainDid)
     API-->>UI: Success response
     UI-->>U: Show domain dashboard
@@ -481,31 +481,31 @@ sequenceDiagram
 
     U->>UI: Click "Add Trust Anchor"
     UI->>API: POST /api/v1/domains/{id}/trust-anchors
-    
+
     API->>DS: addTrustAnchor(domainId, issuerDid, config)
     DS->>DB: Get domain by ID
     DB-->>DS: Domain data
-    
+
     DS->>DR: Resolve issuer DID
     DR-->>DS: DID Document
-    
+
     alt DID Resolution Failed
         DS-->>API: Error: DID not resolvable
         API-->>UI: Show error message
     else DID Resolved Successfully
         DS->>TR: Check if anchor exists
         TR-->>DS: Anchor not found
-        
+
         DS->>TR: Add trust anchor
         TR->>DB: Save trust anchor metadata
         DB-->>TR: Anchor saved
-        
+
         TR->>TR: Update trust graph
         TR-->>DS: Anchor added (trustScore: 1.0)
-        
+
         DS->>DB: Update domain trust anchors count
         DB-->>DS: Updated
-        
+
         DS-->>API: Success (anchorId, trustScore)
         API-->>UI: Show success message
         UI-->>U: Update trust anchors list
@@ -528,37 +528,37 @@ sequenceDiagram
 
     U->>UI: Fill credential form, click "Issue"
     UI->>API: POST /api/v1/domains/{id}/credentials/issue
-    
+
     API->>CS: issueCredential(domainId, credentialData)
     CS->>DB: Get domain configuration
     DB-->>CS: Domain config
-    
+
     CS->>DR: Resolve issuer DID
     DR-->>CS: Issuer DID Document
-    
+
     CS->>DR: Resolve subject DID (if provided)
     DR-->>CS: Subject DID Document
-    
+
     CS->>CS: Build VerifiableCredential (without proof)
     CS->>CI: Issue credential
-    
+
     CI->>KMS: Get issuer signing key
     KMS-->>CI: Key pair
-    
+
     CI->>PG: Generate proof
     PG->>PG: Canonicalize credential
     PG->>PG: Compute digest
     PG->>KMS: Sign digest
     KMS-->>PG: Signature
     PG-->>CI: Proof object
-    
+
     CI->>CS: Credential with proof
     CS->>DB: Save credential
     DB-->>CS: Credential saved (credentialId)
-    
+
     CS->>DB: Log issuance activity
     DB-->>CS: Activity logged
-    
+
     CS-->>API: Credential issued (credentialId, credential)
     API-->>UI: Success response
     UI-->>U: Show credential details and QR code
@@ -579,30 +579,30 @@ sequenceDiagram
 
     U->>UI: Upload credential, click "Verify"
     UI->>API: POST /api/v1/domains/{id}/credentials/verify
-    
+
     API->>VS: verifyCredential(domainId, credential)
     VS->>DB: Get domain policies
     DB-->>VS: Domain policies
-    
+
     VS->>CV: Verify credential
     CV->>CV: Validate credential structure
     CV->>DR: Resolve issuer DID
     DR-->>CV: Issuer DID Document
-    
+
     CV->>CV: Verify proof signature
     CV->>CV: Check expiration (if policy enabled)
     CV->>CV: Check revocation (if policy enabled)
-    
+
     CV->>TR: Check issuer trust
     TR->>TR: Find trust path
     TR-->>CV: Trust path found (trustScore: 1.0)
-    
+
     CV->>CV: Check trust score meets minimum
     CV-->>VS: Verification result
-    
+
     VS->>DB: Log verification activity
     DB-->>VS: Activity logged
-    
+
     VS-->>API: Verification result
     API-->>UI: Show verification results
     UI-->>U: Display success/failure with details
@@ -826,50 +826,50 @@ sequenceDiagram
 
     U->>UI: Click "Create DID"
     UI->>API: POST /api/v1/dids
-    
+
     API->>DS: createDid(method, algorithm, metadata)
     DS->>KMS: Generate key pair
     KMS-->>DS: {publicKey, privateKeyId}
-    
+
     DS->>DS: Generate DID
     DS->>DS: Create DID document
     DS->>DB: Save DID
     DB-->>DS: DID saved (didId)
-    
+
     DS-->>API: DID created (did, didDocument)
     API-->>UI: Success response
     UI-->>U: Show DID details
-    
+
     U->>UI: Click "Issue Credential to This DID"
     UI->>API: POST /api/v1/domains/{id}/credentials/issue
-    
+
     API->>CS: issueCredential(domainId, credentialData, subjectDid)
     CS->>DB: Get domain configuration
     DB-->>CS: Domain config
-    
+
     CS->>DS: Verify subject DID exists
     DS-->>CS: DID verified
-    
+
     CS->>CS: Build VerifiableCredential
     CS->>CI: Issue credential
-    
+
     CI->>KMS: Get issuer signing key
     KMS-->>CI: Key pair
-    
+
     CI->>PG: Generate proof
     PG->>PG: Canonicalize credential
     PG->>PG: Compute digest
     PG->>KMS: Sign digest
     KMS-->>PG: Signature
     PG-->>CI: Proof object
-    
+
     CI->>CS: Credential with proof
     CS->>DB: Save credential
     DB-->>CS: Credential saved
-    
+
     CS->>DB: Associate credential with DID
     DB-->>CS: Association saved
-    
+
     CS-->>API: Credential issued
     API-->>UI: Success response
     UI-->>U: Show credential details
@@ -1054,47 +1054,47 @@ sequenceDiagram
     DB-->>CS: Credential data
     CS-->>API: Credential
     API-->>UI: Show update form
-    
+
     U->>UI: Fill update form, click "Create Update"
     UI->>API: POST /api/v1/credentials/{id}/update
-    
+
     API->>CS: updateCredential(credentialId, updates, options)
     CS->>DB: Get original credential
     DB-->>CS: Original credential
-    
+
     CS->>CS: Create new credential version
     CS->>CS: Link to original (previousVersion field)
     CS->>CS: Apply updates
-    
+
     alt Revoke Original
         CS->>RS: Revoke original credential
         RS->>DB: Add to revocation list
         DB-->>RS: Revoked
         RS-->>CS: Original revoked
     end
-    
+
     CS->>CI: Issue updated credential
     CI->>KMS: Get issuer signing key
     KMS-->>CI: Key pair
-    
+
     CI->>PG: Generate proof
     PG->>PG: Canonicalize credential
     PG->>PG: Compute digest
     PG->>KMS: Sign digest
     KMS-->>PG: Signature
     PG-->>CI: Proof object
-    
+
     CI->>CS: Updated credential with proof
     CS->>DB: Save updated credential
     DB-->>CS: Credential saved
-    
+
     CS->>DB: Link credentials (version chain)
     DB-->>CS: Linked
-    
+
     alt Notify Subject
         CS->>CS: Send notification to subject
     end
-    
+
     CS-->>API: Update complete (newCredentialId)
     API-->>UI: Success response
     UI-->>U: Show update confirmation
@@ -1231,11 +1231,11 @@ sequenceDiagram
 
     U->>UI: Click "Revoke" on credential
     UI->>API: POST /api/v1/credentials/{id}/revoke
-    
+
     API->>CS: revokeCredential(credentialId, reason, options)
     CS->>DB: Get credential
     DB-->>CS: Credential data
-    
+
     alt Credential Already Revoked
         CS-->>API: Error: Already revoked
         API-->>UI: Show error message
@@ -1245,20 +1245,20 @@ sequenceDiagram
         RL->>DB: Update revocation list
         DB-->>RL: Updated
         RL-->>RS: Revocation entry created
-        
+
         RS->>DB: Update credential status
         DB-->>RS: Status updated to "revoked"
-        
+
         RS-->>CS: Credential revoked
-        
+
         alt Notify Subject
             CS->>NS: Send revocation notification
             NS->>NS: Send email/notification
         end
-        
+
         CS->>DB: Log revocation activity
         DB-->>CS: Activity logged
-        
+
         CS-->>API: Revocation complete
         API-->>UI: Success response
         UI-->>U: Show revocation confirmation
@@ -1409,22 +1409,22 @@ sequenceDiagram
 
     U->>UI: Click "Create Wallet"
     UI->>API: POST /api/v1/wallets
-    
+
     API->>WS: createWallet(walletData, capabilities)
     WS->>KMS: Generate wallet key pair
     KMS-->>WS: Key pair
-    
+
     WS->>WS: Generate wallet DID
     WS->>DB: Save wallet entity
     DB-->>WS: Wallet saved (walletId)
-    
+
     WS->>DB: Initialize wallet storage
     DB-->>WS: Storage initialized
-    
+
     WS-->>API: Wallet created (walletId, walletDid)
     API-->>UI: Success response
     UI-->>U: Show wallet dashboard
-    
+
     U->>UI: Create collection
     UI->>API: POST /api/v1/wallets/{id}/collections
     API->>WS: createCollection(walletId, collectionData)
@@ -1604,31 +1604,31 @@ sequenceDiagram
 
     U->>UI: Select credentials, configure disclosure
     UI->>API: POST /api/v1/wallets/{id}/presentations
-    
+
     API->>PS: createPresentation(walletId, config)
     PS->>WS: Get credentials from wallet
     WS->>DB: Fetch credentials
     DB-->>WS: Credentials
     WS-->>PS: Credentials list
-    
+
     PS->>PS: Apply selective disclosure
     PS->>PS: Filter disclosed fields
-    
+
     PS->>PS: Build presentation (without proof)
     PS->>KMS: Get holder signing key
     KMS-->>PS: Key pair
-    
+
     PS->>PG: Generate presentation proof
     PG->>PG: Canonicalize presentation
     PG->>PG: Compute digest
     PG->>KMS: Sign digest
     KMS-->>PG: Signature
     PG-->>PS: Proof object
-    
+
     PS->>PS: Attach proof to presentation
     PS->>DB: Save presentation
     DB-->>PS: Presentation saved
-    
+
     PS-->>API: Presentation created
     API-->>UI: Success response
     UI-->>U: Show presentation details and QR code
@@ -1792,27 +1792,27 @@ sequenceDiagram
 
     U->>UI: Click "Anchor Credential"
     UI->>API: POST /api/v1/credentials/{id}/anchor
-    
+
     API->>AS: anchorCredential(credentialId, chainId, options)
     AS->>DB: Get credential
     DB-->>AS: Credential data
-    
+
     AS->>AS: Canonicalize credential
     AS->>AS: Compute digest
     AS->>BC: Get blockchain client
     BC-->>AS: Client instance
-    
+
     AS->>BC: writePayload(digest, metadata)
     BC->>BC: Submit transaction
     BC-->>AS: Transaction submitted (txHash)
-    
+
     AS->>BC: Wait for confirmation
     BC-->>AS: Transaction confirmed (blockHeight, timestamp)
-    
+
     AS->>AS: Create anchor reference
     AS->>DB: Save anchor record
     DB-->>AS: Anchor saved
-    
+
     AS-->>API: Anchor result (anchorRef)
     API-->>UI: Success response
     UI-->>U: Show anchor confirmation
@@ -2083,28 +2083,28 @@ sequenceDiagram
 
     U->>UI: Fill contract form, click "Create"
     UI->>API: POST /api/v1/contracts
-    
+
     API->>CS: createContract(contractData)
     CS->>DB: Save contract draft
     DB-->>CS: Contract saved (contractId)
-    
+
     CS->>CI: Issue contract credential
     CI->>CI: Build credential
     CI->>CI: Generate proof
     CI-->>CS: Credential issued
-    
+
     CS->>AS: Anchor contract to blockchain
     AS->>BC: Submit transaction
     BC-->>AS: Transaction confirmed
     AS-->>CS: Anchor reference
-    
+
     CS->>DB: Update contract with credential and anchor
     DB-->>CS: Updated
-    
+
     CS-->>API: Contract created (contractId, credential, anchor)
     API-->>UI: Success response
     UI-->>U: Show contract details
-    
+
     U->>UI: Click "Activate"
     UI->>API: POST /api/v1/contracts/{id}/activate
     API->>CS: activateContract(contractId)
@@ -2262,37 +2262,37 @@ sequenceDiagram
     DB-->>Auth: User saved
     Auth-->>API: User created + token
     API-->>UI: Auth token
-    
+
     U->>UI: Select template, create domain
     UI->>API: POST /api/v1/domains (with template)
     API->>Auth: Validate token
     Auth-->>API: User authenticated
-    
+
     API->>DS: createDomain(userId, domainData, template)
     DS->>DB: Check domain name uniqueness
     DB-->>DS: Name available
-    
+
     DS->>KMS: Generate domain key pair
     KMS-->>DS: Domain key pair
-    
+
     DS->>DR: Create domain DID
     DR-->>DS: Domain DID + DID document
-    
+
     DS->>TR: Initialize trust registry for domain
     TR->>DB: Create trust registry entry
     DB-->>TR: Registry created
     TR-->>DS: Registry initialized
-    
+
     DS->>DS: Apply template configuration
     DS->>DB: Save domain entity
     DB-->>DS: Domain saved (domainId)
-    
+
     DS->>DB: Save domain configuration
     DB-->>DS: Configuration saved
-    
+
     DS->>Cache: Invalidate domain cache
     Cache-->>DS: Cache cleared
-    
+
     DS-->>API: Domain created (domainId, domainDid, config)
     API-->>UI: Success response
     UI-->>U: Show domain dashboard

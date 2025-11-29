@@ -16,7 +16,7 @@ import java.util.Base64
 object AlgorithmMapping {
     /**
      * Maps TrustWeave Algorithm to Azure Key Vault KeyType and KeyCurveName.
-     * 
+     *
      * @param algorithm TrustWeave algorithm
      * @return Pair of KeyType and optional KeyCurveName (null for RSA)
      * @throws IllegalArgumentException if algorithm is not supported by Azure Key Vault
@@ -41,10 +41,10 @@ object AlgorithmMapping {
             else -> throw IllegalArgumentException("Algorithm ${algorithm.name} is not supported by Azure Key Vault")
         }
     }
-    
+
     /**
      * Maps TrustWeave Algorithm to Azure Key Vault SignatureAlgorithm.
-     * 
+     *
      * @param algorithm TrustWeave algorithm
      * @return Azure Key Vault SignatureAlgorithm
      * @throws IllegalArgumentException if algorithm is not supported by Azure Key Vault
@@ -69,10 +69,10 @@ object AlgorithmMapping {
             else -> throw IllegalArgumentException("Algorithm ${algorithm.name} is not supported by Azure Key Vault")
         }
     }
-    
+
     /**
      * Converts Azure Key Vault public key (JWK or raw bytes) to JWK format.
-     * 
+     *
      * @param publicKeyBytes Public key bytes from Azure Key Vault
      * @param algorithm The algorithm type
      * @return JWK map representation
@@ -85,7 +85,7 @@ object AlgorithmMapping {
                     val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(publicKeyBytes)) as ECPublicKey
                     val params = publicKey.params
                     val point = publicKey.w
-                    
+
                     val curveName = when (algorithm) {
                         is Algorithm.Secp256k1 -> "secp256k1"
                         is Algorithm.P256 -> "P-256"
@@ -93,7 +93,7 @@ object AlgorithmMapping {
                         is Algorithm.P521 -> "P-521"
                         else -> throw IllegalArgumentException("Unsupported EC algorithm")
                     }
-                    
+
                     // Extract x and y coordinates from affine coordinates
                     val affineX = point.affineX
                     val affineY = point.affineY
@@ -103,23 +103,23 @@ object AlgorithmMapping {
                         is Algorithm.P521 -> 66
                         else -> 32
                     }
-                    
+
                     // Convert BigInteger to byte array (big-endian, right-aligned)
                     val xBytes = affineX.toByteArray()
                     val yBytes = affineY.toByteArray()
-                    
+
                     val x = ByteArray(coordinateLength)
                     val y = ByteArray(coordinateLength)
-                    
+
                     // Copy right-aligned (big-endian), padding with zeros on the left if needed
                     val xStart = maxOf(0, xBytes.size - coordinateLength)
                     val yStart = maxOf(0, yBytes.size - coordinateLength)
                     val xOffset = maxOf(0, coordinateLength - xBytes.size)
                     val yOffset = maxOf(0, coordinateLength - yBytes.size)
-                    
+
                     System.arraycopy(xBytes, xStart, x, xOffset, minOf(xBytes.size, coordinateLength))
                     System.arraycopy(yBytes, yStart, y, yOffset, minOf(yBytes.size, coordinateLength))
-                    
+
                     mapOf(
                         "kty" to "EC",
                         "crv" to curveName,
@@ -132,7 +132,7 @@ object AlgorithmMapping {
                     val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(publicKeyBytes)) as RSAPublicKey
                     val modulus = publicKey.modulus
                     val exponent = publicKey.publicExponent
-                    
+
                     mapOf(
                         "kty" to "RSA",
                         "n" to Base64.getUrlEncoder().withoutPadding().encodeToString(modulus.toByteArray()),
@@ -145,10 +145,10 @@ object AlgorithmMapping {
             throw IllegalArgumentException("Failed to convert Azure Key Vault public key to JWK: ${e.message}", e)
         }
     }
-    
+
     /**
      * Resolves a key identifier (name, name with version, or full URL) to a format Azure Key Vault accepts.
-     * 
+     *
      * @param keyId Key identifier (name, name/version, or full URL)
      * @return Normalized key identifier
      * - For URLs: returns "keyname" or "keyname/version" if version is present in URL
@@ -178,10 +178,10 @@ object AlgorithmMapping {
             }
         }
     }
-    
+
     /**
      * Parses algorithm from Azure Key Vault key type and curve name.
-     * 
+     *
      * @param keyType Azure Key Vault KeyType
      * @param curveName Optional curve name for EC keys
      * @param keySize Optional key size for RSA keys

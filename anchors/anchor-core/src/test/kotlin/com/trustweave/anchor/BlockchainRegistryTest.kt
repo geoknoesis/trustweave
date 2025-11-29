@@ -1,6 +1,6 @@
 package com.trustweave.anchor
 
-import com.trustweave.core.exception.NotFoundException
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.AfterEach
@@ -132,7 +132,7 @@ class BlockchainRegistryTest {
         return object : BlockchainAnchorClient {
             private val storage = mutableMapOf<String, AnchorResult>()
             private var txCounter = 0
-            
+
             override suspend fun writePayload(payload: kotlinx.serialization.json.JsonElement, mediaType: String): AnchorResult {
                 val txHash = "tx_${txCounter++}_${System.currentTimeMillis()}"
                 val ref = AnchorRef(chainId = chainId, txHash = txHash)
@@ -145,9 +145,9 @@ class BlockchainRegistryTest {
                 storage[txHash] = result
                 return result
             }
-            
+
             override suspend fun readPayload(ref: AnchorRef): AnchorResult {
-                return storage[ref.txHash] ?: throw NotFoundException("Not found: ${ref.txHash}")
+                return storage[ref.txHash] ?: throw TrustWeaveException.NotFound("Not found: ${ref.txHash}")
             }
         }
     }

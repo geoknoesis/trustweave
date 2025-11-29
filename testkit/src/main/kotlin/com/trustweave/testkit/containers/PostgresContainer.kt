@@ -7,9 +7,9 @@ import java.time.Duration
 
 /**
  * TestContainer for PostgreSQL database.
- * 
+ *
  * Provides a local PostgreSQL instance for database wallet and other database-backed tests.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * @Testcontainers
@@ -18,7 +18,7 @@ import java.time.Duration
  *         @JvmStatic
  *         val postgres = PostgresContainer.create()
  *     }
- *     
+ *
  *     @Test
  *     fun testWithDatabase() {
  *         val jdbcUrl = postgres.getJdbcUrl()
@@ -30,17 +30,17 @@ import java.time.Duration
 class PostgresContainer private constructor(
     dockerImageName: DockerImageName
 ) : GenericContainer<PostgresContainer>(dockerImageName) {
-    
+
     private var dbName: String = "vericore_test"
     private var dbUser: String = "test"
     private var dbPassword: String = "test"
-    
+
     companion object {
         /**
          * Default PostgreSQL Docker image.
          */
         private val DEFAULT_IMAGE = DockerImageName.parse("postgres:15-alpine")
-        
+
         /**
          * Creates a PostgreSQL container with default configuration.
          */
@@ -59,7 +59,7 @@ class PostgresContainer private constructor(
                 .waitingFor(Wait.forListeningPort())
                 .withStartupTimeout(Duration.ofMinutes(2))
         }
-        
+
         /**
          * Creates a PostgreSQL container with custom configuration.
          */
@@ -83,28 +83,28 @@ class PostgresContainer private constructor(
                 .withStartupTimeout(Duration.ofMinutes(2))
         }
     }
-    
+
     /**
      * Gets the JDBC URL for connecting to the database.
      */
     fun getJdbcUrl(): String {
         return "jdbc:postgresql://${host}:${getMappedPort(5432)}/$dbName"
     }
-    
+
     /**
      * Gets the database name.
      */
     fun getDatabaseName(): String {
         return dbName
     }
-    
+
     /**
      * Gets the username.
      */
     fun getUsername(): String {
         return dbUser
     }
-    
+
     /**
      * Gets the password.
      */

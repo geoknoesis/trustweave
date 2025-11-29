@@ -9,15 +9,15 @@ import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Credential anchoring service.
- * 
+ *
  * Integrates credential management with blockchain anchoring.
  * Computes credential digests and anchors them to blockchain for
  * tamper-proof verification.
- * 
+ *
  * **Note**: This is a placeholder implementation. Full implementation requires
  * TrustWeave-anchor and TrustWeave-json dependencies. For now, this provides
  * the interface structure.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * // In a module that has TrustWeave-anchor dependency:
@@ -25,7 +25,7 @@ import kotlinx.serialization.json.jsonPrimitive
  *     anchorClient = anchorClient,
  *     digestUtils = digestUtils
  * )
- * 
+ *
  * val result = anchorService.anchorCredential(
  *     credential = credential,
  *     chainId = "algorand:testnet",
@@ -42,10 +42,10 @@ class CredentialAnchorService(
         encodeDefaults = false
         ignoreUnknownKeys = true
     }
-    
+
     /**
      * Anchor a credential to blockchain.
-     * 
+     *
      * **Note**: Full implementation requires TrustWeave-anchor and TrustWeave-json dependencies.
      */
     suspend fun anchorCredential(
@@ -60,24 +60,24 @@ class CredentialAnchorService(
             val credentialWithoutProof = credential.copy(proof = null)
             json.encodeToString(VerifiableCredential.serializer(), credentialWithoutProof)
         }
-        
+
         // Placeholder: would use DigestUtils.computeDigest(credentialJson)
         val digest = "placeholder-digest"
-        
+
         // Placeholder anchor reference
         val anchorRef = object {
             val chainId = chainId
             val txHash = "placeholder-tx-hash"
             val contract: String? = null
         }
-        
+
         CredentialAnchorResult(
             anchorRef = anchorRef as Any,
             credential = credential,
             digest = digest
         )
     }
-    
+
     /**
      * Verify that a credential is anchored on blockchain.
      */
@@ -90,11 +90,11 @@ class CredentialAnchorService(
             evidence.type.contains("BlockchainAnchorEvidence") &&
             evidence.evidenceDocument?.jsonObject?.get("chainId")?.jsonPrimitive?.content == chainId
         } ?: return@withContext false
-        
+
         // Placeholder: would verify anchor on blockchain
         true
     }
-    
+
     /**
      * Get anchor reference for a credential.
      */
@@ -106,7 +106,7 @@ class CredentialAnchorService(
             evidence.type.contains("BlockchainAnchorEvidence") &&
             evidence.evidenceDocument?.jsonObject?.get("chainId")?.jsonPrimitive?.content == chainId
         } ?: return@withContext null
-        
+
         // Placeholder: would return AnchorRef
         null
     }

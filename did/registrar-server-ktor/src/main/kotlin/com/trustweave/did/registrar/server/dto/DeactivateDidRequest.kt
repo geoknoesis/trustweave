@@ -5,9 +5,9 @@ import kotlinx.serialization.Serializable
 
 /**
  * Request DTO for DID deactivation operations.
- * 
+ *
  * Used by RESTful endpoint: DELETE /1.0/dids/{did}
- * 
+ *
  * **Example:**
  * ```json
  * {

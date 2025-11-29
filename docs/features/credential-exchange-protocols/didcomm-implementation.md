@@ -165,7 +165,7 @@ didcomm.sendMessage(
 1. **Cryptography**: Replace placeholder ECDH-1PU with full implementation
    - Consider using `didcomm-java` library
    - Or implement full ECDH-1PU key agreement
-   
+
 2. **Message Delivery**: Implement actual message transport
    - HTTP POST to DIDComm service endpoints
    - WebSocket support

@@ -11,9 +11,9 @@ import kotlinx.coroutines.withContext
 
 /**
  * Presentation Builder DSL.
- * 
+ *
  * Provides a fluent API for creating verifiable presentations.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val presentation = presentation {
@@ -39,56 +39,56 @@ class PresentationBuilder(
     private var domain: String? = null
     private var selectiveDisclosure: Boolean = false
     private val disclosedFields = mutableListOf<String>()
-    
+
     /**
      * Add credentials to presentation.
      */
     fun credentials(vararg credentials: VerifiableCredential) {
         this.credentials.addAll(credentials)
     }
-    
+
     /**
      * Add credentials from a list.
      */
     fun credentials(credentials: List<VerifiableCredential>) {
         this.credentials.addAll(credentials)
     }
-    
+
     /**
      * Set holder DID.
      */
     fun holder(did: String) {
         this.holderDid = did
     }
-    
+
     /**
      * Set proof type.
      */
     fun proofType(type: String) {
         this.proofType = type
     }
-    
+
     /**
      * Set key ID for signing.
      */
     fun keyId(keyId: String) {
         this.keyId = keyId
     }
-    
+
     /**
      * Set challenge.
      */
     fun challenge(challenge: String) {
         this.challenge = challenge
     }
-    
+
     /**
      * Set domain.
      */
     fun domain(domain: String) {
         this.domain = domain
     }
-    
+
     /**
      * Configure selective disclosure.
      */
@@ -98,17 +98,17 @@ class PresentationBuilder(
         builder.block()
         disclosedFields.addAll(builder.revealedFields)
     }
-    
+
     /**
      * Build the verifiable presentation.
      */
     suspend fun build(): VerifiablePresentation = withContext(Dispatchers.IO) {
         val holder = holderDid ?: throw IllegalStateException("Holder DID is required")
-        
+
         if (credentials.isEmpty()) {
             throw IllegalStateException("At least one credential is required")
         }
-        
+
         val options = PresentationOptions(
             holderDid = holder,
             proofType = proofType,
@@ -118,7 +118,7 @@ class PresentationBuilder(
             selectiveDisclosure = selectiveDisclosure,
             disclosedFields = disclosedFields
         )
-        
+
         presentationService.createPresentation(
             credentials = credentials,
             holderDid = holder,
@@ -132,14 +132,14 @@ class PresentationBuilder(
  */
 class SelectiveDisclosureBuilder {
     val revealedFields = mutableListOf<String>()
-    
+
     /**
      * Reveal specific fields.
      */
     fun reveal(vararg fields: String) {
         revealedFields.addAll(fields)
     }
-    
+
     /**
      * Hide specific fields (not implemented yet, fields not in reveal list are hidden).
      */

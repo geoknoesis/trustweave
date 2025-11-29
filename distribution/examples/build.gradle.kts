@@ -16,7 +16,9 @@ dependencies {
     implementation(project(":did:did-core"))
     implementation(project(":kms:kms-core"))
     implementation(project(":testkit"))
-    
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.serialization.json)
+
     // For blockchain examples
     implementation(project(":anchors:plugins:ganache"))
     implementation(project(":anchors:plugins:indy"))
@@ -25,7 +27,7 @@ dependencies {
     implementation(project(":anchors:plugins:arbitrum"))
     implementation(project(":did:plugins:key"))
     implementation(project(":did:plugins:jwk"))
-    
+
     // Test dependencies are standardized in root build.gradle.kts
 }
 

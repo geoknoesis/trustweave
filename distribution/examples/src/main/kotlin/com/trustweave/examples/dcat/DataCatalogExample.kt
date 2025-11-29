@@ -4,7 +4,7 @@ import kotlinx.coroutines.runBlocking
 
 /**
  * Data Catalog DCAT Scenario Example
- * 
+ *
  * This example demonstrates verifiable data catalogs using DCAT.
  * Full implementation coming soon - see docs/getting-started/data-catalog-dcat-scenario.md
  */

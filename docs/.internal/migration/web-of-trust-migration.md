@@ -40,7 +40,7 @@ The `documentMetadata` field has changed from `Map<String, Any?>` to `DidDocumen
    // Old
    val createdStr = result.documentMetadata["created"] as? String
    val created = createdStr?.let { Instant.parse(it) }
-   
+
    // New
    val created = result.documentMetadata.created
    ```
@@ -52,7 +52,7 @@ The `documentMetadata` field has changed from `Map<String, Any?>` to `DidDocumen
        document = doc,
        documentMetadata = mapOf("created" to "2024-01-01T00:00:00Z")
    )
-   
+
    // New
    DidResolutionResult(
        document = doc,
@@ -82,7 +82,7 @@ trustLayer.trust {
     addAnchor("did:key:issuer") {
         credentialTypes("EducationCredential")
     }
-    
+
     val isTrusted = isTrusted("did:key:issuer", "EducationCredential")
 }
 ```

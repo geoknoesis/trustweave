@@ -140,19 +140,19 @@ val TrustWeave = TrustWeave.create {
         region = "us-east-1",
         credentials = awsCredentials
     )
-    
+
     // Add DID methods
     didMethods {
         + DidKeyMethod(kms)
         + DidWebMethod(kms) { domain = "example.com" }
     }
-    
+
     // Add blockchain clients
     blockchains {
         "algorand:testnet" to algorandClient
         "ethereum:mainnet" to ethereumClient
     }
-    
+
     // Override wallet factory
     walletFactory = DatabaseWalletFactory(dataSource)
 }

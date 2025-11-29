@@ -17,28 +17,28 @@ class IntegrityVerifierTest {
     @Test
     fun `test verifyVcIntegrity`() = runBlocking {
         val client = InMemoryBlockchainAnchorClient("algorand:testnet")
-        
+
         val vc = buildJsonObject {
             put("type", buildJsonArray { add("VerifiableCredential") })
             put("issuer", "did:key:issuer")
             put("credentialSubject", buildJsonObject { put("id", "did:key:subject") })
             put("issued", "2024-01-01T00:00:00Z")
         }
-        val vcDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(vc)
-        
+        val vcDigest = com.trustweave.core.util.DigestUtils.sha256DigestMultibase(vc)
+
         val anchorResult = client.writePayload(
             payload = buildJsonObject { put("vcDigest", vcDigest) }
         )
         val anchorRef = anchorResult.ref
         val registry = BlockchainAnchorRegistry().also { it.register("algorand:testnet", client) }
-        
+
         val vcWithDigest = buildJsonObject {
             vc.entries.forEach { put(it.key, it.value) }
             put("digestMultibase", vcDigest)
         }
-        
+
         val isValid = IntegrityVerifier.verifyVcIntegrity(vcWithDigest, anchorRef, registry)
-        
+
         assertTrue(isValid)
     }
 
@@ -53,7 +53,7 @@ class IntegrityVerifierTest {
                 })
             })
         }
-        val linksetDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
+        val linksetDigest = com.trustweave.core.util.DigestUtils.sha256DigestMultibase(
             buildJsonObject {
                 linkset.entries.forEach { (key, value) ->
                     if (key != "digestMultibase") {
@@ -62,31 +62,31 @@ class IntegrityVerifierTest {
                 }
             }
         )
-        
+
         val linksetWithDigest = buildJsonObject {
             linkset.entries.forEach { put(it.key, it.value) }
             put("digestMultibase", linksetDigest)
         }
-        
+
         val isValid = IntegrityVerifier.verifyLinksetIntegrity(linksetWithDigest, linksetDigest)
-        
+
         assertTrue(isValid)
     }
 
     @Test
     fun `test verifyArtifactIntegrity`() {
         val content = buildJsonObject { put("title", "Test Dataset") }
-        val contentDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(content)
-        
+        val contentDigest = com.trustweave.core.util.DigestUtils.sha256DigestMultibase(content)
+
         val artifact = buildJsonObject {
             put("id", "artifact-1")
             put("type", "Metadata")
             put("content", content)
             put("digestMultibase", contentDigest)
         }
-        
+
         val isValid = IntegrityVerifier.verifyArtifactIntegrity(artifact, contentDigest)
-        
+
         assertTrue(isValid)
     }
 
@@ -94,15 +94,15 @@ class IntegrityVerifierTest {
     fun `test verifyIntegrityChain`() = runBlocking {
         val client = InMemoryBlockchainAnchorClient("algorand:testnet")
         val registry = BlockchainAnchorRegistry().also { it.register("algorand:testnet", client) }
-        
+
         val artifactContent = buildJsonObject { put("title", "Test Dataset") }
-        val artifactDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(artifactContent)
+        val artifactDigest = com.trustweave.core.util.DigestUtils.sha256DigestMultibase(artifactContent)
         val artifact = buildJsonObject {
             put("id", "artifact-1")
             put("content", artifactContent)
             put("digestMultibase", artifactDigest)
         }
-        
+
         val linkset = buildJsonObject {
             put("@context", "https://www.w3.org/ns/json-ld#")
             put("links", buildJsonArray {
@@ -112,7 +112,7 @@ class IntegrityVerifierTest {
                 })
             })
         }
-        val linksetDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
+        val linksetDigest = com.trustweave.core.util.DigestUtils.sha256DigestMultibase(
             buildJsonObject {
                 linkset.entries.forEach { (key, value) ->
                     if (key != "digestMultibase") {
@@ -121,7 +121,7 @@ class IntegrityVerifierTest {
                 }
             }
         )
-        
+
         val vc = buildJsonObject {
             put("type", buildJsonArray { add("VerifiableCredential") })
             put("issuer", "did:key:issuer")
@@ -129,7 +129,7 @@ class IntegrityVerifierTest {
             put("issued", "2024-01-01T00:00:00Z")
             put("linksetDigest", linksetDigest)
         }
-        val vcDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
+        val vcDigest = com.trustweave.core.util.DigestUtils.sha256DigestMultibase(
             buildJsonObject {
                 vc.entries.forEach { (key, value) ->
                     if (key != "digestMultibase" && key != "evidence" && key != "credentialStatus") {
@@ -138,17 +138,17 @@ class IntegrityVerifierTest {
                 }
             }
         )
-        
+
         val anchorResult = client.writePayload(
             payload = buildJsonObject { put("vcDigest", vcDigest) }
         )
         val anchorRef = anchorResult.ref
-        
+
         val linksetWithDigest = buildJsonObject {
             linkset.entries.forEach { put(it.key, it.value) }
             put("digestMultibase", linksetDigest)
         }
-        
+
         val result = IntegrityVerifier.verifyIntegrityChain(
             vc = buildJsonObject {
                 vc.entries.forEach { put(it.key, it.value) }
@@ -159,7 +159,7 @@ class IntegrityVerifierTest {
             anchorRef = anchorRef,
             registry = registry
         )
-        
+
         assertTrue(result.valid)
         assertTrue(result.steps.isNotEmpty())
     }
@@ -177,9 +177,9 @@ class IntegrityVerifierTest {
                 })
             })
         }
-        
+
         val anchorRef = IntegrityVerifier.discoverAnchorFromEvidence(vc)
-        
+
         assertNotNull(anchorRef)
         assertEquals("algorand:testnet", anchorRef?.chainId)
         assertEquals("tx-123", anchorRef?.txHash)
@@ -191,9 +191,9 @@ class IntegrityVerifierTest {
         val vc = buildJsonObject {
             put("type", buildJsonArray { add("VerifiableCredential") })
         }
-        
+
         val anchorRef = IntegrityVerifier.discoverAnchorFromEvidence(vc)
-        
+
         assertNull(anchorRef)
     }
 
@@ -210,9 +210,9 @@ class IntegrityVerifierTest {
                 })
             })
         }
-        
+
         val anchorRef = IntegrityVerifier.discoverAnchorFromDidDocument("did:key:issuer", didDoc)
-        
+
         // Returns null because anchorLookup pattern needs to be resolved
         assertNull(anchorRef)
     }
@@ -225,9 +225,9 @@ class IntegrityVerifierTest {
             digestMultibase = "digest-123"
         )
         val statusResponse = TestDataBuilders.buildStatusResponse("active", anchorInfo)
-        
+
         val anchorRef = IntegrityVerifier.discoverAnchorFromStatusService(statusResponse)
-        
+
         assertNotNull(anchorRef)
         assertEquals("algorand:testnet", anchorRef?.chainId)
         assertEquals("tx-123", anchorRef?.txHash)
@@ -243,9 +243,9 @@ class IntegrityVerifierTest {
             contract = "app-456",
             issuer = "did:key:issuer"
         )
-        
+
         val anchorRef = IntegrityVerifier.discoverAnchorFromRegistry(registryEntry)
-        
+
         assertEquals("algorand:testnet", anchorRef.chainId)
         assertEquals("tx-123", anchorRef.txHash)
         assertEquals("app-456", anchorRef.contract)
@@ -259,9 +259,9 @@ class IntegrityVerifierTest {
             anchoredDigests = listOf("digest-1", "digest-2"),
             contract = "app-456"
         )
-        
+
         val anchorRef = IntegrityVerifier.discoverAnchorFromManifest(manifest)
-        
+
         assertNotNull(anchorRef)
         assertEquals("algorand:testnet", anchorRef?.chainId)
         assertEquals("app-456", anchorRef?.contract)

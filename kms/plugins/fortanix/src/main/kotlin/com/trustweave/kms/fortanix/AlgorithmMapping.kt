@@ -14,7 +14,7 @@ import java.util.Base64
 object AlgorithmMapping {
     /**
      * Maps TrustWeave Algorithm to Fortanix DSM key type.
-     * 
+     *
      * @param algorithm TrustWeave algorithm
      * @return Fortanix DSM key type string
      * @throws IllegalArgumentException if algorithm is not supported by Fortanix DSM
@@ -30,10 +30,10 @@ object AlgorithmMapping {
             else -> throw IllegalArgumentException("Algorithm ${algorithm.name} is not supported by Fortanix DSM")
         }
     }
-    
+
     /**
      * Maps TrustWeave Algorithm to Fortanix DSM curve name.
-     * 
+     *
      * @param algorithm TrustWeave algorithm
      * @return Fortanix DSM curve name, or null for RSA
      */
@@ -48,10 +48,10 @@ object AlgorithmMapping {
             else -> null
         }
     }
-    
+
     /**
      * Maps TrustWeave Algorithm to Fortanix DSM key size (for RSA).
-     * 
+     *
      * @param algorithm TrustWeave algorithm
      * @return Key size in bits, or null for EC algorithms
      */
@@ -61,10 +61,10 @@ object AlgorithmMapping {
             else -> null
         }
     }
-    
+
     /**
      * Parses Fortanix DSM key type to TrustWeave Algorithm.
-     * 
+     *
      * @param keyType Fortanix DSM key type
      * @param curve Curve name (for EC keys)
      * @param keySize Key size (for RSA keys)
@@ -93,10 +93,10 @@ object AlgorithmMapping {
             else -> null
         }
     }
-    
+
     /**
      * Maps TrustWeave Algorithm to Fortanix DSM signing algorithm.
-     * 
+     *
      * @param algorithm TrustWeave algorithm
      * @return Fortanix DSM signing algorithm string
      */
@@ -111,10 +111,10 @@ object AlgorithmMapping {
             else -> "ECDSA"
         }
     }
-    
+
     /**
      * Converts Fortanix DSM public key to JWK format.
-     * 
+     *
      * @param publicKeyBytes Public key bytes from Fortanix DSM
      * @param algorithm The algorithm type
      * @return JWK map representation
@@ -128,7 +128,7 @@ object AlgorithmMapping {
                     } else {
                         publicKeyBytes.takeLast(32).toByteArray()
                     }
-                    
+
                     mapOf(
                         "kty" to "OKP",
                         "crv" to "Ed25519",
@@ -146,7 +146,7 @@ object AlgorithmMapping {
                         is Algorithm.P521 -> "P-521"
                         else -> throw IllegalArgumentException("Unsupported EC algorithm")
                     }
-                    
+
                     val affineX = point.affineX
                     val affineY = point.affineY
                     val coordinateLength = when (algorithm) {
@@ -155,7 +155,7 @@ object AlgorithmMapping {
                         is Algorithm.P521 -> 66
                         else -> 32
                     }
-                    
+
                     fun toUnsignedByteArray(bigInt: BigInteger, length: Int): ByteArray {
                         val bytes = bigInt.toByteArray()
                         val result = ByteArray(length)
@@ -167,10 +167,10 @@ object AlgorithmMapping {
                         }
                         return result
                     }
-                    
+
                     val x = toUnsignedByteArray(affineX, coordinateLength)
                     val y = toUnsignedByteArray(affineY, coordinateLength)
-                    
+
                     mapOf(
                         "kty" to "EC",
                         "crv" to curveName,
@@ -183,7 +183,7 @@ object AlgorithmMapping {
                     val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(publicKeyBytes)) as RSAPublicKey
                     val modulus = publicKey.modulus
                     val exponent = publicKey.publicExponent
-                    
+
                     fun toUnsignedByteArray(bigInt: BigInteger): ByteArray {
                         val signed = bigInt.toByteArray()
                         if (signed.isNotEmpty() && signed[0] == 0.toByte()) {
@@ -191,7 +191,7 @@ object AlgorithmMapping {
                         }
                         return signed
                     }
-                    
+
                     mapOf(
                         "kty" to "RSA",
                         "n" to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(modulus)),
@@ -204,10 +204,10 @@ object AlgorithmMapping {
             throw IllegalArgumentException("Failed to convert Fortanix DSM public key to JWK: ${e.message}", e)
         }
     }
-    
+
     /**
      * Resolves a key identifier to Fortanix DSM key ID.
-     * 
+     *
      * @param keyId Key identifier
      * @return Resolved key identifier for Fortanix API
      */

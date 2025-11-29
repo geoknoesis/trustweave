@@ -34,7 +34,7 @@ class CredentialVerifierEdgeCasesTest {
 
     private lateinit var verifier: CredentialVerifier
     private lateinit var kms: InMemoryKeyManagementService
-    private lateinit var keyId: String
+    private var keyId: com.trustweave.core.types.KeyId? = null
     private lateinit var publicKeyJwk: Map<String, Any?>
     private lateinit var proofGenerator: Ed25519ProofGenerator
     private val issuerDid = "did:key:issuer123"
@@ -52,9 +52,10 @@ class CredentialVerifierEdgeCasesTest {
         publicKeyJwk = keyHandle.publicKeyJwk ?: emptyMap()
 
         // Create proof generator that uses the KMS to sign
+        val keyIdValue = keyId!!
         proofGenerator = Ed25519ProofGenerator(
-            signer = { data, _ -> kms.sign(keyId, data) },
-            getPublicKeyId = { keyId }
+            signer = { data, _ -> kms.sign(keyIdValue, data) },
+            getPublicKeyId = { keyIdValue.value }
         )
 
         // Create DID resolver with real public key
@@ -605,7 +606,7 @@ class CredentialVerifierEdgeCasesTest {
         // Generate a properly signed proof if not provided
         val finalProof = proof ?: proofGenerator.generateProof(
             credential = credentialWithoutProof,
-            keyId = keyId,
+            keyId = keyId!!.value,
             options = ProofOptions(
                 proofPurpose = "assertionMethod",
                 verificationMethod = "$issuerDid#key-1"

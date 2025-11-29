@@ -23,7 +23,7 @@ class CredentialTemplateModelTest {
             requiredFields = listOf("name", "email"),
             optionalFields = listOf("phone", "address")
         )
-        
+
         assertEquals("person-credential", template.id)
         assertEquals("Person Credential", template.name)
         assertEquals("https://example.com/schemas/person", template.schemaId)
@@ -42,7 +42,7 @@ class CredentialTemplateModelTest {
             schemaId = "https://example.com/schemas/basic",
             type = listOf("VerifiableCredential")
         )
-        
+
         assertNull(template.defaultIssuer)
         assertNull(template.defaultValidityDays)
         assertTrue(template.requiredFields.isEmpty())
@@ -52,7 +52,7 @@ class CredentialTemplateModelTest {
     @Test
     fun `test CredentialTemplateService issueFromTemplate validates required fields`() = runBlocking {
         val service = CredentialTemplateService()
-        
+
         val template = CredentialTemplate(
             id = "person-credential",
             name = "Person Credential",
@@ -60,9 +60,9 @@ class CredentialTemplateModelTest {
             type = listOf("VerifiableCredential", "PersonCredential"),
             requiredFields = listOf("name", "email")
         )
-        
+
         service.createTemplate(template)
-        
+
         // Missing required field
         assertFailsWith<IllegalArgumentException> {
             service.issueFromTemplate(
@@ -70,7 +70,7 @@ class CredentialTemplateModelTest {
                 buildJsonObject { put("name", "John Doe") }
             )
         }
-        
+
         // All required fields present
         val credential = service.issueFromTemplate(
             "person-credential",
@@ -80,7 +80,7 @@ class CredentialTemplateModelTest {
             },
             mapOf("issuer" to "did:key:issuer")
         )
-        
+
         assertNotNull(credential)
         assertEquals("did:key:issuer", credential.issuer)
     }
@@ -88,7 +88,7 @@ class CredentialTemplateModelTest {
     @Test
     fun `test CredentialTemplateService issueFromTemplate uses default issuer`() = runBlocking {
         val service = CredentialTemplateService()
-        
+
         val template = CredentialTemplate(
             id = "person-credential",
             name = "Person Credential",
@@ -96,30 +96,30 @@ class CredentialTemplateModelTest {
             type = listOf("VerifiableCredential"),
             defaultIssuer = "did:key:default-issuer"
         )
-        
+
         service.createTemplate(template)
-        
+
         val credential = service.issueFromTemplate(
             "person-credential",
             buildJsonObject { put("name", "John Doe") }
         )
-        
+
         assertEquals("did:key:default-issuer", credential.issuer)
     }
 
     @Test
     fun `test CredentialTemplateService issueFromTemplate fails without issuer`() = runBlocking {
         val service = CredentialTemplateService()
-        
+
         val template = CredentialTemplate(
             id = "person-credential",
             name = "Person Credential",
             schemaId = "https://example.com/schemas/person",
             type = listOf("VerifiableCredential")
         )
-        
+
         service.createTemplate(template)
-        
+
         assertFailsWith<IllegalArgumentException> {
             service.issueFromTemplate(
                 "person-credential",
@@ -131,7 +131,7 @@ class CredentialTemplateModelTest {
     @Test
     fun `test CredentialTemplateService issueFromTemplate calculates expiration date`() = runBlocking {
         val service = CredentialTemplateService()
-        
+
         val template = CredentialTemplate(
             id = "person-credential",
             name = "Person Credential",
@@ -140,14 +140,14 @@ class CredentialTemplateModelTest {
             defaultIssuer = "did:key:issuer",
             defaultValidityDays = 30
         )
-        
+
         service.createTemplate(template)
-        
+
         val credential = service.issueFromTemplate(
             "person-credential",
             buildJsonObject { put("name", "John Doe") }
         )
-        
+
         assertNotNull(credential.expirationDate)
     }
 }

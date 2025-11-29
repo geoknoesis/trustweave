@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,34 +591,34 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="migrating-to-trustweave-100">
-  
-  
+
+
     <a href="#migrating-to-trustweave-100" class="anchor-heading" aria-labelledby="migrating-to-trustweave-100"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Migrating to TrustWeave 1.0.0
-  
-  
+
+
 </h1>
-    
+
 
 <p>This guide helps you migrate from earlier versions of TrustWeave to version 1.0.0.</p>
 <h2 id="overview-of-changes">
-  
-  
+
+
     <a href="#overview-of-changes" class="anchor-heading" aria-labelledby="overview-of-changes"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Overview of Changes
-  
-  
+
+
 </h2>
-    
+
 
 <p>Version 1.0.0 introduces several improvements:</p>
 
@@ -629,13 +629,13 @@
   <li><strong>Plugin lifecycle</strong>: New lifecycle management APIs</li>
 </ul>
 <h2 id="migration-checklist">
-  
-  
+
+
     <a href="#migration-checklist" class="anchor-heading" aria-labelledby="migration-checklist"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Migration Checklist
-  
-  
+
+
 </h2>
-    
+
 
 <ul class="task-list">
   <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update dependencies to 1.0.0-SNAPSHOT</li>
@@ -646,21 +646,21 @@
   <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update documentation references</li>
 </ul>
 <h2 id="1-migrating-to-type-safe-options">
-  
-  
+
+
     <a href="#1-migrating-to-type-safe-options" class="anchor-heading" aria-labelledby="1-migrating-to-type-safe-options"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Migrating to Type-Safe Options
-  
-  
+
+
 </h2>
-    
+
 <h3 id="before-map-based">
-  
-  
+
+
     <a href="#before-map-based" class="anchor-heading" aria-labelledby="before-map-based"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Before (Map-based)
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -678,13 +678,13 @@
 <span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="after-type-safe">
-  
-  
+
+
     <a href="#after-type-safe" class="anchor-heading" aria-labelledby="after-type-safe"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> After (Type-safe)
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -713,21 +713,21 @@
   <li>Type safety prevents configuration errors</li>
 </ul>
 <h2 id="2-migrating-to-result-based-apis">
-  
-  
+
+
     <a href="#2-migrating-to-result-based-apis" class="anchor-heading" aria-labelledby="2-migrating-to-result-based-apis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Migrating to Result-Based APIs
-  
-  
+
+
 </h2>
-    
+
 <h3 id="before-exception-based">
-  
-  
+
+
     <a href="#before-exception-based" class="anchor-heading" aria-labelledby="before-exception-based"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Before (Exception-based)
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -743,13 +743,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="after-result-based">
-  
-  
+
+
     <a href="#after-result-based" class="anchor-heading" aria-labelledby="after-result-based"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> After (Result-based)
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -768,7 +768,7 @@
 15
 </pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">anchor</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">serializer</span><span class="p">,</span> <span class="n">chainId</span><span class="p">)</span>
 <span class="n">result</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
-    <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">anchor</span> <span class="p">-&gt;</span> 
+    <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">anchor</span> <span class="p">-&gt;</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"Anchored: ${anchor.ref.txHash}"</span><span class="p">)</span>
     <span class="p">},</span>
     <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
@@ -790,21 +790,21 @@
   <li>Better error context</li>
 </ul>
 <h2 id="3-migrating-error-handling">
-  
-  
+
+
     <a href="#3-migrating-error-handling" class="anchor-heading" aria-labelledby="3-migrating-error-handling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Migrating Error Handling
-  
-  
+
+
 </h2>
-    
+
 <h3 id="before">
-  
-  
+
+
     <a href="#before" class="anchor-heading" aria-labelledby="before"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Before
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -822,13 +822,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="after">
-  
-  
+
+
     <a href="#after" class="anchor-heading" aria-labelledby="after"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> After
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -855,7 +855,7 @@
 23
 </pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
 <span class="n">result</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
-    <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span> 
+    <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"Created: ${did.id}"</span><span class="p">)</span>
     <span class="p">},</span>
     <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
@@ -878,21 +878,21 @@
 <span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="4-migrating-plugin-lifecycle">
-  
-  
+
+
     <a href="#4-migrating-plugin-lifecycle" class="anchor-heading" aria-labelledby="4-migrating-plugin-lifecycle"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Migrating Plugin Lifecycle
-  
-  
+
+
 </h2>
-    
+
 <h3 id="before-1">
-  
-  
+
+
     <a href="#before-1" class="anchor-heading" aria-labelledby="before-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Before
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -902,13 +902,13 @@
 <span class="c1">// Use immediately</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="after-1">
-  
-  
+
+
     <a href="#after-1" class="anchor-heading" aria-labelledby="after-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> After
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -939,7 +939,7 @@
 <span class="c1">// Initialize plugins</span>
 <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">initialize</span><span class="p">().</span><span class="nf">fold</span><span class="p">(</span>
     <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="nf">println</span><span class="p">(</span><span class="s">"Plugins initialized"</span><span class="p">)</span> <span class="p">},</span>
-    <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span> 
+    <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"Initialization error: ${error.message}"</span><span class="p">)</span>
     <span class="p">}</span>
 <span class="p">)</span>
@@ -960,33 +960,33 @@
 <span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="5-migrating-type-safe-chain-ids">
-  
-  
+
+
     <a href="#5-migrating-type-safe-chain-ids" class="anchor-heading" aria-labelledby="5-migrating-type-safe-chain-ids"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5. Migrating Type-Safe Chain IDs
-  
-  
+
+
 </h2>
-    
+
 <h3 id="before-2">
-  
-  
+
+
     <a href="#before-2" class="anchor-heading" aria-labelledby="before-2"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Before
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 </pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span>  <span class="c1">// Typo-prone string</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="after-2">
-  
-  
+
+
     <a href="#after-2" class="anchor-heading" aria-labelledby="after-2"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> After
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1000,57 +1000,57 @@
 <span class="kd">val</span> <span class="py">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span>  <span class="c1">// Still supported, but less safe</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="common-migration-issues">
-  
-  
+
+
     <a href="#common-migration-issues" class="anchor-heading" aria-labelledby="common-migration-issues"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Common Migration Issues
-  
-  
+
+
 </h2>
-    
+
 <h3 id="issue-1-missing-error-handling">
-  
-  
+
+
     <a href="#issue-1-missing-error-handling" class="anchor-heading" aria-labelledby="issue-1-missing-error-handling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Issue 1: Missing Error Handling
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Problem</strong>: Code assumes operations always succeed</p>
 
 <p><strong>Solution</strong>: Always handle <code class="language-plaintext highlighter-rouge">Result&lt;T&gt;</code> with <code class="language-plaintext highlighter-rouge">fold()</code> or <code class="language-plaintext highlighter-rouge">getOrThrow()</code> (only for tests)</p>
 <h3 id="issue-2-type-mismatches">
-  
-  
+
+
     <a href="#issue-2-type-mismatches" class="anchor-heading" aria-labelledby="issue-2-type-mismatches"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Issue 2: Type Mismatches
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Problem</strong>: Using old map-based options with new APIs</p>
 
 <p><strong>Solution</strong>: Migrate to type-safe options classes</p>
 <h3 id="issue-3-missing-lifecycle-calls">
-  
-  
+
+
     <a href="#issue-3-missing-lifecycle-calls" class="anchor-heading" aria-labelledby="issue-3-missing-lifecycle-calls"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Issue 3: Missing Lifecycle Calls
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Problem</strong>: Plugins not initialized before use</p>
 
 <p><strong>Solution</strong>: Call <code class="language-plaintext highlighter-rouge">initialize()</code> and <code class="language-plaintext highlighter-rouge">start()</code> before using TrustWeave</p>
 <h2 id="testing-your-migration">
-  
-  
+
+
     <a href="#testing-your-migration" class="anchor-heading" aria-labelledby="testing-your-migration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Testing Your Migration
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Run Tests</strong>: Ensure all tests pass with new APIs</li>
@@ -1059,13 +1059,13 @@
   <li><strong>Test Lifecycle</strong>: Verify plugin lifecycle is managed properly</li>
 </ol>
 <h2 id="getting-help">
-  
-  
+
+
     <a href="#getting-help" class="anchor-heading" aria-labelledby="getting-help"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Getting Help
-  
-  
+
+
 </h2>
-    
+
 
 <p>If you encounter issues during migration:</p>
 
@@ -1076,17 +1076,17 @@
   <li>Contact support at <a href="https://www.geoknoesis.com">www.geoknoesis.com</a></li>
 </ol>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -1118,7 +1118,7 @@
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -1128,12 +1128,12 @@
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -1155,12 +1155,12 @@
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -1169,12 +1169,12 @@
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -1182,7 +1182,7 @@
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -1190,31 +1190,31 @@
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -1226,7 +1226,7 @@
 
 
 
-  
+
 </body>
 </html>
 

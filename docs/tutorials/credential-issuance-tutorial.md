@@ -63,11 +63,11 @@ import kotlinx.serialization.json.*
 
 fun main() = runBlocking {
     val trustweave = TrustWeave.create()
-    
+
     // Create issuer DID
     val issuerDid = trustweave.dids.create()
     val issuerKeyId = issuerDid.document.verificationMethod.first().id
-    
+
     // Create credential subject
     val credentialSubject = buildJsonObject {
         put("id", "did:key:subject")
@@ -75,7 +75,7 @@ fun main() = runBlocking {
         put("name", "Alice")
         put("email", "alice@example.com")
     }
-    
+
     // Issue credential
     try {
         val credential = trustweave.credentials.issue(
@@ -88,7 +88,7 @@ fun main() = runBlocking {
             ),
             types = listOf("VerifiableCredential", "PersonCredential")
         )
-        
+
         println("Issued credential: ${credential.id}")
         println("Issuer: ${credential.issuer}")
         println("Subject: ${credential.credentialSubject}")
@@ -115,14 +115,14 @@ fun main() = runBlocking {
     val trustweave = TrustWeave.create()
     val issuerDid = trustweave.dids.create()
     val issuerKeyId = issuerDid.document.verificationMethod.first().id
-    
+
     // Create credential subject
     val credentialSubject = buildJsonObject {
         put("id", "did:key:subject")
         put("type", "Person")
         put("name", "Alice")
     }
-    
+
     // Issue credential with custom expiration
     try {
         val credential = trustweave.credentials.issue(
@@ -136,7 +136,7 @@ fun main() = runBlocking {
             ),
             types = listOf("VerifiableCredential", "PersonCredential")
         )
-        
+
         println("Issued credential with expiration: ${credential.expirationDate}")
         if (credential.credentialStatus != null) {
             println("Status: ${credential.credentialStatus}")
@@ -160,13 +160,13 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustweave = TrustWeave.create()
-    
+
     val credential = /* previously issued credential */
-    
+
     // Verify credential
     try {
         val result = trustweave.credentials.verify(credential)
-        
+
         if (result.valid) {
             println("Credential is valid")
             println("Proof valid: ${result.proofValid}")
@@ -194,9 +194,9 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustweave = TrustWeave.create()
-    
+
     val credential = /* previously issued credential */
-    
+
     // Verify credential with custom configuration
     try {
         val config = VerificationConfig(
@@ -204,9 +204,9 @@ fun main() = runBlocking {
             checkRevocation = true,
             verifyBlockchainAnchor = false
         )
-        
+
         val result = trustweave.credentials.verify(credential, config)
-        
+
         if (result.valid) {
             println("Credential verified successfully")
             println("All checks passed: proof=${result.proofValid}, issuer=${result.issuerValid}")
@@ -235,7 +235,7 @@ fun main() = runBlocking {
     val trustweave = TrustWeave.create()
     val issuerDid = trustweave.dids.create()
     val issuerKeyId = issuerDid.document.verificationMethod.first().id
-    
+
     // Issue credential
     try {
         val credential = trustweave.credentials.issue(
@@ -248,16 +248,16 @@ fun main() = runBlocking {
             ),
             types = listOf("VerifiableCredential")
         )
-        
+
         println("Issued: ${credential.id}")
-        
+
         // Verify credential
         val verificationResult = trustweave.credentials.verify(credential)
         println("Valid: ${verificationResult.valid}")
-        
+
         // Note: Revocation is typically handled through credential status lists
         // and checked during verification. See revocation documentation for details.
-        
+
     } catch (error: TrustWeaveError) {
         println("Error: ${error.message}")
     }
@@ -280,14 +280,14 @@ fun main() = runBlocking {
     val trustweave = TrustWeave.create()
     val issuerDid = trustweave.dids.create()
     val issuerKeyId = issuerDid.document.verificationMethod.first().id
-    
+
     // Create multiple credential subjects
     val subjects = listOf(
         buildJsonObject { put("id", "did:key:alice"); put("name", "Alice") },
         buildJsonObject { put("id", "did:key:bob"); put("name", "Bob") },
         buildJsonObject { put("id", "did:key:charlie"); put("name", "Charlie") }
     )
-    
+
     // Issue credentials in batch
     val credentials = subjects.mapNotNull { subject ->
         try {
@@ -306,7 +306,7 @@ fun main() = runBlocking {
             null
         }
     }
-    
+
     println("Issued ${credentials.size} credentials")
     credentials.forEach { credential ->
         println("Credential: ${credential.id} for ${credential.credentialSubject}")
@@ -325,11 +325,11 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustweave = TrustWeave.create()
-    
+
     val credentials = /* list of credentials */
     val holderDid = trustweave.dids.create()
     val holderKeyId = holderDid.document.verificationMethod.first().id
-    
+
     // Create presentation
     try {
         val presentation = trustweave.credentials.createPresentation(
@@ -341,15 +341,15 @@ fun main() = runBlocking {
                 holderDid = holderDid.id
             )
         )
-        
+
         println("Created presentation: ${presentation.id}")
         println("Holder: ${presentation.holder}")
         println("Credentials: ${presentation.verifiableCredential.size}")
-        
+
         // Verify presentation
         val verifyResult = trustweave.credentials.verifyPresentation(presentation)
         println("Presentation valid: ${verifyResult.valid}")
-        
+
     } catch (error: TrustWeaveError) {
         println("Presentation creation failed: ${error.message}")
     }
@@ -373,7 +373,7 @@ fun main() = runBlocking {
     val trustweave = TrustWeave.create()
     val issuerDid = trustweave.dids.create()
     val issuerKeyId = issuerDid.document.verificationMethod.first().id
-    
+
     try {
         val credential = trustweave.credentials.issue(
             issuer = issuerDid.id,
@@ -385,9 +385,9 @@ fun main() = runBlocking {
             ),
             types = listOf("VerifiableCredential")
         )
-        
+
         println("Issued: ${credential.id}")
-        
+
     } catch (error: TrustWeaveError) {
         when (error) {
             is TrustWeaveError.CredentialInvalid -> {

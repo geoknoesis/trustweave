@@ -2,9 +2,9 @@ package com.trustweave.peerdid
 
 /**
  * Configuration for did:peer method implementation.
- * 
+ *
  * Supports peer DIDs for peer-to-peer communication without external registries.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val config = PeerDidConfig.builder()
@@ -20,18 +20,18 @@ data class PeerDidConfig(
      * - 2: Short-form with multibase encoding (recommended)
      */
     val numalgo: Int = 2,
-    
+
     /**
      * Whether to include service endpoints in DID document.
      */
     val includeServices: Boolean = true,
-    
+
     /**
      * Additional configuration properties.
      */
     val additionalProperties: Map<String, Any?> = emptyMap()
 ) {
-    
+
     companion object {
         /**
          * Numalgo versions.
@@ -39,28 +39,28 @@ data class PeerDidConfig(
         const val NUMALGO_0 = 0 // Static numeric
         const val NUMALGO_1 = 1 // Short-form with inception key
         const val NUMALGO_2 = 2 // Short-form with multibase (recommended)
-        
+
         /**
          * Creates configuration with numalgo 0.
          */
         fun numalgo0(): PeerDidConfig {
             return PeerDidConfig(numalgo = NUMALGO_0)
         }
-        
+
         /**
          * Creates configuration with numalgo 1.
          */
         fun numalgo1(): PeerDidConfig {
             return PeerDidConfig(numalgo = NUMALGO_1)
         }
-        
+
         /**
          * Creates configuration with numalgo 2 (recommended).
          */
         fun numalgo2(): PeerDidConfig {
             return PeerDidConfig(numalgo = NUMALGO_2)
         }
-        
+
         /**
          * Creates configuration from a map (for backward compatibility).
          */
@@ -73,7 +73,7 @@ data class PeerDidConfig(
                 }
             )
         }
-        
+
         /**
          * Builder for PeerDidConfig.
          */
@@ -81,7 +81,7 @@ data class PeerDidConfig(
             return Builder()
         }
     }
-    
+
     /**
      * Builder for PeerDidConfig.
      */
@@ -89,23 +89,23 @@ data class PeerDidConfig(
         private var numalgo: Int = NUMALGO_2
         private var includeServices: Boolean = true
         private val additionalProperties = mutableMapOf<String, Any?>()
-        
+
         fun numalgo(value: Int): Builder {
             require(value in 0..2) { "Numalgo must be 0, 1, or 2" }
             this.numalgo = value
             return this
         }
-        
+
         fun includeServices(value: Boolean): Builder {
             this.includeServices = value
             return this
         }
-        
+
         fun property(key: String, value: Any?): Builder {
             this.additionalProperties[key] = value
             return this
         }
-        
+
         fun build(): PeerDidConfig {
             return PeerDidConfig(
                 numalgo = numalgo,
@@ -114,7 +114,7 @@ data class PeerDidConfig(
             )
         }
     }
-    
+
     /**
      * Converts to map format.
      */

@@ -2,9 +2,9 @@ package com.trustweave.ensdid
 
 /**
  * Configuration for did:ens method implementation.
- * 
+ *
  * Supports Ethereum Name Service (ENS) resolver integration with Ethereum DID documents.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val config = EnsDidConfig.builder()
@@ -19,40 +19,40 @@ data class EnsDidConfig(
      * ENS registry contract address (required).
      */
     val ensRegistryAddress: String,
-    
+
     /**
      * Ethereum RPC endpoint URL (required).
      */
     val rpcUrl: String,
-    
+
     /**
      * Chain ID in CAIP-2 format (e.g., "eip155:1" for mainnet).
      */
     val chainId: String,
-    
+
     /**
      * Private key for signing transactions (optional).
      */
     val privateKey: String? = null,
-    
+
     /**
      * Network name (mainnet, sepolia, etc.).
      */
     val network: String? = null,
-    
+
     /**
      * Additional configuration properties.
      */
     val additionalProperties: Map<String, Any?> = emptyMap()
 ) {
-    
+
     companion object {
         /**
          * ENS registry contract addresses.
          */
         const val MAINNET_REGISTRY = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
         const val SEPOLIA_REGISTRY = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
-        
+
         /**
          * Creates configuration for ENS mainnet.
          */
@@ -65,7 +65,7 @@ data class EnsDidConfig(
                 privateKey = privateKey
             )
         }
-        
+
         /**
          * Creates configuration from a map (for backward compatibility).
          */
@@ -84,7 +84,7 @@ data class EnsDidConfig(
                 }
             )
         }
-        
+
         /**
          * Builder for EnsDidConfig.
          */
@@ -92,7 +92,7 @@ data class EnsDidConfig(
             return Builder()
         }
     }
-    
+
     /**
      * Builder for EnsDidConfig.
      */
@@ -103,42 +103,42 @@ data class EnsDidConfig(
         private var privateKey: String? = null
         private var network: String? = null
         private val additionalProperties = mutableMapOf<String, Any?>()
-        
+
         fun ensRegistryAddress(value: String): Builder {
             this.ensRegistryAddress = value
             return this
         }
-        
+
         fun rpcUrl(value: String): Builder {
             this.rpcUrl = value
             return this
         }
-        
+
         fun chainId(value: String): Builder {
             this.chainId = value
             return this
         }
-        
+
         fun privateKey(value: String?): Builder {
             this.privateKey = value
             return this
         }
-        
+
         fun network(value: String): Builder {
             this.network = value
             return this
         }
-        
+
         fun property(key: String, value: Any?): Builder {
             this.additionalProperties[key] = value
             return this
         }
-        
+
         fun build(): EnsDidConfig {
             require(ensRegistryAddress != null) { "ensRegistryAddress is required" }
             require(rpcUrl != null) { "rpcUrl is required" }
             require(chainId != null) { "chainId is required" }
-            
+
             return EnsDidConfig(
                 ensRegistryAddress = ensRegistryAddress!!,
                 rpcUrl = rpcUrl!!,
@@ -149,7 +149,7 @@ data class EnsDidConfig(
             )
         }
     }
-    
+
     /**
      * Converts to map format.
      */

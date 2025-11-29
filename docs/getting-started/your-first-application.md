@@ -43,17 +43,17 @@ fun main() = runBlocking {
     val kms = InMemoryKeyManagementService()
     val didMethod = DidKeyMockMethod(kms)
     val anchorClient = InMemoryBlockchainAnchorClient("algorand:mainnet")
-    
+
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
     val blockchainRegistry = BlockchainAnchorRegistry().apply {
         register("algorand:mainnet", anchorClient)
     }
-    
+
     // Step 2: Create a DID for the issuer
     val issuerDoc = didMethod.createDid()
     val issuerDid = issuerDoc.id
     println("Created issuer DID: $issuerDid")
-    
+
     // Step 3: Create a verifiable credential payload
     val vcPayload = buildJsonObject {
         put("vcId", "vc-12345")
@@ -66,34 +66,34 @@ fun main() = runBlocking {
         })
         put("issued", "2024-01-01T00:00:00Z")
     }
-    
+
     // Step 4: Compute digest
     val digest = DigestUtils.sha256DigestMultibase(vcPayload)
     println("Computed VC digest: $digest")
-    
+
     // Step 5: Create digest object and anchor it
     val digestObj = VerifiableCredentialDigest(
         vcId = "vc-12345",
         vcDigest = digest,
         issuer = issuerDid
     )
-    
+
     val anchorResult = blockchainRegistry.anchorTyped(
         value = digestObj,
         serializer = VerifiableCredentialDigest.serializer(),
         targetChainId = "algorand:mainnet"
     )
-    
+
     println("Anchored at: ${anchorResult.ref.txHash}")
     println("Chain: ${anchorResult.ref.chainId}")
     println("Timestamp: ${anchorResult.timestamp}")
-    
+
     // Step 6: Verify by reading back
     val retrieved = blockchainRegistry.readTyped<VerifiableCredentialDigest>(
         ref = anchorResult.ref,
         serializer = VerifiableCredentialDigest.serializer()
     )
-    
+
     assert(retrieved.vcDigest == digest)
     assert(retrieved.issuer == issuerDid)
     println("Verification successful!")

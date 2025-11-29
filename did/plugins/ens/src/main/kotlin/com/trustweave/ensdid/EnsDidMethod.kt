@@ -1,9 +1,9 @@
 package com.trustweave.ensdid
 
 import com.trustweave.anchor.BlockchainAnchorClient
-import com.trustweave.core.exception.NotFoundException
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractBlockchainDidMethod
 import com.trustweave.did.base.DidMethodUtils
 import com.trustweave.ethrdid.EthrDidMethod
@@ -13,19 +13,19 @@ import kotlinx.coroutines.withContext
 
 /**
  * Implementation of did:ens method using ENS resolver integration.
- * 
+ *
  * did:ens uses Ethereum Name Service (ENS) resolver with Ethereum DID documents:
  * - Format: `did:ens:{domain-name}` (e.g., "did:ens:example.eth")
  * - Resolves ENS names to Ethereum addresses, then resolves as did:ethr
  * - Integrates with ENS resolver for human-readable names
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val kms = InMemoryKeyManagementService()
  * val config = EnsDidConfig.mainnet("https://eth-mainnet.g.alchemy.com/v2/KEY")
  * val anchorClient = PolygonBlockchainAnchorClient(config.chainId, config.toMap())
  * val method = EnsDidMethod(kms, anchorClient, config)
- * 
+ *
  * // Resolve DID
  * val result = method.resolveDid("did:ens:example.eth")
  * ```
@@ -48,7 +48,7 @@ class EnsDidMethod(
             network = config.network ?: "mainnet",
             additionalProperties = config.additionalProperties
         )
-        
+
         delegate = EthrDidMethod(kms, anchorClient, ethrConfig)
     }
 
@@ -69,8 +69,9 @@ class EnsDidMethod(
     }
 
     override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
-        throw TrustWeaveException(
-            "did:ens does not support DID creation. " +
+        throw TrustWeaveException.Unknown(
+            code = "NOT_SUPPORTED",
+            message = "did:ens does not support DID creation. " +
             "Use ENS to register a domain name first, then resolve it as did:ens."
         )
     }
@@ -78,35 +79,38 @@ class EnsDidMethod(
     override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            
+
             // Extract ENS domain from did:ens
             val ensDomain = extractEnsDomain(did)
-            
+
             // Resolve ENS domain to Ethereum address
             val ethAddress = resolveEnsToAddress(ensDomain)
-            
+
             // Resolve as did:ethr
             val ethrDid = "did:ethr:$ethAddress"
             val ethrResult = delegate.resolveDid(ethrDid)
-            
+
             // Convert result to did:ens format
-            val ethrDoc = ethrResult.document
-            if (ethrDoc != null) {
-                val ensDocument = ethrDoc.copy(id = did)
-                storeDocument(ensDocument.id, ensDocument)
-                
-                DidMethodUtils.createSuccessResolutionResult(
-                    ensDocument,
-                    method,
-                    ethrResult.documentMetadata.created,
-                    ethrResult.documentMetadata.updated
-                )
-            } else {
-                DidMethodUtils.createErrorResolutionResult(
-                    "notFound",
-                    "ENS domain not found or not linked to DID",
-                    method
-                )
+            when (ethrResult) {
+                is DidResolutionResult.Success -> {
+                    val ethrDoc = ethrResult.document
+                    val ensDocument = ethrDoc.copy(id = did)
+                    storeDocument(ensDocument.id, ensDocument)
+
+                    DidMethodUtils.createSuccessResolutionResult(
+                        ensDocument,
+                        method,
+                        ethrResult.documentMetadata.created,
+                        ethrResult.documentMetadata.updated
+                    )
+                }
+                else -> {
+                    DidMethodUtils.createErrorResolutionResult(
+                        "notFound",
+                        "ENS DID not found",
+                        method
+                    )
+                }
             }
         } catch (e: TrustWeaveException) {
             DidMethodUtils.createErrorResolutionResult(
@@ -127,15 +131,17 @@ class EnsDidMethod(
         did: String,
         updater: (DidDocument) -> DidDocument
     ): DidDocument = withContext(Dispatchers.IO) {
-        throw TrustWeaveException(
-            "did:ens does not support DID updates. " +
+        throw TrustWeaveException.Unknown(
+            code = "NOT_SUPPORTED",
+            message = "did:ens does not support DID updates. " +
             "Update the underlying did:ethr DID instead."
         )
     }
 
     override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
-        throw TrustWeaveException(
-            "did:ens does not support DID deactivation. " +
+        throw TrustWeaveException.Unknown(
+            code = "NOT_SUPPORTED",
+            message = "did:ens does not support DID deactivation. " +
             "Deactivate the underlying did:ethr DID instead."
         )
     }
@@ -146,11 +152,11 @@ class EnsDidMethod(
     private fun extractEnsDomain(did: String): String {
         val parsed = DidMethodUtils.parseDid(did)
             ?: throw IllegalArgumentException("Invalid DID format: $did")
-        
+
         if (parsed.first != "ens") {
             throw IllegalArgumentException("Not a did:ens DID: $did")
         }
-        
+
         return parsed.second
     }
 
@@ -160,19 +166,21 @@ class EnsDidMethod(
     private suspend fun resolveEnsToAddress(ensDomain: String): String = withContext(Dispatchers.IO) {
         // In a full implementation, we'd query the ENS resolver contract
         // to resolve the domain to an Ethereum address
-        
+
         // Simplified implementation: query ENS resolver via Web3j
         try {
             // Use Web3j to query ENS resolver
             // This is a placeholder - real implementation needs ENS resolver contract interaction
-            throw TrustWeaveException(
-                "ENS resolution not fully implemented. " +
+            throw TrustWeaveException.Unknown(
+                code = "NOT_IMPLEMENTED",
+                message = "ENS resolution not fully implemented. " +
                 "Query ENS resolver contract at ${config.ensRegistryAddress} for domain: $ensDomain"
             )
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to resolve ENS domain to address: ${e.message}",
-                e
+            throw TrustWeaveException.Unknown(
+                code = "RESOLVE_FAILED",
+                message = "Failed to resolve ENS domain to address: ${e.message}",
+                cause = e
             )
         }
     }

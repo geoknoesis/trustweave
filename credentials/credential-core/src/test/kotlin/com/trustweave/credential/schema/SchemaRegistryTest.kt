@@ -42,9 +42,9 @@ class SchemaRegistryTest {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
             put("type", "object")
         }
-        
+
         val result = SchemaRegistry.registerSchema(schema, definition)
-        
+
         assertTrue(result.success)
         assertEquals("https://example.com/schemas/person", result.schemaId)
     }
@@ -60,11 +60,11 @@ class SchemaRegistryTest {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
             put("type", "object")
         }
-        
+
         SchemaRegistry.registerSchema(schema, definition)
-        
+
         val retrieved = SchemaRegistry.getSchema("https://example.com/schemas/person")
-        
+
         assertNotNull(retrieved)
         assertEquals(schema.id, retrieved?.id)
         assertEquals(schema.type, retrieved?.type)
@@ -84,11 +84,11 @@ class SchemaRegistryTest {
                 put("name", buildJsonObject { put("type", "string") })
             })
         }
-        
+
         SchemaRegistry.registerSchema(schema, definition)
-        
+
         val retrieved = SchemaRegistry.getSchemaDefinition("https://example.com/schemas/person")
-        
+
         assertNotNull(retrieved)
         assertEquals(definition["type"]?.jsonPrimitive?.content, retrieved?.get("type")?.jsonPrimitive?.content)
     }
@@ -96,7 +96,7 @@ class SchemaRegistryTest {
     @Test
     fun `test get non-existent schema returns null`() = runBlocking {
         val schema = SchemaRegistry.getSchema("https://example.com/schemas/nonexistent")
-        
+
         assertNull(schema)
     }
 
@@ -111,9 +111,9 @@ class SchemaRegistryTest {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
             put("type", "object")
         }
-        
+
         SchemaRegistry.registerSchema(schema, definition)
-        
+
         assertTrue(SchemaRegistry.isRegistered("https://example.com/schemas/person"))
         assertFalse(SchemaRegistry.isRegistered("https://example.com/schemas/nonexistent"))
     }
@@ -134,12 +134,12 @@ class SchemaRegistryTest {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
             put("type", "object")
         }
-        
+
         SchemaRegistry.registerSchema(schema1, definition)
         SchemaRegistry.registerSchema(schema2, definition)
-        
+
         val ids = SchemaRegistry.getAllSchemaIds()
-        
+
         assertEquals(2, ids.size)
         assertTrue(ids.contains("https://example.com/schemas/person"))
         assertTrue(ids.contains("https://example.com/schemas/degree"))
@@ -156,12 +156,12 @@ class SchemaRegistryTest {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
             put("type", "object")
         }
-        
+
         SchemaRegistry.registerSchema(schema, definition)
         assertTrue(SchemaRegistry.isRegistered("https://example.com/schemas/person"))
-        
+
         SchemaRegistry.unregister("https://example.com/schemas/person")
-        
+
         assertFalse(SchemaRegistry.isRegistered("https://example.com/schemas/person"))
         assertNull(SchemaRegistry.getSchema("https://example.com/schemas/person"))
         assertNull(SchemaRegistry.getSchemaDefinition("https://example.com/schemas/person"))
@@ -183,14 +183,14 @@ class SchemaRegistryTest {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
             put("type", "object")
         }
-        
+
         SchemaRegistry.registerSchema(schema1, definition)
         SchemaRegistry.registerSchema(schema2, definition)
-        
+
         assertEquals(2, SchemaRegistry.getAllSchemaIds().size)
-        
+
         SchemaRegistry.clear()
-        
+
         assertEquals(0, SchemaRegistry.getAllSchemaIds().size)
         assertFalse(SchemaRegistry.isRegistered("https://example.com/schemas/person"))
         assertFalse(SchemaRegistry.isRegistered("https://example.com/schemas/degree"))
@@ -212,7 +212,7 @@ class SchemaRegistryTest {
             })
         }
         SchemaRegistry.registerSchema(schema, schemaDefinition)
-        
+
         val credential = VerifiableCredential(
             id = "https://example.com/credentials/1",
             type = listOf("VerifiableCredential", "PersonCredential"),
@@ -223,9 +223,9 @@ class SchemaRegistryTest {
             },
             issuanceDate = java.time.Instant.now().toString()
         )
-        
+
         val result = SchemaRegistry.validateCredential(credential, schemaId)
-        
+
         assertNotNull(result)
     }
 
@@ -240,7 +240,7 @@ class SchemaRegistryTest {
             },
             issuanceDate = java.time.Instant.now().toString()
         )
-        
+
         assertFailsWith<IllegalArgumentException> {
             SchemaRegistry.validateCredential(credential, "https://example.com/schemas/nonexistent")
         }
@@ -257,9 +257,9 @@ class SchemaRegistryTest {
             put("@context", "https://www.w3.org/ns/shacl#")
             put("@type", "NodeShape")
         }
-        
+
         val result = SchemaRegistry.registerSchema(schema, definition)
-        
+
         assertTrue(result.success)
         val retrieved = SchemaRegistry.getSchema("https://example.com/schemas/person")
         assertEquals(SchemaFormat.SHACL, retrieved?.schemaFormat)
@@ -278,9 +278,9 @@ class SchemaRegistryTest {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
             put("type", "object")
         }
-        
+
         val result = SchemaRegistry.registerSchema(schema, definition)
-        
+
         // Should succeed under normal circumstances
         assertTrue(result.success)
     }

@@ -1,6 +1,6 @@
 package com.trustweave.anchor
 
-import com.trustweave.core.exception.NotFoundException
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
@@ -18,9 +18,9 @@ class BlockchainAnchorClientInterfaceContractTest {
         val payload = buildJsonObject {
             put("data", "test")
         }
-        
+
         val result = client.writePayload(payload)
-        
+
         assertNotNull(result)
         assertNotNull(result.ref)
         assertEquals("algorand:testnet", result.ref.chainId)
@@ -34,9 +34,9 @@ class BlockchainAnchorClientInterfaceContractTest {
         val payload = buildJsonObject {
             put("data", "test")
         }
-        
+
         val result = client.writePayload(payload, "application/json+ld")
-        
+
         assertNotNull(result)
         assertEquals("application/json+ld", result.mediaType)
     }
@@ -48,23 +48,23 @@ class BlockchainAnchorClientInterfaceContractTest {
             put("data", "test")
         }
         val writeResult = client.writePayload(payload)
-        
+
         val readResult = client.readPayload(writeResult.ref)
-        
+
         assertNotNull(readResult)
         assertEquals(writeResult.ref, readResult.ref)
         assertEquals(payload, readResult.payload)
     }
 
     @Test
-    fun `test BlockchainAnchorClient readPayload throws NotFoundException`() = runBlocking {
+    fun `test BlockchainAnchorClient readPayload throws NotFound`() = runBlocking {
         val client = createMockClient("algorand:testnet")
         val ref = AnchorRef(
             chainId = "algorand:testnet",
             txHash = "non-existent-hash"
         )
-        
-        assertFailsWith<NotFoundException> {
+
+        assertFailsWith<TrustWeaveException.NotFound> {
             client.readPayload(ref)
         }
     }
@@ -85,9 +85,9 @@ class BlockchainAnchorClientInterfaceContractTest {
                 put("tags", buildJsonArray { add("important"); add("verified") })
             })
         }
-        
+
         val result = client.writePayload(payload)
-        
+
         assertNotNull(result)
         assertEquals(payload, result.payload)
     }
@@ -100,9 +100,9 @@ class BlockchainAnchorClientInterfaceContractTest {
             add("item2")
             add("item3")
         }
-        
+
         val result = client.writePayload(payload)
-        
+
         assertNotNull(result)
         assertEquals(payload, result.payload)
     }
@@ -111,9 +111,9 @@ class BlockchainAnchorClientInterfaceContractTest {
     fun `test BlockchainAnchorClient writePayload with primitive payload`() = runBlocking {
         val client = createMockClient("algorand:testnet")
         val payload = JsonPrimitive("simple string")
-        
+
         val result = client.writePayload(payload)
-        
+
         assertNotNull(result)
         assertEquals(payload, result.payload)
     }
@@ -124,9 +124,9 @@ class BlockchainAnchorClientInterfaceContractTest {
         val payload = buildJsonObject {
             put("data", "test")
         }
-        
+
         val result = client.writePayload(payload)
-        
+
         assertNotNull(result.timestamp)
         assertTrue(result.timestamp!! > 0)
     }
@@ -137,9 +137,9 @@ class BlockchainAnchorClientInterfaceContractTest {
         val payload = buildJsonObject {
             put("data", "test")
         }
-        
+
         val result = client.writePayload(payload)
-        
+
         assertNotNull(result.ref.contract)
         assertEquals("contract-123", result.ref.contract)
     }
@@ -150,9 +150,9 @@ class BlockchainAnchorClientInterfaceContractTest {
         val payload = buildJsonObject {
             put("data", "test")
         }
-        
+
         val result = client.writePayload(payload)
-        
+
         // Extra metadata may or may not be present
         assertNotNull(result.ref)
     }
@@ -164,9 +164,9 @@ class BlockchainAnchorClientInterfaceContractTest {
             put("data", "test")
         }
         val writeResult = client.writePayload(payload, "application/json+ld")
-        
+
         val readResult = client.readPayload(writeResult.ref)
-        
+
         assertEquals("application/json+ld", readResult.mediaType)
     }
 
@@ -175,17 +175,17 @@ class BlockchainAnchorClientInterfaceContractTest {
         val client = createMockClient("algorand:testnet")
         val payload1 = buildJsonObject { put("data", "test1") }
         val payload2 = buildJsonObject { put("data", "test2") }
-        
+
         val result1 = client.writePayload(payload1)
         val result2 = client.writePayload(payload2)
-        
+
         assertNotEquals(result1.ref.txHash, result2.ref.txHash)
     }
 
     private fun createMockClient(chainId: String, contract: String? = null): BlockchainAnchorClient {
         return object : BlockchainAnchorClient {
             private val storage = mutableMapOf<String, AnchorResult>()
-            
+
             override suspend fun writePayload(
                 payload: JsonElement,
                 mediaType: String
@@ -206,10 +206,10 @@ class BlockchainAnchorClientInterfaceContractTest {
                 storage[txHash] = result
                 return result
             }
-            
+
             override suspend fun readPayload(ref: AnchorRef): AnchorResult {
                 val result = storage[ref.txHash]
-                    ?: throw NotFoundException("Anchor not found: ${ref.txHash}")
+                    ?: throw TrustWeaveException.NotFound("Anchor not found: ${ref.txHash}")
                 return result
             }
         }

@@ -129,7 +129,7 @@ flowchart TD
     A["KYC Provider<br/>Verifies Customer Identity<br/>Issues KYC Credential<br/>Performs AML/Sanctions Screening"] -->|issues KYC credential| B["KYC Credential<br/>Identity Information<br/>Verification Level<br/>AML Status<br/>Proof cryptographic"]
     B -->|stored in customer wallet| C["Customer Wallet<br/>Stores KYC Credential<br/>Creates Presentations"]
     C -->|presents to financial institution| D["Financial Institution<br/>Verifies KYC Credential<br/>Checks Compliance<br/>Opens Account"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -181,13 +181,13 @@ dependencies {
     implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    
+
     // Test kit for in-memory implementations
     implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -234,37 +234,37 @@ data class KYCRecord(
 
 fun main() = runBlocking {
     println("=== Financial Services & KYC/AML Scenario ===\n")
-    
+
     // Step 1: Setup services
     println("Step 1: Setting up services...")
     val kycProviderKms = InMemoryKeyManagementService()
     val bankKms = InMemoryKeyManagementService()
     val cryptoExchangeKms = InMemoryKeyManagementService()
     val customerKms = InMemoryKeyManagementService()
-    
+
     val didMethod = DidKeyMockMethod(kycProviderKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
-    
+
     // Setup blockchain for anchoring
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
     val blockchainRegistry = BlockchainAnchorRegistry().apply {
         register("eip155:1", anchorClient)
     }
-    
+
     // Step 2: Create DIDs
     println("\nStep 2: Creating DIDs...")
     val kycProviderDid = didMethod.createDid()
     println("KYC Provider DID: ${kycProviderDid.id}")
-    
+
     val bankDid = didMethod.createDid()
     println("Bank DID: ${bankDid.id}")
-    
+
     val cryptoExchangeDid = didMethod.createDid()
     println("Crypto Exchange DID: ${cryptoExchangeDid.id}")
-    
+
     val customerDid = didMethod.createDid()
     println("Customer DID: ${customerDid.id}")
-    
+
     // Step 3: Create customer wallet
     println("\nStep 3: Creating customer wallet...")
     val customerWallet = InMemoryWallet(
@@ -272,7 +272,7 @@ fun main() = runBlocking {
         holderDid = customerDid.id
     )
     println("Customer wallet created: ${customerWallet.walletId}")
-    
+
     // Step 4: Perform KYC verification
     println("\nStep 4: Performing KYC verification...")
     val identityData = mapOf(
@@ -283,19 +283,19 @@ fun main() = runBlocking {
         "idDocumentType" to "Passport",
         "idDocumentNumber" to "P123456789"
     )
-    
+
     // Simulate KYC verification process
     val kycVerificationResult = performKYCVerification(
         customerDid = customerDid.id,
         identityData = identityData,
         kycProviderDid = kycProviderDid.id
     )
-    
+
     println("KYC verification completed:")
     println("  - Status: ${kycVerificationResult.status}")
     println("  - Verification Level: ${kycVerificationResult.verificationLevel}")
     println("  - AML Status: ${kycVerificationResult.amlStatus}")
-    
+
     // Step 5: Issue KYC credential
     println("\nStep 5: Issuing KYC credential...")
     val kycCredential = createKYCCredential(
@@ -306,7 +306,7 @@ fun main() = runBlocking {
         amlStatus = kycVerificationResult.amlStatus,
         riskRating = kycVerificationResult.riskRating
     )
-    
+
     val kycProviderKey = kycProviderKms.generateKey("Ed25519")
     val kycProofGenerator = Ed25519ProofGenerator(
         signer = { data, keyId -> kycProviderKms.sign(keyId, data) },
@@ -315,29 +315,29 @@ fun main() = runBlocking {
 val didResolver = CredentialDidResolver { did ->
     didRegistry.resolve(did).toCredentialDidResolution()
 }
-    
+
     val kycIssuer = CredentialIssuer(
         proofGenerator = kycProofGenerator,
         resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
     )
-    
+
     val issuedKYCCredential = kycIssuer.issue(
         credential = kycCredential,
         issuerDid = kycProviderDid.id,
         keyId = kycProviderKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("KYC credential issued:")
     println("  - Verification Level: ${kycVerificationResult.verificationLevel}")
     println("  - AML Status: ${kycVerificationResult.amlStatus}")
     println("  - Has proof: ${issuedKYCCredential.proof != null}")
-    
+
     // Step 6: Store KYC credential in customer wallet
     println("\nStep 6: Storing KYC credential in customer wallet...")
     val kycCredentialId = customerWallet.store(issuedKYCCredential)
     println("KYC credential stored: $kycCredentialId")
-    
+
     // Step 7: Anchor KYC record to blockchain
     println("\nStep 7: Anchoring KYC record to blockchain...")
     val kycDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
@@ -346,7 +346,7 @@ val didResolver = CredentialDidResolver { did ->
             issuedKYCCredential
         )
     )
-    
+
     val kycRecord = KYCRecord(
         customerDid = customerDid.id,
         kycProviderDid = kycProviderDid.id,
@@ -354,21 +354,21 @@ val didResolver = CredentialDidResolver { did ->
         credentialDigest = kycDigest,
         complianceStatus = "compliant"
     )
-    
+
     val anchorResult = blockchainRegistry.anchorTyped(
         value = kycRecord,
         serializer = KYCRecord.serializer(),
         targetChainId = "eip155:1"
     )
-    
+
     println("KYC record anchored:")
     println("  - Transaction hash: ${anchorResult.ref.txHash}")
     println("  - Provides regulatory audit trail")
-    
+
     // Step 8: Bank verifies KYC credential
     println("\nStep 8: Bank verifies KYC credential for account opening...")
     val bankVerifier = CredentialVerifier(didResolver)
-    
+
     val bankVerification = bankVerifier.verify(
         credential = issuedKYCCredential,
         options = CredentialVerificationOptions(
@@ -378,26 +378,26 @@ val didResolver = CredentialDidResolver { did ->
             didResolver = didResolver
         )
     )
-    
+
     if (bankVerification.valid) {
         println("✅ KYC credential verified by bank!")
         println("  - Proof valid: ${bankVerification.proofValid}")
         println("  - Issuer valid: ${bankVerification.issuerValid}")
         println("  - Not expired: ${bankVerification.notExpired}")
-        
+
         // Check compliance requirements
         val meetsBankRequirements = checkComplianceRequirements(
             credential = issuedKYCCredential,
             requiredLevel = "Standard",
             requiredAMLStatus = "clear"
         )
-        
+
         if (meetsBankRequirements) {
             println("✅ Meets bank compliance requirements")
             println("  - Account can be opened")
         }
     }
-    
+
     // Step 9: Create bank account opening presentation
     println("\nStep 9: Creating bank account opening presentation...")
     val bankPresentation = customerWallet.createSelectiveDisclosure(
@@ -417,9 +417,9 @@ val didResolver = CredentialDidResolver { did ->
             challenge = "bank-account-opening-${Instant.now().toEpochMilli()}"
         )
     )
-    
+
     println("Bank account opening presentation created")
-    
+
     // Step 10: Crypto exchange verifies same KYC credential
     println("\nStep 10: Crypto exchange verifies KYC credential...")
     val exchangeVerification = bankVerifier.verify(
@@ -430,13 +430,13 @@ val didResolver = CredentialDidResolver { did ->
             didResolver = didResolver
         )
     )
-    
+
     if (exchangeVerification.valid) {
         println("✅ KYC credential verified by crypto exchange!")
         println("  - Same credential reused - no need for new KYC")
         println("  - Account can be opened instantly")
     }
-    
+
     // Step 11: Create exchange account opening presentation
     println("\nStep 11: Creating exchange account opening presentation...")
     val exchangePresentation = customerWallet.createSelectiveDisclosure(
@@ -454,9 +454,9 @@ val didResolver = CredentialDidResolver { did ->
             challenge = "crypto-exchange-opening-${Instant.now().toEpochMilli()}"
         )
     )
-    
+
     println("Exchange account opening presentation created")
-    
+
     // Step 12: Wallet statistics
     println("\nStep 12: Customer wallet statistics...")
     val stats = customerWallet.getStatistics()
@@ -464,7 +464,7 @@ val didResolver = CredentialDidResolver { did ->
         Total credentials: ${stats.totalCredentials}
         Valid credentials: ${stats.validCredentials}
     """.trimIndent())
-    
+
     println("\n=== Scenario Complete ===")
 }
 
@@ -487,7 +487,7 @@ fun performKYCVerification(
     // - AML/sanctions screening
     // - PEP checks
     // - Risk assessment
-    
+
     return KYCVerificationResult(
         status = "verified",
         verificationLevel = "Standard",
@@ -540,13 +540,13 @@ fun checkComplianceRequirements(
 ): Boolean {
     val kyc = credential.credentialSubject.jsonObject["kyc"]?.jsonObject
         ?: return false
-    
+
     val verificationLevel = kyc["verificationLevel"]?.jsonPrimitive?.content
         ?: return false
-    
+
     val amlStatus = kyc["amlStatus"]?.jsonPrimitive?.content
         ?: return false
-    
+
     // Check verification level meets requirement
     val levelHierarchy = mapOf(
         "Basic" to 1,
@@ -554,15 +554,15 @@ fun checkComplianceRequirements(
         "Enhanced" to 3,
         "Premium" to 4
     )
-    
+
     val customerLevel = levelHierarchy[verificationLevel] ?: return false
     val requiredLevelValue = levelHierarchy[requiredLevel] ?: return false
-    
+
     if (customerLevel < requiredLevelValue) return false
-    
+
     // Check AML status
     if (amlStatus != requiredAMLStatus) return false
-    
+
     return true
 }
 ```
@@ -833,7 +833,7 @@ fun verifyCrossBorderKYC(
             didRegistry.resolve(did).toCredentialDidResolution()
         }
     )
-    
+
     val verification = verifier.verify(
         credential = kycCredential,
         options = CredentialVerificationOptions(
@@ -841,9 +841,9 @@ fun verifyCrossBorderKYC(
             checkExpiration = true
         )
     )
-    
+
     if (!verification.valid) return false
-    
+
     // Check if KYC provider is recognized in verifying country
     val kycProviderDid = kycCredential.issuer
     // In production, check against list of recognized KYC providers
@@ -869,18 +869,18 @@ fun openBankAccountWithKYC(
         byType("KYCCredential")
         valid()
     }.firstOrNull() ?: throw IllegalArgumentException("No valid KYC credential")
-    
+
     // Check if KYC meets bank requirements
     val meetsRequirements = checkComplianceRequirements(
         credential = kycCredential,
         requiredLevel = "Standard",
         requiredAMLStatus = "clear"
     )
-    
+
     if (!meetsRequirements) {
         throw IllegalArgumentException("KYC does not meet bank requirements")
     }
-    
+
     // Create presentation
     return customerWallet.createSelectiveDisclosure(
         credentialIds = listOfNotNull(kycCredential.id),
@@ -915,7 +915,7 @@ fun openCryptoExchangeAccount(
         byType("KYCCredential")
         valid()
     }.firstOrNull() ?: throw IllegalArgumentException("No valid KYC credential")
-    
+
     // Crypto exchanges typically need less information
     return customerWallet.createSelectiveDisclosure(
         credentialIds = listOfNotNull(kycCredential.id),
@@ -950,15 +950,15 @@ fun applyForLoan(
         byType("EnhancedKYCCredential")
         valid()
     }.firstOrNull() ?: throw IllegalArgumentException("Enhanced KYC required for loan")
-    
+
     // Verify enhanced KYC meets loan requirements
     val kyc = enhancedKYCCredential.credentialSubject.jsonObject["enhancedKYC"]?.jsonObject
     val verificationLevel = kyc?.get("verificationLevel")?.jsonPrimitive?.content
-    
+
     if (verificationLevel != "Enhanced" && verificationLevel != "Premium") {
         throw IllegalArgumentException("Enhanced KYC required for loan application")
     }
-    
+
     return customerWallet.createSelectiveDisclosure(
         credentialIds = listOfNotNull(enhancedKYCCredential.id),
         disclosedFields = listOf(

@@ -17,7 +17,7 @@ class VerifiableCredentialTest {
             verificationMethod = "did:key:issuer#key-1",
             proofPurpose = "assertionMethod"
         )
-        
+
         val credential = VerifiableCredential(
             id = "https://example.com/credentials/1",
             type = listOf("VerifiableCredential", "PersonCredential"),
@@ -55,7 +55,7 @@ class VerifiableCredentialTest {
                 serviceEndpoint = "https://example.com/refresh"
             )
         )
-        
+
         assertEquals("https://example.com/credentials/1", credential.id)
         assertEquals(2, credential.type.size)
         assertEquals("did:key:issuer", credential.issuer)
@@ -75,7 +75,7 @@ class VerifiableCredentialTest {
             },
             issuanceDate = "2024-01-01T00:00:00Z"
         )
-        
+
         assertNull(credential.id)
         assertNull(credential.expirationDate)
         assertNull(credential.proof)
@@ -91,7 +91,7 @@ class VerifiableCredentialTest {
             proofPurpose = "assertionMethod",
             proofValue = "zSignatureValue"
         )
-        
+
         val credential = VerifiableCredential(
             type = listOf("VerifiableCredential"),
             issuer = "did:key:issuer",
@@ -99,7 +99,7 @@ class VerifiableCredentialTest {
             issuanceDate = "2024-01-01T00:00:00Z",
             proof = proof
         )
-        
+
         assertEquals(proof, credential.proof)
         assertEquals("zSignatureValue", credential.proof?.proofValue)
     }
@@ -113,7 +113,7 @@ class VerifiableCredentialTest {
             proofPurpose = "assertionMethod",
             jws = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
         )
-        
+
         val credential = VerifiableCredential(
             type = listOf("VerifiableCredential"),
             issuer = "did:key:issuer",
@@ -121,7 +121,7 @@ class VerifiableCredentialTest {
             issuanceDate = "2024-01-01T00:00:00Z",
             proof = proof
         )
-        
+
         assertNotNull(credential.proof?.jws)
         assertNull(credential.proof?.proofValue)
     }
@@ -136,7 +136,7 @@ class VerifiableCredentialTest {
             challenge = "challenge-123",
             domain = "example.com"
         )
-        
+
         val credential = VerifiableCredential(
             type = listOf("VerifiableCredential"),
             issuer = "did:key:issuer",
@@ -144,7 +144,7 @@ class VerifiableCredentialTest {
             issuanceDate = "2024-01-01T00:00:00Z",
             proof = proof
         )
-        
+
         assertEquals("challenge-123", credential.proof?.challenge)
         assertEquals("example.com", credential.proof?.domain)
     }

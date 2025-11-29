@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 
 class MyPluginTest : BasePluginTest() {
-    
+
     @Test
     fun testSomething() = runBlocking {
         val fixture = createFixture()
@@ -40,7 +40,7 @@ import org.testcontainers.junit.jupiter.Testcontainers
 @Testcontainers
 @Tag("integration")
 class MyIntegrationTest : BaseIntegrationTest() {
-    
+
     @Test
     fun testWithRealService() = runBlocking {
         val fixture = createFixture()
@@ -109,16 +109,16 @@ Organize tests by functionality:
 
 ```kotlin
 class MyPluginTest : BasePluginTest() {
-    
+
     @Test
     fun testCreate() = runBlocking { }
-    
+
     @Test
     fun testRead() = runBlocking { }
-    
+
     @Test
     fun testUpdate() = runBlocking { }
-    
+
     @Test
     fun testDelete() = runBlocking { }
 }
@@ -128,7 +128,7 @@ class MyPluginTest : BasePluginTest() {
 
 ```kotlin
 class MyTest : BasePluginTest() {
-    
+
     @Test
     fun testWithCustomFixture() = runBlocking {
         withFixture({

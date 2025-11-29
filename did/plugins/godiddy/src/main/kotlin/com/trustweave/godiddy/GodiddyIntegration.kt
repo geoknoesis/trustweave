@@ -29,7 +29,7 @@ object GodiddyIntegration {
         // Create configuration from options
         val config = GodiddyConfig.fromOptions(options)
         val client = GodiddyClient(config)
-        
+
         // Create service clients
         val resolver = GodiddyResolver(client)
         val registrar = try {
@@ -47,12 +47,12 @@ object GodiddyIntegration {
         } catch (e: Exception) {
             null // Verifier may not be available
         }
-        
+
         // Discover DID method provider
         val didProviders = ServiceLoader.load(DidMethodProvider::class.java)
         val godiddyDidProvider = didProviders.find { it.name == "godiddy" }
             ?: throw IllegalStateException("godiddy DID method provider not found. Ensure TrustWeave-godiddy is on classpath.")
-        
+
         // Register supported DID methods
         val registeredMethods = mutableListOf<String>()
         for (methodName in godiddyDidProvider.supportedMethods) {
@@ -93,11 +93,11 @@ object GodiddyIntegration {
         } else {
             options
         }
-        
+
         // Create configuration
         val config = GodiddyConfig.fromOptions(mergedOptions)
         val client = GodiddyClient(config)
-        
+
         // Create service clients
         val resolver = GodiddyResolver(client)
         val registrar = try {
@@ -115,16 +115,16 @@ object GodiddyIntegration {
         } catch (e: Exception) {
             null
         }
-        
+
         // Discover DID method provider
         val didProviders = ServiceLoader.load(DidMethodProvider::class.java)
         val godiddyDidProvider = didProviders.find { it.name == "godiddy" }
             ?: throw IllegalStateException("godiddy DID method provider not found. Ensure TrustWeave-godiddy is on classpath.")
-        
+
         // Register requested DID methods or all supported
         val methodsToRegister = didMethods ?: godiddyDidProvider.supportedMethods
         val registeredMethods = mutableListOf<String>()
-        
+
         for (methodName in methodsToRegister) {
             if (methodName in godiddyDidProvider.supportedMethods) {
                 val method = godiddyDidProvider.create(methodName, mergedOptions)

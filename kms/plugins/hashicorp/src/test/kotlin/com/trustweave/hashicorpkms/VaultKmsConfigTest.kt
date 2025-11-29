@@ -13,7 +13,7 @@ class VaultKmsConfigTest {
             .token("hvs.xxx")
             .transitPath("transit")
             .build()
-        
+
         assertEquals("http://localhost:8200", config.address)
         assertEquals("hvs.xxx", config.token)
         assertEquals("transit", config.transitPath)
@@ -27,7 +27,7 @@ class VaultKmsConfigTest {
             .roleId("role-id")
             .secretId("secret-id")
             .build()
-        
+
         assertEquals("http://localhost:8200", config.address)
         assertEquals("approle", config.appRolePath)
         assertEquals("role-id", config.roleId)
@@ -51,7 +51,7 @@ class VaultKmsConfigTest {
             "transitPath" to "transit",
             "namespace" to "admin"
         ))
-        
+
         assertEquals("http://vault.example.com:8200", config.address)
         assertEquals("hvs.xxx", config.token)
         assertEquals("transit", config.transitPath)
@@ -70,7 +70,7 @@ class VaultKmsConfigTest {
         val config = VaultKmsConfig.fromMap(mapOf(
             "address" to "http://localhost:8200"
         ))
-        
+
         assertEquals("transit", config.transitPath)
     }
 

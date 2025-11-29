@@ -30,10 +30,10 @@ class CredentialIssuerAdditionalBranchCoverageTest {
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
         val issuer = CredentialIssuer(proofGenerator = generator, proofRegistry = proofRegistry)
-        
+
         val credential = createTestCredential(issuerDid = "did:key:issuer")
         val result = issuer.issue(credential, "did:key:issuer", "key-1")
-        
+
         assertNotNull(result.proof)
     }
 
@@ -43,13 +43,13 @@ class CredentialIssuerAdditionalBranchCoverageTest {
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
         proofRegistry.register(generator)
-        
+
         val issuer = CredentialIssuer(proofGenerator = null, proofRegistry = proofRegistry)
-        
+
         val credential = createTestCredential(issuerDid = "did:key:issuer")
         val options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
         val result = issuer.issue(credential, "did:key:issuer", "key-1", options)
-        
+
         assertNotNull(result.proof)
     }
 
@@ -63,9 +63,9 @@ class CredentialIssuerAdditionalBranchCoverageTest {
             resolveDid = { false },
             proofRegistry = proofRegistry
         )
-        
+
         val credential = createTestCredential(issuerDid = "did:key:issuer")
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuer.issue(credential, "did:key:issuer", "key-1")
         }
@@ -81,9 +81,9 @@ class CredentialIssuerAdditionalBranchCoverageTest {
             resolveDid = { throw RuntimeException("DID resolution failed") },
             proofRegistry = proofRegistry
         )
-        
+
         val credential = createTestCredential(issuerDid = "did:key:issuer")
-        
+
         assertFailsWith<RuntimeException> {
             issuer.issue(credential, "did:key:issuer", "key-1")
         }
@@ -95,7 +95,7 @@ class CredentialIssuerAdditionalBranchCoverageTest {
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
         val issuer = CredentialIssuer(proofGenerator = generator, proofRegistry = proofRegistry)
-        
+
         val schema = com.trustweave.credential.models.CredentialSchema(
             id = "schema-1",
             type = "JsonSchemaValidator2018"
@@ -105,14 +105,14 @@ class CredentialIssuerAdditionalBranchCoverageTest {
             put("type", "object")
         }
         SchemaRegistry.registerSchema(schema, schemaDef)
-        
+
         val credential = createTestCredential(
             issuerDid = "did:key:issuer",
             credentialSchema = schema
         )
-        
+
         val result = issuer.issue(credential, "did:key:issuer", "key-1")
-        
+
         assertNotNull(result.proof)
     }
 
@@ -122,14 +122,14 @@ class CredentialIssuerAdditionalBranchCoverageTest {
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
         val issuer = CredentialIssuer(proofGenerator = generator, proofRegistry = proofRegistry)
-        
+
         val credential = createTestCredential(issuerDid = "did:key:issuer")
         val options = CredentialIssuanceOptions(
             additionalOptions = mapOf("verificationMethod" to "did:key:custom#key-1")
         )
-        
+
         val result = issuer.issue(credential, "did:key:issuer", "key-1", options)
-        
+
         assertEquals("did:key:custom#key-1", result.proof?.verificationMethod)
     }
 
@@ -139,12 +139,12 @@ class CredentialIssuerAdditionalBranchCoverageTest {
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
         val issuer = CredentialIssuer(proofGenerator = generator, proofRegistry = proofRegistry)
-        
+
         val credential = createTestCredential(issuerDid = "did:key:issuer")
         val options = CredentialIssuanceOptions(challenge = "challenge-123")
-        
+
         val result = issuer.issue(credential, "did:key:issuer", "key-1", options)
-        
+
         assertEquals("challenge-123", result.proof?.challenge)
     }
 
@@ -154,12 +154,12 @@ class CredentialIssuerAdditionalBranchCoverageTest {
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
         val issuer = CredentialIssuer(proofGenerator = generator, proofRegistry = proofRegistry)
-        
+
         val credential = createTestCredential(issuerDid = "did:key:issuer")
         val options = CredentialIssuanceOptions(domain = "example.com")
-        
+
         val result = issuer.issue(credential, "did:key:issuer", "key-1", options)
-        
+
         assertEquals("example.com", result.proof?.domain)
     }
 

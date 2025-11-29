@@ -53,7 +53,7 @@ val did = TrustWeave.createDid().getOrThrow()
 // Production pattern: explicit error handling
 val result = TrustWeave.createDid()
 result.fold(
-    onSuccess = { did -> 
+    onSuccess = { did ->
         processDid(did)
     },
     onFailure = { error ->
@@ -73,7 +73,7 @@ result.fold(
 ```kotlin
 // Chaining pattern
 val credential = TrustWeave.createDid()
-    .map { did -> 
+    .map { did ->
         TrustWeave.issueCredential(issuerDid = did.id, ...)
     }
     .flatMap { it }  // Unwrap nested Result
@@ -190,7 +190,7 @@ fun main() = runBlocking {
 ### Format
 
 ```markdown
-> **Version:** 1.0.0-SNAPSHOT  
+> **Version:** 1.0.0-SNAPSHOT
 > **API:** TrustWeave Facade
 
 This example uses the TrustWeave facade API available in 1.0.0+.
@@ -234,7 +234,7 @@ import kotlinx.serialization.json.put
 
 /**
  * Example: Creating and using a DID
- * 
+ *
  * This example demonstrates:
  * - Creating a DID with default options
  * - Resolving a DID
@@ -243,13 +243,13 @@ import kotlinx.serialization.json.put
 fun main() = runBlocking {
     // Create TrustWeave instance
     val TrustWeave = TrustWeave.create()
-    
+
     // Create DID with error handling
     val didResult = TrustWeave.createDid()
     didResult.fold(
         onSuccess = { did ->
             println("Created DID: ${did.id}")
-            
+
             // Resolve the DID
             val resolution = TrustWeave.resolveDid(did.id).getOrThrow()
             if (resolution.document != null) {

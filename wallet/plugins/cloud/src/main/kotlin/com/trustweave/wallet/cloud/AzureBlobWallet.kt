@@ -10,15 +10,15 @@ import kotlinx.coroutines.withContext
 
 /**
  * Azure Blob Storage-backed wallet implementation.
- * 
+ *
  * Stores credentials in Azure Blob Storage containers.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val blobServiceClient = BlobServiceClientBuilder()
  *     .connectionString(connectionString)
  *     .buildClient()
- * 
+ *
  * val wallet = AzureBlobWallet(
  *     walletId = "wallet-1",
  *     walletDid = "did:key:wallet-1",
@@ -37,16 +37,16 @@ class AzureBlobWallet(
     basePath: String,
     private val blobServiceClient: BlobServiceClient
 ) : CloudWallet(walletId, walletDid, holderDid, containerName, basePath) {
-    
+
     private val containerClient: BlobContainerClient = blobServiceClient.getBlobContainerClient(containerName)
-    
+
     init {
         // Ensure container exists
         if (!containerClient.exists()) {
             containerClient.create()
         }
     }
-    
+
     override suspend fun upload(key: String, data: ByteArray): Unit = withContext(Dispatchers.IO) {
         try {
             val blobClient: BlobClient = containerClient.getBlobClient(key)
@@ -55,14 +55,14 @@ class AzureBlobWallet(
             throw RuntimeException("Failed to upload to Azure Blob Storage: ${e.message}", e)
         }
     }
-    
+
     override suspend fun download(key: String): ByteArray? = withContext(Dispatchers.IO) {
         try {
             val blobClient: BlobClient = containerClient.getBlobClient(key)
             if (!blobClient.exists()) {
                 return@withContext null
             }
-            
+
             val outputStream = java.io.ByteArrayOutputStream()
             blobClient.downloadStream(outputStream)
             outputStream.toByteArray()
@@ -70,21 +70,21 @@ class AzureBlobWallet(
             throw RuntimeException("Failed to download from Azure Blob Storage: ${e.message}", e)
         }
     }
-    
+
     override suspend fun deleteFromStorage(key: String): Boolean = withContext(Dispatchers.IO) {
         try {
             val blobClient: BlobClient = containerClient.getBlobClient(key)
             if (!blobClient.exists()) {
                 return@withContext false
             }
-            
+
             blobClient.delete()
             true
         } catch (e: Exception) {
             false
         }
     }
-    
+
     override suspend fun listKeys(prefix: String): List<String> = withContext(Dispatchers.IO) {
         try {
             containerClient.listBlobsByHierarchy(prefix)

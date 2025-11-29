@@ -24,11 +24,11 @@ data class Did(
          */
         /**
          * Parses a DID string or DID URL into a Did object.
-         * 
+         *
          * Handles:
          * - DID: `did:method:id`
          * - DID URL: `did:method:id/path#fragment` (fragment and path are ignored)
-         * 
+         *
          * @param didString The DID string (e.g., "did:web:example.com" or "did:web:example.com/path#fragment")
          * @return A Did object
          * @throws IllegalArgumentException if the string is not a valid DID
@@ -40,10 +40,10 @@ data class Did(
                     reason = "Invalid DID format: must start with 'did:'"
                 )
             }
-            
+
             // Remove fragment if present (everything after #)
             val withoutFragment = didString.split('#').first()
-            
+
             // Split by : to get method and id
             val parts = withoutFragment.substring(4).split(":", limit = 2)
             if (parts.size != 2) {
@@ -52,16 +52,16 @@ data class Did(
                     reason = "Invalid DID format: expected 'did:method:id'"
                 )
             }
-            
+
             // Extract method and id (id may contain path like /path/to/resource)
             val method = parts[0]
             val idWithPath = parts[1]
-            
+
             // For now, include path in id. Could be separated if needed:
             // val idParts = idWithPath.split("/", limit = 2)
             // val id = idParts[0]
             // val path = idParts.getOrNull(1)
-            
+
             return Did(method = method, id = idWithPath)
         }
     }
@@ -69,7 +69,7 @@ data class Did(
 
 /**
  * Represents a verification method in a DID Document.
- * 
+ *
  * Following W3C DID Core specification, verification methods can be embedded
  * in the `verificationMethod` array or referenced by ID in relationship arrays.
  *
@@ -89,7 +89,7 @@ data class VerificationMethod(
 
 /**
  * Represents a service endpoint in a DID Document.
- * 
+ *
  * Following W3C DID Core specification, services provide means of communication
  * or interaction with the DID subject.
  *

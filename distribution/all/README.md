@@ -50,10 +50,10 @@ Optional modules must be added explicitly if needed:
 ```kotlin
 dependencies {
     implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
-    
+
     // Add blockchain adapters as needed
     implementation("com.trustweave:TrustWeave-algorand:1.0.0-SNAPSHOT")
-    
+
     // Add integration modules as needed
     implementation("com.trustweave:TrustWeave-waltid:1.0.0-SNAPSHOT")
 }

@@ -123,7 +123,7 @@ flowchart TD
     A["Healthcare Provider<br/>Creates Provider DID<br/>Issues Medical Credentials<br/>Manages Patient Consent"] -->|issues credentials| B["Medical Credentials<br/>Prescription<br/>Lab Results<br/>Vaccination Record<br/>Diagnosis<br/>Proof cryptographic"]
     B -->|stored in patient wallet| C["Patient Wallet<br/>Stores all medical credentials<br/>Manages consent<br/>Creates selective presentations"]
     C -->|shares with consent| D["Healthcare Provider New<br/>Receives presentation<br/>Verifies credentials<br/>Accesses authorized data"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -176,13 +176,13 @@ dependencies {
     implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    
+
     // Test kit for in-memory implementations
     implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -231,33 +231,33 @@ data class ConsentRecord(
 
 fun main() = runBlocking {
     println("=== Healthcare & Medical Records Scenario ===\n")
-    
+
     // Step 1: Setup services
     println("Step 1: Setting up services...")
     val hospitalKms = InMemoryKeyManagementService()
     val patientKms = InMemoryKeyManagementService()
     val specialistKms = InMemoryKeyManagementService()
-    
+
     val didMethod = DidKeyMockMethod(hospitalKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
-    
+
     // Setup blockchain for anchoring critical records
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
     val blockchainRegistry = BlockchainAnchorRegistry().apply {
         register("eip155:1", anchorClient)
     }
-    
+
     // Step 2: Create DIDs
     println("\nStep 2: Creating DIDs...")
     val hospitalDid = didMethod.createDid()
     println("Hospital DID: ${hospitalDid.id}")
-    
+
     val patientDid = didMethod.createDid()
     println("Patient DID: ${patientDid.id}")
-    
+
     val specialistDid = didMethod.createDid()
     println("Specialist DID: ${specialistDid.id}")
-    
+
     // Step 3: Create patient wallet
     println("\nStep 3: Creating patient wallet...")
     val patientWallet = InMemoryWallet(
@@ -265,7 +265,7 @@ fun main() = runBlocking {
         holderDid = patientDid.id
     )
     println("Patient wallet created: ${patientWallet.walletId}")
-    
+
     // Step 4: Issue prescription credential
     println("\nStep 4: Issuing prescription credential...")
     val prescriptionCredential = createPrescriptionCredential(
@@ -277,31 +277,31 @@ fun main() = runBlocking {
         duration = "30 days",
         prescribingDoctor = "Dr. Smith"
     )
-    
+
     val hospitalKey = hospitalKms.generateKey("Ed25519")
     val proofGenerator = Ed25519ProofGenerator(
         signer = { data, keyId -> hospitalKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> hospitalKey.id }
     )
     val proofRegistry = ProofGeneratorRegistry().apply { register(proofGenerator) }
-    
+
     val credentialIssuer = CredentialIssuer(
         proofGenerator = proofGenerator,
         resolveDid = { did -> didRegistry.resolve(did) != null },
         proofRegistry = proofRegistry
     )
-    
+
     val issuedPrescription = credentialIssuer.issue(
         credential = prescriptionCredential,
         issuerDid = hospitalDid.id,
         keyId = hospitalKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Prescription credential issued:")
     println("  - Medication: Lisinopril 10mg")
     println("  - Has proof: ${issuedPrescription.proof != null}")
-    
+
     // Step 5: Issue lab results credential
     println("\nStep 5: Issuing lab results credential...")
     val labResultsCredential = createLabResultsCredential(
@@ -322,16 +322,16 @@ fun main() = runBlocking {
         ),
         labDate = Instant.now().toString()
     )
-    
+
     val issuedLabResults = credentialIssuer.issue(
         credential = labResultsCredential,
         issuerDid = hospitalDid.id,
         keyId = hospitalKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Lab results credential issued")
-    
+
     // Step 6: Issue vaccination credential
     println("\nStep 6: Issuing vaccination credential...")
     val vaccinationCredential = createVaccinationCredential(
@@ -343,24 +343,24 @@ fun main() = runBlocking {
         administrationDate = "2023-03-15",
         administeringProvider = "Dr. Johnson"
     )
-    
+
     val issuedVaccination = credentialIssuer.issue(
         credential = vaccinationCredential,
         issuerDid = hospitalDid.id,
         keyId = hospitalKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Vaccination credential issued")
-    
+
     // Step 7: Store credentials in patient wallet
     println("\nStep 7: Storing credentials in patient wallet...")
     val prescriptionId = patientWallet.store(issuedPrescription)
     val labResultsId = patientWallet.store(issuedLabResults)
     val vaccinationId = patientWallet.store(issuedVaccination)
-    
+
     println("Stored ${patientWallet.list().size} medical credentials")
-    
+
     // Step 8: Organize credentials
     println("\nStep 8: Organizing credentials...")
     val prescriptionsCollection = patientWallet.createCollection(
@@ -375,18 +375,18 @@ fun main() = runBlocking {
         name = "Vaccinations",
         description = "Vaccination records"
     )
-    
+
     patientWallet.addToCollection(prescriptionId, prescriptionsCollection)
     patientWallet.addToCollection(labResultsId, labResultsCollection)
     patientWallet.addToCollection(vaccinationId, vaccinationsCollection)
-    
+
     // Tag credentials
     patientWallet.tagCredential(prescriptionId, setOf("medication", "prescription", "active"))
     patientWallet.tagCredential(labResultsId, setOf("lab", "test-results", "blood-work"))
     patientWallet.tagCredential(vaccinationId, setOf("vaccination", "immunization", "covid-19"))
-    
+
     println("Created ${patientWallet.listCollections().size} collections")
-    
+
     // Step 9: Create consent for data sharing
     println("\nStep 9: Creating consent credential...")
     val consentCredential = createConsentCredential(
@@ -396,17 +396,17 @@ fun main() = runBlocking {
         purpose = "Specialist consultation",
         expirationDate = Instant.now().plus(90, ChronoUnit.DAYS).toString()
     )
-    
+
     val issuedConsent = credentialIssuer.issue(
         credential = consentCredential,
         issuerDid = patientDid.id, // Patient issues their own consent
         keyId = patientKms.generateKey("Ed25519").id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     val consentId = patientWallet.store(issuedConsent)
     println("Consent credential created and stored")
-    
+
     // Step 10: Create selective disclosure presentation
     println("\nStep 10: Creating selective disclosure presentation...")
     // Patient shares only lab results with specialist (not prescriptions or full vaccination details)
@@ -426,11 +426,11 @@ fun main() = runBlocking {
             challenge = "specialist-consultation-${Instant.now().toEpochMilli()}"
         )
     )
-    
+
     println("Selective disclosure presentation created:")
     println("  - Shared: Lab results (partial)")
     println("  - Not shared: Prescriptions, full vaccination details")
-    
+
     // Step 11: Verify credentials
     println("\nStep 11: Verifying medical credentials...")
     val verifier = CredentialVerifier(
@@ -438,7 +438,7 @@ fun main() = runBlocking {
             didRegistry.resolve(did).toCredentialDidResolution()
         }
     )
-    
+
     val prescriptionVerification = verifier.verify(
         credential = issuedPrescription,
         options = CredentialVerificationOptions(
@@ -447,14 +447,14 @@ fun main() = runBlocking {
             validateSchema = true
         )
     )
-    
+
     if (prescriptionVerification.valid) {
         println("✅ Prescription credential is valid!")
     } else {
         println("❌ Prescription verification failed:")
         prescriptionVerification.errors.forEach { println("  - $it") }
     }
-    
+
     // Step 12: Anchor critical records to blockchain
     println("\nStep 12: Anchoring critical records to blockchain...")
     val prescriptionDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
@@ -463,7 +463,7 @@ fun main() = runBlocking {
             issuedPrescription
         )
     )
-    
+
     val consentRecord = ConsentRecord(
         patientDid = patientDid.id,
         providerDid = specialistDid.id,
@@ -472,17 +472,17 @@ fun main() = runBlocking {
         expirationDate = Instant.now().plus(90, ChronoUnit.DAYS).toString(),
         credentialDigest = prescriptionDigest
     )
-    
+
     val anchorResult = blockchainRegistry.anchorTyped(
         value = consentRecord,
         serializer = ConsentRecord.serializer(),
         targetChainId = "eip155:1"
     )
-    
+
     println("Consent record anchored:")
     println("  - Transaction hash: ${anchorResult.ref.txHash}")
     println("  - Provides HIPAA audit trail")
-    
+
     // Step 13: Query medical credentials
     println("\nStep 13: Querying medical credentials...")
     val activePrescriptions = patientWallet.query {
@@ -490,13 +490,13 @@ fun main() = runBlocking {
         valid()
     }
     println("Active prescriptions: ${activePrescriptions.size}")
-    
+
     val recentLabResults = patientWallet.query {
         byType("LabResultsCredential")
         valid()
     }
     println("Recent lab results: ${recentLabResults.size}")
-    
+
     // Step 14: Wallet statistics
     println("\nStep 14: Patient wallet statistics...")
     val stats = patientWallet.getStatistics()
@@ -506,7 +506,7 @@ fun main() = runBlocking {
         Collections: ${stats.collectionsCount}
         Tags: ${stats.tagsCount}
     """.trimIndent())
-    
+
     println("\n=== Scenario Complete ===")
 }
 
@@ -892,7 +892,7 @@ fun shareMedicalDataWithProvider(
         purpose = purpose,
         expirationDate = Instant.now().plus(30, ChronoUnit.DAYS).toString()
     )
-    
+
     // Create presentation with consent
     return patientWallet.createPresentation(
         credentialIds = credentialIds,
@@ -978,20 +978,20 @@ fun createEmergencyMedicalPresentation(
         byType("AllergyCredential")
         valid()
     }
-    
+
     val medications = patientWallet.query {
         byType("PrescriptionCredential")
         valid()
     }
-    
+
     val conditions = patientWallet.query {
         byType("DiagnosisCredential")
         valid()
     }
-    
+
     // Create emergency access presentation
     val credentialIds = (allergies + medications + conditions).mapNotNull { it.id }
-    
+
     return patientWallet.createPresentation(
         credentialIds = credentialIds,
         holderDid = patientWallet.holderDid!!,
@@ -1025,7 +1025,7 @@ fun shareRelevantMedicalHistory(
             ?.get("condition")?.jsonPrimitive?.content
         diagnosis?.contains(condition, ignoreCase = true) == true
     }
-    
+
     // Create selective disclosure presentation
     return patientWallet.createSelectiveDisclosure(
         credentialIds = relevantCredentials.mapNotNull { it.id },
@@ -1063,12 +1063,12 @@ fun createInsuranceClaimPresentation(
     }.filter { credential ->
         val treatmentDate = credential.credentialSubject.jsonObject["treatment"]?.jsonObject
             ?.get("date")?.jsonPrimitive?.content
-        treatmentDate?.let { 
+        treatmentDate?.let {
             Instant.parse(it).isAfter(Instant.parse(claimDetails.startDate)) &&
             Instant.parse(it).isBefore(Instant.parse(claimDetails.endDate))
         } ?: false
     }
-    
+
     // Create presentation with minimal necessary information
     return patientWallet.createSelectiveDisclosure(
         credentialIds = treatmentCredentials.mapNotNull { it.id },
@@ -1109,7 +1109,7 @@ fun authenticateForTelemedicine(
         byType("IdentityCredential")
         valid()
     }.firstOrNull()
-    
+
     // Create appointment-specific presentation
     return patientWallet.createPresentation(
         credentialIds = listOfNotNull(identityCredential?.id),

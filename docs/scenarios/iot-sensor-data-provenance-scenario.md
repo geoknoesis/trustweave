@@ -117,7 +117,7 @@ flowchart TD
     B -->|sensor uses| C["IoT Sensor<br/>Captures Data<br/>Creates Data Attestation<br/>Signs with Sensor Key"]
     C -->|issues| D["Data Attestation Credential<br/>Data Digest<br/>Timestamp<br/>Sensor DID<br/>Calibration Status<br/>Cryptographic Proof"]
     D -->|consumers verify| E["Data Consumer<br/>Verifies Sensor Attestation<br/>Checks Data Integrity<br/>Validates Timestamp<br/>Grants Access"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -141,10 +141,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 dependencies {
     // Core TrustWeave modules
     implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -174,35 +174,35 @@ fun main() = runBlocking {
     println("=".repeat(70))
     println("IoT Sensor Data Provenance & Integrity Scenario - Complete End-to-End Example")
     println("=".repeat(70))
-    
+
     // Step 1: Create TrustWeave instance
     val TrustWeave = TrustWeave.create()
     println("\n✅ TrustWeave initialized")
-    
+
     // Step 2: Create DIDs for sensor manufacturer, sensors, and data consumer
     val manufacturerDidDoc = TrustWeave.dids.create()
     val manufacturerDid = manufacturerDidDoc.id
     val manufacturerKeyId = manufacturerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val temperatureSensorDidDoc = TrustWeave.dids.create()
     val temperatureSensorDid = temperatureSensorDidDoc.id
     val temperatureSensorKeyId = temperatureSensorDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val humiditySensorDidDoc = TrustWeave.dids.create()
     val humiditySensorDid = humiditySensorDidDoc.id
     val humiditySensorKeyId = humiditySensorDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val dataConsumerDidDoc = TrustWeave.dids.create()
     val dataConsumerDid = dataConsumerDidDoc.id
-    
+
     println("✅ Sensor Manufacturer DID: $manufacturerDid")
     println("✅ Temperature Sensor DID: $temperatureSensorDid")
     println("✅ Humidity Sensor DID: $humiditySensorDid")
     println("✅ Data Consumer DID: $dataConsumerDid")
-    
+
     // Step 3: Issue sensor attestation credential for temperature sensor
     val temperatureSensorAttestation = TrustWeave.issueCredential(
         issuerDid = manufacturerDid,
@@ -232,9 +232,9 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "SensorAttestationCredential", "IoTDeviceCredential"),
         expirationDate = null // Sensor attestation doesn't expire
     ).getOrThrow()
-    
+
     println("\n✅ Temperature sensor attestation credential issued: ${temperatureSensorAttestation.id}")
-    
+
     // Step 4: Issue sensor attestation credential for humidity sensor
     val humiditySensorAttestation = TrustWeave.issueCredential(
         issuerDid = manufacturerDid,
@@ -264,12 +264,12 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "SensorAttestationCredential", "IoTDeviceCredential"),
         expirationDate = null
     ).getOrThrow()
-    
+
     println("✅ Humidity sensor attestation credential issued: ${humiditySensorAttestation.id}")
-    
+
     // Step 5: Simulate sensor data capture and create data attestation
     println("\n📊 Sensor Data Capture:")
-    
+
     // Temperature reading
     val temperatureReading = 23.5
     val temperatureData = buildJsonObject {
@@ -284,13 +284,13 @@ fun main() = runBlocking {
             put("altitude", 10.0)
         })
     }
-    
+
     val temperatureDataBytes = temperatureData.toString().toByteArray()
     val temperatureDataDigest = DigestUtils.sha256DigestMultibase(temperatureDataBytes)
-    
+
     println("   Temperature: ${temperatureReading}°C")
     println("   Data digest: ${temperatureDataDigest.take(20)}...")
-    
+
     // Humidity reading
     val humidityReading = 65.3
     val humidityData = buildJsonObject {
@@ -305,17 +305,17 @@ fun main() = runBlocking {
             put("altitude", 10.0)
         })
     }
-    
+
     val humidityDataBytes = humidityData.toString().toByteArray()
     val humidityDataDigest = DigestUtils.sha256DigestMultibase(humidityDataBytes)
-    
+
     println("   Humidity: ${humidityReading}% RH")
     println("   Data digest: ${humidityDataDigest.take(20)}...")
-    
+
     // Step 6: Create data attestation credentials (signed by sensor)
     // Note: In production, sensors would sign these with their own keys
     // For this example, we'll use the manufacturer's key to simulate sensor signing
-    
+
     val temperatureDataAttestation = TrustWeave.issueCredential(
         issuerDid = temperatureSensorDid,
         issuerKeyId = temperatureSensorKeyId,
@@ -338,9 +338,9 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "SensorDataAttestationCredential", "DataProvenanceCredential"),
         expirationDate = null // Data attestation doesn't expire
     ).getOrThrow()
-    
+
     println("\n✅ Temperature data attestation credential issued: ${temperatureDataAttestation.id}")
-    
+
     val humidityDataAttestation = TrustWeave.issueCredential(
         issuerDid = humiditySensorDid,
         issuerKeyId = humiditySensorKeyId,
@@ -363,9 +363,9 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "SensorDataAttestationCredential", "DataProvenanceCredential"),
         expirationDate = null
     ).getOrThrow()
-    
+
     println("✅ Humidity data attestation credential issued: ${humidityDataAttestation.id}")
-    
+
     // Step 7: Create consumer wallet and store credentials
     val consumerWallet = TrustWeave.createWallet(
         holderDid = dataConsumerDid,
@@ -374,37 +374,37 @@ fun main() = runBlocking {
             enablePresentation = true
         }.build()
     ).getOrThrow()
-    
+
     val tempSensorAttestationId = consumerWallet.store(temperatureSensorAttestation)
     val humiditySensorAttestationId = consumerWallet.store(humiditySensorAttestation)
     val tempDataAttestationId = consumerWallet.store(temperatureDataAttestation)
     val humidityDataAttestationId = consumerWallet.store(humidityDataAttestation)
-    
+
     println("\n✅ All credentials stored in consumer wallet")
-    
+
     // Step 8: Organize credentials
     consumerWallet.withOrganization { org ->
         val sensorCollectionId = org.createCollection("Sensors", "Sensor attestation credentials")
         val dataCollectionId = org.createCollection("Sensor Data", "Sensor data attestation credentials")
-        
+
         org.addToCollection(tempSensorAttestationId, sensorCollectionId)
         org.addToCollection(humiditySensorAttestationId, sensorCollectionId)
         org.addToCollection(tempDataAttestationId, dataCollectionId)
         org.addToCollection(humidityDataAttestationId, dataCollectionId)
-        
+
         org.tagCredential(tempSensorAttestationId, setOf("sensor", "temperature", "attestation", "calibration"))
         org.tagCredential(humiditySensorAttestationId, setOf("sensor", "humidity", "attestation", "calibration"))
         org.tagCredential(tempDataAttestationId, setOf("data", "temperature", "provenance", "integrity"))
         org.tagCredential(humidityDataAttestationId, setOf("data", "humidity", "provenance", "integrity"))
-        
+
         println("✅ Credentials organized")
     }
-    
+
     // Step 9: Data consumer verification - Sensor attestation
     println("\n🔍 Data Consumer Verification - Sensor Attestation:")
-    
+
     val tempSensorVerification = TrustWeave.verifyCredential(temperatureSensorAttestation).getOrThrow()
-    
+
     if (tempSensorVerification.valid) {
         val credentialSubject = temperatureSensorAttestation.credentialSubject
         val sensor = credentialSubject.jsonObject["sensor"]?.jsonObject
@@ -412,12 +412,12 @@ fun main() = runBlocking {
         val calibration = sensor?.get("calibration")?.jsonObject
         val calibrated = calibration?.get("calibrated")?.jsonPrimitive?.content?.toBoolean() ?: false
         val calibrationExpiry = calibration?.get("calibrationExpiry")?.jsonPrimitive?.content
-        
+
         println("✅ Sensor Attestation Credential: VALID")
         println("   Sensor Type: $sensorType")
         println("   Calibrated: $calibrated")
         println("   Calibration Expiry: $calibrationExpiry")
-        
+
         if (calibrated) {
             println("✅ Sensor calibration verified")
             println("✅ Sensor attestation VERIFIED")
@@ -429,12 +429,12 @@ fun main() = runBlocking {
         println("❌ Sensor Attestation Credential: INVALID")
         println("❌ Sensor attestation NOT VERIFIED")
     }
-    
+
     // Step 10: Data consumer verification - Data integrity
     println("\n🔍 Data Consumer Verification - Data Integrity:")
-    
+
     val tempDataVerification = TrustWeave.verifyCredential(temperatureDataAttestation).getOrThrow()
-    
+
     if (tempDataVerification.valid) {
         val credentialSubject = temperatureDataAttestation.credentialSubject
         val sensorData = credentialSubject.jsonObject["sensorData"]?.jsonObject
@@ -443,13 +443,13 @@ fun main() = runBlocking {
         val sensorHealth = sensorData?.get("sensorHealth")?.jsonPrimitive?.content
         val dataQuality = sensorData?.get("dataQuality")?.jsonObject
         val confidence = dataQuality?.get("confidence")?.jsonPrimitive?.content?.toDouble() ?: 0.0
-        
+
         println("✅ Data Attestation Credential: VALID")
         println("   Data Digest: ${dataDigest?.take(20)}...")
         println("   Calibration Status: $calibrationStatus")
         println("   Sensor Health: $sensorHealth")
         println("   Data Confidence: $confidence")
-        
+
         // Verify data digest matches actual data
         val computedDigest = DigestUtils.sha256DigestMultibase(temperatureDataBytes)
         if (dataDigest == computedDigest) {
@@ -465,13 +465,13 @@ fun main() = runBlocking {
         println("❌ Data Attestation Credential: INVALID")
         println("❌ Data integrity NOT VERIFIED")
     }
-    
+
     // Step 11: Complete data provenance verification workflow
     println("\n🔍 Complete Data Provenance Verification Workflow:")
-    
+
     val sensorAttestationValid = TrustWeave.verifyCredential(temperatureSensorAttestation).getOrThrow().valid
     val dataAttestationValid = TrustWeave.verifyCredential(temperatureDataAttestation).getOrThrow().valid
-    
+
     if (sensorAttestationValid && dataAttestationValid) {
         println("✅ Sensor Attestation: VERIFIED")
         println("✅ Data Attestation: VERIFIED")
@@ -484,7 +484,7 @@ fun main() = runBlocking {
         println("❌ Sensor data is NOT TRUSTED")
         println("❌ Data should be rejected")
     }
-    
+
     // Step 12: Display wallet statistics
     val stats = consumerWallet.getStatistics()
     println("\n📊 Consumer Wallet Statistics:")
@@ -492,7 +492,7 @@ fun main() = runBlocking {
     println("   Valid credentials: ${stats.validCredentials}")
     println("   Collections: ${stats.collectionsCount}")
     println("   Tags: ${stats.tagsCount}")
-    
+
     // Step 13: Summary
     println("\n" + "=".repeat(70))
     println("✅ IoT SENSOR DATA PROVENANCE & INTEGRITY SYSTEM COMPLETE")

@@ -108,16 +108,16 @@ EUDR compliance needs:
 dependencies {
     // Core TrustWeave modules
     implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
-    
+
     // Test kit for in-memory implementations
     testImplementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
-    
+
     // Optional: Algorand adapter for real blockchain anchoring
     implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -141,11 +141,11 @@ fun main() = runBlocking {
     println("=".repeat(70))
     println("EUDR Compliance with EO Data - Complete Example")
     println("=".repeat(70))
-    
+
     // Step 1: Create TrustWeave instance
     val TrustWeave = TrustWeave.create()
     println("\n✅ TrustWeave initialized")
-    
+
     // Step 2: Create DIDs for exporter, importer, and verifier
     val exporterDid = TrustWeave.dids.create()
     Result.success(exporterDid).fold(
@@ -155,7 +155,7 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     val importerDid = TrustWeave.dids.create()
     Result.success(importerDid).fold(
         onSuccess = { it },
@@ -164,7 +164,7 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     val verifierDid = TrustWeave.dids.create()
     Result.success(verifierDid).fold(
         onSuccess = { it },
@@ -173,11 +173,11 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     println("✅ Exporter DID: ${exporterDid.id}")
     println("✅ Importer DID: ${importerDid.id}")
     println("✅ Verifier DID: ${verifierDid.id}")
-    
+
     // Step 3: Create farm/production site DID
     val farmDid = TrustWeave.dids.create()
     Result.success(farmDid).fold(
@@ -188,7 +188,7 @@ fun main() = runBlocking {
         }
     )
     println("✅ Farm DID: ${farmDid.id}")
-    
+
     // Step 4: Create EO data evidence (non-deforestation proof)
     val eoDeforestationProof = buildJsonObject {
         put("id", "eo-deforestation-proof-2024")
@@ -220,13 +220,13 @@ fun main() = runBlocking {
         })
         put("timestamp", Instant.now().toString())
     }
-    
+
     val eoProofDigest = DigestUtils.sha256DigestMultibase(eoDeforestationProof)
-    
+
     // Step 5: Verifier issues compliance credential
     val verifierKeyId = verifierDid.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val complianceCredential = TrustWeave.issueCredential(
         issuerDid = verifierDid.id,
         issuerKeyId = verifierKeyId,
@@ -257,15 +257,15 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     println("✅ Compliance Credential issued: ${complianceCredential.id}")
     println("   Status: compliant")
     println("   Farm: ${farmDid.id}")
-    
+
     // Step 6: Create Digital Product Passport (DPP)
     val exporterKeyId = exporterDid.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val dppCredential = TrustWeave.issueCredential(
         issuerDid = exporterDid.id,
         issuerKeyId = exporterKeyId,
@@ -291,11 +291,11 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     println("✅ Digital Product Passport issued: ${dppCredential.id}")
     println("   Product: Coffee Beans")
     println("   Quantity: 10,000 kg")
-    
+
     // Step 7: Importer verifies compliance before import
     val dppVerification = TrustWeave.verifyCredential(dppCredential).fold(
         onSuccess = { it },
@@ -304,14 +304,14 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     if (!dppVerification.valid) {
         println("❌ DPP verification failed: ${dppVerification.errors}")
         return@runBlocking
     }
-    
+
     println("✅ DPP verified")
-    
+
     // Step 8: Verify compliance credential
     val complianceVerification = TrustWeave.verifyCredential(complianceCredential).fold(
         onSuccess = { it },
@@ -320,19 +320,19 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     if (!complianceVerification.valid) {
         println("❌ Compliance verification failed: ${complianceVerification.errors}")
         return@runBlocking
     }
-    
+
     println("✅ Compliance verified")
-    
+
     // Step 9: Verify EO evidence integrity
     val currentProofDigest = DigestUtils.sha256DigestMultibase(eoDeforestationProof)
     val credentialProofDigest = complianceCredential.credentialSubject
         .jsonObject["eoEvidenceDigest"]?.jsonPrimitive?.content ?: ""
-    
+
     if (currentProofDigest == credentialProofDigest) {
         println("✅ EO Evidence integrity verified")
         println("   No tampering detected")
@@ -341,7 +341,7 @@ fun main() = runBlocking {
         println("   Evidence may have been tampered with")
         return@runBlocking
     }
-    
+
     // Step 10: Check against Climate TRACE (global verifier)
     val climateTraceVerification = verifyAgainstClimateTrace(
         location = buildJsonObject {
@@ -350,14 +350,14 @@ fun main() = runBlocking {
         },
         eoEvidence = eoDeforestationProof
     )
-    
+
     if (climateTraceVerification) {
         println("✅ Verified against Climate TRACE")
         println("   Global verification confirms compliance")
     } else {
         println("⚠️ Climate TRACE verification inconclusive")
     }
-    
+
     // Step 11: Anchor to blockchain for audit trail
     val anchorResult = TrustWeave.blockchains.anchor(
         data = dppCredential,
@@ -373,7 +373,7 @@ fun main() = runBlocking {
             null
         }
     )
-    
+
     println("\n📊 EUDR Compliance Summary:")
     println("   Farm: ${farmDid.id}")
     println("   Compliance Status: compliant")
@@ -381,7 +381,7 @@ fun main() = runBlocking {
     println("   DPP: issued and verified")
     println("   Blockchain Anchor: ${anchorResult?.ref?.txHash}")
     println("   ✅ Ready for EU import")
-    
+
     println("\n" + "=".repeat(70))
     println("✅ EUDR Compliance Scenario Complete!")
     println("=".repeat(70))
@@ -450,30 +450,30 @@ suspend fun automatedEUDRVerification(
     if (!dppVerification.valid) {
         return ComplianceResult.NonCompliant("DPP verification failed")
     }
-    
+
     // Extract compliance credential ID
     val complianceCredentialId = extractComplianceCredentialId(dppCredential)
-    
+
     // Verify compliance credential
     val complianceCredential = fetchCredential(complianceCredentialId)
     val complianceVerification = TrustWeave.verifyCredential(complianceCredential).getOrThrow()
     if (!complianceVerification.valid) {
         return ComplianceResult.NonCompliant("Compliance verification failed")
     }
-    
+
     // Verify EO evidence
     val eoEvidence = extractEOEvidence(complianceCredential)
     val eoVerification = verifyEOEvidence(eoEvidence)
     if (!eoVerification.valid) {
         return ComplianceResult.NonCompliant("EO evidence verification failed")
     }
-    
+
     // Check against Climate TRACE
     val climateTraceCheck = verifyAgainstClimateTrace(eoEvidence)
     if (!climateTraceCheck) {
         return ComplianceResult.NonCompliant("Climate TRACE verification failed")
     }
-    
+
     return ComplianceResult.Compliant("All checks passed")
 }
 
@@ -523,10 +523,10 @@ suspend fun verifyAgainstClimateTrace(
 ): Boolean {
     // Query Climate TRACE API
     val climateTraceData = queryClimateTraceAPI(location)
-    
+
     // Compare with EO evidence
     val matches = compareWithClimateTrace(eoEvidence, climateTraceData)
-    
+
     return matches
 }
 ```

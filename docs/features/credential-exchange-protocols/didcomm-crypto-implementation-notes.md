@@ -18,7 +18,7 @@ private suspend fun performEcdh1puKeyAgreement(...): ByteArray {
     // Simplified ECDH-1PU implementation
     // In production, use a proper DIDComm library
     // This is a placeholder that demonstrates the structure
-    
+
     // For now, return a placeholder shared secret
     return ByteArray(32) // ❌ This is just dummy data!
 }
@@ -129,29 +129,29 @@ private suspend fun performEcdh1puKeyAgreement(
 ): ByteArray {
     // 1. Get private key from KMS
     val privateKey = kms.getPrivateKey(privateKeyId) // ⚠️ Need this method!
-    
+
     // 2. Convert JWK to EC public keys
     val senderPublicKey = jwkToECPublicKey(senderPublicKeyJwk)
     val recipientPublicKey = jwkToECPublicKey(recipientPublicKeyJwk)
     val ephemeralPublicKey = jwkToECPublicKey(epk)
-    
+
     // 3. Perform ECDH operations
     val keyAgreement = KeyAgreement.getInstance("ECDH", "BC")
     keyAgreement.init(privateKey)
-    
+
     // ECDH with sender's key
     keyAgreement.doPhase(senderPublicKey, true)
     val senderShared = keyAgreement.generateSecret()
-    
+
     // ECDH with ephemeral key
     keyAgreement.init(privateKey)
     keyAgreement.doPhase(ephemeralPublicKey, true)
     val ephemeralShared = keyAgreement.generateSecret()
-    
+
     // 4. Combine using ECDH-1PU algorithm
     // This is the complex part - requires specific algorithm
     val combined = combineEcdh1pu(senderShared, ephemeralShared, senderPublicKey)
-    
+
     return combined
 }
 
@@ -160,10 +160,10 @@ private fun deriveKeys(sharedSecret: ByteArray): Pair<ByteArray, ByteArray> {
     val hkdf = HKDF.fromHmacSha256()
     val salt = ByteArray(32) // Should be from message or protocol
     val info = "didcomm-encryption".toByteArray()
-    
+
     val cek = hkdf.extractAndExpand(sharedSecret, salt, info, 32)
     val kek = hkdf.extractAndExpand(sharedSecret, salt, "didcomm-key-wrapping".toByteArray(), 32)
-    
+
     return Pair(cek, kek)
 }
 ```
@@ -192,11 +192,11 @@ class DidCommCrypto(
     private val resolveDid: suspend (String) -> DidDocument?
 ) {
     private val didComm = DIDComm()
-    
+
     suspend fun encrypt(...): DidCommEnvelope {
         // Use didComm.pack() instead of manual encryption
     }
-    
+
     suspend fun decrypt(...): JsonObject {
         // Use didComm.unpack() instead of manual decryption
     }

@@ -1,8 +1,8 @@
 package com.trustweave.plcdid
 
-import com.trustweave.core.exception.NotFoundException
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractDidMethod
 import com.trustweave.did.base.DidMethodUtils
 import com.trustweave.kms.KeyManagementService
@@ -15,24 +15,24 @@ import okhttp3.RequestBody.Companion.toRequestBody
 
 /**
  * Implementation of did:plc method for AT Protocol.
- * 
+ *
  * did:plc uses Personal Linked Container (PLC) DID method for AT Protocol:
  * - Format: `did:plc:{identifier}`
  * - Distributed registry for AT Protocol
  * - HTTP-based resolution
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val kms = InMemoryKeyManagementService()
  * val config = PlcDidConfig.default()
  * val method = PlcDidMethod(kms, config)
- * 
+ *
  * // Create DID
  * val options = didCreationOptions {
  *     algorithm = KeyAlgorithm.ED25519
  * }
  * val document = method.createDid(options)
- * 
+ *
  * // Resolve DID
  * val result = method.resolveDid("did:plc:...")
  * ```
@@ -57,17 +57,17 @@ class PlcDidMethod(
             // Generate key using KMS
             val algorithm = options.algorithm.algorithmName
             val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
-            
+
             // Create DID identifier (PLC uses specific format)
             val did = generatePlcDid(keyHandle)
-            
+
             // Create verification method
             val verificationMethod = DidMethodUtils.createVerificationMethod(
                 did = did,
                 keyHandle = keyHandle,
                 algorithm = options.algorithm
             )
-            
+
             // Build DID document
             val document = DidMethodUtils.buildDidDocument(
                 did = did,
@@ -77,7 +77,7 @@ class PlcDidMethod(
                     listOf(verificationMethod.id)
                 } else null
             )
-            
+
             // Register with PLC registry if endpoint is configured
             if (config.plcRegistryUrl != null) {
                 try {
@@ -90,16 +90,17 @@ class PlcDidMethod(
                 // Store locally if no registry configured
                 storeDocument(document.id, document)
             }
-            
+
             document
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: IllegalArgumentException) {
             throw e
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to create did:plc: ${e.message}",
-                e
+            throw TrustWeaveException.Unknown(
+                code = "CREATE_FAILED",
+                message = "Failed to create did:plc: ${e.message}",
+                cause = e
             )
         }
     }
@@ -107,18 +108,18 @@ class PlcDidMethod(
     override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            
+
             // Resolve from PLC registry
             val url = "${config.plcRegistryUrl}/did/$did"
-            
+
             val request = Request.Builder()
                 .url(url)
                 .get()
                 .addHeader("Accept", "application/json")
                 .build()
-            
+
             val response = httpClient.newCall(request).execute()
-            
+
             if (!response.isSuccessful) {
                 if (response.code == 404) {
                     // Try stored document as fallback
@@ -131,26 +132,30 @@ class PlcDidMethod(
                             getDocumentMetadata(did)?.updated
                         )
                     }
-                    
+
                     return@withContext DidMethodUtils.createErrorResolutionResult(
                         "notFound",
                         "DID not found in PLC registry",
                         method
                     )
                 }
-                
-                throw TrustWeaveException(
-                    "Failed to resolve DID: HTTP ${response.code} ${response.message}"
+
+                throw TrustWeaveException.Unknown(
+                    code = "RESOLVE_FAILED",
+                    message = "Failed to resolve DID: HTTP ${response.code} ${response.message}"
                 )
             }
-            
-            val body = response.body ?: throw TrustWeaveException("Empty response body")
+
+            val body = response.body ?: throw TrustWeaveException.Unknown(
+                code = "EMPTY_RESPONSE",
+                message = "Empty response body"
+            )
             val jsonString = body.string()
-            
+
             // Parse JSON to DidDocument
             val json = Json.parseToJsonElement(jsonString)
             val document = jsonElementToDocument(json)
-            
+
             // Validate DID matches
             if (document.id != did) {
                 // Rebuild with correct DID
@@ -158,7 +163,7 @@ class PlcDidMethod(
                 storeDocument(correctedDocument.id, correctedDocument)
                 return@withContext DidMethodUtils.createSuccessResolutionResult(correctedDocument, method)
             }
-            
+
             storeDocument(document.id, document)
             DidMethodUtils.createSuccessResolutionResult(document, method)
         } catch (e: TrustWeaveException) {
@@ -182,33 +187,38 @@ class PlcDidMethod(
     ): DidDocument = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            
+
             // Resolve current document
             val currentResult = resolveDid(did)
-            val currentDocument = currentResult.document
-                ?: throw NotFoundException("DID document not found: $did")
-            
+            val currentDocument = when (currentResult) {
+                is DidResolutionResult.Success -> currentResult.document
+                else -> throw TrustWeaveException.NotFound(
+                    message = "DID document not found: $did"
+                )
+            }
+
             // Apply updater (use explicit variable to avoid smart cast issue)
             val doc = currentDocument
             val updatedDocument = updater(doc)
-            
+
             // Update in PLC registry
             if (config.plcRegistryUrl != null) {
                 updateInPlcRegistry(updatedDocument)
             }
-            
+
             // Store locally
             storeDocument(updatedDocument.id, updatedDocument)
-            
+
             updatedDocument
-        } catch (e: NotFoundException) {
+        } catch (e: TrustWeaveException.NotFound) {
             throw e
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to update did:plc: ${e.message}",
-                e
+            throw TrustWeaveException.Unknown(
+                code = "UPDATE_FAILED",
+                message = "Failed to update did:plc: ${e.message}",
+                cause = e
             )
         }
     }
@@ -216,14 +226,14 @@ class PlcDidMethod(
     override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            
+
             // Resolve current document
             val currentResult = resolveDid(did)
-            val currentDocument = currentResult.document
-            if (currentDocument == null) {
-                return@withContext false
+            val currentDocument = when (currentResult) {
+                is DidResolutionResult.Success -> currentResult.document
+                else -> return@withContext false
             }
-            
+
             // Create deactivated document
             val deactivatedDocument = currentDocument.copy(
                 verificationMethod = emptyList(),
@@ -233,23 +243,24 @@ class PlcDidMethod(
                 capabilityInvocation = emptyList(),
                 capabilityDelegation = emptyList()
             )
-            
+
             // Deactivate in PLC registry
             if (config.plcRegistryUrl != null) {
                 updateInPlcRegistry(deactivatedDocument)
             }
-            
+
             // Remove from local storage
             documents.remove(did)
             documentMetadata.remove(did)
-            
+
             true
-        } catch (e: NotFoundException) {
+        } catch (e: TrustWeaveException.NotFound) {
             false
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to deactivate did:plc: ${e.message}",
-                e
+            throw TrustWeaveException.Unknown(
+                code = "DEACTIVATE_FAILED",
+                message = "Failed to deactivate did:plc: ${e.message}",
+                cause = e
             )
         }
     }
@@ -261,7 +272,7 @@ class PlcDidMethod(
         // PLC DID format: did:plc:{base32-encoded-hash}
         // Simplified implementation - real implementation needs proper base32 encoding
         val hash = java.security.MessageDigest.getInstance("SHA-256")
-            .digest(keyHandle.id.toByteArray())
+            .digest(keyHandle.id.value.toByteArray())
         val encoded = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(hash)
         return "did:plc:${encoded.take(24).lowercase()}"
     }
@@ -273,25 +284,26 @@ class PlcDidMethod(
         if (config.plcRegistryUrl == null) {
             return@withContext
         }
-        
+
         val url = "${config.plcRegistryUrl}/did"
         val json = documentToJsonElement(document)
         val jsonString = Json.encodeToString(JsonElement.serializer(), json)
         val mediaType = "application/json".toMediaType()
         val body = jsonString.toRequestBody(mediaType)
-        
+
         val request = Request.Builder()
             .url(url)
             .post(body)
             .addHeader("Content-Type", "application/json")
             .build()
-        
+
         val response = httpClient.newCall(request).execute()
-        
+
         if (!response.isSuccessful) {
             val errorBody = response.body?.string() ?: "Unknown error"
-            throw TrustWeaveException(
-                "Failed to register with PLC registry: HTTP ${response.code}: $errorBody"
+            throw TrustWeaveException.Unknown(
+                code = "REGISTRY_REGISTER_FAILED",
+                message = "Failed to register with PLC registry: HTTP ${response.code}: $errorBody"
             )
         }
     }
@@ -303,25 +315,26 @@ class PlcDidMethod(
         if (config.plcRegistryUrl == null) {
             return@withContext
         }
-        
+
         val url = "${config.plcRegistryUrl}/did/${document.id}"
         val json = documentToJsonElement(document)
         val jsonString = Json.encodeToString(JsonElement.serializer(), json)
         val mediaType = "application/json".toMediaType()
         val body = jsonString.toRequestBody(mediaType)
-        
+
         val request = Request.Builder()
             .url(url)
             .put(body)
             .addHeader("Content-Type", "application/json")
             .build()
-        
+
         val response = httpClient.newCall(request).execute()
-        
+
         if (!response.isSuccessful) {
             val errorBody = response.body?.string() ?: "Unknown error"
-            throw TrustWeaveException(
-                "Failed to update in PLC registry: HTTP ${response.code}: $errorBody"
+            throw TrustWeaveException.Unknown(
+                code = "REGISTRY_UPDATE_FAILED",
+                message = "Failed to update in PLC registry: HTTP ${response.code}: $errorBody"
             )
         }
     }
@@ -333,7 +346,7 @@ class PlcDidMethod(
         return buildJsonObject {
             put("@context", JsonArray(document.context.map { JsonPrimitive(it) }))
             put("id", document.id)
-            
+
             if (document.verificationMethod.isNotEmpty()) {
                 put("verificationMethod", JsonArray(document.verificationMethod.map { vmToJsonObject(it) }))
             }
@@ -370,7 +383,7 @@ class PlcDidMethod(
         )
     }
 
-    private fun vmToJsonObject(vm: VerificationMethodRef): JsonObject {
+    private fun vmToJsonObject(vm: VerificationMethod): JsonObject {
         return buildJsonObject {
             put("id", vm.id)
             put("type", vm.type)
@@ -381,7 +394,7 @@ class PlcDidMethod(
         }
     }
 
-    private fun serviceToJsonObject(service: Service): JsonObject {
+    private fun serviceToJsonObject(service: DidService): JsonObject {
         return buildJsonObject {
             put("id", service.id)
             put("type", service.type)
@@ -392,9 +405,9 @@ class PlcDidMethod(
         }
     }
 
-    private fun jsonToVerificationMethod(json: JsonElement): VerificationMethodRef? {
+    private fun jsonToVerificationMethod(json: JsonElement): VerificationMethod? {
         val obj = json.jsonObject
-        return VerificationMethodRef(
+        return VerificationMethod(
             id = obj["id"]?.jsonPrimitive?.content ?: return null,
             type = obj["type"]?.jsonPrimitive?.content ?: return null,
             controller = obj["controller"]?.jsonPrimitive?.content ?: return null,
@@ -403,9 +416,9 @@ class PlcDidMethod(
         )
     }
 
-    private fun jsonToService(json: JsonElement): Service? {
+    private fun jsonToService(json: JsonElement): DidService? {
         val obj = json.jsonObject
-        return Service(
+        return DidService(
             id = obj["id"]?.jsonPrimitive?.content ?: return null,
             type = obj["type"]?.jsonPrimitive?.content ?: return null,
             serviceEndpoint = obj["serviceEndpoint"]?.let {

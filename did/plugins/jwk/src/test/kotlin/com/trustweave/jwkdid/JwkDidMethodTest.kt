@@ -2,6 +2,7 @@ package com.trustweave.jwkdid
 
 import com.trustweave.did.*
 import com.trustweave.did.DidCreationOptions.KeyAlgorithm
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
@@ -50,9 +51,10 @@ class JwkDidMethodTest {
 
         val result = method.resolveDid(document.id)
 
-        assertNotNull(result.document)
-        assertEquals(document.id, result.document?.id)
-        assertEquals("jwk", result.resolutionMetadata["method"])
+        assertTrue(result is DidResolutionResult.Success)
+        val successResult = result as DidResolutionResult.Success
+        assertEquals(document.id, successResult.document.id)
+        assertEquals("jwk", successResult.resolutionMetadata["method"])
     }
 
     @Test

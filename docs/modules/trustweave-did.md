@@ -41,7 +41,7 @@ graph TB
         DidDocument[DidDocument Models]
         DidValidator[DidValidator]
     end
-    
+
     subgraph "DID Method Implementations"
         KeyMethod[did:key]
         WebMethod[did:web]
@@ -49,12 +49,12 @@ graph TB
         IonMethod[did:ion]
         HttpMethod[HttpDidMethod]
     end
-    
+
     subgraph "External Services"
         UniversalResolver[Universal Resolver]
         UniversalRegistrar[Universal Registrar]
     end
-    
+
     DidMethod --> DidMethodRegistry
     DidMethodRegistry --> DidResolver
     DidMethod --> DidRegistrar
@@ -62,7 +62,7 @@ graph TB
     HttpMethod --> UniversalResolver
     HttpMethod --> UniversalRegistrar
     DidRegistrar --> UniversalRegistrar
-    
+
     style DidMethod fill:#e1f5ff
     style DidMethodRegistry fill:#e1f5ff
     style DidResolver fill:#e1f5ff
@@ -78,7 +78,7 @@ import com.trustweave.did.*
 
 interface DidMethod {
     val method: String  // e.g., "key", "web", "ion"
-    
+
     suspend fun createDid(options: DidCreationOptions): DidDocument
     suspend fun resolveDid(did: String): DidResolutionResult
     suspend fun updateDid(did: String, updater: (DidDocument) -> DidDocument): DidDocument
@@ -175,13 +175,13 @@ graph LR
         DR[DidRegistrar]
         DRes[DidResolver]
     end
-    
+
     subgraph "Registry & Resolution"
         DMR[DidMethodRegistry]
         RBR[RegistryBasedResolver]
         DUR[DefaultUniversalResolver]
     end
-    
+
     subgraph "Registration Models"
         CRO[CreateDidOptions]
         URO[UpdateDidOptions]
@@ -189,13 +189,13 @@ graph LR
         DRR[DidRegistrationResponse]
         DS[DidState]
     end
-    
+
     subgraph "Document Models"
         DD[DidDocument]
         VM[VerificationMethod]
         DSvc[DidService]
     end
-    
+
     DM --> DMR
     DMR --> RBR
     RBR --> DRes
@@ -207,7 +207,7 @@ graph LR
     DR --> CRO
     DR --> URO
     DR --> DRO
-    
+
     style DM fill:#e1f5ff
     style DR fill:#e1f5ff
     style DRes fill:#e1f5ff
@@ -227,14 +227,14 @@ fun main() = runBlocking {
             + DidKeyMethod(kms)  // Register did:key method
         }
     }
-    
+
     // Create DID with options
     val didDoc = trustweave.dids.create("key") {
         algorithm = KeyAlgorithm.Ed25519
     }
-    
+
     println("Created DID: ${didDoc.id}")
-    
+
     // Resolve DID
     val resolution = trustweave.dids.resolve(didDoc.id)
     if (resolution.document != null) {
@@ -282,7 +282,7 @@ graph TD
         A --> H[registration/]
         A --> I[validation/]
         A --> J[spi/]
-        
+
         D --> D1[DidModels.kt]
         E --> E1[DidMethodRegistry.kt]
         F --> F1[DidResolver.kt]
@@ -294,7 +294,7 @@ graph TD
         H --> H2[impl/]
         H --> H3[mapper/]
     end
-    
+
     style A fill:#e1f5ff
     style G fill:#fff4e1
     style H fill:#e8f5e9

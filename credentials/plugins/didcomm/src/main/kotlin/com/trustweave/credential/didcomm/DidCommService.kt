@@ -8,7 +8,7 @@ import kotlinx.coroutines.withContext
 
 /**
  * Service interface for DIDComm V2 messaging.
- * 
+ *
  * Provides methods for:
  * - Sending messages (packing and delivery)
  * - Receiving messages (unpacking)
@@ -18,7 +18,7 @@ import kotlinx.coroutines.withContext
 interface DidCommService {
     /**
      * Sends a DIDComm message.
-     * 
+     *
      * @param message The message to send
      * @param fromDid Sender DID
      * @param fromKeyId Sender key ID
@@ -38,7 +38,7 @@ interface DidCommService {
 
     /**
      * Receives and processes a DIDComm message.
-     * 
+     *
      * @param packedMessage The packed message (JSON string)
      * @param recipientDid Recipient DID
      * @param recipientKeyId Recipient key ID
@@ -54,7 +54,7 @@ interface DidCommService {
 
     /**
      * Stores a message (for later retrieval).
-     * 
+     *
      * @param message The message to store
      * @return Message ID
      */
@@ -62,7 +62,7 @@ interface DidCommService {
 
     /**
      * Retrieves a stored message by ID.
-     * 
+     *
      * @param messageId The message ID
      * @return The message, or null if not found
      */
@@ -70,7 +70,7 @@ interface DidCommService {
 
     /**
      * Gets all messages for a given DID (sent or received).
-     * 
+     *
      * @param did The DID
      * @return List of messages
      */
@@ -78,7 +78,7 @@ interface DidCommService {
 
     /**
      * Gets messages in a thread.
-     * 
+     *
      * @param thid Thread ID
      * @return List of messages in the thread
      */
@@ -87,7 +87,7 @@ interface DidCommService {
 
 /**
  * In-memory implementation of DidCommService.
- * 
+ *
  * Suitable for testing and simple use cases.
  * For production, use a persistent storage implementation.
  */
@@ -96,7 +96,7 @@ class InMemoryDidCommService(
     private val resolveDid: suspend (String) -> DidDocument?,
     private val storage: com.trustweave.credential.didcomm.storage.DidCommMessageStorage? = null
 ) : DidCommService {
-    private val inMemoryStorage = storage 
+    private val inMemoryStorage = storage
         ?: com.trustweave.credential.didcomm.storage.InMemoryDidCommMessageStorage()
 
     override suspend fun sendMessage(
@@ -116,13 +116,13 @@ class InMemoryDidCommService(
             toKeyId = toKeyId,
             encrypt = encrypt
         )
-        
+
         // Store the message
         storeMessage(message)
-        
+
         // In a real implementation, this would deliver the message via HTTP, WebSocket, etc.
         // For now, we just store it
-        
+
         message.id
     }
 
@@ -139,10 +139,10 @@ class InMemoryDidCommService(
             recipientKeyId = recipientKeyId,
             senderDid = senderDid
         )
-        
+
         // Store the received message
         storeMessage(message)
-        
+
         message
     }
 

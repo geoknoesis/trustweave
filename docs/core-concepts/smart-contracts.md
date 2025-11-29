@@ -217,7 +217,7 @@ suspend fun createFloodInsuranceContract(
             }
         )
     ).getOrThrow()
-    
+
     println("Created contract: ${contract.id}")
     return contract
 }
@@ -242,7 +242,7 @@ suspend fun bindContract(
         issuerKeyId = issuerKeyId,
         chainId = "algorand:mainnet"
     ).getOrThrow()
-    
+
     println("Contract bound:")
     println("  Credential ID: ${bound.credentialId}")
     println("  Anchor: ${bound.anchorRef.txHash}")
@@ -271,7 +271,7 @@ suspend fun executeFloodContract(
             }
         )
     ).getOrThrow()
-    
+
     if (result.executed) {
         println("Contract executed!")
         result.outcomes.forEach { outcome ->

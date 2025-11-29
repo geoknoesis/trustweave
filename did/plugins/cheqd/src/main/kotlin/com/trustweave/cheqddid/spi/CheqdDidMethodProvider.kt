@@ -11,7 +11,7 @@ import java.util.ServiceLoader
 
 /**
  * SPI provider for did:cheqd method.
- * 
+ *
  * Automatically discovers did:cheqd method when this module is on the classpath.
  */
 class CheqdDidMethodProvider : DidMethodProvider {
@@ -39,7 +39,7 @@ class CheqdDidMethodProvider : DidMethodProvider {
 
         // Create configuration from options
         val config = createConfig(options)
-        
+
         // Get or create blockchain anchor client
         val anchorClient = getOrCreateAnchorClient(options, config)
 
@@ -51,7 +51,7 @@ class CheqdDidMethodProvider : DidMethodProvider {
      */
     private fun createConfig(options: DidCreationOptions): CheqdDidConfig {
         val configMap = options.additionalProperties
-        
+
         // Use defaults if not specified
         return CheqdDidConfig.fromMap(configMap)
     }
@@ -68,7 +68,7 @@ class CheqdDidMethodProvider : DidMethodProvider {
         if (providedClient != null) {
             return providedClient
         }
-        
+
         // In a full implementation, we'd create a CheqdBlockchainAnchorClient
         // For now, throw an error - anchor client must be provided
         throw IllegalStateException(

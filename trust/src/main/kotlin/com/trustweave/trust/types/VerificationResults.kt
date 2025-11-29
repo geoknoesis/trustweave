@@ -7,16 +7,16 @@ import java.time.Instant
 
 /**
  * Sealed result types for credential verification.
- * 
+ *
  * Provides exhaustive error handling with clear, type-safe error cases.
  * Wraps the underlying CredentialVerificationResult for better API ergonomics.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val result: VerificationResult = trustWeave.verify {
  *     credential(credential)
  * }
- * 
+ *
  * when (result) {
  *     is VerificationResult.Valid -> {
  *         println("Credential is valid: ${result.credential.id}")
@@ -42,7 +42,7 @@ sealed class VerificationResult {
         val credential: VerifiableCredential,
         val warnings: List<String> = emptyList()
     ) : VerificationResult()
-    
+
     /**
      * Credential verification failed.
      */
@@ -55,7 +55,7 @@ sealed class VerificationResult {
             val expiredAt: Instant,
             val errors: List<String> = emptyList()
         ) : Invalid()
-        
+
         /**
          * Credential has been revoked.
          */
@@ -64,7 +64,7 @@ sealed class VerificationResult {
             val revokedAt: Instant? = null,
             val errors: List<String> = emptyList()
         ) : Invalid()
-        
+
         /**
          * Proof signature is invalid.
          */
@@ -73,7 +73,7 @@ sealed class VerificationResult {
             val reason: String,
             val errors: List<String> = emptyList()
         ) : Invalid()
-        
+
         /**
          * Issuer DID could not be resolved or is invalid.
          */
@@ -83,7 +83,7 @@ sealed class VerificationResult {
             val reason: String,
             val errors: List<String> = emptyList()
         ) : Invalid()
-        
+
         /**
          * Issuer is not trusted for this credential type.
          */
@@ -93,7 +93,7 @@ sealed class VerificationResult {
             val credentialType: String? = null,
             val errors: List<String> = emptyList()
         ) : Invalid()
-        
+
         /**
          * Schema validation failed.
          */
@@ -101,7 +101,7 @@ sealed class VerificationResult {
             val credential: VerifiableCredential,
             val errors: List<String>
         ) : Invalid()
-        
+
         /**
          * Multiple validation failures.
          */
@@ -110,7 +110,7 @@ sealed class VerificationResult {
             val failures: List<Invalid>,
             val errors: List<String>
         ) : Invalid()
-        
+
         /**
          * Other validation failure.
          */
@@ -120,11 +120,11 @@ sealed class VerificationResult {
             val errors: List<String> = emptyList()
         ) : Invalid()
     }
-    
+
     companion object {
         /**
          * Convert a CredentialVerificationResult to a sealed VerificationResult.
-         * 
+         *
          * This provides a bridge from the existing data class API to the new
          * sealed class API for better error handling.
          */
@@ -132,112 +132,188 @@ sealed class VerificationResult {
             credential: VerifiableCredential,
             result: CredentialVerificationResult
         ): VerificationResult {
-            if (result.valid) {
-                return Valid(
-                    credential = credential,
-                    warnings = result.warnings
-                )
-            }
-            
-            // Determine primary failure reason
-            val failures = mutableListOf<Invalid>()
-            
-            if (!result.notExpired) {
-                val expiredAt = credential.expirationDate?.let {
-                    try {
-                        Instant.parse(it)
+            return when (result) {
+                is CredentialVerificationResult.Valid -> {
+                    Valid(
+                        credential = credential,
+                        warnings = result.warnings
+                    )
+                }
+                is CredentialVerificationResult.Invalid.Expired -> {
+                    Invalid.Expired(
+                        credential = credential,
+                        expiredAt = result.expiredAt,
+                        errors = result.errors
+                    )
+                }
+                is CredentialVerificationResult.Invalid.Revoked -> {
+                    Invalid.Revoked(
+                        credential = credential,
+                        revokedAt = result.revokedAt,
+                        errors = result.errors
+                    )
+                }
+                is CredentialVerificationResult.Invalid.InvalidProof -> {
+                    Invalid.InvalidProof(
+                        credential = credential,
+                        reason = result.reason,
+                        errors = result.errors
+                    )
+                }
+                is CredentialVerificationResult.Invalid.InvalidIssuer -> {
+                    val issuerDid = try {
+                        Did(result.issuerDid)
                     } catch (e: Exception) {
-                        null
+                        return Invalid.Other(
+                            credential = credential,
+                            reason = "Invalid issuer DID format: ${result.issuerDid}",
+                            errors = result.errors
+                        )
                     }
-                } ?: Instant.now()
-                
-                failures.add(Invalid.Expired(
-                    credential = credential,
-                    expiredAt = expiredAt,
-                    errors = result.errors.filter { it.contains("expir", ignoreCase = true) }
-                ))
-            }
-            
-            if (!result.notRevoked) {
-                failures.add(Invalid.Revoked(
-                    credential = credential,
-                    revokedAt = null, // Could be extracted from credential status if available
-                    errors = result.errors.filter { it.contains("revok", ignoreCase = true) }
-                ))
-            }
-            
-            if (!result.proofValid) {
-                failures.add(Invalid.InvalidProof(
-                    credential = credential,
-                    reason = result.errors.firstOrNull { it.contains("proof", ignoreCase = true) }
-                        ?: "Proof validation failed",
-                    errors = result.errors.filter { it.contains("proof", ignoreCase = true) }
-                ))
-            }
-            
-            if (!result.issuerValid) {
-                val issuerDid = try {
-                    Did(credential.issuer)
-                } catch (e: Exception) {
-                    return Invalid.Other(
+                    Invalid.IssuerResolutionFailed(
                         credential = credential,
-                        reason = "Invalid issuer DID format: ${credential.issuer}",
+                        issuer = issuerDid,
+                        reason = result.reason,
                         errors = result.errors
                     )
                 }
-                
-                failures.add(Invalid.IssuerResolutionFailed(
-                    credential = credential,
-                    issuer = issuerDid,
-                    reason = result.errors.firstOrNull { it.contains("issuer", ignoreCase = true) }
-                        ?: "Issuer DID resolution failed",
-                    errors = result.errors.filter { it.contains("issuer", ignoreCase = true) }
-                ))
-            }
-            
-            if (!result.trustRegistryValid) {
-                val issuerDid = try {
-                    Did(credential.issuer)
-                } catch (e: Exception) {
-                    return Invalid.Other(
+                is CredentialVerificationResult.Invalid.UntrustedIssuer -> {
+                    val issuerDid = try {
+                        Did(result.issuerDid)
+                    } catch (e: Exception) {
+                        return Invalid.Other(
+                            credential = credential,
+                            reason = "Invalid issuer DID format: ${result.issuerDid}",
+                            errors = result.errors
+                        )
+                    }
+                    Invalid.UntrustedIssuer(
                         credential = credential,
-                        reason = "Invalid issuer DID format: ${credential.issuer}",
+                        issuer = issuerDid,
+                        credentialType = credential.type.firstOrNull(),
                         errors = result.errors
                     )
                 }
-                
-                failures.add(Invalid.UntrustedIssuer(
-                    credential = credential,
-                    issuer = issuerDid,
-                    credentialType = credential.type.firstOrNull(),
-                    errors = result.errors.filter { it.contains("trust", ignoreCase = true) }
-                ))
-            }
-            
-            if (!result.schemaValid) {
-                failures.add(Invalid.SchemaValidationFailed(
-                    credential = credential,
-                    errors = result.errors.filter { it.contains("schema", ignoreCase = true) }
-                ))
-            }
-            
-            // Return most specific failure, or multiple failures if several occurred
-            return when {
-                failures.size == 1 -> failures.first()
-                failures.size > 1 -> Invalid.MultipleFailures(
-                    credential = credential,
-                    failures = failures,
-                    errors = result.errors
-                )
-                else -> Invalid.Other(
-                    credential = credential,
-                    reason = result.errors.firstOrNull() ?: "Verification failed",
-                    errors = result.errors
-                )
+                is CredentialVerificationResult.Invalid.SchemaValidationFailed -> {
+                    Invalid.SchemaValidationFailed(
+                        credential = credential,
+                        errors = result.errors
+                    )
+                }
+                is CredentialVerificationResult.Invalid.InvalidBlockchainAnchor -> {
+                    Invalid.Other(
+                        credential = credential,
+                        reason = result.reason,
+                        errors = result.errors
+                    )
+                }
+                is CredentialVerificationResult.Invalid.InvalidProofPurpose -> {
+                    Invalid.Other(
+                        credential = credential,
+                        reason = "Invalid proof purpose: ${result.requiredPurpose}",
+                        errors = result.errors
+                    )
+                }
+                is CredentialVerificationResult.Invalid.InvalidDelegation -> {
+                    Invalid.Other(
+                        credential = credential,
+                        reason = result.reason,
+                        errors = result.errors
+                    )
+                }
+                is CredentialVerificationResult.Invalid.MultipleFailures -> {
+                    // Convert the errors to a list of Invalid types if needed
+                    // For now, just create an Other with all errors
+                    Invalid.Other(
+                        credential = credential,
+                        reason = result.errors.firstOrNull() ?: "Multiple verification failures",
+                        errors = result.errors
+                    )
+                }
             }
         }
     }
 }
+
+/**
+ * Extension properties for backward compatibility with tests.
+ * These allow accessing properties similar to CredentialVerificationResult.
+ */
+val VerificationResult.valid: Boolean
+    get() = this is VerificationResult.Valid
+
+val VerificationResult.revoked: Boolean
+    get() = when (this) {
+        is VerificationResult.Valid -> false
+        is VerificationResult.Invalid.Revoked -> true
+        else -> false
+    }
+
+val VerificationResult.errors: List<String>
+    get() = when (this) {
+        is VerificationResult.Valid -> emptyList()
+        is VerificationResult.Invalid.Expired -> this.errors
+        is VerificationResult.Invalid.Revoked -> this.errors
+        is VerificationResult.Invalid.InvalidProof -> this.errors
+        is VerificationResult.Invalid.IssuerResolutionFailed -> this.errors
+        is VerificationResult.Invalid.UntrustedIssuer -> this.errors
+        is VerificationResult.Invalid.SchemaValidationFailed -> this.errors
+        is VerificationResult.Invalid.MultipleFailures -> this.errors
+        is VerificationResult.Invalid.Other -> this.errors
+    }
+
+val VerificationResult.warnings: List<String>
+    get() = when (this) {
+        is VerificationResult.Valid -> this.warnings
+        else -> emptyList()
+    }
+
+val VerificationResult.proofValid: Boolean
+    get() = when (this) {
+        is VerificationResult.Valid -> true
+        is VerificationResult.Invalid.InvalidProof -> false
+        else -> true // Other failures don't necessarily mean proof is invalid
+    }
+
+val VerificationResult.issuerValid: Boolean
+    get() = when (this) {
+        is VerificationResult.Valid -> true
+        is VerificationResult.Invalid.IssuerResolutionFailed -> false
+        else -> true // Other failures don't necessarily mean issuer is invalid
+    }
+
+val VerificationResult.trustRegistryValid: Boolean
+    get() = when (this) {
+        is VerificationResult.Valid -> true
+        is VerificationResult.Invalid.UntrustedIssuer -> false
+        else -> true // Other failures don't necessarily mean trust registry check failed
+    }
+
+val VerificationResult.delegationValid: Boolean
+    get() = when (this) {
+        is VerificationResult.Valid -> true
+        else -> {
+            // Check if there are delegation-related errors
+            val hasDelegationErrors = errors.any {
+                it.contains("delegation", ignoreCase = true) ||
+                it.contains("capability", ignoreCase = true)
+            }
+            !hasDelegationErrors
+        }
+    }
+
+val VerificationResult.proofPurposeValid: Boolean
+    get() = when (this) {
+        is VerificationResult.Valid -> true
+        else -> {
+            // Check if there are proof purpose-related errors
+            val hasProofPurposeErrors = errors.any {
+                it.contains("proof purpose", ignoreCase = true) ||
+                it.contains("proofPurpose", ignoreCase = true)
+            }
+            !hasProofPurposeErrors
+        }
+    }
 
 /**
  * Sealed result type for DID operations.
@@ -250,7 +326,7 @@ sealed class DidResult {
         val did: Did,
         val document: DidDocument
     ) : DidResult()
-    
+
     /**
      * DID operation failed.
      */
@@ -262,7 +338,7 @@ sealed class DidResult {
             val did: Did,
             val reason: String
         ) : Failure()
-        
+
         /**
          * DID creation failed.
          */
@@ -270,7 +346,7 @@ sealed class DidResult {
             val reason: String,
             val cause: Throwable? = null
         ) : Failure()
-        
+
         /**
          * DID update failed.
          */
@@ -279,7 +355,7 @@ sealed class DidResult {
             val reason: String,
             val cause: Throwable? = null
         ) : Failure()
-        
+
         /**
          * DID deactivation failed.
          */

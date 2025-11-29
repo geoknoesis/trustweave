@@ -27,10 +27,10 @@ dependencies {
     implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    
+
     // Web3j for Polygon blockchain
     implementation("org.web3j:core:4.10.0")
-    
+
     // Polygon anchor client
     implementation("com.trustweave.chains:polygon:1.0.0-SNAPSHOT")
 }
@@ -220,11 +220,11 @@ val anchorClient = PolygonBlockchainAnchorClient(config.chainId, config.toMap())
 
 val TrustWeave = TrustWeave.create {
     kms = InMemoryKeyManagementService()
-    
+
     blockchain {
         register(config.chainId, anchorClient)
     }
-    
+
     didMethods {
         + PolygonDidMethod(kms!!, anchorClient, config)
     }

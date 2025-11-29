@@ -116,7 +116,7 @@ flowchart TD
     B -->|references| C["Field Data Collection Event<br/>Geospatial features, measurements,<br/>photos, metadata"]
     D["Field Worker Credential<br/>Authorization, qualifications,<br/>project assignment"] -->|authorizes| C
     E["Field Worker DID<br/>Decentralized identifier<br/>for worker identity"] -->|identifies| D
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -149,16 +149,16 @@ dependencies {
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-credential:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-wallet:1.0.0-SNAPSHOT")
-    
+
     // Test kit for in-memory implementations
     implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
-    
+
     // Optional: Blockchain adapters for real blockchain anchoring
     implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -239,7 +239,7 @@ fun main() = runBlocking {
     // Setup TrustWeave with blockchain support
     val chainId = "algorand:testnet"
     val anchorClient = InMemoryBlockchainAnchorClient(chainId)
-    
+
     val trustWeave = TrustWeave.build {
         keys {
             provider("inMemory")
@@ -254,7 +254,7 @@ fun main() = runBlocking {
             chainId to anchorClient
         }
     }
-    
+
     println("✓ TrustWeave configured")
     println("  - Chain: $chainId")
     println("  - Mode: In-memory (for testing)")
@@ -559,11 +559,11 @@ fun main() = runBlocking {
     println("Field Data Collection - Complete Verification Scenario")
     println("=".repeat(70))
     println()
-    
+
     // Step 1: Setup TrustWeave
     val chainId = "algorand:testnet"
     val anchorClient = InMemoryBlockchainAnchorClient(chainId)
-    
+
     val trustWeave = TrustWeave.build {
         keys {
             provider("inMemory")
@@ -578,11 +578,11 @@ fun main() = runBlocking {
             chainId to anchorClient
         }
     }
-    
+
     println("Step 1: TrustWeave configured")
     println("  - Chain: $chainId")
     println()
-    
+
     // Step 2: Create organization DID
     val organizationDid = trustWeave.createDid {
         method("key")
@@ -590,7 +590,7 @@ fun main() = runBlocking {
     println("Step 2: Organization DID created")
     println("  - DID: ${organizationDid.value}")
     println()
-    
+
     // Step 3: Create field worker DID
     val workerDid = trustWeave.createDid {
         method("key")
@@ -598,12 +598,12 @@ fun main() = runBlocking {
     println("Step 3: Field worker DID created")
     println("  - DID: ${workerDid.value}")
     println()
-    
+
     // Step 4: Issue worker authorization credential
     val expirationDate = Instant.now()
         .plusSeconds(365 * 24 * 60 * 60L)
         .toString()
-    
+
     val workerCredential = trustWeave.issue {
         credential {
             id("credential:worker-auth-001")
@@ -624,12 +624,12 @@ fun main() = runBlocking {
             keyId = "${organizationDid.value}#key-1"
         )
     }
-    
+
     println("Step 4: Worker authorization credential issued")
     println("  - Credential ID: ${workerCredential.id}")
     println("  - Role: Forest Surveyor")
     println()
-    
+
     // Step 5: Create collection event
     val collectionEvent = FieldCollectionEvent(
         id = "collection-${Instant.now().toEpochMilli()}",
@@ -659,16 +659,16 @@ fun main() = runBlocking {
             "weather" to "sunny"
         )
     )
-    
+
     println("Step 5: Collection event created")
     println("  - Event ID: ${collectionEvent.id}")
     println("  - Features: ${collectionEvent.features.size}")
     println()
-    
+
     // Step 6: Compute digest and issue collection credential
     val eventJson = Json.encodeToJsonElement(collectionEvent)
     val dataDigest = DigestUtils.sha256DigestMultibase(eventJson)
-    
+
     val collectionCredential = trustWeave.issue {
         credential {
             id("credential:${collectionEvent.id}")
@@ -689,11 +689,11 @@ fun main() = runBlocking {
             keyId = "${organizationDid.value}#key-1"
         )
     }
-    
+
     println("Step 6: Collection credential issued")
     println("  - Data Digest: $dataDigest")
     println()
-    
+
     // Step 7: Anchor to blockchain
     val anchorPayload = FieldDataAnchor(
         collectionEventId = collectionEvent.id,
@@ -702,24 +702,24 @@ fun main() = runBlocking {
         dataDigest = dataDigest,
         timestamp = collectionEvent.timestamp
     )
-    
+
     val anchorResult = trustWeave.blockchains.anchor(
         data = anchorPayload,
         serializer = FieldDataAnchor.serializer(),
         chainId = chainId
     )
-    
+
     println("Step 7: Data anchored to blockchain")
     println("  - TX Hash: ${anchorResult.ref.txHash}")
     println()
-    
+
     // Step 8: Verify integrity
     val anchoredData = trustWeave.blockchains.readAnchor<FieldDataAnchor>(
         anchorRef = anchorResult.ref
     )
     val currentDigest = DigestUtils.sha256DigestMultibase(eventJson)
     val isIntact = anchoredData.dataDigest == currentDigest
-    
+
     println("Step 8: Data integrity verification")
     if (isIntact) {
         println("  ✓ Data integrity verified - no tampering detected")
@@ -727,18 +727,18 @@ fun main() = runBlocking {
         println("  ✗ Data integrity check failed - possible tampering")
     }
     println()
-    
+
     // Step 9: Verify credentials
     val workerVerification = trustWeave.verify {
         credential(workerCredential)
         checkTrust(true)
     }
-    
+
     val collectionVerification = trustWeave.verify {
         credential(collectionCredential)
         checkTrust(true)
     }
-    
+
     println("Step 9: Credential verification")
     when (workerVerification) {
         is VerificationResult.Valid -> println("  ✓ Worker credential verified")
@@ -749,7 +749,7 @@ fun main() = runBlocking {
         is VerificationResult.Invalid -> println("  ✗ Collection credential invalid")
     }
     println()
-    
+
     println("=".repeat(70))
     println("Scenario Complete!")
     println("=".repeat(70))
@@ -800,4 +800,6 @@ You've learned how to:
 - ✅ Verify data integrity and worker authorization
 
 This creates a complete, verifiable field data collection system that ensures data integrity, verifies worker identity, and provides immutable audit trails for compliance and trust.
+
+
 

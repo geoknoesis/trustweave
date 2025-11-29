@@ -5,9 +5,11 @@ plugins {
 
 group = "com.trustweave.chains"
 dependencies {
+    implementation(project(":common"))
     implementation(project(":credentials:credential-core"))
     implementation(project(":anchors:anchor-core"))
-    implementation(project(":common"))    // Using HTTP approach initially (can be upgraded to indy-vdr later)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.bundles.ktor.client)
 
     // Test dependencies

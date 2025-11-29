@@ -68,14 +68,14 @@ Successfully implemented persistent message storage and SecretResolver for DIDCo
 #### Hybrid Secret Resolver
 - **File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/crypto/secret/HybridKmsSecretResolver.kt`
 - **Purpose**: Recommended approach for production
-- **Strategy**: 
+- **Strategy**:
   - DIDComm keys stored locally (for ECDH)
   - Other keys use cloud KMS (for signing)
 - **Status**: ✅ Complete
 
 #### Updated Production Crypto
 - **File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/crypto/DidCommCryptoProduction.kt`
-- **Changes**: 
+- **Changes**:
   - Added SecretResolver parameter
   - Uses custom resolver if provided
   - Falls back to default if not provided
@@ -83,7 +83,7 @@ Successfully implemented persistent message storage and SecretResolver for DIDCo
 
 #### Updated Crypto Adapter
 - **File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/crypto/DidCommCryptoAdapter.kt`
-- **Changes**: 
+- **Changes**:
   - Added SecretResolver parameter
   - Passes resolver to production crypto
 - **Status**: ✅ Complete
@@ -101,7 +101,7 @@ Successfully implemented persistent message storage and SecretResolver for DIDCo
 
 #### In-Memory Service
 - **File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/DidCommService.kt`
-- **Changes**: 
+- **Changes**:
   - Updated to use storage interface
   - Accepts optional storage parameter
 - **Status**: ✅ Complete

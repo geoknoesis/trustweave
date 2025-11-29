@@ -21,7 +21,7 @@ import java.util.ServiceLoader
 
 /**
  * Factory implementations for testkit services.
- * 
+ *
  * Provides factory methods for creating test implementations without reflection.
  * Also handles SPI discovery for providers that may be available.
  */
@@ -35,11 +35,11 @@ class TestkitKmsFactory : KmsFactory {
         val kms = InMemoryKeyManagementService()
         val kmsRef = kms
         val signerFn: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
-            kmsRef.sign(keyId, data)
+            kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)
         }
         return Pair(kms as Any, signerFn)
     }
-    
+
     override suspend fun createFromProvider(
         providerName: String,
         algorithm: String
@@ -47,7 +47,7 @@ class TestkitKmsFactory : KmsFactory {
         if (providerName == "inMemory") {
             return createInMemory()
         }
-        
+
         // Try SPI discovery
         try {
             val providers = ServiceLoader.load(KeyManagementServiceProvider::class.java)
@@ -61,7 +61,7 @@ class TestkitKmsFactory : KmsFactory {
         } catch (e: Exception) {
             // SPI classes not available or provider not found
         }
-        
+
         throw IllegalStateException(
             "KMS provider '$providerName' not found. " +
             "Ensure TrustWeave-$providerName is on classpath or use 'inMemory' for testing."
@@ -86,7 +86,7 @@ class TestkitDidMethodFactory : DidMethodFactory {
                 if (methodName in provider.supportedMethods) {
                     val keyManagementService = kms as? KeyManagementService
                         ?: throw IllegalArgumentException("KMS must be KeyManagementService instance")
-                    
+
                     // Convert config to options map
                     var creationOptions = when (config) {
                         is DidCreationOptions -> config
@@ -98,7 +98,7 @@ class TestkitDidMethodFactory : DidMethodFactory {
                             additionalProperties = creationOptions.additionalProperties + ("kms" to keyManagementService)
                         )
                     }
-                    
+
                     val method = provider.create(methodName, creationOptions)
                     if (method != null) {
                         return method as Any
@@ -108,14 +108,14 @@ class TestkitDidMethodFactory : DidMethodFactory {
         } catch (e: Exception) {
             // SPI classes not available, fall through to testkit
         }
-        
+
         // Fallback to testkit for "key" method
         if (methodName == "key") {
             val keyManagementService = kms as? KeyManagementService
                 ?: throw IllegalArgumentException("KMS must be KeyManagementService instance")
             return DidKeyMockMethod(keyManagementService) as Any
         }
-        
+
         return null // Method not found
     }
 }
@@ -165,7 +165,7 @@ class TestkitBlockchainAnchorClientFactory : BlockchainAnchorClientFactory {
             val contract = configMap?.get("contract") as? String
             return InMemoryBlockchainAnchorClient(chainId, contract) as Any
         }
-        
+
         // Try SPI discovery
         try {
             val providers = ServiceLoader.load(BlockchainAnchorClientProvider::class.java)
@@ -178,7 +178,7 @@ class TestkitBlockchainAnchorClientFactory : BlockchainAnchorClientFactory {
         } catch (e: Exception) {
             // SPI classes not available or provider not found
         }
-        
+
         throw IllegalStateException(
             "BlockchainAnchorClient provider '$providerName' not found for chain '$chainId'. " +
             "Ensure TrustWeave-$providerName is on classpath or use 'inMemory' for testing."

@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,34 +591,34 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="credential-exchange-protocols---versioning">
-  
-  
+
+
     <a href="#credential-exchange-protocols---versioning" class="anchor-heading" aria-labelledby="credential-exchange-protocols---versioning"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Credential Exchange Protocols - Versioning
-  
-  
+
+
 </h1>
-    
+
 
 <p>Version information, deprecation notices, and migration guides for credential exchange protocols.</p>
 <h2 id="current-version">
-  
-  
+
+
     <a href="#current-version" class="anchor-heading" aria-labelledby="current-version"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Current Version
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><strong>API Version</strong>: 1.0.0-SNAPSHOT</li>
@@ -627,21 +627,21 @@
   <li><strong>Java Version</strong>: 21+</li>
 </ul>
 <h2 id="version-history">
-  
-  
+
+
     <a href="#version-history" class="anchor-heading" aria-labelledby="version-history"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Version History
-  
-  
+
+
 </h2>
-    
+
 <h3 id="100-snapshot-current">
-  
-  
+
+
     <a href="#100-snapshot-current" class="anchor-heading" aria-labelledby="100-snapshot-current"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1.0.0-SNAPSHOT (Current)
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Initial Release</strong></p>
 
@@ -671,21 +671,21 @@
   <li>Advanced features</li>
 </ul><hr />
 <h2 id="deprecation-policy">
-  
-  
+
+
     <a href="#deprecation-policy" class="anchor-heading" aria-labelledby="deprecation-policy"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Deprecation Policy
-  
-  
+
+
 </h2>
-    
+
 <h3 id="deprecation-timeline">
-  
-  
+
+
     <a href="#deprecation-timeline" class="anchor-heading" aria-labelledby="deprecation-timeline"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Deprecation Timeline
-  
-  
+
+
 </h3>
-    
+
 
 <ol>
   <li><strong>Deprecation Notice</strong>: Features are marked as deprecated in documentation and code comments</li>
@@ -693,41 +693,41 @@
   <li><strong>Removal</strong>: Deprecated features are removed in a major version release</li>
 </ol>
 <h3 id="currently-deprecated">
-  
-  
+
+
     <a href="#currently-deprecated" class="anchor-heading" aria-labelledby="currently-deprecated"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Currently Deprecated
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>None</strong> - No features are currently deprecated.</p><hr />
 <h2 id="migration-guides">
-  
-  
+
+
     <a href="#migration-guides" class="anchor-heading" aria-labelledby="migration-guides"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Migration Guides
-  
-  
+
+
 </h2>
-    
+
 <h3 id="migrating-from-protocol-specific-apis">
-  
-  
+
+
     <a href="#migrating-from-protocol-specific-apis" class="anchor-heading" aria-labelledby="migrating-from-protocol-specific-apis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Migrating from Protocol-Specific APIs
-  
-  
+
+
 </h3>
-    
+
 
 <p>If you’re using protocol-specific APIs directly, you can migrate to the protocol abstraction layer.</p>
 <h4 id="before-direct-protocol-usage">
-  
-  
+
+
     <a href="#before-direct-protocol-usage" class="anchor-heading" aria-labelledby="before-direct-protocol-usage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Before: Direct Protocol Usage
-  
-  
+
+
 </h4>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -745,13 +745,13 @@
 <span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h4 id="after-protocol-abstraction">
-  
-  
+
+
     <a href="#after-protocol-abstraction" class="anchor-heading" aria-labelledby="after-protocol-abstraction"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> After: Protocol Abstraction
-  
-  
+
+
 </h4>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -789,21 +789,21 @@
   <li>Better testability</li>
 </ul><hr />
 <h3 id="migrating-between-protocols">
-  
-  
+
+
     <a href="#migrating-between-protocols" class="anchor-heading" aria-labelledby="migrating-between-protocols"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Migrating Between Protocols
-  
-  
+
+
 </h3>
-    
+
 <h4 id="from-didcomm-to-oidc4vci">
-  
-  
+
+
     <a href="#from-didcomm-to-oidc4vci" class="anchor-heading" aria-labelledby="from-didcomm-to-oidc4vci"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> From DIDComm to OIDC4VCI
-  
-  
+
+
 </h4>
-    
+
 
 <p><strong>When to migrate:</strong></p>
 <ul>
@@ -844,7 +844,7 @@
     <span class="s">"fromKeyId"</span> <span class="n">to</span> <span class="s">"did:key:issuer#key-1"</span><span class="p">,</span>
     <span class="s">"toKeyId"</span> <span class="n">to</span> <span class="s">"did:key:holder#key-1"</span>
 <span class="p">)</span>
-   
+
 <span class="c1">// After (OIDC4VCI)</span>
 <span class="n">options</span> <span class="p">=</span> <span class="nf">mapOf</span><span class="p">(</span>
     <span class="s">"credentialIssuer"</span> <span class="n">to</span> <span class="s">"https://issuer.example.com"</span>
@@ -859,7 +859,7 @@
 5
 </pre></td><td class="rouge-code"><pre><span class="c1">// Before</span>
 <span class="n">registry</span><span class="p">.</span><span class="nf">offerCredential</span><span class="p">(</span><span class="s">"didcomm"</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
-   
+
 <span class="c1">// After</span>
 <span class="n">registry</span><span class="p">.</span><span class="nf">offerCredential</span><span class="p">(</span><span class="s">"oidc4vci"</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div>    </div>
@@ -873,13 +873,13 @@
   <li>Different error handling</li>
 </ul><hr />
 <h4 id="from-oidc4vci-to-didcomm">
-  
-  
+
+
     <a href="#from-oidc4vci-to-didcomm" class="anchor-heading" aria-labelledby="from-oidc4vci-to-didcomm"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> From OIDC4VCI to DIDComm
-  
-  
+
+
 </h4>
-    
+
 
 <p><strong>When to migrate:</strong></p>
 <ul>
@@ -913,7 +913,7 @@
 <span class="n">options</span> <span class="p">=</span> <span class="nf">mapOf</span><span class="p">(</span>
     <span class="s">"credentialIssuer"</span> <span class="n">to</span> <span class="s">"https://issuer.example.com"</span>
 <span class="p">)</span>
-   
+
 <span class="c1">// After (DIDComm)</span>
 <span class="n">options</span> <span class="p">=</span> <span class="nf">mapOf</span><span class="p">(</span>
     <span class="s">"fromKeyId"</span> <span class="n">to</span> <span class="s">"did:key:issuer#key-1"</span><span class="p">,</span>
@@ -929,7 +929,7 @@
 5
 </pre></td><td class="rouge-code"><pre><span class="c1">// Before</span>
 <span class="n">registry</span><span class="p">.</span><span class="nf">offerCredential</span><span class="p">(</span><span class="s">"oidc4vci"</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
-   
+
 <span class="c1">// After</span>
 <span class="n">registry</span><span class="p">.</span><span class="nf">offerCredential</span><span class="p">(</span><span class="s">"didcomm"</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div>    </div>
@@ -943,21 +943,21 @@
   <li>Peer-to-peer communication</li>
 </ul><hr />
 <h3 id="migrating-storage-implementations">
-  
-  
+
+
     <a href="#migrating-storage-implementations" class="anchor-heading" aria-labelledby="migrating-storage-implementations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Migrating Storage Implementations
-  
-  
+
+
 </h3>
-    
+
 <h4 id="from-in-memory-to-database-storage">
-  
-  
+
+
     <a href="#from-in-memory-to-database-storage" class="anchor-heading" aria-labelledby="from-in-memory-to-database-storage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> From In-Memory to Database Storage
-  
-  
+
+
 </h4>
-    
+
 
 <p><strong>Before:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1012,21 +1012,21 @@
   </li>
 </ol><hr />
 <h2 id="compatibility-matrix">
-  
-  
+
+
     <a href="#compatibility-matrix" class="anchor-heading" aria-labelledby="compatibility-matrix"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Compatibility Matrix
-  
-  
+
+
 </h2>
-    
+
 <h3 id="protocol-compatibility">
-  
-  
+
+
     <a href="#protocol-compatibility" class="anchor-heading" aria-labelledby="protocol-compatibility"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Protocol Compatibility
-  
-  
+
+
 </h3>
-    
+
 
 <div class="table-wrapper"><table>
   <thead>
@@ -1066,13 +1066,13 @@
   <li>❌ Not compatible</li>
 </ul>
 <h3 id="api-compatibility">
-  
-  
+
+
     <a href="#api-compatibility" class="anchor-heading" aria-labelledby="api-compatibility"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> API Compatibility
-  
-  
+
+
 </h3>
-    
+
 
 <div class="table-wrapper"><table>
   <thead>
@@ -1089,21 +1089,21 @@
   </tbody>
 </table></div><hr />
 <h2 id="upgrade-guide">
-  
-  
+
+
     <a href="#upgrade-guide" class="anchor-heading" aria-labelledby="upgrade-guide"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Upgrade Guide
-  
-  
+
+
 </h2>
-    
+
 <h3 id="upgrading-to-latest-version">
-  
-  
+
+
     <a href="#upgrading-to-latest-version" class="anchor-heading" aria-labelledby="upgrading-to-latest-version"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Upgrading to Latest Version
-  
-  
+
+
 </h3>
-    
+
 
 <ol>
   <li><strong>Check current version:</strong>
@@ -1145,21 +1145,21 @@
   </li>
 </ol><hr />
 <h2 id="future-versions">
-  
-  
+
+
     <a href="#future-versions" class="anchor-heading" aria-labelledby="future-versions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Future Versions
-  
-  
+
+
 </h2>
-    
+
 <h3 id="planned-features-future-versions">
-  
-  
+
+
     <a href="#planned-features-future-versions" class="anchor-heading" aria-labelledby="planned-features-future-versions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Planned Features (Future Versions)
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>OIDC4VP (OpenID Connect for Verifiable Presentations)</li>
@@ -1170,13 +1170,13 @@
   <li>Metrics and observability per protocol</li>
 </ul>
 <h3 id="version-roadmap">
-  
-  
+
+
     <a href="#version-roadmap" class="anchor-heading" aria-labelledby="version-roadmap"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Version Roadmap
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>1.1.0</strong>: Additional protocols (OIDC4VP, SIOPv2)</li>
@@ -1184,21 +1184,21 @@
   <li><strong>2.0.0</strong>: Major API improvements (if needed)</li>
 </ul><hr />
 <h2 id="support-policy">
-  
-  
+
+
     <a href="#support-policy" class="anchor-heading" aria-labelledby="support-policy"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Support Policy
-  
-  
+
+
 </h2>
-    
+
 <h3 id="supported-versions">
-  
-  
+
+
     <a href="#supported-versions" class="anchor-heading" aria-labelledby="supported-versions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Supported Versions
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>Current Version</strong>: Full support</li>
@@ -1206,13 +1206,13 @@
   <li><strong>Older Versions</strong>: No support</li>
 </ul>
 <h3 id="support-timeline">
-  
-  
+
+
     <a href="#support-timeline" class="anchor-heading" aria-labelledby="support-timeline"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Support Timeline
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>Major Versions</strong>: Supported for 2 years</li>
@@ -1220,13 +1220,13 @@
   <li><strong>Patch Versions</strong>: Supported until next patch version</li>
 </ul><hr />
 <h2 id="related-documentation">
-  
-  
+
+
     <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><strong><a href="/trustweave/features/credential-exchange-protocols/QUICK_START.md">Quick Start</a></strong> - Get started quickly</li>
@@ -1235,17 +1235,17 @@
   <li><strong><a href="/trustweave/features/credential-exchange-protocols/TROUBLESHOOTING/">Troubleshooting</a></strong> - Common issues and solutions</li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -1277,7 +1277,7 @@
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -1287,12 +1287,12 @@
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -1314,12 +1314,12 @@
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -1328,12 +1328,12 @@
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -1341,7 +1341,7 @@
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -1349,31 +1349,31 @@
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -1385,7 +1385,7 @@
 
 
 
-  
+
 </body>
 </html>
 

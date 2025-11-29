@@ -14,15 +14,15 @@ import java.nio.charset.StandardCharsets
 
 /**
  * Optimism blockchain anchor client implementation.
- * 
+ *
  * Supports Optimism mainnet and Sepolia testnet chains.
  * Uses Ethereum-compatible transaction data fields to store payload data.
- * 
+ *
  * Chain ID format: "eip155:<chain-id>"
  * Examples:
  * - "eip155:10" (Optimism mainnet)
  * - "eip155:11155420" (Optimism Sepolia testnet)
- * 
+ *
  * **Example:**
  * ```kotlin
  * val client = OptimismBlockchainAnchorClient(
@@ -38,11 +38,11 @@ class OptimismBlockchainAnchorClient(
     chainId: String,
     options: Map<String, Any?> = emptyMap()
 ) : AbstractBlockchainAnchorClient(chainId, options), java.io.Closeable {
-    
+
     companion object {
         const val MAINNET = "eip155:10"  // Optimism mainnet
         const val SEPOLIA = "eip155:11155420" // Optimism Sepolia testnet
-        
+
         // Network RPC endpoints
         private const val MAINNET_RPC_URL = "https://mainnet.optimism.io"
         private const val SEPOLIA_RPC_URL = "https://sepolia.optimism.io"
@@ -60,7 +60,7 @@ class OptimismBlockchainAnchorClient(
         require(chainIdNum == 10 || chainIdNum == 11155420) {
             "Unsupported Optimism chain ID: $chainId. Use 'eip155:10' (mainnet) or 'eip155:11155420' (Sepolia testnet)"
         }
-        
+
         // Initialize Web3j client based on chain
         val rpcUrl = when (chainId) {
             MAINNET -> options["rpcUrl"] as? String ?: MAINNET_RPC_URL
@@ -125,7 +125,7 @@ class OptimismBlockchainAnchorClient(
 
         val signedTransaction = org.web3j.crypto.TransactionEncoder.signMessage(rawTransaction, creds)
         val hexValue = org.web3j.utils.Numeric.toHexString(signedTransaction)
-        
+
         val ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send()
         if (ethSendTransaction.hasError()) {
             val error = ethSendTransaction.error
@@ -160,14 +160,14 @@ class OptimismBlockchainAnchorClient(
         val dataBytes = org.web3j.utils.Numeric.hexStringToByteArray(input)
         val payloadJson = String(dataBytes, StandardCharsets.UTF_8)
         val payload = Json.parseToJsonElement(payloadJson)
-        
+
         // Extract block number
         val blockNumber = try {
             receipt.blockNumber?.toLong()
         } catch (e: Exception) {
             null
         }
-        
+
         return AnchorResult(
             ref = buildAnchorRef(
                 txHash = txHash,

@@ -12,10 +12,10 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
 
     .site-nav > ul.nav-list:first-child > li > a,
-    
+
     .site-nav > ul.nav-list:first-child > li > ul > li:not(:nth-child(6)) > a,
     .site-nav > ul.nav-list:first-child > li > ul > li > ul > li a {
       background-image: none;
@@ -38,17 +38,17 @@
     }
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -97,7 +97,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -106,7 +106,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -136,13 +136,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -153,7 +153,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -358,7 +358,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -406,14 +406,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -421,7 +421,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -434,21 +434,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -516,7 +516,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -531,8 +531,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -549,10 +549,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -565,8 +565,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -582,25 +582,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -610,9 +610,9 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
@@ -626,25 +626,25 @@
 
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="manage-wallets">
-  
-  
+
+
     <a href="#manage-wallets" class="anchor-heading" aria-labelledby="manage-wallets"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Manage Wallets
-  
-  
+
+
 </h1>
-    
+
 
 <p>This guide shows you how to create wallets, store credentials, organize them with collections and tags, and create verifiable presentations.</p>
 <h2 id="quick-example">
-  
-  
+
+
     <a href="#quick-example" class="anchor-heading" aria-labelledby="quick-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Quick Example
-  
-  
+
+
 </h2>
-    
+
 
 <p>Here’s a complete example that creates a wallet, stores a credential, and organizes it:</p>
 
@@ -743,21 +743,21 @@
 </pre></td><td class="rouge-code"><pre>✅ Stored credential: urn:uuid:...
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="step-by-step-guide">
-  
-  
+
+
     <a href="#step-by-step-guide" class="anchor-heading" aria-labelledby="step-by-step-guide"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step-by-Step Guide
-  
-  
+
+
 </h2>
-    
+
 <h3 id="step-1-create-a-wallet">
-  
-  
+
+
     <a href="#step-1-create-a-wallet" class="anchor-heading" aria-labelledby="step-1-create-a-wallet"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Create a Wallet
-  
-  
+
+
 </h3>
-    
+
 
 <p>Create a wallet for a holder:</p>
 
@@ -769,13 +769,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-2-store-credentials">
-  
-  
+
+
     <a href="#step-2-store-credentials" class="anchor-heading" aria-labelledby="step-2-store-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Store Credentials
-  
-  
+
+
 </h3>
-    
+
 
 <p>Store credentials in the wallet:</p>
 
@@ -785,13 +785,13 @@
 <span class="nf">println</span><span class="p">(</span><span class="s">"Stored credential ID: $credentialId"</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-3-retrieve-credentials">
-  
-  
+
+
     <a href="#step-3-retrieve-credentials" class="anchor-heading" aria-labelledby="step-3-retrieve-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Retrieve Credentials
-  
-  
+
+
 </h3>
-    
+
 
 <p>Get credentials by ID or list all:</p>
 
@@ -807,13 +807,13 @@
 <span class="kd">val</span> <span class="py">allCredentials</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">list</span><span class="p">()</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-4-organize-credentials-optional">
-  
-  
+
+
     <a href="#step-4-organize-credentials-optional" class="anchor-heading" aria-labelledby="step-4-organize-credentials-optional"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Organize Credentials (Optional)
-  
-  
+
+
 </h3>
-    
+
 
 <p>Use collections and tags to organize credentials:</p>
 
@@ -830,30 +830,30 @@
 </pre></td><td class="rouge-code"><pre><span class="n">wallet</span><span class="p">.</span><span class="nf">withOrganization</span> <span class="p">{</span> <span class="n">org</span> <span class="p">-&gt;</span>
     <span class="c1">// Create collection</span>
     <span class="kd">val</span> <span class="py">collectionId</span> <span class="p">=</span> <span class="n">org</span><span class="p">.</span><span class="nf">createCollection</span><span class="p">(</span><span class="s">"Education"</span><span class="p">,</span> <span class="s">"Academic credentials"</span><span class="p">)</span>
-    
+
     <span class="c1">// Add credential to collection</span>
     <span class="n">org</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">credentialId</span><span class="p">,</span> <span class="n">collectionId</span><span class="p">)</span>
-    
+
     <span class="c1">// Add tags</span>
     <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">credentialId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"degree"</span><span class="p">,</span> <span class="s">"verified"</span><span class="p">))</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="creating-wallets">
-  
-  
+
+
     <a href="#creating-wallets" class="anchor-heading" aria-labelledby="creating-wallets"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Creating Wallets
-  
-  
+
+
 </h2>
-    
+
 <h3 id="basic-wallet">
-  
-  
+
+
     <a href="#basic-wallet" class="anchor-heading" aria-labelledby="basic-wallet"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Basic Wallet
-  
-  
+
+
 </h3>
-    
+
 
 <p>Create a simple wallet for credential storage:</p>
 
@@ -865,13 +865,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="wallet-with-organization">
-  
-  
+
+
     <a href="#wallet-with-organization" class="anchor-heading" aria-labelledby="wallet-with-organization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Wallet with Organization
-  
-  
+
+
 </h3>
-    
+
 
 <p>Enable organization features (collections, tags, metadata):</p>
 
@@ -885,13 +885,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="wallet-with-presentation">
-  
-  
+
+
     <a href="#wallet-with-presentation" class="anchor-heading" aria-labelledby="wallet-with-presentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Wallet with Presentation
-  
-  
+
+
 </h3>
-    
+
 
 <p>Enable presentation creation:</p>
 
@@ -905,13 +905,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="full-featured-wallet">
-  
-  
+
+
     <a href="#full-featured-wallet" class="anchor-heading" aria-labelledby="full-featured-wallet"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Full-Featured Wallet
-  
-  
+
+
 </h3>
-    
+
 
 <p>Enable all features:</p>
 
@@ -929,21 +929,21 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="storing-credentials">
-  
-  
+
+
     <a href="#storing-credentials" class="anchor-heading" aria-labelledby="storing-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Storing Credentials
-  
-  
+
+
 </h2>
-    
+
 <h3 id="basic-storage">
-  
-  
+
+
     <a href="#basic-storage" class="anchor-heading" aria-labelledby="basic-storage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Basic Storage
-  
-  
+
+
 </h3>
-    
+
 
 <p>Store a single credential:</p>
 
@@ -951,13 +951,13 @@
 </pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">credentialId</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="batch-storage">
-  
-  
+
+
     <a href="#batch-storage" class="anchor-heading" aria-labelledby="batch-storage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Batch Storage
-  
-  
+
+
 </h3>
-    
+
 
 <p>Store multiple credentials:</p>
 
@@ -969,13 +969,13 @@
 <span class="nf">println</span><span class="p">(</span><span class="s">"Stored ${credentialIds.size} credentials"</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="storage-with-error-handling">
-  
-  
+
+
     <a href="#storage-with-error-handling" class="anchor-heading" aria-labelledby="storage-with-error-handling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Storage with Error Handling
-  
-  
+
+
 </h3>
-    
+
 
 <p>Handle storage errors:</p>
 
@@ -1007,21 +1007,21 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="organizing-credentials">
-  
-  
+
+
     <a href="#organizing-credentials" class="anchor-heading" aria-labelledby="organizing-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Organizing Credentials
-  
-  
+
+
 </h2>
-    
+
 <h3 id="collections">
-  
-  
+
+
     <a href="#collections" class="anchor-heading" aria-labelledby="collections"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Collections
-  
-  
+
+
 </h3>
-    
+
 
 <p>Group credentials into collections:</p>
 
@@ -1047,25 +1047,25 @@
         <span class="n">name</span> <span class="p">=</span> <span class="s">"Education"</span><span class="p">,</span>
         <span class="n">description</span> <span class="p">=</span> <span class="s">"Academic credentials"</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// Add credential to collection</span>
     <span class="n">org</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">credentialId</span><span class="p">,</span> <span class="n">educationId</span><span class="p">)</span>
-    
+
     <span class="c1">// Get credentials in collection</span>
     <span class="kd">val</span> <span class="py">educationCreds</span> <span class="p">=</span> <span class="n">org</span><span class="p">.</span><span class="nf">getCredentialsInCollection</span><span class="p">(</span><span class="n">educationId</span><span class="p">)</span>
-    
+
     <span class="c1">// List all collections</span>
     <span class="kd">val</span> <span class="py">collections</span> <span class="p">=</span> <span class="n">org</span><span class="p">.</span><span class="nf">listCollections</span><span class="p">()</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="tags">
-  
-  
+
+
     <a href="#tags" class="anchor-heading" aria-labelledby="tags"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Tags
-  
-  
+
+
 </h3>
-    
+
 
 <p>Tag credentials for flexible querying:</p>
 
@@ -1085,25 +1085,25 @@
 </pre></td><td class="rouge-code"><pre><span class="n">wallet</span><span class="p">.</span><span class="nf">withOrganization</span> <span class="p">{</span> <span class="n">org</span> <span class="p">-&gt;</span>
     <span class="c1">// Add tags</span>
     <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">credentialId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"degree"</span><span class="p">,</span> <span class="s">"verified"</span><span class="p">,</span> <span class="s">"active"</span><span class="p">))</span>
-    
+
     <span class="c1">// Get tags for credential</span>
     <span class="kd">val</span> <span class="py">tags</span> <span class="p">=</span> <span class="n">org</span><span class="p">.</span><span class="nf">getTags</span><span class="p">(</span><span class="n">credentialId</span><span class="p">)</span>
-    
+
     <span class="c1">// Find credentials by tag</span>
     <span class="kd">val</span> <span class="py">verifiedCreds</span> <span class="p">=</span> <span class="n">org</span><span class="p">.</span><span class="nf">findByTag</span><span class="p">(</span><span class="s">"verified"</span><span class="p">)</span>
-    
+
     <span class="c1">// Get all tags</span>
     <span class="kd">val</span> <span class="py">allTags</span> <span class="p">=</span> <span class="n">org</span><span class="p">.</span><span class="nf">getAllTags</span><span class="p">()</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="metadata">
-  
-  
+
+
     <a href="#metadata" class="anchor-heading" aria-labelledby="metadata"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Metadata
-  
-  
+
+
 </h3>
-    
+
 
 <p>Add custom metadata to credentials:</p>
 
@@ -1128,30 +1128,30 @@
         <span class="s">"storedAt"</span> <span class="n">to</span> <span class="nc">System</span><span class="p">.</span><span class="nf">currentTimeMillis</span><span class="p">(),</span>
         <span class="s">"source"</span> <span class="n">to</span> <span class="s">"university"</span>
     <span class="p">))</span>
-    
+
     <span class="c1">// Get metadata</span>
     <span class="kd">val</span> <span class="py">metadata</span> <span class="p">=</span> <span class="n">org</span><span class="p">.</span><span class="nf">getMetadata</span><span class="p">(</span><span class="n">credentialId</span><span class="p">)</span>
-    
+
     <span class="c1">// Add notes</span>
     <span class="n">org</span><span class="p">.</span><span class="nf">updateNotes</span><span class="p">(</span><span class="n">credentialId</span><span class="p">,</span> <span class="s">"Important credential for job applications"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="querying-credentials">
-  
-  
+
+
     <a href="#querying-credentials" class="anchor-heading" aria-labelledby="querying-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Querying Credentials
-  
-  
+
+
 </h2>
-    
+
 <h3 id="list-all-credentials">
-  
-  
+
+
     <a href="#list-all-credentials" class="anchor-heading" aria-labelledby="list-all-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> List All Credentials
-  
-  
+
+
 </h3>
-    
+
 
 <p>Get all credentials in the wallet:</p>
 
@@ -1159,13 +1159,13 @@
 </pre></td><td class="rouge-code"><pre><span class="kd">val</span> <span class="py">allCredentials</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">list</span><span class="p">()</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="query-with-filters">
-  
-  
+
+
     <a href="#query-with-filters" class="anchor-heading" aria-labelledby="query-with-filters"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Query with Filters
-  
-  
+
+
 </h3>
-    
+
 
 <p>Query credentials using filters:</p>
 
@@ -1181,13 +1181,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="query-by-collection">
-  
-  
+
+
     <a href="#query-by-collection" class="anchor-heading" aria-labelledby="query-by-collection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Query by Collection
-  
-  
+
+
 </h3>
-    
+
 
 <p>Get credentials in a specific collection:</p>
 
@@ -1205,13 +1205,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="query-by-tag">
-  
-  
+
+
     <a href="#query-by-tag" class="anchor-heading" aria-labelledby="query-by-tag"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Query by Tag
-  
-  
+
+
 </h3>
-    
+
 
 <p>Find credentials with specific tags:</p>
 
@@ -1225,21 +1225,21 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="creating-presentations">
-  
-  
+
+
     <a href="#creating-presentations" class="anchor-heading" aria-labelledby="creating-presentations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Creating Presentations
-  
-  
+
+
 </h2>
-    
+
 <h3 id="basic-presentation">
-  
-  
+
+
     <a href="#basic-presentation" class="anchor-heading" aria-labelledby="basic-presentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Basic Presentation
-  
-  
+
+
 </h3>
-    
+
 
 <p>Create a verifiable presentation:</p>
 
@@ -1264,18 +1264,18 @@
             <span class="n">challenge</span> <span class="p">=</span> <span class="s">"job-application-${System.currentTimeMillis()}"</span>
         <span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Created presentation: ${presentation.id}"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="selective-disclosure">
-  
-  
+
+
     <a href="#selective-disclosure" class="anchor-heading" aria-labelledby="selective-disclosure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Selective Disclosure
-  
-  
+
+
 </h3>
-    
+
 
 <p>Create a presentation with selective disclosure:</p>
 
@@ -1297,13 +1297,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="wallet-capabilities">
-  
-  
+
+
     <a href="#wallet-capabilities" class="anchor-heading" aria-labelledby="wallet-capabilities"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Wallet Capabilities
-  
-  
+
+
 </h2>
-    
+
 
 <p>Check what capabilities a wallet supports:</p>
 
@@ -1335,21 +1335,21 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="common-patterns">
-  
-  
+
+
     <a href="#common-patterns" class="anchor-heading" aria-labelledby="common-patterns"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Common Patterns
-  
-  
+
+
 </h2>
-    
+
 <h3 id="pattern-1-organize-after-storage">
-  
-  
+
+
     <a href="#pattern-1-organize-after-storage" class="anchor-heading" aria-labelledby="pattern-1-organize-after-storage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Pattern 1: Organize After Storage
-  
-  
+
+
 </h3>
-    
+
 
 <p>Organize credentials immediately after storing:</p>
 
@@ -1375,13 +1375,13 @@
 <span class="n">wallet</span><span class="p">.</span><span class="nf">withOrganization</span> <span class="p">{</span> <span class="n">org</span> <span class="p">-&gt;</span>
     <span class="c1">// Create or get collection</span>
     <span class="kd">val</span> <span class="py">collectionId</span> <span class="p">=</span> <span class="n">org</span><span class="p">.</span><span class="nf">createCollection</span><span class="p">(</span><span class="s">"Work"</span><span class="p">,</span> <span class="s">"Professional credentials"</span><span class="p">)</span>
-    
+
     <span class="c1">// Add to collection</span>
     <span class="n">org</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">credentialId</span><span class="p">,</span> <span class="n">collectionId</span><span class="p">)</span>
-    
+
     <span class="c1">// Add tags</span>
     <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">credentialId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"work"</span><span class="p">,</span> <span class="s">"verified"</span><span class="p">))</span>
-    
+
     <span class="c1">// Add metadata</span>
     <span class="n">org</span><span class="p">.</span><span class="nf">addMetadata</span><span class="p">(</span><span class="n">credentialId</span><span class="p">,</span> <span class="nf">mapOf</span><span class="p">(</span>
         <span class="s">"storedAt"</span> <span class="n">to</span> <span class="nc">System</span><span class="p">.</span><span class="nf">currentTimeMillis</span><span class="p">()</span>
@@ -1389,13 +1389,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="pattern-2-query-and-organize">
-  
-  
+
+
     <a href="#pattern-2-query-and-organize" class="anchor-heading" aria-labelledby="pattern-2-query-and-organize"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Pattern 2: Query and Organize
-  
-  
+
+
 </h3>
-    
+
 
 <p>Query credentials and organize them:</p>
 
@@ -1429,13 +1429,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="pattern-3-wallet-statistics">
-  
-  
+
+
     <a href="#pattern-3-wallet-statistics" class="anchor-heading" aria-labelledby="pattern-3-wallet-statistics"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Pattern 3: Wallet Statistics
-  
-  
+
+
 </h3>
-    
+
 
 <p>Get wallet statistics:</p>
 
@@ -1449,13 +1449,13 @@
 <span class="nf">println</span><span class="p">(</span><span class="s">"Tags: ${stats.tagsCount}"</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="error-handling">
-  
-  
+
+
     <a href="#error-handling" class="anchor-heading" aria-labelledby="error-handling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Error Handling
-  
-  
+
+
 </h2>
-    
+
 
 <p>Wallet operations can fail. Always handle errors:</p>
 
@@ -1483,7 +1483,7 @@
     <span class="kd">val</span> <span class="py">wallet</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">wallet</span> <span class="p">{</span>
         <span class="nf">holder</span><span class="p">(</span><span class="s">"did:key:holder"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="kd">val</span> <span class="py">credentialId</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
 <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nc">TrustWeaveError</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">when</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
@@ -1501,13 +1501,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="api-reference">
-  
-  
+
+
     <a href="#api-reference" class="anchor-heading" aria-labelledby="api-reference"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> API Reference
-  
-  
+
+
 </h2>
-    
+
 
 <p>For complete API documentation, see:</p>
 <ul>
@@ -1515,39 +1515,39 @@
   <li><strong><a href="/trustweave/api-reference/core-api/#wallet">Core API - wallet()</a></strong> - Wallet creation DSL</li>
 </ul>
 <h2 id="related-concepts">
-  
-  
+
+
     <a href="#related-concepts" class="anchor-heading" aria-labelledby="related-concepts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Concepts
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><strong><a href="/trustweave/core-concepts/wallets/">Wallets</a></strong> - Understanding what wallets are</li>
   <li><strong><a href="/trustweave/core-concepts/verifiable-credentials/">Verifiable Credentials</a></strong> - Understanding credentials</li>
 </ul>
 <h2 id="related-how-to-guides">
-  
-  
+
+
     <a href="#related-how-to-guides" class="anchor-heading" aria-labelledby="related-how-to-guides"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related How-To Guides
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><strong><a href="/trustweave/how-to/issue-credentials/">Issue Credentials</a></strong> - Issue credentials to store</li>
   <li><strong><a href="/trustweave/how-to/verify-credentials/">Verify Credentials</a></strong> - Verify stored credentials</li>
 </ul>
 <h2 id="next-steps">
-  
-  
+
+
     <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>Ready to issue credentials?</strong></p>
 <ul>
@@ -1565,17 +1565,17 @@
   <li><a href="/trustweave/tutorials/wallet-api-tutorial/">Wallet API Tutorial</a> - Comprehensive tutorial</li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -1607,7 +1607,7 @@
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -1617,12 +1617,12 @@
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -1644,12 +1644,12 @@
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -1658,12 +1658,12 @@
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -1671,7 +1671,7 @@
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -1679,31 +1679,31 @@
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -1715,7 +1715,7 @@
 
 
 
-  
+
 </body>
 </html>
 

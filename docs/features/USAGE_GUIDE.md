@@ -363,16 +363,16 @@ suspend fun issueCredentialWithTracking(
     subjectDid: String
 ): VerifiableCredential {
     val startTime = System.currentTimeMillis()
-    
+
     val credential = TrustWeave.issueCredential(
         issuerDid = issuerDid,
         subjectDid = subjectDid
     ) { /* credential data */ }.getOrThrow()
-    
+
     // Track metrics
     metrics.increment("credentials.issued")
     metrics.recordLatency("credential.issue", System.currentTimeMillis() - startTime)
-    
+
     // Audit log
     auditLogger.logEvent(
         AuditEvent(
@@ -384,10 +384,10 @@ suspend fun issueCredentialWithTracking(
             status = "SUCCESS"
         )
     )
-    
+
     // Generate QR code
     val qrData = qrGenerator.generateForCredential(credential, QrCodeFormat.JSON)
-    
+
     return credential
 }
 ```

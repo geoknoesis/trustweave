@@ -79,10 +79,11 @@ class DidRegistryTest {
     fun `test resolve DID`() = runBlocking {
         val method = createMockDidMethod("test")
         registry.register(method)
-        
+
         val result = registry.resolve("did:test:123")
-        
+
         assertNotNull(result)
+        assertTrue(result is DidResolutionResult.Success)
         assertNotNull(result.document)
     }
 
@@ -97,10 +98,10 @@ class DidRegistryTest {
     fun `test register overwrites existing method`() {
         val method1 = createMockDidMethod("test")
         val method2 = createMockDidMethod("test")
-        
+
         registry.register(method1)
         registry.register(method2)
-        
+
         val retrieved = registry.get("test")
         assertNotNull(retrieved)
         assertEquals("test", retrieved?.method)
@@ -110,7 +111,7 @@ class DidRegistryTest {
     fun `test resolve with invalid DID format`() = runBlocking {
         val method = createMockDidMethod("test")
         registry.register(method)
-        
+
         assertFailsWith<InvalidDidFormat> {
             registry.resolve("invalid-did")
         }
@@ -120,10 +121,12 @@ class DidRegistryTest {
     fun `test resolve with multiple registered methods`() = runBlocking {
         registry.register(createMockDidMethod("method1"))
         registry.register(createMockDidMethod("method2"))
-        
+
         val result1 = registry.resolve("did:method1:123")
         val result2 = registry.resolve("did:method2:456")
-        
+
+        assertTrue(result1 is DidResolutionResult.Success)
+        assertTrue(result2 is DidResolutionResult.Success)
         assertNotNull(result1.document)
         assertNotNull(result2.document)
     }
@@ -132,27 +135,28 @@ class DidRegistryTest {
     fun `test resolve extracts correct method from DID`() = runBlocking {
         val method = createMockDidMethod("web")
         registry.register(method)
-        
+
         val result = registry.resolve("did:web:example.com")
-        
+
+        assertTrue(result is DidResolutionResult.Success)
         assertNotNull(result.document)
-        assertEquals("did:web:example.com", result.document?.id)
+        assertEquals("did:web:example.com", result.document.id)
     }
 
     private fun createMockDidMethod(methodName: String): DidMethod {
         return object : DidMethod {
             override val method = methodName
-            
+
             override suspend fun createDid(options: DidCreationOptions) = DidDocument(
                 id = "did:$methodName:123"
             )
-            
-            override suspend fun resolveDid(did: String) = DidResolutionResult(
+
+            override suspend fun resolveDid(did: String) = DidResolutionResult.Success(
                 document = DidDocument(id = did)
             )
-            
+
             override suspend fun updateDid(did: String, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
-            
+
             override suspend fun deactivateDid(did: String) = true
         }
     }

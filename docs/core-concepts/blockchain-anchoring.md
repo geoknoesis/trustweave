@@ -28,8 +28,8 @@ dependencies {
 
 ## Why anchor data?
 
-- **Integrity** – recompute a digest and compare it to the anchor; any change breaks the link.  
-- **Provenance** – the anchor’s block height or timestamp proves when the information existed.  
+- **Integrity** – recompute a digest and compare it to the anchor; any change breaks the link.
+- **Provenance** – the anchor’s block height or timestamp proves when the information existed.
 - **Portability** – `AnchorRef` structures capture chain ID, transaction hash, optional contract/app ID, and metadata that verifiers can consume.
 
 Anchoring complements verifiable credentials: you can notarise VC digests, presentation receipts, workflow checkpoints—anything that needs an immutable trail.
@@ -75,10 +75,10 @@ result.fold(
 
 ## Configuring clients
 
-- **In-memory** – perfect for tutorials and unit tests.  
-- **Algorand** – use `AlgorandBlockchainAnchorClientOptions` (`algodUrl`, `algodToken`, optional private key).  
-- **Polygon / Ganache** – specify RPC endpoints, signer keys, and (optionally) contract addresses.  
-- **Indy** – configure pool parameters and wallet credentials for permissioned ledgers.  
+- **In-memory** – perfect for tutorials and unit tests.
+- **Algorand** – use `AlgorandBlockchainAnchorClientOptions` (`algodUrl`, `algodToken`, optional private key).
+- **Polygon / Ganache** – specify RPC endpoints, signer keys, and (optionally) contract addresses.
+- **Indy** – configure pool parameters and wallet credentials for permissioned ledgers.
 - **Custom** – implement `BlockchainAnchorClient` or `BlockchainAnchorClientProvider` (discovered via SPI).
 
 ## Reading and verifying
@@ -111,16 +111,16 @@ result.fold(
 )
 ```
 
-- `readAnchor` returns `Result<T>` with the deserialized data.  
-- For higher assurance, recompute the digest from the canonical payload and compare it to the data stored on chain.  
+- `readAnchor` returns `Result<T>` with the deserialized data.
+- For higher assurance, recompute the digest from the canonical payload and compare it to the data stored on chain.
 - Keep connection credentials (RPC tokens, private keys) in a secret store for production deployments.
 - All anchoring operations return `Result<T>` for consistent error handling.
 
 ## Practical usage tips
 
-- **Persist AnchorRefs with credentials** so verifiers can revalidate without bespoke lookups.  
-- **Retry-friendly anchoring** – public chains may require exponential back-off; design idempotent submissions.  
-- **Integrate with revocation** – anchor revocation lists or proofs to create audit trails for credential status changes.  
+- **Persist AnchorRefs with credentials** so verifiers can revalidate without bespoke lookups.
+- **Retry-friendly anchoring** – public chains may require exponential back-off; design idempotent submissions.
+- **Integrate with revocation** – anchor revocation lists or proofs to create audit trails for credential status changes.
 - **Testing** – use the in-memory client or spin up Ganache/Testnet clients for end-to-end tests.
 - **Error handling** – all anchoring operations return `Result<T>` with structured `TrustWeaveError` types. See [Error Handling](../advanced/error-handling.md).
 - **Input validation** – TrustWeave automatically validates chain ID format and registration before anchoring.
@@ -128,9 +128,9 @@ result.fold(
 ## See also
 
 - [Blockchain Anchor Integration Guides](../integrations/README.md#blockchain-anchor-integrations) – Implementation guides for Algorand, Ethereum, Base, Arbitrum, Polygon, and Ganache
-- [Quick Start – Step 5](../getting-started/quick-start.md#step-5-verify-and-optionally-anchor) for an end-to-end example.  
-- [Wallet API Reference – Anchoring helpers](../api-reference/wallet-api.md#anchors) for wallet-integrated flows.  
-- [Architecture Overview](../introduction/architecture-overview.md) for the DID ➜ credential ➜ anchor flow.  
+- [Quick Start – Step 5](../getting-started/quick-start.md#step-5-verify-and-optionally-anchor) for an end-to-end example.
+- [Wallet API Reference – Anchoring helpers](../api-reference/wallet-api.md#anchors) for wallet-integrated flows.
+- [Architecture Overview](../introduction/architecture-overview.md) for the DID ➜ credential ➜ anchor flow.
 - [Verifiable Credentials](verifiable-credentials.md) to understand what you may want to anchor.
 - [Blockchain-Anchored Revocation](blockchain-anchored-revocation.md) for anchoring credential revocation status lists.
 
@@ -164,7 +164,7 @@ println("Anchored tx: ${result?.ref?.txHash}")
 ## Configuring Clients
 
 - **In-memory** – great for tests. Register with `BlockchainAnchorRegistry().register("inmemory:anchor", InMemoryBlockchainAnchorClient("inmemory:anchor"))`.
-- **Algorand** – configure `AlgorandBlockchainAnchorClientOptions` (`algodUrl`, `algodToken`, optional private key for signing). See [Algorand Integration Guide](../integrations/algorand.md).  
+- **Algorand** – configure `AlgorandBlockchainAnchorClientOptions` (`algodUrl`, `algodToken`, optional private key for signing). See [Algorand Integration Guide](../integrations/algorand.md).
 - **Polygon / Ganache** – supply RPC URLs, contract addresses, and private keys via typed options. See [Integration Modules](../integrations/README.md#blockchain-anchor-integrations).
 - **Indy** – connect to Hyperledger Indy pools using pool endpoints, wallet names, and DIDs.
 

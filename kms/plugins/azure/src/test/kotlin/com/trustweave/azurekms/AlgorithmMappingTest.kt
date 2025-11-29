@@ -15,19 +15,19 @@ class AlgorithmMappingTest {
         val (keyType1, curveName1) = AlgorithmMapping.toAzureKeyType(Algorithm.Secp256k1)
         assertEquals(KeyType.EC, keyType1)
         assertEquals(KeyCurveName.P_256K, curveName1)
-        
+
         val (keyType2, curveName2) = AlgorithmMapping.toAzureKeyType(Algorithm.P256)
         assertEquals(KeyType.EC, keyType2)
         assertEquals(KeyCurveName.P_256, curveName2)
-        
+
         val (keyType3, curveName3) = AlgorithmMapping.toAzureKeyType(Algorithm.P384)
         assertEquals(KeyType.EC, keyType3)
         assertEquals(KeyCurveName.P_384, curveName3)
-        
+
         val (keyType4, curveName4) = AlgorithmMapping.toAzureKeyType(Algorithm.P521)
         assertEquals(KeyType.EC, keyType4)
         assertEquals(KeyCurveName.P_521, curveName4)
-        
+
         val (keyType5, curveName5) = AlgorithmMapping.toAzureKeyType(Algorithm.RSA.RSA_2048)
         assertEquals(KeyType.RSA, keyType5)
         assertNull(curveName5)

@@ -5,9 +5,9 @@ import java.time.Duration
 
 /**
  * Scheduled key rotation service.
- * 
+ *
  * Automatically checks and rotates keys on a schedule.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val rotationManager = KeyRotationManager(keyStore, kms, policy)
@@ -15,7 +15,7 @@ import java.time.Duration
  *     rotationManager = rotationManager,
  *     interval = Duration.ofDays(1)
  * )
- * 
+ *
  * scheduledRotation.start()
  * // ... later ...
  * scheduledRotation.stop()
@@ -27,7 +27,7 @@ class ScheduledKeyRotation(
 ) {
     private var rotationJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-    
+
     /**
      * Starts scheduled rotation.
      */
@@ -35,7 +35,7 @@ class ScheduledKeyRotation(
         if (rotationJob?.isActive == true) {
             return // Already started
         }
-        
+
         rotationJob = scope.launch {
             while (isActive) {
                 try {
@@ -47,7 +47,7 @@ class ScheduledKeyRotation(
             }
         }
     }
-    
+
     /**
      * Stops scheduled rotation.
      */
@@ -55,7 +55,7 @@ class ScheduledKeyRotation(
         rotationJob?.cancel()
         rotationJob = null
     }
-    
+
     /**
      * Checks if rotation is running.
      */

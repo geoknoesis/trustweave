@@ -34,11 +34,11 @@ class PresentationServiceMoreBranchesTest {
     @BeforeEach
     fun setup() {
         proofRegistry = ProofGeneratorRegistry()
-        
+
         val signer: suspend (ByteArray, String) -> ByteArray = { data, _ ->
             "mock-signature-${UUID.randomUUID()}".toByteArray()
         }
-        
+
         val proofGenerator = Ed25519ProofGenerator(
             signer = signer,
             getPublicKeyId = { "did:key:holder123#key-1" }
@@ -80,9 +80,9 @@ class PresentationServiceMoreBranchesTest {
             proofType = "Ed25519Signature2020",
             keyId = "key-1"
         )
-        
+
         val presentation = presentationService.createPresentation(credentials, holderDid, options)
-        
+
         assertNotNull(presentation)
         assertEquals(1, presentation.verifiableCredential?.size)
         assertNotNull(presentation.proof)
@@ -98,9 +98,9 @@ class PresentationServiceMoreBranchesTest {
             proofType = "Ed25519Signature2020",
             keyId = "key-1"
         )
-        
+
         val presentation = presentationService.createPresentation(credentials, holderDid, options)
-        
+
         assertNotNull(presentation)
         assertEquals(2, presentation.verifiableCredential?.size)
         assertNotNull(presentation.proof)
@@ -115,9 +115,9 @@ class PresentationServiceMoreBranchesTest {
             challenge = "challenge-123",
             keyId = "key-1"
         )
-        
+
         val presentation = presentationService.createPresentation(listOf(credential), holderDid, options)
-        
+
         // Challenge is set on presentation and proof
         assertEquals("challenge-123", presentation.challenge)
         assertEquals("challenge-123", presentation.proof?.challenge)
@@ -132,9 +132,9 @@ class PresentationServiceMoreBranchesTest {
             domain = "example.com",
             keyId = "key-1"
         )
-        
+
         val presentation = presentationService.createPresentation(listOf(credential), holderDid, options)
-        
+
         // Domain is set on presentation and proof
         assertEquals("example.com", presentation.domain)
         assertEquals("example.com", presentation.proof?.domain)
@@ -148,9 +148,9 @@ class PresentationServiceMoreBranchesTest {
             proofType = "Ed25519Signature2020",
             keyId = "custom-key-id"
         )
-        
+
         val presentation = presentationService.createPresentation(listOf(credential), holderDid, options)
-        
+
         assertNotNull(presentation.proof)
     }
 
@@ -166,9 +166,9 @@ class PresentationServiceMoreBranchesTest {
         val options = com.trustweave.credential.PresentationVerificationOptions(
             verifyChallenge = false
         )
-        
+
         val result = presentationService.verifyPresentation(presentation, options)
-        
+
         assertNotNull(result)
     }
 
@@ -182,9 +182,9 @@ class PresentationServiceMoreBranchesTest {
         val options = com.trustweave.credential.PresentationVerificationOptions(
             verifyDomain = false
         )
-        
+
         val result = presentationService.verifyPresentation(presentation, options)
-        
+
         assertNotNull(result)
     }
 
@@ -195,9 +195,9 @@ class PresentationServiceMoreBranchesTest {
         val options = com.trustweave.credential.PresentationVerificationOptions(
             checkRevocation = false
         )
-        
+
         val result = presentationService.verifyPresentation(presentation, options)
-        
+
         assertNotNull(result)
     }
 
@@ -212,9 +212,9 @@ class PresentationServiceMoreBranchesTest {
             verifyChallenge = true,
             expectedChallenge = "expected-challenge"
         )
-        
+
         val result = presentationService.verifyPresentation(presentation, options)
-        
+
         assertNotNull(result)
     }
 
@@ -229,9 +229,9 @@ class PresentationServiceMoreBranchesTest {
             verifyChallenge = true,
             expectedChallenge = "expected-challenge"
         )
-        
+
         val result = presentationService.verifyPresentation(presentation, options)
-        
+
         assertFalse(result.valid)
     }
 
@@ -246,9 +246,9 @@ class PresentationServiceMoreBranchesTest {
             verifyDomain = true,
             expectedDomain = "expected-domain.com"
         )
-        
+
         val result = presentationService.verifyPresentation(presentation, options)
-        
+
         assertNotNull(result)
     }
 
@@ -263,9 +263,9 @@ class PresentationServiceMoreBranchesTest {
             verifyDomain = true,
             expectedDomain = "expected-domain.com"
         )
-        
+
         val result = presentationService.verifyPresentation(presentation, options)
-        
+
         assertFalse(result.valid)
     }
 
@@ -279,14 +279,14 @@ class PresentationServiceMoreBranchesTest {
             holderDid = holderDid,
             proofType = "Ed25519Signature2020"
         )
-        
+
         val presentation = presentationService.createSelectiveDisclosure(
             credentials = listOf(credential),
             disclosedFields = reveal,
             holderDid = holderDid,
             options = options
         )
-        
+
         assertNotNull(presentation)
         assertNotNull(presentation.proof)
     }
@@ -299,14 +299,14 @@ class PresentationServiceMoreBranchesTest {
             holderDid = holderDid,
             proofType = "Ed25519Signature2020"
         )
-        
+
         val presentation = presentationService.createSelectiveDisclosure(
             credentials = listOf(credential),
             disclosedFields = reveal,
             holderDid = holderDid,
             options = options
         )
-        
+
         assertNotNull(presentation)
         assertNotNull(presentation.proof)
     }
@@ -319,14 +319,14 @@ class PresentationServiceMoreBranchesTest {
             holderDid = holderDid,
             proofType = "Ed25519Signature2020"
         )
-        
+
         val presentation = presentationService.createSelectiveDisclosure(
             credentials = listOf(credential),
             disclosedFields = reveal,
             holderDid = holderDid,
             options = options
         )
-        
+
         assertNotNull(presentation)
     }
 

@@ -12,10 +12,10 @@ import kotlin.test.assertTrue
 
 /**
  * Example EO integration test using in-memory blockchain client.
- * 
+ *
  * This demonstrates how to use BaseEoIntegrationTest and EoTestIntegration
  * to create reusable EO test scenarios without requiring TestContainers.
- * 
+ *
  * For TestContainers examples, see the TrustWeave-ganache module tests.
  */
 class InMemoryEoTestIntegrationExample : BaseEoIntegrationTest() {
@@ -39,12 +39,12 @@ class InMemoryEoTestIntegrationExample : BaseEoIntegrationTest() {
     @Test
     fun `end-to-end EO integrity chain verification with in-memory client`() = runBlocking {
         val result = runEoTestScenario()
-        
+
         // Verify results
         assertNotNull(result.anchorResult)
         assertNotNull(result.verificationResult)
         assertTrue(result.verificationResult.valid, "Integrity chain verification should pass")
-        
+
         println("\n=== EO Test Integration Results (In-Memory) ===")
         println("Chain ID: ${result.scenario.chainId}")
         println("Transaction Hash: ${result.anchorResult.ref.txHash}")
@@ -67,10 +67,10 @@ class InMemoryEoTestIntegrationExample : BaseEoIntegrationTest() {
             metadataTitle = "Custom EO Dataset",
             metadataDescription = "A custom Earth Observation dataset for testing"
         )
-        
+
         assertTrue(result.verificationResult.valid)
         assertTrue(result.anchorResult.ref.txHash.isNotEmpty())
-        
+
         // Verify custom dataset ID is in VC
         val vcSubject = result.scenario.vc["credentialSubject"]?.jsonObject
         assertNotNull(vcSubject)
@@ -83,16 +83,16 @@ class InMemoryEoTestIntegrationExample : BaseEoIntegrationTest() {
         val kms = com.trustweave.testkit.kms.InMemoryKeyManagementService()
         val didMethod = com.trustweave.testkit.did.DidKeyMockMethod(kms)
         didRegistry.register(didMethod)
-        
+
         // Create issuer DID
         val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
-        
+
         // Create anchor client
         val chainId = getChainId()
         val anchorClient = createAnchorClient(chainId, getAnchorClientOptions())
         blockchainRegistry.register(chainId, anchorClient)
-        
+
         // Create scenario
         val scenario = EoTestIntegration.createScenario(
             issuerDid = issuerDid,
@@ -101,17 +101,17 @@ class InMemoryEoTestIntegrationExample : BaseEoIntegrationTest() {
             datasetId = "step-by-step-dataset",
             metadataTitle = "Step-by-Step EO Dataset"
         )
-        
+
         // Verify scenario components
         assertNotNull(scenario.artifacts)
         assertEquals(3, scenario.artifacts.size)
         assertTrue(scenario.artifacts.containsKey("metadata-1"))
         assertTrue(scenario.artifacts.containsKey("provenance-1"))
         assertTrue(scenario.artifacts.containsKey("quality-1"))
-        
+
         // Execute scenario
         val result = EoTestIntegration.executeScenario(scenario, blockchainRegistry)
-        
+
         // Verify results
         assertTrue(result.verificationResult.valid)
         assertEquals(5, result.verificationResult.steps.size) // VC + Linkset + 3 artifacts

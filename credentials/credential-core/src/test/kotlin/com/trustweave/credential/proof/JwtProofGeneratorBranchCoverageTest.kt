@@ -17,15 +17,15 @@ class JwtProofGeneratorBranchCoverageTest {
             signer = { _, _ -> byteArrayOf(1, 2, 3) },
             getPublicKeyId = { null }
         )
-        
+
         val credential = createTestCredential()
         val options = ProofOptions(
             proofPurpose = "assertionMethod",
             verificationMethod = "did:key:custom#key-1"
         )
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertEquals("did:key:custom#key-1", proof.verificationMethod)
         assertEquals("JsonWebSignature2020", proof.type)
         assertNotNull(proof.jws)
@@ -37,12 +37,12 @@ class JwtProofGeneratorBranchCoverageTest {
             signer = { _, _ -> byteArrayOf(1, 2, 3) },
             getPublicKeyId = { "public-key-id" }
         )
-        
+
         val credential = createTestCredential()
         val options = ProofOptions(proofPurpose = "assertionMethod")
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertEquals("did:key:public-key-id#key-1", proof.verificationMethod)
     }
 
@@ -52,12 +52,12 @@ class JwtProofGeneratorBranchCoverageTest {
             signer = { _, _ -> byteArrayOf(1, 2, 3) },
             getPublicKeyId = { null }
         )
-        
+
         val credential = createTestCredential()
         val options = ProofOptions(proofPurpose = "assertionMethod")
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertEquals("did:key:key-1", proof.verificationMethod)
     }
 
@@ -66,12 +66,12 @@ class JwtProofGeneratorBranchCoverageTest {
         val generator = JwtProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        
+
         val credential = createTestCredential()
         val options = ProofOptions(proofPurpose = "assertionMethod")
-        
+
         val jwt = generator.generateJwt(credential, "key-1", options)
-        
+
         assertNotNull(jwt)
         assertEquals("PLACEHOLDER_JWT_STRING", jwt)
     }
@@ -83,10 +83,10 @@ class JwtProofGeneratorBranchCoverageTest {
         val generator = JwtProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        
+
         val credential = createTestCredential()
         val options = ProofOptions(proofPurpose = "assertionMethod")
-        
+
         // Current implementation always sets jws, so this won't throw
         val jwt = generator.generateJwt(credential, "key-1", options)
         assertNotNull(jwt)
@@ -97,15 +97,15 @@ class JwtProofGeneratorBranchCoverageTest {
         val generator = JwtProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        
+
         val credential = createTestCredential()
         val options = ProofOptions(
             proofPurpose = "assertionMethod",
             challenge = "challenge-123"
         )
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertEquals("challenge-123", proof.challenge)
     }
 
@@ -114,15 +114,15 @@ class JwtProofGeneratorBranchCoverageTest {
         val generator = JwtProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        
+
         val credential = createTestCredential()
         val options = ProofOptions(
             proofPurpose = "assertionMethod",
             domain = "example.com"
         )
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertEquals("example.com", proof.domain)
     }
 

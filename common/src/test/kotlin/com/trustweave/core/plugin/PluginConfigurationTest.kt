@@ -25,7 +25,7 @@ class PluginConfigurationTest {
             defaultProviders = mapOf("credential-service" to "test"),
             providerChains = mapOf("credential-service" to listOf("test", "fallback"))
         )
-        
+
         assertEquals(1, config.plugins.size)
         assertEquals(1, config.defaultProviders.size)
         assertEquals(1, config.providerChains.size)
@@ -34,7 +34,7 @@ class PluginConfigurationTest {
     @Test
     fun `test PluginConfiguration with defaults`() {
         val config = PluginConfiguration()
-        
+
         assertTrue(config.plugins.isEmpty())
         assertTrue(config.defaultProviders.isEmpty())
         assertTrue(config.providerChains.isEmpty())
@@ -50,7 +50,7 @@ class PluginConfigurationTest {
             config = mapOf("key1" to "value1", "key2" to "value2"),
             priority = 5
         )
-        
+
         assertEquals("test-plugin", pluginConfig.id)
         assertEquals(PluginType.CREDENTIAL_SERVICE, pluginConfig.type)
         assertEquals("test", pluginConfig.provider)
@@ -66,7 +66,7 @@ class PluginConfigurationTest {
             type = PluginType.CREDENTIAL_SERVICE,
             provider = "test"
         )
-        
+
         assertTrue(pluginConfig.enabled)
         assertTrue(pluginConfig.config.isEmpty())
         assertEquals(0, pluginConfig.priority)
@@ -80,7 +80,7 @@ class PluginConfigurationTest {
             provider = "test",
             config = mapOf("key" to "value")
         )
-        
+
         assertEquals("value", pluginConfig.getConfigValue("key"))
         assertNull(pluginConfig.getConfigValue("nonexistent"))
     }
@@ -93,9 +93,9 @@ class PluginConfigurationTest {
             provider = "test",
             config = mapOf("key" to "value", "number" to "42")
         )
-        
+
         val jsonObject = pluginConfig.getConfigAsJsonObject()
-        
+
         assertEquals("value", jsonObject["key"]?.jsonPrimitive?.content)
         assertEquals("42", jsonObject["number"]?.jsonPrimitive?.content)
     }
@@ -137,9 +137,9 @@ class PluginConfigurationTest {
             }
         }
         """
-        
+
         val config = PluginConfigurationLoader.loadFromJson(jsonString)
-        
+
         assertEquals(1, config.plugins.size)
         assertEquals("test-plugin", config.plugins.first().id)
         assertEquals(1, config.defaultProviders.size)
@@ -157,9 +157,9 @@ class PluginConfigurationTest {
                 }
             })
         }
-        
+
         val config = PluginConfigurationLoader.loadFromJsonObject(jsonObject)
-        
+
         assertEquals(1, config.plugins.size)
         assertEquals("test-plugin", config.plugins.first().id)
     }

@@ -2,7 +2,7 @@
 
 $modules = @(
     "core:trustweave-core",
-    "chains:trustweave-anchor", 
+    "chains:trustweave-anchor",
     "did:trustweave-did",
     "kms:trustweave-kms",
     "core:trustweave-json",
@@ -34,7 +34,7 @@ foreach ($module in $modules) {
     $xmlPath = Join-Path $modulePath "build\reports\kover\report.xml"
     if (Test-Path $xmlPath) {
         [xml]$xml = Get-Content $xmlPath
-        
+
         $classMissed = 0
         $classCovered = 0
         $methodMissed = 0
@@ -45,38 +45,38 @@ foreach ($module in $modules) {
         $lineCovered = 0
         $instructionMissed = 0
         $instructionCovered = 0
-        
+
         # Parse counters from XML
         $counters = $xml.report.counter
         foreach ($counter in $counters) {
             $type = $counter.type
             $missed = [int]$counter.missed
             $covered = [int]$counter.covered
-            
+
             switch ($type) {
-                "CLASS" { 
+                "CLASS" {
                     $classMissed += $missed
                     $classCovered += $covered
                 }
-                "METHOD" { 
+                "METHOD" {
                     $methodMissed += $missed
                     $methodCovered += $covered
                 }
-                "BRANCH" { 
+                "BRANCH" {
                     $branchMissed += $missed
                     $branchCovered += $covered
                 }
-                "LINE" { 
+                "LINE" {
                     $lineMissed += $missed
                     $lineCovered += $covered
                 }
-                "INSTRUCTION" { 
+                "INSTRUCTION" {
                     $instructionMissed += $missed
                     $instructionCovered += $covered
                 }
             }
         }
-        
+
         $totalClasses += ($classMissed + $classCovered)
         $coveredClasses += $classCovered
         $totalMethods += ($methodMissed + $methodCovered)
@@ -87,19 +87,19 @@ foreach ($module in $modules) {
         $coveredLines += $lineCovered
         $totalInstructions += ($instructionMissed + $instructionCovered)
         $coveredInstructions += $instructionCovered
-        
+
         $classTotal = $classMissed + $classCovered
         $methodTotal = $methodMissed + $methodCovered
         $branchTotal = $branchMissed + $branchCovered
         $lineTotal = $lineMissed + $lineCovered
         $instructionTotal = $instructionMissed + $instructionCovered
-        
+
         $classPct = if ($classTotal -gt 0) { [math]::Round(($classCovered / $classTotal) * 100, 1) } else { 0 }
         $methodPct = if ($methodTotal -gt 0) { [math]::Round(($methodCovered / $methodTotal) * 100, 1) } else { 0 }
         $branchPct = if ($branchTotal -gt 0) { [math]::Round(($branchCovered / $branchTotal) * 100, 1) } else { 0 }
         $linePct = if ($lineTotal -gt 0) { [math]::Round(($lineCovered / $lineTotal) * 100, 1) } else { 0 }
         $instructionPct = if ($instructionTotal -gt 0) { [math]::Round(($instructionCovered / $instructionTotal) * 100, 1) } else { 0 }
-        
+
         $moduleResults += [PSCustomObject]@{
             Module = $module
             Classes = "$classPct% ($classCovered/$classTotal)"

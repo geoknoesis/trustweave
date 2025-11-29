@@ -15,9 +15,9 @@ import kotlin.test.assertEquals
 
 /**
  * Reusable test scenario for full credential lifecycle.
- * 
+ *
  * Tests the complete flow: issuance -> storage -> presentation -> verification -> revocation.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * @Test
@@ -30,7 +30,7 @@ import kotlin.test.assertEquals
 class CredentialLifecycleScenario(
     private val fixture: TrustWeaveTestFixture
 ) {
-    
+
     /**
      * Executes the full credential lifecycle test.
      */
@@ -38,25 +38,25 @@ class CredentialLifecycleScenario(
         // 1. Setup: Create issuer and holder DIDs
         val issuerDid = fixture.createIssuerDid()
         val holderDid = fixture.createIssuerDid()
-        
+
         // 2. Issue credential
         val credential = issueCredential(issuerDid, holderDid)
         kotlin.test.assertNotNull(credential)
         kotlin.test.assertEquals(issuerDid.id, credential.issuer)
-        
+
         // 3. Store credential (if wallet is available)
         // This would use fixture.getWallet() if available
-        
+
         // 4. Create presentation
         // This would create a VerifiablePresentation from the credential
-        
+
         // 5. Verify credential
         // This would verify the credential using fixture.getCredentialRegistry()
-        
+
         // 6. Revoke credential (if status list is available)
         // This would revoke the credential and verify it's no longer valid
     }
-    
+
     /**
      * Issues a test credential.
      */
@@ -71,7 +71,7 @@ class CredentialLifecycleScenario(
                 "email" to "test@example.com"
             )
         )
-        
+
         // In a real scenario, this would use the credential service
         // For now, create a minimal credential structure
         return VerifiableCredential(

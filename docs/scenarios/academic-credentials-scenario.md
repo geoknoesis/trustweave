@@ -109,7 +109,7 @@ flowchart TD
     A["University Issuer<br/>Creates DID<br/>Issues Verifiable Credential"] -->|issues| B["Verifiable Credential<br/>Student DID<br/>Degree Information<br/>Cryptographic Proof"]
     B -->|stored in| C["Student Wallet<br/>Stores credential<br/>Organizes with collections<br/>Creates presentations"]
     C -->|presents| D["Employer Verifier<br/>Receives presentation<br/>Verifies cryptographically<br/>Checks revocation status"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -135,13 +135,13 @@ dependencies {
     implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    
+
     // Test kit for in-memory implementations
     implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -170,23 +170,23 @@ fun main() = runBlocking {
     println("=".repeat(70))
     println("Academic Credentials Scenario - Complete End-to-End Example")
     println("=".repeat(70))
-    
+
     // Step 1: Create TrustWeave instance
     val TrustWeave = TrustWeave.create()
     println("\n✅ TrustWeave initialized")
-    
+
     // Step 2: Create DIDs for university (issuer) and student (holder)
     val universityDidDoc = TrustWeave.dids.create()
     val universityDid = universityDidDoc.id
     val universityKeyId = universityDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val studentDidDoc = TrustWeave.dids.create()
     val studentDid = studentDidDoc.id
-    
+
     println("✅ University DID: $universityDid")
     println("✅ Student DID: $studentDid")
-    
+
     // Step 3: Issue a degree credential
     val credential = TrustWeave.issueCredential(
         issuerDid = universityDid,
@@ -206,11 +206,11 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "DegreeCredential", "BachelorDegreeCredential"),
         expirationDate = Instant.now().plus(10, ChronoUnit.YEARS).toString()
     ).getOrThrow()
-    
+
     println("✅ Credential issued: ${credential.id}")
     println("   Type: ${credential.type.joinToString()}")
     println("   Issuer: ${credential.issuer}")
-    
+
     // Step 4: Create student wallet and store credential
     val studentWallet = TrustWeave.createWallet(
         holderDid = studentDid
@@ -218,10 +218,10 @@ fun main() = runBlocking {
         enableOrganization = true
         enablePresentation = true
     }.getOrThrow()
-    
+
     val credentialId = studentWallet.store(credential)
     println("✅ Credential stored in wallet: $credentialId")
-    
+
     // Step 5: Organize credential with collections and tags
     studentWallet.withOrganization { org ->
         val collectionId = org.createCollection("Education", "Academic credentials")
@@ -229,7 +229,7 @@ fun main() = runBlocking {
         org.tagCredential(credentialId, setOf("degree", "computer-science", "bachelor", "verified"))
         println("✅ Credential organized: collection=$collectionId, tags=${org.getTags(credentialId)}")
     }
-    
+
     // Step 6: Create a verifiable presentation for job application
     val presentation = studentWallet.withPresentation { pres ->
         pres.createPresentation(
@@ -241,14 +241,14 @@ fun main() = runBlocking {
             )
         )
     } ?: error("Presentation capability not available")
-    
+
     println("✅ Presentation created: ${presentation.id}")
     println("   Holder: ${presentation.holder}")
     println("   Credentials: ${presentation.verifiableCredential.size}")
-    
+
     // Step 7: Verify the credential
     val verification = TrustWeave.verifyCredential(credential).getOrThrow()
-    
+
     if (verification.valid) {
         println("\n✅ Credential Verification SUCCESS")
         println("   Proof valid: ${verification.proofValid}")
@@ -261,7 +261,7 @@ fun main() = runBlocking {
         println("\n❌ Credential Verification FAILED")
         println("   Errors: ${verification.errors}")
     }
-    
+
     // Step 8: Display wallet statistics
     val stats = studentWallet.getStatistics()
     println("\n📊 Wallet Statistics:")
@@ -269,7 +269,7 @@ fun main() = runBlocking {
     println("   Valid credentials: ${stats.validCredentials}")
     println("   Collections: ${stats.collectionsCount}")
     println("   Tags: ${stats.tagsCount}")
-    
+
     println("\n" + "=".repeat(70))
     println("✅ Academic Credentials Scenario Complete!")
     println("=".repeat(70))
@@ -531,7 +531,7 @@ suspend fun verifyAcademicCredential(
     if (!result.valid) return false
     if (credential.issuer != expectedIssuer) return false
     if (!credential.type.contains("DegreeCredential")) return false
-    
+
     return true
 }
 ```

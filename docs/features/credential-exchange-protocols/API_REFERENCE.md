@@ -27,7 +27,7 @@ Main interface that all protocols implement.
 interface CredentialExchangeProtocol {
     val protocolName: String
     val supportedOperations: Set<ExchangeOperation>
-    
+
     suspend fun offerCredential(request: CredentialOfferRequest): CredentialOfferResponse
     suspend fun requestCredential(request: CredentialRequestRequest): CredentialRequestResponse
     suspend fun issueCredential(request: CredentialIssueRequest): CredentialIssueResponse

@@ -1,9 +1,12 @@
 package com.trustweave.did.base
 
 import com.trustweave.anchor.BlockchainAnchorClient
-import com.trustweave.core.exception.NotFoundException
+// NotFoundException replaced with TrustWeaveException.NotFound
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.VerificationMethod
+import com.trustweave.did.DidService
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -11,21 +14,21 @@ import kotlinx.serialization.json.*
 
 /**
  * Abstract base class for blockchain-based DID method implementations.
- * 
+ *
  * Provides common functionality for DID methods that store documents on blockchain:
  * - Integration with BlockchainAnchorClient for on-chain storage
  * - Document anchoring to blockchain
  * - Document resolution from blockchain
  * - Fallback to in-memory storage for testing
- * 
+ *
  * Subclasses should implement:
  * - [createDid]: Create a new DID and anchor its document
  * - [resolveDid]: Resolve DID from blockchain
  * - [getBlockchainAnchorClient]: Provide the blockchain anchor client
  * - [getChainId]: Provide the blockchain chain ID
- * 
+ *
  * Pattern: Reuses existing blockchain anchoring infrastructure.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * class EthrDidMethod(
@@ -33,21 +36,21 @@ import kotlinx.serialization.json.*
  *     private val anchorClient: BlockchainAnchorClient,
  *     private val chainId: String = "eip155:1"
  * ) : AbstractBlockchainDidMethod("ethr", kms) {
- *     
+ *
  *     override fun getBlockchainAnchorClient(): BlockchainAnchorClient = anchorClient
- *     
+ *
  *     override fun getChainId(): String = chainId
- *     
+ *
  *     override suspend fun createDid(options: DidCreationOptions): DidDocument {
  *         // Create DID document
  *         val document = createDocument(options)
- *         
+ *
  *         // Anchor to blockchain
  *         anchorDocument(document)
- *         
+ *
  *         return document
  *     }
- *     
+ *
  *     override suspend fun resolveDid(did: String): DidResolutionResult {
  *         // Resolve from blockchain
  *         return resolveFromBlockchain(did)
@@ -62,24 +65,24 @@ abstract class AbstractBlockchainDidMethod(
 
     /**
      * Gets the blockchain anchor client for this method.
-     * 
+     *
      * @return BlockchainAnchorClient instance
      */
     protected abstract fun getBlockchainAnchorClient(): BlockchainAnchorClient
 
     /**
      * Gets the blockchain chain ID for this method.
-     * 
+     *
      * @return Chain ID (e.g., "eip155:1" for Ethereum mainnet)
      */
     protected abstract fun getChainId(): String
 
     /**
      * Checks if this method can submit transactions to the blockchain.
-     * 
+     *
      * Default implementation checks if the anchor client can submit transactions.
      * Subclasses can override for custom logic.
-     * 
+     *
      * @return true if transactions can be submitted
      */
     protected open suspend fun canSubmitTransaction(): Boolean {
@@ -90,9 +93,9 @@ abstract class AbstractBlockchainDidMethod(
 
     /**
      * Anchors a DID document to the blockchain.
-     * 
+     *
      * Uses the blockchain anchor client to store the document.
-     * 
+     *
      * @param document The DID document to anchor
      * @return Transaction hash or anchor reference
      * @throws TrustWeaveException if anchoring fails
@@ -100,31 +103,32 @@ abstract class AbstractBlockchainDidMethod(
     protected suspend fun anchorDocument(document: DidDocument): String = withContext(Dispatchers.IO) {
         try {
             val anchorClient = getBlockchainAnchorClient()
-            
+
             // Convert document to JsonElement
             val payload = documentToJsonElement(document)
-            
+
             // Anchor to blockchain
             val result = anchorClient.writePayload(payload, "application/json")
-            
+
             // Store locally for fallback
             storeDocument(document.id, document)
-            
+
             // Return transaction hash
             result.ref.txHash
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: Exception) {
             throw TrustWeaveException(
-                "Failed to anchor DID document to blockchain: ${e.message}",
-                e
+                code = "DID_ANCHOR_FAILED",
+                message = "Failed to anchor DID document to blockchain: ${e.message}",
+                cause = e
             )
         }
     }
-    
+
     /**
      * Converts a DID document to JsonElement.
-     * 
+     *
      * @param document The DID document
      * @return JsonElement representation
      */
@@ -132,7 +136,7 @@ abstract class AbstractBlockchainDidMethod(
         return buildJsonObject {
             put("@context", JsonArray(document.context.map { JsonPrimitive(it) }))
             put("id", document.id)
-            
+
             if (document.alsoKnownAs.isNotEmpty()) {
                 put("alsoKnownAs", JsonArray(document.alsoKnownAs.map { JsonPrimitive(it) }))
             }
@@ -162,11 +166,11 @@ abstract class AbstractBlockchainDidMethod(
             }
         }
     }
-    
+
     /**
      * Converts a verification method to JsonObject.
      */
-    private fun vmToJsonObject(vm: VerificationMethodRef): JsonObject {
+    private fun vmToJsonObject(vm: VerificationMethod): JsonObject {
         return buildJsonObject {
             put("id", vm.id)
             put("type", vm.type)
@@ -179,11 +183,11 @@ abstract class AbstractBlockchainDidMethod(
             }
         }
     }
-    
+
     /**
      * Converts a service to JsonObject.
      */
-    private fun serviceToJsonObject(service: Service): JsonObject {
+    private fun serviceToJsonObject(service: DidService): JsonObject {
         return buildJsonObject {
             put("id", service.id)
             put("type", service.type)
@@ -193,7 +197,7 @@ abstract class AbstractBlockchainDidMethod(
             })
         }
     }
-    
+
     /**
      * Converts a Map to JsonObject.
      */
@@ -206,7 +210,7 @@ abstract class AbstractBlockchainDidMethod(
                     is Number -> put(key, value)
                     is Boolean -> put(key, value)
                     is Map<*, *> -> put(key, mapToJsonObject(value as Map<String, Any?>))
-                    is List<*> -> put(key, JsonArray(value.map { 
+                    is List<*> -> put(key, JsonArray(value.map {
                         when (it) {
                             is String -> JsonPrimitive(it)
                             is Number -> JsonPrimitive(it)
@@ -219,10 +223,10 @@ abstract class AbstractBlockchainDidMethod(
             }
         }
     }
-    
+
     /**
      * Converts JsonElement to DidDocument.
-     * 
+     *
      * @param json The JsonElement
      * @return DidDocument
      */
@@ -230,7 +234,7 @@ abstract class AbstractBlockchainDidMethod(
         val obj = json.jsonObject
         return DidDocument(
             id = obj["id"]?.jsonPrimitive?.content ?: throw IllegalArgumentException("Missing id"),
-            context = obj["@context"]?.let { 
+            context = obj["@context"]?.let {
                 when (it) {
                     is JsonPrimitive -> listOf(it.content)
                     is JsonArray -> it.mapNotNull { (it as? JsonPrimitive)?.content }
@@ -254,10 +258,10 @@ abstract class AbstractBlockchainDidMethod(
             service = obj["service"]?.jsonArray?.mapNotNull { jsonToService(it) } ?: emptyList()
         )
     }
-    
-    private fun jsonToVerificationMethod(json: JsonElement): VerificationMethodRef? {
+
+    private fun jsonToVerificationMethod(json: JsonElement): VerificationMethod? {
         val obj = json.jsonObject
-        return VerificationMethodRef(
+        return VerificationMethod(
             id = obj["id"]?.jsonPrimitive?.content ?: return null,
             type = obj["type"]?.jsonPrimitive?.content ?: return null,
             controller = obj["controller"]?.jsonPrimitive?.content ?: return null,
@@ -265,10 +269,10 @@ abstract class AbstractBlockchainDidMethod(
             publicKeyMultibase = obj["publicKeyMultibase"]?.jsonPrimitive?.content
         )
     }
-    
-    private fun jsonToService(json: JsonElement): Service? {
+
+    private fun jsonToService(json: JsonElement): DidService? {
         val obj = json.jsonObject
-        return Service(
+        return DidService(
             id = obj["id"]?.jsonPrimitive?.content ?: return null,
             type = obj["type"]?.jsonPrimitive?.content ?: return null,
             serviceEndpoint = obj["serviceEndpoint"]?.let {
@@ -279,7 +283,7 @@ abstract class AbstractBlockchainDidMethod(
             } ?: return null
         )
     }
-    
+
     private fun jsonObjectToMap(obj: JsonObject): Map<String, Any?> {
         return obj.entries.associate { (key, value) ->
             key to when (value) {
@@ -293,7 +297,7 @@ abstract class AbstractBlockchainDidMethod(
 
     /**
      * Resolves a DID document from the blockchain.
-     * 
+     *
      * @param did The DID to resolve
      * @param txHash Optional transaction hash (if known)
      * @return DidResolutionResult
@@ -322,7 +326,9 @@ abstract class AbstractBlockchainDidMethod(
                         )
                     }
 
-                    throw NotFoundException("DID document not found on blockchain: $did")
+                    throw TrustWeaveException.NotFound(
+                        resource = "DID document: $did"
+                    )
                 }
 
                 // Read from blockchain
@@ -330,9 +336,9 @@ abstract class AbstractBlockchainDidMethod(
                     chainId = chainId,
                     txHash = hash
                 )
-                
+
                 val result = anchorClient.readPayload(anchorRef)
-                
+
                 // Convert JsonElement to DidDocument
                 val document = jsonElementToDocument(result.payload)
 
@@ -340,7 +346,7 @@ abstract class AbstractBlockchainDidMethod(
                 storeDocument(document.id, document)
 
                 com.trustweave.did.base.DidMethodUtils.createSuccessResolutionResult(document, method)
-            } catch (e: NotFoundException) {
+            } catch (e: TrustWeaveException.NotFound) {
                 throw e
             } catch (e: TrustWeaveException) {
                 throw e
@@ -357,20 +363,21 @@ abstract class AbstractBlockchainDidMethod(
                 }
 
                 throw TrustWeaveException(
-                    "Failed to resolve DID from blockchain: ${e.message}",
-                    e
+                    code = "DID_RESOLUTION_FAILED",
+                    message = "Failed to resolve DID from blockchain: ${e.message}",
+                    cause = e
                 )
             }
         }
 
     /**
      * Finds the transaction hash for a DID document.
-     * 
+     *
      * This is method-specific - some methods store a mapping of DID to txHash,
      * others derive it from the DID itself.
-     * 
+     *
      * Subclasses should override this to provide method-specific lookup.
-     * 
+     *
      * @param did The DID to find
      * @return Transaction hash or null if not found
      */
@@ -381,28 +388,28 @@ abstract class AbstractBlockchainDidMethod(
 
     /**
      * Updates a DID document on the blockchain.
-     * 
+     *
      * @param did The DID to update
      * @param document The updated document
      * @return Transaction hash
      */
     protected suspend fun updateDocumentOnBlockchain(did: String, document: DidDocument): String {
         validateDidFormat(did)
-        
+
         // Anchor updated document
         val txHash = anchorDocument(document)
-        
+
         // Update local storage
         val now = java.time.Instant.now()
         documentMetadata[did] = (documentMetadata[did] ?: DidDocumentMetadata(created = now))
             .copy(updated = now)
-        
+
         return txHash
     }
 
     /**
      * Deactivates a DID document on the blockchain.
-     * 
+     *
      * @param did The DID to deactivate
      * @param deactivatedDocument The deactivated document (with deactivated flag)
      * @return true if successful
@@ -412,20 +419,21 @@ abstract class AbstractBlockchainDidMethod(
         deactivatedDocument: DidDocument
     ): Boolean {
         validateDidFormat(did)
-        
+
         try {
             // Anchor deactivated document
             anchorDocument(deactivatedDocument)
-            
+
             // Remove from local storage
             documents.remove(did)
             documentMetadata.remove(did)
-            
+
             return true
         } catch (e: Exception) {
             throw TrustWeaveException(
-                "Failed to deactivate DID on blockchain: ${e.message}",
-                e
+                code = "DID_DEACTIVATION_FAILED",
+                message = "Failed to deactivate DID on blockchain: ${e.message}",
+                cause = e
             )
         }
     }

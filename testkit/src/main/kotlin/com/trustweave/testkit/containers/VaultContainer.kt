@@ -7,9 +7,9 @@ import java.time.Duration
 
 /**
  * TestContainer for HashiCorp Vault.
- * 
+ *
  * Provides a local Vault instance for KMS testing.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * @Testcontainers
@@ -18,7 +18,7 @@ import java.time.Duration
  *         @JvmStatic
  *         val vault = VaultContainer.create()
  *     }
- *     
+ *
  *     @Test
  *     fun testWithVault() {
  *         val vaultUrl = vault.getVaultUrl()
@@ -31,18 +31,18 @@ import java.time.Duration
 class VaultContainer private constructor(
     dockerImageName: DockerImageName
 ) : GenericContainer<VaultContainer>(dockerImageName) {
-    
+
     companion object {
         /**
          * Default Vault Docker image.
          */
         private val DEFAULT_IMAGE = DockerImageName.parse("hashicorp/vault:latest")
-        
+
         /**
          * Default root token for testing.
          */
         private const val DEFAULT_ROOT_TOKEN = "test-token"
-        
+
         /**
          * Creates a Vault container with default configuration.
          */
@@ -55,7 +55,7 @@ class VaultContainer private constructor(
                 .waitingFor(Wait.forHttp("/v1/sys/health").forStatusCode(200))
                 .withStartupTimeout(Duration.ofMinutes(2))
         }
-        
+
         /**
          * Creates a Vault container with custom root token.
          */
@@ -69,21 +69,21 @@ class VaultContainer private constructor(
                 .withStartupTimeout(Duration.ofMinutes(2))
         }
     }
-    
+
     /**
      * Gets the Vault URL.
      */
     fun getVaultUrl(): String {
         return "http://${host}:${getMappedPort(8200)}"
     }
-    
+
     /**
      * Gets the root token.
      */
     fun getRootToken(): String {
         return DEFAULT_ROOT_TOKEN
     }
-    
+
     /**
      * Gets the Vault address environment variable value.
      */

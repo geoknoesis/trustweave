@@ -2,19 +2,19 @@ package com.trustweave.anchor.options
 
 /**
  * Base sealed class for blockchain anchor client options.
- * 
+ *
  * Provides type-safe configuration for blockchain adapters.
  * Each blockchain type has its own specific options class.
- * 
+ *
  * **Benefits of Type-Safe Options**:
  * - Compile-time validation of configuration
  * - IDE autocomplete support
  * - Clear documentation of available options
  * - Prevents typos in option keys
- * 
+ *
  * **Backward Compatibility**: Options can be converted to/from `Map<String, Any?>` for
  * compatibility with existing code and the SPI interface.
- * 
+ *
  * **Example Usage**:
  * ```
  * // Type-safe (recommended)
@@ -23,14 +23,14 @@ package com.trustweave.anchor.options
  *     privateKey = "base64-key"
  * )
  * val client = AlgorandBlockchainAnchorClient(chainId, options)
- * 
+ *
  * // From map (backward compatible)
  * val map = mapOf("algodUrl" to "https://testnet-api.algonode.cloud")
  * val options = BlockchainAnchorClientOptions.fromMap("algorand:testnet", map)
  * ```
  */
 sealed class BlockchainAnchorClientOptions {
-    
+
     /**
      * Converts options to a map for backward compatibility.
      */
@@ -40,7 +40,7 @@ sealed class BlockchainAnchorClientOptions {
      * Retrieves a typed value from [toMap] representation.
      */
     inline fun <reified T> get(key: String): T? = (toMap()[key] as? T)
-    
+
     companion object {
         /**
          * Creates options from a map (for backward compatibility).
@@ -68,7 +68,7 @@ sealed class BlockchainAnchorClientOptions {
 
 /**
  * Algorand blockchain anchor client options.
- * 
+ *
  * @param algodUrl Optional Algod API URL (defaults to network-specific endpoint)
  * @param algodToken Optional Algod API token (defaults to empty string)
  * @param privateKey Optional private key in base64 format (required for real transactions)
@@ -80,14 +80,14 @@ data class AlgorandOptions(
     val privateKey: String? = null,
     val appId: String? = null
 ) : BlockchainAnchorClientOptions() {
-    
+
     override fun toMap(): Map<String, Any?> = buildMap {
         algodUrl?.let { put("algodUrl", it) }
         algodToken?.let { put("algodToken", it) }
         privateKey?.let { put("privateKey", it) }
         appId?.let { put("appId", it) }
     }
-    
+
     companion object {
         @JvmStatic
         fun fromMap(map: Map<String, Any?>): AlgorandOptions {
@@ -103,7 +103,7 @@ data class AlgorandOptions(
 
 /**
  * Polygon blockchain anchor client options.
- * 
+ *
  * @param rpcUrl Optional RPC endpoint URL (defaults to network-specific endpoint)
  * @param privateKey Optional private key in hex format (required for real transactions)
  * @param contractAddress Optional contract address for contract interactions
@@ -113,13 +113,13 @@ data class PolygonOptions(
     val privateKey: String? = null,
     val contractAddress: String? = null
 ) : BlockchainAnchorClientOptions() {
-    
+
     override fun toMap(): Map<String, Any?> = buildMap {
         rpcUrl?.let { put("rpcUrl", it) }
         privateKey?.let { put("privateKey", it) }
         contractAddress?.let { put("contractAddress", it) }
     }
-    
+
     companion object {
         @JvmStatic
         fun fromMap(map: Map<String, Any?>): PolygonOptions {
@@ -134,7 +134,7 @@ data class PolygonOptions(
 
 /**
  * Ganache blockchain anchor client options.
- * 
+ *
  * @param rpcUrl Optional RPC endpoint URL (defaults to http://localhost:8545)
  * @param privateKey Private key in hex format (required)
  * @param contractAddress Optional contract address for contract interactions
@@ -144,13 +144,13 @@ data class GanacheOptions(
     val privateKey: String,
     val contractAddress: String? = null
 ) : BlockchainAnchorClientOptions() {
-    
+
     override fun toMap(): Map<String, Any?> = buildMap {
         rpcUrl?.let { put("rpcUrl", it) }
         put("privateKey", privateKey)
         contractAddress?.let { put("contractAddress", it) }
     }
-    
+
     companion object {
         @JvmStatic
         fun fromMap(map: Map<String, Any?>): GanacheOptions {
@@ -167,7 +167,7 @@ data class GanacheOptions(
 
 /**
  * Hyperledger Indy blockchain anchor client options.
- * 
+ *
  * @param poolEndpoint Optional pool endpoint URL (defaults to network-specific endpoint)
  * @param walletName Optional wallet name (required for real transactions)
  * @param walletKey Optional wallet key (required for real transactions)
@@ -179,14 +179,14 @@ data class IndyOptions(
     val walletKey: String? = null,
     val did: String? = null
 ) : BlockchainAnchorClientOptions() {
-    
+
     override fun toMap(): Map<String, Any?> = buildMap {
         poolEndpoint?.let { put("poolEndpoint", it) }
         walletName?.let { put("walletName", it) }
         walletKey?.let { put("walletKey", it) }
         did?.let { put("did", it) }
     }
-    
+
     companion object {
         @JvmStatic
         fun fromMap(map: Map<String, Any?>): IndyOptions {

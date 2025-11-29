@@ -4,9 +4,13 @@ import com.trustweave.TrustWeave
 import com.trustweave.core.*
 import com.trustweave.credential.proof.ProofType
 import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.wallet.Wallet
-import com.trustweave.chain.indy.IndyBlockchainAnchorClient
-import com.trustweave.chain.indy.IndyIntegration
+import com.trustweave.did.exception.DidException
+import com.trustweave.credential.exception.CredentialException
+import com.trustweave.wallet.exception.WalletException
+import com.trustweave.anchor.exceptions.BlockchainException
+import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.anchor.indy.IndyBlockchainAnchorClient
+import com.trustweave.anchor.indy.IndyIntegration
 import com.trustweave.services.IssuanceConfig
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
@@ -14,7 +18,7 @@ import kotlinx.serialization.Serializable
 
 /**
  * Complete Indy Integration Example.
- * 
+ *
  * This example demonstrates the full workflow using Hyperledger Indy for blockchain anchoring:
  * 1. Setup TrustWeave with Indy integration
  * 2. Create DIDs for issuer and holder
@@ -24,10 +28,10 @@ import kotlinx.serialization.Serializable
  * 6. Anchor credential to Indy blockchain (BCovrin Testnet)
  * 7. Read back anchored data
  * 8. Verify the read credential
- * 
+ *
  * Note: Uses in-memory fallback mode (no wallet credentials required) for testing.
  * In production, provide wallet credentials and pool endpoint configuration.
- * 
+ *
  * Run: `./gradlew :TrustWeave-examples:runIndyIntegration`
  */
 fun main() = runBlocking {
@@ -35,11 +39,11 @@ fun main() = runBlocking {
     println("Indy Integration - Complete End-to-End Scenario")
     println("=".repeat(70))
     println()
-    
+
     // Step 1: Setup TrustWeave with Indy integration
     println("Step 1: Setting up TrustWeave with Indy integration...")
     val chainId = IndyBlockchainAnchorClient.BCOVRIN_TESTNET
-    
+
     // Create TrustWeave instance with Indy blockchain client
     // Using in-memory fallback mode (empty options) for testing
     // In production, provide: walletName, walletKey, did, poolEndpoint
@@ -55,12 +59,12 @@ fun main() = runBlocking {
     println("✓ TrustWeave instance created")
     println("✓ Indy blockchain client registered: $chainId")
     println()
-    
+
     // Step 2: Create DIDs for issuer and holder
     println("Step 2: Creating DIDs...")
     val issuerDid = try {
         trustweave.dids.create()
-    } catch (error: TrustWeaveError.DidMethodNotRegistered) {
+    } catch (error: DidException.DidMethodNotRegistered) {
         println("✗ DID method not registered: ${error.method}")
         println("  Available methods: ${error.availableMethods.joinToString(", ")}")
         return@runBlocking
@@ -69,10 +73,10 @@ fun main() = runBlocking {
         return@runBlocking
     }
     println("✓ Issuer DID created: ${issuerDid.id}")
-    
+
     val holderDid = try {
         trustweave.dids.create()
-    } catch (error: TrustWeaveError.DidMethodNotRegistered) {
+    } catch (error: DidException.DidMethodNotRegistered) {
         println("✗ DID method not registered: ${error.method}")
         println("  Available methods: ${error.availableMethods.joinToString(", ")}")
         return@runBlocking
@@ -81,35 +85,41 @@ fun main() = runBlocking {
         return@runBlocking
     }
     println("✓ Holder DID created: ${holderDid.id}")
-    
+
     val issuerKeyId = issuerDid.verificationMethod.first().id
     println("✓ Issuer Key ID: $issuerKeyId")
-    
+
     // Resolve the DIDs to verify they're accessible
     println("\n  Resolving DIDs to verify accessibility...")
     try {
         val issuerResolution = trustweave.dids.resolve(issuerDid.id)
-        if (issuerResolution.document != null) {
-            println("  ✓ Issuer DID resolved successfully")
-        } else {
-            println("  ⚠ Issuer DID resolution returned no document (may be in-memory)")
+        when (issuerResolution) {
+            is com.trustweave.did.resolver.DidResolutionResult.Success -> {
+                println("  ✓ Issuer DID resolved successfully")
+            }
+            else -> {
+                println("  ⚠ Issuer DID resolution returned no document (may be in-memory)")
+            }
         }
     } catch (e: Throwable) {
         println("  ⚠ Issuer DID resolution failed: ${e.message}")
     }
-    
+
     try {
         val holderResolution = trustweave.dids.resolve(holderDid.id)
-        if (holderResolution.document != null) {
-            println("  ✓ Holder DID resolved successfully")
-        } else {
-            println("  ⚠ Holder DID resolution returned no document (may be in-memory)")
+        when (holderResolution) {
+            is com.trustweave.did.resolver.DidResolutionResult.Success -> {
+                println("  ✓ Holder DID resolved successfully")
+            }
+            else -> {
+                println("  ⚠ Holder DID resolution returned no document (may be in-memory)")
+            }
         }
     } catch (e: Throwable) {
         println("  ⚠ Holder DID resolution failed: ${e.message}")
     }
     println()
-    
+
     // Step 3: Issue a verifiable credential
     println("Step 3: Issuing verifiable credential...")
     val credential = try {
@@ -131,14 +141,14 @@ fun main() = runBlocking {
             ),
             types = listOf("UniversityDegreeCredential", "VerifiableCredential")
         )
-    } catch (error: TrustWeaveError.InvalidDidFormat) {
+    } catch (error: DidException.InvalidDidFormat) {
         println("✗ Invalid DID format: ${error.reason}")
         return@runBlocking
-    } catch (error: TrustWeaveError.DidMethodNotRegistered) {
+    } catch (error: DidException.DidMethodNotRegistered) {
         println("✗ DID method not registered: ${error.method}")
         println("  Available methods: ${error.availableMethods.joinToString(", ")}")
         return@runBlocking
-    } catch (error: TrustWeaveError.CredentialInvalid) {
+    } catch (error: CredentialException.CredentialInvalid) {
         println("✗ Credential validation failed: ${error.reason}")
         println("  Field: ${error.field}")
         return@runBlocking
@@ -152,12 +162,12 @@ fun main() = runBlocking {
     println("  - Types: ${credential.type.joinToString(", ")}")
     println("  - Has proof: ${credential.proof != null}")
     println()
-    
+
     // Step 4: Verify the credential
     println("Step 4: Verifying credential...")
     val verification = try {
         trustweave.credentials.verify(credential)
-    } catch (error: TrustWeaveError.CredentialInvalid) {
+    } catch (error: CredentialException.CredentialInvalid) {
         println("✗ Credential validation failed: ${error.reason}")
         println("  Field: ${error.field}")
         return@runBlocking
@@ -165,7 +175,7 @@ fun main() = runBlocking {
         println("✗ Verification failed: ${error.message}")
         return@runBlocking
     }
-    
+
     if (verification.valid) {
         println("✓ Credential verified successfully")
         println("  - Valid: ${verification.valid}")
@@ -173,24 +183,24 @@ fun main() = runBlocking {
         println("  - Issuer valid: ${verification.issuerValid}")
         println("  - Not expired: ${verification.notExpired}")
         println("  - Not revoked: ${verification.notRevoked}")
-        if (verification.warnings.isNotEmpty()) {
-            println("  - Warnings: ${verification.warnings.joinToString(", ")}")
+        if (verification.allWarnings.isNotEmpty()) {
+            println("  - Warnings: ${verification.allWarnings.joinToString(", ")}")
         }
     } else {
         println("✗ Credential verification failed")
-        println("  - Errors: ${verification.errors.joinToString(", ")}")
-        if (verification.warnings.isNotEmpty()) {
-            println("  - Warnings: ${verification.warnings.joinToString(", ")}")
+        println("  - Errors: ${verification.allErrors.joinToString(", ")}")
+        if (verification.allWarnings.isNotEmpty()) {
+            println("  - Warnings: ${verification.allWarnings.joinToString(", ")}")
         }
         return@runBlocking
     }
     println()
-    
+
     // Step 5: Create wallet and store credential
     println("Step 5: Creating wallet and storing credential...")
     val wallet = try {
         trustweave.wallets.create(holderDid = holderDid.id)
-    } catch (error: TrustWeaveError.WalletCreationFailed) {
+    } catch (error: WalletException.WalletCreationFailed) {
         println("✗ Wallet creation failed: ${error.reason}")
         return@runBlocking
     } catch (error: Throwable) {
@@ -199,12 +209,12 @@ fun main() = runBlocking {
     }
     println("✓ Wallet created successfully")
     println("  - Wallet ID: ${wallet.walletId}")
-    
+
     val credentialId = requireNotNull(credential.id) { "Credential should have an ID" }
     wallet.store(credential)
     println("✓ Credential stored in wallet")
     println("  - Credential ID: $credentialId")
-    
+
     // Retrieve credential from wallet
     val storedCredential = wallet.get(credentialId)
     if (storedCredential != null) {
@@ -215,31 +225,31 @@ fun main() = runBlocking {
         return@runBlocking
     }
     println()
-    
+
     // Step 6: Anchor credential to Indy blockchain
     println("Step 6: Anchoring credential to Indy blockchain...")
     println("  - Chain ID: $chainId")
     println("  - Mode: In-memory fallback (for testing)")
     println("  - Note: In production, provide wallet credentials and pool endpoint")
-    
+
     // Convert credential to JsonElement for anchoring
     val json = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
     }
     val credentialJson = json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
-    
+
     val anchor = try {
         trustweave.blockchains.anchor(
             data = credentialJson,
             serializer = JsonElement.serializer(),
             chainId = chainId
         )
-    } catch (error: TrustWeaveError.ChainNotRegistered) {
+    } catch (error: BlockchainException.ChainNotRegistered) {
         println("✗ Chain not registered: ${error.chainId}")
         println("  Available chains: ${error.availableChains.joinToString(", ")}")
         return@runBlocking
-    } catch (error: TrustWeaveError.ValidationFailed) {
+    } catch (error: TrustWeaveException.ValidationFailed) {
         println("✗ Validation failed: ${error.reason}")
         println("  Field: ${error.field}")
         println("  Value: ${error.value}")
@@ -254,7 +264,7 @@ fun main() = runBlocking {
     println("  - Network: ${anchor.ref.extra["network"]}")
     println("  - Pool: ${anchor.ref.extra["pool"]}")
     println()
-    
+
     // Step 7: Read back anchored data
     println("Step 7: Reading anchored data from Indy blockchain...")
     val readJson = try {
@@ -262,7 +272,7 @@ fun main() = runBlocking {
             ref = anchor.ref,
             serializer = JsonElement.serializer()
         )
-    } catch (error: TrustWeaveError.ChainNotRegistered) {
+    } catch (error: BlockchainException.ChainNotRegistered) {
         println("✗ Chain not registered: ${error.chainId}")
         println("  Available chains: ${error.availableChains.joinToString(", ")}")
         return@runBlocking
@@ -271,13 +281,13 @@ fun main() = runBlocking {
         return@runBlocking
     }
     println("✓ Anchored data read successfully")
-    
+
     // Deserialize the credential
     val readCredential = json.decodeFromJsonElement(VerifiableCredential.serializer(), readJson)
     println("  - Read Credential ID: ${readCredential.id}")
     println("  - Read Credential Issuer: ${readCredential.issuer}")
     println("  - Read Credential Types: ${readCredential.type.joinToString(", ")}")
-    
+
     // Verify data integrity
     if (credential.id == readCredential.id && credential.issuer == readCredential.issuer) {
         println("✓ Data integrity verified: Credential matches anchored data")
@@ -286,7 +296,7 @@ fun main() = runBlocking {
         return@runBlocking
     }
     println()
-    
+
     // Step 8: Verify the read credential
     println("Step 8: Verifying read credential...")
     val readVerification = try {
@@ -295,7 +305,7 @@ fun main() = runBlocking {
         println("✗ Verification failed: ${error.message}")
         return@runBlocking
     }
-    
+
     if (readVerification.valid) {
         println("✓ Read credential verified successfully")
         println("  - Valid: ${readVerification.valid}")
@@ -303,10 +313,10 @@ fun main() = runBlocking {
         println("  - Issuer valid: ${readVerification.issuerValid}")
     } else {
         println("✗ Read credential verification failed")
-        println("  - Errors: ${readVerification.errors.joinToString(", ")}")
+        println("  - Errors: ${readVerification.allErrors.joinToString(", ")}")
     }
     println()
-    
+
     // Step 9: Demonstrate multiple credentials
     println("Step 9: Demonstrating multiple credentials...")
     val additionalCredentials = mutableListOf<VerifiableCredential>()
@@ -327,7 +337,7 @@ fun main() = runBlocking {
                 ),
                 types = listOf("ProfessionalCertification", "VerifiableCredential")
             )
-            
+
             additionalCredentials.add(additionalCredential)
             wallet.store(additionalCredential)
             println("✓ Additional credential $i issued and stored")
@@ -338,7 +348,7 @@ fun main() = runBlocking {
     }
     println("  Total credentials in wallet: ${wallet.getStatistics().totalCredentials}")
     println()
-    
+
     // Step 10: Demonstrate custom data type anchoring
     println("Step 10: Demonstrating custom data type anchoring...")
     @Serializable
@@ -349,7 +359,7 @@ fun main() = runBlocking {
         val timestamp: String,
         val chainId: String
     )
-    
+
     val digest = CredentialDigest(
         vcId = requireNotNull(credential.id),
         digest = "uABC123...",
@@ -357,7 +367,7 @@ fun main() = runBlocking {
         timestamp = java.time.Instant.now().toString(),
         chainId = chainId
     )
-    
+
     val digestJson = json.encodeToJsonElement(CredentialDigest.serializer(), digest)
     val digestAnchor = try {
         trustweave.blockchains.anchor(
@@ -365,7 +375,7 @@ fun main() = runBlocking {
             serializer = JsonElement.serializer(),
             chainId = chainId
         )
-    } catch (error: TrustWeaveError.ChainNotRegistered) {
+    } catch (error: BlockchainException.ChainNotRegistered) {
         println("✗ Chain not registered: ${error.chainId}")
         println("  Available chains: ${error.availableChains.joinToString(", ")}")
         return@runBlocking
@@ -373,42 +383,42 @@ fun main() = runBlocking {
         println("✗ Failed to anchor custom data: ${error.message}")
         return@runBlocking
     }
-    
+
     println("✓ Custom data anchored successfully")
     println("  - Transaction Hash: ${digestAnchor.ref.txHash}")
     println("  - Chain ID: ${digestAnchor.ref.chainId}")
     println("  - Network: ${digestAnchor.ref.extra["network"]}")
     println("  - Pool: ${digestAnchor.ref.extra["pool"]}")
-    
+
     // Read back custom data
     val readDigestJson = try {
         trustweave.blockchains.read<JsonElement>(
             ref = digestAnchor.ref,
             serializer = JsonElement.serializer()
         )
-    } catch (error: TrustWeaveError.ChainNotRegistered) {
+    } catch (error: BlockchainException.ChainNotRegistered) {
         println("✗ Chain not registered: ${error.chainId}")
         return@runBlocking
     } catch (error: Throwable) {
         println("✗ Failed to read custom data: ${error.message}")
         return@runBlocking
     }
-    
+
     val readDigest = json.decodeFromJsonElement(CredentialDigest.serializer(), readDigestJson)
     println("✓ Custom data read successfully")
     println("  - VC ID: ${readDigest.vcId}")
     println("  - Digest: ${readDigest.digest}")
     println("  - Issuer: ${readDigest.issuer}")
     println("  - Timestamp: ${readDigest.timestamp}")
-    if (digest.vcId == readDigest.vcId && 
-        digest.digest == readDigest.digest && 
+    if (digest.vcId == readDigest.vcId &&
+        digest.digest == readDigest.digest &&
         digest.issuer == readDigest.issuer) {
         println("✓ Data integrity verified: All fields match")
     } else {
         println("✗ Data integrity check failed: Fields do not match")
     }
     println()
-    
+
     // Step 11: Demonstrate SPI discovery
     println("Step 11: Demonstrating SPI discovery...")
     val integrationResult = IndyIntegration.discoverAndRegister()
@@ -422,10 +432,10 @@ fun main() = runBlocking {
         }
     }
     println()
-    
+
     // Step 12: Demonstrate error handling scenarios
     println("Step 12: Demonstrating error handling...")
-    
+
     // Test invalid chain ID
     println("  Testing invalid chain ID...")
     try {
@@ -435,30 +445,30 @@ fun main() = runBlocking {
             chainId = "invalid:chain:id"
         )
         println("  ⚠ Unexpected success with invalid chain ID")
-    } catch (error: TrustWeaveError.ChainNotRegistered) {
+    } catch (error: BlockchainException.ChainNotRegistered) {
         println("  ✓ Correctly rejected invalid chain ID: ${error.chainId}")
         println("    Available chains: ${error.availableChains.joinToString(", ")}")
-    } catch (error: TrustWeaveError.ValidationFailed) {
+    } catch (error: TrustWeaveException.ValidationFailed) {
         println("  ✓ Correctly rejected invalid chain ID format: ${error.reason}")
     } catch (error: Throwable) {
         println("  ✓ Error handling works: ${error.message}")
     }
-    
+
     // Test DID resolution error
     println("  Testing DID resolution with unregistered method...")
     try {
         trustweave.dids.resolve("did:unknown:test")
         println("  ⚠ Unexpected success with unregistered DID method")
-    } catch (error: TrustWeaveError.DidMethodNotRegistered) {
+    } catch (error: DidException.DidMethodNotRegistered) {
         println("  ✓ Correctly rejected unregistered DID method: ${error.method}")
         println("    Available methods: ${error.availableMethods.joinToString(", ")}")
-    } catch (error: TrustWeaveError.InvalidDidFormat) {
+    } catch (error: DidException.InvalidDidFormat) {
         println("  ✓ Correctly rejected invalid DID format: ${error.reason}")
     } catch (error: Throwable) {
         println("  ✓ Error handling works: ${error.message}")
     }
     println()
-    
+
     // Summary
     println("=".repeat(70))
     println("Scenario Summary")

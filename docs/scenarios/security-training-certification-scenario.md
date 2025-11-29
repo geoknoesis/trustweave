@@ -117,7 +117,7 @@ flowchart TD
     A["Training Provider<br/>Issues Training/Certification<br/>Credential"] -->|issues| B["Training/Certification Credential<br/>Professional DID<br/>Certification Details<br/>Cryptographic Proof"]
     B -->|stored in| C["Professional Wallet<br/>Stores certifications<br/>Organizes by skill<br/>Maintains privacy"]
     C -->|presents| D["Employer<br/>Verifies certifications<br/>Checks expiration<br/>Validates qualifications"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -139,10 +139,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 dependencies {
     // Core TrustWeave modules
     implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -170,39 +170,39 @@ fun main() = runBlocking {
     println("=".repeat(70))
     println("Security Training & Certification Verification Scenario - Complete End-to-End Example")
     println("=".repeat(70))
-    
+
     // Step 1: Create TrustWeave instance
     val TrustWeave = TrustWeave.create()
     println("\n✅ TrustWeave initialized")
-    
+
     // Step 2: Create DIDs for training providers, professionals, and employers
     val isc2DidDoc = TrustWeave.dids.create()
     val isc2Did = isc2DidDoc.id
     val isc2KeyId = isc2DidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val ecCouncilDidDoc = TrustWeave.dids.create()
     val ecCouncilDid = ecCouncilDidDoc.id
     val ecCouncilKeyId = ecCouncilDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val comptiaDidDoc = TrustWeave.dids.create()
     val comptiaDid = comptiaDidDoc.id
     val comptiaKeyId = comptiaDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val professionalDidDoc = TrustWeave.dids.create()
     val professionalDid = professionalDidDoc.id
-    
+
     val employerDidDoc = TrustWeave.dids.create()
     val employerDid = employerDidDoc.id
-    
+
     println("✅ (ISC)² DID: $isc2Did")
     println("✅ EC-Council DID: $ecCouncilDid")
     println("✅ CompTIA DID: $comptiaDid")
     println("✅ Professional DID: $professionalDid")
     println("✅ Employer DID: $employerDid")
-    
+
     // Step 3: Issue CISSP certification credential
     val cisspCredential = TrustWeave.issueCredential(
         issuerDid = isc2Did,
@@ -239,9 +239,9 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "CertificationCredential", "SecurityCertification"),
         expirationDate = Instant.now().plus(2, ChronoUnit.YEARS).toString()
     ).getOrThrow()
-    
+
     println("\n✅ CISSP certification credential issued: ${cisspCredential.id}")
-    
+
     // Step 4: Issue CEH certification credential
     val cehCredential = TrustWeave.issueCredential(
         issuerDid = ecCouncilDid,
@@ -284,9 +284,9 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "CertificationCredential", "SecurityCertification"),
         expirationDate = Instant.now().plus(3, ChronoUnit.YEARS).toString()
     ).getOrThrow()
-    
+
     println("✅ CEH certification credential issued: ${cehCredential.id}")
-    
+
     // Step 5: Issue Security+ training credential
     val securityPlusTrainingCredential = TrustWeave.issueCredential(
         issuerDid = comptiaDid,
@@ -312,9 +312,9 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "TrainingCredential", "SecurityTraining"),
         expirationDate = null // Training credentials don't expire
     ).getOrThrow()
-    
+
     println("✅ Security+ training credential issued: ${securityPlusTrainingCredential.id}")
-    
+
     // Step 6: Create professional wallet and store all credentials
     val professionalWallet = TrustWeave.createWallet(
         holderDid = professionalDid,
@@ -323,46 +323,46 @@ fun main() = runBlocking {
             enablePresentation = true
         }.build()
     ).getOrThrow()
-    
+
     val cisspCredentialId = professionalWallet.store(cisspCredential)
     val cehCredentialId = professionalWallet.store(cehCredential)
     val trainingCredentialId = professionalWallet.store(securityPlusTrainingCredential)
-    
+
     println("\n✅ All credentials stored in wallet")
-    
+
     // Step 7: Organize credentials by skill and type
     professionalWallet.withOrganization { org ->
         val certificationsCollectionId = org.createCollection("Certifications", "Professional certifications")
         val trainingCollectionId = org.createCollection("Training", "Training completion records")
-        
+
         org.addToCollection(cisspCredentialId, certificationsCollectionId)
         org.addToCollection(cehCredentialId, certificationsCollectionId)
         org.addToCollection(trainingCredentialId, trainingCollectionId)
-        
+
         org.tagCredential(cisspCredentialId, setOf("certification", "cissp", "security", "management", "leadership"))
         org.tagCredential(cehCredentialId, setOf("certification", "ceh", "security", "penetration-testing", "ethical-hacking"))
         org.tagCredential(trainingCredentialId, setOf("training", "security-plus", "security", "foundational"))
-        
+
         println("✅ Credentials organized by type and skill")
     }
-    
+
     // Step 8: Employer verification - CISSP required
     println("\n🏢 Employer Verification - CISSP Required:")
-    
+
     val cisspVerification = TrustWeave.verifyCredential(cisspCredential).getOrThrow()
-    
+
     if (cisspVerification.valid) {
         val credentialSubject = cisspCredential.credentialSubject
         val certification = credentialSubject.jsonObject["certification"]?.jsonObject
         val certificationName = certification?.get("certificationName")?.jsonPrimitive?.content
         val status = certification?.get("status")?.jsonPrimitive?.content
         val expirationDate = certification?.get("expirationDate")?.jsonPrimitive?.content
-        
+
         println("✅ Certification Credential: VALID")
         println("   Certification: $certificationName")
         println("   Status: $status")
         println("   Expiration: $expirationDate")
-        
+
         if (certificationName == "CISSP" && status == "Active") {
             println("✅ CISSP requirement MET")
             println("✅ Certification is active")
@@ -375,13 +375,13 @@ fun main() = runBlocking {
         println("❌ Certification Credential: INVALID")
         println("❌ Qualification NOT VERIFIED")
     }
-    
+
     // Step 9: Employer verification - Multiple certifications
     println("\n🏢 Employer Verification - Multiple Certifications Required:")
-    
+
     val cisspValid = TrustWeave.verifyCredential(cisspCredential).getOrThrow().valid
     val cehValid = TrustWeave.verifyCredential(cehCredential).getOrThrow().valid
-    
+
     if (cisspValid && cehValid) {
         println("✅ CISSP Certification: VALID")
         println("✅ CEH Certification: VALID")
@@ -392,10 +392,10 @@ fun main() = runBlocking {
         println("❌ One or more certifications invalid")
         println("❌ Qualification NOT VERIFIED")
     }
-    
+
     // Step 10: Expired certification check
     println("\n🏢 Expired Certification Check:")
-    
+
     // Create an expired certification
     val expiredCertCredential = TrustWeave.issueCredential(
         issuerDid = isc2Did,
@@ -411,12 +411,12 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "CertificationCredential", "SecurityCertification"),
         expirationDate = Instant.now().minus(30, ChronoUnit.DAYS).toString() // Already expired
     ).getOrThrow()
-    
+
     val expiredVerification = TrustWeave.verifyCredential(
         expiredCertCredential,
         options = CredentialVerificationOptions(checkExpiration = true)
     ).getOrThrow()
-    
+
     if (!expiredVerification.valid) {
         println("❌ Expired Certification: INVALID")
         println("   Certification expired: YES")
@@ -424,7 +424,7 @@ fun main() = runBlocking {
         println("❌ Qualification NOT VERIFIED")
         println("   Note: Professional must renew certification")
     }
-    
+
     // Step 11: Create privacy-preserving certification presentation
     val certificationPresentation = professionalWallet.withPresentation { pres ->
         pres.createPresentation(
@@ -436,12 +436,12 @@ fun main() = runBlocking {
             )
         )
     } ?: error("Presentation capability not available")
-    
+
     println("\n✅ Privacy-preserving certification presentation created")
     println("   Holder: ${certificationPresentation.holder}")
     println("   Credentials: ${certificationPresentation.verifiableCredential.size}")
     println("   Note: Only certifications shared, no personal details")
-    
+
     // Step 12: Demonstrate privacy - verify no personal information is exposed
     println("\n🔒 Privacy Verification:")
     val presentationCredential = certificationPresentation.verifiableCredential.firstOrNull()
@@ -451,14 +451,14 @@ fun main() = runBlocking {
         val hasEmail = subject.jsonObject.containsKey("email")
         val hasSSN = subject.jsonObject.containsKey("ssn")
         val hasCertification = subject.jsonObject.containsKey("certification")
-        
+
         println("   Full Name exposed: $hasFullName ❌")
         println("   Email exposed: $hasEmail ❌")
         println("   SSN exposed: $hasSSN ❌")
         println("   Certification details: $hasCertification ✅")
         println("✅ Privacy preserved - only certification information shared")
     }
-    
+
     // Step 13: Display wallet statistics
     val stats = professionalWallet.getStatistics()
     println("\n📊 Professional Wallet Statistics:")
@@ -466,7 +466,7 @@ fun main() = runBlocking {
     println("   Valid credentials: ${stats.validCredentials}")
     println("   Collections: ${stats.collectionsCount}")
     println("   Tags: ${stats.tagsCount}")
-    
+
     // Step 14: Summary
     println("\n" + "=".repeat(70))
     println("✅ SECURITY TRAINING & CERTIFICATION VERIFICATION SYSTEM COMPLETE")

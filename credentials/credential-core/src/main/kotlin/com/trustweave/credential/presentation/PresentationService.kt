@@ -17,9 +17,9 @@ import java.util.UUID
 
 /**
  * Presentation request model.
- * 
+ *
  * Used to request verifiable presentations from holders.
- * 
+ *
  * @param id Unique request identifier
  * @param query Presentation query specifying what credentials are requested
  * @param challenge Challenge string for authentication
@@ -36,7 +36,7 @@ data class PresentationRequest(
 
 /**
  * Presentation query specifying credential requirements.
- * 
+ *
  * @param type Query type (e.g., "DIDAuthentication", "CredentialQuery")
  * @param credentialTypes List of required credential types
  * @param requiredFields List of required fields in credentialSubject
@@ -51,16 +51,16 @@ data class PresentationQuery(
 
 /**
  * Presentation service for creating and verifying verifiable presentations.
- * 
+ *
  * Handles presentation creation, selective disclosure, and verification.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val service = PresentationService(
  *     proofGenerator = Ed25519ProofGenerator { data, keyId -> kms.sign(keyId, data) },
  *     credentialVerifier = CredentialVerifier { did -> didRegistry.resolve(did).document != null }
  * )
- * 
+ *
  * // Create presentation
  * val presentation = service.createPresentation(
  *     credentials = listOf(credential1, credential2),
@@ -71,7 +71,7 @@ data class PresentationQuery(
  *         domain = "example.com"
  *     )
  * )
- * 
+ *
  * // Verify presentation
  * val result = service.verifyPresentation(
  *     presentation = presentation,
@@ -89,7 +89,7 @@ class PresentationService(
 ) {
     /**
      * Create a verifiable presentation from credentials.
-     * 
+     *
      * @param credentials List of credentials to include in presentation
      * @param holderDid DID of the presentation holder
      * @param options Presentation options (proof type, challenge, domain, etc.)
@@ -102,7 +102,7 @@ class PresentationService(
     ): VerifiablePresentation = withContext(Dispatchers.IO) {
         require(credentials.isNotEmpty()) { "At least one credential is required" }
         require(holderDid.isNotBlank()) { "Holder DID is required" }
-        
+
         // Build presentation without proof
         val presentation = VerifiablePresentation(
             id = UUID.randomUUID().toString(),
@@ -113,7 +113,7 @@ class PresentationService(
             challenge = options.challenge,
             domain = options.domain
         )
-        
+
         // Generate proof if proof type is specified
         val proof = if (options.proofType.isNotBlank() && options.keyId != null) {
             val generator = proofGenerator ?: getProofGenerator(options.proofType)
@@ -129,13 +129,13 @@ class PresentationService(
         } else {
             null
         }
-        
+
         presentation.copy(proof = proof)
     }
-    
+
     /**
      * Verify a verifiable presentation.
-     * 
+     *
      * @param presentation Presentation to verify
      * @param options Verification options
      * @return Verification result
@@ -146,11 +146,11 @@ class PresentationService(
     ): PresentationVerificationResult = withContext(Dispatchers.IO) {
         val errors = mutableListOf<String>()
         val warnings = mutableListOf<String>()
-        
+
         var presentationProofValid = false
         var challengeValid = true
         var domainValid = true
-        
+
         // 1. Verify presentation proof
         if (presentation.proof != null) {
             // TODO: Implement actual proof verification
@@ -163,7 +163,7 @@ class PresentationService(
         } else {
             errors.add("Presentation has no proof")
         }
-        
+
         // 2. Verify challenge
         if (options.verifyChallenge) {
             if (options.expectedChallenge != null) {
@@ -175,7 +175,7 @@ class PresentationService(
                 warnings.add("No challenge provided in presentation")
             }
         }
-        
+
         // 3. Verify domain
         if (options.verifyDomain && options.expectedDomain != null) {
             domainValid = presentation.domain == options.expectedDomain
@@ -183,7 +183,7 @@ class PresentationService(
                 errors.add("Domain mismatch: expected '${options.expectedDomain}', got '${presentation.domain}'")
             }
         }
-        
+
         // 4. Verify all credentials in presentation
         val credentialResults = mutableListOf<CredentialVerificationResult>()
         if (options.checkRevocation && credentialVerifier != null) {
@@ -195,13 +195,13 @@ class PresentationService(
                     )
                 )
                 credentialResults.add(result)
-                
-                if (!result.valid) {
-                    errors.add("Credential ${credential.id ?: "unknown"} verification failed: ${result.errors.joinToString(", ")}")
+
+                if (!result.isValid) {
+                    errors.add("Credential ${credential.id ?: "unknown"} verification failed: ${result.allErrors.joinToString(", ")}")
                 }
             }
         }
-        
+
         PresentationVerificationResult(
             valid = errors.isEmpty() && presentationProofValid && challengeValid && domainValid,
             errors = errors,
@@ -212,13 +212,13 @@ class PresentationService(
             credentialResults = credentialResults
         )
     }
-    
+
     /**
      * Create a selective disclosure presentation.
-     * 
+     *
      * Creates a presentation that only discloses specific fields from credentials.
      * Requires BBS+ proof type for zero-knowledge selective disclosure.
-     * 
+     *
      * @param credentials List of credentials
      * @param disclosedFields List of field paths to disclose (e.g., ["credentialSubject.name", "credentialSubject.email"])
      * @param holderDid DID of the holder
@@ -233,14 +233,14 @@ class PresentationService(
     ): VerifiablePresentation {
         // Check if BBS+ proof generator is available
         val bbsGenerator = proofRegistry.get("BbsBlsSignature2020")
-        
+
         if (bbsGenerator != null && bbsGenerator is com.trustweave.credential.proof.BbsProofGenerator) {
             // Use BBS+ generator for selective disclosure
             val derivedCredentials = credentials.map { credential ->
                 // Create derived credential with only disclosed fields
                 createDerivedCredentialForDisclosure(credential, disclosedFields)
             }
-            
+
             // Create presentation with derived credentials
             // In a full implementation, this would use BBS+ selective disclosure proofs
             return createPresentation(derivedCredentials, holderDid, options.copy(proofType = "BbsBlsSignature2020"))
@@ -252,7 +252,7 @@ class PresentationService(
             return createPresentation(filteredCredentials, holderDid, options)
         }
     }
-    
+
     /**
      * Create a derived credential with only disclosed fields.
      */
@@ -265,13 +265,13 @@ class PresentationService(
             encodeDefaults = false
             ignoreUnknownKeys = true
         }
-        
+
         // Serialize credential to JSON
         val credentialJson = json.encodeToJsonElement(
             com.trustweave.credential.models.VerifiableCredential.serializer(),
             credential
         ).jsonObject
-        
+
         // Create derived credential with only disclosed fields
         val derivedJson = buildJsonObject {
             // Always include core fields
@@ -279,14 +279,14 @@ class PresentationService(
             put("type", credentialJson["type"] ?: kotlinx.serialization.json.buildJsonArray { })
             put("issuer", credentialJson["issuer"] ?: kotlinx.serialization.json.JsonPrimitive(""))
             put("issuanceDate", credentialJson["issuanceDate"] ?: kotlinx.serialization.json.JsonPrimitive(""))
-            
+
             // Include disclosed fields from credentialSubject
             val subjectJson = credentialJson["credentialSubject"]?.jsonObject
             if (subjectJson != null) {
                 val derivedSubject = buildJsonObject {
                     // Always include id
                     subjectJson["id"]?.let { put("id", it) }
-                    
+
                     // Include only disclosed fields
                     for (fieldPath in disclosedFields) {
                         val fieldName = if (fieldPath.contains(".")) {
@@ -294,7 +294,7 @@ class PresentationService(
                         } else {
                             fieldPath
                         }
-                        
+
                         // Check if this field should be disclosed
                         if (fieldPath.startsWith("credentialSubject.") || fieldPath == fieldName) {
                             subjectJson[fieldName]?.let { put(fieldName, it) }
@@ -307,14 +307,14 @@ class PresentationService(
                 credentialJson["credentialSubject"]?.let { put("credentialSubject", it) }
             }
         }
-        
+
         // Parse back to VerifiableCredential
         return json.decodeFromJsonElement(
             com.trustweave.credential.models.VerifiableCredential.serializer(),
             derivedJson
         )
     }
-    
+
     /**
      * Get proof generator by type.
      */

@@ -1,6 +1,6 @@
 package com.trustweave.core.plugin
 
-import com.trustweave.core.exception.TrustWeaveError
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -8,11 +8,11 @@ import kotlin.test.*
 
 /**
  * Error handling tests for ProviderChain.
- * 
+ *
  * **Test Isolation**: Each test uses its own isolated PluginRegistry instance.
  */
 class ProviderChainErrorTest {
-    
+
     private lateinit var registry: PluginRegistry
 
     @BeforeEach
@@ -25,7 +25,7 @@ class ProviderChainErrorTest {
         val exception = assertFailsWith<IllegalArgumentException> {
             ProviderChain<TestProvider>(emptyList())
         }
-        
+
         assertTrue(exception.message?.contains("at least one provider") == true)
     }
 
@@ -35,11 +35,11 @@ class ProviderChainErrorTest {
             TestProvider("provider-1"),
             TestProvider("provider-2")
         )
-        
+
         val exception = assertFailsWith<IllegalArgumentException> {
             ProviderChain(providers) { false }
         }
-        
+
         assertTrue(exception.message?.contains("filters out all providers") == true)
     }
 
@@ -50,11 +50,11 @@ class ProviderChainErrorTest {
             TestProvider("provider-2", shouldFail = true)
         )
         val chain = ProviderChain(providers)
-        
-        val exception = assertFailsWith<TrustWeaveError.AllProvidersFailed> {
+
+        val exception = assertFailsWith<TrustWeaveException.AllProvidersFailed> {
             chain.execute { it.operation() }
         }
-        
+
         assertEquals("ALL_PROVIDERS_FAILED", exception.code)
         assertEquals(2, exception.attemptedProviders.size)
         // Provider ID might be qualified name or simple name
@@ -70,16 +70,16 @@ class ProviderChainErrorTest {
             TestProvider("provider-2", shouldFail = true, errorMessage = "Error 2")
         )
         val chain = ProviderChain(providers)
-        
-        val exception = assertFailsWith<TrustWeaveError.AllProvidersFailed> {
+
+        val exception = assertFailsWith<TrustWeaveException.AllProvidersFailed> {
             chain.execute { it.operation() }
         }
-        
+
         assertEquals(2, exception.providerErrors.size)
         // Verify both error messages are captured correctly
-        assertTrue(exception.providerErrors.values.any { it == "Error 1" }, 
+        assertTrue(exception.providerErrors.values.any { it == "Error 1" },
             "Should contain Error 1")
-        assertTrue(exception.providerErrors.values.any { it == "Error 2" }, 
+        assertTrue(exception.providerErrors.values.any { it == "Error 2" },
             "Should contain Error 2")
     }
 
@@ -89,7 +89,7 @@ class ProviderChainErrorTest {
             TestProvider("provider-1", shouldThrowError = true)
         )
         val chain = ProviderChain(providers)
-        
+
         // Should propagate Error types (OutOfMemoryError, etc.)
         assertFailsWith<OutOfMemoryError> {
             chain.execute { it.operation() }
@@ -98,10 +98,10 @@ class ProviderChainErrorTest {
 
     @Test
     fun `test createProviderChain throws NoProvidersFound when no providers exist`() {
-        val exception = assertFailsWith<TrustWeaveError.NoProvidersFound> {
+        val exception = assertFailsWith<TrustWeaveException.NoProvidersFound> {
             createProviderChain<TestProvider>(listOf("nonexistent-1", "nonexistent-2"), registry)
         }
-        
+
         assertEquals("NO_PROVIDERS_FOUND", exception.code)
         assertEquals(2, exception.pluginIds.size)
         assertTrue(exception.pluginIds.contains("nonexistent-1"))
@@ -118,11 +118,11 @@ class ProviderChainErrorTest {
             capabilities = PluginCapabilities()
         )
         registry.register(metadata, TestProvider("provider-1"))
-        
-        val exception = assertFailsWith<TrustWeaveError.PartialProvidersFound> {
+
+        val exception = assertFailsWith<TrustWeaveException.PartialProvidersFound> {
             createProviderChain<TestProvider>(listOf("plugin-1", "plugin-2", "plugin-3"), registry)
         }
-        
+
         assertEquals("PARTIAL_PROVIDERS_FOUND", exception.code)
         assertEquals(3, exception.requestedIds.size)
         assertEquals(1, exception.foundIds.size)
@@ -148,12 +148,12 @@ class ProviderChainErrorTest {
             provider = "test",
             capabilities = PluginCapabilities()
         )
-        
+
         registry.register(metadata1, TestProvider("provider-1"))
         registry.register(metadata2, TestProvider("provider-2"))
-        
+
         val chain = createProviderChain<TestProvider>(listOf("plugin-1", "plugin-2"), registry)
-        
+
         assertNotNull(chain)
         assertEquals(2, chain.size())
     }
@@ -161,9 +161,9 @@ class ProviderChainErrorTest {
     @Test
     fun `test createProviderChainFromConfig returns null when chain not found`() {
         val config = PluginConfiguration()
-        
+
         val chain = createProviderChainFromConfig<TestProvider>("nonexistent-chain", config, registry)
-        
+
         assertNull(chain)
     }
 
@@ -174,9 +174,9 @@ class ProviderChainErrorTest {
             TestProvider("provider-2"),
             TestProvider("provider-3")
         )
-        
+
         val chain = ProviderChain(providers) { it.name != "provider-2" }
-        
+
         assertEquals(3, chain.size())
         assertEquals(2, chain.selectedSize())
     }

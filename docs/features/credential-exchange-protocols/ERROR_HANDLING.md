@@ -104,7 +104,7 @@ try {
    val registry = CredentialExchangeProtocolRegistry()
    val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
    registry.register(DidCommExchangeProtocol(didCommService))
-   
+
    // Now safe to use
    val offer = registry.offerCredential("didcomm", request)
    ```
@@ -219,7 +219,7 @@ try {
    ```kotlin
    // First create an offer
    val offer = registry.offerCredential("didcomm", offerRequest)
-   
+
    // Then use the offer ID
    val request = CredentialRequestRequest(
        holderDid = "did:key:holder",
@@ -990,7 +990,7 @@ suspend fun offerCredentialWithFallback(
             println("Preferred protocol failed: ${e.message}")
         }
     }
-    
+
     // Try fallback protocols
     for (protocol in fallbackProtocols) {
         if (registry.isRegistered(protocol)) {
@@ -1001,7 +1001,7 @@ suspend fun offerCredentialWithFallback(
             }
         }
     }
-    
+
     return null
 }
 
@@ -1020,7 +1020,7 @@ val offer = offerCredentialWithFallback(
 ```kotlin
 fun validateOfferRequest(request: CredentialOfferRequest): ValidationResult {
     val errors = mutableListOf<String>()
-    
+
     // Validate DIDs
     if (!isValidDid(request.issuerDid)) {
         errors.add("Invalid issuer DID format")
@@ -1028,15 +1028,15 @@ fun validateOfferRequest(request: CredentialOfferRequest): ValidationResult {
     if (!isValidDid(request.holderDid)) {
         errors.add("Invalid holder DID format")
     }
-    
+
     // Validate preview
     if (request.credentialPreview.attributes.isEmpty()) {
         errors.add("Credential preview attributes must not be empty")
     }
-    
+
     // Validate protocol-specific options
     // (Implementation depends on protocol)
-    
+
     return if (errors.isEmpty()) {
         ValidationResult.Valid
     } else {
@@ -1242,7 +1242,7 @@ suspend fun offerCredentialWithAutoRegister(
             // ... other protocols
         }
     }
-    
+
     return registry.offerCredential(protocolName, request)
 }
 ```

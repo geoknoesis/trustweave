@@ -35,10 +35,10 @@ The core interface for key management operations:
 import com.trustweave.kms.*
 
 interface KeyManagementService {
-    suspend fun generateKey(algorithm: Algorithm): Key
-    suspend fun sign(keyId: String, data: ByteArray): ByteArray
-    suspend fun getPublicKey(keyId: String): PublicKey
-    suspend fun deleteKey(keyId: String): Boolean
+    suspend fun generateKey(algorithm: Algorithm): KeyHandle
+    suspend fun sign(keyId: KeyId, data: ByteArray): ByteArray
+    suspend fun getPublicKey(keyId: KeyId): KeyHandle
+    suspend fun deleteKey(keyId: KeyId): Boolean
 }
 ```
 
@@ -85,6 +85,7 @@ val key = kms?.generateKey(Algorithm.Secp256k1)
 
 // Sign data
 val signature = key?.let { kms.sign(it.id, data.toByteArray()) }
+// Note: key.id is a KeyId value class, which is automatically used by sign()
 ```
 
 **What this does:** Uses SPI to discover and instantiate a KMS provider, then generates a key and signs data.

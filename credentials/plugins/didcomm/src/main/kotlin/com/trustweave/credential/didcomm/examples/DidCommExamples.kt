@@ -6,23 +6,21 @@ import com.trustweave.credential.didcomm.utils.DidCommUtils
 import com.trustweave.did.DidDocument
 import com.trustweave.did.VerificationMethod
 import com.trustweave.kms.KeyManagementService
-import com.trustweave.testkit.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 
 /**
  * Example usage of DIDComm V2 for credential exchange.
  */
 object DidCommExamples {
-    
+
     /**
      * Example: Complete credential issuance flow.
      */
-    fun credentialIssuanceExample() = runBlocking {
-        // Setup
-        val kms = InMemoryKeyManagementService()
+    fun credentialIssuanceExample(kms: KeyManagementService) = runBlocking {
+        // Setup - KMS should be provided by caller
         val issuerDid = "did:key:issuer"
         val holderDid = "did:key:holder"
-        
+
         // Mock DID resolution
         val resolveDid: suspend (String) -> DidDocument? = { did ->
             DidDocument(
@@ -42,10 +40,10 @@ object DidCommExamples {
                 keyAgreement = listOf("$did#key-1")
             )
         }
-        
+
         // Create DIDComm service
         val didcomm = DidCommFactory.createInMemoryService(kms, resolveDid)
-        
+
         // Step 1: Issuer creates credential offer
         val preview = com.trustweave.credential.exchange.CredentialPreview(
             attributes = listOf(
@@ -53,13 +51,13 @@ object DidCommExamples {
                 com.trustweave.credential.exchange.CredentialAttribute("email", "alice@example.com")
             )
         )
-        
+
         val offer = CredentialProtocol.createCredentialOffer(
             fromDid = issuerDid,
             toDid = holderDid,
             credentialPreview = preview
         )
-        
+
         // Step 2: Send offer (in real implementation, this would be delivered via HTTP/WebSocket)
         val offerId = didcomm.sendMessage(
             message = offer,
@@ -68,9 +66,9 @@ object DidCommExamples {
             toDid = holderDid,
             toKeyId = "$holderDid#key-1"
         )
-        
+
         println("Sent credential offer: $offerId")
-        
+
         // Step 3: Holder receives offer and creates request
         val receivedOffer = didcomm.getMessage(offerId)
         if (receivedOffer != null) {
@@ -79,7 +77,7 @@ object DidCommExamples {
                 toDid = issuerDid,
                 thid = receivedOffer.id
             )
-            
+
             val requestId = didcomm.sendMessage(
                 message = request,
                 fromDid = holderDid,
@@ -87,19 +85,19 @@ object DidCommExamples {
                 toDid = issuerDid,
                 toKeyId = "$issuerDid#key-1"
             )
-            
+
             println("Sent credential request: $requestId")
         }
     }
-    
+
     /**
      * Example: Basic message exchange.
      */
-    fun basicMessageExample() = runBlocking {
-        val kms = InMemoryKeyManagementService()
+    fun basicMessageExample(kms: KeyManagementService) = runBlocking {
+        // KMS should be provided by caller
         val aliceDid = "did:key:alice"
         val bobDid = "did:key:bob"
-        
+
         val resolveDid: suspend (String) -> DidDocument? = { did ->
             DidDocument(
                 id = did,
@@ -114,9 +112,9 @@ object DidCommExamples {
                 keyAgreement = listOf("$did#key-1")
             )
         }
-        
+
         val didcomm = DidCommFactory.createInMemoryService(kms, resolveDid)
-        
+
         // Alice sends message to Bob
         val message = BasicMessageProtocol.createBasicMessage(
             fromDid = aliceDid,
@@ -124,7 +122,7 @@ object DidCommExamples {
             content = "Hello, Bob!",
             thid = "conversation-123"
         )
-        
+
         val messageId = didcomm.sendMessage(
             message = message,
             fromDid = aliceDid,
@@ -132,18 +130,18 @@ object DidCommExamples {
             toDid = bobDid,
             toKeyId = "$bobDid#key-1"
         )
-        
+
         println("Sent message: $messageId")
-        
+
         // Bob retrieves messages
         val bobMessages = didcomm.getMessagesForDid(bobDid)
         println("Bob has ${bobMessages.size} messages")
-        
+
         // Get conversation thread
         val threadMessages = didcomm.getThreadMessages("conversation-123")
         println("Thread has ${threadMessages.size} messages")
     }
-    
+
     /**
      * Example: Finding key agreement keys from DID documents.
      */
@@ -160,15 +158,15 @@ object DidCommExamples {
             ),
             keyAgreement = listOf("did:key:example#key-1")
         )
-        
+
         // Find key agreement key
         val keyAgreementKey = DidCommUtils.findKeyAgreementKey(document)
         println("Found key agreement key: ${keyAgreementKey?.id}")
-        
+
         // Check for DIDComm service
         val hasService = DidCommUtils.hasDidCommService(document)
         println("Has DIDComm service: $hasService")
-        
+
         // Get service endpoint
         val endpoint = DidCommUtils.getDidCommServiceEndpoint(document)
         println("Service endpoint: $endpoint")

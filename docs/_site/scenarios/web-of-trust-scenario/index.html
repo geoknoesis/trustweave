@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,24 +591,24 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="web-of-trust-scenario">
-  
-  
+
+
     <a href="#web-of-trust-scenario" class="anchor-heading" aria-labelledby="web-of-trust-scenario"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Web of Trust Scenario
-  
-  
+
+
 </h1>
-    
+
 
 <p>This document provides a complete walkthrough of using TrustWeave’s web of trust features, including trust registries, delegation chains, and proof purpose validation.</p>
 
@@ -626,13 +626,13 @@
 
 <p><strong>Result:</strong> These modules give you the trust-layer DSLs, registries, and in-memory mocks used throughout the walkthrough.</p>
 <h2 id="overview">
-  
-  
+
+
     <a href="#overview" class="anchor-heading" aria-labelledby="overview"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Overview
-  
-  
+
+
 </h2>
-    
+
 
 <p>The web of trust scenario demonstrates how to:</p>
 <ol>
@@ -645,21 +645,21 @@
   <li>Integrate all features together</li>
 </ol>
 <h2 id="step-by-step-walkthrough">
-  
-  
+
+
     <a href="#step-by-step-walkthrough" class="anchor-heading" aria-labelledby="step-by-step-walkthrough"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step-by-Step Walkthrough
-  
-  
+
+
 </h2>
-    
+
 <h3 id="step-1-configure-trust-layer-with-trust-registry">
-  
-  
+
+
     <a href="#step-1-configure-trust-layer-with-trust-registry" class="anchor-heading" aria-labelledby="step-1-configure-trust-layer-with-trust-registry"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Configure Trust Layer with Trust Registry
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -698,17 +698,17 @@
             <span class="nf">provider</span><span class="p">(</span><span class="s">"inMemory"</span><span class="p">)</span>
             <span class="nf">algorithm</span><span class="p">(</span><span class="nc">KeyAlgorithms</span><span class="p">.</span><span class="nc">ED25519</span><span class="p">)</span>
         <span class="p">}</span>
-        
+
         <span class="nf">did</span> <span class="p">{</span>
             <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span> <span class="p">{</span>
                 <span class="nf">algorithm</span><span class="p">(</span><span class="nc">KeyAlgorithms</span><span class="p">.</span><span class="nc">ED25519</span><span class="p">)</span>
             <span class="p">}</span>
         <span class="p">}</span>
-        
+
         <span class="nf">credentials</span> <span class="p">{</span>
             <span class="nf">defaultProofType</span><span class="p">(</span><span class="nc">ProofTypes</span><span class="p">.</span><span class="nc">ED25519</span><span class="p">)</span>
         <span class="p">}</span>
-        
+
         <span class="nf">trust</span> <span class="p">{</span>
             <span class="nf">provider</span><span class="p">(</span><span class="s">"inMemory"</span><span class="p">)</span>
         <span class="p">}</span>
@@ -721,13 +721,13 @@
 
 <p><strong>Outcome:</strong> Returns a configured trust layer you reuse in subsequent steps to create DIDs, issue credentials, and resolve trust anchors.</p>
 <h3 id="step-2-create-dids-for-entities">
-  
-  
+
+
     <a href="#step-2-create-dids-for-entities" class="anchor-heading" aria-labelledby="step-2-create-dids-for-entities"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Create DIDs for Entities
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -773,13 +773,13 @@
 
 <p><strong>Outcome:</strong> Each actor has a resolvable identifier that upcoming trust and delegation steps can reference.</p>
 <h3 id="step-3-set-up-trust-anchors">
-  
-  
+
+
     <a href="#step-3-set-up-trust-anchors" class="anchor-heading" aria-labelledby="step-3-set-up-trust-anchors"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Set Up Trust Anchors
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -805,13 +805,13 @@
         <span class="nf">credentialTypes</span><span class="p">(</span><span class="s">"EducationCredential"</span><span class="p">,</span> <span class="s">"DegreeCredential"</span><span class="p">)</span>
         <span class="nf">description</span><span class="p">(</span><span class="s">"Trusted university for education credentials"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Add company as trusted anchor for employment credentials</span>
     <span class="nf">addAnchor</span><span class="p">(</span><span class="n">companyDid</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">credentialTypes</span><span class="p">(</span><span class="s">"EmploymentCredential"</span><span class="p">)</span>
         <span class="nf">description</span><span class="p">(</span><span class="s">"Trusted company for employment credentials"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Verify trust anchors were added</span>
     <span class="kd">val</span> <span class="py">isUniversityTrusted</span> <span class="p">=</span> <span class="nf">isTrusted</span><span class="p">(</span><span class="n">universityDid</span><span class="p">,</span> <span class="s">"EducationCredential"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"University trusted for EducationCredential: $isUniversityTrusted"</span><span class="p">)</span>
@@ -823,13 +823,13 @@
 
 <p><strong>Outcome:</strong> Subsequent verifications can rely on trust registry lookups instead of hard-coded issuer lists.</p>
 <h3 id="step-4-issue-credentials-with-trust-verification">
-  
-  
+
+
     <a href="#step-4-issue-credentials-with-trust-verification" class="anchor-heading" aria-labelledby="step-4-issue-credentials-with-trust-verification"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Issue Credentials with Trust Verification
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -913,13 +913,13 @@
 
 <p><strong>Outcome:</strong> A positive result confirms both the issuer’s trust anchor and the credential’s validity window are satisfied.</p>
 <h3 id="step-5-set-up-delegation">
-  
-  
+
+
     <a href="#step-5-set-up-delegation" class="anchor-heading" aria-labelledby="step-5-set-up-delegation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Set Up Delegation
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -965,13 +965,13 @@
 
 <p><strong>Outcome:</strong> A <code class="language-plaintext highlighter-rouge">valid</code> result proves the HR department may act on behalf of the company when issuing credentials.</p>
 <h3 id="step-6-issue-credential-using-delegated-authority">
-  
-  
+
+
     <a href="#step-6-issue-credential-using-delegated-authority" class="anchor-heading" aria-labelledby="step-6-issue-credential-using-delegated-authority"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 6: Issue Credential Using Delegated Authority
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1041,13 +1041,13 @@
 
 <p><strong>Outcome:</strong> Successful verification confirms the delegation chain and trust anchors are respected before the credential is accepted.</p>
 <h3 id="step-7-find-trust-paths">
-  
-  
+
+
     <a href="#step-7-find-trust-paths" class="anchor-heading" aria-labelledby="step-7-find-trust-paths"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 7: Find Trust Paths
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1069,7 +1069,7 @@
     <span class="c1">// Get all trusted issuers for a credential type</span>
     <span class="kd">val</span> <span class="py">educationIssuers</span> <span class="p">=</span> <span class="nf">getTrustedIssuers</span><span class="p">(</span><span class="s">"EducationCredential"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Trusted education issuers: ${educationIssuers.joinToString("</span><span class="p">,</span> <span class="s">")}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Find trust path between two DIDs (if trust relationships exist)</span>
     <span class="kd">val</span> <span class="py">trustPath</span> <span class="p">=</span> <span class="nf">getTrustPath</span><span class="p">(</span><span class="n">universityDid</span><span class="p">,</span> <span class="n">companyDid</span><span class="p">)</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">trustPath</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
@@ -1087,13 +1087,13 @@
 
 <p><strong>Outcome:</strong> If a path exists you receive the ordered DIDs and trust score, helping you diagnose trust relationships before accepting credentials.</p>
 <h3 id="step-8-update-did-documents-with-new-fields">
-  
-  
+
+
     <a href="#step-8-update-did-documents-with-new-fields" class="anchor-heading" aria-labelledby="step-8-update-did-documents-with-new-fields"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 8: Update DID Documents with New Fields
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1113,13 +1113,13 @@
 </pre></td><td class="rouge-code"><pre><span class="n">trustLayer</span><span class="p">.</span><span class="nf">updateDid</span> <span class="p">{</span>
     <span class="nf">did</span><span class="p">(</span><span class="n">studentDid</span><span class="p">)</span>
     <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span>
-    
+
     <span class="c1">// Add capability invocation for signing documents</span>
     <span class="nf">addCapabilityInvocation</span><span class="p">(</span><span class="s">"$studentDid#key-1"</span><span class="p">)</span>
-    
+
     <span class="c1">// Add capability delegation for delegating to assistants</span>
     <span class="nf">addCapabilityDelegation</span><span class="p">(</span><span class="s">"$studentDid#key-2"</span><span class="p">)</span>
-    
+
     <span class="c1">// Set JSON-LD context</span>
     <span class="nf">context</span><span class="p">(</span><span class="s">"https://www.w3.org/ns/did/v1"</span><span class="p">,</span> <span class="s">"https://example.com/context/v1"</span><span class="p">)</span>
 <span class="p">}</span>
@@ -1131,13 +1131,13 @@
 
 <p><strong>Outcome:</strong> The student can now sign documents and delegate capabilities while verifiers understand the DID document structure.</p>
 <h3 id="step-9-use-proof-purpose-validation">
-  
-  
+
+
     <a href="#step-9-use-proof-purpose-validation" class="anchor-heading" aria-labelledby="step-9-use-proof-purpose-validation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 9: Use Proof Purpose Validation
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1298,25 +1298,25 @@
         <span class="nf">did</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span> <span class="p">}</span>
         <span class="nf">trust</span> <span class="p">{</span> <span class="nf">provider</span><span class="p">(</span><span class="s">"inMemory"</span><span class="p">)</span> <span class="p">}</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// 1. Create DIDs</span>
     <span class="kd">val</span> <span class="py">issuerDid</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span> <span class="p">}</span>
     <span class="kd">val</span> <span class="py">holderDid</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span> <span class="p">}</span>
-    
+
     <span class="c1">// 2. Set up trust anchor</span>
     <span class="n">trustLayer</span><span class="p">.</span><span class="nf">trust</span> <span class="p">{</span>
         <span class="nf">addAnchor</span><span class="p">(</span><span class="n">issuerDid</span><span class="p">)</span> <span class="p">{</span>
             <span class="nf">credentialTypes</span><span class="p">(</span><span class="s">"TestCredential"</span><span class="p">)</span>
         <span class="p">}</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// 3. Update issuer DID with assertionMethod</span>
     <span class="n">trustLayer</span><span class="p">.</span><span class="nf">updateDid</span> <span class="p">{</span>
         <span class="nf">did</span><span class="p">(</span><span class="n">issuerDid</span><span class="p">)</span>
         <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span>
         <span class="nf">addAssertionMethod</span><span class="p">(</span><span class="s">"$issuerDid#key-1"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// 4. Issue credential</span>
     <span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span>
         <span class="nf">credential</span> <span class="p">{</span>
@@ -1332,7 +1332,7 @@
         <span class="k">by</span><span class="p">(</span><span class="n">issuerDid</span> <span class="p">=</span> <span class="n">issuerDid</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">=</span> <span class="s">"key-1"</span><span class="p">)</span>
         <span class="nf">proofPurpose</span><span class="p">(</span><span class="nc">ProofPurposes</span><span class="p">.</span><span class="nc">ASSERTION_METHOD</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// 5. Verify with all checks enabled</span>
     <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
         <span class="nf">credential</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
@@ -1340,7 +1340,7 @@
         <span class="nf">validateProofPurpose</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
         <span class="nf">checkExpiration</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// 6. Check results</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Complete Verification Results:"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  Valid: ${result.valid}"</span><span class="p">)</span>
@@ -1348,7 +1348,7 @@
     <span class="nf">println</span><span class="p">(</span><span class="s">"  Proof Purpose Valid: ${result.proofPurposeValid}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  Proof Valid: ${result.proofValid}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  Not Expired: ${result.notExpired}"</span><span class="p">)</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">valid</span> <span class="p">&amp;&amp;</span> <span class="n">result</span><span class="p">.</span><span class="n">trustRegistryValid</span> <span class="p">&amp;&amp;</span> <span class="n">result</span><span class="p">.</span><span class="n">proofPurposeValid</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Credential verified successfully with all checks!"</span><span class="p">)</span>
     <span class="p">}</span>
@@ -1359,21 +1359,21 @@
 
 <p><strong>Outcome:</strong> Use this function as a regression test to ensure future changes preserve the trust-layer guarantees.</p>
 <h2 id="real-world-use-cases">
-  
-  
+
+
     <a href="#real-world-use-cases" class="anchor-heading" aria-labelledby="real-world-use-cases"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Use Cases
-  
-  
+
+
 </h2>
-    
+
 <h3 id="university-credential-verification">
-  
-  
+
+
     <a href="#university-credential-verification" class="anchor-heading" aria-labelledby="university-credential-verification"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> University Credential Verification
-  
-  
+
+
 </h3>
-    
+
 
 <p>Universities can be added as trust anchors, allowing verifiers to automatically trust credentials issued by recognized institutions.</p>
 
@@ -1393,13 +1393,13 @@
 
 <p><strong>Outcome:</strong> Any verifier consulting the trust registry now recognises the university’s credentials automatically, reducing ad-hoc whitelists across institutions.</p>
 <h3 id="corporate-delegation">
-  
-  
+
+
     <a href="#corporate-delegation" class="anchor-heading" aria-labelledby="corporate-delegation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Corporate Delegation
-  
-  
+
+
 </h3>
-    
+
 
 <p>Companies can delegate credential issuance to HR departments, creating a hierarchical authority structure while maintaining centralized trust.</p>
 
@@ -1429,13 +1429,13 @@
 
 <p><strong>Outcome:</strong> A delegation ladder forms so HR staff can issue credentials while the executive team retains ultimate control over capability revocation.</p>
 <h3 id="multi-party-trust-networks">
-  
-  
+
+
     <a href="#multi-party-trust-networks" class="anchor-heading" aria-labelledby="multi-party-trust-networks"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Multi-Party Trust Networks
-  
-  
+
+
 </h3>
-    
+
 
 <p>Multiple organizations can form trust networks where credentials issued by one trusted party are automatically trusted by others in the network.</p>
 
@@ -1466,7 +1466,7 @@
     <span class="nf">addAnchor</span><span class="p">(</span><span class="n">organization3Did</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">credentialTypes</span><span class="p">(</span><span class="s">"PartnershipCredential"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Get all trusted partners</span>
     <span class="kd">val</span> <span class="py">partners</span> <span class="p">=</span> <span class="nf">getTrustedIssuers</span><span class="p">(</span><span class="s">"PartnershipCredential"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Trusted partners: ${partners.joinToString("</span><span class="p">,</span> <span class="s">")}"</span><span class="p">)</span>
@@ -1475,13 +1475,13 @@
 
 <p><strong>Outcome:</strong> A single query returns every organisation trusted for partnership credentials, making it easy to surface network relationships to auditors or dashboards.</p>
 <h2 id="best-practices">
-  
-  
+
+
     <a href="#best-practices" class="anchor-heading" aria-labelledby="best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Best Practices
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Use Credential Type Filtering</strong>: Specify credential types when adding trust anchors to limit trust scope</li>
@@ -1493,13 +1493,13 @@
   <li><strong>Regular Audits</strong>: Periodically review and update trust anchors and delegation relationships</li>
 </ol>
 <h2 id="error-handling">
-  
-  
+
+
     <a href="#error-handling" class="anchor-heading" aria-labelledby="error-handling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Error Handling
-  
-  
+
+
 </h2>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1524,7 +1524,7 @@
         <span class="nf">validateProofPurpose</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
         <span class="nf">verifyDelegation</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="k">if</span> <span class="p">(!</span><span class="n">result</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"Verification failed:"</span><span class="p">)</span>
         <span class="n">result</span><span class="p">.</span><span class="n">errors</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="nf">println</span><span class="p">(</span><span class="s">"  - $it"</span><span class="p">)</span> <span class="p">}</span>
@@ -1537,13 +1537,13 @@
 
 <p><strong>Outcome:</strong> Errors and warnings are surfaced explicitly so you can distinguish hard failures (invalid proofs, missing trust anchors) from advisory messages during troubleshooting.</p>
 <h2 id="see-also">
-  
-  
+
+
     <a href="#see-also" class="anchor-heading" aria-labelledby="see-also"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> See Also
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><a href="/trustweave/core-concepts/trust-registry/">Trust Registry Documentation</a></li>
@@ -1554,17 +1554,17 @@
   <li><a href="../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/delegation/DelegationChainExample.kt">Delegation Chain Example</a></li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -1596,7 +1596,7 @@
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -1606,12 +1606,12 @@
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -1633,12 +1633,12 @@
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -1647,12 +1647,12 @@
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -1660,7 +1660,7 @@
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -1668,31 +1668,31 @@
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -1704,7 +1704,7 @@
 
 
 
-  
+
 </body>
 </html>
 

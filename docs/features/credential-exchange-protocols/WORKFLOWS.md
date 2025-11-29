@@ -30,7 +30,7 @@ graph TD
     Encryption{Need peer-to-peer<br/>encryption?}
     Web{Web-based<br/>OAuth integration?}
     Browser{Browser-based<br/>wallet?}
-    
+
     Start --> Encryption
     Encryption -->|Yes| DIDComm[Use DIDComm]
     Encryption -->|No| Web
@@ -38,7 +38,7 @@ graph TD
     Web -->|No| Browser
     Browser -->|Yes| CHAPI[Use CHAPI]
     Browser -->|No| DIDComm
-    
+
     style DIDComm fill:#e8f5e9
     style OIDC4VCI fill:#e8f5e9
     style CHAPI fill:#e8f5e9
@@ -410,7 +410,7 @@ suspend fun offerCredentialWithFallback(
     } catch (e: Exception) {
         println("Preferred protocol failed: ${e.message}")
     }
-    
+
     // Try fallback protocols
     val fallbacks = when (preferredProtocol) {
         "didcomm" -> listOf("oidc4vci", "chapi")
@@ -418,7 +418,7 @@ suspend fun offerCredentialWithFallback(
         "chapi" -> listOf("didcomm", "oidc4vci")
         else -> listOf("didcomm", "oidc4vci", "chapi")
     }
-    
+
     for (protocol in fallbacks) {
         if (registry.isRegistered(protocol)) {
             try {
@@ -428,7 +428,7 @@ suspend fun offerCredentialWithFallback(
             }
         }
     }
-    
+
     throw IllegalStateException("All protocols failed")
 }
 ```
@@ -438,7 +438,7 @@ suspend fun offerCredentialWithFallback(
 ```kotlin
 fun validateRequest(request: CredentialOfferRequest): ValidationResult {
     val errors = mutableListOf<String>()
-    
+
     // Validate DIDs
     if (!isValidDid(request.issuerDid)) {
         errors.add("Invalid issuer DID: ${request.issuerDid}")
@@ -446,15 +446,15 @@ fun validateRequest(request: CredentialOfferRequest): ValidationResult {
     if (!isValidDid(request.holderDid)) {
         errors.add("Invalid holder DID: ${request.holderDid}")
     }
-    
+
     // Validate preview
     if (request.credentialPreview.attributes.isEmpty()) {
         errors.add("Credential preview must have at least one attribute")
     }
-    
+
     // Validate protocol-specific options
     // (Implementation depends on protocol)
-    
+
     return if (errors.isEmpty()) {
         ValidationResult.Valid
     } else {

@@ -14,7 +14,7 @@ $replacements = @{
     "sealed class VeriCore" = "sealed class TrustWeave"
     "open class VeriCore" = "open class TrustWeave"
     "interface VeriCore" = "interface TrustWeave"
-    
+
     # Specific class names
     "VeriCoreContext" = "TrustWeaveContext"
     "VeriCoreConfig" = "TrustWeaveConfig"
@@ -23,22 +23,22 @@ $replacements = @{
     "VeriCoreError" = "TrustWeaveError"
     "VeriCoreConstants" = "TrustWeaveConstants"
     "VeriCoreTestFixture" = "TrustWeaveTestFixture"
-    
+
     # Imports
     "import com.trustweave.VeriCore" = "import com.trustweave.TrustWeave"
     "import com.trustweave.core.VeriCoreException" = "import com.trustweave.core.TrustWeaveException"
     "import com.trustweave.core.VeriCoreError" = "import com.trustweave.core.TrustWeaveError"
     "import com.trustweave.core.VeriCoreConstants" = "import com.trustweave.core.TrustWeaveConstants"
     "import com.trustweave.testkit.VeriCoreTestFixture" = "import com.trustweave.testkit.TrustWeaveTestFixture"
-    
+
     # Extension functions
     "toVeriCoreError" = "toTrustWeaveError"
-    
+
     # Variable names in code examples (optional - be careful)
     "val vericore = VeriCore" = "val trustweave = TrustWeave"
     "vericore: VeriCore" = "trustweave: TrustWeave"
     "vericore." = "trustweave."
-    
+
     # Documentation references
     "VeriCore library" = "TrustWeave library"
     "VeriCore provides" = "TrustWeave provides"
@@ -53,10 +53,10 @@ $totalReplacements = 0
 foreach ($file in $files) {
     $content = Get-Content $file.FullName -Raw -ErrorAction SilentlyContinue
     if ($null -eq $content) { continue }
-    
+
     $originalContent = $content
     $fileReplacements = 0
-    
+
     foreach ($pattern in $replacements.Keys) {
         $newPattern = $replacements[$pattern]
         if ($content -match [regex]::Escape($pattern)) {
@@ -64,7 +64,7 @@ foreach ($file in $files) {
             $fileReplacements++
         }
     }
-    
+
     if ($content -ne $originalContent) {
         Set-Content -Path $file.FullName -Value $content -NoNewline
         $totalFiles++

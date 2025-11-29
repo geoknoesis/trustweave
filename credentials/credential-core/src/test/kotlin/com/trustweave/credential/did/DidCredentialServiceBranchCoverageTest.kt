@@ -40,12 +40,12 @@ class DidLinkedCredentialServiceBranchCoverageTest {
             proofRegistry = proofRegistry
         )
         val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
-        
+
         val claims = mapOf<String, Any>(
             "name" to "John Doe",
             "email" to "john@example.com"
         )
-        
+
         val credential = service.issueCredentialForDid(
             subjectDid = "did:key:subject",
             credentialType = "PersonCredential",
@@ -53,7 +53,7 @@ class DidLinkedCredentialServiceBranchCoverageTest {
             issuerDid = "did:key:issuer",
             keyId = "key-1"
         )
-        
+
         assertNotNull(credential)
         assertEquals("PersonCredential", credential.type.last())
         assertEquals("did:key:subject", credential.credentialSubject.jsonObject["id"]?.jsonPrimitive?.content)
@@ -63,12 +63,12 @@ class DidLinkedCredentialServiceBranchCoverageTest {
     fun `test DidLinkedCredentialService issueCredentialForDid with number claims`() = runBlocking {
         val issuer = CredentialIssuer(proofRegistry = proofRegistry)
         val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
-        
+
         val claims = mapOf<String, Any>(
             "age" to 30,
             "score" to 95.5
         )
-        
+
         val credential = service.issueCredentialForDid(
             subjectDid = "did:key:subject",
             credentialType = "PersonCredential",
@@ -76,7 +76,7 @@ class DidLinkedCredentialServiceBranchCoverageTest {
             issuerDid = "did:key:issuer",
             keyId = "key-1"
         )
-        
+
         assertNotNull(credential)
     }
 
@@ -84,12 +84,12 @@ class DidLinkedCredentialServiceBranchCoverageTest {
     fun `test DidLinkedCredentialService issueCredentialForDid with boolean claims`() = runBlocking {
         val issuer = CredentialIssuer(proofRegistry = proofRegistry)
         val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
-        
+
         val claims = mapOf<String, Any>(
             "verified" to true,
             "active" to false
         )
-        
+
         val credential = service.issueCredentialForDid(
             subjectDid = "did:key:subject",
             credentialType = "PersonCredential",
@@ -97,7 +97,7 @@ class DidLinkedCredentialServiceBranchCoverageTest {
             issuerDid = "did:key:issuer",
             keyId = "key-1"
         )
-        
+
         assertNotNull(credential)
     }
 
@@ -105,14 +105,14 @@ class DidLinkedCredentialServiceBranchCoverageTest {
     fun `test DidLinkedCredentialService issueCredentialForDid with mixed claims`() = runBlocking {
         val issuer = CredentialIssuer(proofRegistry = proofRegistry)
         val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
-        
+
         val claims = mapOf<String, Any>(
             "name" to "John Doe",
             "age" to 30,
             "verified" to true,
             "custom" to mapOf("nested" to "value")
         )
-        
+
         val credential = service.issueCredentialForDid(
             subjectDid = "did:key:subject",
             credentialType = "PersonCredential",
@@ -120,7 +120,7 @@ class DidLinkedCredentialServiceBranchCoverageTest {
             issuerDid = "did:key:issuer",
             keyId = "key-1"
         )
-        
+
         assertNotNull(credential)
     }
 
@@ -128,13 +128,13 @@ class DidLinkedCredentialServiceBranchCoverageTest {
     fun `test DidLinkedCredentialService issueCredentialForDid with options`() = runBlocking {
         val issuer = CredentialIssuer(proofRegistry = proofRegistry)
         val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
-        
+
         val claims = mapOf<String, Any>("name" to "John Doe")
         val options = CredentialIssuanceOptions(
             proofType = "Ed25519Signature2020",
             challenge = "challenge-123"
         )
-        
+
         val credential = service.issueCredentialForDid(
             subjectDid = "did:key:subject",
             credentialType = "PersonCredential",
@@ -143,7 +143,7 @@ class DidLinkedCredentialServiceBranchCoverageTest {
             keyId = "key-1",
             options = options
         )
-        
+
         assertNotNull(credential)
         assertNotNull(credential.proof)
     }
@@ -152,7 +152,7 @@ class DidLinkedCredentialServiceBranchCoverageTest {
     fun `test DidLinkedCredentialService resolveCredentialSubject with DID subject`() = runBlocking {
         val issuer = CredentialIssuer(proofRegistry = proofRegistry)
         val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
-        
+
         val credential = VerifiableCredential(
             type = listOf("VerifiableCredential"),
             issuer = "did:key:issuer",
@@ -162,9 +162,9 @@ class DidLinkedCredentialServiceBranchCoverageTest {
             },
             issuanceDate = java.time.Instant.now().toString()
         )
-        
+
         val subjectDid = service.resolveCredentialSubject(credential)
-        
+
         assertEquals("did:key:subject", subjectDid)
     }
 
@@ -172,7 +172,7 @@ class DidLinkedCredentialServiceBranchCoverageTest {
     fun `test DidLinkedCredentialService resolveCredentialSubject with non-DID subject`() = runBlocking {
         val issuer = CredentialIssuer(proofRegistry = proofRegistry)
         val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
-        
+
         val credential = VerifiableCredential(
             type = listOf("VerifiableCredential"),
             issuer = "did:key:issuer",
@@ -182,9 +182,9 @@ class DidLinkedCredentialServiceBranchCoverageTest {
             },
             issuanceDate = java.time.Instant.now().toString()
         )
-        
+
         val subjectDid = service.resolveCredentialSubject(credential)
-        
+
         assertNull(subjectDid)
     }
 
@@ -192,7 +192,7 @@ class DidLinkedCredentialServiceBranchCoverageTest {
     fun `test DidLinkedCredentialService resolveCredentialSubject with missing id`() = runBlocking {
         val issuer = CredentialIssuer(proofRegistry = proofRegistry)
         val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
-        
+
         val credential = VerifiableCredential(
             type = listOf("VerifiableCredential"),
             issuer = "did:key:issuer",
@@ -201,9 +201,9 @@ class DidLinkedCredentialServiceBranchCoverageTest {
             },
             issuanceDate = java.time.Instant.now().toString()
         )
-        
+
         val subjectDid = service.resolveCredentialSubject(credential)
-        
+
         assertNull(subjectDid)
     }
 
@@ -211,7 +211,7 @@ class DidLinkedCredentialServiceBranchCoverageTest {
     fun `test DidLinkedCredentialService verifyIssuerDid returns true`() = runBlocking {
         val issuer = CredentialIssuer()
         val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
-        
+
         val credential = VerifiableCredential(
             type = listOf("VerifiableCredential"),
             issuer = "did:key:issuer",
@@ -220,9 +220,9 @@ class DidLinkedCredentialServiceBranchCoverageTest {
             },
             issuanceDate = java.time.Instant.now().toString()
         )
-        
+
         val valid = service.verifyIssuerDid(credential)
-        
+
         assertTrue(valid) // Current implementation always returns true
     }
 
@@ -230,7 +230,7 @@ class DidLinkedCredentialServiceBranchCoverageTest {
     fun `test DidLinkedCredentialService verifyIssuerDid with invalid DID`() = runBlocking {
         val issuer = CredentialIssuer()
         val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
-        
+
         val credential = VerifiableCredential(
             type = listOf("VerifiableCredential"),
             issuer = "invalid-did",
@@ -239,9 +239,9 @@ class DidLinkedCredentialServiceBranchCoverageTest {
             },
             issuanceDate = java.time.Instant.now().toString()
         )
-        
+
         val valid = service.verifyIssuerDid(credential)
-        
+
         assertFalse(valid)
     }
 }
@@ -257,7 +257,7 @@ private fun createDidRegistry(): DidMethodRegistry {
             return DidDocument(id = id)
         }
 
-        override suspend fun resolveDid(did: String): DidResolutionResult = DidResolutionResult(
+        override suspend fun resolveDid(did: String): DidResolutionResult = DidResolutionResult.Success(
             document = DidDocument(id = did)
         )
 

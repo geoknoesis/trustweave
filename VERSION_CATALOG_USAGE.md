@@ -12,11 +12,11 @@ dependencies {
     // Single library
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.okhttp)
-    
+
     // Using bundles (groups of related dependencies)
     implementation(libs.bundles.kotlinx)
     implementation(libs.bundles.test)
-    
+
     // Platform/BOM
     implementation(platform(libs.aws.sdk.bom))
 }

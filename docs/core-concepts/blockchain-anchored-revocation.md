@@ -236,7 +236,7 @@ val revoked = registry.revokeCredential(
 
 if (revoked) {
     println("Credential revoked successfully")
-    
+
     // Check if anchoring was triggered
     val pending = registry.getPendingAnchor(statusList.id)
     if (pending == null) {
@@ -321,7 +321,7 @@ suspend fun main() {
     // 1. Set up components
     val statusListManager = InMemoryStatusListManager()
     val anchorClient = /* your blockchain anchor client */
-    
+
     // 2. Create registry with periodic strategy
     val registry = BlockchainRevocationRegistry(
         anchorClient = anchorClient,
@@ -332,24 +332,24 @@ suspend fun main() {
         ),
         chainId = "algorand:testnet"
     )
-    
+
     // 3. Create status list
     val statusList = registry.createStatusList(
         issuerDid = "did:key:z6Mkr...",
         purpose = StatusPurpose.REVOCATION
     )
     println("Created status list: ${statusList.id}")
-    
+
     // 4. Issue credential with status list reference
     val credential = /* issue credential with statusList.id */
-    
+
     // 5. Revoke credential (automatic anchoring if threshold reached)
     registry.revokeCredential("cred-123", statusList.id)
-    
+
     // 6. Check revocation status
     val status = registry.checkRevocationStatus(credential)
     println("Revoked: ${status.revoked}")
-    
+
     // 7. Check anchor status
     val lastAnchor = registry.getLastAnchorTime(statusList.id)
     if (lastAnchor != null) {

@@ -16,7 +16,7 @@ class ProofGeneratorInterfaceContractTest {
     @Test
     fun `test ProofGenerator proofType returns type`() = runBlocking {
         val generator = createMockGenerator("Ed25519Signature2020")
-        
+
         assertEquals("Ed25519Signature2020", generator.proofType)
     }
 
@@ -29,9 +29,9 @@ class ProofGeneratorInterfaceContractTest {
             challenge = "challenge-123",
             domain = "example.com"
         )
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertNotNull(proof)
         assertEquals("Ed25519Signature2020", proof.type)
         assertEquals("assertionMethod", proof.proofPurpose)
@@ -44,9 +44,9 @@ class ProofGeneratorInterfaceContractTest {
         val generator = createMockGenerator("Ed25519Signature2020")
         val credential = createTestCredential()
         val options = ProofOptions()
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertNotNull(proof)
         assertEquals("assertionMethod", proof.proofPurpose) // Default
     }
@@ -58,9 +58,9 @@ class ProofGeneratorInterfaceContractTest {
         val options = ProofOptions(
             verificationMethod = "did:key:custom#key-1"
         )
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertNotNull(proof)
         assertEquals("did:key:custom#key-1", proof.verificationMethod)
     }
@@ -72,9 +72,9 @@ class ProofGeneratorInterfaceContractTest {
         val options = ProofOptions(
             additionalOptions = mapOf("customField" to "customValue")
         )
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertNotNull(proof)
     }
 
@@ -88,9 +88,9 @@ class ProofGeneratorInterfaceContractTest {
             issuanceDate = java.time.Instant.now().toString()
         )
         val options = ProofOptions()
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertNotNull(proof)
     }
 
@@ -111,16 +111,16 @@ class ProofGeneratorInterfaceContractTest {
             }
         )
         val options = ProofOptions()
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertNotNull(proof)
     }
 
     private fun createMockGenerator(proofType: String): ProofGenerator {
         return object : ProofGenerator {
             override val proofType: String = proofType
-            
+
             override suspend fun generateProof(
                 credential: VerifiableCredential,
                 keyId: String,

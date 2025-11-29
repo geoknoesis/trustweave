@@ -12,7 +12,7 @@ import com.trustweave.anchor.spi.BlockchainIntegrationHelper
 class EthereumBlockchainAnchorClientProvider : BlockchainAnchorClientProvider {
 
     override val name: String = "ethereum"
-    
+
     override val supportedChains: List<String> = listOf(
         EthereumBlockchainAnchorClient.MAINNET,
         EthereumBlockchainAnchorClient.SEPOLIA

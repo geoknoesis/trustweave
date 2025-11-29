@@ -114,7 +114,7 @@ flowchart TD
     A["Healthcare Provider<br/>Issues Vaccination Credential<br/>Signs with provider DID"] -->|issues| B["Vaccination Credential<br/>Individual DID<br/>Vaccine Information<br/>Cryptographic Proof"]
     B -->|stored in| C["Health Wallet<br/>Stores vaccination credentials<br/>Organizes by vaccine type<br/>Tracks expiration dates"]
     C -->|presents| D["Verifier<br/>Airlines, Venues, Employers<br/>Verifies vaccination status<br/>Checks expiration without seeing personal info"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -136,10 +136,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 dependencies {
     // Core TrustWeave modules
     implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -167,27 +167,27 @@ fun main() = runBlocking {
     println("=".repeat(70))
     println("Vaccination and Health Passport Scenario - Complete End-to-End Example")
     println("=".repeat(70))
-    
+
     // Step 1: Create TrustWeave instance
     val TrustWeave = TrustWeave.create()
     println("\n✅ TrustWeave initialized")
-    
+
     // Step 2: Create DIDs for healthcare provider and individual
     val healthcareProviderDidDoc = TrustWeave.dids.create()
     val healthcareProviderDid = healthcareProviderDidDoc.id
     val healthcareProviderKeyId = healthcareProviderDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val individualDidDoc = TrustWeave.dids.create()
     val individualDid = individualDidDoc.id
-    
+
     val airlineDidDoc = TrustWeave.dids.create()
     val airlineDid = airlineDidDoc.id
-    
+
     println("✅ Healthcare Provider DID: $healthcareProviderDid")
     println("✅ Individual DID: $individualDid")
     println("✅ Airline Verifier DID: $airlineDid")
-    
+
     // Step 3: Issue first vaccination credential (COVID-19, Dose 1)
     val vaccination1Credential = TrustWeave.issueCredential(
         issuerDid = healthcareProviderDid,
@@ -210,9 +210,9 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "VaccinationCredential", "HealthCredential"),
         expirationDate = Instant.now().plus(2, ChronoUnit.YEARS).toString()
     ).getOrThrow()
-    
+
     println("\n✅ First vaccination credential issued: ${vaccination1Credential.id}")
-    
+
     // Step 4: Issue second vaccination credential (COVID-19, Dose 2)
     val vaccination2Credential = TrustWeave.issueCredential(
         issuerDid = healthcareProviderDid,
@@ -236,9 +236,9 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "VaccinationCredential", "HealthCredential"),
         expirationDate = Instant.now().plus(2, ChronoUnit.YEARS).toString()
     ).getOrThrow()
-    
+
     println("✅ Second vaccination credential issued: ${vaccination2Credential.id}")
-    
+
     // Step 5: Issue booster vaccination credential
     val boosterCredential = TrustWeave.issueCredential(
         issuerDid = healthcareProviderDid,
@@ -263,9 +263,9 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "VaccinationCredential", "HealthCredential", "BoosterCredential"),
         expirationDate = Instant.now().plus(1, ChronoUnit.YEARS).toString()
     ).getOrThrow()
-    
+
     println("✅ Booster vaccination credential issued: ${boosterCredential.id}")
-    
+
     // Step 6: Create health wallet and store all vaccination credentials
     val healthWallet = TrustWeave.createWallet(
         holderDid = individualDid,
@@ -274,28 +274,28 @@ fun main() = runBlocking {
             enablePresentation = true
         }.build()
     ).getOrThrow()
-    
+
     val vaccination1Id = healthWallet.store(vaccination1Credential)
     val vaccination2Id = healthWallet.store(vaccination2Credential)
     val boosterId = healthWallet.store(boosterCredential)
-    
+
     println("\n✅ All vaccination credentials stored in health wallet")
-    
+
     // Step 7: Organize credentials by vaccine type
     healthWallet.withOrganization { org ->
         val covid19CollectionId = org.createCollection("COVID-19 Vaccinations", "COVID-19 vaccination records")
-        
+
         org.addToCollection(vaccination1Id, covid19CollectionId)
         org.addToCollection(vaccination2Id, covid19CollectionId)
         org.addToCollection(boosterId, covid19CollectionId)
-        
+
         org.tagCredential(vaccination1Id, setOf("covid19", "dose1", "pfizer", "vaccination"))
         org.tagCredential(vaccination2Id, setOf("covid19", "dose2", "pfizer", "fully-vaccinated", "vaccination"))
         org.tagCredential(boosterId, setOf("covid19", "booster", "pfizer", "fully-vaccinated", "vaccination"))
-        
+
         println("✅ Vaccination credentials organized")
     }
-    
+
     // Step 8: Create privacy-preserving presentation for airline
     // Only shares vaccination status, not personal health information
     val travelPresentation = healthWallet.withPresentation { pres ->
@@ -308,29 +308,29 @@ fun main() = runBlocking {
             )
         )
     } ?: error("Presentation capability not available")
-    
+
     println("\n✅ Travel presentation created")
     println("   Holder: ${travelPresentation.holder}")
     println("   Credentials: ${travelPresentation.verifiableCredential.size}")
-    
+
     // Step 9: Airline verifies vaccination status
     println("\n✈️ Airline Verification Process:")
-    
+
     val boosterVerification = TrustWeave.verifyCredential(boosterCredential).getOrThrow()
-    
+
     if (boosterVerification.valid) {
         println("✅ Vaccination Credential: VALID")
         println("   Proof valid: ${boosterVerification.proofValid}")
         println("   Issuer valid: ${boosterVerification.issuerValid}")
-        println("   Not expired: ${boosterCredential.expirationDate?.let { 
-            Instant.parse(it).isAfter(Instant.now()) 
+        println("   Not expired: ${boosterCredential.expirationDate?.let {
+            Instant.parse(it).isAfter(Instant.now())
         } ?: true}")
-        
+
         // Check if fully vaccinated
         val credentialSubject = boosterCredential.credentialSubject
         val vaccination = credentialSubject.jsonObject["vaccination"]?.jsonObject
         val fullyVaccinated = vaccination?.get("fullyVaccinated")?.jsonPrimitive?.content?.toBoolean() ?: false
-        
+
         if (fullyVaccinated) {
             println("✅ Individual is fully vaccinated")
             println("✅ Boarding approved")
@@ -343,10 +343,10 @@ fun main() = runBlocking {
         println("   Errors: ${boosterVerification.errors}")
         println("❌ Boarding denied")
     }
-    
+
     // Step 10: Check credential expiration and renewal
     println("\n📅 Credential Expiration Check:")
-    
+
     listOf(vaccination1Credential, vaccination2Credential, boosterCredential).forEach { cred ->
         val expirationDate = cred.expirationDate?.let { Instant.parse(it) }
         if (expirationDate != null) {
@@ -358,7 +358,7 @@ fun main() = runBlocking {
             }
         }
     }
-    
+
     // Step 11: Display wallet statistics
     val stats = healthWallet.getStatistics()
     println("\n📊 Health Wallet Statistics:")
@@ -366,7 +366,7 @@ fun main() = runBlocking {
     println("   Valid credentials: ${stats.validCredentials}")
     println("   Collections: ${stats.collectionsCount}")
     println("   Tags: ${stats.tagsCount}")
-    
+
     // Step 12: Summary
     println("\n" + "=".repeat(70))
     println("✅ VACCINATION HEALTH PASSPORT SYSTEM COMPLETE")

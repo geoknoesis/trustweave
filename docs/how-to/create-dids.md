@@ -46,10 +46,12 @@ fun main() = runBlocking {
             method("key")
             algorithm("Ed25519")
         }
-        
-        // Extract key ID for signing (use .value to get string)
-        val issuerKeyId = "${issuerDid.value}#key-1"
-        
+
+        // Extract key ID for signing
+        // Note: When using keyHandle.id, it's already a KeyId value class
+        // For string-based key IDs, construct using KeyId("...")
+        val issuerKeyId = KeyId("${issuerDid.value}#key-1")
+
         println("Created DID: ${issuerDid.value}")
         println("Key ID: $issuerKeyId")
     } catch (error: TrustWeaveError) {
@@ -122,7 +124,7 @@ Extract the key ID from the DID for signing operations:
 
 ```kotlin
 val did = trustLayer.createDid { method("key") }
-val keyId = "$did#key-1"  // Standard key ID format
+val keyId = KeyId("${did.value}#key-1")  // Standard key ID format using KeyId value class
 ```
 
 ### Step 4: Use the DID
@@ -132,10 +134,10 @@ Use the DID and key ID in credential operations:
 ```kotlin
 val credential = trustLayer.issue {
     credential {
-        issuer(did)
+        issuer(did.value)
         // ... credential configuration
     }
-    by(issuerDid = did, keyId = keyId)
+    by(issuerDid = did.value, keyId = keyId.value)
 }
 ```
 

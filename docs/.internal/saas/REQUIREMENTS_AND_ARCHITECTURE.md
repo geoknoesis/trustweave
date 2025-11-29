@@ -818,7 +818,7 @@ This document provides the comprehensive foundation for building TrustWeave Gove
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2024  
+**Document Version**: 1.0
+**Last Updated**: 2024
 **Status**: Requirements & Design Phase
 

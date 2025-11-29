@@ -22,12 +22,12 @@ class ProofGeneratorRegistryTest {
     @BeforeEach
     fun setup() {
         registry = ProofGeneratorRegistry()
-        
+
         generator1 = Ed25519ProofGenerator(
             signer = { data, _ -> "signature-1-${UUID.randomUUID()}".toByteArray() },
             getPublicKeyId = { "did:key:test#key-1" }
         )
-        
+
         generator2 = object : ProofGenerator {
             override val proofType = "JwtProof2020"
             override suspend fun generateProof(
@@ -54,7 +54,7 @@ class ProofGeneratorRegistryTest {
     @Test
     fun `test register generator`() = runBlocking {
         registry.register(generator1)
-        
+
         assertTrue(registry.isSupported("Ed25519Signature2020"))
         assertEquals(generator1, registry.get("Ed25519Signature2020"))
     }
@@ -63,9 +63,9 @@ class ProofGeneratorRegistryTest {
     fun `test get generator by type`() = runBlocking {
         registry.register(generator1)
         registry.register(generator2)
-        
+
         val retrieved = registry.get("Ed25519Signature2020")
-        
+
         assertNotNull(retrieved)
         assertEquals("Ed25519Signature2020", retrieved?.proofType)
     }
@@ -79,9 +79,9 @@ class ProofGeneratorRegistryTest {
     fun `test getRegisteredTypes returns all types`() = runBlocking {
         registry.register(generator1)
         registry.register(generator2)
-        
+
         val types = registry.getRegisteredTypes()
-        
+
         assertEquals(2, types.size)
         assertTrue(types.contains("Ed25519Signature2020"))
         assertTrue(types.contains("JwtProof2020"))
@@ -90,7 +90,7 @@ class ProofGeneratorRegistryTest {
     @Test
     fun `test isSupported returns true for registered type`() = runBlocking {
         registry.register(generator1)
-        
+
         assertTrue(registry.isSupported("Ed25519Signature2020"))
         assertFalse(registry.isSupported("NonexistentProofType"))
     }
@@ -100,9 +100,9 @@ class ProofGeneratorRegistryTest {
         registry.register(generator1)
         registry.register(generator2)
         assertEquals(2, registry.getRegisteredTypes().size)
-        
+
         registry.clear()
-        
+
         assertEquals(0, registry.getRegisteredTypes().size)
         assertFalse(registry.isSupported("Ed25519Signature2020"))
     }
@@ -110,14 +110,14 @@ class ProofGeneratorRegistryTest {
     @Test
     fun `test register overwrites existing generator`() = runBlocking {
         registry.register(generator1)
-        
+
         val newGenerator = Ed25519ProofGenerator(
             signer = { data, _ -> "new-signature".toByteArray() },
             getPublicKeyId = { "did:key:new#key-1" }
         )
-        
+
         registry.register(newGenerator)
-        
+
         val retrieved = registry.get("Ed25519Signature2020")
         assertEquals(newGenerator, retrieved)
     }
@@ -126,13 +126,13 @@ class ProofGeneratorRegistryTest {
     fun `test generate proof with registered generator`() = runBlocking {
         registry.register(generator1)
         val credential = createTestCredential()
-        
+
         val proof = generator1.generateProof(
             credential = credential,
             keyId = "key-1",
             options = ProofOptions(proofPurpose = "assertionMethod")
         )
-        
+
         assertNotNull(proof)
         assertEquals("Ed25519Signature2020", proof.type)
         assertNotNull(proof.proofValue)
@@ -142,7 +142,7 @@ class ProofGeneratorRegistryTest {
     fun `test generate proof with options`() = runBlocking {
         registry.register(generator1)
         val credential = createTestCredential()
-        
+
         val proof = generator1.generateProof(
             credential = credential,
             keyId = "key-1",
@@ -153,7 +153,7 @@ class ProofGeneratorRegistryTest {
                 verificationMethod = "did:key:custom#key-1"
             )
         )
-        
+
         assertEquals("authentication", proof.proofPurpose)
         assertEquals("challenge-123", proof.challenge)
         assertEquals("example.com", proof.domain)

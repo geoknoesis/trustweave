@@ -12,10 +12,10 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
 
     .site-nav > ul.nav-list:first-child > li > a,
-    
+
     .site-nav > ul.nav-list:first-child > li > ul > li:not(:nth-child(10)) > a,
     .site-nav > ul.nav-list:first-child > li > ul > li > ul > li a {
       background-image: none;
@@ -38,17 +38,17 @@
     }
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -97,7 +97,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -106,7 +106,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -136,13 +136,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -153,7 +153,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -358,7 +358,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -406,14 +406,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -421,7 +421,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -434,21 +434,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -516,7 +516,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -531,8 +531,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -549,10 +549,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -565,8 +565,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -582,25 +582,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -610,9 +610,9 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
@@ -626,15 +626,15 @@
 
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="troubleshooting-guide">
-  
-  
+
+
     <a href="#troubleshooting-guide" class="anchor-heading" aria-labelledby="troubleshooting-guide"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Troubleshooting Guide
-  
-  
+
+
 </h1>
-    
+
 
 <p>Common issues and solutions when working with TrustWeave.</p>
 
@@ -643,21 +643,21 @@
 If you encounter issues not covered here, please <a href="https://github.com/your-org/TrustWeave/issues">file an issue</a> or check the <a href="/trustweave/faq/">FAQ</a>.</p>
 </blockquote>
 <h2 id="common-issues">
-  
-  
+
+
     <a href="#common-issues" class="anchor-heading" aria-labelledby="common-issues"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Common Issues
-  
-  
+
+
 </h2>
-    
+
 <h3 id="did-method-not-registered">
-  
-  
+
+
     <a href="#did-method-not-registered" class="anchor-heading" aria-labelledby="did-method-not-registered"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> DID Method Not Registered
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Error:</strong></p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -690,13 +690,13 @@ Register the DID method before using it:</p>
   <li>Register methods during TrustWeave initialization</li>
 </ul>
 <h3 id="chain-not-registered">
-  
-  
+
+
     <a href="#chain-not-registered" class="anchor-heading" aria-labelledby="chain-not-registered"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Chain Not Registered
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Error:</strong></p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -729,13 +729,13 @@ Register the blockchain client before anchoring:</p>
   <li>Register clients during TrustWeave initialization</li>
 </ul>
 <h3 id="credential-verification-fails">
-  
-  
+
+
     <a href="#credential-verification-fails" class="anchor-heading" aria-labelledby="credential-verification-fails"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Credential Verification Fails
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Error:</strong></p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -792,13 +792,13 @@ Register the blockchain client before anchoring:</p>
   <li>Verify proof type is supported</li>
 </ul>
 <h3 id="wallet-creation-fails">
-  
-  
+
+
     <a href="#wallet-creation-fails" class="anchor-heading" aria-labelledby="wallet-creation-fails"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Wallet Creation Fails
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Error:</strong></p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -822,13 +822,13 @@ Register the blockchain client before anchoring:</p>
 <span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="plugin-initialization-fails">
-  
-  
+
+
     <a href="#plugin-initialization-fails" class="anchor-heading" aria-labelledby="plugin-initialization-fails"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Plugin Initialization Fails
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Error:</strong></p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -866,21 +866,21 @@ Register the blockchain client before anchoring:</p>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="debugging-workflows">
-  
-  
+
+
     <a href="#debugging-workflows" class="anchor-heading" aria-labelledby="debugging-workflows"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Debugging Workflows
-  
-  
+
+
 </h2>
-    
+
 <h3 id="step-1-enable-comprehensive-logging">
-  
-  
+
+
     <a href="#step-1-enable-comprehensive-logging" class="anchor-heading" aria-labelledby="step-1-enable-comprehensive-logging"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Enable Comprehensive Logging
-  
-  
+
+
 </h3>
-    
+
 
 <p>Enable detailed logging to see what’s happening:</p>
 
@@ -918,25 +918,25 @@ Register the blockchain client before anchoring:</p>
             <span class="p">&lt;</span><span class="n">pattern</span><span class="p">&gt;%</span><span class="nf">d</span><span class="p">{</span><span class="nc">HH</span><span class="p">:</span><span class="n">mm</span><span class="p">:</span><span class="n">ss</span><span class="p">.</span><span class="nc">SSS</span><span class="p">}</span> <span class="p">[%</span><span class="n">thread</span><span class="p">]</span> <span class="p">%-</span><span class="mi">5</span><span class="n">level</span> <span class="p">%</span><span class="nf">logger</span><span class="p">{</span><span class="mi">36</span><span class="p">}</span> <span class="p">-</span> <span class="p">%</span><span class="n">msg</span><span class="p">%</span><span class="n">n</span><span class="p">&lt;/</span><span class="n">pattern</span><span class="p">&gt;</span>
         <span class="p">&lt;/</span><span class="n">encoder</span><span class="p">&gt;</span>
     <span class="p">&lt;/</span><span class="n">appender</span><span class="p">&gt;</span>
-    
+
     <span class="p">&lt;!--</span> <span class="nc">TrustWeave</span> <span class="n">specific</span> <span class="n">loggers</span> <span class="p">--&gt;</span>
     <span class="p">&lt;</span><span class="n">logger</span> <span class="n">name</span><span class="p">=</span><span class="s">"com.trustweave"</span> <span class="n">level</span><span class="p">=</span><span class="s">"DEBUG"</span><span class="p">/&gt;</span>
     <span class="p">&lt;</span><span class="n">logger</span> <span class="n">name</span><span class="p">=</span><span class="s">"com.trustweave.core"</span> <span class="n">level</span><span class="p">=</span><span class="s">"TRACE"</span><span class="p">/&gt;</span>
     <span class="p">&lt;</span><span class="n">logger</span> <span class="n">name</span><span class="p">=</span><span class="s">"com.trustweave.plugins"</span> <span class="n">level</span><span class="p">=</span><span class="s">"DEBUG"</span><span class="p">/&gt;</span>
-    
+
     <span class="p">&lt;</span><span class="n">root</span> <span class="n">level</span><span class="p">=</span><span class="s">"INFO"</span><span class="p">&gt;</span>
         <span class="p">&lt;</span><span class="n">appender-ref</span> <span class="n">ref</span><span class="p">=</span><span class="s">"STDOUT"</span> <span class="p">/&gt;</span>
     <span class="p">&lt;/</span><span class="n">root</span><span class="p">&gt;</span>
 <span class="p">&lt;/</span><span class="n">configuration</span><span class="p">&gt;</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-2-verify-system-state">
-  
-  
+
+
     <a href="#step-2-verify-system-state" class="anchor-heading" aria-labelledby="step-2-verify-system-state"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Verify System State
-  
-  
+
+
 </h3>
-    
+
 
 <p>Check all registries and available services:</p>
 
@@ -969,22 +969,22 @@ Register the blockchain client before anchoring:</p>
 27
 </pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">debugSystemState</span><span class="p">(</span><span class="n">trustweave</span><span class="p">:</span> <span class="nc">TrustWeave</span><span class="p">)</span> <span class="p">{</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"=== TrustWeave System State ==="</span><span class="p">)</span>
-    
+
     <span class="c1">// Check registered DID methods</span>
     <span class="kd">val</span> <span class="py">methods</span> <span class="p">=</span> <span class="n">trustweave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">availableMethods</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Available DID methods: $methods"</span><span class="p">)</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">methods</span><span class="p">.</span><span class="nf">isEmpty</span><span class="p">())</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"⚠️  WARNING: No DID methods registered!"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Check registered blockchain chains</span>
     <span class="kd">val</span> <span class="py">chains</span> <span class="p">=</span> <span class="n">trustweave</span><span class="p">.</span><span class="n">blockchains</span><span class="p">.</span><span class="nf">availableChains</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Available chains: $chains"</span><span class="p">)</span>
-    
+
     <span class="c1">// Check plugin status</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n=== Plugin Status ==="</span><span class="p">)</span>
     <span class="c1">// Add plugin status checks if available</span>
-    
+
     <span class="c1">// Test basic operations</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n=== Basic Operation Tests ==="</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">testDid</span> <span class="p">=</span> <span class="k">try</span> <span class="p">{</span> <span class="n">trustweave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span> <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">e</span><span class="p">:</span> <span class="nc">Exception</span><span class="p">)</span> <span class="p">{</span> <span class="k">null</span> <span class="p">}</span>
@@ -996,13 +996,13 @@ Register the blockchain client before anchoring:</p>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-3-validate-inputs-before-operations">
-  
-  
+
+
     <a href="#step-3-validate-inputs-before-operations" class="anchor-heading" aria-labelledby="step-3-validate-inputs-before-operations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Validate Inputs Before Operations
-  
-  
+
+
 </h3>
-    
+
 
 <p>Always validate inputs to catch errors early:</p>
 
@@ -1056,7 +1056,7 @@ Register the blockchain client before anchoring:</p>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Value: ${error.value}"</span><span class="p">)</span>
         <span class="k">return</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Validate DID method is available</span>
     <span class="kd">val</span> <span class="py">method</span> <span class="p">=</span> <span class="n">did</span><span class="p">.</span><span class="nf">substringAfter</span><span class="p">(</span><span class="s">"did:"</span><span class="p">).</span><span class="nf">substringBefore</span><span class="p">(</span><span class="s">":"</span><span class="p">)</span>
     <span class="c1">// Note: This requires a TrustWeave instance - pass it as parameter</span>
@@ -1066,7 +1066,7 @@ Register the blockchain client before anchoring:</p>
     <span class="c1">//     println("   Available methods: $availableMethods")</span>
     <span class="c1">//     return</span>
     <span class="c1">// }</span>
-    
+
     <span class="c1">// Validate credential if provided</span>
     <span class="n">credential</span><span class="o">?.</span><span class="nf">let</span> <span class="p">{</span>
         <span class="kd">val</span> <span class="py">credValidation</span> <span class="p">=</span> <span class="nc">CredentialValidator</span><span class="p">.</span><span class="nf">validateStructure</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
@@ -1077,18 +1077,18 @@ Register the blockchain client before anchoring:</p>
             <span class="k">return</span>
         <span class="p">}</span>
     <span class="p">}</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ All validations passed"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-4-trace-operation-flow">
-  
-  
+
+
     <a href="#step-4-trace-operation-flow" class="anchor-heading" aria-labelledby="step-4-trace-operation-flow"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Trace Operation Flow
-  
-  
+
+
 </h3>
-    
+
 
 <p>Add detailed tracing to understand operation flow:</p>
 
@@ -1140,7 +1140,7 @@ Register the blockchain client before anchoring:</p>
 </pre></td><td class="rouge-code"><pre><span class="k">suspend</span> <span class="k">fun</span> <span class="nf">traceDidResolution</span><span class="p">(</span><span class="n">did</span><span class="p">:</span> <span class="nc">String</span><span class="p">)</span> <span class="p">{</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"=== Tracing DID Resolution ==="</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Input DID: $did"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 1: Format validation</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n[Step 1] Validating DID format..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">formatValidation</span> <span class="p">=</span> <span class="nc">DidValidator</span><span class="p">.</span><span class="nf">validateFormat</span><span class="p">(</span><span class="n">did</span><span class="p">)</span>
@@ -1149,12 +1149,12 @@ Register the blockchain client before anchoring:</p>
         <span class="k">return</span>
     <span class="p">}</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Format valid"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 2: Method extraction</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n[Step 2] Extracting method..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">method</span> <span class="p">=</span> <span class="n">did</span><span class="p">.</span><span class="nf">substringAfter</span><span class="p">(</span><span class="s">"did:"</span><span class="p">).</span><span class="nf">substringBefore</span><span class="p">(</span><span class="s">":"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Method: $method"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 3: Method availability</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n[Step 3] Checking method availability..."</span><span class="p">)</span>
     <span class="c1">// Note: This requires a TrustWeave instance - pass it as parameter</span>
@@ -1165,7 +1165,7 @@ Register the blockchain client before anchoring:</p>
     <span class="c1">//     return</span>
     <span class="c1">// }</span>
     <span class="c1">// println("✅ Method available")</span>
-    
+
     <span class="c1">// Step 4: Resolution attempt</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n[Step 4] Attempting resolution..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">startTime</span> <span class="p">=</span> <span class="nc">System</span><span class="p">.</span><span class="nf">currentTimeMillis</span><span class="p">()</span>
@@ -1184,13 +1184,13 @@ Register the blockchain client before anchoring:</p>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-5-isolate-the-problem">
-  
-  
+
+
     <a href="#step-5-isolate-the-problem" class="anchor-heading" aria-labelledby="step-5-isolate-the-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Isolate the Problem
-  
-  
+
+
 </h3>
-    
+
 
 <p>Create a minimal reproducible example:</p>
 
@@ -1234,12 +1234,12 @@ Register the blockchain client before anchoring:</p>
 38
 </pre></td><td class="rouge-code"><pre><span class="k">suspend</span> <span class="k">fun</span> <span class="nf">minimalReproducibleExample</span><span class="p">()</span> <span class="p">{</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"=== Minimal Reproducible Example ==="</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 1: Create TrustWeave instance</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n[1] Creating TrustWeave instance..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ TrustWeave created"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 2: Create a DID</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n[2] Creating DID..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
@@ -1247,7 +1247,7 @@ Register the blockchain client before anchoring:</p>
     <span class="n">didResult</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
         <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ DID created: ${did.id}"</span><span class="p">)</span>
-            
+
             <span class="c1">// Step 3: Resolve the DID</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"\n[3] Resolving DID..."</span><span class="p">)</span>
             <span class="kd">val</span> <span class="py">resolution</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
@@ -1272,13 +1272,13 @@ Register the blockchain client before anchoring:</p>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-6-check-error-context">
-  
-  
+
+
     <a href="#step-6-check-error-context" class="anchor-heading" aria-labelledby="step-6-check-error-context"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 6: Check Error Context
-  
-  
+
+
 </h3>
-    
+
 
 <p>Always examine error context for debugging clues:</p>
 
@@ -1330,7 +1330,7 @@ Register the blockchain client before anchoring:</p>
     <span class="n">error</span><span class="p">.</span><span class="n">context</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="p">-&gt;</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"  $key: $value"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Check for specific error types</span>
     <span class="k">when</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">is</span> <span class="nc">TrustWeaveError</span><span class="p">.</span><span class="nc">DidMethodNotRegistered</span> <span class="p">-&gt;</span> <span class="p">{</span>
@@ -1355,7 +1355,7 @@ Register the blockchain client before anchoring:</p>
             <span class="nf">println</span><span class="p">(</span><span class="s">"  - Check system state: debugSystemState(TrustWeave)"</span><span class="p">)</span>
         <span class="p">}</span>
     <span class="p">}</span>
-    
+
     <span class="n">error</span><span class="p">.</span><span class="n">cause</span><span class="o">?.</span><span class="nf">let</span> <span class="p">{</span> <span class="n">cause</span> <span class="p">-&gt;</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"\nUnderlying exception:"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"  ${cause::class.simpleName}: ${cause.message}"</span><span class="p">)</span>
@@ -1364,13 +1364,13 @@ Register the blockchain client before anchoring:</p>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-7-network-and-connectivity-checks">
-  
-  
+
+
     <a href="#step-7-network-and-connectivity-checks" class="anchor-heading" aria-labelledby="step-7-network-and-connectivity-checks"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 7: Network and Connectivity Checks
-  
-  
+
+
 </h3>
-    
+
 
 <p>For operations requiring network access:</p>
 
@@ -1406,16 +1406,16 @@ Register the blockchain client before anchoring:</p>
 30
 </pre></td><td class="rouge-code"><pre><span class="k">suspend</span> <span class="k">fun</span> <span class="nf">checkNetworkConnectivity</span><span class="p">()</span> <span class="p">{</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"=== Network Connectivity Check ==="</span><span class="p">)</span>
-    
+
     <span class="c1">// Test DID resolution (requires network for did:web)</span>
     <span class="kd">val</span> <span class="py">testDid</span> <span class="p">=</span> <span class="s">"did:web:example.com"</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Testing resolution of: $testDid"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">startTime</span> <span class="p">=</span> <span class="nc">System</span><span class="p">.</span><span class="nf">currentTimeMillis</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">resolution</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">testDid</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="nc">Result</span><span class="p">.</span><span class="nf">success</span><span class="p">(</span><span class="n">resolution</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">duration</span> <span class="p">=</span> <span class="nc">System</span><span class="p">.</span><span class="nf">currentTimeMillis</span><span class="p">()</span> <span class="p">-</span> <span class="n">startTime</span>
-    
+
     <span class="n">result</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
         <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Network connectivity OK (${duration}ms)"</span><span class="p">)</span>
@@ -1436,59 +1436,59 @@ Register the blockchain client before anchoring:</p>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="debugging-tips">
-  
-  
+
+
     <a href="#debugging-tips" class="anchor-heading" aria-labelledby="debugging-tips"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Debugging Tips
-  
-  
+
+
 </h2>
-    
+
 <h3 id="enable-logging">
-  
-  
+
+
     <a href="#enable-logging" class="anchor-heading" aria-labelledby="enable-logging"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Enable Logging
-  
-  
+
+
 </h3>
-    
+
 
 <p>See <a href="#step-1-enable-comprehensive-logging">Step 1: Enable Comprehensive Logging</a> above.</p>
 <h3 id="check-registry-state">
-  
-  
+
+
     <a href="#check-registry-state" class="anchor-heading" aria-labelledby="check-registry-state"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Check Registry State
-  
-  
+
+
 </h3>
-    
+
 
 <p>See <a href="#step-2-verify-system-state">Step 2: Verify System State</a> above.</p>
 <h3 id="validate-inputs">
-  
-  
+
+
     <a href="#validate-inputs" class="anchor-heading" aria-labelledby="validate-inputs"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Validate Inputs
-  
-  
+
+
 </h3>
-    
+
 
 <p>See <a href="#step-3-validate-inputs-before-operations">Step 3: Validate Inputs Before Operations</a> above.</p>
 <h2 id="performance-issues">
-  
-  
+
+
     <a href="#performance-issues" class="anchor-heading" aria-labelledby="performance-issues"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Performance Issues
-  
-  
+
+
 </h2>
-    
+
 <h3 id="slow-did-resolution">
-  
-  
+
+
     <a href="#slow-did-resolution" class="anchor-heading" aria-labelledby="slow-did-resolution"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Slow DID Resolution
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Issue:</strong> DID resolution takes too long</p>
 
@@ -1543,13 +1543,13 @@ Register the blockchain client before anchoring:</p>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="memory-usage">
-  
-  
+
+
     <a href="#memory-usage" class="anchor-heading" aria-labelledby="memory-usage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Memory Usage
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Issue:</strong> High memory usage with many credentials</p>
 
@@ -1582,13 +1582,13 @@ Register the blockchain client before anchoring:</p>
 <span class="kd">val</span> <span class="py">credentials</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">list</span><span class="p">(</span><span class="n">offset</span> <span class="p">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">limit</span> <span class="p">=</span> <span class="mi">100</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="slow-credential-issuance">
-  
-  
+
+
     <a href="#slow-credential-issuance" class="anchor-heading" aria-labelledby="slow-credential-issuance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Slow Credential Issuance
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Issue:</strong> Credential issuance is slow</p>
 
@@ -1654,13 +1654,13 @@ Register the blockchain client before anchoring:</p>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="high-cpu-usage">
-  
-  
+
+
     <a href="#high-cpu-usage" class="anchor-heading" aria-labelledby="high-cpu-usage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> High CPU Usage
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Issue:</strong> High CPU usage during operations</p>
 
@@ -1672,21 +1672,21 @@ Register the blockchain client before anchoring:</p>
   <li>Profile and optimize hot paths</li>
 </ul>
 <h2 id="concurrency-issues">
-  
-  
+
+
     <a href="#concurrency-issues" class="anchor-heading" aria-labelledby="concurrency-issues"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Concurrency Issues
-  
-  
+
+
 </h2>
-    
+
 <h3 id="race-conditions">
-  
-  
+
+
     <a href="#race-conditions" class="anchor-heading" aria-labelledby="race-conditions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Race Conditions
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Issue:</strong> Concurrent operations causing inconsistent state</p>
 
@@ -1722,13 +1722,13 @@ Register the blockchain client before anchoring:</p>
 <span class="kd">class</span> <span class="nc">ThreadSafeCredentialStore</span> <span class="p">{</span>
     <span class="k">private</span> <span class="kd">val</span> <span class="py">mutex</span> <span class="p">=</span> <span class="nc">Mutex</span><span class="p">()</span>
     <span class="k">private</span> <span class="kd">val</span> <span class="py">credentials</span> <span class="p">=</span> <span class="n">mutableMapOf</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">,</span> <span class="nc">VerifiableCredential</span><span class="p">&gt;()</span>
-    
+
     <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">store</span><span class="p">(</span><span class="n">id</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span> <span class="n">credential</span><span class="p">:</span> <span class="nc">VerifiableCredential</span><span class="p">)</span> <span class="p">{</span>
         <span class="n">mutex</span><span class="p">.</span><span class="nf">withLock</span> <span class="p">{</span>
             <span class="n">credentials</span><span class="p">[</span><span class="n">id</span><span class="p">]</span> <span class="p">=</span> <span class="n">credential</span>
         <span class="p">}</span>
     <span class="p">}</span>
-    
+
     <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">get</span><span class="p">(</span><span class="n">id</span><span class="p">:</span> <span class="nc">String</span><span class="p">):</span> <span class="nc">VerifiableCredential</span><span class="p">?</span> <span class="p">{</span>
         <span class="k">return</span> <span class="n">mutex</span><span class="p">.</span><span class="nf">withLock</span> <span class="p">{</span>
             <span class="n">credentials</span><span class="p">[</span><span class="n">id</span><span class="p">]</span>
@@ -1737,13 +1737,13 @@ Register the blockchain client before anchoring:</p>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="deadlocks">
-  
-  
+
+
     <a href="#deadlocks" class="anchor-heading" aria-labelledby="deadlocks"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Deadlocks
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Issue:</strong> Operations hanging due to deadlocks</p>
 
@@ -1800,13 +1800,13 @@ Register the blockchain client before anchoring:</p>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="resource-exhaustion">
-  
-  
+
+
     <a href="#resource-exhaustion" class="anchor-heading" aria-labelledby="resource-exhaustion"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Resource Exhaustion
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Issue:</strong> Running out of connections, memory, or threads</p>
 
@@ -1838,21 +1838,21 @@ Register the blockchain client before anchoring:</p>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="environment-specific-issues">
-  
-  
+
+
     <a href="#environment-specific-issues" class="anchor-heading" aria-labelledby="environment-specific-issues"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Environment-Specific Issues
-  
-  
+
+
 </h2>
-    
+
 <h3 id="java-version-mismatch">
-  
-  
+
+
     <a href="#java-version-mismatch" class="anchor-heading" aria-labelledby="java-version-mismatch"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Java Version Mismatch
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Error:</strong></p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1880,13 +1880,13 @@ Register the blockchain client before anchoring:</p>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="kotlin-version-conflicts">
-  
-  
+
+
     <a href="#kotlin-version-conflicts" class="anchor-heading" aria-labelledby="kotlin-version-conflicts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Kotlin Version Conflicts
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Error:</strong></p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1900,13 +1900,13 @@ Register the blockchain client before anchoring:</p>
   <li>Sync Gradle dependencies</li>
 </ul>
 <h3 id="coroutine-context-issues">
-  
-  
+
+
     <a href="#coroutine-context-issues" class="anchor-heading" aria-labelledby="coroutine-context-issues"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Coroutine Context Issues
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Error:</strong></p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1932,13 +1932,13 @@ Register the blockchain client before anchoring:</p>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="getting-help">
-  
-  
+
+
     <a href="#getting-help" class="anchor-heading" aria-labelledby="getting-help"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Getting Help
-  
-  
+
+
 </h2>
-    
+
 
 <p>If you’re still experiencing issues:</p>
 
@@ -1956,13 +1956,13 @@ Register the blockchain client before anchoring:</p>
   </li>
 </ol>
 <h2 id="related-documentation">
-  
-  
+
+
     <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><a href="/trustweave/advanced/error-handling/">Error Handling</a> - Detailed error handling patterns</li>
@@ -1971,17 +1971,17 @@ Register the blockchain client before anchoring:</p>
   <li><a href="/trustweave/api-reference/core-api/">API Reference</a> - Complete API documentation</li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -2013,7 +2013,7 @@ Register the blockchain client before anchoring:</p>
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -2023,12 +2023,12 @@ Register the blockchain client before anchoring:</p>
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -2050,12 +2050,12 @@ Register the blockchain client before anchoring:</p>
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -2064,12 +2064,12 @@ Register the blockchain client before anchoring:</p>
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -2077,7 +2077,7 @@ Register the blockchain client before anchoring:</p>
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -2085,31 +2085,31 @@ Register the blockchain client before anchoring:</p>
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -2121,7 +2121,7 @@ Register the blockchain client before anchoring:</p>
 
 
 
-  
+
 </body>
 </html>
 

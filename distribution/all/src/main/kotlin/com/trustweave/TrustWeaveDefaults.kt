@@ -18,7 +18,7 @@ object TrustWeaveDefaults {
 
     /**
      * Builds an in-memory configuration backed by the testkit components.
-     * 
+     *
      * This is useful for development, testing, and quick starts.
      * For production, use [TrustWeave.create] with custom configuration.
      */
@@ -32,7 +32,7 @@ object TrustWeaveDefaults {
             register(
                 Ed25519ProofGenerator(
                     signer = { data, keyId ->
-                        kms.sign(keyId, data)
+                        kms.sign(com.trustweave.core.types.KeyId(keyId), data)
                     }
                 )
             )

@@ -69,13 +69,13 @@ fun main() = runBlocking {
             // Additional methods can be registered here
         }
     }
-    
+
     // Create a DID using typed options
     val issuerDid = trustweave.dids.create("key") {
         algorithm = KeyAlgorithm.ED25519
         // Additional properties can be set via additionalProperties
     }
-    
+
     println("Issuer DID: ${issuerDid.id}")
 }
 

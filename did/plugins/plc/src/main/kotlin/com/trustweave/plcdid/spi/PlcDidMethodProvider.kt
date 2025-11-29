@@ -10,7 +10,7 @@ import java.util.ServiceLoader
 
 /**
  * SPI provider for did:plc method.
- * 
+ *
  * Automatically discovers did:plc method when this module is on the classpath.
  */
 class PlcDidMethodProvider : DidMethodProvider {
@@ -47,7 +47,7 @@ class PlcDidMethodProvider : DidMethodProvider {
      */
     private fun createConfig(options: DidCreationOptions): PlcDidConfig {
         val configMap = options.additionalProperties
-        
+
         // Use defaults if not specified
         return PlcDidConfig.fromMap(configMap)
     }

@@ -50,7 +50,7 @@ class PresentationServiceBranchCoverageTest {
         )
         val service = newPresentationService(proofGenerator = generator)
         val credentials = listOf(createTestCredential())
-        
+
         val presentation = service.createPresentation(
             credentials,
             "did:key:holder",
@@ -60,7 +60,7 @@ class PresentationServiceBranchCoverageTest {
                 keyId = "key-1"
             )
         )
-        
+
         assertNotNull(presentation.proof)
     }
 
@@ -68,7 +68,7 @@ class PresentationServiceBranchCoverageTest {
     fun `test branch createPresentation without proofGenerator uses registry`() = runBlocking {
         val service = newPresentationService(proofGenerator = null)
         val credentials = listOf(createTestCredential())
-        
+
         val presentation = service.createPresentation(
             credentials,
             "did:key:holder",
@@ -78,7 +78,7 @@ class PresentationServiceBranchCoverageTest {
                 keyId = "key-1"
             )
         )
-        
+
         assertNotNull(presentation.proof)
     }
 
@@ -86,7 +86,7 @@ class PresentationServiceBranchCoverageTest {
     fun `test branch createPresentation with blank proofType`() = runBlocking {
         val service = newPresentationService()
         val credentials = listOf(createTestCredential())
-        
+
         val presentation = service.createPresentation(
             credentials,
             "did:key:holder",
@@ -96,7 +96,7 @@ class PresentationServiceBranchCoverageTest {
                 keyId = null
             )
         )
-        
+
         assertNull(presentation.proof)
     }
 
@@ -104,7 +104,7 @@ class PresentationServiceBranchCoverageTest {
     fun `test branch createPresentation with null keyId`() = runBlocking {
         val service = newPresentationService()
         val credentials = listOf(createTestCredential())
-        
+
         val presentation = service.createPresentation(
             credentials,
             "did:key:holder",
@@ -114,7 +114,7 @@ class PresentationServiceBranchCoverageTest {
                 keyId = null
             )
         )
-        
+
         assertNull(presentation.proof)
     }
 
@@ -130,9 +130,9 @@ class PresentationServiceBranchCoverageTest {
                 proofValue = "test-proof"
             )
         )
-        
+
         val result = service.verifyPresentation(presentation)
-        
+
         assertTrue(result.presentationProofValid)
     }
 
@@ -140,9 +140,9 @@ class PresentationServiceBranchCoverageTest {
     fun `test branch verifyPresentation without proof`() = runBlocking {
         val service = newPresentationService()
         val presentation = createTestPresentation(proof = null)
-        
+
         val result = service.verifyPresentation(presentation)
-        
+
         assertFalse(result.presentationProofValid)
         assertTrue(result.errors.any { it.contains("no proof") })
     }
@@ -158,9 +158,9 @@ class PresentationServiceBranchCoverageTest {
                 proofPurpose = "authentication"
             )
         )
-        
+
         val result = service.verifyPresentation(presentation)
-        
+
         assertFalse(result.presentationProofValid)
     }
 
@@ -175,9 +175,9 @@ class PresentationServiceBranchCoverageTest {
                 proofPurpose = "authentication"
             )
         )
-        
+
         val result = service.verifyPresentation(presentation)
-        
+
         assertFalse(result.presentationProofValid)
     }
 
@@ -185,7 +185,7 @@ class PresentationServiceBranchCoverageTest {
     fun `test branch verifyPresentation verifyChallenge true with match`() = runBlocking {
         val service = newPresentationService()
         val presentation = createTestPresentation(challenge = "challenge-123")
-        
+
         val result = service.verifyPresentation(
             presentation,
             PresentationVerificationOptions(
@@ -193,7 +193,7 @@ class PresentationServiceBranchCoverageTest {
                 expectedChallenge = "challenge-123"
             )
         )
-        
+
         assertTrue(result.challengeValid)
     }
 
@@ -201,7 +201,7 @@ class PresentationServiceBranchCoverageTest {
     fun `test branch verifyPresentation verifyChallenge true with mismatch`() = runBlocking {
         val service = newPresentationService()
         val presentation = createTestPresentation(challenge = "challenge-123")
-        
+
         val result = service.verifyPresentation(
             presentation,
             PresentationVerificationOptions(
@@ -209,7 +209,7 @@ class PresentationServiceBranchCoverageTest {
                 expectedChallenge = "different-challenge"
             )
         )
-        
+
         assertFalse(result.challengeValid)
     }
 
@@ -217,7 +217,7 @@ class PresentationServiceBranchCoverageTest {
     fun `test branch verifyPresentation verifyChallenge true with null expected`() = runBlocking {
         val service = newPresentationService()
         val presentation = createTestPresentation(challenge = null)
-        
+
         val result = service.verifyPresentation(
             presentation,
             PresentationVerificationOptions(
@@ -225,7 +225,7 @@ class PresentationServiceBranchCoverageTest {
                 expectedChallenge = null
             )
         )
-        
+
         assertTrue(result.challengeValid)
         assertTrue(result.warnings.any { it.contains("No challenge") })
     }
@@ -234,14 +234,14 @@ class PresentationServiceBranchCoverageTest {
     fun `test branch verifyPresentation verifyChallenge false`() = runBlocking {
         val service = newPresentationService()
         val presentation = createTestPresentation(challenge = "challenge-123")
-        
+
         val result = service.verifyPresentation(
             presentation,
             PresentationVerificationOptions(
                 verifyChallenge = false
             )
         )
-        
+
         assertTrue(result.challengeValid)
     }
 
@@ -249,7 +249,7 @@ class PresentationServiceBranchCoverageTest {
     fun `test branch verifyPresentation verifyDomain true with match`() = runBlocking {
         val service = newPresentationService()
         val presentation = createTestPresentation(domain = "example.com")
-        
+
         val result = service.verifyPresentation(
             presentation,
             PresentationVerificationOptions(
@@ -257,7 +257,7 @@ class PresentationServiceBranchCoverageTest {
                 expectedDomain = "example.com"
             )
         )
-        
+
         assertTrue(result.domainValid)
     }
 
@@ -265,7 +265,7 @@ class PresentationServiceBranchCoverageTest {
     fun `test branch verifyPresentation verifyDomain true with mismatch`() = runBlocking {
         val service = newPresentationService()
         val presentation = createTestPresentation(domain = "example.com")
-        
+
         val result = service.verifyPresentation(
             presentation,
             PresentationVerificationOptions(
@@ -273,7 +273,7 @@ class PresentationServiceBranchCoverageTest {
                 expectedDomain = "different.com"
             )
         )
-        
+
         assertFalse(result.domainValid)
     }
 
@@ -281,14 +281,14 @@ class PresentationServiceBranchCoverageTest {
     fun `test branch verifyPresentation verifyDomain false`() = runBlocking {
         val service = newPresentationService()
         val presentation = createTestPresentation(domain = "example.com")
-        
+
         val result = service.verifyPresentation(
             presentation,
             PresentationVerificationOptions(
                 verifyDomain = false
             )
         )
-        
+
         assertTrue(result.domainValid)
     }
 
@@ -298,14 +298,14 @@ class PresentationServiceBranchCoverageTest {
         val service = newPresentationService(verifier = verifier)
         val credential = createTestCredential()
         val presentation = createTestPresentation(credentials = listOf(credential))
-        
+
         val result = service.verifyPresentation(
             presentation,
             PresentationVerificationOptions(
                 checkRevocation = true
             )
         )
-        
+
         assertTrue(result.credentialResults.isNotEmpty())
     }
 
@@ -313,14 +313,14 @@ class PresentationServiceBranchCoverageTest {
     fun `test branch verifyPresentation checkRevocation true without verifier`() = runBlocking {
         val service = newPresentationService(verifier = null)
         val presentation = createTestPresentation()
-        
+
         val result = service.verifyPresentation(
             presentation,
             PresentationVerificationOptions(
                 checkRevocation = true
             )
         )
-        
+
         assertTrue(result.credentialResults.isEmpty())
     }
 
@@ -329,14 +329,14 @@ class PresentationServiceBranchCoverageTest {
         val verifier = CredentialVerifier(booleanDidResolver { true })
         val service = newPresentationService(verifier = verifier)
         val presentation = createTestPresentation()
-        
+
         val result = service.verifyPresentation(
             presentation,
             PresentationVerificationOptions(
                 checkRevocation = false
             )
         )
-        
+
         assertTrue(result.credentialResults.isEmpty())
     }
 
@@ -355,14 +355,14 @@ class PresentationServiceBranchCoverageTest {
                 proofValue = "test-proof"
             )
         )
-        
+
         val result = service.verifyPresentation(
             presentation,
             PresentationVerificationOptions(
                 checkRevocation = true
             )
         )
-        
+
         assertFalse(result.valid)
         assertTrue(result.errors.any { it.contains("verification failed") })
     }
@@ -371,14 +371,14 @@ class PresentationServiceBranchCoverageTest {
     fun `test branch createSelectiveDisclosure calls createPresentation`() = runBlocking {
         val service = newPresentationService()
         val credentials = listOf(createTestCredential())
-        
+
         val presentation = service.createSelectiveDisclosure(
             credentials,
             listOf("credentialSubject.name"),
             "did:key:holder",
             PresentationOptions(holderDid = "did:key:holder")
         )
-        
+
         assertNotNull(presentation)
     }
 

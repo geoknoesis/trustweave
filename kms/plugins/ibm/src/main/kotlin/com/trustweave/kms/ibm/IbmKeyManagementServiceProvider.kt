@@ -6,9 +6,9 @@ import com.trustweave.kms.spi.KeyManagementServiceProvider
 
 /**
  * SPI provider for IBM Key Protect KeyManagementService.
- * 
+ *
  * Automatically discovered via Java ServiceLoader when the module is on the classpath.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val providers = ServiceLoader.load(KeyManagementServiceProvider::class.java)
@@ -22,7 +22,7 @@ import com.trustweave.kms.spi.KeyManagementServiceProvider
  */
 class IbmKeyManagementServiceProvider : KeyManagementServiceProvider {
     override val name: String = "ibm"
-    
+
     override val supportedAlgorithms: Set<Algorithm> = IbmKeyManagementService.SUPPORTED_ALGORITHMS
 
     override fun create(options: Map<String, Any?>): KeyManagementService {
@@ -37,7 +37,7 @@ class IbmKeyManagementServiceProvider : KeyManagementServiceProvider {
                     e
                 )
         }
-        
+
         return IbmKeyManagementService(config)
     }
 }

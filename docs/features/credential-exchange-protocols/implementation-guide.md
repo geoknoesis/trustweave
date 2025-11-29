@@ -84,15 +84,15 @@ import com.trustweave.credential.exchange.*
 class YourProtocolExchangeProtocol(
     private val service: YourProtocolService
 ) : CredentialExchangeProtocol {
-    
+
     override val protocolName = "yourprotocol"
-    
+
     override val supportedOperations = setOf(
         ExchangeOperation.OFFER_CREDENTIAL,
         ExchangeOperation.REQUEST_CREDENTIAL,
         ExchangeOperation.ISSUE_CREDENTIAL
     )
-    
+
     override suspend fun offerCredential(
         request: CredentialOfferRequest
     ): CredentialOfferResponse {
@@ -101,14 +101,14 @@ class YourProtocolExchangeProtocol(
             holderDid = request.holderDid,
             preview = request.credentialPreview
         )
-        
+
         return CredentialOfferResponse(
             offerId = offer.id,
             offerData = offer,
             protocolName = protocolName
         )
     }
-    
+
     // Implement other operations...
 }
 ```
@@ -140,17 +140,17 @@ import com.trustweave.credential.exchange.spi.CredentialExchangeProtocolProvider
 class YourProtocolExchangeProtocolProvider : CredentialExchangeProtocolProvider {
     override val name = "yourprotocol"
     override val supportedProtocols = listOf("yourprotocol")
-    
+
     override fun create(
         protocolName: String,
         options: Map<String, Any?>
     ): CredentialExchangeProtocol? {
         if (protocolName != "yourprotocol") return null
-        
+
         val service = YourProtocolService(
             // Initialize from options
         )
-        
+
         return YourProtocolExchangeProtocol(service)
     }
 }
@@ -171,7 +171,7 @@ dependencies {
     implementation(project(":credentials:credential-core"))
     implementation(project(":did:did-core"))
     implementation(project(":common"))
-    
+
     // Protocol-specific dependencies
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.core)
@@ -222,7 +222,7 @@ options = mapOf(
 fun `test offer credential`() = runTest {
     val service = YourProtocolService()
     val protocol = YourProtocolExchangeProtocol(service)
-    
+
     val offer = protocol.offerCredential(
         CredentialOfferRequest(
             issuerDid = "did:key:issuer",
@@ -232,7 +232,7 @@ fun `test offer credential`() = runTest {
             )
         )
     )
-    
+
     assertEquals("yourprotocol", offer.protocolName)
     assertNotNull(offer.offerId)
 }
@@ -245,12 +245,12 @@ fun `test offer credential`() = runTest {
 fun `test complete exchange flow`() = runTest {
     val registry = CredentialExchangeProtocolRegistry()
     registry.register(YourProtocolExchangeProtocol(service))
-    
+
     // Test full flow
     val offer = registry.offerCredential("yourprotocol", offerRequest)
     val request = registry.requestCredential("yourprotocol", requestRequest)
     val issue = registry.issueCredential("yourprotocol", issueRequest)
-    
+
     assertNotNull(issue.credential)
 }
 ```

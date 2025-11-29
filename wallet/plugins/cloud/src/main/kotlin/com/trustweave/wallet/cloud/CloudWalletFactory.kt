@@ -2,18 +2,19 @@ package com.trustweave.wallet.cloud
 
 import com.trustweave.wallet.services.WalletFactory
 import com.trustweave.wallet.services.WalletCreationOptions
+import com.trustweave.wallet.Wallet
 import java.util.UUID
 
 /**
  * Cloud storage-backed wallet factory implementation.
- * 
+ *
  * Supports AWS S3, Azure Blob Storage, and Google Cloud Storage.
  * Enables multi-device wallet synchronization.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val factory = CloudWalletFactory()
- * 
+ *
  * // AWS S3
  * val s3Wallet = factory.create(
  *     providerName = "cloud",
@@ -26,7 +27,7 @@ import java.util.UUID
  *         )
  *     )
  * )
- * 
+ *
  * // Azure Blob Storage
  * val azureWallet = factory.create(
  *     providerName = "cloud",
@@ -40,7 +41,7 @@ import java.util.UUID
  *         )
  *     )
  * )
- * 
+ *
  * // Google Cloud Storage
  * val gcsWallet = factory.create(
  *     providerName = "cloud",
@@ -56,30 +57,30 @@ import java.util.UUID
  * ```
  */
 class CloudWalletFactory : WalletFactory {
-    
+
     override suspend fun create(
         providerName: String,
         walletId: String?,
         walletDid: String?,
         holderDid: String?,
         options: WalletCreationOptions
-    ): Any {
+    ): Wallet {
         if (providerName.lowercase() != "cloud") {
             throw IllegalArgumentException("Provider name must be 'cloud'")
         }
-        
+
         val finalWalletId = walletId ?: UUID.randomUUID().toString()
         val finalWalletDid = walletDid ?: "did:key:wallet-$finalWalletId"
-        val finalHolderDid = holderDid 
+        val finalHolderDid = holderDid
             ?: throw IllegalArgumentException("holderDid is required for CloudWallet")
-        
+
         val storagePath = options.storagePath
             ?: throw IllegalArgumentException("storagePath is required for CloudWallet")
-        
+
         val provider = options.additionalProperties["provider"] as? String
             ?: detectProviderFromPath(storagePath)
             ?: throw IllegalArgumentException("Cloud storage provider must be specified (aws, azure, or gcs)")
-        
+
         // Extract bucket/container name and path from storagePath
         val (bucketName, basePath) = when (provider) {
             "aws" -> {
@@ -100,14 +101,14 @@ class CloudWalletFactory : WalletFactory {
             }
             else -> throw IllegalArgumentException("Unsupported cloud provider: $provider")
         }
-        
+
         // Create provider-specific wallet implementation
         return when (provider.lowercase()) {
             "aws" -> {
                 val region = options.additionalProperties["region"] as? String ?: "us-east-1"
                 val accessKeyId = options.additionalProperties["accessKeyId"] as? String
                 val secretAccessKey = options.additionalProperties["secretAccessKey"] as? String
-                
+
                 val s3Client = if (accessKeyId != null && secretAccessKey != null) {
                     software.amazon.awssdk.services.s3.S3Client.builder()
                         .region(software.amazon.awssdk.regions.Region.of(region))
@@ -125,7 +126,7 @@ class CloudWalletFactory : WalletFactory {
                         .region(software.amazon.awssdk.regions.Region.of(region))
                         .build()
                 }
-                
+
                 AwsS3Wallet(
                     walletId = finalWalletId,
                     walletDid = finalWalletDid,
@@ -139,7 +140,7 @@ class CloudWalletFactory : WalletFactory {
                 val connectionString = options.additionalProperties["connectionString"] as? String
                 val accountName = options.additionalProperties["accountName"] as? String
                 val accountKey = options.additionalProperties["accountKey"] as? String
-                
+
                 val blobServiceClient = when {
                     connectionString != null -> {
                         com.azure.storage.blob.BlobServiceClientBuilder()
@@ -159,7 +160,7 @@ class CloudWalletFactory : WalletFactory {
                         )
                     }
                 }
-                
+
                 AzureBlobWallet(
                     walletId = finalWalletId,
                     walletDid = finalWalletDid,
@@ -172,7 +173,7 @@ class CloudWalletFactory : WalletFactory {
             "gcs" -> {
                 val projectId = options.additionalProperties["projectId"] as? String
                 val credentialsPath = options.additionalProperties["credentialsPath"] as? String
-                
+
                 val storage = when {
                     credentialsPath != null -> {
                         com.google.cloud.storage.StorageOptions.newBuilder()
@@ -196,7 +197,7 @@ class CloudWalletFactory : WalletFactory {
                         com.google.cloud.storage.StorageOptions.getDefaultInstance().service
                     }
                 }
-                
+
                 GoogleCloudStorageWallet(
                     walletId = finalWalletId,
                     walletDid = finalWalletDid,
@@ -209,7 +210,7 @@ class CloudWalletFactory : WalletFactory {
             else -> throw IllegalArgumentException("Unsupported cloud provider: $provider")
         }
     }
-    
+
     private fun detectProviderFromPath(path: String): String? {
         return when {
             path.startsWith("s3://") -> "aws"

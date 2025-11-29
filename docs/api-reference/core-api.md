@@ -17,8 +17,8 @@ keywords:
 
 Complete API reference for TrustWeave's TrustWeave API.
 
-> **Version:** 1.0.0-SNAPSHOT  
-> **Kotlin:** 2.2.0+ | **Java:** 21+  
+> **Version:** 1.0.0-SNAPSHOT
+> **Kotlin:** 2.2.0+ | **Java:** 21+
 > See [CHANGELOG.md](../../CHANGELOG.md) for version history and migration guides.
 >
 > **Note:** This API reference documents the `TrustWeave` API, which is the primary interface for trust and identity operations in TrustWeave. The TrustWeave provides a DSL-based API for creating DIDs, issuing credentials, managing wallets, and more.
@@ -91,7 +91,7 @@ fun main() = runBlocking {
             }
         }
     }
-    
+
     // Create with custom configuration
     val trustWeave = TrustWeave.build {
         keys {
@@ -483,14 +483,14 @@ The DSL builder provides a fluent API for configuring the credential:
 
 **Performance Characteristics:**
 
-- **Time Complexity**: 
+- **Time Complexity**:
   - O(1) for key lookup (if cached)
   - O(n) for proof generation where n = credential size
   - O(1) for DID resolution (if cached)
-- **Network Calls**: 
+- **Network Calls**:
   - 1 call for DID resolution (unless cached)
   - 0 calls for signing (uses local KMS)
-- **Thread Safety**: 
+- **Thread Safety**:
   - ✅ Thread-safe (all operations are suspend functions)
   - ✅ Safe for concurrent use
 - **Resource Usage**:
@@ -566,12 +566,12 @@ The DSL builder provides a fluent API for configuring verification:
 - `warnings`: List of warnings (e.g., expiring soon, missing optional fields)
 
 **Performance Characteristics:**
-- **Time Complexity:** 
+- **Time Complexity:**
   - O(1) for proof verification (cryptographic operation)
   - O(1) for DID resolution (if cached), O(N) for network-based methods
   - O(1) for expiration check
   - O(1) for revocation check (if status list cached)
-- **Network Calls:** 
+- **Network Calls:**
   - 1 call for issuer DID resolution (unless cached)
   - 0-1 calls for revocation status check (if enabled and not cached)
 - **Thread Safety:** ✅ Thread-safe, can be called concurrently
@@ -614,7 +614,7 @@ if (result.valid) {
     println("   Issuer valid: ${result.issuerValid}")
     println("   Not expired: ${result.notExpired}")
     println("   Not revoked: ${result.notRevoked}")
-    
+
     if (result.warnings.isNotEmpty()) {
         println("   Warnings: ${result.warnings.joinToString()}")
     }
@@ -1001,7 +1001,7 @@ trustLayer.trust {
         credentialTypes("EducationCredential")
         description("Trusted university")
     }
-    
+
     val isTrusted = isTrusted("did:key:university", "EducationCredential")
     val path = getTrustPath("did:key:verifier", "did:key:issuer")
 }
@@ -1722,7 +1722,7 @@ try {
 ```kotlin
 val result = someService.operation()
 result.fold(
-    onSuccess = { value -> 
+    onSuccess = { value ->
         // Handle success
         println("Success: $value")
     },

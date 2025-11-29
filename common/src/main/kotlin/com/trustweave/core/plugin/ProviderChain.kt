@@ -29,8 +29,8 @@ class ProviderChain<T>(
         require(providers.isNotEmpty()) { "Provider chain must contain at least one provider" }
         // Validate that selector doesn't filter out all providers
         val selectedCount = providers.count(selector)
-        require(selectedCount > 0) { 
-            "Selector function filters out all providers. At least one provider must be selected." 
+        require(selectedCount > 0) {
+            "Selector function filters out all providers. At least one provider must be selected."
         }
     }
 
@@ -67,7 +67,7 @@ class ProviderChain<T>(
                     throw e
                 }
                 lastException = e
-                
+
                 // Generate a unique identifier for this provider instance.
                 // We combine the class name with the index because:
                 // 1. Multiple instances of the same class may exist in the chain
@@ -79,11 +79,11 @@ class ProviderChain<T>(
                     .substringAfterLast('.')
                 val providerId = "$className[$index]"
                 attemptedProviders.add(providerId)
-                
+
                 // Store error message for detailed failure reporting.
                 // Fallback chain: exception message -> class name -> "Unknown error"
                 providerErrors[providerId] = e.message ?: e::class.simpleName ?: "Unknown error"
-                
+
                 // Continue to next provider in the chain (failover behavior)
                 continue
             }
@@ -133,7 +133,7 @@ class ProviderChain<T>(
 
     /**
      * Check if chain is empty.
-     * 
+     *
      * **Note:** Due to the constructor requirement that at least one provider must be present,
      * this will always return `false` after a `ProviderChain` is successfully constructed.
      * This method exists for API consistency and will only return `true` if the internal
@@ -162,7 +162,7 @@ inline fun <reified T> createProviderChain(
     val found = pluginIds.mapIndexedNotNull { _, pluginId ->
         registry.getInstance(pluginId, T::class.java)?.let { pluginId to it }
     }
-    
+
     // Extract found IDs and compute missing IDs by set difference.
     // This allows us to provide detailed error information about which
     // specific plugins were not found.
@@ -177,7 +177,7 @@ inline fun <reified T> createProviderChain(
             availablePlugins = registry.getAllPlugins().map { it.id }
         )
     }
-    
+
     // Error handling: Fail if some (but not all) providers are missing.
     // This ensures that the chain contains exactly the requested providers,
     // maintaining predictable behavior and preventing partial configurations.

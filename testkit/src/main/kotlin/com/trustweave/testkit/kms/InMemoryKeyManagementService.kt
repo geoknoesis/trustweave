@@ -1,6 +1,8 @@
 package com.trustweave.testkit.kms
 
+import com.trustweave.core.types.KeyId
 import com.trustweave.kms.*
+import com.trustweave.kms.exception.KmsException
 import java.security.*
 import java.security.spec.*
 import java.util.*
@@ -19,8 +21,8 @@ class InMemoryKeyManagementService : KeyManagementService {
         val SUPPORTED_ALGORITHMS = setOf(Algorithm.Ed25519, Algorithm.Secp256k1)
     }
 
-    private val keys = ConcurrentHashMap<String, KeyPair>()
-    private val keyMetadata = ConcurrentHashMap<String, KeyHandle>()
+    private val keys = ConcurrentHashMap<KeyId, KeyPair>()
+    private val keyMetadata = ConcurrentHashMap<KeyId, KeyHandle>()
 
     override suspend fun getSupportedAlgorithms(): Set<Algorithm> = SUPPORTED_ALGORITHMS
 
@@ -34,17 +36,18 @@ class InMemoryKeyManagementService : KeyManagementService {
                 "Supported: ${SUPPORTED_ALGORITHMS.joinToString(", ") { it.name }}"
             )
         }
-        
+
         val keyPair = when (algorithm) {
             is Algorithm.Ed25519 -> generateEd25519KeyPair()
             is Algorithm.Secp256k1 -> generateSecp256k1KeyPair()
             else -> throw UnsupportedAlgorithmException("Algorithm ${algorithm.name} not implemented")
         }
 
-        val keyId = options["keyId"] as? String ?: "key_${UUID.randomUUID()}"
-        
+        val keyIdString = options["keyId"] as? String ?: "key_${UUID.randomUUID()}"
+        val keyId = KeyId(keyIdString)
+
         keys[keyId] = keyPair
-        
+
         val publicKeyJwk = when (algorithm) {
             is Algorithm.Ed25519 -> {
                 // Extract raw 32 bytes from DER-encoded public key
@@ -60,11 +63,11 @@ class InMemoryKeyManagementService : KeyManagementService {
                 } else {
                     throw IllegalStateException("Invalid Ed25519 public key encoding: expected at least 32 bytes, got ${encoded.size}")
                 }
-                
-                require(rawKey.size == 32) { 
-                    "Expected 32-byte Ed25519 public key, but got ${rawKey.size} bytes from encoded key of size ${encoded.size}" 
+
+                require(rawKey.size == 32) {
+                    "Expected 32-byte Ed25519 public key, but got ${rawKey.size} bytes from encoded key of size ${encoded.size}"
                 }
-                
+
                 mapOf(
                     "kty" to "OKP",
                     "crv" to "Ed25519",
@@ -85,23 +88,23 @@ class InMemoryKeyManagementService : KeyManagementService {
             algorithm = algorithm.name,
             publicKeyJwk = publicKeyJwk
         )
-        
+
         keyMetadata[keyId] = handle
         return handle
     }
 
-    override suspend fun getPublicKey(keyId: String): KeyHandle {
+    override suspend fun getPublicKey(keyId: KeyId): KeyHandle {
         return keyMetadata[keyId]
-            ?: throw KeyNotFoundException("Key not found: $keyId")
+            ?: throw KmsException.KeyNotFound(keyId = keyId.value)
     }
 
     override suspend fun sign(
-        keyId: String,
+        keyId: KeyId,
         data: ByteArray,
         algorithm: Algorithm?
     ): ByteArray {
         val keyPair = keys[keyId]
-            ?: throw KeyNotFoundException("Key not found: $keyId")
+            ?: throw KmsException.KeyNotFound(keyId = keyId.value)
 
         val signAlgorithm = algorithm?.let { alg ->
             when (alg) {
@@ -112,7 +115,7 @@ class InMemoryKeyManagementService : KeyManagementService {
         } ?: when (keyMetadata[keyId]?.algorithm?.uppercase()) {
             "ED25519" -> "Ed25519"
             "SECP256K1" -> "SHA256withECDSA"
-            else -> throw IllegalArgumentException("Unknown algorithm for key: $keyId")
+            else -> throw IllegalArgumentException("Unknown algorithm for key: ${keyId.value}")
         }
 
         val signature = Signature.getInstance(signAlgorithm).apply {
@@ -122,7 +125,7 @@ class InMemoryKeyManagementService : KeyManagementService {
         return signature.sign()
     }
 
-    override suspend fun deleteKey(keyId: String): Boolean {
+    override suspend fun deleteKey(keyId: KeyId): Boolean {
         keys.remove(keyId)
         return keyMetadata.remove(keyId) != null
     }

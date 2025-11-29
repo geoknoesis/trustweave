@@ -117,7 +117,7 @@ flowchart TD
     A["Authentication Authority<br/>Issues Short-Lived<br/>Authentication Credential"] -->|issues| B["Authentication Credential<br/>User DID<br/>Time-Bound Validity<br/>Device Attestation<br/>Cryptographic Proof"]
     B -->|stored in| C["User Wallet<br/>Stores auth credentials<br/>Maintains privacy<br/>Controls disclosure"]
     C -->|presents| D["Zero Trust System<br/>Continuously Verifies<br/>Checks Expiration<br/>Validates Device<br/>Grants Access"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -139,10 +139,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 dependencies {
     // Core TrustWeave modules
     implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -170,31 +170,31 @@ fun main() = runBlocking {
     println("=".repeat(70))
     println("Zero Trust Continuous Authentication Scenario - Complete End-to-End Example")
     println("=".repeat(70))
-    
+
     // Step 1: Create TrustWeave instance
     val TrustWeave = TrustWeave.create()
     println("\n✅ TrustWeave initialized")
-    
+
     // Step 2: Create DIDs for authentication authority, users, and systems
     val authAuthorityDidDoc = TrustWeave.dids.create()
     val authAuthorityDid = authAuthorityDidDoc.id
     val authAuthorityKeyId = authAuthorityDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val userDidDoc = TrustWeave.dids.create()
     val userDid = userDidDoc.id
-    
+
     val deviceDidDoc = TrustWeave.dids.create()
     val deviceDid = deviceDidDoc.id
-    
+
     val systemDidDoc = TrustWeave.dids.create()
     val systemDid = systemDidDoc.id
-    
+
     println("✅ Authentication Authority DID: $authAuthorityDid")
     println("✅ User DID: $userDid")
     println("✅ Device DID: $deviceDid")
     println("✅ System DID: $systemDid")
-    
+
     // Step 3: Issue short-lived authentication credential (15 minutes)
     val authCredential = TrustWeave.issueCredential(
         issuerDid = authAuthorityDid,
@@ -222,12 +222,12 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "AuthenticationCredential", "ZeroTrustCredential"),
         expirationDate = Instant.now().plus(15, ChronoUnit.MINUTES).toString() // Short-lived
     ).getOrThrow()
-    
+
     println("\n✅ Short-lived authentication credential issued: ${authCredential.id}")
     println("   Validity: 15 minutes")
     println("   Device: $deviceDid")
     println("   Note: No traditional session created")
-    
+
     // Step 4: Create user wallet and store authentication credential
     val userWallet = TrustWeave.createWallet(
         holderDid = userDid,
@@ -236,10 +236,10 @@ fun main() = runBlocking {
             enablePresentation = true
         }.build()
     ).getOrThrow()
-    
+
     val authCredentialId = userWallet.store(authCredential)
     println("✅ Authentication credential stored in wallet: $authCredentialId")
-    
+
     // Step 5: Organize credential
     userWallet.withOrganization { org ->
         val authCollectionId = org.createCollection("Authentication", "Authentication credentials")
@@ -247,24 +247,24 @@ fun main() = runBlocking {
         org.tagCredential(authCredentialId, setOf("authentication", "zero-trust", "short-lived", "device-attested"))
         println("✅ Authentication credential organized")
     }
-    
+
     // Step 6: Initial authentication verification
     println("\n🔐 Initial Authentication Verification:")
-    
+
     val initialVerification = TrustWeave.verifyCredential(authCredential).getOrThrow()
-    
+
     if (initialVerification.valid) {
         val credentialSubject = authCredential.credentialSubject
         val authentication = credentialSubject.jsonObject["authentication"]?.jsonObject
         val authenticated = authentication?.get("authenticated")?.jsonPrimitive?.content?.toBoolean() ?: false
         val deviceAttested = authentication?.get("deviceAttested")?.jsonPrimitive?.content?.toBoolean() ?: false
         val riskScore = authentication?.get("riskScore")?.jsonPrimitive?.content?.toDouble() ?: 1.0
-        
+
         println("✅ Authentication Credential: VALID")
         println("   Authenticated: $authenticated")
         println("   Device Attested: $deviceAttested")
         println("   Risk Score: $riskScore")
-        
+
         if (authenticated && deviceAttested && riskScore < 0.5) {
             println("✅ Authentication requirements MET")
             println("✅ Device trust verified")
@@ -278,10 +278,10 @@ fun main() = runBlocking {
         println("❌ Authentication Credential: INVALID")
         println("❌ Access DENIED")
     }
-    
+
     // Step 7: Continuous re-authentication (after 5 minutes)
     println("\n🔐 Continuous Re-Authentication (5 minutes later):")
-    
+
     // Simulate time passing - in production, this would be a real-time check
     val reAuthCredential = TrustWeave.issueCredential(
         issuerDid = authAuthorityDid,
@@ -309,9 +309,9 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "AuthenticationCredential", "ZeroTrustCredential"),
         expirationDate = Instant.now().plus(15, ChronoUnit.MINUTES).toString()
     ).getOrThrow()
-    
+
     val reAuthVerification = TrustWeave.verifyCredential(reAuthCredential).getOrThrow()
-    
+
     if (reAuthVerification.valid) {
         println("✅ Re-Authentication Credential: VALID")
         println("   Continuous verification: PASSED")
@@ -322,10 +322,10 @@ fun main() = runBlocking {
         println("❌ Re-Authentication Credential: INVALID")
         println("❌ Access REVOKED")
     }
-    
+
     // Step 8: Expired credential verification
     println("\n🔐 Expired Credential Verification:")
-    
+
     // Create an expired credential
     val expiredCredential = TrustWeave.issueCredential(
         issuerDid = authAuthorityDid,
@@ -340,22 +340,22 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "AuthenticationCredential", "ZeroTrustCredential"),
         expirationDate = Instant.now().minus(5, ChronoUnit.MINUTES).toString() // Already expired
     ).getOrThrow()
-    
+
     val expiredVerification = TrustWeave.verifyCredential(
         expiredCredential,
         options = CredentialVerificationOptions(checkExpiration = true)
     ).getOrThrow()
-    
+
     if (!expiredVerification.valid) {
         println("❌ Expired Credential: INVALID")
         println("   Credential expired: YES")
         println("   Access DENIED")
         println("   Note: User must re-authenticate")
     }
-    
+
     // Step 9: High-risk scenario verification
     println("\n🔐 High-Risk Scenario Verification:")
-    
+
     val highRiskCredential = TrustWeave.issueCredential(
         issuerDid = authAuthorityDid,
         issuerKeyId = authAuthorityKeyId,
@@ -378,26 +378,26 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "AuthenticationCredential", "ZeroTrustCredential"),
         expirationDate = Instant.now().plus(15, ChronoUnit.MINUTES).toString()
     ).getOrThrow()
-    
+
     val highRiskVerification = TrustWeave.verifyCredential(highRiskCredential).getOrThrow()
-    
+
     if (highRiskVerification.valid) {
         val credentialSubject = highRiskCredential.credentialSubject
         val authentication = credentialSubject.jsonObject["authentication"]?.jsonObject
         val deviceAttested = authentication?.get("deviceAttested")?.jsonPrimitive?.content?.toBoolean() ?: false
         val riskScore = authentication?.get("riskScore")?.jsonPrimitive?.content?.toDouble() ?: 1.0
-        
+
         println("✅ Authentication Credential: VALID (structurally)")
         println("   Device Attested: $deviceAttested")
         println("   Risk Score: $riskScore")
-        
+
         if (!deviceAttested || riskScore > 0.5) {
             println("❌ Security requirements NOT MET")
             println("❌ Device not trusted or risk too high")
             println("❌ Access DENIED - Additional verification required")
         }
     }
-    
+
     // Step 10: Create privacy-preserving authentication presentation
     val authPresentation = userWallet.withPresentation { pres ->
         pres.createPresentation(
@@ -409,12 +409,12 @@ fun main() = runBlocking {
             )
         )
     } ?: error("Presentation capability not available")
-    
+
     println("\n✅ Privacy-preserving authentication presentation created")
     println("   Holder: ${authPresentation.holder}")
     println("   Credentials: ${authPresentation.verifiableCredential.size}")
     println("   Note: Only authentication status shared, no personal details")
-    
+
     // Step 11: Demonstrate privacy - verify no personal information is exposed
     println("\n🔒 Privacy Verification:")
     val presentationCredential = authPresentation.verifiableCredential.firstOrNull()
@@ -424,14 +424,14 @@ fun main() = runBlocking {
         val hasEmail = subject.jsonObject.containsKey("email")
         val hasPassword = subject.jsonObject.containsKey("password")
         val hasAuthentication = subject.jsonObject.containsKey("authentication")
-        
+
         println("   Full Name exposed: $hasFullName ❌")
         println("   Email exposed: $hasEmail ❌")
         println("   Password exposed: $hasPassword ❌")
         println("   Authentication status: $hasAuthentication ✅")
         println("✅ Privacy preserved - only authentication status shared")
     }
-    
+
     // Step 12: Display wallet statistics
     val stats = userWallet.getStatistics()
     println("\n📊 User Wallet Statistics:")
@@ -439,7 +439,7 @@ fun main() = runBlocking {
     println("   Valid credentials: ${stats.validCredentials}")
     println("   Collections: ${stats.collectionsCount}")
     println("   Tags: ${stats.tagsCount}")
-    
+
     // Step 13: Summary
     println("\n" + "=".repeat(70))
     println("✅ ZERO TRUST CONTINUOUS AUTHENTICATION SYSTEM COMPLETE")

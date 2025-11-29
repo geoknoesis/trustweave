@@ -199,14 +199,14 @@ if (wallet is CredentialOrganization) {
         name = "Work Credentials",
         description = "Professional credentials and certifications"
     )
-    
+
     // Add credentials to collection
     wallet.addToCollection(credentialId, workCollection)
-    
+
     // Get credentials in collection
     val workCreds = wallet.getCredentialsInCollection(workCollection)
     println("Work credentials: ${workCreds.size}")
-    
+
     // List all collections
     val collections = wallet.listCollections()
     collections.forEach { collection ->
@@ -225,18 +225,18 @@ Tag credentials for easy filtering:
 if (wallet is CredentialOrganization) {
     // Tag a credential
     wallet.tagCredential(credentialId, setOf("important", "verified", "work"))
-    
+
     // Get tags for a credential
     val tags = wallet.getTags(credentialId)
     println("Tags: $tags")
-    
+
     // Find credentials by tag
     val importantCreds = wallet.findByTag("important")
-    
+
     // Get all tags
     val allTags = wallet.getAllTags()
     println("All tags: $allTags")
-    
+
     // Remove tags
     wallet.untagCredential(credentialId, setOf("work"))
 }
@@ -256,11 +256,11 @@ if (wallet is CredentialOrganization) {
         "verified" to true,
         "priority" to "high"
     ))
-    
+
     // Get metadata
     val metadata = wallet.getMetadata(credentialId)
     println("Metadata: ${metadata?.metadata}")
-    
+
     // Add notes
     wallet.updateNotes(credentialId, "This credential was verified manually")
 }
@@ -328,7 +328,7 @@ if (wallet is CredentialPresentation) {
             domain = "example.com"
         )
     )
-    
+
     println("Created presentation with ${presentation.verifiableCredential.size} credentials")
 }
 ```
@@ -360,11 +360,11 @@ if (wallet is CredentialPresentation) {
 if (wallet is CredentialLifecycle) {
     // Archive old credentials
     wallet.archive(oldCredentialId)
-    
+
     // Get archived credentials
     val archived = wallet.getArchived()
     println("Archived credentials: ${archived.size}")
-    
+
     // Unarchive if needed
     wallet.unarchive(oldCredentialId)
 }
@@ -485,25 +485,25 @@ fun main() = runBlocking {
     // Create wallet using TrustWeave service API
     val trustweave = TrustWeave.create()
     val wallet = trustweave.wallets.create(holderDid = "did:key:holder")
-    
+
     // Store credentials
     val credential1 = createCredential("Alice", "alice@example.com")
     val credential2 = createCredential("Bob", "bob@example.com")
-    
+
     val id1 = wallet.store(credential1)
     val id2 = wallet.store(credential2)
-    
+
     // Organize credentials
     val workCollection = wallet.createCollection("Work Credentials")
     wallet.addToCollection(id1, workCollection)
     wallet.tagCredential(id1, setOf("important", "verified"))
-    
+
     // Query credentials
     val important = wallet.query {
         byIssuer("did:key:issuer")
         valid()
     }
-    
+
     // Create presentation
     val presentation = wallet.createPresentation(
         credentialIds = listOf(id1),
@@ -513,7 +513,7 @@ fun main() = runBlocking {
             proofType = "Ed25519Signature2020"
         )
     )
-    
+
     // Get statistics
     val stats = wallet.getStatistics()
     println("Wallet has ${stats.totalCredentials} credentials")

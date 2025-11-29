@@ -9,7 +9,7 @@ import java.util.ServiceLoader
 
 /**
  * SPI provider for did:jwk method.
- * 
+ *
  * Automatically discovers did:jwk method when this module is on the classpath.
  */
 class JwkDidMethodProvider : DidMethodProvider {

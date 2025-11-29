@@ -22,9 +22,9 @@ class SchemaValidatorRegistryBranchCoverageTest {
     @Test
     fun `test branch register stores validator`() {
         val validator = JsonSchemaValidator()
-        
+
         SchemaValidatorRegistry.register(validator)
-        
+
         assertEquals(validator, SchemaValidatorRegistry.get(SchemaFormat.JSON_SCHEMA))
     }
 
@@ -32,9 +32,9 @@ class SchemaValidatorRegistryBranchCoverageTest {
     fun `test branch unregister removes validator`() {
         val validator = JsonSchemaValidator()
         SchemaValidatorRegistry.register(validator)
-        
+
         SchemaValidatorRegistry.unregister(SchemaFormat.JSON_SCHEMA)
-        
+
         assertNull(SchemaValidatorRegistry.get(SchemaFormat.JSON_SCHEMA))
     }
 
@@ -42,16 +42,16 @@ class SchemaValidatorRegistryBranchCoverageTest {
     fun `test branch get returns registered validator`() {
         val validator = JsonSchemaValidator()
         SchemaValidatorRegistry.register(validator)
-        
+
         val retrieved = SchemaValidatorRegistry.get(SchemaFormat.JSON_SCHEMA)
-        
+
         assertEquals(validator, retrieved)
     }
 
     @Test
     fun `test branch get returns null`() {
         val retrieved = SchemaValidatorRegistry.get(SchemaFormat.JSON_SCHEMA)
-        
+
         assertNull(retrieved)
     }
 
@@ -59,12 +59,12 @@ class SchemaValidatorRegistryBranchCoverageTest {
     fun `test branch validate with explicit format`() = runBlocking {
         val validator = JsonSchemaValidator()
         SchemaValidatorRegistry.register(validator)
-        
+
         val credential = createTestCredential()
         val schema = createTestSchema()
-        
+
         val result = SchemaValidatorRegistry.validate(credential, schema, SchemaFormat.JSON_SCHEMA)
-        
+
         assertNotNull(result)
     }
 
@@ -72,12 +72,12 @@ class SchemaValidatorRegistryBranchCoverageTest {
     fun `test branch validate with auto-detection`() = runBlocking {
         val validator = JsonSchemaValidator()
         SchemaValidatorRegistry.register(validator)
-        
+
         val credential = createTestCredential()
         val schema = createTestSchema()
-        
+
         val result = SchemaValidatorRegistry.validate(credential, schema)
-        
+
         assertNotNull(result)
     }
 
@@ -85,7 +85,7 @@ class SchemaValidatorRegistryBranchCoverageTest {
     fun `test branch validate throws when no validator`() = runBlocking {
         val credential = createTestCredential()
         val schema = createTestSchema()
-        
+
         assertFailsWith<IllegalArgumentException> {
             SchemaValidatorRegistry.validate(credential, schema, SchemaFormat.JSON_SCHEMA)
         }
@@ -95,15 +95,15 @@ class SchemaValidatorRegistryBranchCoverageTest {
     fun `test branch validateCredentialSubject with explicit format`() = runBlocking {
         val validator = JsonSchemaValidator()
         SchemaValidatorRegistry.register(validator)
-        
+
         val subject = buildJsonObject {
             put("id", "did:key:subject")
             put("name", "John Doe")
         }
         val schema = createTestSchema()
-        
+
         val result = SchemaValidatorRegistry.validateCredentialSubject(subject, schema, SchemaFormat.JSON_SCHEMA)
-        
+
         assertNotNull(result)
     }
 
@@ -111,15 +111,15 @@ class SchemaValidatorRegistryBranchCoverageTest {
     fun `test branch validateCredentialSubject with auto-detection`() = runBlocking {
         val validator = JsonSchemaValidator()
         SchemaValidatorRegistry.register(validator)
-        
+
         val subject = buildJsonObject {
             put("id", "did:key:subject")
             put("name", "John Doe")
         }
         val schema = createTestSchema()
-        
+
         val result = SchemaValidatorRegistry.validateCredentialSubject(subject, schema)
-        
+
         assertNotNull(result)
     }
 
@@ -128,9 +128,9 @@ class SchemaValidatorRegistryBranchCoverageTest {
         val schema = buildJsonObject {
             put("@context", "http://www.w3.org/ns/shacl")
         }
-        
+
         val format = SchemaValidatorRegistry.detectSchemaFormat(schema)
-        
+
         assertEquals(SchemaFormat.SHACL, format)
     }
 
@@ -141,9 +141,9 @@ class SchemaValidatorRegistryBranchCoverageTest {
                 put("sh", "http://www.w3.org/ns/shacl#")
             })
         }
-        
+
         val format = SchemaValidatorRegistry.detectSchemaFormat(schema)
-        
+
         assertEquals(SchemaFormat.SHACL, format)
     }
 
@@ -152,9 +152,9 @@ class SchemaValidatorRegistryBranchCoverageTest {
         val schema = buildJsonObject {
             put("sh:targetClass", "Person")
         }
-        
+
         val format = SchemaValidatorRegistry.detectSchemaFormat(schema)
-        
+
         assertEquals(SchemaFormat.SHACL, format)
     }
 
@@ -163,9 +163,9 @@ class SchemaValidatorRegistryBranchCoverageTest {
         val schema = buildJsonObject {
             put("sh:property", buildJsonArray {})
         }
-        
+
         val format = SchemaValidatorRegistry.detectSchemaFormat(schema)
-        
+
         assertEquals(SchemaFormat.SHACL, format)
     }
 
@@ -174,9 +174,9 @@ class SchemaValidatorRegistryBranchCoverageTest {
         val schema = buildJsonObject {
             put("sh:node", buildJsonObject {})
         }
-        
+
         val format = SchemaValidatorRegistry.detectSchemaFormat(schema)
-        
+
         assertEquals(SchemaFormat.SHACL, format)
     }
 
@@ -185,9 +185,9 @@ class SchemaValidatorRegistryBranchCoverageTest {
         val schema = buildJsonObject {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
         }
-        
+
         val format = SchemaValidatorRegistry.detectSchemaFormat(schema)
-        
+
         assertEquals(SchemaFormat.JSON_SCHEMA, format)
     }
 
@@ -196,9 +196,9 @@ class SchemaValidatorRegistryBranchCoverageTest {
         val schema = buildJsonObject {
             put("type", "object")
         }
-        
+
         val format = SchemaValidatorRegistry.detectSchemaFormat(schema)
-        
+
         assertEquals(SchemaFormat.JSON_SCHEMA, format)
     }
 
@@ -207,18 +207,18 @@ class SchemaValidatorRegistryBranchCoverageTest {
         val schema = buildJsonObject {
             put("properties", buildJsonObject {})
         }
-        
+
         val format = SchemaValidatorRegistry.detectSchemaFormat(schema)
-        
+
         assertEquals(SchemaFormat.JSON_SCHEMA, format)
     }
 
     @Test
     fun `test branch detectSchemaFormat defaults to JSON_SCHEMA`() {
         val schema = buildJsonObject {}
-        
+
         val format = SchemaValidatorRegistry.detectSchemaFormat(schema)
-        
+
         assertEquals(SchemaFormat.JSON_SCHEMA, format)
     }
 
@@ -226,7 +226,7 @@ class SchemaValidatorRegistryBranchCoverageTest {
     fun `test branch hasValidator returns true`() {
         val validator = JsonSchemaValidator()
         SchemaValidatorRegistry.register(validator)
-        
+
         assertTrue(SchemaValidatorRegistry.hasValidator(SchemaFormat.JSON_SCHEMA))
     }
 
@@ -239,9 +239,9 @@ class SchemaValidatorRegistryBranchCoverageTest {
     fun `test branch getRegisteredFormats returns formats`() {
         val validator = JsonSchemaValidator()
         SchemaValidatorRegistry.register(validator)
-        
+
         val formats = SchemaValidatorRegistry.getRegisteredFormats()
-        
+
         assertTrue(formats.contains(SchemaFormat.JSON_SCHEMA))
     }
 
@@ -249,9 +249,9 @@ class SchemaValidatorRegistryBranchCoverageTest {
     fun `test branch clear removes all validators`() {
         val validator = JsonSchemaValidator()
         SchemaValidatorRegistry.register(validator)
-        
+
         SchemaValidatorRegistry.clear()
-        
+
         assertTrue(SchemaValidatorRegistry.getRegisteredFormats().isEmpty())
     }
 

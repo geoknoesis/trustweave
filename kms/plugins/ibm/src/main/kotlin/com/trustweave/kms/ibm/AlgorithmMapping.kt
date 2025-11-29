@@ -14,7 +14,7 @@ import java.util.Base64
 object AlgorithmMapping {
     /**
      * Maps TrustWeave Algorithm to IBM Key Protect key type.
-     * 
+     *
      * @param algorithm TrustWeave algorithm
      * @return IBM Key Protect key type string
      * @throws IllegalArgumentException if algorithm is not supported by IBM Key Protect
@@ -37,10 +37,10 @@ object AlgorithmMapping {
             else -> throw IllegalArgumentException("Algorithm ${algorithm.name} is not supported by IBM Key Protect")
         }
     }
-    
+
     /**
      * Parses IBM Key Protect key type to TrustWeave Algorithm.
-     * 
+     *
      * @param keyType IBM Key Protect key type string
      * @return TrustWeave Algorithm, or null if not recognized
      */
@@ -57,10 +57,10 @@ object AlgorithmMapping {
             else -> null
         }
     }
-    
+
     /**
      * Maps TrustWeave Algorithm to IBM Key Protect signing algorithm.
-     * 
+     *
      * @param algorithm TrustWeave algorithm
      * @return IBM Key Protect signing algorithm string
      */
@@ -75,10 +75,10 @@ object AlgorithmMapping {
             else -> "ECDSA"
         }
     }
-    
+
     /**
      * Converts IBM Key Protect public key to JWK format.
-     * 
+     *
      * @param publicKeyBytes Public key bytes from IBM Key Protect
      * @param algorithm The algorithm type
      * @return JWK map representation
@@ -94,7 +94,7 @@ object AlgorithmMapping {
                         // Extract from DER if needed
                         publicKeyBytes.takeLast(32).toByteArray()
                     }
-                    
+
                     mapOf(
                         "kty" to "OKP",
                         "crv" to "Ed25519",
@@ -112,7 +112,7 @@ object AlgorithmMapping {
                         is Algorithm.P521 -> "P-521"
                         else -> throw IllegalArgumentException("Unsupported EC algorithm")
                     }
-                    
+
                     val affineX = point.affineX
                     val affineY = point.affineY
                     val coordinateLength = when (algorithm) {
@@ -121,7 +121,7 @@ object AlgorithmMapping {
                         is Algorithm.P521 -> 66
                         else -> 32
                     }
-                    
+
                     fun toUnsignedByteArray(bigInt: BigInteger, length: Int): ByteArray {
                         val bytes = bigInt.toByteArray()
                         val result = ByteArray(length)
@@ -133,10 +133,10 @@ object AlgorithmMapping {
                         }
                         return result
                     }
-                    
+
                     val x = toUnsignedByteArray(affineX, coordinateLength)
                     val y = toUnsignedByteArray(affineY, coordinateLength)
-                    
+
                     mapOf(
                         "kty" to "EC",
                         "crv" to curveName,
@@ -149,7 +149,7 @@ object AlgorithmMapping {
                     val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(publicKeyBytes)) as RSAPublicKey
                     val modulus = publicKey.modulus
                     val exponent = publicKey.publicExponent
-                    
+
                     fun toUnsignedByteArray(bigInt: BigInteger): ByteArray {
                         val signed = bigInt.toByteArray()
                         if (signed.isNotEmpty() && signed[0] == 0.toByte()) {
@@ -157,7 +157,7 @@ object AlgorithmMapping {
                         }
                         return signed
                     }
-                    
+
                     mapOf(
                         "kty" to "RSA",
                         "n" to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(modulus)),
@@ -170,10 +170,10 @@ object AlgorithmMapping {
             throw IllegalArgumentException("Failed to convert IBM Key Protect public key to JWK: ${e.message}", e)
         }
     }
-    
+
     /**
      * Resolves a key identifier to IBM Key Protect key ID or CRN.
-     * 
+     *
      * @param keyId Key identifier (can be key ID, CRN, or alias)
      * @return Resolved key identifier for IBM API
      */

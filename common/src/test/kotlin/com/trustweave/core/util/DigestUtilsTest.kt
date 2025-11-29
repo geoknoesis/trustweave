@@ -96,7 +96,7 @@ class DigestUtilsTest {
         // Should be base58 encoded (only contains base58 characters)
         val base58Chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
         val encodedPart = digest.substring(1)
-        assertTrue(encodedPart.all { it in base58Chars }, 
+        assertTrue(encodedPart.all { it in base58Chars },
             "Encoded part should only contain base58 characters")
     }
 

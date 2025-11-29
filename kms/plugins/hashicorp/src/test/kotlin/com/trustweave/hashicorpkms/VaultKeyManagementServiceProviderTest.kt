@@ -26,7 +26,7 @@ class VaultKeyManagementServiceProviderTest {
     @Test
     fun `test provider create with options`() {
         val provider = VaultKeyManagementServiceProvider()
-        
+
         // Note: This will fail without actual Vault instance, but tests the creation logic
         assertThrows<IllegalArgumentException> {
             provider.create(emptyMap())
@@ -36,12 +36,12 @@ class VaultKeyManagementServiceProviderTest {
     @Test
     fun `test provider create with address`() {
         val provider = VaultKeyManagementServiceProvider()
-        
+
         val kms = provider.create(mapOf(
             "address" to "http://localhost:8200",
             "token" to "test-token"
         ))
-        
+
         assertNotNull(kms)
         assertTrue(kms is VaultKeyManagementService)
     }
@@ -49,7 +49,7 @@ class VaultKeyManagementServiceProviderTest {
     @Test
     fun `test provider supports algorithm by name`() {
         val provider = VaultKeyManagementServiceProvider()
-        
+
         assertTrue(provider.supportsAlgorithm("Ed25519"))
         assertTrue(provider.supportsAlgorithm("ed25519"))
         assertTrue(provider.supportsAlgorithm("secp256k1"))

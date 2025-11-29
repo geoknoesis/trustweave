@@ -10,12 +10,12 @@ layout: null
     <title>TrustWeave - Build Decentralized Trust Domains Without Vendor Lock-In | Open Source</title>
     <meta name="description" content="Build decentralized trust domains without vendor lock-in. Switch blockchains, DID methods, or KMS providers with configuration, not code rewrites. Free & open source.">
     <meta name="keywords" content="decentralized identity, verifiable credentials, DID, blockchain identity, Kotlin SDK, open source identity, chain-agnostic, KMS-agnostic">
-    
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="TrustWeave - Build Decentralized Trust Domains Without Vendor Lock-In">
     <meta property="og:description" content="Switch technologies anytime. No code rewrites. Never locked in. The only SDK that gives you true freedom.">
-    
+
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="TrustWeave - Build Decentralized Trust Domains Without Vendor Lock-In">
@@ -345,7 +345,7 @@ layout: null
         <div class="hero-container">
             <h1>Build Decentralized Trust Domains Without Vendor Lock-In</h1>
             <p>Write once. Switch blockchains, DID methods, or KMS providers with configuration—not code rewrites. Never locked in. Always future-proof.</p>
-            
+
             <!-- Quality Indicators -->
             <div style="display: flex; justify-content: center; gap: 2.5rem; margin: 2.5rem 0; flex-wrap: wrap; font-size: 1.1rem; font-weight: 500;">
                 <span style="display: flex; align-items: center; gap: 0.75rem; color: var(--text);">
@@ -361,7 +361,7 @@ layout: null
                     <span style="color: var(--accent); font-size: 1.3rem;">✅</span> 25+ Real-World Examples
                 </span>
             </div>
-            
+
             <div class="hero-buttons">
                 <a href="{{ site.baseurl }}/getting-started/quick-start/" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
                     🚀 Start Building Free (Open Source)
@@ -370,7 +370,7 @@ layout: null
                     📚 Documentation
                 </a>
             </div>
-            
+
             <p style="margin-top: 1.5rem; font-size: 0.95rem; color: var(--text-light);">
                 💼 Need managed infrastructure? <a href="#waitlist" style="color: var(--primary); text-decoration: underline;">Join SaaS waitlist →</a>
             </p>
@@ -412,7 +412,7 @@ layout: null
                     <p style="font-size: 1.125rem; color: var(--text-light); margin-bottom: 3rem; max-width: 800px; margin-left: auto; margin-right: auto;">
                         TrustWeave is the <strong>only SDK</strong> that gives you true freedom. Your application code never changes. Only your configuration does.
                     </p>
-                    
+
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-top: 3rem;">
                         <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
                             <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">⛓️</div>
@@ -518,12 +518,12 @@ layout: null
                 <a href="{{ site.baseurl }}/getting-started/README/" class="btn btn-secondary">View Documentation</a>
             </div>
             <p class="cta-note">Get started in 5 minutes with our quick start guide</p>
-            
+
             <form class="waitlist-form" id="waitlistForm">
-                <input 
-                    type="email" 
-                    id="emailInput" 
-                    placeholder="Enter your email for SaaS waitlist" 
+                <input
+                    type="email"
+                    id="emailInput"
+                    placeholder="Enter your email for SaaS waitlist"
                     required
                     aria-label="Email address"
                 >
@@ -545,9 +545,9 @@ layout: null
 
         waitlistForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const email = emailInput.value.trim();
-            
+
             if (!email) {
                 return;
             }
@@ -564,7 +564,7 @@ layout: null
                     },
                     body: JSON.stringify({ email: email })
                 });
-                
+
                 if (response.ok) {
                     successMessage.classList.add('show');
                     emailInput.value = '';
@@ -579,7 +579,7 @@ layout: null
             // Demo: Show success message
             successMessage.classList.add('show');
             emailInput.value = '';
-            
+
             // Scroll to success message
             successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         });

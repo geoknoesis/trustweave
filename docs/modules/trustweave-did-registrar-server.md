@@ -42,27 +42,27 @@ graph TB
         InMemoryStorage[InMemoryJobStorage]
         DatabaseStorage[DatabaseJobStorage]
     end
-    
+
     subgraph "Database"
         DB[(PostgreSQL/MySQL/H2)]
     end
-    
+
     subgraph "Ktor Server"
         KtorApp[Ktor Application]
         HTTP[HTTP Endpoints]
     end
-    
+
     subgraph "Registrar Backend"
         DidRegistrar[DidRegistrar Implementation]
         KmsRegistrar[KmsBasedRegistrar]
         DefaultUR[DefaultUniversalRegistrar]
     end
-    
+
     subgraph "Clients"
         HTTPClient[HTTP Client]
         RegistrarClient[Registrar Client]
     end
-    
+
     Server --> KtorApp
     KtorApp --> Routes
     Routes --> Storage
@@ -72,10 +72,10 @@ graph TB
     Routes --> DidRegistrar
     DidRegistrar --> KmsRegistrar
     DidRegistrar --> DefaultUR
-    
+
     HTTPClient --> HTTP
     RegistrarClient --> HTTP
-    
+
     style Server fill:#e1f5ff
     style Routes fill:#fff4e1
     style Storage fill:#e8f5e9
@@ -381,17 +381,17 @@ sequenceDiagram
     participant Routes as DidRegistrarRoutes
     participant Registrar as DidRegistrar
     participant Storage as JobStorage
-    
+
     Client->>Server: POST /1.0/operations
     Server->>Routes: Route request
     Routes->>Routes: Parse request body
     Routes->>Registrar: createDid/updateDid/deactivateDid
     Registrar-->>Routes: DidRegistrationResponse
-    
+
     alt Long-Running Operation
         Routes->>Storage: store(jobId, response)
         Routes-->>Client: 200 OK (with jobId)
-        
+
         Client->>Server: GET /1.0/operations/{jobId}
         Server->>Routes: Route request
         Routes->>Storage: get(jobId)
@@ -415,13 +415,13 @@ fun main() {
     // Create registrar backend
     val kms = InMemoryKeyManagementService()
     val registrar = KmsBasedRegistrar(kms)
-    
+
     // Create and start server
     val server = DidRegistrarServer(
         registrar = registrar,
         port = 8080
     )
-    
+
     server.start(wait = true)
 }
 ```
@@ -479,11 +479,11 @@ class RedisJobStorage : JobStorage {
     override fun store(jobId: String, response: DidRegistrationResponse) {
         // Store in Redis
     }
-    
+
     override fun get(jobId: String): DidRegistrationResponse? {
         // Retrieve from Redis
     }
-    
+
     // ... other methods
 }
 
@@ -551,22 +551,22 @@ graph TD
         D --> D3[DeactivateDidRequest.kt]
         D --> D4[ErrorResponse.kt]
         A --> D[JobStorage.kt]
-        
+
         D --> D1[JobStorage Interface]
         D --> D2[InMemoryJobStorage]
     end
-    
+
     subgraph "Dependencies"
         E[Ktor Server]
         F[DidRegistrar]
         G[Registration Models]
     end
-    
+
     B --> E
     C --> F
     C --> G
     C --> D
-    
+
     style A fill:#e1f5ff
     style B fill:#fff4e1
     style C fill:#e8f5e9
@@ -604,7 +604,7 @@ fun Application.module() {
             }
         }
     }
-    
+
     routing {
         authenticate {
             configureDidRegistrarRoutes(registrar, jobStorage)

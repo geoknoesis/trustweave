@@ -16,7 +16,7 @@ import java.util.Base64
 object AlgorithmMapping {
     /**
      * Maps TrustWeave Algorithm to AWS KMS KeySpec.
-     * 
+     *
      * @param algorithm TrustWeave algorithm
      * @return AWS KMS KeySpec
      * @throws IllegalArgumentException if algorithm is not supported by AWS KMS
@@ -55,10 +55,10 @@ object AlgorithmMapping {
             else -> throw IllegalArgumentException("Algorithm ${algorithm.name} is not supported by AWS KMS")
         }
     }
-    
+
     /**
      * Maps TrustWeave Algorithm to AWS KMS SigningAlgorithmSpec.
-     * 
+     *
      * @param algorithm TrustWeave algorithm
      * @return AWS KMS SigningAlgorithmSpec
      * @throws IllegalArgumentException if algorithm is not supported by AWS KMS
@@ -79,10 +79,10 @@ object AlgorithmMapping {
             else -> throw IllegalArgumentException("Algorithm ${algorithm.name} is not supported by AWS KMS")
         }
     }
-    
+
     /**
      * Converts AWS KMS public key (DER-encoded) to JWK format.
-     * 
+     *
      * @param publicKeyBytes DER-encoded public key from AWS KMS
      * @param algorithm The algorithm type
      * @return JWK map representation
@@ -114,7 +114,7 @@ object AlgorithmMapping {
                     val keyFactory = KeyFactory.getInstance("EC")
                     val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(publicKeyBytes)) as ECPublicKey
                     val point = publicKey.w
-                    
+
                     val curveName = when (algorithm) {
                         is Algorithm.Secp256k1 -> "secp256k1"
                         is Algorithm.P256 -> "P-256"
@@ -122,7 +122,7 @@ object AlgorithmMapping {
                         is Algorithm.P521 -> "P-521"
                         else -> throw IllegalArgumentException("Unsupported EC algorithm")
                     }
-                    
+
                     // Extract x and y coordinates
                     val affineX = point.affineX
                     val affineY = point.affineY
@@ -132,7 +132,7 @@ object AlgorithmMapping {
                         is Algorithm.P521 -> 66
                         else -> 32
                     }
-                    
+
                     // Convert BigInteger to byte array (unsigned, big-endian)
                     fun toUnsignedByteArray(bigInt: BigInteger, length: Int): ByteArray {
                         val bytes = bigInt.toByteArray()
@@ -146,10 +146,10 @@ object AlgorithmMapping {
                         }
                         return result
                     }
-                    
+
                     val x = toUnsignedByteArray(affineX, coordinateLength)
                     val y = toUnsignedByteArray(affineY, coordinateLength)
-                    
+
                     mapOf(
                         "kty" to "EC",
                         "crv" to curveName,
@@ -162,7 +162,7 @@ object AlgorithmMapping {
                     val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(publicKeyBytes)) as RSAPublicKey
                     val modulus = publicKey.modulus
                     val exponent = publicKey.publicExponent
-                    
+
                     // Convert BigInteger to unsigned byte array
                     fun toUnsignedByteArray(bigInt: BigInteger): ByteArray {
                         val signed = bigInt.toByteArray()
@@ -171,7 +171,7 @@ object AlgorithmMapping {
                         }
                         return signed
                     }
-                    
+
                     mapOf(
                         "kty" to "RSA",
                         "n" to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(modulus)),
@@ -184,10 +184,10 @@ object AlgorithmMapping {
             throw IllegalArgumentException("Failed to convert AWS KMS public key to JWK: ${e.message}", e)
         }
     }
-    
+
     /**
      * Resolves a key identifier (ID, ARN, or alias) to a format AWS KMS accepts.
-     * 
+     *
      * @param keyId Key ID, ARN, or alias
      * @return Normalized key identifier
      */

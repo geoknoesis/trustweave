@@ -10,7 +10,7 @@ class AzureKeyManagementServiceProviderTest {
     @Test
     fun `test AzureKeyManagementServiceProvider`() {
         val provider = AzureKeyManagementServiceProvider()
-        
+
         assertEquals("azure", provider.name)
         assertEquals(AzureKeyManagementService.SUPPORTED_ALGORITHMS, provider.supportedAlgorithms)
         assertTrue(provider.supportsAlgorithm(Algorithm.P256))
@@ -22,11 +22,11 @@ class AzureKeyManagementServiceProviderTest {
     @Test
     fun `test AzureKeyManagementServiceProvider create with options`() {
         val provider = AzureKeyManagementServiceProvider()
-        
+
         val kms = provider.create(mapOf(
             "vaultUrl" to "https://testvault.vault.azure.net"
         ))
-        
+
         assertNotNull(kms)
         assertTrue(kms is AzureKeyManagementService)
     }
@@ -34,7 +34,7 @@ class AzureKeyManagementServiceProviderTest {
     @Test
     fun `test AzureKeyManagementServiceProvider create without vaultUrl throws exception`() {
         val provider = AzureKeyManagementServiceProvider()
-        
+
         assertThrows<IllegalArgumentException> {
             provider.create(emptyMap())
         }
@@ -43,14 +43,14 @@ class AzureKeyManagementServiceProviderTest {
     @Test
     fun `test AzureKeyManagementServiceProvider create with service principal`() {
         val provider = AzureKeyManagementServiceProvider()
-        
+
         val kms = provider.create(mapOf(
             "vaultUrl" to "https://testvault.vault.azure.net",
             "clientId" to "test-client-id",
             "clientSecret" to "test-client-secret",
             "tenantId" to "test-tenant-id"
         ))
-        
+
         assertNotNull(kms)
         assertTrue(kms is AzureKeyManagementService)
     }

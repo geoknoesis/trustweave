@@ -6,17 +6,17 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Pluggable proof generator interface.
- * 
+ *
  * Implementations generate cryptographic proofs for verifiable credentials.
  * Supports multiple proof types: Ed25519, JWT, BBS+, etc.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val generator = Ed25519ProofGenerator { data, keyId ->
  *     kms.sign(keyId, data)
  * }
  * ProofGeneratorRegistry.register(generator)
- * 
+ *
  * val proof = generator.generateProof(credential, keyId, options)
  * ```
  */
@@ -25,10 +25,10 @@ interface ProofGenerator {
      * Proof type identifier (e.g., "Ed25519Signature2020", "JsonWebSignature2020").
      */
     val proofType: String
-    
+
     /**
      * Generate a proof for a credential.
-     * 
+     *
      * @param credential Credential to sign (without proof)
      * @param keyId Key ID for signing
      * @param options Proof generation options

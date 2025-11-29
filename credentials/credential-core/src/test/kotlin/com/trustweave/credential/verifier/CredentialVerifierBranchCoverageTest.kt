@@ -10,13 +10,12 @@ import com.trustweave.credential.schema.JsonSchemaValidator
 import com.trustweave.credential.schema.SchemaRegistry
 import com.trustweave.credential.schema.SchemaValidatorRegistry
 import com.trustweave.credential.SchemaFormat
-import com.trustweave.credential.did.CredentialDidResolver
-import com.trustweave.credential.did.CredentialDidResolution
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofOptions
 import com.trustweave.did.DidDocument
+import com.trustweave.did.VerificationMethod
+import com.trustweave.did.resolver.DidResolver
 import com.trustweave.did.resolver.DidResolutionResult
-import com.trustweave.did.VerificationMethodRef
 import com.trustweave.kms.Algorithm
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.util.booleanDidResolver
@@ -36,7 +35,7 @@ class CredentialVerifierBranchCoverageTest {
 
     private lateinit var verifier: CredentialVerifier
     private lateinit var kms: InMemoryKeyManagementService
-    private lateinit var keyId: String
+    private var keyId: com.trustweave.core.types.KeyId? = null
     private lateinit var publicKeyJwk: Map<String, Any?>
     private lateinit var proofGenerator: Ed25519ProofGenerator
     private val issuerDid = "did:key:issuer123"
@@ -46,36 +45,37 @@ class CredentialVerifierBranchCoverageTest {
         SchemaRegistry.clear()
         SchemaValidatorRegistry.clear()
         SchemaValidatorRegistry.register(JsonSchemaValidator())
-        
+
         // Create a real KMS and generate a real Ed25519 key
         kms = InMemoryKeyManagementService()
         val keyHandle = kms.generateKey(Algorithm.Ed25519, mapOf("keyId" to "key-1"))
         keyId = keyHandle.id
         publicKeyJwk = keyHandle.publicKeyJwk ?: emptyMap()
-        
+
         // Create proof generator that uses the KMS to sign
+        val keyIdValue = keyId!!
         proofGenerator = Ed25519ProofGenerator(
-            signer = { data, _ -> kms.sign(keyId, data) },
-            getPublicKeyId = { keyId }
+            signer = { data, _ -> kms.sign(keyIdValue, data) },
+            getPublicKeyId = { keyIdValue.value }
         )
-        
+
         // Create DID resolver with real public key
         val didResolver = createTestDidResolver()
-        verifier = CredentialVerifier(didResolver)
+        verifier = CredentialVerifier(defaultDidResolver = didResolver)
     }
-    
+
     /**
      * Creates a test DID resolver that returns a DID document with verification methods.
      * Uses the real public key from the generated key.
      */
-    private fun createTestDidResolver(): CredentialDidResolver {
+    private fun createTestDidResolver(): DidResolver {
         return resultDidResolver { did ->
             if (did == issuerDid || did == "did:key:issuer123") {
-                DidResolutionResult(
+                DidResolutionResult.Success(
                     document = DidDocument(
                         id = did,
                         verificationMethod = listOf(
-                            VerificationMethodRef(
+                            VerificationMethod(
                                 id = "$did#key-1",
                                 type = "Ed25519VerificationKey2020",
                                 controller = did,
@@ -101,12 +101,12 @@ class CredentialVerifierBranchCoverageTest {
     @Test
     fun `test branch proof is null`() = runBlocking {
         val credential = createTestCredentialWithoutProof()
-        
+
         val result = verifier.verify(credential)
-        
+
         assertFalse(result.valid)
         assertFalse(result.proofValid)
-        assertTrue(result.errors.any { it.contains("no proof") })
+        assertTrue(result.allErrors.any { it.contains("no proof") })
     }
 
     @Test
@@ -119,9 +119,9 @@ class CredentialVerifierBranchCoverageTest {
                 proofPurpose = "assertionMethod"
             )
         )
-        
+
         val result = verifier.verify(credential)
-        
+
         assertFalse(result.valid)
         assertFalse(result.proofValid)
     }
@@ -136,9 +136,9 @@ class CredentialVerifierBranchCoverageTest {
                 proofPurpose = "assertionMethod"
             )
         )
-        
+
         val result = verifier.verify(credential)
-        
+
         assertFalse(result.valid)
         assertFalse(result.proofValid)
     }
@@ -155,9 +155,9 @@ class CredentialVerifierBranchCoverageTest {
                 jws = null
             )
         )
-        
+
         val result = verifier.verify(credential)
-        
+
         assertFalse(result.valid)
         assertFalse(result.proofValid)
     }
@@ -166,9 +166,9 @@ class CredentialVerifierBranchCoverageTest {
     fun `test branch proof exists with proofValue`() = runBlocking {
         // Create credential with properly signed proof
         val credential = createTestCredential()
-        
+
         val result = verifier.verify(credential)
-        
+
         assertTrue(result.proofValid)
     }
 
@@ -179,7 +179,7 @@ class CredentialVerifierBranchCoverageTest {
         // The verifier checks for proofValue OR jws, so a proof with only jws (no proofValue)
         // would fail verification since we don't have JWT support yet
         val credential = createTestCredentialWithoutProof()
-        
+
         val credentialWithJws = credential.copy(
             proof = Proof(
                 type = "Ed25519Signature2020",
@@ -190,9 +190,9 @@ class CredentialVerifierBranchCoverageTest {
                 jws = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9..."
             )
         )
-        
+
         val result = verifier.verify(credentialWithJws)
-        
+
         // JWS verification not implemented yet, so this will fail
         // But the test structure is valid - it has jws field
         assertFalse(result.proofValid) // JWS not implemented, so verification fails
@@ -203,9 +203,9 @@ class CredentialVerifierBranchCoverageTest {
     @Test
     fun `test branch DID resolution succeeds`() = runBlocking {
         val credential = createTestCredential()
-        
+
         val result = verifier.verify(credential)
-        
+
         assertTrue(result.issuerValid)
     }
 
@@ -215,9 +215,9 @@ class CredentialVerifierBranchCoverageTest {
             booleanDidResolver { false }
         )
         val credential = createTestCredential()
-        
+
         val result = verifierWithFailedDid.verify(credential)
-        
+
         assertFalse(result.issuerValid)
         assertFalse(result.valid)
     }
@@ -225,15 +225,15 @@ class CredentialVerifierBranchCoverageTest {
     @Test
     fun `test branch DID resolution throws exception`() = runBlocking {
         val verifierWithThrowingDid = CredentialVerifier(
-            CredentialDidResolver { throw RuntimeException("DID resolution failed") }
+            defaultDidResolver = DidResolver { throw RuntimeException("DID resolution failed") }
         )
         val credential = createTestCredential()
-        
+
         val result = verifierWithThrowingDid.verify(credential)
-        
+
         assertFalse(result.issuerValid)
         assertFalse(result.valid)
-        assertTrue(result.errors.any { it.contains("Failed to resolve issuer DID") })
+        assertTrue(result.allErrors.any { it.contains("Failed to resolve issuer DID") })
     }
 
     // ========== Expiration Check Branches ==========
@@ -243,12 +243,12 @@ class CredentialVerifierBranchCoverageTest {
         val expiredCredential = createTestCredential(
             expirationDate = java.time.Instant.now().minusSeconds(86400).toString()
         )
-        
+
         val result = verifier.verify(
             expiredCredential,
             CredentialVerificationOptions(checkExpiration = false)
         )
-        
+
         assertTrue(result.notExpired) // Should be true when check disabled
     }
 
@@ -257,15 +257,15 @@ class CredentialVerifierBranchCoverageTest {
         val expiredCredential = createTestCredential(
             expirationDate = java.time.Instant.now().minusSeconds(86400).toString()
         )
-        
+
         val result = verifier.verify(
             expiredCredential,
             CredentialVerificationOptions(checkExpiration = true)
         )
-        
+
         assertFalse(result.notExpired)
         assertFalse(result.valid)
-        assertTrue(result.errors.any { it.contains("expired") })
+        assertTrue(result.allErrors.any { it.contains("expired") })
     }
 
     @Test
@@ -273,38 +273,38 @@ class CredentialVerifierBranchCoverageTest {
         val validCredential = createTestCredential(
             expirationDate = java.time.Instant.now().plusSeconds(86400).toString()
         )
-        
+
         val result = verifier.verify(
             validCredential,
             CredentialVerificationOptions(checkExpiration = true)
         )
-        
+
         assertTrue(result.notExpired)
     }
 
     @Test
     fun `test branch expiration check enabled but no expiration date`() = runBlocking {
         val credential = createTestCredential(expirationDate = null)
-        
+
         val result = verifier.verify(
             credential,
             CredentialVerificationOptions(checkExpiration = true)
         )
-        
+
         assertTrue(result.notExpired) // No expiration date means not expired
     }
 
     @Test
     fun `test branch expiration date parse fails`() = runBlocking {
         val credential = createTestCredential(expirationDate = "invalid-date")
-        
+
         val result = verifier.verify(
             credential,
             CredentialVerificationOptions(checkExpiration = true)
         )
-        
+
         assertTrue(result.notExpired) // Invalid format defaults to not expired
-        assertTrue(result.warnings.any { it.contains("Invalid expiration date format") })
+        assertTrue(result.allWarnings.any { it.contains("Invalid expiration date format") })
     }
 
     // ========== Revocation Check Branches ==========
@@ -317,24 +317,24 @@ class CredentialVerifierBranchCoverageTest {
                 type = "StatusList2021Entry"
             )
         )
-        
+
         val result = verifier.verify(
             credential,
             CredentialVerificationOptions(checkRevocation = false)
         )
-        
+
         assertTrue(result.notRevoked)
     }
 
     @Test
     fun `test branch revocation check enabled but no credential status`() = runBlocking {
         val credential = createTestCredential(credentialStatus = null)
-        
+
         val result = verifier.verify(
             credential,
             CredentialVerificationOptions(checkRevocation = true)
         )
-        
+
         assertTrue(result.notRevoked)
     }
 
@@ -346,13 +346,13 @@ class CredentialVerifierBranchCoverageTest {
                 type = "StatusList2021Entry"
             )
         )
-        
+
         val result = verifier.verify(
             credential,
             CredentialVerificationOptions(checkRevocation = true)
         )
-        
-        assertTrue(result.warnings.any { it.contains("Revocation checking requested but no StatusListManager provided") })
+
+        assertTrue(result.allWarnings.any { it.contains("Revocation checking requested but no StatusListManager provided") })
         assertTrue(result.notRevoked) // Currently defaults to true
     }
 
@@ -366,24 +366,24 @@ class CredentialVerifierBranchCoverageTest {
             schemaFormat = SchemaFormat.JSON_SCHEMA
         )
         val credential = createTestCredential(schema = schema)
-        
+
         val result = verifier.verify(
             credential,
             CredentialVerificationOptions(validateSchema = false)
         )
-        
+
         assertTrue(result.schemaValid) // Should default to true when disabled
     }
 
     @Test
     fun `test branch schema validation enabled but no schema`() = runBlocking {
         val credential = createTestCredential(schema = null)
-        
+
         val result = verifier.verify(
             credential,
             CredentialVerificationOptions(validateSchema = true)
         )
-        
+
         assertTrue(result.schemaValid) // No schema means valid
     }
 
@@ -403,14 +403,14 @@ class CredentialVerifierBranchCoverageTest {
             })
         }
         SchemaRegistry.registerSchema(schema, schemaDefinition)
-        
+
         val credential = createTestCredential(schema = schema)
-        
+
         val result = verifier.verify(
             credential,
             CredentialVerificationOptions(validateSchema = true)
         )
-        
+
         assertTrue(result.schemaValid)
     }
 
@@ -423,12 +423,12 @@ class CredentialVerifierBranchCoverageTest {
             schemaFormat = SchemaFormat.JSON_SCHEMA
         )
         val credential = createTestCredential(schema = schema)
-        
+
         val result = verifier.verify(
             credential,
             CredentialVerificationOptions(validateSchema = true)
         )
-        
+
         // May add warning or handle gracefully
         assertNotNull(result)
     }
@@ -448,24 +448,24 @@ class CredentialVerifierBranchCoverageTest {
                 )
             )
         )
-        
+
         val result = verifier.verify(
             credential,
             CredentialVerificationOptions(verifyBlockchainAnchor = false)
         )
-        
+
         assertTrue(result.blockchainAnchorValid)
     }
 
     @Test
     fun `test branch blockchain anchor verification enabled but no evidence`() = runBlocking {
         val credential = createTestCredential(evidence = null)
-        
+
         val result = verifier.verify(
             credential,
             CredentialVerificationOptions(verifyBlockchainAnchor = true)
         )
-        
+
         assertTrue(result.blockchainAnchorValid)
     }
 
@@ -483,12 +483,12 @@ class CredentialVerifierBranchCoverageTest {
                 )
             )
         )
-        
+
         val result = verifier.verify(
             credential,
             CredentialVerificationOptions(verifyBlockchainAnchor = true)
         )
-        
+
         // Blockchain anchor verification actually happens - it checks evidence structure
         assertTrue(result.blockchainAnchorValid) // Should be true if evidence structure is valid
     }
@@ -498,7 +498,7 @@ class CredentialVerifierBranchCoverageTest {
     @Test
     fun `test branch all checks pass`() = runBlocking {
         val credential = createTestCredential()
-        
+
         val result = verifier.verify(
             credential,
             CredentialVerificationOptions(
@@ -508,7 +508,7 @@ class CredentialVerifierBranchCoverageTest {
                 verifyBlockchainAnchor = true
             )
         )
-        
+
         assertTrue(result.valid)
         assertTrue(result.proofValid)
         assertTrue(result.issuerValid)
@@ -524,17 +524,17 @@ class CredentialVerifierBranchCoverageTest {
             expirationDate = java.time.Instant.now().minusSeconds(86400).toString(),
             issuerDid = "did:key:wrong"
         )
-        
+
         val result = verifier.verify(
             credential,
             CredentialVerificationOptions(checkExpiration = true)
         )
-        
+
         assertFalse(result.valid)
         assertFalse(result.proofValid)
         assertFalse(result.issuerValid)
         assertFalse(result.notExpired)
-        assertTrue(result.errors.size >= 2)
+        assertTrue(result.allErrors.size >= 2)
     }
 
     private suspend fun createTestCredential(
@@ -565,21 +565,21 @@ class CredentialVerifierBranchCoverageTest {
             credentialStatus = credentialStatus,
             evidence = evidence
         )
-        
+
         // Generate a properly signed proof if not provided
         val finalProof = proof ?: proofGenerator.generateProof(
             credential = credentialWithoutProof,
-            keyId = keyId,
+            keyId = keyId!!.value,
             options = ProofOptions(
                 proofPurpose = "assertionMethod",
                 verificationMethod = "$issuerDid#key-1"
             )
         )
-        
+
         // Return credential with proof
         return credentialWithoutProof.copy(proof = finalProof)
     }
-    
+
     /**
      * Creates a test credential without a proof (for testing validation without proof).
      */

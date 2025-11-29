@@ -18,17 +18,17 @@ graph TB
     App[Application Code]
     Registry[CredentialExchangeProtocolRegistry]
     Protocol[CredentialExchangeProtocol Interface]
-    
+
     DIDComm[DIDComm Protocol]
     OIDC4VCI[OIDC4VCI Protocol]
     CHAPI[CHAPI Protocol]
-    
+
     App --> Registry
     Registry --> Protocol
     Protocol --> DIDComm
     Protocol --> OIDC4VCI
     Protocol --> CHAPI
-    
+
     style Registry fill:#e1f5ff
     style Protocol fill:#fff4e1
     style DIDComm fill:#e8f5e9
@@ -70,7 +70,7 @@ The main interface that all protocols implement:
 interface CredentialExchangeProtocol {
     val protocolName: String
     val supportedOperations: Set<ExchangeOperation>
-    
+
     suspend fun offerCredential(request: CredentialOfferRequest): CredentialOfferResponse
     suspend fun requestCredential(request: CredentialRequestRequest): CredentialRequestResponse
     suspend fun issueCredential(request: CredentialIssueRequest): CredentialIssueResponse
@@ -143,20 +143,20 @@ sequenceDiagram
     participant Registry
     participant Protocol
     participant Holder
-    
+
     Issuer->>Registry: offerCredential("didcomm", request)
     Registry->>Protocol: offerCredential(request)
     Protocol->>Protocol: Create DIDComm message
     Protocol->>Protocol: Encrypt & Sign
     Protocol-->>Registry: CredentialOfferResponse
     Registry-->>Issuer: Offer created (offerId)
-    
+
     Holder->>Registry: requestCredential("didcomm", request)
     Registry->>Protocol: requestCredential(request)
     Protocol->>Protocol: Create request message
     Protocol-->>Registry: CredentialRequestResponse
     Registry-->>Holder: Request created (requestId)
-    
+
     Issuer->>Registry: issueCredential("didcomm", request)
     Registry->>Protocol: issueCredential(request)
     Protocol->>Protocol: Create credential message
@@ -173,13 +173,13 @@ sequenceDiagram
     participant Registry
     participant Protocol
     participant Prover
-    
+
     Verifier->>Registry: requestProof("didcomm", request)
     Registry->>Protocol: requestProof(request)
     Protocol->>Protocol: Create proof request
     Protocol-->>Registry: ProofRequestResponse
     Registry-->>Verifier: Request created (requestId)
-    
+
     Prover->>Registry: presentProof("didcomm", request)
     Registry->>Protocol: presentProof(request)
     Protocol->>Protocol: Create presentation

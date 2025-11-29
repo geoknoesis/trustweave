@@ -26,15 +26,15 @@ class SchemaValidationModelsTest {
                 code = "INVALID_FORMAT"
             )
         )
-        
+
         val warnings = listOf("Field 'age' is deprecated")
-        
+
         val result = SchemaValidationResult(
             valid = false,
             errors = errors,
             warnings = warnings
         )
-        
+
         assertFalse(result.valid)
         assertEquals(2, result.errors.size)
         assertEquals(1, result.warnings.size)
@@ -43,7 +43,7 @@ class SchemaValidationModelsTest {
     @Test
     fun `test SchemaValidationResult with defaults`() {
         val result = SchemaValidationResult(valid = true)
-        
+
         assertTrue(result.valid)
         assertTrue(result.errors.isEmpty())
         assertTrue(result.warnings.isEmpty())
@@ -56,7 +56,7 @@ class SchemaValidationModelsTest {
             message = "Name is required",
             code = "REQUIRED_FIELD"
         )
-        
+
         assertEquals("$.credentialSubject.name", error.path)
         assertEquals("Name is required", error.message)
         assertEquals("REQUIRED_FIELD", error.code)
@@ -68,7 +68,7 @@ class SchemaValidationModelsTest {
             path = "$.credentialSubject.name",
             message = "Name is required"
         )
-        
+
         assertEquals("$.credentialSubject.name", error.path)
         assertEquals("Name is required", error.message)
         assertNull(error.code)
@@ -80,7 +80,7 @@ class SchemaValidationModelsTest {
             success = true,
             schemaId = "https://example.com/schemas/person"
         )
-        
+
         assertTrue(result.success)
         assertEquals("https://example.com/schemas/person", result.schemaId)
         assertNull(result.error)
@@ -92,7 +92,7 @@ class SchemaValidationModelsTest {
             success = false,
             error = "Schema validation failed"
         )
-        
+
         assertFalse(result.success)
         assertNull(result.schemaId)
         assertEquals("Schema validation failed", result.error)
@@ -101,7 +101,7 @@ class SchemaValidationModelsTest {
     @Test
     fun `test SchemaRegistrationResult with defaults`() {
         val result = SchemaRegistrationResult(success = false)
-        
+
         assertFalse(result.success)
         assertNull(result.schemaId)
         assertNull(result.error)

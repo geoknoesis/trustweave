@@ -2,8 +2,8 @@
 
 Get started with credential exchange protocols in 5 minutes! This guide will walk you through creating your first credential exchange using the protocol abstraction layer.
 
-> **Version:** 1.0.0-SNAPSHOT  
-> **Kotlin:** 2.2.0+ | **Java:** 21+  
+> **Version:** 1.0.0-SNAPSHOT
+> **Kotlin:** 2.2.0+ | **Java:** 21+
 > **Prerequisites:** See [Installation](../../getting-started/installation.md)
 
 ## Complete Runnable Example
@@ -32,18 +32,18 @@ fun main() = runBlocking {
             // Mock DID resolution - replace with real resolver in production
             DidDocument(id = did, verificationMethod = emptyList())
         }
-        
+
         // Step 2: Create and register protocol
         val registry = CredentialExchangeProtocolRegistry()
         val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
         registry.register(DidCommExchangeProtocol(didCommService))
-        
+
         println("✅ Protocol registered: ${registry.getAllProtocolNames()}")
-        
+
         // Step 3: Create credential offer
         val issuerDid = "did:key:issuer"
         val holderDid = "did:key:holder"
-        
+
         val offer = registry.offerCredential(
             protocolName = "didcomm",
             request = CredentialOfferRequest(
@@ -61,11 +61,11 @@ fun main() = runBlocking {
                 )
             )
         )
-        
+
         println("✅ Offer created:")
         println("   Offer ID: ${offer.offerId}")
         println("   Protocol: ${offer.protocolName}")
-        
+
         // Step 4: Request credential
         val request = registry.requestCredential(
             protocolName = "didcomm",
@@ -79,11 +79,11 @@ fun main() = runBlocking {
                 )
             )
         )
-        
+
         println("✅ Request created:")
         println("   Request ID: ${request.requestId}")
         println("   Protocol: ${request.protocolName}")
-        
+
         // Step 5: Issue credential
         val credential = VerifiableCredential(
             type = listOf("VerifiableCredential", "PersonCredential"),
@@ -95,7 +95,7 @@ fun main() = runBlocking {
             },
             issuanceDate = java.time.Instant.now().toString()
         )
-        
+
         val issue = registry.issueCredential(
             protocolName = "didcomm",
             request = CredentialIssueRequest(
@@ -109,12 +109,12 @@ fun main() = runBlocking {
                 )
             )
         )
-        
+
         println("✅ Credential issued:")
         println("   Issue ID: ${issue.issueId}")
         println("   Credential ID: ${issue.credential.id}")
         println("   Protocol: ${issue.protocolName}")
-        
+
     } catch (e: ExchangeException) {
         when (e) {
             is ExchangeException.ProtocolNotRegistered -> {
@@ -173,16 +173,16 @@ Add the credential exchange dependencies to your `build.gradle.kts`:
 dependencies {
     // Core credential exchange
     implementation(project(":credentials:credential-core"))
-    
+
     // DIDComm protocol (optional - choose protocols you need)
     implementation(project(":credentials:plugins:didcomm"))
-    
+
     // OIDC4VCI protocol (optional)
     // implementation(project(":credentials:plugins:oidc4vci"))
-    
+
     // CHAPI protocol (optional)
     // implementation(project(":credentials:plugins:chapi"))
-    
+
     // Test kit for in-memory implementations
     testImplementation(project(":testkit"))
     testImplementation(project(":kms:kms-core"))

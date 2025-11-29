@@ -4,13 +4,13 @@ import kotlinx.serialization.Serializable
 
 /**
  * Verifiable Presentation models.
- * 
+ *
  * W3C VC Data Model 1.1 compliant presentation types.
  */
 
 /**
  * Verifiable Presentation as defined by W3C VC Data Model 1.1.
- * 
+ *
  * @param id Optional unique identifier for the presentation
  * @param type List of presentation types (must include "VerifiablePresentation")
  * @param verifiableCredential List of verifiable credentials in the presentation

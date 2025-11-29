@@ -21,7 +21,7 @@ import org.springframework.context.annotation.Configuration
  *         // Your DidRegistrar implementation
  *         return KmsBasedRegistrar(kms)
  *     }
- *     
+ *
  *     @Bean
  *     fun jobStorage(): JobStorage {
  *         // Use InMemoryJobStorage for development or DatabaseJobStorage for production
@@ -34,7 +34,7 @@ import org.springframework.context.annotation.Configuration
 class DidRegistrarConfiguration {
     /**
      * Creates the DID Registrar Service bean.
-     * 
+     *
      * Note: You must provide DidRegistrar and JobStorage beans in your application configuration.
      */
     @Bean

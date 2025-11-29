@@ -19,7 +19,7 @@ class GodiddyDidMethodProviderTest {
     fun `test GodiddyDidMethodProvider supportedMethods contains expected methods`() {
         val provider = GodiddyDidMethodProvider()
         val methods = provider.supportedMethods
-        
+
         assertTrue(methods.contains("key"))
         assertTrue(methods.contains("web"))
         assertTrue(methods.contains("ion"))
@@ -32,9 +32,9 @@ class GodiddyDidMethodProviderTest {
         val options = didCreationOptions {
             property("baseUrl", "https://example.com")
         }
-        
+
         val method = provider.create("key", options)
-        
+
         assertNotNull(method)
         assertEquals("key", method.method)
     }
@@ -45,9 +45,9 @@ class GodiddyDidMethodProviderTest {
         val options = didCreationOptions {
             property("baseUrl", "https://example.com")
         }
-        
+
         val method = provider.create("web", options)
-        
+
         assertNotNull(method)
         assertEquals("web", method.method)
     }
@@ -58,10 +58,10 @@ class GodiddyDidMethodProviderTest {
         val options = didCreationOptions {
             property("baseUrl", "https://example.com")
         }
-        
+
         // Should handle registrar creation failure gracefully
         val method = provider.create("key", options)
-        
+
         // Method should still be created even if registrar fails
         assertNotNull(method)
     }
@@ -69,9 +69,9 @@ class GodiddyDidMethodProviderTest {
     @Test
     fun `test GodiddyDidMethodProvider create with empty options`() {
         val provider = GodiddyDidMethodProvider()
-        
+
         val method = provider.create("key")
-        
+
         assertNotNull(method)
     }
 
@@ -82,9 +82,9 @@ class GodiddyDidMethodProviderTest {
             property("baseUrl", "https://custom.example.com")
             property("timeout", 30000)
         }
-        
+
         val method = provider.create("key", options)
-        
+
         assertNotNull(method)
     }
 
@@ -95,9 +95,9 @@ class GodiddyDidMethodProviderTest {
             property("baseUrl", "https://example.com")
             property("apiKey", "test-key")
         }
-        
+
         val method = provider.create("key", options)
-        
+
         assertNotNull(method)
     }
 }

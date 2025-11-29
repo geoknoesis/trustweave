@@ -8,7 +8,7 @@ title: Partner Referral Agreement
 
 ---
 
-**IMPORTANT LEGAL NOTICE:**  
+**IMPORTANT LEGAL NOTICE:**
 This document is a template for reference purposes only. All partner agreements must be reviewed and executed through Geoknoesis LLC's legal process. Contact partners@geoknoesis.com to initiate the formal partner agreement process.
 
 ---
@@ -312,7 +312,7 @@ NOW, THEREFORE, in consideration of the mutual covenants and agreements containe
 
 **15.4 Governing Law.** This Agreement shall be governed by and construed in accordance with the laws of [STATE/COUNTRY], without regard to conflict of law principles.
 
-**15.5 Dispute Resolution.** 
+**15.5 Dispute Resolution.**
 - (a) The Parties shall attempt to resolve disputes through good faith negotiation
 - (b) If negotiation fails, disputes shall be resolved through binding arbitration in accordance with [ARBITRATION RULES]
 - (c) The arbitration shall be conducted in [LOCATION]
@@ -340,35 +340,35 @@ IN WITNESS WHEREOF, the Parties have executed this Agreement as of the Effective
 
 **GEOKNOESIS LLC**
 
-By: _____________________________  
-Name: [NAME]  
-Title: [TITLE]  
+By: _____________________________
+Name: [NAME]
+Title: [TITLE]
 Date: _______________
 
 **PARTNER**
 
-By: _____________________________  
-Name: [NAME]  
-Title: [TITLE]  
+By: _____________________________
+Name: [NAME]
+Title: [TITLE]
 Date: _______________
 
 ---
 
 ## Schedule A: Partner Information
 
-**Partner Name:** [PARTNER NAME]  
-**Entity Type:** [CORPORATION/LLC/INDIVIDUAL/etc.]  
-**Tax ID/EIN:** [TAX ID]  
-**Address:** [ADDRESS]  
-**Email:** [EMAIL]  
-**Phone:** [PHONE]  
-**Partner Portal Username:** [USERNAME]  
-**Initial Partner Tier:** [BRONZE/SILVER/GOLD]  
-**Payment Information:**  
-- Bank Name: [BANK NAME]  
-- Account Number: [ACCOUNT NUMBER]  
-- Routing Number: [ROUTING NUMBER]  
-- SWIFT Code (if international): [SWIFT CODE]  
+**Partner Name:** [PARTNER NAME]
+**Entity Type:** [CORPORATION/LLC/INDIVIDUAL/etc.]
+**Tax ID/EIN:** [TAX ID]
+**Address:** [ADDRESS]
+**Email:** [EMAIL]
+**Phone:** [PHONE]
+**Partner Portal Username:** [USERNAME]
+**Initial Partner Tier:** [BRONZE/SILVER/GOLD]
+**Payment Information:**
+- Bank Name: [BANK NAME]
+- Account Number: [ACCOUNT NUMBER]
+- Routing Number: [ROUTING NUMBER]
+- SWIFT Code (if international): [SWIFT CODE]
 
 ---
 
@@ -378,8 +378,8 @@ Date: _______________
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** 2025  
+**Document Version:** 1.0
+**Last Updated:** 2025
 **Template Status:** For Reference Only - Not a Binding Agreement
 
 ---

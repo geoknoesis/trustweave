@@ -17,15 +17,15 @@ class BbsProofGeneratorBranchCoverageTest {
             signer = { _, _ -> byteArrayOf(1, 2, 3) },
             getPublicKeyId = { null }
         )
-        
+
         val credential = createTestCredential()
         val options = ProofOptions(
             proofPurpose = "assertionMethod",
             verificationMethod = "did:key:custom#key-1"
         )
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertEquals("did:key:custom#key-1", proof.verificationMethod)
         assertEquals("BbsBlsSignature2020", proof.type)
     }
@@ -36,12 +36,12 @@ class BbsProofGeneratorBranchCoverageTest {
             signer = { _, _ -> byteArrayOf(1, 2, 3) },
             getPublicKeyId = { "public-key-id" }
         )
-        
+
         val credential = createTestCredential()
         val options = ProofOptions(proofPurpose = "assertionMethod")
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertEquals("did:key:public-key-id#key-1", proof.verificationMethod)
     }
 
@@ -51,12 +51,12 @@ class BbsProofGeneratorBranchCoverageTest {
             signer = { _, _ -> byteArrayOf(1, 2, 3) },
             getPublicKeyId = { null }
         )
-        
+
         val credential = createTestCredential()
         val options = ProofOptions(proofPurpose = "assertionMethod")
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertEquals("did:key:key-1", proof.verificationMethod)
     }
 
@@ -65,12 +65,12 @@ class BbsProofGeneratorBranchCoverageTest {
         val generator = BbsProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        
+
         val credential = createTestCredential()
         val disclosedFields = listOf("credentialSubject.name")
-        
+
         val proof = generator.createSelectiveDisclosureProof(credential, disclosedFields, "key-1")
-        
+
         assertNotNull(proof)
         assertEquals("BbsBlsSignature2020", proof.type)
     }
@@ -80,12 +80,12 @@ class BbsProofGeneratorBranchCoverageTest {
         val generator = BbsProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        
+
         val credential = createTestCredential()
         val disclosedFields = listOf("credentialSubject.name", "credentialSubject.email")
-        
+
         val proof = generator.createSelectiveDisclosureProof(credential, disclosedFields, "key-1")
-        
+
         assertNotNull(proof)
     }
 
@@ -94,11 +94,11 @@ class BbsProofGeneratorBranchCoverageTest {
         val generator = BbsProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        
+
         val credential = createTestCredential()
-        
+
         val proof = generator.createSelectiveDisclosureProof(credential, emptyList(), "key-1")
-        
+
         assertNotNull(proof)
     }
 

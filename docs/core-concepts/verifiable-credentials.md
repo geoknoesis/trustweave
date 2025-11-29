@@ -20,14 +20,14 @@ dependencies {
 
 **Result:** Grants access to the credential builders and verification helpers referenced throughout this guide.
 
-1. **Metadata** – issuer, issuance/expiration dates, schema references.  
-2. **Credential subject** – the claims being asserted (`name`, `degree`, `license`, etc.).  
+1. **Metadata** – issuer, issuance/expiration dates, schema references.
+2. **Credential subject** – the claims being asserted (`name`, `degree`, `license`, etc.).
 3. **Proof** – cryptographic signature binding the issuer to the credential content.
 
 ## Why VCs matter in TrustWeave
 
-- They are the unit of trust flowing between issuers and verifiers.  
-- Wallets store VCs, anchor clients notarise them, and verification routines replay the proofs.  
+- They are the unit of trust flowing between issuers and verifiers.
+- Wallets store VCs, anchor clients notarise them, and verification routines replay the proofs.
 - Typed builders and canonicalisation keep the credential lifecycle consistent across DID methods and signature suites.
 
 ## How TrustWeave issues and verifies VCs
@@ -70,9 +70,9 @@ suspend fun issueEmployeeBadge(trustweave: TrustWeave, issuerDid: String, issuer
 
 TrustWeave automatically:
 
-- Canonicalises the JSON payload using JSON Canonicalization Scheme (JCS).  
-- Signs the digest through the configured `KeyManagementService`.  
-- Embeds the resulting proof (`Ed25519Signature2020` by default) into the VC.  
+- Canonicalises the JSON payload using JSON Canonicalization Scheme (JCS).
+- Signs the digest through the configured `KeyManagementService`.
+- Embeds the resulting proof (`Ed25519Signature2020` by default) into the VC.
 - Returns a `VerifiableCredential` data class that you can store or present.
 
 ### Example: verifying a credential
@@ -98,9 +98,9 @@ Verification resolves the issuer DID document, checks the signature suites, and 
 
 ## Practical usage tips
 
-- **SPI-level options** – drop down to `CredentialServiceRegistry` and supply `CredentialIssuanceOptions` when you need custom proof types, schema hints, or audiences.  
-- **Anchoring** – store the credential digest with a `BlockchainAnchorClient` to prove freshness (see [Blockchain Anchoring](blockchain-anchoring.md)).  
-- **Revocation** – integrate status endpoints by adding `credentialStatus` claims; custom verification policies can enforce them.  
+- **SPI-level options** – drop down to `CredentialServiceRegistry` and supply `CredentialIssuanceOptions` when you need custom proof types, schema hints, or audiences.
+- **Anchoring** – store the credential digest with a `BlockchainAnchorClient` to prove freshness (see [Blockchain Anchoring](blockchain-anchoring.md)).
+- **Revocation** – integrate status endpoints by adding `credentialStatus` claims; custom verification policies can enforce them.
 - **Error handling** – credential operations throw `TrustWeaveError` exceptions directly. Use `try-catch` blocks for error handling. See [Error Handling](../advanced/error-handling.md).
 - **Input validation** – TrustWeave automatically validates credential structure, issuer DID format, and method registration before issuance.
 

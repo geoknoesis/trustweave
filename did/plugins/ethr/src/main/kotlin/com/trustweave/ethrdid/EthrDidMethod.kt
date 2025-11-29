@@ -1,9 +1,9 @@
 package com.trustweave.ethrdid
 
 import com.trustweave.anchor.BlockchainAnchorClient
-import com.trustweave.core.exception.NotFoundException
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractBlockchainDidMethod
 import com.trustweave.did.base.DidMethodUtils
 import com.trustweave.kms.KeyManagementService
@@ -19,29 +19,29 @@ import java.math.BigInteger
 
 /**
  * Implementation of did:ethr method for Ethereum blockchain.
- * 
+ *
  * did:ethr uses Ethereum addresses as DID identifiers:
  * - Format: `did:ethr:{network}:{address}` or `did:ethr:{address}`
  * - Stores DID documents on Ethereum blockchain via anchoring
  * - Can integrate with ERC1056 registry contract for standard resolution
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val kms = InMemoryKeyManagementService()
  * val config = EthrDidConfig.sepolia("https://eth-sepolia.g.alchemy.com/v2/KEY")
  * val anchorClient = PolygonBlockchainAnchorClient(config.chainId, config.toMap())
  * val method = EthrDidMethod(kms, anchorClient, config)
- * 
+ *
  * // Create DID
  * val options = didCreationOptions {
  *     algorithm = KeyAlgorithm.SECP256K1
  * }
  * val document = method.createDid(options)
- * 
+ *
  * // Resolve DID
  * val result = method.resolveDid("did:ethr:0x...")
  * ```
- * 
+ *
  * @see <a href="https://github.com/decentralized-identity/ethr-did-resolver">ethr-did-resolver</a>
  */
 class EthrDidMethod(
@@ -57,7 +57,7 @@ class EthrDidMethod(
     init {
         // Initialize Web3j client
         web3j = Web3j.build(HttpService(config.rpcUrl))
-        
+
         // Initialize transaction manager if private key provided
         transactionManager = config.privateKey?.let { privateKeyHex ->
             try {
@@ -90,11 +90,11 @@ class EthrDidMethod(
         if (cached != null) {
             return cached
         }
-        
+
         // For did:ethr, we can derive the transaction hash from the DID
         // In a full ERC1056 implementation, we would query the registry contract
         // For now, we use a simpler approach with blockchain anchoring
-        
+
         // Try to resolve from stored documents
         val stored = getStoredDocument(did)
         if (stored != null) {
@@ -102,7 +102,7 @@ class EthrDidMethod(
             // In a real implementation, we'd store the txHash when anchoring
             return null
         }
-        
+
         return null
     }
 
@@ -114,28 +114,28 @@ class EthrDidMethod(
             if (algorithm.uppercase() != "SECP256K1" && algorithm.uppercase() != "ED25519") {
                 throw IllegalArgumentException("did:ethr requires secp256k1 or Ed25519 algorithm")
             }
-            
+
             val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
-            
+
             // Derive Ethereum address from key
             // Note: In a full implementation, we'd derive the address from the public key
             // For now, we use a simplified approach
             val ethereumAddress = deriveEthereumAddress(keyHandle)
-            
+
             // Build DID identifier
             val did = if (config.network != null) {
                 "did:ethr:${config.network}:$ethereumAddress"
             } else {
                 "did:ethr:$ethereumAddress"
             }
-            
+
             // Create verification method
             val verificationMethod = DidMethodUtils.createVerificationMethod(
                 did = did,
                 keyHandle = keyHandle,
                 algorithm = options.algorithm
             )
-            
+
             // Build DID document
             val document = DidMethodUtils.buildDidDocument(
                 did = did,
@@ -145,7 +145,7 @@ class EthrDidMethod(
                     listOf(verificationMethod.id)
                 } else null
             )
-            
+
             // Anchor document to blockchain
             try {
                 val txHash = anchorDocument(document)
@@ -154,16 +154,17 @@ class EthrDidMethod(
                 // If anchoring fails, still store locally for testing
                 storeDocument(document.id, document)
             }
-            
+
             document
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: IllegalArgumentException) {
             throw e
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to create did:ethr: ${e.message}",
-                e
+            throw TrustWeaveException.Unknown(
+                code = "CREATE_FAILED",
+                message = "Failed to create did:ethr: ${e.message}",
+                cause = e
             )
         }
     }
@@ -171,11 +172,11 @@ class EthrDidMethod(
     override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            
+
             // Try to resolve from blockchain
             try {
                 return@withContext resolveFromBlockchain(did, didToTxHash[did])
-            } catch (e: NotFoundException) {
+            } catch (e: TrustWeaveException.NotFound) {
                 // If not found on blockchain, try stored document
                 val stored = getStoredDocument(did)
                 if (stored != null) {
@@ -186,7 +187,7 @@ class EthrDidMethod(
                         getDocumentMetadata(did)?.updated
                     )
                 }
-                
+
                 // Return not found
                 return@withContext DidMethodUtils.createErrorResolutionResult(
                     "notFound",
@@ -211,28 +212,33 @@ class EthrDidMethod(
     ): DidDocument = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            
+
             // Resolve current document
             val currentResult = resolveDid(did)
-            val currentDocument = currentResult.document
-                ?: throw NotFoundException("DID document not found: $did")
-            
+            val currentDocument = when (currentResult) {
+                is DidResolutionResult.Success -> currentResult.document
+                else -> throw TrustWeaveException.NotFound(
+                    message = "DID document not found: $did"
+                )
+            }
+
             // Apply updater
             val updatedDocument = updater(currentDocument)
-            
+
             // Anchor updated document to blockchain
             val txHash = updateDocumentOnBlockchain(did, updatedDocument)
             didToTxHash[did] = txHash
-            
+
             updatedDocument
-        } catch (e: NotFoundException) {
+        } catch (e: TrustWeaveException.NotFound) {
             throw e
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to update did:ethr: ${e.message}",
-                e
+            throw TrustWeaveException.Unknown(
+                code = "UPDATE_FAILED",
+                message = "Failed to update did:ethr: ${e.message}",
+                cause = e
             )
         }
     }
@@ -240,12 +246,14 @@ class EthrDidMethod(
     override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            
+
             // Resolve current document
             val currentResult = resolveDid(did)
-            val currentDocument = currentResult.document
-                ?: return@withContext false
-            
+            val currentDocument = when (currentResult) {
+                is DidResolutionResult.Success -> currentResult.document
+                else -> return@withContext false
+            }
+
             // Create deactivated document
             val deactivatedDocument = currentDocument.copy(
                 verificationMethod = emptyList(),
@@ -255,27 +263,28 @@ class EthrDidMethod(
                 capabilityInvocation = emptyList(),
                 capabilityDelegation = emptyList()
             )
-            
+
             // Anchor deactivated document
             deactivateDocumentOnBlockchain(did, deactivatedDocument)
-            
+
             // Remove from cache
             didToTxHash.remove(did)
-            
+
             true
-        } catch (e: NotFoundException) {
+        } catch (e: TrustWeaveException.NotFound) {
             false
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to deactivate did:ethr: ${e.message}",
-                e
+            throw TrustWeaveException.Unknown(
+                code = "DEACTIVATE_FAILED",
+                message = "Failed to deactivate did:ethr: ${e.message}",
+                cause = e
             )
         }
     }
 
     /**
      * Derives an Ethereum address from a key handle.
-     * 
+     *
      * In a full implementation, this would properly derive the address from the public key.
      * For now, we use a simplified approach.
      */
@@ -286,7 +295,7 @@ class EthrDidMethod(
         // 2. Compute Keccak-256 hash
         // 3. Take last 20 bytes
         // 4. Prepend 0x
-        
+
         // Simplified: generate address from key ID
         // This is for demonstration - real implementation needs proper address derivation
         val keyIdHash = keyHandle.id.hashCode().toString(16).take(40).padStart(40, '0')

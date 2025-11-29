@@ -1,10 +1,11 @@
 package com.trustweave.awskms
 
 import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.core.types.KeyId
 import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyHandle
 import com.trustweave.kms.KeyManagementService
-import com.trustweave.kms.KeyNotFoundException
+import com.trustweave.kms.exception.KmsException
 import com.trustweave.kms.UnsupportedAlgorithmException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -15,17 +16,17 @@ import software.amazon.awssdk.awscore.exception.AwsServiceException
 
 /**
  * AWS KMS implementation of KeyManagementService.
- * 
+ *
  * Supports all AWS KMS-compatible algorithms:
  * - Ed25519 (ECC_Ed25519) - Note: Not in current FIPS certificate, may use non-FIPS path
  * - secp256k1 (ECC_SECG_P256K1) - FIPS 140-3 Level 3 validated (blockchain use only)
  * - P-256, P-384, P-521 (ECC_NIST_P256/384/521) - FIPS 140-3 Level 3 validated
  * - RSA-2048, RSA-3072, RSA-4096 - FIPS 140-3 Level 3 validated
- * 
+ *
  * AWS KMS uses FIPS 140-3 Level 3 validated hardware security modules.
  * See [NIST Certificate #4884](https://csrc.nist.gov/projects/cryptographic-module-validation-program/certificate/4884)
  * for validation details.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val config = AwsKmsConfig.builder()
@@ -71,16 +72,16 @@ class AwsKeyManagementService(
 
         try {
             val keySpec = AlgorithmMapping.toAwsKeySpec(algorithm)
-            
+
             val requestBuilder = CreateKeyRequest.builder()
                 .keySpec(keySpec)
                 .keyUsage(KeyUsageType.SIGN_VERIFY)
-            
+
             // Add description if provided
             (options["description"] as? String)?.let {
                 requestBuilder.description(it)
             }
-            
+
             // Add tags if provided
             val tags = options["tags"] as? Map<String, String>
             tags?.let {
@@ -93,7 +94,7 @@ class AwsKeyManagementService(
             val createResponse = kmsClient.createKey(requestBuilder.build())
             val keyId = createResponse.keyMetadata().keyId()
             val keyArn = createResponse.keyMetadata().arn()
-            
+
             // Enable automatic rotation if requested
             if (options["enableAutomaticRotation"] == true) {
                 try {
@@ -107,7 +108,7 @@ class AwsKeyManagementService(
                     // Automatic rotation may not be available for all key types
                 }
             }
-            
+
             // Create alias if provided
             val alias = options["alias"] as? String
             alias?.let { aliasName ->
@@ -131,26 +132,29 @@ class AwsKeyManagementService(
                     .keyId(keyId)
                     .build()
             )
-            
+
             val publicKeyBytes = publicKeyResponse.publicKey().asByteArray()
             val publicKeyJwk = AlgorithmMapping.publicKeyToJwk(publicKeyBytes, algorithm)
 
             KeyHandle(
-                id = keyArn ?: keyId, // Prefer ARN for full identification
+                id = KeyId(keyArn ?: keyId), // Prefer ARN for full identification
                 algorithm = algorithm.name,
                 publicKeyJwk = publicKeyJwk
             )
         } catch (e: AwsServiceException) {
             throw mapAwsException(e, "Failed to generate key")
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to generate key: ${e.message}", e)
+            throw TrustWeaveException.Unknown(
+                message = "Failed to generate key: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
     }
 
-    override suspend fun getPublicKey(keyId: String): KeyHandle = withContext(Dispatchers.IO) {
+    override suspend fun getPublicKey(keyId: KeyId): KeyHandle = withContext(Dispatchers.IO) {
         try {
-            val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId)
-            
+            val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
+
             // Get key metadata to determine algorithm
             val describeResponse = kmsClient.describeKey(
                 DescribeKeyRequest.builder()
@@ -161,8 +165,10 @@ class AwsKeyManagementService(
             val keySpec = keyMetadata.keySpec()
             val algorithmName = keySpec.toString()
             val algorithm = parseAlgorithmFromKeySpec(algorithmName)
-                ?: throw TrustWeaveException("Unknown key spec: $algorithmName")
-            
+                ?: throw TrustWeaveException.Unknown(
+                    message = "Unknown key spec: $algorithmName"
+                )
+
             // Get public key
             val publicKeyResponse = kmsClient.getPublicKey(
                 GetPublicKeyRequest.builder()
@@ -173,28 +179,31 @@ class AwsKeyManagementService(
             val publicKeyJwk = AlgorithmMapping.publicKeyToJwk(publicKeyBytes, algorithm)
 
             KeyHandle(
-                id = keyMetadata.arn() ?: keyMetadata.keyId(),
+                id = KeyId(keyMetadata.arn() ?: keyMetadata.keyId()),
                 algorithm = algorithm.name,
                 publicKeyJwk = publicKeyJwk
             )
         } catch (e: AwsServiceException) {
             if (e.statusCode() == 404 || e.awsErrorDetails()?.errorCode() == "NotFoundException") {
-                throw KeyNotFoundException("Key not found: $keyId", e)
+                throw KmsException.KeyNotFound(keyId = keyId.value)
             }
             throw mapAwsException(e, "Failed to get public key")
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to get public key: ${e.message}", e)
+            throw TrustWeaveException.Unknown(
+                message = "Failed to get public key: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
     }
 
     override suspend fun sign(
-        keyId: String,
+        keyId: KeyId,
         data: ByteArray,
         algorithm: Algorithm?
     ): ByteArray = withContext(Dispatchers.IO) {
         try {
-            val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId)
-            
+            val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
+
             // Get key metadata to determine algorithm if not provided
             val signingAlgorithm = algorithm ?: run {
                 val describeResponse = kmsClient.describeKey(
@@ -204,43 +213,48 @@ class AwsKeyManagementService(
                 )
                 val keySpec = describeResponse.keyMetadata().keySpec().toString()
                 parseAlgorithmFromKeySpec(keySpec)
-                    ?: throw TrustWeaveException("Cannot determine signing algorithm for key: $keyId")
+                    ?: throw TrustWeaveException.Unknown(
+                        message = "Cannot determine signing algorithm for key: ${keyId.value}"
+                    )
             }
-            
+
             val awsSigningAlgorithm = AlgorithmMapping.toAwsSigningAlgorithm(signingAlgorithm)
-            
+
             val signRequest = SignRequest.builder()
                 .keyId(resolvedKeyId)
                 .message(SdkBytes.fromByteArray(data))
                 .signingAlgorithm(awsSigningAlgorithm)
                 .build()
-            
+
             val signResponse = kmsClient.sign(signRequest)
             signResponse.signature().asByteArray()
         } catch (e: AwsServiceException) {
             if (e.statusCode() == 404 || e.awsErrorDetails()?.errorCode() == "NotFoundException") {
-                throw KeyNotFoundException("Key not found: $keyId", e)
+                throw KmsException.KeyNotFound(keyId = keyId.value)
             }
             throw mapAwsException(e, "Failed to sign data")
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to sign data: ${e.message}", e)
+            throw TrustWeaveException.Unknown(
+                message = "Failed to sign data: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
     }
 
-    override suspend fun deleteKey(keyId: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deleteKey(keyId: KeyId): Boolean = withContext(Dispatchers.IO) {
         try {
-            val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId)
-            
+            val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
+
             // Get pending window from options or use default (30 days)
             val pendingWindowInDays = 30
-            
+
             kmsClient.scheduleKeyDeletion(
                 ScheduleKeyDeletionRequest.builder()
                     .keyId(resolvedKeyId)
                     .pendingWindowInDays(pendingWindowInDays)
                     .build()
             )
-            
+
             true
         } catch (e: AwsServiceException) {
             if (e.statusCode() == 404 || e.awsErrorDetails()?.errorCode() == "NotFoundException") {
@@ -248,7 +262,10 @@ class AwsKeyManagementService(
             }
             throw mapAwsException(e, "Failed to delete key")
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to delete key: ${e.message}", e)
+            throw TrustWeaveException.Unknown(
+                message = "Failed to delete key: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
     }
 
@@ -275,14 +292,24 @@ class AwsKeyManagementService(
     private fun mapAwsException(e: AwsServiceException, operation: String): Exception {
         val errorCode = e.awsErrorDetails()?.errorCode()
         return when (errorCode) {
-            "NotFoundException" -> KeyNotFoundException("Key not found: ${e.message}", e)
+            "NotFoundException" -> {
+                // Try to extract keyId from error message if possible
+                val errorMessage = e.message ?: "Key not found"
+                KmsException.KeyNotFound(
+                    keyId = errorMessage
+                )
+            }
             "InvalidKeyUsageException" -> UnsupportedAlgorithmException(
                 "Invalid key usage: ${e.message}", e
             )
-            "AccessDeniedException" -> TrustWeaveException(
-                "Access denied to AWS KMS. Check IAM permissions: ${e.message}", e
+            "AccessDeniedException" -> TrustWeaveException.Unknown(
+                message = "Access denied to AWS KMS. Check IAM permissions: ${e.message ?: "Unknown error"}",
+                cause = e
             )
-            else -> TrustWeaveException("$operation: ${e.message}", e)
+            else -> TrustWeaveException.Unknown(
+                message = "$operation: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
     }
 

@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,34 +591,34 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="financial-services--kycaml-scenario">
-  
-  
+
+
     <a href="#financial-services--kycaml-scenario" class="anchor-heading" aria-labelledby="financial-services--kycaml-scenario"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Financial Services &amp; KYC/AML Scenario
-  
-  
+
+
 </h1>
-    
+
 
 <p>This guide demonstrates how to build a financial services identity verification system using TrustWeave that enables reusable KYC credentials, compliance verification, cross-institution sharing, and regulatory anchoring.</p>
 <h2 id="what-youll-build">
-  
-  
+
+
     <a href="#what-youll-build" class="anchor-heading" aria-labelledby="what-youll-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Build
-  
-  
+
+
 </h2>
-    
+
 
 <p>By the end of this tutorial, you’ll have:</p>
 
@@ -632,21 +632,21 @@
   <li>✅ Built customer identity wallet</li>
 </ul>
 <h2 id="big-picture--significance">
-  
-  
+
+
     <a href="#big-picture--significance" class="anchor-heading" aria-labelledby="big-picture--significance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Big Picture &amp; Significance
-  
-  
+
+
 </h2>
-    
+
 <h3 id="the-financial-identity-revolution">
-  
-  
+
+
     <a href="#the-financial-identity-revolution" class="anchor-heading" aria-labelledby="the-financial-identity-revolution"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Financial Identity Revolution
-  
-  
+
+
 </h3>
-    
+
 
 <p>Financial services face increasing regulatory requirements for Know Your Customer (KYC) and Anti-Money Laundering (AML) compliance. Traditional KYC processes are expensive, repetitive, and create privacy concerns. Verifiable credentials enable reusable, privacy-preserving identity verification.</p>
 
@@ -669,13 +669,13 @@
   <li><strong>Interoperability</strong>: Works across different financial institutions</li>
 </ol>
 <h3 id="the-kycaml-challenge">
-  
-  
+
+
     <a href="#the-kycaml-challenge" class="anchor-heading" aria-labelledby="the-kycaml-challenge"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The KYC/AML Challenge
-  
-  
+
+
 </h3>
-    
+
 
 <p>Traditional KYC systems face critical issues:</p>
 <ul>
@@ -688,21 +688,21 @@
   <li><strong>Fraud Risk</strong>: Identity documents can be forged</li>
 </ul>
 <h2 id="value-proposition">
-  
-  
+
+
     <a href="#value-proposition" class="anchor-heading" aria-labelledby="value-proposition"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Value Proposition
-  
-  
+
+
 </h2>
-    
+
 <h3 id="problems-solved">
-  
-  
+
+
     <a href="#problems-solved" class="anchor-heading" aria-labelledby="problems-solved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Problems Solved
-  
-  
+
+
 </h3>
-    
+
 
 <ol>
   <li><strong>Reusable Identity</strong>: One-time KYC, reuse across institutions</li>
@@ -715,13 +715,13 @@
   <li><strong>Audit Trail</strong>: Immutable records for regulatory compliance</li>
 </ol>
 <h3 id="business-benefits">
-  
-  
+
+
     <a href="#business-benefits" class="anchor-heading" aria-labelledby="business-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Business Benefits
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>For Financial Institutions</strong>:</p>
 <ul>
@@ -749,13 +749,13 @@
   <li><strong>Fraud Prevention</strong>: Better fraud detection</li>
 </ul>
 <h3 id="roi-considerations">
-  
-  
+
+
     <a href="#roi-considerations" class="anchor-heading" aria-labelledby="roi-considerations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ROI Considerations
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>KYC Cost Reduction</strong>: $50-150 per verification → $5-15 with reusable credentials</li>
@@ -765,13 +765,13 @@
   <li><strong>Customer Acquisition</strong>: Faster onboarding increases conversions</li>
 </ul>
 <h2 id="understanding-the-problem">
-  
-  
+
+
     <a href="#understanding-the-problem" class="anchor-heading" aria-labelledby="understanding-the-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Understanding the Problem
-  
-  
+
+
 </h2>
-    
+
 
 <p>Financial services identity verification faces several critical challenges:</p>
 
@@ -785,13 +785,13 @@
   <li><strong>Fraud Risk</strong>: Identity document forgery</li>
 </ol>
 <h3 id="real-world-pain-points">
-  
-  
+
+
     <a href="#real-world-pain-points" class="anchor-heading" aria-labelledby="real-world-pain-points"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Pain Points
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Example 1: Bank Account Opening</strong></p>
 <ul>
@@ -814,40 +814,40 @@
   <li>Solution: Verifiable credentials recognized internationally</li>
 </ul>
 <h2 id="how-it-works-kyc-credential-flow">
-  
-  
+
+
     <a href="#how-it-works-kyc-credential-flow" class="anchor-heading" aria-labelledby="how-it-works-kyc-credential-flow"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How It Works: KYC Credential Flow
-  
-  
+
+
 </h2>
-    
+
 
 <pre><code class="language-mermaid">flowchart TD
     A["KYC Provider&lt;br/&gt;Verifies Customer Identity&lt;br/&gt;Issues KYC Credential&lt;br/&gt;Performs AML/Sanctions Screening"] --&gt;|issues KYC credential| B["KYC Credential&lt;br/&gt;Identity Information&lt;br/&gt;Verification Level&lt;br/&gt;AML Status&lt;br/&gt;Proof cryptographic"]
     B --&gt;|stored in customer wallet| C["Customer Wallet&lt;br/&gt;Stores KYC Credential&lt;br/&gt;Creates Presentations"]
     C --&gt;|presents to financial institution| D["Financial Institution&lt;br/&gt;Verifies KYC Credential&lt;br/&gt;Checks Compliance&lt;br/&gt;Opens Account"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
     style D fill:#c2185b,stroke:#880e4f,stroke-width:2px,color:#fff
 </code></pre>
 <h2 id="key-concepts">
-  
-  
+
+
     <a href="#key-concepts" class="anchor-heading" aria-labelledby="key-concepts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Concepts
-  
-  
+
+
 </h2>
-    
+
 <h3 id="kyc-credential-types">
-  
-  
+
+
     <a href="#kyc-credential-types" class="anchor-heading" aria-labelledby="kyc-credential-types"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> KYC Credential Types
-  
-  
+
+
 </h3>
-    
+
 
 <ol>
   <li><strong>Identity Verification Credential</strong>: Basic identity information (name, DOB, address)</li>
@@ -857,13 +857,13 @@
   <li><strong>Compliance Credential</strong>: Regulatory compliance status</li>
 </ol>
 <h3 id="verification-levels">
-  
-  
+
+
     <a href="#verification-levels" class="anchor-heading" aria-labelledby="verification-levels"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Verification Levels
-  
-  
+
+
 </h3>
-    
+
 
 <ol>
   <li><strong>Basic</strong>: Name, DOB, address verification</li>
@@ -872,13 +872,13 @@
   <li><strong>Premium</strong>: Enhanced + ongoing monitoring</li>
 </ol>
 <h3 id="compliance-features">
-  
-  
+
+
     <a href="#compliance-features" class="anchor-heading" aria-labelledby="compliance-features"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Compliance Features
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>AML Screening</strong>: Anti-money laundering checks</li>
@@ -888,13 +888,13 @@
   <li><strong>Audit Trail</strong>: Immutable compliance records</li>
 </ul>
 <h2 id="prerequisites">
-  
-  
+
+
     <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li>Java 21+</li>
@@ -904,13 +904,13 @@
   <li>Familiarity with KYC/AML concepts (helpful but not required)</li>
 </ul>
 <h2 id="step-1-add-dependencies">
-  
-  
+
+
     <a href="#step-1-add-dependencies" class="anchor-heading" aria-labelledby="step-1-add-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Add Dependencies
-  
-  
+
+
 </h2>
-    
+
 
 <p>Add TrustWeave dependencies to your <code class="language-plaintext highlighter-rouge">build.gradle.kts</code>. These libraries cover DID management, credential issuance, wallet storage, and the in-memory adapters the scenario relies on for KYC flows.</p>
 
@@ -938,13 +938,13 @@
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    
+
     <span class="c1">// Test kit for in-memory implementations</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    
+
     <span class="c1">// Kotlinx Serialization</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
-    
+
     <span class="c1">// Coroutines</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"</span><span class="p">)</span>
 <span class="p">}</span>
@@ -952,13 +952,13 @@
 
 <p><strong>Result:</strong> Gradle now resolves everything you need to run the snippets—no extra module wiring required.</p>
 <h2 id="step-2-complete-example">
-  
-  
+
+
     <a href="#step-2-complete-example" class="anchor-heading" aria-labelledby="step-2-complete-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Complete Example
-  
-  
+
+
 </h2>
-    
+
 
 <p>Here’s the full KYC credential management workflow. Run it once to observe the happy path, then use the breakdowns that follow to understand each step in detail.</p>
 
@@ -1361,37 +1361,37 @@
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"=== Financial Services &amp; KYC/AML Scenario ===\n"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 1: Setup services</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Step 1: Setting up services..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">kycProviderKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">bankKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">cryptoExchangeKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">customerKms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
-    
+
     <span class="kd">val</span> <span class="py">didMethod</span> <span class="p">=</span> <span class="nc">DidKeyMockMethod</span><span class="p">(</span><span class="n">kycProviderKms</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">didRegistry</span> <span class="p">=</span> <span class="nc">DidMethodRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span> <span class="nf">register</span><span class="p">(</span><span class="n">didMethod</span><span class="p">)</span> <span class="p">}</span>
-    
+
     <span class="c1">// Setup blockchain for anchoring</span>
     <span class="kd">val</span> <span class="py">anchorClient</span> <span class="p">=</span> <span class="nc">InMemoryBlockchainAnchorClient</span><span class="p">(</span><span class="s">"eip155:1"</span><span class="p">,</span> <span class="nf">emptyMap</span><span class="p">())</span>
     <span class="kd">val</span> <span class="py">blockchainRegistry</span> <span class="p">=</span> <span class="nc">BlockchainAnchorRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
         <span class="nf">register</span><span class="p">(</span><span class="s">"eip155:1"</span><span class="p">,</span> <span class="n">anchorClient</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 2: Create DIDs</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 2: Creating DIDs..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">kycProviderDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"KYC Provider DID: ${kycProviderDid.id}"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">bankDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Bank DID: ${bankDid.id}"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">cryptoExchangeDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Crypto Exchange DID: ${cryptoExchangeDid.id}"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">customerDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Customer DID: ${customerDid.id}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 3: Create customer wallet</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 3: Creating customer wallet..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">customerWallet</span> <span class="p">=</span> <span class="nc">InMemoryWallet</span><span class="p">(</span>
@@ -1399,7 +1399,7 @@
         <span class="n">holderDid</span> <span class="p">=</span> <span class="n">customerDid</span><span class="p">.</span><span class="n">id</span>
     <span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Customer wallet created: ${customerWallet.walletId}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 4: Perform KYC verification</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 4: Performing KYC verification..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">identityData</span> <span class="p">=</span> <span class="nf">mapOf</span><span class="p">(</span>
@@ -1410,19 +1410,19 @@
         <span class="s">"idDocumentType"</span> <span class="n">to</span> <span class="s">"Passport"</span><span class="p">,</span>
         <span class="s">"idDocumentNumber"</span> <span class="n">to</span> <span class="s">"P123456789"</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// Simulate KYC verification process</span>
     <span class="kd">val</span> <span class="py">kycVerificationResult</span> <span class="p">=</span> <span class="nf">performKYCVerification</span><span class="p">(</span>
         <span class="n">customerDid</span> <span class="p">=</span> <span class="n">customerDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">identityData</span> <span class="p">=</span> <span class="n">identityData</span><span class="p">,</span>
         <span class="n">kycProviderDid</span> <span class="p">=</span> <span class="n">kycProviderDid</span><span class="p">.</span><span class="n">id</span>
     <span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"KYC verification completed:"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Status: ${kycVerificationResult.status}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Verification Level: ${kycVerificationResult.verificationLevel}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - AML Status: ${kycVerificationResult.amlStatus}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 5: Issue KYC credential</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 5: Issuing KYC credential..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">kycCredential</span> <span class="p">=</span> <span class="nf">createKYCCredential</span><span class="p">(</span>
@@ -1433,7 +1433,7 @@
         <span class="n">amlStatus</span> <span class="p">=</span> <span class="n">kycVerificationResult</span><span class="p">.</span><span class="n">amlStatus</span><span class="p">,</span>
         <span class="n">riskRating</span> <span class="p">=</span> <span class="n">kycVerificationResult</span><span class="p">.</span><span class="n">riskRating</span>
     <span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">kycProviderKey</span> <span class="p">=</span> <span class="n">kycProviderKms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">kycProofGenerator</span> <span class="p">=</span> <span class="nc">Ed25519ProofGenerator</span><span class="p">(</span>
         <span class="n">signer</span> <span class="p">=</span> <span class="p">{</span> <span class="n">data</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">-&gt;</span> <span class="n">kycProviderKms</span><span class="p">.</span><span class="nf">sign</span><span class="p">(</span><span class="n">keyId</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span> <span class="p">},</span>
@@ -1442,29 +1442,29 @@
 <span class="kd">val</span> <span class="py">didResolver</span> <span class="p">=</span> <span class="nc">CredentialDidResolver</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span>
     <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">).</span><span class="nf">toCredentialDidResolution</span><span class="p">()</span>
 <span class="p">}</span>
-    
+
     <span class="kd">val</span> <span class="py">kycIssuer</span> <span class="p">=</span> <span class="nc">CredentialIssuer</span><span class="p">(</span>
         <span class="n">proofGenerator</span> <span class="p">=</span> <span class="n">kycProofGenerator</span><span class="p">,</span>
         <span class="n">resolveDid</span> <span class="p">=</span> <span class="p">{</span> <span class="n">did</span> <span class="p">-&gt;</span> <span class="n">didResolver</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">)</span><span class="o">?.</span><span class="n">isResolvable</span> <span class="p">==</span> <span class="k">true</span> <span class="p">}</span>
     <span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">issuedKYCCredential</span> <span class="p">=</span> <span class="n">kycIssuer</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
         <span class="n">credential</span> <span class="p">=</span> <span class="n">kycCredential</span><span class="p">,</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">kycProviderDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">keyId</span> <span class="p">=</span> <span class="n">kycProviderKey</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialIssuanceOptions</span><span class="p">(</span><span class="n">proofType</span> <span class="p">=</span> <span class="s">"Ed25519Signature2020"</span><span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"KYC credential issued:"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Verification Level: ${kycVerificationResult.verificationLevel}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - AML Status: ${kycVerificationResult.amlStatus}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Has proof: ${issuedKYCCredential.proof != null}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 6: Store KYC credential in customer wallet</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 6: Storing KYC credential in customer wallet..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">kycCredentialId</span> <span class="p">=</span> <span class="n">customerWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">issuedKYCCredential</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"KYC credential stored: $kycCredentialId"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 7: Anchor KYC record to blockchain</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 7: Anchoring KYC record to blockchain..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">kycDigest</span> <span class="p">=</span> <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">json</span><span class="p">.</span><span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span>
@@ -1473,7 +1473,7 @@
             <span class="n">issuedKYCCredential</span>
         <span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">kycRecord</span> <span class="p">=</span> <span class="nc">KYCRecord</span><span class="p">(</span>
         <span class="n">customerDid</span> <span class="p">=</span> <span class="n">customerDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">kycProviderDid</span> <span class="p">=</span> <span class="n">kycProviderDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
@@ -1481,21 +1481,21 @@
         <span class="n">credentialDigest</span> <span class="p">=</span> <span class="n">kycDigest</span><span class="p">,</span>
         <span class="n">complianceStatus</span> <span class="p">=</span> <span class="s">"compliant"</span>
     <span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">anchorResult</span> <span class="p">=</span> <span class="n">blockchainRegistry</span><span class="p">.</span><span class="nf">anchorTyped</span><span class="p">(</span>
         <span class="n">value</span> <span class="p">=</span> <span class="n">kycRecord</span><span class="p">,</span>
         <span class="n">serializer</span> <span class="p">=</span> <span class="nc">KYCRecord</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
         <span class="n">targetChainId</span> <span class="p">=</span> <span class="s">"eip155:1"</span>
     <span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"KYC record anchored:"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Transaction hash: ${anchorResult.ref.txHash}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"  - Provides regulatory audit trail"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 8: Bank verifies KYC credential</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 8: Bank verifies KYC credential for account opening..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">bankVerifier</span> <span class="p">=</span> <span class="nc">CredentialVerifier</span><span class="p">(</span><span class="n">didResolver</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">bankVerification</span> <span class="p">=</span> <span class="n">bankVerifier</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span>
         <span class="n">credential</span> <span class="p">=</span> <span class="n">issuedKYCCredential</span><span class="p">,</span>
         <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialVerificationOptions</span><span class="p">(</span>
@@ -1505,26 +1505,26 @@
             <span class="n">didResolver</span> <span class="p">=</span> <span class="n">didResolver</span>
         <span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">bankVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ KYC credential verified by bank!"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"  - Proof valid: ${bankVerification.proofValid}"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"  - Issuer valid: ${bankVerification.issuerValid}"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"  - Not expired: ${bankVerification.notExpired}"</span><span class="p">)</span>
-        
+
         <span class="c1">// Check compliance requirements</span>
         <span class="kd">val</span> <span class="py">meetsBankRequirements</span> <span class="p">=</span> <span class="nf">checkComplianceRequirements</span><span class="p">(</span>
             <span class="n">credential</span> <span class="p">=</span> <span class="n">issuedKYCCredential</span><span class="p">,</span>
             <span class="n">requiredLevel</span> <span class="p">=</span> <span class="s">"Standard"</span><span class="p">,</span>
             <span class="n">requiredAMLStatus</span> <span class="p">=</span> <span class="s">"clear"</span>
         <span class="p">)</span>
-        
+
         <span class="k">if</span> <span class="p">(</span><span class="n">meetsBankRequirements</span><span class="p">)</span> <span class="p">{</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Meets bank compliance requirements"</span><span class="p">)</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"  - Account can be opened"</span><span class="p">)</span>
         <span class="p">}</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 9: Create bank account opening presentation</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 9: Creating bank account opening presentation..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">bankPresentation</span> <span class="p">=</span> <span class="n">customerWallet</span><span class="p">.</span><span class="nf">createSelectiveDisclosure</span><span class="p">(</span>
@@ -1544,9 +1544,9 @@
             <span class="n">challenge</span> <span class="p">=</span> <span class="s">"bank-account-opening-${Instant.now().toEpochMilli()}"</span>
         <span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Bank account opening presentation created"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 10: Crypto exchange verifies same KYC credential</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 10: Crypto exchange verifies KYC credential..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">exchangeVerification</span> <span class="p">=</span> <span class="n">bankVerifier</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span>
@@ -1557,13 +1557,13 @@
             <span class="n">didResolver</span> <span class="p">=</span> <span class="n">didResolver</span>
         <span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">exchangeVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ KYC credential verified by crypto exchange!"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"  - Same credential reused - no need for new KYC"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"  - Account can be opened instantly"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 11: Create exchange account opening presentation</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 11: Creating exchange account opening presentation..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">exchangePresentation</span> <span class="p">=</span> <span class="n">customerWallet</span><span class="p">.</span><span class="nf">createSelectiveDisclosure</span><span class="p">(</span>
@@ -1581,9 +1581,9 @@
             <span class="n">challenge</span> <span class="p">=</span> <span class="s">"crypto-exchange-opening-${Instant.now().toEpochMilli()}"</span>
         <span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Exchange account opening presentation created"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 12: Wallet statistics</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 12: Customer wallet statistics..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">stats</span> <span class="p">=</span> <span class="n">customerWallet</span><span class="p">.</span><span class="nf">getStatistics</span><span class="p">()</span>
@@ -1591,7 +1591,7 @@
         Total credentials: ${stats.totalCredentials}
         Valid credentials: ${stats.validCredentials}
     """</span><span class="p">.</span><span class="nf">trimIndent</span><span class="p">())</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n=== Scenario Complete ==="</span><span class="p">)</span>
 <span class="p">}</span>
 
@@ -1614,7 +1614,7 @@
     <span class="c1">// - AML/sanctions screening</span>
     <span class="c1">// - PEP checks</span>
     <span class="c1">// - Risk assessment</span>
-    
+
     <span class="k">return</span> <span class="nc">KYCVerificationResult</span><span class="p">(</span>
         <span class="n">status</span> <span class="p">=</span> <span class="s">"verified"</span><span class="p">,</span>
         <span class="n">verificationLevel</span> <span class="p">=</span> <span class="s">"Standard"</span><span class="p">,</span>
@@ -1667,13 +1667,13 @@
 <span class="p">):</span> <span class="nc">Boolean</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">kyc</span> <span class="p">=</span> <span class="n">credential</span><span class="p">.</span><span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"kyc"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
         <span class="o">?:</span> <span class="k">return</span> <span class="k">false</span>
-    
+
     <span class="kd">val</span> <span class="py">verificationLevel</span> <span class="p">=</span> <span class="n">kyc</span><span class="p">[</span><span class="s">"verificationLevel"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
         <span class="o">?:</span> <span class="k">return</span> <span class="k">false</span>
-    
+
     <span class="kd">val</span> <span class="py">amlStatus</span> <span class="p">=</span> <span class="n">kyc</span><span class="p">[</span><span class="s">"amlStatus"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
         <span class="o">?:</span> <span class="k">return</span> <span class="k">false</span>
-    
+
     <span class="c1">// Check verification level meets requirement</span>
     <span class="kd">val</span> <span class="py">levelHierarchy</span> <span class="p">=</span> <span class="nf">mapOf</span><span class="p">(</span>
         <span class="s">"Basic"</span> <span class="n">to</span> <span class="mi">1</span><span class="p">,</span>
@@ -1681,34 +1681,34 @@
         <span class="s">"Enhanced"</span> <span class="n">to</span> <span class="mi">3</span><span class="p">,</span>
         <span class="s">"Premium"</span> <span class="n">to</span> <span class="mi">4</span>
     <span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">customerLevel</span> <span class="p">=</span> <span class="n">levelHierarchy</span><span class="p">[</span><span class="n">verificationLevel</span><span class="p">]</span> <span class="o">?:</span> <span class="k">return</span> <span class="k">false</span>
     <span class="kd">val</span> <span class="py">requiredLevelValue</span> <span class="p">=</span> <span class="n">levelHierarchy</span><span class="p">[</span><span class="n">requiredLevel</span><span class="p">]</span> <span class="o">?:</span> <span class="k">return</span> <span class="k">false</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">customerLevel</span> <span class="p">&lt;</span> <span class="n">requiredLevelValue</span><span class="p">)</span> <span class="k">return</span> <span class="k">false</span>
-    
+
     <span class="c1">// Check AML status</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">amlStatus</span> <span class="p">!=</span> <span class="n">requiredAMLStatus</span><span class="p">)</span> <span class="k">return</span> <span class="k">false</span>
-    
+
     <span class="k">return</span> <span class="k">true</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="extensive-step-by-step-breakdown">
-  
-  
+
+
     <a href="#extensive-step-by-step-breakdown" class="anchor-heading" aria-labelledby="extensive-step-by-step-breakdown"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Extensive Step-by-Step Breakdown
-  
-  
+
+
 </h2>
-    
+
 <h3 id="step-1-setup-and-initialization">
-  
-  
+
+
     <a href="#step-1-setup-and-initialization" class="anchor-heading" aria-labelledby="step-1-setup-and-initialization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Setup and Initialization
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Initialize financial services identity system with proper key management.</p>
 
@@ -1722,13 +1722,13 @@
 
 <p><strong>Why This Matters</strong>: Financial services require the highest security standards. Multiple KMS instances ensure proper key isolation and regulatory compliance.</p>
 <h3 id="step-2-create-financial-institution-dids">
-  
-  
+
+
     <a href="#step-2-create-financial-institution-dids" class="anchor-heading" aria-labelledby="step-2-create-financial-institution-dids"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Create Financial Institution DIDs
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Establish verifiable identities for financial institutions.</p>
 
@@ -1747,13 +1747,13 @@
   <li>Can be verified by customers and regulators</li>
 </ul>
 <h3 id="step-3-create-customer-did">
-  
-  
+
+
     <a href="#step-3-create-customer-did" class="anchor-heading" aria-labelledby="step-3-create-customer-did"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Create Customer DID
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Establish customer’s self-sovereign identity.</p>
 
@@ -1773,13 +1773,13 @@
   <li>Privacy-preserving</li>
 </ul>
 <h3 id="step-4-perform-kyc-verification">
-  
-  
+
+
     <a href="#step-4-perform-kyc-verification" class="anchor-heading" aria-labelledby="step-4-perform-kyc-verification"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Perform KYC Verification
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Verify customer identity and perform compliance checks.</p>
 
@@ -1800,13 +1800,13 @@
   <li>Audit trail</li>
 </ul>
 <h3 id="step-5-issue-kyc-credential">
-  
-  
+
+
     <a href="#step-5-issue-kyc-credential" class="anchor-heading" aria-labelledby="step-5-issue-kyc-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Issue KYC Credential
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Create verifiable KYC credential.</p>
 
@@ -1828,13 +1828,13 @@
   <li>Can be revoked if status changes</li>
 </ul>
 <h3 id="step-6-store-kyc-credential-in-customer-wallet">
-  
-  
+
+
     <a href="#step-6-store-kyc-credential-in-customer-wallet" class="anchor-heading" aria-labelledby="step-6-store-kyc-credential-in-customer-wallet"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 6: Store KYC Credential in Customer Wallet
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Enable customer to manage and reuse KYC credential.</p>
 
@@ -1854,13 +1854,13 @@
   <li>Portable across institutions</li>
 </ul>
 <h3 id="step-7-anchor-kyc-record-to-blockchain">
-  
-  
+
+
     <a href="#step-7-anchor-kyc-record-to-blockchain" class="anchor-heading" aria-labelledby="step-7-anchor-kyc-record-to-blockchain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 7: Anchor KYC Record to Blockchain
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Create immutable record for regulatory compliance.</p>
 
@@ -1879,13 +1879,13 @@
   <li>Meets regulatory requirements</li>
 </ul>
 <h3 id="step-8-bank-verifies-kyc-credential">
-  
-  
+
+
     <a href="#step-8-bank-verifies-kyc-credential" class="anchor-heading" aria-labelledby="step-8-bank-verifies-kyc-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 8: Bank Verifies KYC Credential
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Bank verifies customer KYC credential for account opening.</p>
 
@@ -1905,13 +1905,13 @@
   <li>Fraud prevention</li>
 </ul>
 <h3 id="step-9-create-bank-account-opening-presentation">
-  
-  
+
+
     <a href="#step-9-create-bank-account-opening-presentation" class="anchor-heading" aria-labelledby="step-9-create-bank-account-opening-presentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 9: Create Bank Account Opening Presentation
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Customer presents KYC credential to bank with selective disclosure.</p>
 
@@ -1930,13 +1930,13 @@
   <li>Enables targeted data sharing</li>
 </ul>
 <h3 id="step-10-crypto-exchange-verifies-same-kyc-credential">
-  
-  
+
+
     <a href="#step-10-crypto-exchange-verifies-same-kyc-credential" class="anchor-heading" aria-labelledby="step-10-crypto-exchange-verifies-same-kyc-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 10: Crypto Exchange Verifies Same KYC Credential
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Demonstrate reusability of KYC credential.</p>
 
@@ -1955,13 +1955,13 @@
   <li>Better customer experience</li>
 </ul>
 <h3 id="step-11-create-exchange-account-opening-presentation">
-  
-  
+
+
     <a href="#step-11-create-exchange-account-opening-presentation" class="anchor-heading" aria-labelledby="step-11-create-exchange-account-opening-presentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 11: Create Exchange Account Opening Presentation
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Customer presents KYC credential to exchange with minimal disclosure.</p>
 
@@ -1980,13 +1980,13 @@
   <li>Targeted sharing</li>
 </ul>
 <h3 id="step-12-wallet-statistics">
-  
-  
+
+
     <a href="#step-12-wallet-statistics" class="anchor-heading" aria-labelledby="step-12-wallet-statistics"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 12: Wallet Statistics
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Purpose</strong>: Provide overview of customer’s credentials.</p>
 
@@ -2005,21 +2005,21 @@
   <li>Identity management</li>
 </ul>
 <h2 id="advanced-features">
-  
-  
+
+
     <a href="#advanced-features" class="anchor-heading" aria-labelledby="advanced-features"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Advanced Features
-  
-  
+
+
 </h2>
-    
+
 <h3 id="enhanced-kyc">
-  
-  
+
+
     <a href="#enhanced-kyc" class="anchor-heading" aria-labelledby="enhanced-kyc"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Enhanced KYC
-  
-  
+
+
 </h3>
-    
+
 
 <p>Add source of funds and occupation verification:</p>
 
@@ -2081,13 +2081,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="ongoing-monitoring">
-  
-  
+
+
     <a href="#ongoing-monitoring" class="anchor-heading" aria-labelledby="ongoing-monitoring"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Ongoing Monitoring
-  
-  
+
+
 </h3>
-    
+
 
 <p>Monitor customer for changes:</p>
 
@@ -2133,13 +2133,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="cross-border-kyc">
-  
-  
+
+
     <a href="#cross-border-kyc" class="anchor-heading" aria-labelledby="cross-border-kyc"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Cross-Border KYC
-  
-  
+
+
 </h3>
-    
+
 
 <p>Enable international KYC recognition:</p>
 
@@ -2179,7 +2179,7 @@
             <span class="n">didRegistry</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">).</span><span class="nf">toCredentialDidResolution</span><span class="p">()</span>
         <span class="p">}</span>
     <span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">verifier</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span>
         <span class="n">credential</span> <span class="p">=</span> <span class="n">kycCredential</span><span class="p">,</span>
         <span class="n">options</span> <span class="p">=</span> <span class="nc">CredentialVerificationOptions</span><span class="p">(</span>
@@ -2187,9 +2187,9 @@
             <span class="n">checkExpiration</span> <span class="p">=</span> <span class="k">true</span>
         <span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="k">if</span> <span class="p">(!</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="k">return</span> <span class="k">false</span>
-    
+
     <span class="c1">// Check if KYC provider is recognized in verifying country</span>
     <span class="kd">val</span> <span class="py">kycProviderDid</span> <span class="p">=</span> <span class="n">kycCredential</span><span class="p">.</span><span class="n">issuer</span>
     <span class="c1">// In production, check against list of recognized KYC providers</span>
@@ -2197,21 +2197,21 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="real-world-use-cases">
-  
-  
+
+
     <a href="#real-world-use-cases" class="anchor-heading" aria-labelledby="real-world-use-cases"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Use Cases
-  
-  
+
+
 </h2>
-    
+
 <h3 id="1-bank-account-opening">
-  
-  
+
+
     <a href="#1-bank-account-opening" class="anchor-heading" aria-labelledby="1-bank-account-opening"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Bank Account Opening
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Scenario</strong>: Customer opens bank account using reusable KYC credential.</p>
 
@@ -2264,18 +2264,18 @@
         <span class="nf">byType</span><span class="p">(</span><span class="s">"KYCCredential"</span><span class="p">)</span>
         <span class="nf">valid</span><span class="p">()</span>
     <span class="p">}.</span><span class="nf">firstOrNull</span><span class="p">()</span> <span class="o">?:</span> <span class="k">throw</span> <span class="nc">IllegalArgumentException</span><span class="p">(</span><span class="s">"No valid KYC credential"</span><span class="p">)</span>
-    
+
     <span class="c1">// Check if KYC meets bank requirements</span>
     <span class="kd">val</span> <span class="py">meetsRequirements</span> <span class="p">=</span> <span class="nf">checkComplianceRequirements</span><span class="p">(</span>
         <span class="n">credential</span> <span class="p">=</span> <span class="n">kycCredential</span><span class="p">,</span>
         <span class="n">requiredLevel</span> <span class="p">=</span> <span class="s">"Standard"</span><span class="p">,</span>
         <span class="n">requiredAMLStatus</span> <span class="p">=</span> <span class="s">"clear"</span>
     <span class="p">)</span>
-    
+
     <span class="k">if</span> <span class="p">(!</span><span class="n">meetsRequirements</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">throw</span> <span class="nc">IllegalArgumentException</span><span class="p">(</span><span class="s">"KYC does not meet bank requirements"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Create presentation</span>
     <span class="k">return</span> <span class="n">customerWallet</span><span class="p">.</span><span class="nf">createSelectiveDisclosure</span><span class="p">(</span>
         <span class="n">credentialIds</span> <span class="p">=</span> <span class="nf">listOfNotNull</span><span class="p">(</span><span class="n">kycCredential</span><span class="p">.</span><span class="n">id</span><span class="p">),</span>
@@ -2295,13 +2295,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="2-crypto-exchange-kyc">
-  
-  
+
+
     <a href="#2-crypto-exchange-kyc" class="anchor-heading" aria-labelledby="2-crypto-exchange-kyc"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Crypto Exchange KYC
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Scenario</strong>: Customer opens crypto exchange account using same KYC credential.</p>
 
@@ -2340,7 +2340,7 @@
         <span class="nf">byType</span><span class="p">(</span><span class="s">"KYCCredential"</span><span class="p">)</span>
         <span class="nf">valid</span><span class="p">()</span>
     <span class="p">}.</span><span class="nf">firstOrNull</span><span class="p">()</span> <span class="o">?:</span> <span class="k">throw</span> <span class="nc">IllegalArgumentException</span><span class="p">(</span><span class="s">"No valid KYC credential"</span><span class="p">)</span>
-    
+
     <span class="c1">// Crypto exchanges typically need less information</span>
     <span class="k">return</span> <span class="n">customerWallet</span><span class="p">.</span><span class="nf">createSelectiveDisclosure</span><span class="p">(</span>
         <span class="n">credentialIds</span> <span class="p">=</span> <span class="nf">listOfNotNull</span><span class="p">(</span><span class="n">kycCredential</span><span class="p">.</span><span class="n">id</span><span class="p">),</span>
@@ -2359,13 +2359,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="3-loan-application">
-  
-  
+
+
     <a href="#3-loan-application" class="anchor-heading" aria-labelledby="3-loan-application"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Loan Application
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Scenario</strong>: Customer applies for loan using enhanced KYC credential.</p>
 
@@ -2413,15 +2413,15 @@
         <span class="nf">byType</span><span class="p">(</span><span class="s">"EnhancedKYCCredential"</span><span class="p">)</span>
         <span class="nf">valid</span><span class="p">()</span>
     <span class="p">}.</span><span class="nf">firstOrNull</span><span class="p">()</span> <span class="o">?:</span> <span class="k">throw</span> <span class="nc">IllegalArgumentException</span><span class="p">(</span><span class="s">"Enhanced KYC required for loan"</span><span class="p">)</span>
-    
+
     <span class="c1">// Verify enhanced KYC meets loan requirements</span>
     <span class="kd">val</span> <span class="py">kyc</span> <span class="p">=</span> <span class="n">enhancedKYCCredential</span><span class="p">.</span><span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"enhancedKYC"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
     <span class="kd">val</span> <span class="py">verificationLevel</span> <span class="p">=</span> <span class="n">kyc</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"verificationLevel"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">verificationLevel</span> <span class="p">!=</span> <span class="s">"Enhanced"</span> <span class="p">&amp;&amp;</span> <span class="n">verificationLevel</span> <span class="p">!=</span> <span class="s">"Premium"</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">throw</span> <span class="nc">IllegalArgumentException</span><span class="p">(</span><span class="s">"Enhanced KYC required for loan application"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="k">return</span> <span class="n">customerWallet</span><span class="p">.</span><span class="nf">createSelectiveDisclosure</span><span class="p">(</span>
         <span class="n">credentialIds</span> <span class="p">=</span> <span class="nf">listOfNotNull</span><span class="p">(</span><span class="n">enhancedKYCCredential</span><span class="p">.</span><span class="n">id</span><span class="p">),</span>
         <span class="n">disclosedFields</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span>
@@ -2439,13 +2439,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="benefits">
-  
-  
+
+
     <a href="#benefits" class="anchor-heading" aria-labelledby="benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Benefits
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Reusable Identity</strong>: One-time KYC, reuse across institutions</li>
@@ -2460,13 +2460,13 @@
   <li><strong>Security</strong>: Reduced risk of identity theft</li>
 </ol>
 <h2 id="best-practices">
-  
-  
+
+
     <a href="#best-practices" class="anchor-heading" aria-labelledby="best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Best Practices
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Verification Levels</strong>: Use appropriate verification levels</li>
@@ -2481,13 +2481,13 @@
   <li><strong>Customer Education</strong>: Educate customers on credential management</li>
 </ol>
 <h2 id="next-steps">
-  
-  
+
+
     <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li>Learn about <a href="/trustweave/tutorials/wallet-api-tutorial/">Wallet API Tutorial</a></li>
@@ -2496,17 +2496,17 @@
   <li>Review <a href="/trustweave/core-concepts/verifiable-credentials/">Core Concepts: Verifiable Credentials</a> for credential details</li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -2538,7 +2538,7 @@
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -2548,12 +2548,12 @@
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -2575,12 +2575,12 @@
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -2589,12 +2589,12 @@
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -2602,7 +2602,7 @@
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -2610,31 +2610,31 @@
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -2646,7 +2646,7 @@
 
 
 
-  
+
 </body>
 </html>
 

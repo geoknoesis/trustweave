@@ -111,7 +111,7 @@ flowchart TD
     B -->|issues credential| C["Verifiable Credential<br/>Location Claim<br/>Proof cryptographic<br/>Metadata"]
     C -->|anchors to blockchain| D["Blockchain Anchor<br/>Immutable timestamp<br/>Location digest<br/>Integrity proof"]
     D -->|stores in wallet| E["Location Wallet<br/>Stores location credentials<br/>Creates presentations<br/>Selective disclosure"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -139,13 +139,13 @@ dependencies {
     implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    
+
     // Test kit for in-memory implementations
     implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -197,29 +197,29 @@ data class LocationProof(
 
 fun main() = runBlocking {
     println("=== Proof of Location Scenario ===\n")
-    
+
     // Step 1: Setup services
     println("Step 1: Setting up services...")
     val locationProviderKms = InMemoryKeyManagementService()
     val verifierKms = InMemoryKeyManagementService()
-    
+
     val didMethod = DidKeyMockMethod(locationProviderKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
-    
+
     // Setup blockchain for anchoring
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
     val blockchainRegistry = BlockchainAnchorRegistry().apply {
         register("eip155:1", anchorClient)
     }
-    
+
     // Step 2: Create DIDs
     println("\nStep 2: Creating DIDs...")
     val locationProviderDid = didMethod.createDid()
     println("Location Provider DID: ${locationProviderDid.id}")
-    
+
     val deviceDid = didMethod.createDid()
     println("Device DID: ${deviceDid.id}")
-    
+
     // Step 3: Create location wallet
     println("\nStep 3: Creating location wallet...")
     val locationWallet = InMemoryWallet(
@@ -227,7 +227,7 @@ fun main() = runBlocking {
         holderDid = deviceDid.id
     )
     println("Location wallet created: ${locationWallet.walletId}")
-    
+
     // Step 4: Capture location data
     println("\nStep 4: Capturing location data...")
     val locationClaim = LocationClaim(
@@ -243,7 +243,7 @@ fun main() = runBlocking {
     println("  - Coordinates: (${locationClaim.latitude}, ${locationClaim.longitude})")
     println("  - Accuracy: ${locationClaim.accuracy} meters")
     println("  - Timestamp: ${locationClaim.timestamp}")
-    
+
     // Step 5: Create location credential
     println("\nStep 5: Creating location credential...")
     val locationCredential = VerifiableCredential(
@@ -270,7 +270,7 @@ fun main() = runBlocking {
             schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
         )
     )
-    
+
     // Step 6: Issue credential with proof
     println("\nStep 6: Issuing credential with proof...")
     val issuerKey = locationProviderKms.generateKey("Ed25519")
@@ -280,24 +280,24 @@ fun main() = runBlocking {
     )
 
     val proofRegistry = ProofGeneratorRegistry().apply { register(proofGenerator) }
-    
+
     val credentialIssuer = CredentialIssuer(
         proofGenerator = proofGenerator,
         resolveDid = { did -> didRegistry.resolve(did) != null },
         proofRegistry = proofRegistry
     )
-    
+
     val issuedCredential = credentialIssuer.issue(
         credential = locationCredential,
         issuerDid = locationProviderDid.id,
         keyId = issuerKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Credential issued:")
     println("  - Type: ${issuedCredential.type}")
     println("  - Has proof: ${issuedCredential.proof != null}")
-    
+
     // Step 7: Compute digest and anchor to blockchain
     println("\nStep 7: Anchoring location proof to blockchain...")
     val credentialDigest = DigestUtils.sha256DigestMultibase(
@@ -306,28 +306,28 @@ fun main() = runBlocking {
             issuedCredential
         )
     )
-    
+
     val locationProof = LocationProof(
         locationClaim = locationClaim,
         credentialDigest = credentialDigest
     )
-    
+
     val anchorResult = blockchainRegistry.anchorTyped(
         value = locationProof,
         serializer = LocationProof.serializer(),
         targetChainId = "eip155:1"
     )
-    
+
     println("Location proof anchored:")
     println("  - Transaction hash: ${anchorResult.ref.txHash}")
     println("  - Chain ID: ${anchorResult.ref.chainId}")
     println("  - Digest: $credentialDigest")
-    
+
     // Step 8: Store credential in wallet
     println("\nStep 8: Storing credential in wallet...")
     val credentialId = locationWallet.store(issuedCredential)
     println("Credential stored with ID: $credentialId")
-    
+
     // Step 9: Organize location credentials
     println("\nStep 9: Organizing location credentials...")
     val locationCollection = locationWallet.createCollection(
@@ -335,15 +335,15 @@ fun main() = runBlocking {
         description = "Historical location proofs"
     )
     locationWallet.addToCollection(credentialId, locationCollection)
-    
+
     // Tag by location type
     val locationTags = when {
-        locationClaim.latitude > 37.7 && locationClaim.latitude < 37.8 -> 
+        locationClaim.latitude > 37.7 && locationClaim.latitude < 37.8 ->
             setOf("san-francisco", "california", "usa", "gps")
         else -> setOf("location", "gps", "verified")
     }
     locationWallet.tagCredential(credentialId, locationTags)
-    
+
     // Add metadata
     locationWallet.addMetadata(credentialId, mapOf(
         "city" to "San Francisco",
@@ -351,10 +351,10 @@ fun main() = runBlocking {
         "anchorTxHash" to anchorResult.ref.txHash,
         "accuracy" to locationClaim.accuracy
     ))
-    
+
     println("Created collection: $locationCollection")
     println("Added tags: ${locationTags.joinToString()}")
-    
+
     // Step 10: Query location credentials
     println("\nStep 10: Querying location credentials...")
     val recentLocations = locationWallet.query {
@@ -362,14 +362,14 @@ fun main() = runBlocking {
         valid()
     }
     println("Found ${recentLocations.size} valid location credentials")
-    
+
     // Find locations in specific area (using tags)
     val sfLocations = locationWallet.findByTag("san-francisco")
     println("San Francisco locations: ${sfLocations.size}")
-    
+
     // Step 11: Create location presentation with selective disclosure
     println("\nStep 11: Creating location presentation...")
-    
+
     // Selective disclosure: reveal approximate location but not exact coordinates
     val approximatePresentation = locationWallet.createSelectiveDisclosure(
         credentialIds = listOf(credentialId),
@@ -386,7 +386,7 @@ fun main() = runBlocking {
         )
     )
     println("Approximate location presentation created (coordinates hidden)")
-    
+
     // Full location presentation (for trusted verifiers)
     val fullPresentation = locationWallet.createPresentation(
         credentialIds = listOf(credentialId),
@@ -398,11 +398,11 @@ fun main() = runBlocking {
         )
     )
     println("Full location presentation created")
-    
+
     // Step 12: Verify location credential
     println("\nStep 12: Verifying location credential...")
     val verifier = CredentialVerifier(didRegistry.resolve(deviceDid.id) ?: throw IllegalArgumentException("Device DID not found"))
-    
+
     val verificationResult = verifier.verify(
         credential = issuedCredential,
         options = CredentialVerificationOptions(
@@ -412,7 +412,7 @@ fun main() = runBlocking {
             didResolver = { did -> didRegistry.resolve(did) != null }
         )
     )
-    
+
     if (verificationResult.valid) {
         println("✅ Location credential is valid!")
         println("  - Proof valid: ${verificationResult.proofValid}")
@@ -422,14 +422,14 @@ fun main() = runBlocking {
         println("❌ Location credential verification failed:")
         verificationResult.errors.forEach { println("  - $it") }
     }
-    
+
     // Step 13: Verify blockchain anchor
     println("\nStep 13: Verifying blockchain anchor...")
     val retrievedProof = blockchainRegistry.readTyped<LocationProof>(
         ref = anchorResult.ref,
         serializer = LocationProof.serializer()
     )
-    
+
     val retrievedDigest = retrievedProof.credentialDigest
     if (retrievedDigest == credentialDigest) {
         println("✅ Blockchain anchor verified!")
@@ -438,7 +438,7 @@ fun main() = runBlocking {
     } else {
         println("❌ Digest mismatch - location proof may have been tampered with")
     }
-    
+
     // Step 14: Location-based queries
     println("\nStep 14: Location-based queries...")
     val stats = locationWallet.getStatistics()
@@ -449,7 +449,7 @@ fun main() = runBlocking {
         - Collections: ${stats.collectionsCount}
         - Tags: ${stats.tagsCount}
     """.trimIndent())
-    
+
     println("\n=== Scenario Complete ===")
 }
 
@@ -576,10 +576,10 @@ fun verifyLocationInGeofence(
 ): Boolean {
     val location = credential.credentialSubject.jsonObject["location"]?.jsonObject
         ?: return false
-    
+
     val lat = location["latitude"]?.jsonPrimitive?.content?.toDouble() ?: return false
     val lon = location["longitude"]?.jsonPrimitive?.content?.toDouble() ?: return false
-    
+
     return lat in minLat..maxLat && lon in minLon..maxLon
 }
 
@@ -606,13 +606,13 @@ fun verifyLocationWithinDistance(
 ): Boolean {
     val location = credential.credentialSubject.jsonObject["location"]?.jsonObject
         ?: return false
-    
+
     val lat = location["latitude"]?.jsonPrimitive?.content?.toDouble() ?: return false
     val lon = location["longitude"]?.jsonPrimitive?.content?.toDouble() ?: return false
     val accuracy = location["accuracy"]?.jsonPrimitive?.content?.toDouble() ?: Double.MAX_VALUE
-    
+
     val distance = calculateHaversineDistance(lat, lon, targetLat, targetLon)
-    
+
     // Account for location accuracy
     return distance <= (maxDistance + accuracy)
 }
@@ -758,13 +758,13 @@ fun verifyVehicleTrajectory(
     // Check proofs are from different roadside units
     val issuers = locationProofs.map { it.issuer }.toSet()
     if (issuers.size < 2) return false // Need multiple sources
-    
+
     // Verify temporal sequence
     val timestamps = locationProofs.mapNotNull { credential ->
         credential.credentialSubject.jsonObject["location"]?.jsonObject
             ?.get("timestamp")?.jsonPrimitive?.content
     }.sorted()
-    
+
     // Check timestamps are sequential
     return timestamps.zipWithNext().all { (t1, t2) ->
         Instant.parse(t1).isBefore(Instant.parse(t2))
@@ -805,10 +805,10 @@ fun verifyDataLocationCompliance(
 ): Boolean {
     val location = credential.credentialSubject.jsonObject["storageLocation"]?.jsonObject
         ?: return false
-    
+
     val lat = location["latitude"]?.jsonPrimitive?.content?.toDouble() ?: return false
     val lon = location["longitude"]?.jsonPrimitive?.content?.toDouble() ?: return false
-    
+
     return allowedRegions.any { region ->
         lat in region.minLat..region.maxLat && lon in region.minLon..region.maxLon
     }
@@ -852,19 +852,19 @@ fun verifyMediaLocation(
 ): Boolean {
     val credentialHash = credential.credentialSubject.jsonObject["mediaHash"]?.jsonPrimitive?.content
     if (credentialHash != mediaHash) return false
-    
+
     val location = credential.credentialSubject.jsonObject["captureLocation"]?.jsonObject
         ?: return false
-    
+
     val lat = location["latitude"]?.jsonPrimitive?.content?.toDouble() ?: return false
     val lon = location["longitude"]?.jsonPrimitive?.content?.toDouble() ?: return false
-    
+
     val distance = calculateHaversineDistance(
         lat, lon,
         claimedLocation.first,
         claimedLocation.second
     )
-    
+
     return distance < 100.0 // Within 100 meters
 }
 ```
@@ -980,7 +980,7 @@ fun anchorGeospatialDataset(
     val digest = DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
     )
-    
+
     return blockchainRegistry.anchorTyped(
         value = LocationProof(dataset, digest),
         serializer = LocationProof.serializer(),
@@ -1027,12 +1027,12 @@ fun createMultiSourceLocationCredential(
             })
         }
     }
-    
+
     // Calculate consensus location
     val consensusLocation = calculateConsensusLocation(
         listOfNotNull(gpsLocation, wifiLocation, cellLocation)
     )
-    
+
     return VerifiableCredential(
         type = listOf("VerifiableCredential", "MultiSourceLocationCredential"),
         issuer = issuerDid,
@@ -1055,26 +1055,26 @@ fun calculateConsensusLocation(
     if (locations.isEmpty()) {
         throw IllegalArgumentException("At least one location required")
     }
-    
+
     // Weighted average based on accuracy (lower accuracy = higher weight)
     val weights = locations.map { 1.0 / it.accuracy }
     val totalWeight = weights.sum()
-    
+
     val avgLat = locations.zip(weights).sumOf { (loc, weight) ->
         loc.latitude * weight
     } / totalWeight
-    
+
     val avgLon = locations.zip(weights).sumOf { (loc, weight) ->
         loc.longitude * weight
     } / totalWeight
-    
+
     // Confidence based on number of sources and agreement
     val confidence = when {
         locations.size >= 3 -> 0.95
         locations.size == 2 -> 0.85
         else -> 0.70
     }
-    
+
     return Triple(avgLat, avgLon, confidence)
 }
 ```

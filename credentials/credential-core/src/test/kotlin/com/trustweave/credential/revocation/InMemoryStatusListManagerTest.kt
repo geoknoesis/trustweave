@@ -34,7 +34,7 @@ class InMemoryStatusListManagerTest {
             purpose = StatusPurpose.REVOCATION,
             size = 1000
         )
-        
+
         assertNotNull(statusList)
         assertEquals(issuerDid, statusList.issuer)
         assertTrue(statusList.type.contains("StatusList2021Credential"))
@@ -49,7 +49,7 @@ class InMemoryStatusListManagerTest {
             purpose = StatusPurpose.SUSPENSION,
             size = 1000
         )
-        
+
         assertEquals("suspension", statusList.credentialSubject.statusPurpose)
     }
 
@@ -60,7 +60,7 @@ class InMemoryStatusListManagerTest {
             purpose = StatusPurpose.REVOCATION,
             size = 5000
         )
-        
+
         assertNotNull(statusList)
     }
 
@@ -70,16 +70,16 @@ class InMemoryStatusListManagerTest {
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
         )
-        
+
         val revoked = manager.revokeCredential("cred-123", statusList.id)
-        
+
         assertTrue(revoked)
     }
 
     @Test
     fun `test revoke credential fails when status list not found`() = runBlocking {
         val revoked = manager.revokeCredential("cred-123", "nonexistent-status-list")
-        
+
         assertFalse(revoked)
     }
 
@@ -89,9 +89,9 @@ class InMemoryStatusListManagerTest {
             issuerDid = issuerDid,
             purpose = StatusPurpose.SUSPENSION
         )
-        
+
         val suspended = manager.suspendCredential("cred-123", statusList.id)
-        
+
         assertTrue(suspended)
     }
 
@@ -101,7 +101,7 @@ class InMemoryStatusListManagerTest {
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
         )
-        
+
         val credential = createTestCredential(
             id = "cred-123",
             credentialStatus = CredentialStatus(
@@ -110,9 +110,9 @@ class InMemoryStatusListManagerTest {
                 statusListCredential = statusList.id
             )
         )
-        
+
         val status = manager.checkRevocationStatus(credential)
-        
+
         assertFalse(status.revoked)
         assertFalse(status.suspended)
     }
@@ -123,9 +123,9 @@ class InMemoryStatusListManagerTest {
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
         )
-        
+
         manager.revokeCredential("cred-123", statusList.id)
-        
+
         val credential = createTestCredential(
             id = "cred-123",
             credentialStatus = CredentialStatus(
@@ -134,9 +134,9 @@ class InMemoryStatusListManagerTest {
                 statusListCredential = statusList.id
             )
         )
-        
+
         val status = manager.checkRevocationStatus(credential)
-        
+
         assertTrue(status.revoked)
         assertFalse(status.suspended)
     }
@@ -147,9 +147,9 @@ class InMemoryStatusListManagerTest {
             issuerDid = issuerDid,
             purpose = StatusPurpose.SUSPENSION
         )
-        
+
         manager.suspendCredential("cred-123", statusList.id)
-        
+
         val credential = createTestCredential(
             id = "cred-123",
             credentialStatus = CredentialStatus(
@@ -158,9 +158,9 @@ class InMemoryStatusListManagerTest {
                 statusListCredential = statusList.id
             )
         )
-        
+
         val status = manager.checkRevocationStatus(credential)
-        
+
         assertFalse(status.revoked)
         assertTrue(status.suspended)
     }
@@ -168,9 +168,9 @@ class InMemoryStatusListManagerTest {
     @Test
     fun `test check revocation status for credential without status`() = runBlocking {
         val credential = createTestCredential()
-        
+
         val status = manager.checkRevocationStatus(credential)
-        
+
         assertFalse(status.revoked)
         assertFalse(status.suspended)
     }
@@ -181,9 +181,9 @@ class InMemoryStatusListManagerTest {
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
         )
-        
+
         val updated = manager.updateStatusList(statusList.id, listOf(0, 1, 2))
-        
+
         assertNotNull(updated)
         assertNotEquals(statusList.credentialSubject.encodedList, updated.credentialSubject.encodedList)
     }
@@ -201,9 +201,9 @@ class InMemoryStatusListManagerTest {
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
         )
-        
+
         val retrieved = manager.getStatusList(statusList.id)
-        
+
         assertNotNull(retrieved)
         assertEquals(statusList.id, retrieved?.id)
     }
@@ -219,11 +219,11 @@ class InMemoryStatusListManagerTest {
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
         )
-        
+
         assertTrue(manager.revokeCredential("cred-1", statusList.id))
         assertTrue(manager.revokeCredential("cred-2", statusList.id))
         assertTrue(manager.revokeCredential("cred-3", statusList.id))
-        
+
         val credential1 = createTestCredential(
             id = "cred-1",
             credentialStatus = CredentialStatus(
@@ -240,7 +240,7 @@ class InMemoryStatusListManagerTest {
                 statusListCredential = statusList.id
             )
         )
-        
+
         assertTrue(manager.checkRevocationStatus(credential1).revoked)
         assertTrue(manager.checkRevocationStatus(credential2).revoked)
     }
@@ -251,9 +251,9 @@ class InMemoryStatusListManagerTest {
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
         )
-        
+
         manager.revokeCredential("cred-123", statusList.id)
-        
+
         val credential = createTestCredential(
             id = "cred-123",
             credentialStatus = CredentialStatus(
@@ -263,9 +263,9 @@ class InMemoryStatusListManagerTest {
                 statusListIndex = "0"
             )
         )
-        
+
         val status = manager.checkRevocationStatus(credential)
-        
+
         assertTrue(status.revoked)
     }
 

@@ -49,14 +49,14 @@ fun main() = runBlocking {
         keys { provider("inMemory"); algorithm("Ed25519") }
         did { method("key") { algorithm("Ed25519") } }
     }
-    
+
     try {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
         println("Created DID: $did")
-        
+
         val credential = trustWeave.issue {
             credential {
                 type("VerifiableCredential", "ExampleCredential")
@@ -464,11 +464,11 @@ val did = TrustWeave.dids.create()
 // Note: dids.create() returns DidDocument directly, not Result
 // For error handling, wrap in try-catch
 result.fold(
-    onSuccess = { did -> 
+    onSuccess = { did ->
         // Process DID
         processDid(did)
     },
-    onFailure = { error -> 
+    onFailure = { error ->
         // Handle error appropriately
         logger.error("Failed to create DID", error)
         // Show user-friendly message or retry
@@ -483,7 +483,7 @@ result.fold(
 ❌ **Bad:**
 ```kotlin
 result.fold(
-    onFailure = { error -> 
+    onFailure = { error ->
         println("Error: ${error.message}")  // Loses valuable context
     }
 )
@@ -496,7 +496,7 @@ result.fold(
         logger.error("Error: ${error.message}")
         logger.debug("Error code: ${error.code}")
         logger.debug("Context: ${error.context}")
-        
+
         // Use context for better error handling
         when (error) {
             is DidException.DidMethodNotRegistered -> {
@@ -535,18 +535,18 @@ if (verification.valid) {
         logger.warn("Credential has warnings: ${verification.warnings}")
         // Decide if warnings are acceptable for your use case
     }
-    
+
     // Check specific validation flags
     if (!verification.proofValid) {
         logger.error("Proof validation failed")
         return
     }
-    
+
     if (!verification.notRevoked) {
         logger.warn("Credential may be revoked")
         // Handle revocation appropriately
     }
-    
+
     processCredential(credential)
 }
 ```
@@ -586,7 +586,7 @@ val resolution = TrustWeave.dids.resolve(userInputDid)
 ❌ **Bad:**
 ```kotlin
 result.fold(
-    onFailure = { error -> 
+    onFailure = { error ->
         // Generic handling loses specific error information
         println("Something went wrong: ${error.message}")
     }
@@ -641,7 +641,7 @@ val did = TrustWeave.dids.create()
 // Note: dids.create() returns DidDocument directly, not Result
 // For error handling, wrap in try-catch
 result.fold(
-    onSuccess = { did -> 
+    onSuccess = { did ->
         println("Created DID: ${did.id}")
     },
     onFailure = { error ->
@@ -756,7 +756,7 @@ val results = dids.mapAsync { did ->
 }
 
 results.fold(
-    onSuccess = { resolutions -> 
+    onSuccess = { resolutions ->
         resolutions.forEach { println("Resolved: ${it.document?.id}") }
     },
     onFailure = { error -> println("Error: ${error.message}") }
@@ -1018,15 +1018,15 @@ suspend fun <T> retryWithBackoff(
 ): Result<T> {
     var delay = initialDelay.toDouble()
     var lastError: TrustWeaveException? = null
-    
+
     repeat(maxRetries) { attempt ->
         val result = operation()
-        
+
         result.fold(
             onSuccess = { return result },
             onFailure = { error ->
                 lastError = error
-                
+
                 // Don't retry on certain errors
                 when (error) {
                     is DidException.InvalidDidFormat,
@@ -1046,7 +1046,7 @@ suspend fun <T> retryWithBackoff(
             }
         )
     }
-    
+
     return Result.failure(lastError ?: TrustWeaveException.Unknown(
         code = "RETRY_EXHAUSTED",
         message = "Operation failed after $maxRetries retries",
@@ -1071,24 +1071,24 @@ suspend fun resolveDidWithFallback(
     preferredMethods: List<String> = listOf("web", "key", "peer")
 ): Result<DidResolutionResult> {
     val method = did.substringAfter("did:").substringBefore(":")
-    
+
     // Try preferred method first
     if (method in preferredMethods) {
         val resolution = TrustWeave.dids.resolve(did)
         if (result.isSuccess) return result
     }
-    
+
     // Try fallback methods
     for (fallbackMethod in preferredMethods) {
         if (fallbackMethod == method) continue
-        
+
         val fallbackDid = did.replace("did:$method:", "did:$fallbackMethod:")
         val resolution = TrustWeave.dids.resolve(fallbackDid)
         if (result.isSuccess) {
             return result
         }
     }
-    
+
     return Result.failure(DidException.DidNotFound(
         did = did,
         availableMethods = TrustWeave.getAvailableDidMethods()
@@ -1106,7 +1106,7 @@ suspend fun createDidWithAutoRegistration(
     options: DidCreationOptions? = null
 ): Result<DidDocument> {
     val did = TrustWeave.dids.create(method, options)
-    
+
     return result.fold(
         onSuccess = { did -> Result.success(did) },
         onFailure = { error ->
@@ -1152,13 +1152,13 @@ class CircuitBreaker(
     private var failureCount = 0
     private var lastFailureTime = 0L
     private var halfOpenSuccessCount = 0
-    
+
     suspend fun <T> execute(operation: suspend () -> Result<T>): Result<T> {
         when (state) {
             CircuitState.CLOSED -> {
                 val result = operation()
                 result.fold(
-                    onSuccess = { 
+                    onSuccess = {
                         failureCount = 0
                         return result
                     },
@@ -1225,11 +1225,11 @@ suspend fun verifyCredentialWithFallback(
     strictMode: Boolean = false
 ): CredentialVerificationResult {
     val result = TrustWeave.verifyCredential(credential).getOrNull()
-    
+
     if (result != null && result.valid) {
         return result
     }
-    
+
     // Fallback: Basic validation without network calls
     if (!strictMode) {
         val basicValidation = CredentialValidator.validateStructure(credential)
@@ -1237,8 +1237,8 @@ suspend fun verifyCredentialWithFallback(
             return CredentialVerificationResult(
                 valid = true,
                 proofValid = false, // Unknown without network
-                notExpired = credential.expirationDate?.let { 
-                    Instant.parse(it).isAfter(Instant.now()) 
+                notExpired = credential.expirationDate?.let {
+                    Instant.parse(it).isAfter(Instant.now())
                 } ?: true,
                 notRevoked = null, // Unknown without network
                 warnings = listOf("Full verification unavailable, using basic validation"),
@@ -1246,7 +1246,7 @@ suspend fun verifyCredentialWithFallback(
             )
         }
     }
-    
+
     return result ?: CredentialVerificationResult(
         valid = false,
         errors = listOf("Verification failed and no fallback available")
@@ -1264,7 +1264,7 @@ suspend fun batchResolveDids(
 ): Result<Map<String, DidResolutionResult>> {
     val results = mutableMapOf<String, DidResolutionResult>()
     val errors = mutableListOf<TrustWeaveException>()
-    
+
     dids.forEach { did ->
         val resolution = TrustWeave.dids.resolve(did)
         result.fold(
@@ -1272,7 +1272,7 @@ suspend fun batchResolveDids(
             onFailure = { error -> errors.add(error) }
         )
     }
-    
+
     return if (errors.isEmpty() || results.isNotEmpty()) {
         Result.success(results)
     } else {

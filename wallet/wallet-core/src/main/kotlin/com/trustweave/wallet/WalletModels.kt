@@ -5,7 +5,7 @@ import java.time.Instant
 
 /**
  * Credential collection model.
- * 
+ *
  * @param id Collection ID
  * @param name Collection name
  * @param description Optional description
@@ -22,7 +22,7 @@ data class CredentialCollection(
 
 /**
  * Credential metadata model.
- * 
+ *
  * @param credentialId Credential ID
  * @param notes Optional notes
  * @param tags Set of tags
@@ -41,7 +41,7 @@ data class CredentialMetadata(
 
 /**
  * Key information model.
- * 
+ *
  * @param id Key ID
  * @param algorithm Key algorithm (e.g., "Ed25519", "secp256k1")
  * @param publicKeyJwk Public key in JWK format (optional)
@@ -58,7 +58,7 @@ data class KeyInfo(
 
 /**
  * Wallet statistics model.
- * 
+ *
  * @param totalCredentials Total number of credentials
  * @param validCredentials Number of valid credentials (not expired, not revoked, has proof)
  * @param expiredCredentials Number of expired credentials

@@ -5,8 +5,10 @@ plugins {
 
 group = "com.trustweave.kms"
 dependencies {
+    implementation(project(":common"))
     implementation(project(":credentials:credential-core"))
     implementation(project(":kms:kms-core"))
+    implementation(libs.kotlinx.coroutines.core)
 
     // Azure SDK for Key Vault
     implementation(platform("com.azure:azure-sdk-bom:1.2.15"))

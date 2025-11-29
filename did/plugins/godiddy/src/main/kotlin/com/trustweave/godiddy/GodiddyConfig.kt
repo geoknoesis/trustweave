@@ -10,12 +10,12 @@ data class GodiddyConfig(
      * Can be overridden for self-hosted instances.
      */
     val baseUrl: String = "https://api.godiddy.com",
-    
+
     /**
      * HTTP request timeout in milliseconds.
      */
     val timeout: Long = 30000,
-    
+
     /**
      * API key for authentication (if required).
      */
@@ -26,7 +26,7 @@ data class GodiddyConfig(
          * Default configuration using public godiddy service.
          */
         fun default(): GodiddyConfig = GodiddyConfig()
-        
+
         fun fromOptions(options: com.trustweave.did.DidCreationOptions): GodiddyConfig {
             val props = options.additionalProperties
             return GodiddyConfig(

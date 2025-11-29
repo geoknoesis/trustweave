@@ -1,8 +1,8 @@
 package com.trustweave.peerdid
 
-import com.trustweave.core.exception.NotFoundException
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractDidMethod
 import com.trustweave.did.base.DidMethodUtils
 import com.trustweave.kms.KeyManagementService
@@ -13,25 +13,25 @@ import java.util.Base64
 
 /**
  * Implementation of did:peer method for peer-to-peer DIDs.
- * 
+ *
  * did:peer uses peer DIDs for P2P communication without external registries:
  * - Format: `did:peer:{numalgo}:{encoded-data}`
  * - No external registry required
  * - Documents embedded in DID or stored locally
  * - Supports numalgo 0, 1, and 2
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val kms = InMemoryKeyManagementService()
  * val config = PeerDidConfig.numalgo2()
  * val method = PeerDidMethod(kms, config)
- * 
+ *
  * // Create DID
  * val options = didCreationOptions {
  *     algorithm = KeyAlgorithm.ED25519
  * }
  * val document = method.createDid(options)
- * 
+ *
  * // Resolve DID (from embedded document)
  * val result = method.resolveDid(document.id)
  * ```
@@ -46,7 +46,7 @@ class PeerDidMethod(
             // Generate key using KMS
             val algorithm = options.algorithm.algorithmName
             val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
-            
+
             // Generate peer DID based on numalgo
             val did = when (config.numalgo) {
                 PeerDidConfig.NUMALGO_0 -> generateNumalgo0Did(keyHandle)
@@ -54,25 +54,25 @@ class PeerDidMethod(
                 PeerDidConfig.NUMALGO_2 -> generateNumalgo2Did(keyHandle)
                 else -> throw IllegalArgumentException("Unsupported numalgo: ${config.numalgo}")
             }
-            
+
             // Create verification method
             val verificationMethod = DidMethodUtils.createVerificationMethod(
                 did = did,
                 keyHandle = keyHandle,
                 algorithm = options.algorithm
             )
-            
+
             // Build DID document
             val service = if (config.includeServices && options.additionalProperties.containsKey("serviceEndpoint")) {
-                listOf(Service(
+                listOf(DidService(
                     id = "$did#didcomm",
                     type = "DIDCommMessaging",
                     serviceEndpoint = options.additionalProperties["serviceEndpoint"] as String
                 ))
             } else {
-                emptyList()
+                emptyList<DidService>()
             }
-            
+
             val document = DidMethodUtils.buildDidDocument(
                 did = did,
                 verificationMethod = listOf(verificationMethod),
@@ -82,19 +82,20 @@ class PeerDidMethod(
                 } else null,
                 service = service
             )
-            
+
             // Store locally (peer DIDs don't use external registries)
             storeDocument(document.id, document)
-            
+
             document
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: IllegalArgumentException) {
             throw e
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to create did:peer: ${e.message}",
-                e
+            throw TrustWeaveException.Unknown(
+                code = "CREATE_FAILED",
+                message = "Failed to create did:peer: ${e.message}",
+                cause = e
             )
         }
     }
@@ -102,7 +103,7 @@ class PeerDidMethod(
     override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            
+
             // For peer DIDs, documents are stored locally or embedded in DID
             // First try to get from local storage
             val stored = getStoredDocument(did)
@@ -114,14 +115,14 @@ class PeerDidMethod(
                     getDocumentMetadata(did)?.updated
                 )
             }
-            
+
             // Try to resolve from embedded document (for long-form peer DIDs)
             val embedded = resolveEmbeddedDocument(did)
             if (embedded != null) {
                 storeDocument(embedded.id, embedded)
                 return@withContext DidMethodUtils.createSuccessResolutionResult(embedded, method)
             }
-            
+
             // Not found
             DidMethodUtils.createErrorResolutionResult(
                 "notFound",
@@ -149,27 +150,32 @@ class PeerDidMethod(
     ): DidDocument = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            
+
             // Resolve current document
             val currentResult = resolveDid(did)
-            val currentDocument = currentResult.document
-                ?: throw NotFoundException("DID document not found: $did")
-            
+            val currentDocument = when (currentResult) {
+                is DidResolutionResult.Success -> currentResult.document
+                else -> throw TrustWeaveException.NotFound(
+                    message = "DID document not found: $did"
+                )
+            }
+
             // Apply updater
             val updatedDocument = updater(currentDocument)
-            
+
             // Store updated document locally
             storeDocument(updatedDocument.id, updatedDocument)
-            
+
             updatedDocument
-        } catch (e: NotFoundException) {
+        } catch (e: TrustWeaveException.NotFound) {
             throw e
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to update did:peer: ${e.message}",
-                e
+            throw TrustWeaveException.Unknown(
+                code = "UPDATE_FAILED",
+                message = "Failed to update did:peer: ${e.message}",
+                cause = e
             )
         }
     }
@@ -177,22 +183,23 @@ class PeerDidMethod(
     override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            
+
             // Check if document exists
             val document = getStoredDocument(did)
             if (document == null) {
                 return@withContext false
             }
-            
+
             // Remove from local storage
             documents.remove(did)
             documentMetadata.remove(did)
-            
+
             true
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to deactivate did:peer: ${e.message}",
-                e
+            throw TrustWeaveException.Unknown(
+                code = "DEACTIVATE_FAILED",
+                message = "Failed to deactivate did:peer: ${e.message}",
+                cause = e
             )
         }
     }
@@ -204,7 +211,7 @@ class PeerDidMethod(
         // Numalgo 0 uses static numeric encoding
         // Simplified implementation
         val hash = MessageDigest.getInstance("SHA-256")
-            .digest(keyHandle.id.toByteArray())
+            .digest(keyHandle.id.value.toByteArray())
         val encoded = Base64.getUrlEncoder().withoutPadding().encodeToString(hash)
         return "did:peer:0${encoded.take(22)}"
     }
@@ -216,8 +223,11 @@ class PeerDidMethod(
         // Numalgo 1 uses inception key
         // Simplified implementation
         val publicKey = keyHandle.publicKeyMultibase
-            ?: throw TrustWeaveException("Public key multibase required for numalgo 1")
-        
+            ?: throw TrustWeaveException.Unknown(
+                code = "MISSING_PUBLIC_KEY",
+                message = "Public key multibase required for numalgo 1"
+            )
+
         val hash = MessageDigest.getInstance("SHA-256")
             .digest(publicKey.toByteArray())
         val encoded = Base64.getUrlEncoder().withoutPadding().encodeToString(hash)
@@ -231,8 +241,11 @@ class PeerDidMethod(
         // Numalgo 2 uses multibase encoding
         // Simplified implementation
         val publicKey = keyHandle.publicKeyMultibase
-            ?: throw TrustWeaveException("Public key multibase required for numalgo 2")
-        
+            ?: throw TrustWeaveException.Unknown(
+                code = "MISSING_PUBLIC_KEY",
+                message = "Public key multibase required for numalgo 2"
+            )
+
         val hash = MessageDigest.getInstance("SHA-256")
             .digest(publicKey.toByteArray())
         val encoded = Base64.getUrlEncoder().withoutPadding().encodeToString(hash)
@@ -246,7 +259,7 @@ class PeerDidMethod(
         // For long-form peer DIDs, the document might be embedded
         // This is a simplified implementation
         // In a full implementation, we'd decode the embedded document from the DID
-        
+
         // For now, return null (documents are stored locally)
         return null
     }

@@ -15,7 +15,7 @@ import java.util.*
 object ProofProtocol {
     /**
      * Creates a proof request message.
-     * 
+     *
      * @param fromDid Verifier DID
      * @param toDid Prover DID
      * @param proofRequest The proof request details
@@ -35,8 +35,8 @@ object ProofProtocol {
                 put("name", proofRequest.name)
                 put("version", proofRequest.version)
                 put("requested_attributes", JsonObject(
-                    proofRequest.requestedAttributes.associate { (key, attr) ->
-                        key to buildJsonObject {
+                    proofRequest.requestedAttributes.mapValues { (_, attr) ->
+                        buildJsonObject {
                             put("name", attr.name)
                             put("restrictions", JsonArray(
                                 attr.restrictions.map { restriction ->
@@ -51,13 +51,13 @@ object ProofProtocol {
                     }
                 ))
                 put("requested_predicates", JsonObject(
-                    proofRequest.requestedPredicates.associate { (key, pred) ->
-                        key to buildJsonObject {
+                    proofRequest.requestedPredicates.mapValues { (_, pred) ->
+                        buildJsonObject {
                             put("name", pred.name)
                             put("p_type", pred.pType)
                             put("p_value", pred.pValue)
                             put("restrictions", JsonArray(
-                                pred.restrictions.map { restriction ->
+                                pred.restrictions.map { restriction: AttributeRestriction ->
                                     buildJsonObject {
                                         restriction.issuerDid?.let { put("issuer", it) }
                                         restriction.schemaId?.let { put("schema_id", it) }
@@ -70,7 +70,7 @@ object ProofProtocol {
                 ))
             })
         }
-        
+
         return DidCommMessage(
             id = UUID.randomUUID().toString(),
             type = DidCommMessageTypes.PROOF_REQUEST,
@@ -84,7 +84,7 @@ object ProofProtocol {
 
     /**
      * Creates a proof presentation message.
-     * 
+     *
      * @param fromDid Prover DID
      * @param toDid Verifier DID
      * @param presentation The verifiable presentation
@@ -103,7 +103,7 @@ object ProofProtocol {
             VerifiablePresentation.serializer(),
             presentation
         )
-        
+
         val attachment = DidCommAttachment(
             id = UUID.randomUUID().toString(),
             mediaType = "application/json",
@@ -111,11 +111,11 @@ object ProofProtocol {
                 json = presentationJson
             )
         )
-        
+
         val body = buildJsonObject {
             put("goal_code", "present-proof")
         }
-        
+
         return DidCommMessage(
             id = UUID.randomUUID().toString(),
             type = DidCommMessageTypes.PROOF_PRESENTATION,
@@ -130,7 +130,7 @@ object ProofProtocol {
 
     /**
      * Creates a proof acknowledgment message.
-     * 
+     *
      * @param fromDid Verifier DID
      * @param toDid Prover DID
      * @param thid Thread ID
@@ -144,7 +144,7 @@ object ProofProtocol {
         val body = buildJsonObject {
             put("goal_code", "ack-proof")
         }
-        
+
         return DidCommMessage(
             id = UUID.randomUUID().toString(),
             type = DidCommMessageTypes.PROOF_ACK,
@@ -158,17 +158,17 @@ object ProofProtocol {
 
     /**
      * Extracts presentation from a proof presentation message.
-     * 
+     *
      * @param message The proof presentation message
      * @return The verifiable presentation, or null if not found
      */
     fun extractPresentation(message: DidCommMessage): VerifiablePresentation? {
         val attachment = message.attachments.firstOrNull()
             ?: return null
-        
+
         val presentationJson = attachment.data.json
             ?: return null
-        
+
         val json = Json { prettyPrint = false; ignoreUnknownKeys = true }
         return try {
             json.decodeFromJsonElement(

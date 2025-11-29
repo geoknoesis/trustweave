@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Interface for plugin registry operations.
- * 
+ *
  * This interface allows for dependency injection and test isolation
  * by enabling the use of test-specific registry instances.
  */
@@ -77,7 +77,7 @@ interface PluginRegistry {
         capability: String,
         preferences: List<String>
     ): PluginMetadata?
-    
+
     /**
      * Select best provider for a capability.
      *
@@ -140,12 +140,12 @@ interface PluginRegistry {
  * ```
  */
 class DefaultPluginRegistry : PluginRegistry {
-    
+
     private val plugins = ConcurrentHashMap<String, PluginMetadata>()
     private val instances = ConcurrentHashMap<String, Any>()
     // Store runtime class information for each instance to enable type-safe retrieval
     private val instanceTypes = ConcurrentHashMap<String, Class<*>>()
-    
+
     // Synchronization lock for operations that need atomicity across multiple maps
     private val lock = Any()
 
@@ -153,7 +153,7 @@ class DefaultPluginRegistry : PluginRegistry {
         if (metadata.id.isBlank()) {
             throw TrustWeaveException.BlankPluginId()
         }
-        
+
         // Synchronization is required to ensure atomicity across both maps.
         // While ConcurrentHashMap provides thread-safe individual operations,
         // we need to ensure that both plugins and instances maps are updated
@@ -193,13 +193,13 @@ class DefaultPluginRegistry : PluginRegistry {
     override fun <T> getInstance(pluginId: String, clazz: Class<T>): T? {
         val instance = instances[pluginId] ?: return null
         val storedClass = instanceTypes[pluginId] ?: return null
-        
+
         // Use Class.isAssignableFrom() to check if stored instance is compatible
         // with the requested type. This handles inheritance correctly.
         if (!clazz.isAssignableFrom(storedClass)) {
             return null
         }
-        
+
         // Safe cast: we've verified type compatibility above
         @Suppress("UNCHECKED_CAST")
         return instance as T
@@ -242,7 +242,7 @@ class DefaultPluginRegistry : PluginRegistry {
         // This ensures that even without preferences, a provider is selected if available.
         return candidates.firstOrNull()
     }
-    
+
     override fun selectProvider(capability: String): PluginMetadata? {
         return selectProvider(capability, emptyList())
     }
@@ -266,21 +266,21 @@ class DefaultPluginRegistry : PluginRegistry {
 
 /**
  * Get plugin instance with type safety check using reified type parameter.
- * 
+ *
  * This is a convenience extension function that provides type-safe retrieval using
  * reified generics. It calls the interface method [PluginRegistry.getInstance] with
  * the reified class, eliminating the need to manually pass Class objects.
- * 
+ *
  * **Type Safety**: Uses stored class information to verify type compatibility at runtime,
  * eliminating unsafe unchecked casts. Handles inheritance correctly (e.g., ArrayList
  * is compatible with List).
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val credentialService = registry.getInstance<CredentialService>("plugin-id")
  * // credentialService is of type CredentialService? with full type safety
  * ```
- * 
+ *
  * @param pluginId Plugin ID to retrieve
  * @return Plugin instance of type T, or null if not found or type mismatch
  */

@@ -32,21 +32,21 @@ class PresentationServiceEdgeCasesTest {
     @BeforeEach
     fun setup() {
         proofRegistry = ProofGeneratorRegistry()
-        
+
         val signer: suspend (ByteArray, String) -> ByteArray = { data, _ ->
             "mock-signature-${UUID.randomUUID()}".toByteArray()
         }
-        
+
         val proofGenerator = Ed25519ProofGenerator(
             signer = signer,
             getPublicKeyId = { "did:key:holder123#key-1" }
         )
         proofRegistry.register(proofGenerator)
-        
+
         credentialVerifier = CredentialVerifier(
             booleanDidResolver { true }
         )
-        
+
         service = newService(proofGenerator = proofGenerator)
     }
 
@@ -73,7 +73,7 @@ class PresentationServiceEdgeCasesTest {
             proofType = "Ed25519Signature2020",
             keyId = keyId
         )
-        
+
         assertFailsWith<IllegalArgumentException> {
             service.createPresentation(emptyList(), holderDid, options)
         }
@@ -87,7 +87,7 @@ class PresentationServiceEdgeCasesTest {
             proofType = "Ed25519Signature2020",
             keyId = keyId
         )
-        
+
         // Should handle gracefully or fail
         try {
             val presentation = service.createPresentation(credentials, holderDid, options)
@@ -107,7 +107,7 @@ class PresentationServiceEdgeCasesTest {
             proofType = "Ed25519Signature2020",
             keyId = keyId
         )
-        
+
         assertFailsWith<IllegalArgumentException> {
             service.createPresentation(credentials, "", options)
         }
@@ -121,7 +121,7 @@ class PresentationServiceEdgeCasesTest {
             proofType = "Ed25519Signature2020",
             keyId = keyId
         )
-        
+
         assertFailsWith<IllegalArgumentException> {
             service.createPresentation(credentials, "   ", options)
         }
@@ -135,9 +135,9 @@ class PresentationServiceEdgeCasesTest {
             proofType = "Ed25519Signature2020",
             keyId = null
         )
-        
+
         val presentation = service.createPresentation(credentials, holderDid, options)
-        
+
         // Should create presentation without proof or with default key
         assertNotNull(presentation)
     }
@@ -150,9 +150,9 @@ class PresentationServiceEdgeCasesTest {
             proofType = "",
             keyId = keyId
         )
-        
+
         val presentation = service.createPresentation(credentials, holderDid, options)
-        
+
         assertNull(presentation.proof)
     }
 
@@ -166,9 +166,9 @@ class PresentationServiceEdgeCasesTest {
             proofType = "Ed25519Signature2020",
             keyId = keyId
         )
-        
+
         val presentation = service.createPresentation(credentials, holderDid, options)
-        
+
         assertEquals(1000, presentation.verifiableCredential.size)
         assertNotNull(presentation.proof)
     }
@@ -183,9 +183,9 @@ class PresentationServiceEdgeCasesTest {
             keyId = keyId,
             challenge = longChallenge
         )
-        
+
         val presentation = service.createPresentation(credentials, holderDid, options)
-        
+
         assertEquals(longChallenge, presentation.challenge)
         assertEquals(longChallenge, presentation.proof?.challenge)
     }
@@ -200,9 +200,9 @@ class PresentationServiceEdgeCasesTest {
             keyId = keyId,
             domain = longDomain
         )
-        
+
         val presentation = service.createPresentation(credentials, holderDid, options)
-        
+
         assertEquals(longDomain, presentation.domain)
         assertEquals(longDomain, presentation.proof?.domain)
     }
@@ -217,7 +217,7 @@ class PresentationServiceEdgeCasesTest {
             proofType = "Ed25519Signature2020",
             keyId = keyId
         )
-        
+
         assertFailsWith<IllegalArgumentException> {
             service.createPresentation(credentials, "not-a-did", options)
         }
@@ -231,7 +231,7 @@ class PresentationServiceEdgeCasesTest {
             proofType = "InvalidProofType",
             keyId = keyId
         )
-        
+
         assertFailsWith<IllegalArgumentException> {
             service.createPresentation(credentials, holderDid, options)
         }
@@ -248,9 +248,9 @@ class PresentationServiceEdgeCasesTest {
             holder = holderDid,
             proof = null
         )
-        
+
         val result = service.verifyPresentation(presentation)
-        
+
         assertFalse(result.valid)
         assertFalse(result.presentationProofValid)
         assertTrue(result.errors.any { it.contains("no proof") || it.contains("proof") })
@@ -270,9 +270,9 @@ class PresentationServiceEdgeCasesTest {
                 proofPurpose = "assertionMethod"
             )
         )
-        
+
         val result = service.verifyPresentation(presentation)
-        
+
         // May fail validation or handle gracefully
         assertNotNull(result)
         // Empty type list should result in invalid presentation
@@ -295,9 +295,9 @@ class PresentationServiceEdgeCasesTest {
                 proofPurpose = "assertionMethod"
             )
         )
-        
+
         val result = service.verifyPresentation(presentation)
-        
+
         // May be valid or invalid depending on implementation
         assertNotNull(result)
     }
@@ -312,14 +312,14 @@ class PresentationServiceEdgeCasesTest {
             challenge = "Challenge123"
         )
         val presentation = service.createPresentation(credentials, holderDid, options)
-        
+
         val verificationOptions = PresentationVerificationOptions(
             verifyChallenge = true,
             expectedChallenge = "challenge123" // Different case
         )
-        
+
         val result = service.verifyPresentation(presentation, verificationOptions)
-        
+
         assertFalse(result.valid)
         assertFalse(result.challengeValid)
         assertTrue(result.errors.any { it.contains("Challenge mismatch") })
@@ -335,14 +335,14 @@ class PresentationServiceEdgeCasesTest {
             domain = "Example.com"
         )
         val presentation = service.createPresentation(credentials, holderDid, options)
-        
+
         val verificationOptions = PresentationVerificationOptions(
             verifyDomain = true,
             expectedDomain = "example.com" // Different case
         )
-        
+
         val result = service.verifyPresentation(presentation, verificationOptions)
-        
+
         assertFalse(result.valid)
         assertFalse(result.domainValid)
         assertTrue(result.errors.any { it.contains("Domain mismatch") })
@@ -358,14 +358,14 @@ class PresentationServiceEdgeCasesTest {
             // No challenge
         )
         val presentation = service.createPresentation(credentials, holderDid, options)
-        
+
         val verificationOptions = PresentationVerificationOptions(
             verifyChallenge = true,
             expectedChallenge = "required-challenge"
         )
-        
+
         val result = service.verifyPresentation(presentation, verificationOptions)
-        
+
         assertFalse(result.valid)
         assertFalse(result.challengeValid)
         assertTrue(result.errors.any { it.contains("Challenge") || it.contains("challenge") })
@@ -381,14 +381,14 @@ class PresentationServiceEdgeCasesTest {
             // No domain
         )
         val presentation = service.createPresentation(credentials, holderDid, options)
-        
+
         val verificationOptions = PresentationVerificationOptions(
             verifyDomain = true,
             expectedDomain = "required-domain.com"
         )
-        
+
         val result = service.verifyPresentation(presentation, verificationOptions)
-        
+
         assertFalse(result.valid)
         assertFalse(result.domainValid)
         assertTrue(result.errors.any { it.contains("Domain") || it.contains("domain") })
@@ -404,14 +404,14 @@ class PresentationServiceEdgeCasesTest {
             proofType = "Ed25519Signature2020",
             keyId = keyId
         )
-        
+
         val presentation = service.createSelectiveDisclosure(
             credentials = credentials,
             disclosedFields = emptyList(),
             holderDid = holderDid,
             options = options
         )
-        
+
         assertNotNull(presentation)
     }
 
@@ -423,14 +423,14 @@ class PresentationServiceEdgeCasesTest {
             proofType = "Ed25519Signature2020",
             keyId = keyId
         )
-        
+
         val presentation = service.createSelectiveDisclosure(
             credentials = credentials,
             disclosedFields = listOf("nonexistent.field.path", "another.invalid.path"),
             holderDid = holderDid,
             options = options
         )
-        
+
         assertNotNull(presentation)
     }
 
@@ -442,7 +442,7 @@ class PresentationServiceEdgeCasesTest {
             proofType = "Ed25519Signature2020",
             keyId = keyId
         )
-        
+
         val longPath = "level1.${"level".repeat(100)}.field"
         val presentation = service.createSelectiveDisclosure(
             credentials = credentials,
@@ -450,7 +450,7 @@ class PresentationServiceEdgeCasesTest {
             holderDid = holderDid,
             options = options
         )
-        
+
         assertNotNull(presentation)
     }
 
@@ -464,11 +464,11 @@ class PresentationServiceEdgeCasesTest {
             proofType = "Ed25519Signature2020",
             keyId = keyId
         )
-        
+
         val presentations = (1..10).map {
             service.createPresentation(credentials, holderDid, options)
         }
-        
+
         assertEquals(10, presentations.size)
         presentations.forEach { assertNotNull(it.proof) }
     }
@@ -488,11 +488,11 @@ class PresentationServiceEdgeCasesTest {
             proofType = "Ed25519Signature2020",
             keyId = keyId
         )
-        
+
         assertFailsWith<IllegalArgumentException> {
             serviceWithoutGenerator.createPresentation(credentials, holderDid, options)
         }
-        
+
         // Should work after registering generator
         val signer: suspend (ByteArray, String) -> ByteArray = { data, _ ->
             "mock-signature-${UUID.randomUUID()}".toByteArray()
@@ -502,7 +502,7 @@ class PresentationServiceEdgeCasesTest {
             getPublicKeyId = { "did:key:holder123#key-1" }
         )
         proofRegistry.register(proofGenerator)
-        
+
         val presentation = serviceWithoutGenerator.createPresentation(credentials, holderDid, options)
         assertNotNull(presentation.proof)
     }
@@ -519,9 +519,9 @@ class PresentationServiceEdgeCasesTest {
             keyId = keyId,
             challenge = specialChallenge
         )
-        
+
         val presentation = service.createPresentation(credentials, holderDid, options)
-        
+
         assertEquals(specialChallenge, presentation.challenge)
     }
 
@@ -534,7 +534,7 @@ class PresentationServiceEdgeCasesTest {
             proofType = "Ed25519Signature2020",
             keyId = keyId
         )
-        
+
         try {
             val presentation = service.createPresentation(credentials, unicodeDid, options)
             assertNotNull(presentation)

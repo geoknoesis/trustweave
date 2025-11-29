@@ -43,7 +43,7 @@ $gitbook-code-bg: #f5f5f5;
     overflow-x: auto;
     min-height: 200px;
     display: block;
-    
+
     // Ensure diagrams are visible
     svg {
       max-width: 100%;
@@ -51,13 +51,13 @@ $gitbook-code-bg: #f5f5f5;
       display: block;
       margin: 0 auto;
     }
-    
+
     // Fix for sequence diagrams
     &.sequence-diagram {
       min-height: 300px;
     }
   }
-  
+
   // Mermaid wrapper for better rendering
   .mermaid-wrapper {
     margin: 2rem 0;
@@ -66,20 +66,20 @@ $gitbook-code-bg: #f5f5f5;
     border: 1px solid $gitbook-border;
     border-radius: 4px;
     overflow-x: auto;
-    
+
     .mermaid {
       margin: 0;
       background-color: transparent;
     }
   }
-  
+
   .mermaid-diagram-title {
     font-weight: 600;
     margin-bottom: 0.5rem;
     color: $gitbook-text;
     font-size: 1.1em;
   }
-  
+
   .mermaid-diagram-caption {
     margin-top: 0.5rem;
     font-size: 0.9em;
@@ -189,12 +189,12 @@ $gitbook-code-bg: #f5f5f5;
     background-color: #e8f5e9;
     border-color: #388e3c;
   }
-  
+
   // Code example enhancements
   .code-example {
     position: relative;
     margin: 1.5rem 0;
-    
+
     .code-example-badge {
       position: absolute;
       top: 0.5rem;
@@ -207,40 +207,40 @@ $gitbook-code-bg: #f5f5f5;
       font-weight: 600;
       z-index: 10;
     }
-    
+
     .code-example-title {
       font-weight: 600;
       margin-bottom: 0.5rem;
       color: $gitbook-text;
     }
-    
+
     .code-example-source {
       text-align: right;
       margin-top: 0.5rem;
       font-size: 0.875rem;
-      
+
       a {
         color: $gitbook-primary;
         text-decoration: none;
-        
+
         &:hover {
           text-decoration: underline;
         }
       }
-      
+
       .external-icon {
         font-size: 0.75em;
         margin-left: 0.25rem;
       }
     }
-    
+
     .code-example-output {
       margin-top: 1rem;
       padding: 1rem;
       background: #f3f4f6;
       border-left: 3px solid #10b981;
       border-radius: 4px;
-      
+
       pre {
         margin: 0;
         background: transparent;
@@ -255,7 +255,7 @@ $gitbook-code-bg: #f5f5f5;
 .side-bar {
   // Ensure sidebar has proper top spacing
   padding-top: 0 !important;
-  
+
   // Fix site title/header positioning to align with search box top
   .site-header {
     padding-top: 0.5rem !important; // Align with search box top
@@ -269,7 +269,7 @@ $gitbook-code-bg: #f5f5f5;
     min-height: auto !important;
     position: relative !important;
     box-sizing: border-box !important;
-    
+
     .site-title {
       padding-top: 0 !important;
       margin-top: 0 !important;
@@ -286,17 +286,17 @@ $gitbook-code-bg: #f5f5f5;
       position: relative !important;
     }
   }
-  
+
   // GitBook-like sidebar styling
   .nav-list {
     .nav-list-item {
       .nav-list-link {
         color: $gitbook-text;
-        
+
         &:hover {
           color: $gitbook-primary;
         }
-        
+
         &.active {
           color: $gitbook-primary;
           font-weight: 600;
@@ -311,7 +311,7 @@ $gitbook-code-bg: #f5f5f5;
   input {
     border: 1px solid $gitbook-border;
     border-radius: 4px;
-    
+
     &:focus {
       border-color: $gitbook-primary;
       outline: none;
@@ -325,7 +325,7 @@ $gitbook-code-bg: #f5f5f5;
   border: 1px solid $gitbook-border;
   border-radius: 4px;
   padding: 15px;
-  
+
   pre {
     background-color: transparent;
     border: none;
@@ -350,7 +350,7 @@ html.search-active,
 body.search-active {
   overflow: hidden;
   position: relative;
-  
+
   // Hide footer when search is active to prevent overlap
   .site-footer {
     display: none !important;
@@ -434,7 +434,7 @@ body.search-active {
   z-index: 1000;
   padding: 1rem 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  
+
   .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -443,46 +443,46 @@ body.search-active {
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .logo {
     display: flex;
     align-items: center;
     text-decoration: none;
     cursor: pointer;
-    
+
     img {
       height: 80px;
       width: auto;
       transition: opacity 0.3s;
     }
-    
+
     &:hover img {
       opacity: 0.8;
     }
-    
+
     &:hover {
       text-decoration: none;
     }
   }
-  
+
   .nav-links {
     display: flex;
     gap: 2rem;
     align-items: center;
-    
+
     a {
       text-decoration: none;
       color: var(--nav-text);
       font-weight: 500;
       transition: color 0.3s;
       padding: 0.5rem 1rem;
-      
+
       &:hover {
         color: var(--nav-primary);
       }
     }
   }
-  
+
   .github-icon {
     display: flex;
     align-items: center;
@@ -492,12 +492,12 @@ body.search-active {
     border-radius: 0.5rem;
     transition: all 0.3s;
     padding: 0.5rem;
-    
+
     &:hover {
       background: var(--nav-bg-light);
       transform: translateY(-2px);
     }
-    
+
     svg {
       width: 24px;
       height: 24px;
@@ -515,12 +515,12 @@ body.search-active {
   .main-content {
     padding: 1rem;
   }
-  
+
   .main-nav {
     .nav-links {
       gap: 0.5rem;
       font-size: 0.9rem;
-      
+
       a {
         padding: 0.25rem 0.5rem;
       }

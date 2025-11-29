@@ -147,7 +147,7 @@ $FilesMovedCount = 0
 $DirectoriesCreated = 0
 
 $OldPackageDirs = Get-ChildItem -Path "." -Directory -Recurse -ErrorAction SilentlyContinue | Where-Object {
-    $_.FullName -like "*com\geoknoesis*" -and 
+    $_.FullName -like "*com\geoknoesis*" -and
     $_.FullName -notlike "*trustweave*" -and
     -not (Should-Exclude $_.FullName)
 }
@@ -156,27 +156,27 @@ Write-Host "Found $($OldPackageDirs.Count) old package directories to process" -
 
 foreach ($OldDir in $OldPackageDirs) {
     $OldDirPath = $OldDir.FullName
-    
+
     # Find all files in this directory (non-recursive for this iteration)
     $FilesInDir = Get-ChildItem -Path $OldDirPath -File -ErrorAction SilentlyContinue
-    
+
     if ($FilesInDir) {
         Write-Host "  Processing files in: $OldDirPath" -ForegroundColor Yellow
-        
+
         foreach ($File in $FilesInDir) {
             $OldFilePath = $File.FullName
-            
+
             # Calculate new file path by replacing the package structure
             $RelativePath = $OldFilePath.Substring((Get-Location).Path.Length + 1)
-            
+
             # Transform the path: com\geoknoesis\vericore -> com\trustweave
             $NewRelativePath = $RelativePath -replace "com\\geoknoesis\\vericore", "com\\trustweave"
             $NewRelativePath = $NewRelativePath -replace "com/geoknoesis/vericore", "com/trustweave"
-            $NewRelativePath = $NewRelativePath -replace "com\\geoknoesis", "com\\trustweave"  
+            $NewRelativePath = $NewRelativePath -replace "com\\geoknoesis", "com\\trustweave"
             $NewRelativePath = $NewRelativePath -replace "com/geoknoesis", "com/trustweave"
-            
+
             $NewFilePath = Join-Path (Get-Location) $NewRelativePath
-            
+
             if ($OldFilePath -ne $NewFilePath) {
                 try {
                     # Create destination directory
@@ -186,7 +186,7 @@ foreach ($OldDir in $OldPackageDirs) {
                         Write-Host "    Created: $NewFileDir" -ForegroundColor Green
                         $DirectoriesCreated++
                     }
-                    
+
                     # Move the file
                     if (Test-Path $NewFilePath) {
                         Write-Warning "    Target exists, skipping: $($File.Name)"
@@ -214,24 +214,24 @@ $TotalDirsRemoved = 0
 
 for ($pass = 1; $pass -le $MaxPasses; $pass++) {
     Write-Host "  Cleanup pass $pass..." -ForegroundColor Gray
-    
+
     # Get current list of old directories (deepest first)
     $CurrentOldDirs = Get-ChildItem -Path "." -Directory -Recurse -ErrorAction SilentlyContinue | Where-Object {
-        $_.FullName -like "*geoknoesis*" -and 
+        $_.FullName -like "*geoknoesis*" -and
         $_.FullName -notlike "*trustweave*" -and
         -not (Should-Exclude $_.FullName)
     } | Sort-Object { $_.FullName.Split('\').Count } -Descending
-    
+
     if ($CurrentOldDirs.Count -eq 0) {
         Write-Host "    No more old directories found" -ForegroundColor Gray
         break
     }
-    
+
     $DirsRemovedThisPass = 0
-    
+
     foreach ($DirToRemove in $CurrentOldDirs) {
         $DirPath = $DirToRemove.FullName
-        
+
         try {
             # Method 1: Try PowerShell Remove-Item
             Remove-Item -Path $DirPath -Recurse -Force -ErrorAction Stop
@@ -242,7 +242,7 @@ for ($pass = 1; $pass -le $MaxPasses; $pass++) {
             # Method 2: Try CMD rmdir
             try {
                 & cmd /c "rmdir /s /q `"$DirPath`"" 2>$null
-                
+
                 # Check if it's gone
                 if (-not (Test-Path $DirPath)) {
                     Write-Host "    ✅ CMD Removed: $DirPath" -ForegroundColor Green
@@ -251,7 +251,7 @@ for ($pass = 1; $pass -le $MaxPasses; $pass++) {
                 } else {
                     # Method 3: Try individual file deletion
                     $FilesInDir = Get-ChildItem -Path $DirPath -File -Recurse -Force -ErrorAction SilentlyContinue
-                    
+
                     if ($FilesInDir) {
                         foreach ($File in $FilesInDir) {
                             try {
@@ -261,7 +261,7 @@ for ($pass = 1; $pass -le $MaxPasses; $pass++) {
                                 # File is really stuck
                             }
                         }
-                        
+
                         # Try to remove directory again
                         try {
                             Remove-Item -Path $DirPath -Recurse -Force -ErrorAction Stop
@@ -281,9 +281,9 @@ for ($pass = 1; $pass -le $MaxPasses; $pass++) {
             }
         }
     }
-    
+
     Write-Host "    Pass $pass removed: $DirsRemovedThisPass directories" -ForegroundColor Gray
-    
+
     if ($DirsRemovedThisPass -eq 0) {
         Write-Host "    No progress made, stopping cleanup passes" -ForegroundColor Gray
         break
@@ -294,14 +294,14 @@ Write-Host "Total directories removed: $TotalDirsRemoved" -ForegroundColor Cyan
 
 # Force cleanup option for remaining directories
 $RemainingOldDirs = Get-ChildItem -Path "." -Directory -Recurse -ErrorAction SilentlyContinue | Where-Object {
-    $_.FullName -like "*geoknoesis*" -and 
+    $_.FullName -like "*geoknoesis*" -and
     $_.FullName -notlike "*trustweave*" -and
     -not (Should-Exclude $_.FullName)
 }
 
 if ($RemainingOldDirs.Count -gt 0 -and ($ForceCleanup -or $pass -eq $MaxPasses)) {
     Write-Warning "Attempting force cleanup of $($RemainingOldDirs.Count) remaining directories..."
-    
+
     if (-not $ForceCleanup) {
         $confirmation = Read-Host "Force delete remaining directories? (y/N)"
         if ($confirmation -ne "y" -and $confirmation -ne "Y") {
@@ -310,21 +310,21 @@ if ($RemainingOldDirs.Count -gt 0 -and ($ForceCleanup -or $pass -eq $MaxPasses))
             $ForceCleanup = $true
         }
     }
-    
+
     if ($ForceCleanup) {
         foreach ($Dir in $RemainingOldDirs) {
             try {
                 Write-Host "  Force deleting: $($Dir.FullName)" -ForegroundColor Red
-                
+
                 # Try multiple methods
                 & cmd /c "rmdir /s /q `"$($Dir.FullName)`"" 2>$null
-                
+
                 if (Test-Path $Dir.FullName) {
                     # Change attributes and try again
                     & attrib -r -s -h "$($Dir.FullName)\*.*" /s /d 2>$null
                     Remove-Item -Path $Dir.FullName -Recurse -Force -ErrorAction SilentlyContinue
                 }
-                
+
                 if (-not (Test-Path $Dir.FullName)) {
                     Write-Host "  ✅ Force deleted: $($Dir.FullName)" -ForegroundColor Green
                     $TotalDirsRemoved++
@@ -342,7 +342,7 @@ if ($RemainingOldDirs.Count -gt 0 -and ($ForceCleanup -or $pass -eq $MaxPasses))
 Write-Success "Final verification..."
 
 $FinalRemainingDirs = Get-ChildItem -Path "." -Directory -Recurse -ErrorAction SilentlyContinue | Where-Object {
-    $_.FullName -like "*geoknoesis*" -and 
+    $_.FullName -like "*geoknoesis*" -and
     $_.FullName -notlike "*trustweave*" -and
     -not (Should-Exclude $_.FullName)
 }
@@ -373,7 +373,7 @@ Backup Created: $(if ($SkipBackup) { "No (skipped)" } else { "Yes at $BackupDir"
 
 FILE CHANGES:
 - Updated package declarations in $PackageUpdateCount source files
-- Updated import statements in $ImportUpdateCount files  
+- Updated import statements in $ImportUpdateCount files
 - Updated build.gradle.kts group declarations in $GroupUpdateCount files
 
 DIRECTORY CHANGES:

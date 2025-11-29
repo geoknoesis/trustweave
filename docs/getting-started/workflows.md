@@ -28,7 +28,7 @@ suspend fun issueCredentialWorkflow(
         val context = trustLayer.getDslContext()
         val resolver = context.getDidResolver()
         val issuerResolution = resolver?.resolve(issuerDid)
-        
+
         if (issuerResolution?.document == null) {
             return Result.failure(
                 TrustWeaveError.DidNotFound(
@@ -37,10 +37,10 @@ suspend fun issueCredentialWorkflow(
                 )
             )
         }
-        
+
         // 2. Get issuer key ID
         val issuerKeyId = "$issuerDid#key-1"
-        
+
         // 3. Issue credential
         val credential = trustLayer.issue {
             credential {
@@ -55,7 +55,7 @@ suspend fun issueCredentialWorkflow(
             }
             by(issuerDid = issuerDid, keyId = issuerKeyId)
         }
-        
+
         Result.success(credential)
     } catch (error: TrustWeaveError) {
         Result.failure(error)
@@ -80,7 +80,7 @@ suspend fun verifyCredentialWorkflow(
             checkRevocation(true)
             checkTrust(checkTrust)
         }
-        
+
         // Log verification result
         if (verification.valid) {
             logger.info("Credential verified successfully", mapOf(
@@ -93,7 +93,7 @@ suspend fun verifyCredentialWorkflow(
                 "errors" to verification.errors
             ))
         }
-        
+
         verification
     } catch (error: TrustWeaveError) {
         logger.error("Verification error", error)
@@ -129,14 +129,14 @@ suspend fun revokeCredentialWorkflow(
         if (status.revoked) {
             return Result.success(false) // Already revoked
         }
-        
+
         // 2. Revoke credential
         val revoked = statusListManager.revoke(
             credentialId = credentialId,
             statusListId = statusListId,
             reason = reason
         )
-        
+
         if (revoked) {
             logger.info("Credential revoked", mapOf(
                 "credentialId" to credentialId,
@@ -144,7 +144,7 @@ suspend fun revokeCredentialWorkflow(
                 "reason" to reason
             ))
         }
-        
+
         Result.success(revoked)
     } catch (error: Exception) {
         logger.error("Revocation failed", error)
@@ -169,7 +169,7 @@ suspend fun rotateKeyWorkflow(
         val context = trustLayer.getDslContext()
         val resolver = context.getDidResolver()
         val currentResolution = resolver?.resolve(did)
-        
+
         if (currentResolution?.document == null) {
             return Result.failure(
                 TrustWeaveError.DidNotFound(
@@ -178,11 +178,11 @@ suspend fun rotateKeyWorkflow(
                 )
             )
         }
-        
+
         // 2. Verify old key exists
         val oldKey = currentResolution.document.verificationMethod
             .find { it.id == oldKeyId }
-        
+
         if (oldKey == null) {
             return Result.failure(
                 TrustWeaveError.ValidationFailed(
@@ -192,20 +192,20 @@ suspend fun rotateKeyWorkflow(
                 )
             )
         }
-        
+
         // 3. Rotate key
         val updated = trustLayer.rotateKey {
             did(did)
             oldKeyId(oldKeyId)
             newKeyId(newKeyId)
         }
-        
+
         logger.info("Key rotated successfully", mapOf(
             "did" to did,
             "oldKeyId" to oldKeyId,
             "newKeyId" to newKeyId
         ))
-        
+
         Result.success(updated as DidDocument)
     } catch (error: TrustWeaveError) {
         logger.error("Key rotation failed", error)
@@ -230,7 +230,7 @@ suspend fun manageTrustAnchorWorkflow(
         val context = trustLayer.getDslContext()
         val resolver = context.getDidResolver()
         val resolution = resolver?.resolve(anchorDid)
-        
+
         if (resolution?.document == null) {
             return Result.failure(
                 TrustWeaveError.DidNotFound(
@@ -239,13 +239,13 @@ suspend fun manageTrustAnchorWorkflow(
                 )
             )
         }
-        
+
         // 2. Add trust anchor
         val added = trustLayer.addTrustAnchor(anchorDid) {
             credentialTypes(*credentialTypes.toTypedArray())
             description(description)
         }
-        
+
         if (added) {
             logger.info("Trust anchor added", mapOf(
                 "anchorDid" to anchorDid,
@@ -256,7 +256,7 @@ suspend fun manageTrustAnchorWorkflow(
                 "anchorDid" to anchorDid
             ))
         }
-        
+
         Result.success(added)
     } catch (error: TrustWeaveError) {
         logger.error("Failed to add trust anchor", error)
@@ -281,7 +281,7 @@ suspend fun walletManagementWorkflow(
             enableOrganization()
             enablePresentation()
         }
-        
+
         // 2. Store credential
         val credential = trustLayer.issue {
             credential {
@@ -294,13 +294,13 @@ suspend fun walletManagementWorkflow(
             }
             by(issuerDid = "did:key:issuer", keyId = "did:key:issuer#key-1")
         }
-        
+
         val credentialId = wallet.store(credential)
         logger.info("Credential stored", mapOf(
             "credentialId" to credentialId,
             "holderDid" to holderDid
         ))
-        
+
         // 3. Retrieve credential
         val retrieved = wallet.get(credentialId)
         if (retrieved != null) {
@@ -308,11 +308,11 @@ suspend fun walletManagementWorkflow(
                 "credentialId" to credentialId
             ))
         }
-        
+
         // 4. List all credentials
         val allCredentials = wallet.list()
         logger.info("Wallet contains ${allCredentials.size} credentials")
-        
+
         Result.success(wallet)
     } catch (error: TrustWeaveError) {
         logger.error("Wallet management failed", error)
@@ -352,11 +352,11 @@ suspend fun batchIssuanceWorkflow(
                 }
             }
         }.awaitAll()
-        
+
         logger.info("Batch issuance completed", mapOf(
             "count" to credentials.size
         ))
-        
+
         Result.success(credentials)
     } catch (error: TrustWeaveError) {
         logger.error("Batch issuance failed", error)

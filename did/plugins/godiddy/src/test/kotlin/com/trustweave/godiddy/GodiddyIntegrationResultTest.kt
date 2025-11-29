@@ -18,7 +18,7 @@ class GodiddyIntegrationResultTest {
             issuer = null,
             verifier = null
         )
-        
+
         assertEquals(2, result.registeredDidMethods.size)
         assertTrue(result.registeredDidMethods.contains("key"))
         assertTrue(result.registeredDidMethods.contains("web"))
@@ -30,7 +30,7 @@ class GodiddyIntegrationResultTest {
             registry = DidMethodRegistry(),
             registeredDidMethods = emptyList()
         )
-        
+
         assertTrue(result.registeredDidMethods.isEmpty())
     }
 
@@ -40,7 +40,7 @@ class GodiddyIntegrationResultTest {
             registry = DidMethodRegistry(),
             registeredDidMethods = listOf("key")
         )
-        
+
         assertEquals(1, result.registeredDidMethods.size)
         assertEquals("key", result.registeredDidMethods.first())
     }
@@ -51,7 +51,7 @@ class GodiddyIntegrationResultTest {
             registry = DidMethodRegistry(),
             registeredDidMethods = listOf("key", "web", "ion", "polygonid")
         )
-        
+
         assertEquals(4, result.registeredDidMethods.size)
     }
 
@@ -66,7 +66,7 @@ class GodiddyIntegrationResultTest {
             registry = registry,
             registeredDidMethods = listOf("key", "web")
         )
-        
+
         assertEquals(result1, result2)
     }
 
@@ -79,7 +79,7 @@ class GodiddyIntegrationResultTest {
         val copied = original.copy(
             registeredDidMethods = listOf("key", "web")
         )
-        
+
         assertEquals(1, original.registeredDidMethods.size)
         assertEquals(2, copied.registeredDidMethods.size)
     }
@@ -90,7 +90,7 @@ class GodiddyIntegrationResultTest {
             registry = DidMethodRegistry(),
             registeredDidMethods = listOf("key")
         )
-        
+
         val str = result.toString()
         assertTrue(str.contains("GodiddyIntegrationResult"))
     }

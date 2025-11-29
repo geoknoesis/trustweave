@@ -11,10 +11,10 @@ import javax.sql.DataSource
 
 /**
  * Database-backed wallet implementation.
- * 
+ *
  * Stores credentials, collections, tags, and metadata in a relational database.
  * Supports PostgreSQL, MySQL, and H2 databases.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val wallet = DatabaseWallet(
@@ -31,18 +31,18 @@ class DatabaseWallet(
     val holderDid: String,
     private val dataSource: DataSource
 ) : Wallet, CredentialStorage {
-    
+
     private val json = Json {
         prettyPrint = false
         encodeDefaults = false
         ignoreUnknownKeys = true
     }
-    
+
     init {
         // Initialize database schema
         initializeSchema()
     }
-    
+
     /**
      * Initialize database schema (tables for credentials, collections, tags, metadata).
      */
@@ -60,7 +60,7 @@ class DatabaseWallet(
                     INDEX idx_archived (archived)
                 )
             """).execute()
-            
+
             // Collections table
             conn.prepareStatement("""
                 CREATE TABLE IF NOT EXISTS collections (
@@ -72,7 +72,7 @@ class DatabaseWallet(
                     INDEX idx_wallet_id (wallet_id)
                 )
             """).execute()
-            
+
             // Credential collections junction table
             conn.prepareStatement("""
                 CREATE TABLE IF NOT EXISTS credential_collections (
@@ -85,7 +85,7 @@ class DatabaseWallet(
                     INDEX idx_collection_id (collection_id)
                 )
             """).execute()
-            
+
             // Tags table
             conn.prepareStatement("""
                 CREATE TABLE IF NOT EXISTS credential_tags (
@@ -97,7 +97,7 @@ class DatabaseWallet(
                     INDEX idx_tag (tag)
                 )
             """).execute()
-            
+
             // Metadata table
             conn.prepareStatement("""
                 CREATE TABLE IF NOT EXISTS credential_metadata (
@@ -109,16 +109,16 @@ class DatabaseWallet(
                     FOREIGN KEY (credential_id) REFERENCES credentials(id) ON DELETE CASCADE
                 )
             """).execute()
-            
+
             conn.commit()
         }
     }
-    
+
     // CredentialStorage implementation
     override suspend fun store(credential: VerifiableCredential): String = withContext(Dispatchers.IO) {
         val id = credential.id ?: UUID.randomUUID().toString()
         val credentialJson = json.encodeToString(VerifiableCredential.serializer(), credential)
-        
+
         dataSource.connection.use { conn ->
             conn.autoCommit = false
             try {
@@ -127,7 +127,7 @@ class DatabaseWallet(
                 deleteStmt.setString(1, id)
                 deleteStmt.setString(2, walletId)
                 deleteStmt.executeUpdate()
-                
+
                 // Insert credential
                 val stmt = conn.prepareStatement("""
                     INSERT INTO credentials (id, wallet_id, credential_data, archived)
@@ -137,13 +137,13 @@ class DatabaseWallet(
                 stmt.setString(2, walletId)
                 stmt.setString(3, credentialJson)
                 stmt.executeUpdate()
-                
+
                 // Initialize metadata if not exists
                 val checkMetadataStmt = conn.prepareStatement("SELECT COUNT(*) as count FROM credential_metadata WHERE credential_id = ?")
                 checkMetadataStmt.setString(1, id)
                 val checkRs = checkMetadataStmt.executeQuery()
                 val exists = checkRs.next() && checkRs.getInt("count") > 0
-                
+
                 if (!exists) {
                     val metadataStmt = conn.prepareStatement("""
                         INSERT INTO credential_metadata (credential_id, created_at, updated_at)
@@ -154,7 +154,7 @@ class DatabaseWallet(
                     metadataStmt.setTimestamp(3, java.sql.Timestamp.from(Instant.now()))
                     metadataStmt.executeUpdate()
                 }
-                
+
                 conn.commit()
                 id
             } catch (e: Exception) {
@@ -163,7 +163,7 @@ class DatabaseWallet(
             }
         }
     }
-    
+
     override suspend fun get(credentialId: String): VerifiableCredential? = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             val stmt = conn.prepareStatement("""
@@ -172,7 +172,7 @@ class DatabaseWallet(
             """)
             stmt.setString(1, credentialId)
             stmt.setString(2, walletId)
-            
+
             val rs = stmt.executeQuery()
             if (rs.next()) {
                 val credentialJson = rs.getString("credential_data")
@@ -182,32 +182,32 @@ class DatabaseWallet(
             }
         }
     }
-    
+
     override suspend fun list(filter: CredentialFilter?): List<VerifiableCredential> = withContext(Dispatchers.IO) {
         val credentials = mutableListOf<VerifiableCredential>()
-        
+
         dataSource.connection.use { conn ->
             val stmt = conn.prepareStatement("""
                 SELECT credential_data FROM credentials
                 WHERE wallet_id = ? AND archived = FALSE
             """)
             stmt.setString(1, walletId)
-            
+
             val rs = stmt.executeQuery()
             while (rs.next()) {
                 val credentialJson = rs.getString("credential_data")
                 val credential = json.decodeFromString(VerifiableCredential.serializer(), credentialJson)
-                
+
                 // Apply filter if provided
                 if (filter == null || matchesFilter(credential, filter)) {
                     credentials.add(credential)
                 }
             }
         }
-        
+
         credentials
     }
-    
+
     override suspend fun delete(credentialId: String): Boolean = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             conn.autoCommit = false
@@ -218,7 +218,7 @@ class DatabaseWallet(
                 stmt.setString(1, credentialId)
                 stmt.setString(2, walletId)
                 val deleted = stmt.executeUpdate() > 0
-                
+
                 conn.commit()
                 deleted
             } catch (e: Exception) {
@@ -227,21 +227,21 @@ class DatabaseWallet(
             }
         }
     }
-    
+
     override suspend fun query(query: CredentialQueryBuilder.() -> Unit): List<VerifiableCredential> = withContext(Dispatchers.IO) {
         val builder = CredentialQueryBuilder()
         builder.query()
-        
+
         // Use reflection to call createPredicate()
         val predicateMethod = builder::class.java.getMethod("createPredicate")
         @Suppress("UNCHECKED_CAST")
         val predicate = predicateMethod.invoke(builder) as (VerifiableCredential) -> Boolean
-        
+
         // Get all credentials and filter
         val allCredentials = list(null)
         allCredentials.filter(predicate)
     }
-    
+
     /**
      * Check if credential matches filter criteria.
      */
@@ -275,7 +275,7 @@ class DatabaseWallet(
         }
         return true
     }
-    
+
     /**
      * Get wallet statistics.
      */
@@ -287,15 +287,15 @@ class DatabaseWallet(
             totalStmt.setString(1, walletId)
             val totalRs = totalStmt.executeQuery()
             val total = if (totalRs.next()) totalRs.getInt("total") else 0
-            
+
             val archivedStmt = conn.prepareStatement("""
-                SELECT COUNT(*) as archived FROM credentials 
+                SELECT COUNT(*) as archived FROM credentials
                 WHERE wallet_id = ? AND archived = TRUE
             """)
             archivedStmt.setString(1, walletId)
             val archivedRs = archivedStmt.executeQuery()
             val archived = if (archivedRs.next()) archivedRs.getInt("archived") else 0
-            
+
             WalletStatistics(
                 totalCredentials = total,
                 validCredentials = (total - archived),

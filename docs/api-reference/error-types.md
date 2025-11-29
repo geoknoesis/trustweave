@@ -31,23 +31,23 @@ sealed class TrustWeaveException(
     data class PluginAlreadyRegistered(...) : TrustWeaveException(...)
     data class PluginNotFound(...) : TrustWeaveException(...)
     data class PluginInitializationFailed(...) : TrustWeaveException(...)
-    
+
     // Provider errors
     data class NoProvidersFound(...) : TrustWeaveException(...)
     data class PartialProvidersFound(...) : TrustWeaveException(...)
     data class AllProvidersFailed(...) : TrustWeaveException(...)
-    
+
     // Configuration errors
     data class ConfigNotFound(...) : TrustWeaveException(...)
     data class ConfigReadFailed(...) : TrustWeaveException(...)
     data class InvalidConfigFormat(...) : TrustWeaveException(...)
-    
+
     // JSON/Digest errors
     data class InvalidJson(...) : TrustWeaveException(...)
     data class JsonEncodeFailed(...) : TrustWeaveException(...)
     data class DigestFailed(...) : TrustWeaveException(...)
     data class EncodeFailed(...) : TrustWeaveException(...)
-    
+
     // Generic errors
     data class ValidationFailed(...) : TrustWeaveException(...)
     data class InvalidOperation(...) : TrustWeaveException(...)
@@ -242,7 +242,7 @@ val result = trustweave.blockchains.anchor(
     chainId = "algorand:testnet"
 )
 result.fold(
-    onSuccess = { anchor -> 
+    onSuccess = { anchor ->
         println("Anchored: ${anchor.ref.txHash}")
     },
     onFailure = { error ->
@@ -328,7 +328,7 @@ try {
     println("Error code: ${error.code}")
     println("Error message: ${error.message}")
     println("Error context: ${error.context}")
-    
+
     // Error codes are strings, e.g.:
     // "PLUGIN_NOT_FOUND"
     // "DID_METHOD_NOT_REGISTERED"

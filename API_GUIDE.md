@@ -36,7 +36,7 @@ try {
         algorithm("Ed25519")
     }
     println("Created: $did")
-    
+
     val credential = trustWeave.issue {
         credential {
             type("VerifiableCredential", "ExampleCredential")
@@ -74,7 +74,7 @@ try {
 }
 ```
 
-**Pros:** Simple, type-safe, sensible defaults, consistent error handling  
+**Pros:** Simple, type-safe, sensible defaults, consistent error handling
 **Cons:** Less configuration flexibility
 
 ### 2. **Wallets & Wallet Factory** (For Credential Storage) 📦
@@ -94,7 +94,7 @@ val wallet = trustweave.createWallet(
 
 Need an in-memory instance for tests? `Wallets.inMemory(holderDid)` still exists for quick fixtures.
 
-**Pros:** Typed options, capability toggles, no reflection  
+**Pros:** Typed options, capability toggles, no reflection
 **Cons:** Provide your own `WalletFactory` for production storage
 
 ### 3. **Direct APIs** (For Advanced Users) ⚙️
@@ -106,7 +106,7 @@ val didMethod = DidKeyMockMethod(kms)
 val doc = didMethod.createDid(options)
 ```
 
-**Pros:** Maximum flexibility and control  
+**Pros:** Maximum flexibility and control
 **Cons:** More verbose, requires manual setup
 
 ### 4. **DSL** (For Complex Workflows) 🎨
@@ -135,7 +135,7 @@ val trustWeave = TrustWeave.build {
 }
 ```
 
-**Pros:** Declarative, readable configuration, type-safe  
+**Pros:** Declarative, readable configuration, type-safe
 **Cons:** Learning curve for DSL syntax
 
 ## Typed Configuration Building Blocks

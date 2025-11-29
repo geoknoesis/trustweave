@@ -81,12 +81,12 @@ class ChainIdTest {
         assertFailsWith<IllegalArgumentException> {
             ChainId.Custom("invalid", "custom")
         }
-        
+
         // The regex allows multiple colons, so this is actually valid
         // assertFailsWith<IllegalArgumentException> {
         //     ChainId.Custom("invalid:format:with:too:many:parts", "custom")
         // }
-        
+
         // Test invalid format without colon
         assertFailsWith<IllegalArgumentException> {
             ChainId.Custom("no-colon", "custom")
@@ -99,7 +99,7 @@ class ChainIdTest {
         assertNotNull(custom)
         assertEquals("custom:test", custom?.toString())
         assertEquals("custom", custom?.getNamespace())
-        
+
         assertNull(ChainId.Custom.fromString("invalid"))
         assertNull(ChainId.Custom.fromString(""))
     }
@@ -109,11 +109,11 @@ class ChainIdTest {
         assertEquals(ChainId.Algorand.Testnet, ChainId.parse("algorand:testnet"))
         assertEquals(ChainId.Eip155.PolygonMainnet, ChainId.parse("eip155:137"))
         assertEquals(ChainId.Indy.BCovrinTestnet, ChainId.parse("indy:testnet:bcovrin"))
-        
+
         val custom = ChainId.parse("custom:test")
         assertNotNull(custom)
         assertTrue(custom is ChainId.Custom)
-        
+
         assertNull(ChainId.parse("invalid"))
     }
 
@@ -125,7 +125,7 @@ class ChainIdTest {
         assertTrue(ChainId.isValid("custom:test"))
         // Multiple colons are valid per CAIP-2
         assertTrue(ChainId.isValid("custom:test:with:multiple:parts"))
-        
+
         assertFalse(ChainId.isValid("invalid"))
         assertFalse(ChainId.isValid(""))
         // Single word without colon is invalid

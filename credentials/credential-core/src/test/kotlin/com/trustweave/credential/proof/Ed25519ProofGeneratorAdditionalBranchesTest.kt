@@ -26,15 +26,15 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        
+
         val credential = createTestCredential()
         val options = com.trustweave.credential.proof.ProofOptions(
             proofPurpose = "assertionMethod",
             challenge = null
         )
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertNull(proof.challenge)
     }
 
@@ -43,15 +43,15 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        
+
         val credential = createTestCredential()
         val options = com.trustweave.credential.proof.ProofOptions(
             proofPurpose = "assertionMethod",
             domain = null
         )
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertNull(proof.domain)
     }
 
@@ -61,15 +61,15 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
             signer = { _, _ -> byteArrayOf(1, 2, 3) },
             getPublicKeyId = { null }
         )
-        
+
         val credential = createTestCredential()
         val options = com.trustweave.credential.proof.ProofOptions(
             proofPurpose = "assertionMethod",
             verificationMethod = null
         )
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertEquals("did:key:key-1", proof.verificationMethod)
     }
 
@@ -78,15 +78,15 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        
+
         val credential = createTestCredential()
         val options = com.trustweave.credential.proof.ProofOptions(
             proofPurpose = "assertionMethod",
             verificationMethod = ""
         )
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         // Should fall back to keyId-based verification method
         assertNotNull(proof.verificationMethod)
     }
@@ -98,11 +98,11 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        
+
         val credential = createTestCredential(id = null)
-        
+
         val proof = generator.generateProof(credential, "key-1", com.trustweave.credential.proof.ProofOptions(proofPurpose = "assertionMethod"))
-        
+
         assertNotNull(proof)
     }
 
@@ -111,9 +111,9 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        
+
         val credential = createTestCredential(issuerDid = null)
-        
+
         assertFailsWith<IllegalArgumentException> {
             generator.generateProof(credential, "key-1", com.trustweave.credential.proof.ProofOptions(proofPurpose = "assertionMethod"))
         }
@@ -124,11 +124,11 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        
+
         val credential = createTestCredential(types = emptyList())
-        
+
         val proof = generator.generateProof(credential, "key-1", com.trustweave.credential.proof.ProofOptions(proofPurpose = "assertionMethod"))
-        
+
         assertNotNull(proof)
     }
 
@@ -139,11 +139,11 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        
+
         val credential = createTestCredential(credentialSubject = buildJsonObject { })
-        
+
         val proof = generator.generateProof(credential, "key-1", com.trustweave.credential.proof.ProofOptions(proofPurpose = "assertionMethod"))
-        
+
         assertNotNull(proof)
     }
 
@@ -154,11 +154,11 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf() }
         )
-        
+
         val credential = createTestCredential()
-        
+
         val proof = generator.generateProof(credential, "key-1", com.trustweave.credential.proof.ProofOptions(proofPurpose = "assertionMethod"))
-        
+
         assertNotNull(proof)
         assertNotNull(proof.proofValue)
     }
@@ -168,9 +168,9 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> throw RuntimeException("Signing failed") }
         )
-        
+
         val credential = createTestCredential()
-        
+
         assertFailsWith<RuntimeException> {
             generator.generateProof(credential, "key-1", com.trustweave.credential.proof.ProofOptions(proofPurpose = "assertionMethod"))
         }

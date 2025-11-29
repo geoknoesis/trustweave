@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,34 +591,34 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="iot-firmware-update-verification-scenario">
-  
-  
+
+
     <a href="#iot-firmware-update-verification-scenario" class="anchor-heading" aria-labelledby="iot-firmware-update-verification-scenario"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> IoT Firmware Update Verification Scenario
-  
-  
+
+
 </h1>
-    
+
 
 <p>This guide demonstrates how to build an IoT firmware update verification system using TrustWeave. You’ll learn how manufacturers can issue firmware attestation credentials, how update servers can authorize updates, and how devices can verify firmware authenticity before installation.</p>
 <h2 id="what-youll-build">
-  
-  
+
+
     <a href="#what-youll-build" class="anchor-heading" aria-labelledby="what-youll-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Build
-  
-  
+
+
 </h2>
-    
+
 
 <p>By the end of this tutorial, you’ll have:</p>
 
@@ -633,21 +633,21 @@
   <li>✅ Created tamper-proof firmware provenance</li>
 </ul>
 <h2 id="big-picture--significance">
-  
-  
+
+
     <a href="#big-picture--significance" class="anchor-heading" aria-labelledby="big-picture--significance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Big Picture &amp; Significance
-  
-  
+
+
 </h2>
-    
+
 <h3 id="the-iot-firmware-update-challenge">
-  
-  
+
+
     <a href="#the-iot-firmware-update-challenge" class="anchor-heading" aria-labelledby="the-iot-firmware-update-challenge"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The IoT Firmware Update Challenge
-  
-  
+
+
 </h3>
-    
+
 
 <p>IoT devices require firmware updates for security patches, bug fixes, and new features. However, firmware updates can be compromised, unauthorized, or tampered with, leading to device compromise. Verifiable credentials enable cryptographic proof of firmware authenticity and update authorization.</p>
 
@@ -670,13 +670,13 @@
   <li><strong>Rollback</strong>: Enable safe firmware rollback</li>
 </ol>
 <h3 id="the-iot-firmware-update-problem">
-  
-  
+
+
     <a href="#the-iot-firmware-update-problem" class="anchor-heading" aria-labelledby="the-iot-firmware-update-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The IoT Firmware Update Problem
-  
-  
+
+
 </h3>
-    
+
 
 <p>Traditional firmware update systems face critical issues:</p>
 <ul>
@@ -688,21 +688,21 @@
   <li><strong>Compliance Risk</strong>: Difficult to meet regulatory requirements</li>
 </ul>
 <h2 id="value-proposition">
-  
-  
+
+
     <a href="#value-proposition" class="anchor-heading" aria-labelledby="value-proposition"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Value Proposition
-  
-  
+
+
 </h2>
-    
+
 <h3 id="problems-solved">
-  
-  
+
+
     <a href="#problems-solved" class="anchor-heading" aria-labelledby="problems-solved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Problems Solved
-  
-  
+
+
 </h3>
-    
+
 
 <ol>
   <li><strong>Firmware Authenticity</strong>: Verify firmware source and manufacturer</li>
@@ -714,13 +714,13 @@
   <li><strong>Security</strong>: Prevent supply chain attacks</li>
 </ol>
 <h3 id="business-benefits">
-  
-  
+
+
     <a href="#business-benefits" class="anchor-heading" aria-labelledby="business-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Business Benefits
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>For Device Owners:</strong></p>
 <ul>
@@ -747,13 +747,13 @@
   <li><strong>Efficiency</strong>: Streamlined update process</li>
 </ul>
 <h3 id="roi-considerations">
-  
-  
+
+
     <a href="#roi-considerations" class="anchor-heading" aria-labelledby="roi-considerations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ROI Considerations
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>Security</strong>: Prevents firmware supply chain attacks</li>
@@ -763,13 +763,13 @@
   <li><strong>Cost Savings</strong>: Prevents costly device compromises</li>
 </ul>
 <h2 id="understanding-the-problem">
-  
-  
+
+
     <a href="#understanding-the-problem" class="anchor-heading" aria-labelledby="understanding-the-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Understanding the Problem
-  
-  
+
+
 </h2>
-    
+
 
 <p>Traditional firmware update systems have several problems:</p>
 
@@ -791,20 +791,20 @@
   <li><strong>Compliance</strong>: Automated compliance with regulations</li>
 </ul>
 <h2 id="how-it-works-the-firmware-update-verification-flow">
-  
-  
+
+
     <a href="#how-it-works-the-firmware-update-verification-flow" class="anchor-heading" aria-labelledby="how-it-works-the-firmware-update-verification-flow"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How It Works: The Firmware Update Verification Flow
-  
-  
+
+
 </h2>
-    
+
 
 <pre><code class="language-mermaid">flowchart TD
     A["Manufacturer&lt;br/&gt;Issues Firmware&lt;br/&gt;Attestation Credential"] --&gt;|issues| B["Firmware Attestation Credential&lt;br/&gt;Firmware Digest&lt;br/&gt;Version Info&lt;br/&gt;Manufacturer DID&lt;br/&gt;Cryptographic Proof"]
     B --&gt;|authorizes| C["Update Server&lt;br/&gt;Issues Update&lt;br/&gt;Authorization Credential"]
     C --&gt;|issues| D["Update Authorization Credential&lt;br/&gt;Firmware Reference&lt;br/&gt;Update Policy&lt;br/&gt;Authorization&lt;br/&gt;Cryptographic Proof"]
     D --&gt;|device verifies| E["IoT Device&lt;br/&gt;Verifies Firmware Attestation&lt;br/&gt;Checks Update Authorization&lt;br/&gt;Validates Firmware Integrity&lt;br/&gt;Installs Update"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -812,13 +812,13 @@
     style E fill:#c2185b,stroke:#880e4f,stroke-width:2px,color:#fff
 </code></pre>
 <h2 id="prerequisites">
-  
-  
+
+
     <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li>Java 21+</li>
@@ -828,13 +828,13 @@
   <li>Understanding of firmware updates and OTA (Over-The-Air) updates</li>
 </ul>
 <h2 id="step-1-add-dependencies">
-  
-  
+
+
     <a href="#step-1-add-dependencies" class="anchor-heading" aria-labelledby="step-1-add-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Add Dependencies
-  
-  
+
+
 </h2>
-    
+
 
 <p>Add TrustWeave dependencies to your <code class="language-plaintext highlighter-rouge">build.gradle.kts</code>:</p>
 
@@ -851,22 +851,22 @@
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
     <span class="c1">// Core TrustWeave modules</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-all:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    
+
     <span class="c1">// Kotlinx Serialization</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
-    
+
     <span class="c1">// Coroutines</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="step-2-complete-runnable-example">
-  
-  
+
+
     <a href="#step-2-complete-runnable-example" class="anchor-heading" aria-labelledby="step-2-complete-runnable-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Complete Runnable Example
-  
-  
+
+
 </h2>
-    
+
 
 <p>Here’s the full IoT firmware update verification flow using the TrustWeave facade API:</p>
 
@@ -1174,32 +1174,32 @@
     <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"IoT Firmware Update Verification Scenario - Complete End-to-End Example"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
-    
+
     <span class="c1">// Step 1: Create TrustWeave instance</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ TrustWeave initialized"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 2: Create DIDs for manufacturer, update server, and IoT device</span>
     <span class="kd">val</span> <span class="py">manufacturerDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">manufacturerDid</span> <span class="p">=</span> <span class="n">manufacturerDidDoc</span><span class="p">.</span><span class="n">id</span>
     <span class="kd">val</span> <span class="py">manufacturerKeyId</span> <span class="p">=</span> <span class="n">manufacturerDidDoc</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
         <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">updateServerDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">updateServerDid</span> <span class="p">=</span> <span class="n">updateServerDidDoc</span><span class="p">.</span><span class="n">id</span>
     <span class="kd">val</span> <span class="py">updateServerKeyId</span> <span class="p">=</span> <span class="n">updateServerDidDoc</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
         <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">deviceDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">deviceDid</span> <span class="p">=</span> <span class="n">deviceDidDoc</span><span class="p">.</span><span class="n">id</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Manufacturer DID: $manufacturerDid"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Update Server DID: $updateServerDid"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ IoT Device DID: $deviceDid"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 3: Simulate firmware creation and compute digest</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n📦 Firmware Creation:"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">firmwareVersion</span> <span class="p">=</span> <span class="s">"2.1.0"</span>
     <span class="kd">val</span> <span class="py">firmwareContent</span> <span class="p">=</span> <span class="s">"""
         // IoT Device Firmware v2.1.0
@@ -1207,15 +1207,15 @@
         // Build date: ${Instant.now()}
         // Manufacturer: SecureIoT Inc
     """</span><span class="p">.</span><span class="nf">trimIndent</span><span class="p">()</span>
-    
+
     <span class="kd">val</span> <span class="py">firmwareBytes</span> <span class="p">=</span> <span class="n">firmwareContent</span><span class="p">.</span><span class="nf">toByteArray</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">firmwareDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">firmwareBytes</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">firmwareSize</span> <span class="p">=</span> <span class="n">firmwareBytes</span><span class="p">.</span><span class="n">size</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Firmware Version: $firmwareVersion"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Firmware Size: $firmwareSize bytes"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Firmware Digest: ${firmwareDigest.take(20)}..."</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 4: Issue firmware attestation credential</span>
     <span class="kd">val</span> <span class="py">firmwareAttestation</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">manufacturerDid</span><span class="p">,</span>
@@ -1246,9 +1246,9 @@
         <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"FirmwareAttestationCredential"</span><span class="p">,</span> <span class="s">"SoftwareCredential"</span><span class="p">),</span>
         <span class="n">expirationDate</span> <span class="p">=</span> <span class="k">null</span> <span class="c1">// Firmware attestation doesn't expire</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ Firmware attestation credential issued: ${firmwareAttestation.id}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 5: Issue firmware update authorization credential</span>
     <span class="kd">val</span> <span class="py">updateAuthorization</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">updateServerDid</span><span class="p">,</span>
@@ -1280,9 +1280,9 @@
         <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"FirmwareUpdateAuthorizationCredential"</span><span class="p">,</span> <span class="s">"UpdateCredential"</span><span class="p">),</span>
         <span class="n">expirationDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">plus</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">DAYS</span><span class="p">).</span><span class="nf">toString</span><span class="p">()</span> <span class="c1">// Authorization expires</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Firmware update authorization credential issued: ${updateAuthorization.id}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 6: Create device wallet and store credentials</span>
     <span class="kd">val</span> <span class="py">deviceWallet</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">createWallet</span><span class="p">(</span>
         <span class="n">holderDid</span> <span class="p">=</span> <span class="n">deviceDid</span><span class="p">,</span>
@@ -1291,42 +1291,42 @@
             <span class="n">enablePresentation</span> <span class="p">=</span> <span class="k">true</span>
         <span class="p">}.</span><span class="nf">build</span><span class="p">()</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="kd">val</span> <span class="py">firmwareAttestationId</span> <span class="p">=</span> <span class="n">deviceWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">firmwareAttestation</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">updateAuthorizationId</span> <span class="p">=</span> <span class="n">deviceWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">updateAuthorization</span><span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ Firmware credentials stored in device wallet"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 7: Organize credentials</span>
     <span class="n">deviceWallet</span><span class="p">.</span><span class="nf">withOrganization</span> <span class="p">{</span> <span class="n">org</span> <span class="p">-&gt;</span>
         <span class="kd">val</span> <span class="py">firmwareCollectionId</span> <span class="p">=</span> <span class="n">org</span><span class="p">.</span><span class="nf">createCollection</span><span class="p">(</span><span class="s">"Firmware"</span><span class="p">,</span> <span class="s">"Firmware attestation and update credentials"</span><span class="p">)</span>
-        
+
         <span class="n">org</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">firmwareAttestationId</span><span class="p">,</span> <span class="n">firmwareCollectionId</span><span class="p">)</span>
         <span class="n">org</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">updateAuthorizationId</span><span class="p">,</span> <span class="n">firmwareCollectionId</span><span class="p">)</span>
-        
+
         <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">firmwareAttestationId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"firmware"</span><span class="p">,</span> <span class="s">"attestation"</span><span class="p">,</span> <span class="s">"security"</span><span class="p">,</span> <span class="s">"update"</span><span class="p">))</span>
         <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">updateAuthorizationId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"firmware"</span><span class="p">,</span> <span class="s">"authorization"</span><span class="p">,</span> <span class="s">"update"</span><span class="p">,</span> <span class="s">"policy"</span><span class="p">))</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Firmware credentials organized"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 8: Device verification - Firmware attestation</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔍 Device Verification - Firmware Attestation:"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">firmwareVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">firmwareAttestation</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">firmwareVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
         <span class="kd">val</span> <span class="py">credentialSubject</span> <span class="p">=</span> <span class="n">firmwareAttestation</span><span class="p">.</span><span class="n">credentialSubject</span>
         <span class="kd">val</span> <span class="py">firmware</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"firmware"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
         <span class="kd">val</span> <span class="py">version</span> <span class="p">=</span> <span class="n">firmware</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"version"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
         <span class="kd">val</span> <span class="py">manufacturer</span> <span class="p">=</span> <span class="n">firmware</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"manufacturer"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
         <span class="kd">val</span> <span class="py">firmwareDigestFromCredential</span> <span class="p">=</span> <span class="n">firmware</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"firmwareDigest"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Firmware Attestation Credential: VALID"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Version: $version"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Manufacturer: ${manufacturer?.take(20)}..."</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Firmware Digest: ${firmwareDigestFromCredential?.take(20)}..."</span><span class="p">)</span>
-        
+
         <span class="c1">// Verify firmware digest matches actual firmware</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">firmwareDigestFromCredential</span> <span class="p">==</span> <span class="n">firmwareDigest</span><span class="p">)</span> <span class="p">{</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Firmware digest matches"</span><span class="p">)</span>
@@ -1340,12 +1340,12 @@
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Firmware Attestation Credential: INVALID"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Firmware authenticity NOT VERIFIED"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 9: Device verification - Update authorization</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔍 Device Verification - Update Authorization:"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">authorizationVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">updateAuthorization</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">authorizationVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
         <span class="kd">val</span> <span class="py">credentialSubject</span> <span class="p">=</span> <span class="n">updateAuthorization</span><span class="p">.</span><span class="n">credentialSubject</span>
         <span class="kd">val</span> <span class="py">updateAuth</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"updateAuthorization"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
@@ -1353,12 +1353,12 @@
         <span class="kd">val</span> <span class="py">updatePolicy</span> <span class="p">=</span> <span class="n">updateAuth</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"updatePolicy"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonObject</span>
         <span class="kd">val</span> <span class="py">updateType</span> <span class="p">=</span> <span class="n">updatePolicy</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"updateType"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
         <span class="kd">val</span> <span class="py">rollbackAllowed</span> <span class="p">=</span> <span class="n">updatePolicy</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"rollbackAllowed"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toBoolean</span><span class="p">()</span> <span class="o">?:</span> <span class="k">false</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Update Authorization Credential: VALID"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Authorized: $authorized"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Update Type: $updateType"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Rollback Allowed: $rollbackAllowed"</span><span class="p">)</span>
-        
+
         <span class="k">if</span> <span class="p">(</span><span class="n">authorized</span><span class="p">)</span> <span class="p">{</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Update authorization VERIFIED"</span><span class="p">)</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Update is authorized for installation"</span><span class="p">)</span>
@@ -1370,19 +1370,19 @@
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Update Authorization Credential: INVALID"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Update authorization NOT VERIFIED"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 10: Complete firmware update verification workflow</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔍 Complete Firmware Update Verification Workflow:"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">firmwareValid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">firmwareAttestation</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">().</span><span class="n">valid</span>
     <span class="kd">val</span> <span class="py">authorizationValid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">updateAuthorization</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">().</span><span class="n">valid</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">firmwareValid</span> <span class="p">&amp;&amp;</span> <span class="n">authorizationValid</span><span class="p">)</span> <span class="p">{</span>
         <span class="c1">// Verify firmware digest matches</span>
         <span class="kd">val</span> <span class="py">credentialSubject</span> <span class="p">=</span> <span class="n">firmwareAttestation</span><span class="p">.</span><span class="n">credentialSubject</span>
         <span class="kd">val</span> <span class="py">firmware</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"firmware"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
         <span class="kd">val</span> <span class="py">firmwareDigestFromCredential</span> <span class="p">=</span> <span class="n">firmware</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"firmwareDigest"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
-        
+
         <span class="k">if</span> <span class="p">(</span><span class="n">firmwareDigestFromCredential</span> <span class="p">==</span> <span class="n">firmwareDigest</span><span class="p">)</span> <span class="p">{</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Firmware Attestation: VERIFIED"</span><span class="p">)</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Update Authorization: VERIFIED"</span><span class="p">)</span>
@@ -1400,20 +1400,20 @@
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Firmware update is NOT SAFE to install"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Update installation BLOCKED"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 11: Firmware rollback scenario</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔄 Firmware Rollback Scenario:"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">currentFirmwareVersion</span> <span class="p">=</span> <span class="s">"2.0.0"</span>
     <span class="kd">val</span> <span class="py">newFirmwareVersion</span> <span class="p">=</span> <span class="n">firmwareVersion</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Current Firmware: $currentFirmwareVersion"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   New Firmware: $newFirmwareVersion"</span><span class="p">)</span>
-    
+
     <span class="c1">// Check if rollback is allowed</span>
     <span class="kd">val</span> <span class="py">updateAuth</span> <span class="p">=</span> <span class="n">updateAuthorization</span><span class="p">.</span><span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"updateAuthorization"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
     <span class="kd">val</span> <span class="py">rollbackAllowed</span> <span class="p">=</span> <span class="n">updateAuth</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"updatePolicy"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonObject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"rollbackAllowed"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toBoolean</span><span class="p">()</span> <span class="o">?:</span> <span class="k">false</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">rollbackAllowed</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Rollback is allowed"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Device can rollback to previous firmware version if needed"</span><span class="p">)</span>
@@ -1421,7 +1421,7 @@
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Rollback is not allowed"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Device cannot rollback to previous firmware version"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 12: Display wallet statistics</span>
     <span class="kd">val</span> <span class="py">stats</span> <span class="p">=</span> <span class="n">deviceWallet</span><span class="p">.</span><span class="nf">getStatistics</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n📊 Device Wallet Statistics:"</span><span class="p">)</span>
@@ -1429,7 +1429,7 @@
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Valid credentials: ${stats.validCredentials}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Collections: ${stats.collectionsCount}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Tags: ${stats.tagsCount}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 13: Summary</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n"</span> <span class="p">+</span> <span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ IoT FIRMWARE UPDATE VERIFICATION SYSTEM COMPLETE"</span><span class="p">)</span>
@@ -1573,13 +1573,13 @@ IoT Firmware Update Verification Scenario - Complete End-to-End Example
 ======================================================================
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="key-features-demonstrated">
-  
-  
+
+
     <a href="#key-features-demonstrated" class="anchor-heading" aria-labelledby="key-features-demonstrated"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Features Demonstrated
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Firmware Attestation</strong>: Verify firmware authenticity and manufacturer</li>
@@ -1590,13 +1590,13 @@ IoT Firmware Update Verification Scenario - Complete End-to-End Example
   <li><strong>Update Policies</strong>: Enforce update policies (mandatory, optional, etc.)</li>
 </ol>
 <h2 id="real-world-extensions">
-  
-  
+
+
     <a href="#real-world-extensions" class="anchor-heading" aria-labelledby="real-world-extensions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Extensions
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><strong>OTA Updates</strong>: Integrate with Over-The-Air update systems</li>
@@ -1608,13 +1608,13 @@ IoT Firmware Update Verification Scenario - Complete End-to-End Example
   <li><strong>Compliance</strong>: Automated compliance with firmware security regulations</li>
 </ul>
 <h2 id="related-documentation">
-  
-  
+
+
     <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><a href="/trustweave/getting-started/quick-start/">Quick Start</a> - Get started with TrustWeave</li>
@@ -1625,17 +1625,17 @@ IoT Firmware Update Verification Scenario - Complete End-to-End Example
   <li><a href="/trustweave/getting-started/troubleshooting/">Troubleshooting</a> - Common issues and solutions</li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -1667,7 +1667,7 @@ IoT Firmware Update Verification Scenario - Complete End-to-End Example
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -1677,12 +1677,12 @@ IoT Firmware Update Verification Scenario - Complete End-to-End Example
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -1704,12 +1704,12 @@ IoT Firmware Update Verification Scenario - Complete End-to-End Example
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -1718,12 +1718,12 @@ IoT Firmware Update Verification Scenario - Complete End-to-End Example
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -1731,7 +1731,7 @@ IoT Firmware Update Verification Scenario - Complete End-to-End Example
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -1739,31 +1739,31 @@ IoT Firmware Update Verification Scenario - Complete End-to-End Example
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -1775,7 +1775,7 @@ IoT Firmware Update Verification Scenario - Complete End-to-End Example
 
 
 
-  
+
 </body>
 </html>
 

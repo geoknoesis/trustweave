@@ -33,12 +33,12 @@ class BlockchainRevocationRegistryTest {
             override suspend fun updateStatusListBatch(statusListId: String, updates: List<StatusUpdate>) = TODO()
             override suspend fun expandStatusList(statusListId: String, additionalSize: Int) = TODO()
         }
-        
+
         val registry = BlockchainRevocationRegistry(
             anchorClient = null,
             statusListManager = statusListManager
         )
-        
+
         val statusList = StatusListCredential(
             id = "https://example.com/status-list/1",
             type = listOf("VerifiableCredential", "StatusList2021Credential"),
@@ -49,9 +49,9 @@ class BlockchainRevocationRegistryTest {
             ),
             issuanceDate = "2024-01-01T00:00:00Z"
         )
-        
+
         val anchorRef = registry.anchorRevocationList(statusList, "algorand:testnet")
-        
+
         // Placeholder implementation returns status list ID
         assertEquals(statusList.id, anchorRef)
     }
@@ -64,9 +64,9 @@ class BlockchainRevocationRegistryTest {
             credentialSubject = buildJsonObject { put("id", "did:key:subject") },
             issuanceDate = "2024-01-01T00:00:00Z"
         )
-        
+
         val expectedStatus = RevocationStatus(revoked = false)
-        
+
         val statusListManager = object : StatusListManager {
             override suspend fun createStatusList(issuerDid: String, purpose: StatusPurpose, size: Int, customId: String?) = TODO()
             override suspend fun revokeCredential(credentialId: String, statusListId: String) = TODO()
@@ -87,14 +87,14 @@ class BlockchainRevocationRegistryTest {
             override suspend fun updateStatusListBatch(statusListId: String, updates: List<StatusUpdate>) = TODO()
             override suspend fun expandStatusList(statusListId: String, additionalSize: Int) = TODO()
         }
-        
+
         val registry = BlockchainRevocationRegistry(
             anchorClient = null,
             statusListManager = statusListManager
         )
-        
+
         val status = registry.checkRevocationOnChain(credential, "algorand:testnet")
-        
+
         assertEquals(expectedStatus, status)
     }
 }

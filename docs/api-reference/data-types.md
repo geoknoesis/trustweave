@@ -15,6 +15,32 @@ Complete reference for all TrustWeave data types.
 
 ## Core Types
 
+### Did
+
+Type-safe Decentralized Identifier (value class).
+
+```kotlin
+@JvmInline
+value class Did(val value: String)
+```
+
+**Properties:**
+- `value`: The underlying string value of the DID (e.g., "did:key:z6Mk...")
+
+**Usage:**
+```kotlin
+// Create Did from string
+val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
+
+// Access underlying string value
+val didString = did.value
+
+// Use in DID operations
+val resolution = didResolver.resolve(did)
+```
+
+**Note:** `Did` is a value class that provides compile-time type safety and validation. The constructor validates that the DID follows the `did:method:identifier` format.
+
 ### DidDocument
 
 W3C-compliant DID document.
@@ -274,13 +300,40 @@ data class AnchorRef(
 
 ## Key Types
 
+### KeyId
+
+Type-safe key identifier (value class).
+
+```kotlin
+@JvmInline
+value class KeyId(val value: String)
+```
+
+**Properties:**
+- `value`: The underlying string value of the key identifier
+
+**Usage:**
+```kotlin
+// Create KeyId from string
+val keyId = KeyId("did:key:z6Mk...#key-1")
+
+// Access underlying string value
+val keyIdString = keyId.value
+
+// Use in KMS operations
+val signature = kms.sign(keyId, data)
+val publicKey = kms.getPublicKey(keyId)
+```
+
+**Note:** `KeyId` is a value class that provides compile-time type safety. When you have a `KeyHandle`, the `id` property is already a `KeyId`, so you can use it directly. When constructing from a string, use `KeyId("your-key-string")`.
+
 ### KeyInfo
 
 Information about a cryptographic key.
 
 ```kotlin
 data class KeyInfo(
-    val keyId: String,                      // Key identifier
+    val keyId: KeyId,                      // Key identifier (type-safe)
     val algorithm: String,                  // Key algorithm
     val publicKey: ByteArray,               // Public key bytes
     val purposes: List<KeyPurpose>         // Key purposes
@@ -288,7 +341,7 @@ data class KeyInfo(
 ```
 
 **Properties:**
-- `keyId`: Key identifier
+- `keyId`: Key identifier (type-safe `KeyId` value class)
 - `algorithm`: Key algorithm (Ed25519, Secp256k1, etc.)
 - `publicKey`: Public key bytes
 - `purposes`: Key purposes (AUTHENTICATION, ASSERTION_METHOD, etc.)

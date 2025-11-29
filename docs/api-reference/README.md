@@ -98,17 +98,17 @@ TrustWeave is configured during creation using a DSL:
 val trustweave = TrustWeave.create {
     kms = InMemoryKeyManagementService()
     walletFactory = TestkitWalletFactory()
-    
+
     didMethods {
         + DidKeyMethod()
         + DidWebMethod()
     }
-    
+
     blockchains {
         "algorand:testnet" to algorandClient
         "polygon:mainnet" to polygonClient
     }
-    
+
     credentialServices {
         + MyCredentialService()
     }
@@ -126,10 +126,10 @@ val trustweave = TrustWeave.create()
 try {
     trustweave.initialize()
     trustweave.start()
-    
+
     // Use TrustWeave
     // ...
-    
+
     trustweave.stop()
     trustweave.cleanup()
 } catch (error: TrustWeaveError) {

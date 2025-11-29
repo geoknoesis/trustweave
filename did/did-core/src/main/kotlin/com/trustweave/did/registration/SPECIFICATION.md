@@ -57,7 +57,7 @@ private fun createUniversalResolver(): UniversalResolver {
     val baseUrl = driver.baseUrl  // "https://dev.uniresolver.io"
     val protocolAdapter = createProtocolAdapter(driver.protocolAdapter)  // "standard"
     val timeout = driver.timeout ?: 30
-    
+
     return DefaultUniversalResolver(
         baseUrl = baseUrl,
         timeout = timeout,
@@ -102,12 +102,12 @@ override suspend fun resolveDid(did: String): DidResolutionResult {
     if (capabilities?.resolve != true) {
         throw TrustWeaveException("DID method does not support resolution.")
     }
-    
+
     // Validate DID format matches method name
     require(did.startsWith("did:${registrationSpec.name}:")) {
         "Invalid DID format for method '${registrationSpec.name}': $did"
     }
-    
+
     // Delegate to Universal Resolver
     return universalResolver.resolveDid(did)
 }
@@ -189,22 +189,22 @@ class HttpDidMethod(
     val registrationSpec: DidRegistrationSpec,
     kms: KeyManagementService
 ) : AbstractDidMethod(registrationSpec.name, kms) {
-    
+
     // Created from driver.baseUrl and driver.protocolAdapter
     private val resolver: UniversalResolver = createResolver()
-    
+
     // Implements DidMethod.resolveDid() if capabilities.resolve == true
     override suspend fun resolveDid(did: String): DidResolutionResult {
         // Validates capabilities.resolve
         // Validates DID format matches method name
         // Delegates to resolver.resolveDid() (HTTP endpoint)
     }
-    
+
     // Throws exception if capabilities.create == false
     override suspend fun createDid(options: DidCreationOptions): DidDocument {
         // Currently not implemented for JSON-registered methods
     }
-    
+
     // Similar for updateDid() and deactivateDid()
 }
 ```

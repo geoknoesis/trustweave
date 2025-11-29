@@ -1,6 +1,7 @@
 package com.trustweave.kms.thalesluna
 
 import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.core.types.KeyId
 import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyHandle
 import com.trustweave.kms.KeyManagementService
@@ -11,9 +12,9 @@ import kotlinx.coroutines.withContext
 
 /**
  * Thales Luna Network HSM implementation of KeyManagementService.
- * 
+ *
  * Supports all Thales Luna HSM-compatible algorithms.
- * 
+ *
  * **Note:** This is a placeholder implementation. Thales Luna HSM integration
  * requires access to Thales Luna SDK and HSM access.
  */
@@ -47,24 +48,30 @@ class ThalesLunaKeyManagementService(
             )
         }
         // TODO: Implement Thales Luna HSM API integration
-        throw TrustWeaveException("Thales Luna HSM integration not yet implemented")
+        throw TrustWeaveException.Unknown(
+            message = "Thales Luna HSM integration not yet implemented"
+        )
     }
 
-    override suspend fun getPublicKey(keyId: String): KeyHandle = withContext(Dispatchers.IO) {
+    override suspend fun getPublicKey(keyId: KeyId): KeyHandle = withContext(Dispatchers.IO) {
         // TODO: Implement Thales Luna HSM API integration
-        throw TrustWeaveException("Thales Luna HSM integration not yet implemented")
+        throw TrustWeaveException.Unknown(
+            message = "Thales Luna HSM integration not yet implemented"
+        )
     }
 
     override suspend fun sign(
-        keyId: String,
+        keyId: KeyId,
         data: ByteArray,
         algorithm: Algorithm?
     ): ByteArray = withContext(Dispatchers.IO) {
         // TODO: Implement Thales Luna HSM API integration
-        throw TrustWeaveException("Thales Luna HSM integration not yet implemented")
+        throw TrustWeaveException.Unknown(
+            message = "Thales Luna HSM integration not yet implemented"
+        )
     }
 
-    override suspend fun deleteKey(keyId: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deleteKey(keyId: KeyId): Boolean = withContext(Dispatchers.IO) {
         // TODO: Implement Thales Luna HSM API integration
         false
     }

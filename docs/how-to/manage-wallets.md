@@ -113,10 +113,10 @@ Use collections and tags to organize credentials:
 wallet.withOrganization { org ->
     // Create collection
     val collectionId = org.createCollection("Education", "Academic credentials")
-    
+
     // Add credential to collection
     org.addToCollection(credentialId, collectionId)
-    
+
     // Add tags
     org.tagCredential(credentialId, setOf("degree", "verified"))
 }
@@ -222,13 +222,13 @@ wallet.withOrganization { org ->
         name = "Education",
         description = "Academic credentials"
     )
-    
+
     // Add credential to collection
     org.addToCollection(credentialId, educationId)
-    
+
     // Get credentials in collection
     val educationCreds = org.getCredentialsInCollection(educationId)
-    
+
     // List all collections
     val collections = org.listCollections()
 }
@@ -242,13 +242,13 @@ Tag credentials for flexible querying:
 wallet.withOrganization { org ->
     // Add tags
     org.tagCredential(credentialId, setOf("degree", "verified", "active"))
-    
+
     // Get tags for credential
     val tags = org.getTags(credentialId)
-    
+
     // Find credentials by tag
     val verifiedCreds = org.findByTag("verified")
-    
+
     // Get all tags
     val allTags = org.getAllTags()
 }
@@ -266,10 +266,10 @@ wallet.withOrganization { org ->
         "storedAt" to System.currentTimeMillis(),
         "source" to "university"
     ))
-    
+
     // Get metadata
     val metadata = org.getMetadata(credentialId)
-    
+
     // Add notes
     org.updateNotes(credentialId, "Important credential for job applications")
 }
@@ -337,7 +337,7 @@ wallet.withPresentation { pres ->
             challenge = "job-application-${System.currentTimeMillis()}"
         )
     )
-    
+
     println("Created presentation: ${presentation.id}")
 }
 ```
@@ -389,13 +389,13 @@ val credentialId = wallet.store(credential)
 wallet.withOrganization { org ->
     // Create or get collection
     val collectionId = org.createCollection("Work", "Professional credentials")
-    
+
     // Add to collection
     org.addToCollection(credentialId, collectionId)
-    
+
     // Add tags
     org.tagCredential(credentialId, setOf("work", "verified"))
-    
+
     // Add metadata
     org.addMetadata(credentialId, mapOf(
         "storedAt" to System.currentTimeMillis()
@@ -444,7 +444,7 @@ try {
     val wallet = trustLayer.wallet {
         holder("did:key:holder")
     }
-    
+
     val credentialId = wallet.store(credential)
 } catch (error: TrustWeaveError) {
     when (error) {

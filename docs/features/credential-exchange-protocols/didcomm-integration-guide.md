@@ -41,7 +41,7 @@ Then in `credentials/plugins/didcomm/build.gradle.kts`:
 ```kotlin
 dependencies {
     // ... existing dependencies ...
-    
+
     // DIDComm library (production crypto)
     implementation(libs.didcomm.java)
 }
@@ -54,7 +54,7 @@ Add directly to `credentials/plugins/didcomm/build.gradle.kts`:
 ```kotlin
 dependencies {
     // ... existing dependencies ...
-    
+
     // DIDComm library (production crypto)
     implementation("org.didcommx:didcomm:0.3.2")
 }
@@ -67,7 +67,7 @@ Uncomment the code in `DidCommCryptoProduction.kt`:
 ```kotlin
 class DidCommCryptoProduction(...) {
     private val didComm = org.didcommx.didcomm.DIDComm()
-    
+
     suspend fun encrypt(...): String {
         // Uncomment the implementation code
         val didCommMessage = org.didcommx.didcomm.message.Message.builder()
@@ -77,17 +77,17 @@ class DidCommCryptoProduction(...) {
             .to(listOf(toDid))
             .body(message["body"]?.jsonObject ?: buildJsonObject { })
             .build()
-        
+
         val packed = didComm.pack(
             message = didCommMessage,
             from = fromDid,
             to = listOf(toDid),
             signFrom = fromKeyId
         )
-        
+
         return packed.value
     }
-    
+
     suspend fun decrypt(...): JsonObject {
         // Uncomment the implementation code
         val packed = org.didcommx.didcomm.pack.EncryptedPackedMessage(packedMessage)
@@ -96,7 +96,7 @@ class DidCommCryptoProduction(...) {
             to = recipientDid,
             from = senderDid
         )
-        
+
         // Convert back to JsonObject
         // ...
     }
@@ -136,7 +136,7 @@ class DidCommPacker(
 ) {
     suspend fun pack(...): String {
         val messageJson = message.toJsonObject()
-        
+
         if (encrypt) {
             // Use adapter which handles both implementations
             if (crypto is DidCommCryptoAdapter && crypto.useProduction) {
@@ -163,7 +163,7 @@ The `didcomm-java` library needs access to private keys. You'll need to:
    ```kotlin
    interface KeyManagementService {
        // ... existing methods ...
-       
+
        suspend fun getPrivateKey(keyId: String): PrivateKey
    }
    ```

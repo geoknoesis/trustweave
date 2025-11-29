@@ -43,7 +43,7 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     // Automatically discover and register Indy adapters
     val result = IndyIntegration.discoverAndRegister()
-    
+
     println("Registered chains: ${result.registeredChains}")
 }
 ```
@@ -59,7 +59,7 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     // Type-safe chain ID
     val chainId = ChainId.Indy.BCovrinTestnet
-    
+
     // Type-safe options (compile-time validation)
     val options = IndyOptions(
         walletName = "my-wallet",
@@ -67,7 +67,7 @@ fun main() = runBlocking {
         did = "did:indy:testnet:...",
         poolEndpoint = "https://test.bcovrin.vonx.io" // Optional
     )
-    
+
     // Setup with type-safe configuration
     val result = IndyIntegration.setup(
         chainIds = listOf(chainId.toString()),
@@ -117,26 +117,26 @@ data class VerifiableCredentialDigest(
 fun main() = runBlocking {
     // Type-safe chain ID
     val chainId = ChainId.Indy.BCovrinTestnet
-    
+
     // Register Indy client (uses in-memory fallback for testing)
     val integration = IndyIntegration.setup(
         chainIds = listOf(chainId.toString()),
         options = emptyMap() // Uses in-memory fallback for testing
     )
     val registry = integration.registry
-    
+
     // Anchor data
     val digest = VerifiableCredentialDigest(
         vcId = "vc-12345",
         vcDigest = "uABC123..."
     )
-    
+
     val result = registry.anchorTyped(
         value = digest,
         serializer = VerifiableCredentialDigest.serializer(),
         targetChainId = chainId.toString()
     )
-    
+
     println("Anchored at: ${result.ref.txHash}")
 }
 ```

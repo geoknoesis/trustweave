@@ -16,9 +16,9 @@ class CredentialTransformerBranchCoverageTest {
     fun `test CredentialTransformer toJwt returns JWT string`() = runBlocking {
         val transformer = CredentialTransformer()
         val credential = createTestCredential()
-        
+
         val jwt = transformer.toJwt(credential)
-        
+
         assertNotNull(jwt)
         assertTrue(jwt.isNotBlank())
     }
@@ -28,9 +28,9 @@ class CredentialTransformerBranchCoverageTest {
         val transformer = CredentialTransformer()
         val credential = createTestCredential()
         val jwt = transformer.toJwt(credential)
-        
+
         val restored = transformer.fromJwt(jwt)
-        
+
         assertNotNull(restored)
         assertEquals(credential.issuer, restored.issuer)
     }
@@ -39,9 +39,9 @@ class CredentialTransformerBranchCoverageTest {
     fun `test CredentialTransformer toJsonLd returns JSON object`() = runBlocking {
         val transformer = CredentialTransformer()
         val credential = createTestCredential()
-        
+
         val jsonLd = transformer.toJsonLd(credential)
-        
+
         assertNotNull(jsonLd)
         assertTrue(jsonLd.containsKey("issuer"))
         assertTrue(jsonLd.containsKey("type"))
@@ -52,9 +52,9 @@ class CredentialTransformerBranchCoverageTest {
         val transformer = CredentialTransformer()
         val credential = createTestCredential()
         val jsonLd = transformer.toJsonLd(credential)
-        
+
         val restored = transformer.fromJsonLd(jsonLd)
-        
+
         assertNotNull(restored)
         assertEquals(credential.issuer, restored.issuer)
     }
@@ -63,9 +63,9 @@ class CredentialTransformerBranchCoverageTest {
     fun `test CredentialTransformer toCbor returns bytes`() = runBlocking {
         val transformer = CredentialTransformer()
         val credential = createTestCredential()
-        
+
         val cbor = transformer.toCbor(credential)
-        
+
         assertNotNull(cbor)
         assertTrue(cbor.isNotEmpty())
     }
@@ -75,9 +75,9 @@ class CredentialTransformerBranchCoverageTest {
         val transformer = CredentialTransformer()
         val credential = createTestCredential()
         val cbor = transformer.toCbor(credential)
-        
+
         val restored = transformer.fromCbor(cbor)
-        
+
         assertNotNull(restored)
         assertEquals(credential.issuer, restored.issuer)
     }
@@ -94,9 +94,9 @@ class CredentialTransformerBranchCoverageTest {
                 proofValue = "test-proof"
             )
         )
-        
+
         val jwt = transformer.toJwt(credential)
-        
+
         assertNotNull(jwt)
     }
 
@@ -117,9 +117,9 @@ class CredentialTransformerBranchCoverageTest {
                 proofValue = "test-proof"
             )
         )
-        
+
         val jsonLd = transformer.toJsonLd(credential)
-        
+
         assertNotNull(jsonLd)
     }
 
@@ -127,10 +127,10 @@ class CredentialTransformerBranchCoverageTest {
     fun `test CredentialTransformer round trip JWT`() = runBlocking {
         val transformer = CredentialTransformer()
         val original = createTestCredential()
-        
+
         val jwt = transformer.toJwt(original)
         val restored = transformer.fromJwt(jwt)
-        
+
         assertEquals(original.issuer, restored.issuer)
         assertEquals(original.type, restored.type)
     }
@@ -139,10 +139,10 @@ class CredentialTransformerBranchCoverageTest {
     fun `test CredentialTransformer round trip JSON-LD`() = runBlocking {
         val transformer = CredentialTransformer()
         val original = createTestCredential()
-        
+
         val jsonLd = transformer.toJsonLd(original)
         val restored = transformer.fromJsonLd(jsonLd)
-        
+
         assertEquals(original.issuer, restored.issuer)
         assertEquals(original.type, restored.type)
     }
@@ -151,10 +151,10 @@ class CredentialTransformerBranchCoverageTest {
     fun `test CredentialTransformer round trip CBOR`() = runBlocking {
         val transformer = CredentialTransformer()
         val original = createTestCredential()
-        
+
         val cbor = transformer.toCbor(original)
         val restored = transformer.fromCbor(cbor)
-        
+
         assertEquals(original.issuer, restored.issuer)
         assertEquals(original.type, restored.type)
     }

@@ -12,15 +12,15 @@ import javax.sql.DataSource
 
 /**
  * PostgreSQL-backed message storage.
- * 
+ *
  * Stores messages in a PostgreSQL database with proper indexing
  * for efficient queries by DID, thread, and time.
- * 
+ *
  * **Database Schema:**
  * - `didcomm_messages` - Main messages table
  * - `didcomm_message_dids` - Index for DID lookups
  * - `didcomm_message_threads` - Index for thread lookups
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val dataSource = HikariDataSource().apply {
@@ -35,18 +35,18 @@ class PostgresDidCommMessageStorage(
     private val dataSource: DataSource,
     private val encryption: MessageEncryption? = null
 ) : DidCommMessageStorage {
-    
+
     init {
         createTables()
     }
-    
+
     override fun setEncryption(encryption: MessageEncryption?) {
         // Note: Encryption is set in constructor
         // To change encryption, create a new storage instance
     }
-    
+
     private val archivedMessages = mutableSetOf<String>()
-    
+
     override suspend fun markAsArchived(messageIds: List<String>, archiveId: String) = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             conn.prepareStatement("""
@@ -60,8 +60,9 @@ class PostgresDidCommMessageStorage(
                 stmt.executeUpdate()
             }
         }
+        Unit
     }
-    
+
     override suspend fun isArchived(messageId: String): Boolean = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             conn.prepareStatement("""
@@ -78,17 +79,17 @@ class PostgresDidCommMessageStorage(
             }
         }
     }
-    
+
     override suspend fun store(message: DidCommMessage): String = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             val json = Json { prettyPrint = false; encodeDefaults = false }
-            
+
             if (encryption != null) {
                 // Encrypt message
                 val encrypted = encryption.encrypt(message)
                 val encryptedDataBase64 = Base64.getEncoder().encodeToString(encrypted.encryptedData)
                 val ivBase64 = Base64.getEncoder().encodeToString(encrypted.iv)
-                
+
                 conn.prepareStatement("""
                     INSERT INTO didcomm_messages (
                         id, type, from_did, to_dids, body, created_time,
@@ -125,7 +126,7 @@ class PostgresDidCommMessageStorage(
                     DidCommMessage.serializer(),
                     message
                 )
-                
+
                 conn.prepareStatement("""
                     INSERT INTO didcomm_messages (
                         id, type, from_did, to_dids, body, created_time,
@@ -150,7 +151,7 @@ class PostgresDidCommMessageStorage(
                     stmt.executeUpdate()
                 }
             }
-            
+
             // Index by DID
             message.from?.let { from ->
                 indexMessageForDid(conn, message.id, from, "from")
@@ -158,16 +159,16 @@ class PostgresDidCommMessageStorage(
             message.to.forEach { to ->
                 indexMessageForDid(conn, message.id, to, "to")
             }
-            
+
             // Index by thread
             message.thid?.let { thid ->
                 indexMessageForThread(conn, message.id, thid)
             }
         }
-        
+
         message.id
     }
-    
+
     override suspend fun get(messageId: String): DidCommMessage? = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             conn.prepareStatement("""
@@ -179,19 +180,19 @@ class PostgresDidCommMessageStorage(
                     if (rs.next()) {
                         val isEncrypted = rs.getBoolean("is_encrypted")
                         val json = Json { ignoreUnknownKeys = true }
-                        
+
                         if (isEncrypted && encryption != null) {
                             // Decrypt message
                             val encryptedData = rs.getBytes("encrypted_data")
                             val keyVersion = rs.getInt("key_version")
                             val iv = rs.getBytes("iv")
-                            
+
                             val encrypted = com.trustweave.credential.didcomm.storage.encryption.EncryptedMessage(
                                 keyVersion = keyVersion,
                                 encryptedData = encryptedData,
                                 iv = iv
                             )
-                            
+
                             encryption.decrypt(encrypted)
                         } else {
                             // Read unencrypted
@@ -205,7 +206,7 @@ class PostgresDidCommMessageStorage(
             }
         }
     }
-    
+
     override suspend fun getMessagesForDid(
         did: String,
         limit: Int,
@@ -228,24 +229,24 @@ class PostgresDidCommMessageStorage(
                     buildList {
                         while (rs.next()) {
                             val isEncrypted = rs.getBoolean("is_encrypted")
-                            
+
                             val message = if (isEncrypted && encryption != null) {
                                 val encryptedData = rs.getBytes("encrypted_data")
                                 val keyVersion = rs.getInt("key_version")
                                 val iv = rs.getBytes("iv")
-                                
+
                                 val encrypted = com.trustweave.credential.didcomm.storage.encryption.EncryptedMessage(
                                     keyVersion = keyVersion,
                                     encryptedData = encryptedData,
                                     iv = iv
                                 )
-                                
+
                                 encryption.decrypt(encrypted)
                             } else {
                                 val messageJson = rs.getString("message_json")
                                 json.decodeFromString(DidCommMessage.serializer(), messageJson)
                             }
-                            
+
                             add(message)
                         }
                     }
@@ -253,7 +254,7 @@ class PostgresDidCommMessageStorage(
             }
         }
     }
-    
+
     override suspend fun getThreadMessages(thid: String): List<DidCommMessage> = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             conn.prepareStatement("""
@@ -268,24 +269,24 @@ class PostgresDidCommMessageStorage(
                     buildList {
                         while (rs.next()) {
                             val isEncrypted = rs.getBoolean("is_encrypted")
-                            
+
                             val message = if (isEncrypted && encryption != null) {
                                 val encryptedData = rs.getBytes("encrypted_data")
                                 val keyVersion = rs.getInt("key_version")
                                 val iv = rs.getBytes("iv")
-                                
+
                                 val encrypted = com.trustweave.credential.didcomm.storage.encryption.EncryptedMessage(
                                     keyVersion = keyVersion,
                                     encryptedData = encryptedData,
                                     iv = iv
                                 )
-                                
+
                                 encryption.decrypt(encrypted)
                             } else {
                                 val messageJson = rs.getString("message_json")
                                 json.decodeFromString(DidCommMessage.serializer(), messageJson)
                             }
-                            
+
                             add(message)
                         }
                     }
@@ -293,7 +294,7 @@ class PostgresDidCommMessageStorage(
             }
         }
     }
-    
+
     override suspend fun delete(messageId: String): Boolean = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             conn.prepareStatement("DELETE FROM didcomm_messages WHERE id = ?").use { stmt ->
@@ -302,7 +303,7 @@ class PostgresDidCommMessageStorage(
             }
         }
     }
-    
+
     override suspend fun deleteMessagesForDid(did: String): Int = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             conn.prepareStatement("""
@@ -316,7 +317,7 @@ class PostgresDidCommMessageStorage(
             }
         }
     }
-    
+
     override suspend fun deleteThreadMessages(thid: String): Int = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             conn.prepareStatement("DELETE FROM didcomm_messages WHERE thid = ?").use { stmt ->
@@ -325,7 +326,7 @@ class PostgresDidCommMessageStorage(
             }
         }
     }
-    
+
     override suspend fun countMessagesForDid(did: String): Int = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             conn.prepareStatement("""
@@ -338,7 +339,7 @@ class PostgresDidCommMessageStorage(
             }
         }
     }
-    
+
     override suspend fun search(
         filter: MessageFilter,
         limit: Int,
@@ -348,7 +349,7 @@ class PostgresDidCommMessageStorage(
         val conditions = mutableListOf<String>()
         val params = mutableListOf<Any>()
         var paramIndex = 1
-        
+
         filter.fromDid?.let {
             conditions.add("from_did = ?")
             params.add(it)
@@ -373,13 +374,13 @@ class PostgresDidCommMessageStorage(
             conditions.add("created_time <= ?")
             params.add(it)
         }
-        
+
         val whereClause = if (conditions.isNotEmpty()) {
             "WHERE ${conditions.joinToString(" AND ")}"
         } else {
             ""
         }
-        
+
         dataSource.connection.use { conn ->
             val sql = """
                 SELECT message_json, encrypted_data, key_version, iv, is_encrypted
@@ -388,14 +389,14 @@ class PostgresDidCommMessageStorage(
                 ORDER BY created_time DESC NULLS LAST
                 LIMIT ? OFFSET ?
             """
-            
+
             conn.prepareStatement(sql).use { stmt ->
                 params.forEachIndexed { index, param ->
                     stmt.setObject(index + 1, param)
                 }
                 stmt.setInt(params.size + 1, limit)
                 stmt.setInt(params.size + 2, offset)
-                
+
                 stmt.executeQuery().use { rs ->
                     val json = Json { ignoreUnknownKeys = true }
                     buildList {
@@ -408,7 +409,7 @@ class PostgresDidCommMessageStorage(
             }
         }
     }
-    
+
     private fun createTables() {
         dataSource.connection.use { conn ->
             // Main messages table
@@ -427,7 +428,7 @@ class PostgresDidCommMessageStorage(
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-            
+
             // Index for DID lookups
             conn.createStatement().execute("""
                 CREATE TABLE IF NOT EXISTS didcomm_message_dids (
@@ -437,7 +438,7 @@ class PostgresDidCommMessageStorage(
                     PRIMARY KEY (message_id, did, role)
                 )
             """)
-            
+
             // Index for thread lookups
             conn.createStatement().execute("""
                 CREATE TABLE IF NOT EXISTS didcomm_message_threads (
@@ -446,11 +447,11 @@ class PostgresDidCommMessageStorage(
                     PRIMARY KEY (message_id, thid)
                 )
             """)
-            
+
             // Add encryption columns if they don't exist
             try {
                 conn.createStatement().execute("""
-                    ALTER TABLE didcomm_messages 
+                    ALTER TABLE didcomm_messages
                     ADD COLUMN IF NOT EXISTS encrypted_data BYTEA,
                     ADD COLUMN IF NOT EXISTS key_version INT,
                     ADD COLUMN IF NOT EXISTS iv BYTEA,
@@ -459,11 +460,11 @@ class PostgresDidCommMessageStorage(
             } catch (e: SQLException) {
                 // Columns may already exist, ignore
             }
-            
+
             // Add archive columns if they don't exist
             try {
                 conn.createStatement().execute("""
-                    ALTER TABLE didcomm_messages 
+                    ALTER TABLE didcomm_messages
                     ADD COLUMN IF NOT EXISTS archived BOOLEAN DEFAULT FALSE,
                     ADD COLUMN IF NOT EXISTS archive_id VARCHAR(255),
                     ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP
@@ -471,7 +472,7 @@ class PostgresDidCommMessageStorage(
             } catch (e: SQLException) {
                 // Columns may already exist, ignore
             }
-            
+
             // Create archive index
             try {
                 conn.createStatement().execute("CREATE INDEX IF NOT EXISTS idx_messages_archived ON didcomm_messages(archived)")
@@ -479,7 +480,7 @@ class PostgresDidCommMessageStorage(
             } catch (e: SQLException) {
                 // Index may already exist
             }
-            
+
             // Create indexes for performance
             conn.createStatement().execute("CREATE INDEX IF NOT EXISTS idx_messages_from_did ON didcomm_messages(from_did)")
             conn.createStatement().execute("CREATE INDEX IF NOT EXISTS idx_messages_thid ON didcomm_messages(thid)")
@@ -491,7 +492,7 @@ class PostgresDidCommMessageStorage(
             conn.createStatement().execute("CREATE INDEX IF NOT EXISTS idx_message_threads_thid ON didcomm_message_threads(thid)")
         }
     }
-    
+
     private fun indexMessageForDid(conn: Connection, messageId: String, did: String, role: String) {
         conn.prepareStatement("""
             INSERT INTO didcomm_message_dids (message_id, did, role)
@@ -504,7 +505,7 @@ class PostgresDidCommMessageStorage(
             stmt.executeUpdate()
         }
     }
-    
+
     private fun indexMessageForThread(conn: Connection, messageId: String, thid: String) {
         conn.prepareStatement("""
             INSERT INTO didcomm_message_threads (message_id, thid)

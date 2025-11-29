@@ -11,7 +11,7 @@ $replacements = @{
     "import com.trustweave.core.VeriCoreConstants" = "import com.trustweave.core.TrustWeaveConstants"
     "import com.trustweave.VeriCoreDefaults" = "import com.trustweave.TrustWeaveDefaults"
     "import com.trustweave.testkit.VeriCoreTestFixture" = "import com.trustweave.testkit.TrustWeaveTestFixture"
-    
+
     # Function names
     "toVeriCoreError" = "toTrustWeaveError"
     "VeriCoreError" = "TrustWeaveError"
@@ -19,14 +19,14 @@ $replacements = @{
     "VeriCoreConstants" = "TrustWeaveConstants"
     "VeriCoreDefaults" = "TrustWeaveDefaults"
     "VeriCoreTestFixture" = "TrustWeaveTestFixture"
-    
+
     # Class references in code
     "VeriCore.create" = "TrustWeave.create"
     "VeriCore\." = "TrustWeave."
     "VeriCore\s" = "TrustWeave "
     "VeriCore\)" = "TrustWeave)"
     "VeriCore\(" = "TrustWeave("
-    
+
     # Comments and documentation
     "VeriCore library" = "TrustWeave library"
     "VeriCore provides" = "TrustWeave provides"
@@ -47,7 +47,7 @@ $replacements = @{
     "VeriCore's" = "TrustWeave's"
     "VeriCore\"" = "TrustWeave\""
     "VeriCore\`" = "TrustWeave`"
-    
+
     # Variable names in examples (be careful with these)
     "val vericore = " = "val trustweave = "
     "val vericore:" = "val trustweave:"
@@ -55,7 +55,7 @@ $replacements = @{
     "vericore\s" = "trustweave "
 }
 
-$filesToProcess = Get-ChildItem -Path . -Recurse -Include *.kt,*.md,*.kts -Exclude *build*,*\.gradle*,*\.idea* | 
+$filesToProcess = Get-ChildItem -Path . -Recurse -Include *.kt,*.md,*.kts -Exclude *build*,*\.gradle*,*\.idea* |
     Where-Object { $_.FullName -notmatch "\\build\\" -and $_.FullName -notmatch "\\.gradle\\" }
 
 $totalFiles = 0
@@ -64,10 +64,10 @@ $totalReplacements = 0
 foreach ($file in $filesToProcess) {
     $content = Get-Content -Path $file.FullName -Raw -ErrorAction SilentlyContinue
     if ($null -eq $content) { continue }
-    
+
     $originalContent = $content
     $fileReplacements = 0
-    
+
     foreach ($pattern in $replacements.Keys) {
         $replacement = $replacements[$pattern]
         if ($content -match $pattern) {
@@ -75,7 +75,7 @@ foreach ($file in $filesToProcess) {
             $fileReplacements++
         }
     }
-    
+
     if ($content -ne $originalContent) {
         Set-Content -Path $file.FullName -Value $content -NoNewline
         $totalFiles++

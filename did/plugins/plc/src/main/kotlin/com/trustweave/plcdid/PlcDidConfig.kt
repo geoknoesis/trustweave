@@ -2,9 +2,9 @@ package com.trustweave.plcdid
 
 /**
  * Configuration for did:plc method implementation.
- * 
+ *
  * Supports Personal Linked Container (PLC) DID method for AT Protocol.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val config = PlcDidConfig.builder()
@@ -18,24 +18,24 @@ data class PlcDidConfig(
      * PLC registry URL (optional, uses default if not provided).
      */
     val plcRegistryUrl: String? = null,
-    
+
     /**
      * HTTP timeout in seconds (default: 30).
      */
     val timeoutSeconds: Int = 30,
-    
+
     /**
      * Additional configuration properties.
      */
     val additionalProperties: Map<String, Any?> = emptyMap()
 ) {
-    
+
     companion object {
         /**
          * Default PLC registry URL.
          */
         const val DEFAULT_PLC_REGISTRY_URL = "https://plc.directory"
-        
+
         /**
          * Creates default configuration.
          */
@@ -44,7 +44,7 @@ data class PlcDidConfig(
                 plcRegistryUrl = DEFAULT_PLC_REGISTRY_URL
             )
         }
-        
+
         /**
          * Creates configuration from a map (for backward compatibility).
          */
@@ -57,7 +57,7 @@ data class PlcDidConfig(
                 }
             )
         }
-        
+
         /**
          * Builder for PlcDidConfig.
          */
@@ -65,7 +65,7 @@ data class PlcDidConfig(
             return Builder()
         }
     }
-    
+
     /**
      * Builder for PlcDidConfig.
      */
@@ -73,22 +73,22 @@ data class PlcDidConfig(
         private var plcRegistryUrl: String? = DEFAULT_PLC_REGISTRY_URL
         private var timeoutSeconds: Int = 30
         private val additionalProperties = mutableMapOf<String, Any?>()
-        
+
         fun plcRegistryUrl(value: String?): Builder {
             this.plcRegistryUrl = value
             return this
         }
-        
+
         fun timeoutSeconds(value: Int): Builder {
             this.timeoutSeconds = value
             return this
         }
-        
+
         fun property(key: String, value: Any?): Builder {
             this.additionalProperties[key] = value
             return this
         }
-        
+
         fun build(): PlcDidConfig {
             return PlcDidConfig(
                 plcRegistryUrl = plcRegistryUrl,
@@ -97,7 +97,7 @@ data class PlcDidConfig(
             )
         }
     }
-    
+
     /**
      * Converts to map format.
      */

@@ -17,10 +17,10 @@ Add an integration when you need a concrete provider:
 dependencies {
     // Chain plugins use hierarchical group IDs
     implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
-    
+
     // DID plugins use hierarchical group IDs
     implementation("com.trustweave.did:key:1.0.0-SNAPSHOT")
-    
+
     // KMS plugins use hierarchical group IDs
     implementation("com.trustweave.kms:aws:1.0.0-SNAPSHOT")
 }

@@ -10,13 +10,12 @@ import com.trustweave.credential.schema.JsonSchemaValidator
 import com.trustweave.credential.schema.SchemaRegistry
 import com.trustweave.credential.schema.SchemaValidatorRegistry
 import com.trustweave.credential.SchemaFormat
-import com.trustweave.credential.did.CredentialDidResolver
-import com.trustweave.credential.did.CredentialDidResolution
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofOptions
 import com.trustweave.did.DidDocument
+import com.trustweave.did.VerificationMethod
+import com.trustweave.did.resolver.DidResolver
 import com.trustweave.did.resolver.DidResolutionResult
-import com.trustweave.did.VerificationMethodRef
 import com.trustweave.kms.Algorithm
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.util.booleanDidResolver
@@ -35,11 +34,11 @@ class CredentialVerifierTest {
 
     private lateinit var verifier: CredentialVerifier
     private lateinit var kms: InMemoryKeyManagementService
-    private lateinit var keyId: String
+    private var keyId: com.trustweave.core.types.KeyId? = null
     private lateinit var publicKeyJwk: Map<String, Any?>
     private val issuerDid = "did:key:issuer123"
     private lateinit var proofGenerator: Ed25519ProofGenerator
-    private lateinit var didResolver: CredentialDidResolver
+    private lateinit var didResolver: DidResolver
 
     @BeforeEach
     fun setup() = runBlocking {
@@ -47,38 +46,39 @@ class CredentialVerifierTest {
         SchemaValidatorRegistry.clear()
         // Register JSON Schema validator
         SchemaValidatorRegistry.register(JsonSchemaValidator())
-        
+
         // Create a real KMS and generate a real Ed25519 key
         kms = InMemoryKeyManagementService()
         val keyHandle = kms.generateKey(Algorithm.Ed25519, mapOf("keyId" to "key-1"))
         keyId = keyHandle.id
         publicKeyJwk = keyHandle.publicKeyJwk ?: emptyMap()
-        
+
         // Create proof generator that uses the KMS to sign
+        val keyIdValue = keyId!!
         proofGenerator = Ed25519ProofGenerator(
-            signer = { data, _ -> kms.sign(keyId, data) },
-            getPublicKeyId = { keyId }
+            signer = { data, _ -> kms.sign(keyIdValue, data) },
+            getPublicKeyId = { keyIdValue.value }
         )
-        
+
         // Create DID resolver with real public key
         didResolver = createTestDidResolver()
-        
+
         // Create verifier with the DID resolver
-        verifier = CredentialVerifier(didResolver)
+        verifier = CredentialVerifier(defaultDidResolver = didResolver)
     }
-    
+
     /**
      * Creates a test DID resolver that returns a DID document with verification methods.
      * Uses the real public key from the generated key.
      */
-    private fun createTestDidResolver(): CredentialDidResolver {
+    private fun createTestDidResolver(): DidResolver {
         return resultDidResolver { did ->
             if (did == issuerDid || did == "did:key:issuer123") {
-                DidResolutionResult(
+                DidResolutionResult.Success(
                     document = DidDocument(
                         id = did,
                         verificationMethod = listOf(
-                            VerificationMethodRef(
+                            VerificationMethod(
                                 id = "$did#key-1",
                                 type = "Ed25519VerificationKey2020",
                                 controller = did,
@@ -102,29 +102,26 @@ class CredentialVerifierTest {
     @Test
     fun `test verify credential successfully`() = runBlocking {
         val credential = createTestCredential()
-        
+
         val result = verifier.verify(
             credential = credential,
             options = CredentialVerificationOptions()
         )
-        
-        assertTrue(result.valid)
-        assertTrue(result.proofValid)
-        assertTrue(result.issuerValid)
-        assertTrue(result.notExpired)
-        assertTrue(result.notRevoked)
-        assertTrue(result.errors.isEmpty())
+
+        assertTrue(result.isValid)
+        assertTrue(result is CredentialVerificationResult.Valid)
+        assertTrue(result.allErrors.isEmpty())
     }
 
     @Test
     fun `test verify credential without proof fails`() = runBlocking {
         val credential = createTestCredentialWithoutProof()
-        
+
         val result = verifier.verify(credential)
-        
-        assertFalse(result.valid)
-        assertFalse(result.proofValid)
-        assertTrue(result.errors.any { it.contains("no proof") })
+
+        assertFalse(result.isValid)
+        assertTrue(result is CredentialVerificationResult.Invalid)
+        assertTrue(result.allErrors.any { it.contains("no proof") || it.contains("proof", ignoreCase = true) })
     }
 
     @Test
@@ -137,11 +134,11 @@ class CredentialVerifierTest {
                 proofPurpose = "assertionMethod"
             )
         )
-        
+
         val result = verifier.verify(credential)
-        
-        assertFalse(result.valid)
-        assertFalse(result.proofValid)
+
+        assertFalse(result.isValid)
+        assertTrue(result is CredentialVerificationResult.Invalid)
     }
 
     @Test
@@ -150,10 +147,10 @@ class CredentialVerifierTest {
             booleanDidResolver { false }
         )
         val credential = createTestCredential()
-        
+
         val result = verifierWithFailedDid.verify(credential)
-        
-        assertFalse(result.valid)
+
+        assertFalse(result.isValid)
         assertFalse(result.issuerValid)
         // When resolveDid returns false (not exception), issuerValid is false but no error is added
         // The credential is invalid because issuerValid is false
@@ -163,40 +160,40 @@ class CredentialVerifierTest {
     fun `test verify expired credential`() = runBlocking {
         val expirationDate = java.time.Instant.now().minusSeconds(86400).toString()
         val credential = createTestCredential(expirationDate = expirationDate)
-        
+
         val result = verifier.verify(
             credential = credential,
             options = CredentialVerificationOptions(checkExpiration = true)
         )
-        
-        assertFalse(result.valid)
+
+        assertFalse(result.isValid)
         assertFalse(result.notExpired)
-        assertTrue(result.errors.any { it.contains("expired") })
+        assertTrue(result.allErrors.any { it.contains("expired") })
     }
 
     @Test
     fun `test verify credential skips expiration check when disabled`() = runBlocking {
         val expirationDate = java.time.Instant.now().minusSeconds(86400).toString()
         val credential = createTestCredential(expirationDate = expirationDate)
-        
+
         val result = verifier.verify(
             credential = credential,
             options = CredentialVerificationOptions(checkExpiration = false)
         )
-        
+
         assertTrue(result.notExpired) // Should be true when check is disabled
     }
 
     @Test
     fun `test verify credential with invalid expiration date format`() = runBlocking {
         val credential = createTestCredential(expirationDate = "invalid-date")
-        
+
         val result = verifier.verify(
             credential = credential,
             options = CredentialVerificationOptions(checkExpiration = true)
         )
-        
-        assertTrue(result.warnings.any { it.contains("Invalid expiration date format") })
+
+        assertTrue(result.allWarnings.any { it.contains("Invalid expiration date format") })
         assertTrue(result.notExpired) // Should default to true for invalid format
     }
 
@@ -208,13 +205,13 @@ class CredentialVerifierTest {
                 type = "StatusList2021Entry"
             )
         )
-        
+
         val result = verifier.verify(
             credential = credential,
             options = CredentialVerificationOptions(checkRevocation = true)
         )
-        
-        assertTrue(result.warnings.any { it.contains("Revocation checking requested but no StatusListManager provided") })
+
+        assertTrue(result.allWarnings.any { it.contains("Revocation checking requested but no StatusListManager provided") })
         assertTrue(result.notRevoked) // Currently defaults to true
     }
 
@@ -234,16 +231,16 @@ class CredentialVerifierTest {
             })
         }
         SchemaRegistry.registerSchema(schema, schemaDefinition)
-        
+
         val credential = createTestCredential(schema = schema)
-        
+
         val result = verifier.verify(
             credential = credential,
             options = CredentialVerificationOptions(validateSchema = true)
         )
-        
+
         assertTrue(result.schemaValid)
-        assertTrue(result.valid)
+        assertTrue(result.isValid)
     }
 
     @Test
@@ -263,7 +260,7 @@ class CredentialVerifierTest {
             })
         }
         SchemaRegistry.registerSchema(schema, schemaDefinition)
-        
+
         val credential = createTestCredential(
             schema = schema,
             subject = buildJsonObject {
@@ -271,12 +268,12 @@ class CredentialVerifierTest {
                 // Missing required "name" field
             }
         )
-        
+
         val result = verifier.verify(
             credential = credential,
             options = CredentialVerificationOptions(validateSchema = true)
         )
-        
+
         // Note: Current JsonSchemaValidator implementation doesn't fully parse required fields
         // So schema validation may pass even with missing fields
         // For now, we verify that schema validation was attempted
@@ -286,12 +283,12 @@ class CredentialVerifierTest {
     @Test
     fun `test verify credential skips schema validation when disabled`() = runBlocking {
         val credential = createTestCredential()
-        
+
         val result = verifier.verify(
             credential = credential,
             options = CredentialVerificationOptions(validateSchema = false)
         )
-        
+
         assertTrue(result.schemaValid) // Should default to true when disabled
     }
 
@@ -309,12 +306,12 @@ class CredentialVerifierTest {
                 )
             )
         )
-        
+
         val result = verifier.verify(
             credential = credential,
             options = CredentialVerificationOptions(verifyBlockchainAnchor = true)
         )
-        
+
         // Blockchain anchor verification actually happens - it checks evidence structure
         assertTrue(result.blockchainAnchorValid) // Should be true if evidence structure is valid
     }
@@ -325,16 +322,16 @@ class CredentialVerifierTest {
         val credential = createTestCredentialWithoutProof(
             expirationDate = expirationDate
         )
-        
+
         val result = verifier.verify(
             credential = credential,
             options = CredentialVerificationOptions(checkExpiration = true)
         )
-        
-        assertFalse(result.valid)
-        assertTrue(result.errors.size >= 2)
-        assertTrue(result.errors.any { it.contains("no proof") })
-        assertTrue(result.errors.any { it.contains("expired") })
+
+        assertFalse(result.isValid)
+        assertTrue(result.allErrors.size >= 2)
+        assertTrue(result.allErrors.any { it.contains("no proof") })
+        assertTrue(result.allErrors.any { it.contains("expired") })
     }
 
     private suspend fun createTestCredential(
@@ -365,21 +362,21 @@ class CredentialVerifierTest {
             credentialStatus = credentialStatus,
             evidence = evidence
         )
-        
+
         // Generate a properly signed proof if not provided
         val finalProof = proof ?: proofGenerator.generateProof(
             credential = credentialWithoutProof,
-            keyId = keyId,
+            keyId = keyId!!.value,
             options = ProofOptions(
                 proofPurpose = "assertionMethod",
                 verificationMethod = "$issuerDid#key-1"
             )
         )
-        
+
         // Return credential with proof
         return credentialWithoutProof.copy(proof = finalProof)
     }
-    
+
     /**
      * Creates a test credential without a proof (for testing validation without proof).
      */

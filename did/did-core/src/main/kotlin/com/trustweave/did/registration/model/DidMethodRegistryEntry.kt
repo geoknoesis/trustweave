@@ -8,9 +8,9 @@ import kotlinx.serialization.json.jsonObject
 
 /**
  * Data model for DID Method Registry Entry following the official DID Registration specification.
- * 
+ *
  * This matches the format used in the DID Method Registry at https://identity.foundation/did-registration/
- * 
+ *
  * **Official Registry Format:**
  * ```json
  * {
@@ -31,7 +31,7 @@ import kotlinx.serialization.json.jsonObject
  *   ]
  * }
  * ```
- * 
+ *
  * @see https://identity.foundation/did-registration/
  */
 @Serializable
@@ -41,29 +41,29 @@ data class DidMethodRegistryEntry(
      * This is the method identifier used in DID strings: `did:method:id`
      */
     val name: String,
-    
+
     /**
      * Implementation status of the method.
      * Common values: "proposed", "implemented", "deprecated", "withdrawn"
      */
     val status: String? = null,
-    
+
     /**
      * URL to the full DID method specification document.
      */
     val specification: String? = null,
-    
+
     /**
      * Contact information for the method maintainers.
      */
     val contact: ContactInfo? = null,
-    
+
     /**
      * List of implementations available for this DID method.
      * Each implementation typically includes a driverUrl pointing to a resolver service.
      */
     val implementations: List<MethodImplementation> = emptyList(),
-    
+
     /**
      * Additional properties from the registry entry that aren't explicitly defined.
      * This allows the model to accept future registry fields without breaking.
@@ -83,7 +83,7 @@ data class ContactInfo(
 
 /**
  * Represents an implementation of a DID method.
- * 
+ *
  * In the registry, implementations typically reference resolver services
  * via driverUrl (Universal Resolver instances).
  */
@@ -93,27 +93,27 @@ data class MethodImplementation(
      * Name of the implementation (e.g., "Universal Resolver", "GoDiddy")
      */
     val name: String? = null,
-    
+
     /**
      * URL to the driver/resolver service for this implementation.
      * This is typically a Universal Resolver endpoint.
      */
     val driverUrl: String? = null,
-    
+
     /**
      * URL to the registrar service for this implementation.
      * This is typically a Universal Registrar endpoint.
-     * 
+     *
      * According to the DID Registration specification, implementations may provide
      * separate endpoints for resolution (driverUrl) and registration (registrarUrl).
      */
     val registrarUrl: String? = null,
-    
+
     /**
      * Whether this implementation is for a test network.
      */
     val testNet: Boolean? = null,
-    
+
     /**
      * Additional implementation-specific properties.
      */
@@ -128,14 +128,14 @@ object DidMethodRegistryEntryParser {
         ignoreUnknownKeys = true
         isLenient = true
     }
-    
+
     /**
      * Parses a DID Method Registry Entry JSON string.
      */
     fun parse(jsonString: String): DidMethodRegistryEntry {
         return json.decodeFromString(jsonString)
     }
-    
+
     /**
      * Parses a DID Method Registry Entry from a JsonObject.
      */

@@ -1,9 +1,9 @@
 package com.trustweave.soldid
 
 import com.trustweave.anchor.BlockchainAnchorClient
-import com.trustweave.core.exception.NotFoundException
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractBlockchainDidMethod
 import com.trustweave.did.base.DidMethodUtils
 import com.trustweave.kms.KeyManagementService
@@ -16,25 +16,25 @@ import okhttp3.RequestBody.Companion.toRequestBody
 
 /**
  * Implementation of did:sol method for Solana blockchain.
- * 
+ *
  * did:sol uses Solana addresses (public keys) as DID identifiers:
  * - Format: `did:sol:{address}` or `did:sol:{network}:{address}`
  * - Stores DID documents on Solana blockchain via program accounts
  * - Account-based storage for DID documents
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val kms = InMemoryKeyManagementService()
  * val config = SolDidConfig.devnet("https://api.devnet.solana.com")
  * val anchorClient = createSolanaAnchorClient(config)
  * val method = SolDidMethod(kms, anchorClient, config)
- * 
+ *
  * // Create DID
  * val options = didCreationOptions {
  *     algorithm = KeyAlgorithm.ED25519
  * }
  * val document = method.createDid(options)
- * 
+ *
  * // Resolve DID
  * val result = method.resolveDid("did:sol:7xK...")
  * ```
@@ -54,7 +54,7 @@ class SolDidMethod(
             .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
             .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
             .build()
-        
+
         solanaClient = SolanaClient(httpClient, config)
     }
 
@@ -83,26 +83,26 @@ class SolDidMethod(
             if (algorithm.uppercase() != "ED25519") {
                 throw IllegalArgumentException("did:sol requires Ed25519 algorithm")
             }
-            
+
             val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
-            
+
             // Derive Solana address from public key
             val solanaAddress = deriveSolanaAddress(keyHandle)
-            
+
             // Build DID identifier
             val did = if (config.network == SolDidConfig.MAINNET) {
                 "did:sol:$solanaAddress"
             } else {
                 "did:sol:${config.network}:$solanaAddress"
             }
-            
+
             // Create verification method
             val verificationMethod = DidMethodUtils.createVerificationMethod(
                 did = did,
                 keyHandle = keyHandle,
                 algorithm = options.algorithm
             )
-            
+
             // Build DID document
             val document = DidMethodUtils.buildDidDocument(
                 did = did,
@@ -112,7 +112,7 @@ class SolDidMethod(
                     listOf(verificationMethod.id)
                 } else null
             )
-            
+
             // Store document on Solana (via program account or anchoring)
             try {
                 val txHash = anchorDocument(document)
@@ -122,16 +122,17 @@ class SolDidMethod(
                 // If anchoring fails, still store locally for testing
                 storeDocument(document.id, document)
             }
-            
+
             document
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: IllegalArgumentException) {
             throw e
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to create did:sol: ${e.message}",
-                e
+            throw TrustWeaveException.Unknown(
+                code = "CREATE_FAILED",
+                message = "Failed to create did:sol: ${e.message}",
+                cause = e
             )
         }
     }
@@ -139,13 +140,13 @@ class SolDidMethod(
     override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            
+
             // Extract Solana address from DID
             val solanaAddress = extractSolanaAddress(did)
-            
+
             // Resolve from Solana program account
             val accountData = solanaClient.getAccountData(solanaAddress)
-            
+
             if (accountData == null) {
                 // Try stored document as fallback
                 val stored = getStoredDocument(did)
@@ -157,18 +158,18 @@ class SolDidMethod(
                         getDocumentMetadata(did)?.updated
                     )
                 }
-                
+
                 return@withContext DidMethodUtils.createErrorResolutionResult(
                     "notFound",
                     "DID document not found on Solana",
                     method
                 )
             }
-            
+
             // Parse account data to DID document
             val json = Json.parseToJsonElement(String(accountData))
             val document = jsonElementToDocument(json)
-            
+
             // Validate DID matches
             if (document.id != did) {
                 // Rebuild with correct DID
@@ -176,7 +177,7 @@ class SolDidMethod(
                 storeDocument(correctedDocument.id, correctedDocument)
                 return@withContext DidMethodUtils.createSuccessResolutionResult(correctedDocument, method)
             }
-            
+
             storeDocument(document.id, document)
             DidMethodUtils.createSuccessResolutionResult(document, method)
         } catch (e: TrustWeaveException) {
@@ -200,28 +201,33 @@ class SolDidMethod(
     ): DidDocument = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            
+
             // Resolve current document
             val currentResult = resolveDid(did)
-            val currentDocument = currentResult.document
-                ?: throw NotFoundException("DID document not found: $did")
-            
+            val currentDocument = when (currentResult) {
+                is DidResolutionResult.Success -> currentResult.document
+                else -> throw TrustWeaveException.NotFound(
+                    message = "DID document not found: $did"
+                )
+            }
+
             // Apply updater (use explicit variable to avoid smart cast issue)
             val doc = currentDocument
             val updatedDocument = updater(doc)
-            
+
             // Update on Solana
             updateDocumentOnBlockchain(did, updatedDocument)
-            
+
             updatedDocument
-        } catch (e: NotFoundException) {
+        } catch (e: TrustWeaveException.NotFound) {
             throw e
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to update did:sol: ${e.message}",
-                e
+            throw TrustWeaveException.Unknown(
+                code = "UPDATE_FAILED",
+                message = "Failed to update did:sol: ${e.message}",
+                cause = e
             )
         }
     }
@@ -229,14 +235,14 @@ class SolDidMethod(
     override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            
+
             // Resolve current document
             val currentResult = resolveDid(did)
-            val currentDocument = currentResult.document
-            if (currentDocument == null) {
-                return@withContext false
+            val currentDocument = when (currentResult) {
+                is DidResolutionResult.Success -> currentResult.document
+                else -> return@withContext false
             }
-            
+
             // Create deactivated document
             val deactivatedDocument = currentDocument.copy(
                 verificationMethod = emptyList(),
@@ -246,34 +252,35 @@ class SolDidMethod(
                 capabilityInvocation = emptyList(),
                 capabilityDelegation = emptyList()
             )
-            
+
             // Deactivate on Solana
             deactivateDocumentOnBlockchain(did, deactivatedDocument)
-            
+
             true
-        } catch (e: NotFoundException) {
+        } catch (e: TrustWeaveException.NotFound) {
             false
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to deactivate did:sol: ${e.message}",
-                e
+            throw TrustWeaveException.Unknown(
+                code = "DEACTIVATE_FAILED",
+                message = "Failed to deactivate did:sol: ${e.message}",
+                cause = e
             )
         }
     }
 
     /**
      * Derives a Solana address from a key handle.
-     * 
+     *
      * Solana uses Ed25519 keys, and addresses are the public key in base58 encoding.
      */
     private fun deriveSolanaAddress(keyHandle: com.trustweave.kms.KeyHandle): String {
         // In a full implementation, we'd extract the public key from JWK
         // and encode it as base58 (Solana address format)
-        
+
         // Simplified: generate address from key ID
         // Real implementation needs proper Ed25519 public key extraction and base58 encoding
         val keyIdHash = keyHandle.id.hashCode().toString(16).take(44).padStart(44, '0')
-        
+
         // Solana addresses are base58 encoded 32-byte public keys
         // This is a placeholder - real implementation needs base58 encoding library
         return "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU" // Placeholder format
@@ -286,13 +293,13 @@ class SolDidMethod(
         // For did:sol:7xK... or did:sol:mainnet:7xK...
         val parsed = DidMethodUtils.parseDid(did)
             ?: throw IllegalArgumentException("Invalid DID format: $did")
-        
+
         if (parsed.first != "sol") {
             throw IllegalArgumentException("Not a did:sol DID: $did")
         }
-        
+
         val identifier = parsed.second
-        
+
         // Check if network prefix exists
         val colonIndex = identifier.indexOf(':')
         return if (colonIndex >= 0) {

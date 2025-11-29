@@ -2,9 +2,9 @@ package com.trustweave.trust.dsl.credential
 
 /**
  * Type-Safe Helpers.
- * 
+ *
  * Provides type-safe constants and helpers to reduce string-based errors.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * credential {

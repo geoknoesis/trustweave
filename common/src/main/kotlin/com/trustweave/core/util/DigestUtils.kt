@@ -8,17 +8,17 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * JSON canonicalization and digest computation utilities.
- * 
+ *
  * Provides optimized implementations for JSON canonicalization and SHA-256 digest computation
  * with multibase encoding (base58btc).
- * 
+ *
  * **Performance Optimizations**:
  * - Cached JSON instances for reuse
  * - Optimized canonicalization algorithm
  * - Thread-safe digest computation
  */
 object DigestUtils {
-    
+
     /**
      * Shared JSON instance for consistent serialization.
      * Configured with stable ordering and no pretty printing.
@@ -30,14 +30,14 @@ object DigestUtils {
         isLenient = false
         coerceInputValues = false
     }
-    
+
     /**
      * Thread-local MessageDigest instance for SHA-256 computation.
-     * 
+     *
      * MessageDigest is not thread-safe - concurrent calls to digest() on the same
      * instance can corrupt the internal state. ThreadLocal ensures each thread
      * has its own MessageDigest instance, eliminating contention and race conditions.
-     * 
+     *
      * Performance note: ThreadLocal has minimal overhead and is more efficient than
      * creating new MessageDigest instances for each operation, as it reuses instances
      * per thread while maintaining thread safety.
@@ -45,11 +45,11 @@ object DigestUtils {
     private val sha256Digest: ThreadLocal<MessageDigest> = ThreadLocal.withInitial {
         MessageDigest.getInstance("SHA-256")
     }
-    
+
     /**
      * Maximum number of entries in the digest cache.
      * When this limit is reached, least recently used entries are evicted.
-     * 
+     *
      * Default: 1000 entries. Set to 0 to disable caching entirely.
      */
     @Volatile
@@ -71,20 +71,20 @@ object DigestUtils {
                 }
             }
         }
-    
+
     /**
      * Lock for synchronizing cache access.
      * LinkedHashMap is not thread-safe, so all access must be synchronized.
      */
     private val cacheLock = Any()
-    
+
     /**
      * Cache for computed digests (optional, can be disabled for memory-constrained environments).
      * Key: canonical JSON string, Value: computed digest
-     * 
+     *
      * **Implementation:** Uses a size-limited cache with LRU eviction to prevent unbounded growth.
      * When the cache reaches maxCacheSize, the least recently used entries are evicted.
-     * 
+     *
      * **Thread Safety:** All access to this cache is synchronized via cacheLock.
      */
     private val digestCache = object : LinkedHashMap<String, String>(16, 0.75f, true) {
@@ -94,11 +94,11 @@ object DigestUtils {
             return size > this@DigestUtils.maxCacheSize
         }
     }
-    
+
     /**
      * Whether digest caching is enabled.
      * Set to false to disable caching (useful for memory-constrained environments).
-     * 
+     *
      * **Memory Consideration:** When enabled, the cache is limited to [maxCacheSize] entries
      * with LRU eviction, preventing unbounded growth in long-running applications.
      */
@@ -111,10 +111,10 @@ object DigestUtils {
                 }
             }
         }
-    
+
     /**
      * Canonicalizes a JSON string by parsing and re-serializing with stable key ordering.
-     * 
+     *
      * @param jsonString The JSON string to canonicalize
      * @return The canonical JSON string
      * @throws TrustWeaveException.InvalidJson if the input is not valid JSON
@@ -138,15 +138,15 @@ object DigestUtils {
             )
         }
     }
-    
+
     /**
      * Canonicalizes a JSON element by sorting keys lexicographically.
-     * 
+     *
      * This ensures that the same JSON content always produces the same canonical form,
      * regardless of key order in the original JSON.
-     * 
+     *
      * **Performance**: Uses optimized JSON serialization with stable ordering.
-     * 
+     *
      * @param element The JSON element to canonicalize
      * @return The canonical JSON string
      */
@@ -161,7 +161,7 @@ object DigestUtils {
             )
         }
     }
-    
+
     /**
      * Recursively sorts keys in JSON objects.
      */
@@ -184,12 +184,12 @@ object DigestUtils {
             else -> element
         }
     }
-    
+
     /**
      * Computes SHA-256 digest of a string with multibase encoding (base58btc).
-     * 
+     *
      * If the string is valid JSON, it will be canonicalized first.
-     * 
+     *
      * @param data The string to digest (JSON or plain text)
      * @return The multibase-encoded digest (e.g., "uABC123...")
      */
@@ -215,43 +215,43 @@ object DigestUtils {
             digest
         }
     }
-    
+
     /**
      * Computes SHA-256 digest of a JSON element with multibase encoding (base58btc).
-     * 
+     *
      * The digest is computed from the canonical JSON representation, ensuring consistency.
-     * 
+     *
      * **Performance**: Uses caching to avoid recomputing digests for the same content.
-     * 
+     *
      * @param element The JSON element to digest
      * @return The multibase-encoded digest (e.g., "uABC123...")
      */
     fun sha256DigestMultibase(element: JsonElement): String {
         val canonical = canonicalizeJson(element)
-        
+
         // Check cache if enabled
         if (enableDigestCache && maxCacheSize > 0) {
             synchronized(cacheLock) {
                 digestCache[canonical]?.let { return it }
             }
         }
-        
+
         // Compute digest
         val digest = computeDigest(canonical)
-        
+
         // Cache if enabled
         if (enableDigestCache && maxCacheSize > 0) {
             synchronized(cacheLock) {
                 digestCache[canonical] = digest
             }
         }
-        
+
         return digest
     }
-    
+
     /**
      * Computes SHA-256 digest from canonical JSON string.
-     * 
+     *
      * @param canonicalJson The canonical JSON string
      * @return The multibase-encoded digest (prefix 'u' for base58btc)
      */
@@ -260,12 +260,12 @@ object DigestUtils {
         return try {
             // Get thread-local MessageDigest instance (thread-safe).
             val messageDigest = sha256Digest.get()
-            
+
             // Compute SHA-256 hash. Note: digest() automatically resets the
             // MessageDigest instance after computation, so it's ready for reuse
             // in the same thread without manual reset() call.
             val digestBytes = messageDigest.digest(bytes)
-            
+
             // Multibase encoding: base58btc uses prefix 'u' per multibase specification.
             // The prefix indicates the encoding format, allowing decoders to automatically
             // detect and use the correct decoding algorithm.
@@ -286,11 +286,11 @@ object DigestUtils {
             )
         }
     }
-    
+
     /**
      * Encodes bytes to base58 (simplified implementation).
      * For production use, consider using a proper multibase library.
-     * 
+     *
      * Base58 encoding algorithm:
      * 1. Convert byte array to BigInteger (treating as unsigned big-endian)
      * 2. Repeatedly divide by 58, using remainder as index into alphabet
@@ -303,7 +303,7 @@ object DigestUtils {
         // The '1' parameter ensures positive sign (unsigned interpretation).
         var num = java.math.BigInteger(1, bytes)
         val sb = StringBuilder()
-        
+
         // Base conversion: repeatedly divide by 58, using remainder as digit.
         // This builds the base58 representation from least significant to most significant.
         while (num > java.math.BigInteger.ZERO) {
@@ -311,7 +311,7 @@ object DigestUtils {
             sb.append(alphabet[remainder.toInt()])
             num = num.divide(java.math.BigInteger.valueOf(58))
         }
-        
+
         // Base58 special case: Leading zero bytes are encoded as '1' characters.
         // This is because '0' is not in the base58 alphabet, so we use '1' (the first
         // character) as a placeholder. We must add these AFTER the division loop
@@ -324,11 +324,11 @@ object DigestUtils {
                 break
             }
         }
-        
+
         // Reverse because we built the string from least significant to most significant.
         return sb.reverse().toString()
     }
-    
+
     /**
      * Clears the digest cache.
      * Useful for memory management or testing.
@@ -338,7 +338,7 @@ object DigestUtils {
             digestCache.clear()
         }
     }
-    
+
     /**
      * Gets the current cache size.
      * Useful for monitoring cache usage.

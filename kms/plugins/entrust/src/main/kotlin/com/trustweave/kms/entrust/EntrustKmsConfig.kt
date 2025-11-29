@@ -13,10 +13,10 @@ data class EntrustKmsConfig(
         require(partitionId.isNotBlank()) { "Entrust partition ID must be specified" }
         require(partitionPassword.isNotBlank()) { "Entrust partition password must be specified" }
     }
-    
+
     companion object {
         fun builder(): Builder = Builder()
-        
+
         fun fromMap(options: Map<String, Any?>): EntrustKmsConfig {
             val hsmAddress = options["hsmAddress"] as? String
                 ?: throw IllegalArgumentException("Entrust nShield HSM address must be specified")
@@ -24,7 +24,7 @@ data class EntrustKmsConfig(
                 ?: throw IllegalArgumentException("Entrust partition ID must be specified")
             val partitionPassword = options["partitionPassword"] as? String
                 ?: throw IllegalArgumentException("Entrust partition password must be specified")
-            
+
             return Builder()
                 .hsmAddress(hsmAddress)
                 .partitionId(partitionId)
@@ -32,27 +32,27 @@ data class EntrustKmsConfig(
                 .build()
         }
     }
-    
+
     class Builder {
         private var hsmAddress: String? = null
         private var partitionId: String? = null
         private var partitionPassword: String? = null
-        
+
         fun hsmAddress(hsmAddress: String): Builder {
             this.hsmAddress = hsmAddress
             return this
         }
-        
+
         fun partitionId(partitionId: String): Builder {
             this.partitionId = partitionId
             return this
         }
-        
+
         fun partitionPassword(partitionPassword: String): Builder {
             this.partitionPassword = partitionPassword
             return this
         }
-        
+
         fun build(): EntrustKmsConfig {
             val hsmAddress = this.hsmAddress ?: throw IllegalArgumentException("HSM address is required")
             val partitionId = this.partitionId ?: throw IllegalArgumentException("Partition ID is required")

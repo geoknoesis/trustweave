@@ -97,7 +97,7 @@ flowchart TD
     A["Journalist DID<br/>Author Identity<br/>Credentials"] -->|creates| B["Article Content<br/>Article DID<br/>Content Hash<br/>Authorship Credential"]
     B -->|modified by| C["Editor DID<br/>Editor Identity<br/>Modification Credential"]
     C -->|publishes| D["Publisher DID<br/>Publication Credential<br/>Blockchain Anchor"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -160,19 +160,19 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     println("=== News Industry & Content Provenance Scenario ===\n")
-    
+
     // Step 1: Setup services
     println("Step 1: Setting up services...")
-    
+
     // Separate KMS for different participants
     // Journalists, editors, publishers each have their own keys
     val journalistKms = InMemoryKeyManagementService()
     val editorKms = InMemoryKeyManagementService()
     val publisherKms = InMemoryKeyManagementService()
-    
+
     val didMethod = DidKeyMockMethod(journalistKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
-    
+
     println("Services initialized")
 }
 ```
@@ -192,17 +192,17 @@ fun main() = runBlocking {
 ```kotlin
     // Step 2: Create journalist and organization DIDs
     println("\nStep 2: Creating journalist and organization DIDs...")
-    
+
     // Journalist DID represents individual journalist
     // This provides persistent identity across platforms
     val journalistDid = didMethod.createDid()
     println("Journalist DID: ${journalistDid.id}")
-    
+
     // Organization DID represents news organization
     // Organizations can issue credentials to journalists
     val organizationDid = didMethod.createDid()
     println("Organization DID: ${organizationDid.id}")
-    
+
     // Create journalist credential issued by organization
     // This proves journalist is affiliated with organization
     val journalistCredential = createJournalistCredential(
@@ -212,7 +212,7 @@ fun main() = runBlocking {
         title = "Senior Journalist",
         beat = "Technology"
     )
-    
+
     println("Journalist credential created:")
     println("  - Name: Alice Reporter")
     println("  - Title: Senior Journalist")
@@ -239,24 +239,24 @@ import java.time.Instant
 
     // Step 3: Create article content DID
     println("\nStep 3: Creating article content DID...")
-    
+
     // Article content
     val articleContent = """
         Breaking: New AI Technology Revolutionizes Healthcare
-        
+
         Scientists have developed a new AI system that can diagnose diseases
         with 95% accuracy. The system uses machine learning to analyze
         medical images and patient data.
-        
+
         "This is a breakthrough," said Dr. Smith, lead researcher.
     """.trimIndent()
-    
+
     // Compute content hash for integrity verification
     // Any modification to content will change this hash
     val contentHash = com.trustweave.json.DigestUtils.sha256DigestMultibase(
         articleContent.encodeToByteArray()
     )
-    
+
     // Create article DID
     val articleDid = didMethod.createDid()
     println("Article DID: ${articleDid.id}")
@@ -278,7 +278,7 @@ import java.time.Instant
 ```kotlin
     // Step 4: Create authorship credential
     println("\nStep 4: Creating authorship credential...")
-    
+
     // Authorship credential proves journalist created the article
     // This is critical for attribution and accountability
     val authorshipCredential = VerifiableCredential(
@@ -298,7 +298,7 @@ import java.time.Instant
         issuanceDate = Instant.now().toString(),
         expirationDate = null
     )
-    
+
     println("Authorship credential created:")
     println("  - Article: ${articleDid.id}")
     println("  - Author: ${journalistDid.id}")
@@ -324,10 +324,10 @@ import com.trustweave.credential.CredentialIssuanceOptions
 
     // Step 5: Issue authorship credential
     println("\nStep 5: Issuing authorship credential...")
-    
+
     // Generate organization's signing key
     val orgKey = publisherKms.generateKey("Ed25519")
-    
+
     // Create proof generator
     val orgProofGenerator = Ed25519ProofGenerator(
         signer = { data, keyId -> publisherKms.sign(keyId, data) },
@@ -336,13 +336,13 @@ import com.trustweave.credential.CredentialIssuanceOptions
     val didResolver = CredentialDidResolver { did ->
         didRegistry.resolve(did).toCredentialDidResolution()
     }
-    
+
     // Create credential issuer
     val orgIssuer = CredentialIssuer(
         proofGenerator = orgProofGenerator,
         resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
     )
-    
+
     // Issue authorship credential
     val issuedAuthorshipCredential = orgIssuer.issue(
         credential = authorshipCredential,
@@ -350,7 +350,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
         keyId = orgKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Authorship credential issued:")
     println("  - Proof: ${issuedAuthorshipCredential.proof != null}")
 ```
@@ -370,26 +370,26 @@ import com.trustweave.credential.CredentialIssuanceOptions
 ```kotlin
     // Step 6: Track content modifications
     println("\nStep 6: Tracking content modifications...")
-    
+
     // Editor DID
     val editorDid = didMethod.createDid()
-    
+
     // Modified article content
     val modifiedContent = """
         Breaking: New AI Technology Revolutionizes Healthcare
-        
+
         Scientists have developed a new AI system that can diagnose diseases
         with 98% accuracy. The system uses advanced machine learning to analyze
         medical images and patient data.
-        
+
         "This is a breakthrough that will transform healthcare," said Dr. Smith,
         lead researcher at the Medical Research Institute.
     """.trimIndent()
-    
+
     val modifiedHash = com.trustweave.json.DigestUtils.sha256DigestMultibase(
         modifiedContent.encodeToByteArray()
     )
-    
+
     // Create modification credential
     // This tracks what was changed and by whom
     val modificationCredential = VerifiableCredential(
@@ -411,7 +411,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
         },
         issuanceDate = Instant.now().toString()
     )
-    
+
     // Issue modification credential
     val issuedModificationCredential = orgIssuer.issue(
         credential = modificationCredential,
@@ -419,7 +419,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
         keyId = orgKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Modification credential created:")
     println("  - Editor: ${editorDid.id}")
     println("  - Changes: accuracy updated, quote extended")
@@ -440,7 +440,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
 ```kotlin
     // Step 7: Create publication credential
     println("\nStep 7: Creating publication credential...")
-    
+
     // Publication credential records when article was published
     val publicationCredential = VerifiableCredential(
         type = listOf("VerifiableCredential", "PublicationCredential", "NewsCredential"),
@@ -457,7 +457,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
         },
         issuanceDate = Instant.now().toString()
     )
-    
+
     // Issue publication credential
     val issuedPublicationCredential = orgIssuer.issue(
         credential = publicationCredential,
@@ -465,7 +465,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
         keyId = orgKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Publication credential created:")
     println("  - Publisher: ${organizationDid.id}")
     println("  - Platform: https://news.example.com")
@@ -487,10 +487,10 @@ import com.trustweave.credential.CredentialIssuanceOptions
 ```kotlin
     // Step 8: Create fact-check credential
     println("\nStep 8: Creating fact-check credential...")
-    
+
     // Fact-checker DID
     val factCheckerDid = didMethod.createDid()
-    
+
     // Fact-check credential verifies article claims
     val factCheckCredential = VerifiableCredential(
         type = listOf("VerifiableCredential", "FactCheckCredential", "NewsCredential"),
@@ -517,7 +517,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
         },
         issuanceDate = Instant.now().toString()
     )
-    
+
     // Issue fact-check credential
     val factCheckerKey = journalistKms.generateKey("Ed25519")
     val factCheckerProofGenerator = Ed25519ProofGenerator(
@@ -527,20 +527,20 @@ import com.trustweave.credential.CredentialIssuanceOptions
     val factCheckerProofRegistry = ProofGeneratorRegistry().apply {
         register(factCheckerProofGenerator)
     }
-    
+
     val factCheckerIssuer = CredentialIssuer(
         proofGenerator = factCheckerProofGenerator,
         resolveDid = { did -> didRegistry.resolve(did) != null },
         proofRegistry = factCheckerProofRegistry
     )
-    
+
     val issuedFactCheckCredential = factCheckerIssuer.issue(
         credential = factCheckCredential,
         issuerDid = factCheckerDid.id,
         keyId = factCheckerKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Fact-check credential created:")
     println("  - Fact-checker: ${factCheckerDid.id}")
     println("  - Overall rating: verified")
@@ -565,9 +565,9 @@ import com.trustweave.credential.CredentialVerificationOptions
 
     // Step 9: Verify content authenticity
     println("\nStep 9: Verifying content authenticity...")
-    
+
     val verifier = CredentialVerifier(didResolver)
-    
+
     // Verify all credentials
     val credentials = listOf(
         issuedAuthorshipCredential,
@@ -575,7 +575,7 @@ import com.trustweave.credential.CredentialVerificationOptions
         issuedPublicationCredential,
         issuedFactCheckCredential
     )
-    
+
     credentials.forEach { credential ->
         val verification = verifier.verify(
             credential = credential,
@@ -585,7 +585,7 @@ import com.trustweave.credential.CredentialVerificationOptions
                 didResolver = didResolver
             )
         )
-        
+
         if (verification.valid) {
             println("✅ Credential verified: ${credential.type.firstOrNull()}")
         } else {
@@ -593,12 +593,12 @@ import com.trustweave.credential.CredentialVerificationOptions
             verification.errors.forEach { println("  - $it") }
         }
     }
-    
+
     // Verify content hash matches
     val currentContentHash = com.trustweave.json.DigestUtils.sha256DigestMultibase(
         modifiedContent.encodeToByteArray()
     )
-    
+
     if (currentContentHash == modifiedHash) {
         println("✅ Content hash verified - content hasn't been tampered with")
     } else {
@@ -637,12 +637,12 @@ data class ContentProvenanceRecord(
 
     // Step 10: Anchor content to blockchain
     println("\nStep 10: Anchoring content to blockchain...")
-    
+
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
     val blockchainRegistry = BlockchainAnchorRegistry().apply {
         register("eip155:1", anchorClient)
     }
-    
+
     // Create provenance record
     val provenanceDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
@@ -650,7 +650,7 @@ data class ContentProvenanceRecord(
             issuedPublicationCredential
         )
     )
-    
+
     val provenanceRecord = ContentProvenanceRecord(
         articleDid = articleDid.id,
         authorDid = journalistDid.id,
@@ -659,14 +659,14 @@ data class ContentProvenanceRecord(
         publicationDate = Instant.now().toString(),
         provenanceDigest = provenanceDigest
     )
-    
+
     // Anchor to blockchain
     val anchorResult = blockchainRegistry.anchorTyped(
         value = provenanceRecord,
         serializer = ContentProvenanceRecord.serializer(),
         targetChainId = "eip155:137"
     )
-    
+
     println("Content anchored to blockchain:")
     println("  - Transaction hash: ${anchorResult.ref.txHash}")
     println("  - Provides immutable provenance record")

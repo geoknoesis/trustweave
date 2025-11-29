@@ -128,7 +128,7 @@ flowchart TD
     A["Government Agency<br/>Creates Agency DID<br/>Issues Identity Credentials<br/>Manages Citizen Registry"] -->|issues credentials| B["Government Credentials<br/>Driver's License<br/>Passport<br/>Tax Credential<br/>Proof cryptographic"]
     B -->|stored in citizen wallet| C["Citizen Identity Wallet<br/>Stores all government credentials<br/>Manages identity<br/>Creates presentations"]
     C -->|presents for service access| D["Government Service<br/>Verifies credentials<br/>Grants access<br/>Logs access"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -181,13 +181,13 @@ dependencies {
     implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    
+
     // Test kit for in-memory implementations
     implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -235,39 +235,39 @@ data class IdentityDocument(
 
 fun main() = runBlocking {
     println("=== Government & Digital Identity Scenario ===\n")
-    
+
     // Step 1: Setup services
     println("Step 1: Setting up services...")
     val dmvKms = InMemoryKeyManagementService() // Department of Motor Vehicles
     val passportOfficeKms = InMemoryKeyManagementService()
     val taxAuthorityKms = InMemoryKeyManagementService()
     val citizenKms = InMemoryKeyManagementService()
-    
+
     val didMethod = DidKeyMockMethod(dmvKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
-    
+
     // Setup blockchain for anchoring
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
     val blockchainRegistry = BlockchainAnchorRegistry().apply {
         register("eip155:1", anchorClient)
     }
-    
+
     // Step 2: Create government agency DIDs
     println("\nStep 2: Creating government agency DIDs...")
     val dmvDid = didMethod.createDid()
     println("DMV DID: ${dmvDid.id}")
-    
+
     val passportOfficeDid = didMethod.createDid()
     println("Passport Office DID: ${passportOfficeDid.id}")
-    
+
     val taxAuthorityDid = didMethod.createDid()
     println("Tax Authority DID: ${taxAuthorityDid.id}")
-    
+
     // Step 3: Create citizen DID
     println("\nStep 3: Creating citizen DID...")
     val citizenDid = didMethod.createDid()
     println("Citizen DID: ${citizenDid.id}")
-    
+
     // Step 4: Create citizen identity wallet
     println("\nStep 4: Creating citizen identity wallet...")
     val citizenWallet = InMemoryWallet(
@@ -275,7 +275,7 @@ fun main() = runBlocking {
         holderDid = citizenDid.id
     )
     println("Citizen wallet created: ${citizenWallet.walletId}")
-    
+
     // Step 5: Issue driver's license credential
     println("\nStep 5: Issuing driver's license credential...")
     val driversLicenseCredential = createDriversLicenseCredential(
@@ -288,32 +288,32 @@ fun main() = runBlocking {
         vehicleClasses = listOf("Class C", "Class M"),
         expirationDate = "2028-06-15"
     )
-    
+
     val dmvKey = dmvKms.generateKey("Ed25519")
     val dmvProofGenerator = Ed25519ProofGenerator(
         signer = { data, keyId -> dmvKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> dmvKey.id }
     )
     val dmvProofRegistry = ProofGeneratorRegistry().apply { register(dmvProofGenerator) }
-    
+
     val dmvIssuer = CredentialIssuer(
         proofGenerator = dmvProofGenerator,
         resolveDid = { did -> didRegistry.resolve(did) != null },
         proofRegistry = dmvProofRegistry
     )
-    
+
     val issuedDriversLicense = dmvIssuer.issue(
         credential = driversLicenseCredential,
         issuerDid = dmvDid.id,
         keyId = dmvKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Driver's license credential issued:")
     println("  - License Number: DL123456789")
     println("  - Name: John Doe")
     println("  - Expiration: 2028-06-15")
-    
+
     // Step 6: Issue passport credential
     println("\nStep 6: Issuing passport credential...")
     val passportCredential = createPassportCredential(
@@ -327,29 +327,29 @@ fun main() = runBlocking {
         issueDate = "2023-01-01",
         expirationDate = "2033-01-01"
     )
-    
+
     val passportKey = passportOfficeKms.generateKey("Ed25519")
     val passportProofGenerator = Ed25519ProofGenerator(
         signer = { data, keyId -> passportOfficeKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> passportKey.id }
     )
     val passportProofRegistry = ProofGeneratorRegistry().apply { register(passportProofGenerator) }
-    
+
     val passportIssuer = CredentialIssuer(
         proofGenerator = passportProofGenerator,
         resolveDid = { did -> didRegistry.resolve(did) != null },
         proofRegistry = passportProofRegistry
     )
-    
+
     val issuedPassport = passportIssuer.issue(
         credential = passportCredential,
         issuerDid = passportOfficeDid.id,
         keyId = passportKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Passport credential issued")
-    
+
     // Step 7: Issue tax credential
     println("\nStep 7: Issuing tax credential...")
     val taxCredential = createTaxCredential(
@@ -360,54 +360,54 @@ fun main() = runBlocking {
         filingStatus = "Single",
         authorizationLevel = "Full"
     )
-    
+
     val taxKey = taxAuthorityKms.generateKey("Ed25519")
     val taxProofGenerator = Ed25519ProofGenerator(
         signer = { data, keyId -> taxAuthorityKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> taxKey.id }
     )
     val taxProofRegistry = ProofGeneratorRegistry().apply { register(taxProofGenerator) }
-    
+
     val taxIssuer = CredentialIssuer(
         proofGenerator = taxProofGenerator,
         resolveDid = { did -> didRegistry.resolve(did) != null },
         proofRegistry = taxProofRegistry
     )
-    
+
     val issuedTaxCredential = taxIssuer.issue(
         credential = taxCredential,
         issuerDid = taxAuthorityDid.id,
         keyId = taxKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Tax credential issued")
-    
+
     // Step 8: Store credentials in citizen wallet
     println("\nStep 8: Storing credentials in citizen wallet...")
     val driversLicenseId = citizenWallet.store(issuedDriversLicense)
     val passportId = citizenWallet.store(issuedPassport)
     val taxCredentialId = citizenWallet.store(issuedTaxCredential)
-    
+
     println("Stored ${citizenWallet.list().size} government credentials")
-    
+
     // Step 9: Organize credentials
     println("\nStep 9: Organizing credentials...")
     val identityCollection = citizenWallet.createCollection(
         name = "Government Identity",
         description = "Government-issued identity credentials"
     )
-    
+
     citizenWallet.addToCollection(driversLicenseId, identityCollection)
     citizenWallet.addToCollection(passportId, identityCollection)
     citizenWallet.addToCollection(taxCredentialId, identityCollection)
-    
+
     citizenWallet.tagCredential(driversLicenseId, setOf("driving", "license", "dmv"))
     citizenWallet.tagCredential(passportId, setOf("travel", "passport", "citizenship"))
     citizenWallet.tagCredential(taxCredentialId, setOf("tax", "irs", "financial"))
-    
+
     println("Created identity collection")
-    
+
     // Step 10: Verify credentials
     println("\nStep 10: Verifying government credentials...")
     val verifier = CredentialVerifier(
@@ -415,7 +415,7 @@ fun main() = runBlocking {
             didRegistry.resolve(did).toCredentialDidResolution()
         }
     )
-    
+
     val licenseVerification = verifier.verify(
         credential = issuedDriversLicense,
         options = CredentialVerificationOptions(
@@ -424,14 +424,14 @@ fun main() = runBlocking {
             validateSchema = true
         )
     )
-    
+
     if (licenseVerification.valid) {
         println("✅ Driver's license credential is valid!")
         println("  - Proof valid: ${licenseVerification.proofValid}")
         println("  - Issuer valid: ${licenseVerification.issuerValid}")
         println("  - Not expired: ${licenseVerification.notExpired}")
     }
-    
+
     // Step 11: Create service access presentation
     println("\nStep 11: Creating service access presentation...")
     // Citizen needs to access government service, presents driver's license
@@ -444,9 +444,9 @@ fun main() = runBlocking {
             challenge = "government-service-${Instant.now().toEpochMilli()}"
         )
     )
-    
+
     println("Service access presentation created")
-    
+
     // Step 12: Anchor identity documents to blockchain
     println("\nStep 12: Anchoring identity documents to blockchain...")
     val licenseDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
@@ -455,7 +455,7 @@ fun main() = runBlocking {
             issuedDriversLicense
         )
     )
-    
+
     val identityDoc = IdentityDocument(
         documentType = "drivers-license",
         documentNumber = "DL123456789",
@@ -463,26 +463,26 @@ fun main() = runBlocking {
         issuerDid = dmvDid.id,
         credentialDigest = licenseDigest
     )
-    
+
     val anchorResult = blockchainRegistry.anchorTyped(
         value = identityDoc,
         serializer = IdentityDocument.serializer(),
         targetChainId = "eip155:1"
     )
-    
+
     println("Identity document anchored:")
     println("  - Transaction hash: ${anchorResult.ref.txHash}")
     println("  - Provides immutable record")
-    
+
     // Step 13: Cross-border verification
     println("\nStep 13: Cross-border identity verification...")
     val canVerifyCrossBorder = verifyCrossBorderIdentity(
         passportCredential = issuedPassport,
         verifyingCountryDid = "did:example:border-control"
     )
-    
+
     println("Cross-border verification: ${if (canVerifyCrossBorder) "Possible" else "Not possible"}")
-    
+
     println("\n=== Scenario Complete ===")
 }
 
@@ -601,7 +601,7 @@ fun verifyCrossBorderIdentity(
             didRegistry.resolve(did).toCredentialDidResolution()
         }
     )
-    
+
     val verification = verifier.verify(
         credential = passportCredential,
         options = CredentialVerificationOptions(
@@ -609,9 +609,9 @@ fun verifyCrossBorderIdentity(
             checkExpiration = true
         )
     )
-    
+
     if (!verification.valid) return false
-    
+
     // Check if passport is from recognized issuing country
     val issuerDid = passportCredential.issuer
     // In production, check against list of trusted country DIDs
@@ -838,7 +838,7 @@ fun aggregateGovernmentCredentials(
     val governmentCredentials = allCredentials.filter {
         it.type.contains("GovernmentCredential")
     }
-    
+
     return citizenWallet.createPresentation(
         credentialIds = governmentCredentials.mapNotNull { it.id },
         holderDid = citizenWallet.holderDid!!,
@@ -902,7 +902,7 @@ fun renewDriversLicense(
         expirationDate = newExpirationDate,
         issuanceDate = Instant.now().toString()
     )
-    
+
     // Issue new credential
     return issuer.issue(
         credential = renewalCredential,
@@ -930,16 +930,16 @@ fun verifyAgeWithDriversLicense(
         byType("DriversLicenseCredential")
         valid()
     }.firstOrNull() ?: return false
-    
+
     val dateOfBirth = license.credentialSubject.jsonObject["driversLicense"]?.jsonObject
         ?.get("dateOfBirth")?.jsonPrimitive?.content
         ?: return false
-    
+
     val age = java.time.Period.between(
         java.time.LocalDate.parse(dateOfBirth),
         java.time.LocalDate.now()
     ).years
-    
+
     return age >= minimumAge
 }
 ```
@@ -960,7 +960,7 @@ fun verifyPassportAtBorder(
             didRegistry.resolve(did).toCredentialDidResolution()
         }
     )
-    
+
     val verification = verifier.verify(
         credential = passportCredential,
         options = CredentialVerificationOptions(
@@ -969,18 +969,18 @@ fun verifyPassportAtBorder(
             validateSchema = true
         )
     )
-    
+
     if (!verification.valid) {
         return BorderVerificationResult(
             authorized = false,
             reason = verification.errors.joinToString()
         )
     }
-    
+
     // Check if passport is from recognized country
     val nationality = passportCredential.credentialSubject.jsonObject["passport"]?.jsonObject
         ?.get("nationality")?.jsonPrimitive?.content
-    
+
     return BorderVerificationResult(
         authorized = true,
         nationality = nationality,
@@ -1012,7 +1012,7 @@ fun fileTaxesWithCredential(
         byType("TaxCredential")
         valid()
     }.firstOrNull() ?: throw IllegalArgumentException("No valid tax credential")
-    
+
     // Create presentation with tax credential
     return citizenWallet.createPresentation(
         credentialIds = listOfNotNull(taxCredential.id),

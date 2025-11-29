@@ -10,19 +10,19 @@ import javax.sql.DataSource
 
 /**
  * PostgreSQL full-text search implementation.
- * 
+ *
  * Uses PostgreSQL tsvector/tsquery for efficient full-text search.
  */
 class PostgresFullTextSearch(
     private val dataSource: DataSource
 ) : AdvancedSearch {
-    
+
     private val json = Json { ignoreUnknownKeys = true }
-    
+
     init {
         createFullTextIndex()
     }
-    
+
     override suspend fun fullTextSearch(
         query: String,
         limit: Int,
@@ -55,7 +55,7 @@ class PostgresFullTextSearch(
             }
         }
     }
-    
+
     override suspend fun facetedSearch(
         query: SearchQuery,
         facets: List<Facet>
@@ -66,18 +66,18 @@ class PostgresFullTextSearch(
         } else {
             emptyList()
         }
-        
+
         // Compute facets
         val facetResults = facets.associate { facet ->
             facet.field to computeFacet(facet, query)
         }
-        
+
         FacetedSearchResult(
             results = results,
             facets = facetResults
         )
     }
-    
+
     override suspend fun complexQuery(
         query: ComplexQuery,
         limit: Int,
@@ -92,7 +92,7 @@ class PostgresFullTextSearch(
                 }
                 stmt.setInt(query.conditions.size + 1, limit)
                 stmt.setInt(query.conditions.size + 2, offset)
-                
+
                 stmt.executeQuery().use { rs ->
                     buildList {
                         while (rs.next()) {
@@ -106,22 +106,22 @@ class PostgresFullTextSearch(
             }
         }
     }
-    
+
     private fun createFullTextIndex() {
         dataSource.connection.use { conn ->
             try {
                 // Add search_vector column if it doesn't exist
                 conn.createStatement().execute("""
-                    ALTER TABLE didcomm_messages 
+                    ALTER TABLE didcomm_messages
                     ADD COLUMN IF NOT EXISTS search_vector tsvector
                 """)
-                
+
                 // Create GIN index for full-text search
                 conn.createStatement().execute("""
-                    CREATE INDEX IF NOT EXISTS idx_messages_search_vector 
+                    CREATE INDEX IF NOT EXISTS idx_messages_search_vector
                     ON didcomm_messages USING GIN(search_vector)
                 """)
-                
+
                 // Create trigger to update search vector
                 conn.createStatement().execute("""
                     CREATE OR REPLACE FUNCTION update_message_search_vector()
@@ -134,7 +134,7 @@ class PostgresFullTextSearch(
                     END;
                     $$ LANGUAGE plpgsql;
                 """)
-                
+
                 conn.createStatement().execute("""
                     DROP TRIGGER IF EXISTS message_search_vector_update ON didcomm_messages;
                     CREATE TRIGGER message_search_vector_update
@@ -146,7 +146,7 @@ class PostgresFullTextSearch(
             }
         }
     }
-    
+
     private suspend fun computeFacet(
         facet: Facet,
         query: SearchQuery
@@ -155,24 +155,24 @@ class PostgresFullTextSearch(
         // Implementation depends on facet type
         return FacetResult(emptyMap())
     }
-    
+
     private fun buildComplexQuery(query: ComplexQuery, limit: Int, offset: Int): String {
         val conditions = query.conditions.mapIndexed { index, condition ->
             buildConditionSQL(condition, index + 1)
         }
-        
+
         val operator = when (query.operator) {
             BooleanOperator.AND -> " AND "
             BooleanOperator.OR -> " OR "
             BooleanOperator.NOT -> " AND NOT "
         }
-        
+
         val whereClause = if (conditions.isNotEmpty()) {
             "WHERE ${conditions.joinToString(operator)}"
         } else {
             ""
         }
-        
+
         return """
             SELECT message_json, encrypted_data, key_version, iv, is_encrypted
             FROM didcomm_messages
@@ -181,7 +181,7 @@ class PostgresFullTextSearch(
             LIMIT ? OFFSET ?
         """
     }
-    
+
     private fun buildConditionSQL(condition: QueryCondition, paramIndex: Int): String {
         val field = condition.field
         val operator = when (condition.operator) {
@@ -197,7 +197,7 @@ class PostgresFullTextSearch(
         }
         return "$field $operator"
     }
-    
+
     private fun setConditionParameter(
         stmt: java.sql.PreparedStatement,
         index: Int,

@@ -38,9 +38,9 @@ class SchemaValidatorTest {
     fun `test SchemaValidator validate with valid credential`() = runBlocking {
         val credential = createTestCredential()
         val schema = createTestSchema()
-        
+
         val result = validator.validate(credential, schema)
-        
+
         assertNotNull(result)
         // Current implementation may not fully validate, but should not throw
     }
@@ -52,9 +52,9 @@ class SchemaValidatorTest {
             put("name", "John Doe")
         }
         val schema = createTestSchema()
-        
+
         val result = validator.validateCredentialSubject(subject, schema)
-        
+
         assertNotNull(result)
     }
 
@@ -72,9 +72,9 @@ class SchemaValidatorTest {
                 put("name", buildJsonObject { put("type", "string") })
             })
         }
-        
+
         val result = validator.validateCredentialSubject(subject, schema)
-        
+
         assertNotNull(result)
     }
 
@@ -82,9 +82,9 @@ class SchemaValidatorTest {
     fun `test SchemaValidator validate with empty schema`() = runBlocking {
         val credential = createTestCredential()
         val schema = buildJsonObject {}
-        
+
         val result = validator.validate(credential, schema)
-        
+
         assertNotNull(result)
     }
 
@@ -107,9 +107,9 @@ class SchemaValidatorTest {
                 put("email", buildJsonObject { put("type", "string") })
             })
         }
-        
+
         val result = validator.validate(credential, schema)
-        
+
         assertNotNull(result)
     }
 
@@ -124,9 +124,9 @@ class SchemaValidatorTest {
             })
         }
         val schema = createTestSchema()
-        
+
         val result = validator.validateCredentialSubject(subject, schema)
-        
+
         assertNotNull(result)
     }
 
@@ -134,9 +134,9 @@ class SchemaValidatorTest {
     fun `test SchemaValidator validateCredentialSubject with primitive subject`() = runBlocking {
         val subject = JsonPrimitive("simple-string")
         val schema = createTestSchema()
-        
+
         val result = validator.validateCredentialSubject(subject, schema)
-        
+
         assertNotNull(result)
     }
 
@@ -151,9 +151,9 @@ class SchemaValidatorTest {
             )
         )
         val schema = createTestSchema()
-        
+
         val result = validator.validate(credential, schema)
-        
+
         assertNotNull(result)
     }
 
@@ -181,9 +181,9 @@ class SchemaValidatorTest {
                 })
             })
         }
-        
+
         val result = validator.validate(credential, schema)
-        
+
         assertNotNull(result)
     }
 
@@ -196,9 +196,9 @@ class SchemaValidatorTest {
             credentialSubject = buildJsonObject {}
         )
         val schema = createTestSchema()
-        
+
         val result = validator.validate(credential, schema)
-        
+
         assertNotNull(result)
     }
 

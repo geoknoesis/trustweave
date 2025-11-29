@@ -52,11 +52,11 @@ fun main(): Unit = runBlocking {
             "Verification succeeded (proof=${verification.proofValid}, issuer=${verification.issuerValid}, " +
                 "revocation=${verification.notRevoked})"
         )
-        if (verification.warnings.isNotEmpty()) {
-            println("Warnings: ${verification.warnings}")
+        if (verification.allWarnings.isNotEmpty()) {
+            println("Warnings: ${verification.allWarnings}")
         }
     } else {
-        println("Verification returned errors: ${verification.errors}")
+        println("Verification returned errors: ${verification.allErrors}")
     }
 
     val anchorRegistry = BlockchainAnchorRegistry().apply {

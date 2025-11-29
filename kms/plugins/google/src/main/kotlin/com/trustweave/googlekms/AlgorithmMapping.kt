@@ -15,7 +15,7 @@ import java.util.Base64
 object AlgorithmMapping {
     /**
      * Maps TrustWeave Algorithm to Google Cloud KMS CryptoKeyVersionAlgorithm.
-     * 
+     *
      * @param algorithm TrustWeave algorithm
      * @return Google Cloud KMS CryptoKeyVersionAlgorithm
      * @throws IllegalArgumentException if algorithm is not supported by Google Cloud KMS
@@ -54,10 +54,10 @@ object AlgorithmMapping {
             else -> throw IllegalArgumentException("Algorithm ${algorithm.name} is not supported by Google Cloud KMS")
         }
     }
-    
+
     /**
      * Parses algorithm from Google Cloud KMS CryptoKeyVersionAlgorithm.
-     * 
+     *
      * @param algorithm Google Cloud KMS algorithm
      * @return TrustWeave Algorithm, or null if not supported
      */
@@ -78,10 +78,10 @@ object AlgorithmMapping {
             null
         }
     }
-    
+
     /**
      * Converts Google Cloud KMS public key (DER-encoded) to JWK format.
-     * 
+     *
      * @param publicKeyBytes DER-encoded public key from Google Cloud KMS
      * @param algorithm The algorithm type
      * @return JWK map representation
@@ -102,7 +102,7 @@ object AlgorithmMapping {
                     val keyFactory = KeyFactory.getInstance("EC")
                     val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(publicKeyBytes)) as ECPublicKey
                     val point = publicKey.w
-                    
+
                     val curveName = when (algorithm) {
                         is Algorithm.Secp256k1 -> "secp256k1"
                         is Algorithm.P256 -> "P-256"
@@ -110,7 +110,7 @@ object AlgorithmMapping {
                         is Algorithm.P521 -> "P-521"
                         else -> throw IllegalArgumentException("Unsupported EC algorithm")
                     }
-                    
+
                     // Extract x and y coordinates from ECPoint
                     // ECPoint has affineX and affineY as BigInteger
                     val affineX = point.affineX
@@ -121,7 +121,7 @@ object AlgorithmMapping {
                         is Algorithm.P521 -> 66
                         else -> 32
                     }
-                    
+
                     // Convert BigInteger to byte array (unsigned, big-endian)
                     fun toUnsignedByteArray(bigInt: BigInteger, length: Int): ByteArray {
                         val bytes = bigInt.toByteArray()
@@ -135,10 +135,10 @@ object AlgorithmMapping {
                         }
                         return result
                     }
-                    
+
                     val x = toUnsignedByteArray(affineX, coordinateLength)
                     val y = toUnsignedByteArray(affineY, coordinateLength)
-                    
+
                     mapOf(
                         "kty" to "EC",
                         "crv" to curveName,
@@ -151,7 +151,7 @@ object AlgorithmMapping {
                     val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(publicKeyBytes)) as RSAPublicKey
                     val modulus = publicKey.modulus
                     val exponent = publicKey.publicExponent
-                    
+
                     mapOf(
                         "kty" to "RSA",
                         "n" to Base64.getUrlEncoder().withoutPadding().encodeToString(modulus.toByteArray()),
@@ -164,14 +164,14 @@ object AlgorithmMapping {
             throw IllegalArgumentException("Failed to convert Google Cloud KMS public key to JWK: ${e.message}", e)
         }
     }
-    
+
     /**
      * Resolves a key identifier to a full Google Cloud KMS resource name.
-     * 
+     *
      * Accepts:
      * - Full resource name: projects/{project}/locations/{location}/keyRings/{keyRing}/cryptoKeys/{key}
      * - Short name with defaults: {key} (uses config defaults)
-     * 
+     *
      * @param keyId Key identifier (full name or short name)
      * @param config Configuration with defaults
      * @return Full resource name
@@ -181,17 +181,17 @@ object AlgorithmMapping {
         if (keyId.startsWith("projects/")) {
             return keyId
         }
-        
+
         // Otherwise, construct from config
         val keyRing = config.keyRing
             ?: throw IllegalArgumentException("Key ring must be specified in config or key ID must be a full resource name")
-        
+
         return "projects/${config.projectId}/locations/${config.location}/keyRings/$keyRing/cryptoKeys/$keyId"
     }
-    
+
     /**
      * Extracts key name from a full resource name.
-     * 
+     *
      * @param resourceName Full resource name
      * @return Short key name
      */

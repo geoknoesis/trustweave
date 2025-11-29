@@ -11,10 +11,10 @@ import kotlinx.coroutines.withContext
 
 /**
  * Wallet Presentation Builder DSL.
- * 
+ *
  * Provides a fluent API for creating presentations from wallet credentials.
  * Automatically retrieves credentials from wallet by ID or query.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * // Create presentation from credential IDs
@@ -25,7 +25,7 @@ import kotlinx.coroutines.withContext
  *         reveal("degree.field", "employment.company")
  *     }
  * }
- * 
+ *
  * // Create presentation from query
  * val presentation = wallet.presentation {
  *     fromQuery {
@@ -48,21 +48,21 @@ class WalletPresentationBuilder(
     private var domain: String? = null
     private var selectiveDisclosure: Boolean = false
     private val disclosedFields = mutableListOf<String>()
-    
+
     /**
      * Add credentials from wallet by ID.
      */
     fun fromWallet(vararg credentialIds: String) {
         this.credentialIds.addAll(credentialIds)
     }
-    
+
     /**
      * Add credentials from wallet by ID list.
      */
     fun fromWallet(credentialIds: List<String>) {
         this.credentialIds.addAll(credentialIds)
     }
-    
+
     /**
      * Add credentials from wallet query.
      */
@@ -71,42 +71,42 @@ class WalletPresentationBuilder(
         builder.block()
         queryBuilder = builder
     }
-    
+
     /**
      * Set holder DID.
      */
     fun holder(did: String) {
         this.holderDid = did
     }
-    
+
     /**
      * Set proof type.
      */
     fun proofType(type: String) {
         this.proofType = type
     }
-    
+
     /**
      * Set key ID for signing.
      */
     fun keyId(keyId: String) {
         this.keyId = keyId
     }
-    
+
     /**
      * Set challenge.
      */
     fun challenge(challenge: String) {
         this.challenge = challenge
     }
-    
+
     /**
      * Set domain.
      */
     fun domain(domain: String) {
         this.domain = domain
     }
-    
+
     /**
      * Configure selective disclosure.
      */
@@ -116,18 +116,18 @@ class WalletPresentationBuilder(
         builder.block()
         disclosedFields.addAll(builder.revealedFields)
     }
-    
+
     /**
      * Build the verifiable presentation.
-     * 
+     *
      * @return Verifiable presentation
      */
     suspend fun build(): VerifiablePresentation = withContext(Dispatchers.IO) {
         val holder = holderDid ?: throw IllegalStateException("Holder DID is required")
-        
+
         // Get credentials from wallet
         val credentials = mutableListOf<VerifiableCredential>()
-        
+
         // Add credentials from IDs
         for (credId in credentialIds) {
             val cred = wallet.get(credId)
@@ -135,16 +135,16 @@ class WalletPresentationBuilder(
                 credentials.add(cred)
             }
         }
-        
+
         // Add credentials from query
         queryBuilder?.let { builder ->
             credentials.addAll(builder.execute())
         }
-        
+
         if (credentials.isEmpty()) {
             throw IllegalStateException("At least one credential is required")
         }
-        
+
         // Use existing presentation builder
         presentation {
             credentials(credentials)

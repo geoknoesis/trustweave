@@ -40,7 +40,7 @@ class IntegrityVerificationTest {
         val didMethod = DidKeyMockMethod(kms)
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
-        
+
         val didRegistry = DidMethodRegistry().also { it.register(didMethod) }
         val blockchainRegistry = BlockchainAnchorRegistry().also { it.register(chainId, anchorClient) }
 
@@ -55,13 +55,13 @@ class IntegrityVerificationTest {
             "Sample Dataset",
             "A test dataset for integrity verification"
         )
-        
+
         val (provenanceArtifact, provenanceDigest) = TestDataBuilders.createProvenanceArtifact(
             "provenance-1",
             "Data Collection",
             issuerDid
         )
-        
+
         val (qualityArtifact, qualityDigest) = TestDataBuilders.createQualityReportArtifact(
             "quality-1",
             0.95,
@@ -74,7 +74,7 @@ class IntegrityVerificationTest {
             TestDataBuilders.buildLink("provenance-1", provenanceDigest, "Provenance"),
             TestDataBuilders.buildLink("quality-1", qualityDigest, "QualityReport")
         )
-        
+
         val linkset = TestDataBuilders.buildLinkset(
             digestMultibase = "", // Will compute after building
             links = links
@@ -95,7 +95,7 @@ class IntegrityVerificationTest {
             put("id", "subject-123")
             put("type", "Person")
         }
-        
+
         // Build VC with linkset digest reference (use fixed timestamp for consistent digest)
         val fixedTimestamp = "2024-01-01T00:00:00Z"
         val vc = buildJsonObject {
@@ -123,7 +123,7 @@ class IntegrityVerificationTest {
             put("vcDigest", vcDigest)
             put("issuer", issuerDid)
         }
-        
+
         val anchorResult = anchorClient.writePayload(digestPayload)
         assertNotNull(anchorResult.ref)
         assertEquals(chainId, anchorResult.ref.chainId)
@@ -134,7 +134,7 @@ class IntegrityVerificationTest {
             "provenance-1" to provenanceArtifact,
             "quality-1" to qualityArtifact
         )
-        
+
         val verificationResult = IntegrityVerifier.verifyIntegrityChain(
             vc = vcWithDigest,
             linkset = linksetWithDigest,
@@ -152,16 +152,16 @@ class IntegrityVerificationTest {
         }
         assertTrue(verificationResult.valid, "Integrity chain verification failed")
         assertEquals(5, verificationResult.steps.size) // VC + Linkset + 3 artifacts
-        
+
         // Verify each step
         val vcStep = verificationResult.steps.find { it.name == "VC Digest" }
         assertNotNull(vcStep)
         assertTrue(vcStep.valid, "VC digest verification failed")
-        
+
         val linksetStep = verificationResult.steps.find { it.name == "Linkset Digest" }
         assertNotNull(linksetStep)
         // Note: Linkset verification may fail if VC doesn't reference it - that's expected in this test
-        
+
         println("Integrity chain verification successful!")
         println("VC Digest: ${vcStep.digest}")
         println("Anchored at: ${anchorResult.ref.txHash}")
@@ -173,7 +173,7 @@ class IntegrityVerificationTest {
         val didMethod = DidKeyMockMethod(kms)
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
-        
+
         val (_, blockchainRegistry) = registerEnvironment(didMethod, chainId, anchorClient)
 
         val issuerDoc = didMethod.createDid()
@@ -189,14 +189,14 @@ class IntegrityVerificationTest {
             issued = fixedTimestamp
         )
         val vcDigest = DigestUtils.sha256DigestMultibase(vcWithoutEvidence)
-        
+
         // Anchor the digest
         val digestPayload = buildJsonObject {
             put("vcDigest", vcDigest)
             put("issuer", issuerDid)
         }
         val anchorResult = anchorClient.writePayload(digestPayload)
-        
+
         // Create evidence
         val evidence = listOf(
             TestDataBuilders.buildAnchorEvidence(
@@ -205,7 +205,7 @@ class IntegrityVerificationTest {
                 digestMultibase = vcDigest
             )
         )
-        
+
         // Create VC with evidence (digest should still match because it's computed from VC without evidence)
         val vcWithEvidence = TestDataBuilders.buildVc(
             issuerDid = issuerDid,
@@ -225,7 +225,7 @@ class IntegrityVerificationTest {
         assertNotNull(discoveredRef, "Failed to discover anchor from evidence. VC evidence: ${vcWithEvidence["evidence"]}")
         assertEquals(chainId, discoveredRef.chainId)
         assertEquals(anchorResult.ref.txHash, discoveredRef.txHash)
-        
+
         // Verify integrity
         val isValid = IntegrityVerifier.verifyVcIntegrity(vcWithEvidence, discoveredRef, blockchainRegistry)
         assertTrue(isValid, "VC integrity verification failed")
@@ -237,7 +237,7 @@ class IntegrityVerificationTest {
         val didMethod = DidKeyMockMethod(kms)
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
-        
+
         val (_, blockchainRegistry) = registerEnvironment(didMethod, chainId, anchorClient)
 
         val issuerDoc = didMethod.createDid()
@@ -249,7 +249,7 @@ class IntegrityVerificationTest {
             anchorLookupPattern = "https://anchors.example.org/vc/{vcId}",
             baseUrl = "https://anchors.example.org"
         )
-        
+
         val didDocument = buildJsonObject {
             put("id", issuerDid)
             put("service", buildJsonArray {
@@ -261,14 +261,14 @@ class IntegrityVerificationTest {
         val services = didDocument["service"]?.jsonArray
         assertNotNull(services)
         assertTrue(services.isNotEmpty())
-        
+
         val service = services[0].jsonObject
         // Type might be missing if default value wasn't serialized, so check for required fields instead
         val endpoint = service["serviceEndpoint"]?.jsonObject
         assertNotNull(endpoint, "Service endpoint should be present")
         val endpointChainId = endpoint["chainId"]?.jsonPrimitive?.content
         assertEquals(chainId, endpointChainId)
-        
+
         // Verify service has type if present, or has required anchor service fields
         val serviceType = service["type"]?.jsonPrimitive?.content
         if (serviceType != null) {
@@ -282,7 +282,7 @@ class IntegrityVerificationTest {
         val didMethod = DidKeyMockMethod(kms)
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
-        
+
         val (_, blockchainRegistry) = registerEnvironment(didMethod, chainId, anchorClient)
 
         val issuerDoc = didMethod.createDid()
@@ -298,18 +298,18 @@ class IntegrityVerificationTest {
             issued = fixedTimestamp
         )
         val vcDigest = DigestUtils.sha256DigestMultibase(vcWithoutStatus)
-        
+
         // Anchor the digest
         val digestPayload = buildJsonObject {
             put("vcDigest", vcDigest)
             put("issuer", issuerDid)
         }
         val anchorResult = anchorClient.writePayload(digestPayload)
-        
+
         // Create credential status
         val statusServiceUrl = "https://status.example.org/vc/vc-12345"
         val credentialStatus = TestDataBuilders.buildCredentialStatus(statusServiceUrl)
-        
+
         // Create VC with credential status (digest should still match because it's computed from VC without status)
         val vcWithStatus = TestDataBuilders.buildVc(
             issuerDid = issuerDid,
@@ -335,7 +335,7 @@ class IntegrityVerificationTest {
         assertNotNull(discoveredRef)
         assertEquals(chainId, discoveredRef.chainId)
         assertEquals(anchorResult.ref.txHash, discoveredRef.txHash)
-        
+
         // Verify integrity
         val isValid = IntegrityVerifier.verifyVcIntegrity(vcWithStatus, discoveredRef, blockchainRegistry)
         assertTrue(isValid, "VC integrity verification failed")
@@ -347,7 +347,7 @@ class IntegrityVerificationTest {
         val didMethod = DidKeyMockMethod(kms)
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
-        
+
         val (_, blockchainRegistry) = registerEnvironment(didMethod, chainId, anchorClient)
 
         val issuerDoc = didMethod.createDid()
@@ -363,7 +363,7 @@ class IntegrityVerificationTest {
             issued = fixedTimestamp
         )
         val vcDigest = DigestUtils.sha256DigestMultibase(vc)
-        
+
         val digestPayload = buildJsonObject {
             put("vcDigest", vcDigest)
             put("issuer", issuerDid)
@@ -383,7 +383,7 @@ class IntegrityVerificationTest {
         val discoveredRef = IntegrityVerifier.discoverAnchorFromRegistry(registryEntry)
         assertEquals(chainId, discoveredRef.chainId)
         assertEquals(anchorResult.ref.txHash, discoveredRef.txHash)
-        
+
         // Verify integrity
         val vcWithDigest = TestDataBuilders.buildVc(
             issuerDid = issuerDid,
@@ -401,7 +401,7 @@ class IntegrityVerificationTest {
         val didMethod = DidKeyMockMethod(kms)
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
-        
+
         val (_, blockchainRegistry) = registerEnvironment(didMethod, chainId, anchorClient)
 
         val issuerDoc = didMethod.createDid()
@@ -425,7 +425,7 @@ class IntegrityVerificationTest {
         assertNotNull(discoveredRef)
         assertEquals(chainId, discoveredRef.chainId)
         assertEquals(manifest.anchorContext.chainId, discoveredRef.chainId)
-        
+
         // Verify manifest contains all digests
         assertEquals(3, manifest.anchoredDigests.size)
         assertTrue(manifest.anchoredDigests.contains(digest1))
@@ -439,7 +439,7 @@ class IntegrityVerificationTest {
         val didMethod = DidKeyMockMethod(kms)
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
-        
+
         val (_, blockchainRegistry) = registerEnvironment(didMethod, chainId, anchorClient)
 
         val issuerDoc = didMethod.createDid()

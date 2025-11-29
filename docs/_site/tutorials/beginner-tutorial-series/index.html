@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,34 +591,34 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="beginner-tutorial-series">
-  
-  
+
+
     <a href="#beginner-tutorial-series" class="anchor-heading" aria-labelledby="beginner-tutorial-series"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Beginner Tutorial Series
-  
-  
+
+
 </h1>
-    
+
 
 <p>A structured learning path for developers new to TrustWeave and decentralized identity. Each tutorial builds on the previous one, introducing concepts progressively.</p>
 <h2 id="learning-path-overview">
-  
-  
+
+
     <a href="#learning-path-overview" class="anchor-heading" aria-labelledby="learning-path-overview"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Learning Path Overview
-  
-  
+
+
 </h2>
-    
+
 
 <p>This series takes you from zero to building production-ready applications with TrustWeave:</p>
 
@@ -630,13 +630,13 @@
   <li><strong>Tutorial 5: Adding Blockchain Anchoring</strong> - Anchor data for tamper evidence</li>
 </ol>
 <h2 id="prerequisites">
-  
-  
+
+
     <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
-  
-  
+
+
 </h2>
-    
+
 
 <p>Before starting:</p>
 <ul>
@@ -645,24 +645,24 @@
   <li><strong>Installation</strong>: Follow the <a href="/trustweave/getting-started/installation/">Installation Guide</a></li>
 </ul>
 <h2 id="tutorial-1-your-first-did">
-  
-  
+
+
     <a href="#tutorial-1-your-first-did" class="anchor-heading" aria-labelledby="tutorial-1-your-first-did"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Tutorial 1: Your First DID
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>Duration:</strong> 15-20 minutes<br />
 <strong>Goal:</strong> Create and resolve your first DID</p>
 <h3 id="what-youll-learn">
-  
-  
+
+
     <a href="#what-youll-learn" class="anchor-heading" aria-labelledby="what-youll-learn"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Learn
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>What DIDs are and why they matter</li>
@@ -671,13 +671,13 @@
   <li>Basic error handling with <code class="language-plaintext highlighter-rouge">Result&lt;T&gt;</code></li>
 </ul>
 <h3 id="step-1-setup">
-  
-  
+
+
     <a href="#step-1-setup" class="anchor-heading" aria-labelledby="step-1-setup"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Setup
-  
-  
+
+
 </h3>
-    
+
 
 <p>Create a new Kotlin project and add dependencies:</p>
 
@@ -691,13 +691,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-2-create-trustweave-instance">
-  
-  
+
+
     <a href="#step-2-create-trustweave-instance" class="anchor-heading" aria-labelledby="step-2-create-trustweave-instance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Create TrustWeave Instance
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -716,20 +716,20 @@
     <span class="c1">// Create TrustWeave with default configuration</span>
     <span class="c1">// This includes did:key method by default</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ TrustWeave initialized"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
 <p><strong>What this does:</strong> Creates a TrustWeave instance with default configuration, including the <code class="language-plaintext highlighter-rouge">did:key</code> method.</p>
 <h3 id="step-3-create-your-first-did">
-  
-  
+
+
     <a href="#step-3-create-your-first-did" class="anchor-heading" aria-labelledby="step-3-create-your-first-did"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Create Your First DID
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -754,11 +754,11 @@
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// Create a DID using the default method (did:key)</span>
     <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="nc">Result</span><span class="p">.</span><span class="nf">success</span><span class="p">(</span><span class="n">did</span><span class="p">)</span>
-    
+
     <span class="n">result</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
         <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">didDocument</span> <span class="p">-&gt;</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Created DID: ${didDocument.id}"</span><span class="p">)</span>
@@ -775,13 +775,13 @@
 
 <p><strong>Result:</strong> A <code class="language-plaintext highlighter-rouge">DidDocument</code> containing the DID identifier and verification methods.</p>
 <h3 id="step-4-resolve-the-did">
-  
-  
+
+
     <a href="#step-4-resolve-the-did" class="anchor-heading" aria-labelledby="step-4-resolve-the-did"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Resolve the DID
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -816,20 +816,20 @@
 31
 </pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// Create a DID</span>
     <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">createResult</span> <span class="p">=</span> <span class="nc">Result</span><span class="p">.</span><span class="nf">success</span><span class="p">(</span><span class="n">did</span><span class="p">)</span>
-    
+
     <span class="n">createResult</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
         <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">didDocument</span> <span class="p">-&gt;</span>
             <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="n">didDocument</span><span class="p">.</span><span class="n">id</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"Created DID: $did"</span><span class="p">)</span>
-            
+
             <span class="c1">// Resolve the DID we just created</span>
             <span class="kd">val</span> <span class="py">resolution</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">)</span>
             <span class="kd">val</span> <span class="py">resolveResult</span> <span class="p">=</span> <span class="nc">Result</span><span class="p">.</span><span class="nf">success</span><span class="p">(</span><span class="n">resolution</span><span class="p">)</span>
-            
+
             <span class="n">resolveResult</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
                 <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">resolution</span> <span class="p">-&gt;</span>
                     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Resolved DID: ${resolution.document?.id}"</span><span class="p">)</span>
@@ -849,13 +849,13 @@
 
 <p><strong>What this does:</strong> Resolves the DID to retrieve its document, demonstrating that DIDs are resolvable identifiers.</p>
 <h3 id="step-5-handle-errors-properly">
-  
-  
+
+
     <a href="#step-5-handle-errors-properly" class="anchor-heading" aria-labelledby="step-5-handle-errors-properly"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Handle Errors Properly
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -886,11 +886,11 @@
 27
 </pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// Try to resolve a non-existent DID</span>
     <span class="kd">val</span> <span class="py">resolution</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="s">"did:key:invalid"</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="nc">Result</span><span class="p">.</span><span class="nf">success</span><span class="p">(</span><span class="n">resolution</span><span class="p">)</span>
-    
+
     <span class="n">result</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
         <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">resolution</span> <span class="p">-&gt;</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"Resolved: ${resolution.document?.id}"</span><span class="p">)</span>
@@ -915,13 +915,13 @@
 
 <p><strong>What this does:</strong> Demonstrates proper error handling using TrustWeave’s structured error types.</p>
 <h3 id="key-takeaways">
-  
-  
+
+
     <a href="#key-takeaways" class="anchor-heading" aria-labelledby="key-takeaways"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Takeaways
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>DIDs are self-sovereign identifiers that you control</li>
@@ -930,13 +930,13 @@
   <li>Error types provide actionable information for recovery</li>
 </ul>
 <h3 id="next-steps">
-  
-  
+
+
     <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>Try creating DIDs with different methods (requires registration)</li>
@@ -944,24 +944,24 @@
   <li>Read <a href="/trustweave/core-concepts/dids/">Core Concepts: DIDs</a></li>
 </ul><hr />
 <h2 id="tutorial-2-issuing-your-first-credential">
-  
-  
+
+
     <a href="#tutorial-2-issuing-your-first-credential" class="anchor-heading" aria-labelledby="tutorial-2-issuing-your-first-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Tutorial 2: Issuing Your First Credential
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>Duration:</strong> 20-25 minutes<br />
 <strong>Goal:</strong> Issue and verify a verifiable credential</p>
 <h3 id="what-youll-learn-1">
-  
-  
+
+
     <a href="#what-youll-learn-1" class="anchor-heading" aria-labelledby="what-youll-learn-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Learn
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>What verifiable credentials are</li>
@@ -970,13 +970,13 @@
   <li>Understanding credential structure</li>
 </ul>
 <h3 id="step-1-create-issuer-and-holder-dids">
-  
-  
+
+
     <a href="#step-1-create-issuer-and-holder-dids" class="anchor-heading" aria-labelledby="step-1-create-issuer-and-holder-dids"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Create Issuer and Holder DIDs
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -991,11 +991,11 @@
 11
 </pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// Create issuer DID (the organization issuing credentials)</span>
     <span class="kd">val</span> <span class="py">issuerDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Issuer DID: ${issuerDid.id}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Create holder DID (the person receiving the credential)</span>
     <span class="kd">val</span> <span class="py">holderDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Holder DID: ${holderDid.id}"</span><span class="p">)</span>
@@ -1004,13 +1004,13 @@
 
 <p><strong>What this does:</strong> Sets up the two parties needed for credential issuance: issuer and holder.</p>
 <h3 id="step-2-issue-a-credential">
-  
-  
+
+
     <a href="#step-2-issue-a-credential" class="anchor-heading" aria-labelledby="step-2-issue-a-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Issue a Credential
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1055,15 +1055,15 @@
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// Create DIDs</span>
     <span class="kd">val</span> <span class="py">issuerDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">holderDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// Get the first verification method from issuer's DID document</span>
     <span class="kd">val</span> <span class="py">issuerKeyId</span> <span class="p">=</span> <span class="n">issuerDid</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
         <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
-    
+
     <span class="c1">// Issue a credential</span>
     <span class="kd">val</span> <span class="py">credentialResult</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">issuerDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
@@ -1076,7 +1076,7 @@
         <span class="p">),</span>
         <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"EducationalCredential"</span><span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="n">credentialResult</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
         <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">credential</span> <span class="p">-&gt;</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Credential issued"</span><span class="p">)</span>
@@ -1096,13 +1096,13 @@
 
 <p><strong>Result:</strong> A <code class="language-plaintext highlighter-rouge">VerifiableCredential</code> with cryptographic proof that can be verified.</p>
 <h3 id="step-3-verify-the-credential">
-  
-  
+
+
     <a href="#step-3-verify-the-credential" class="anchor-heading" aria-labelledby="step-3-verify-the-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Verify the Credential
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1137,14 +1137,14 @@
 31
 </pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// ... (create DIDs and issue credential from Step 2) ...</span>
-    
+
     <span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="n">credentialResult</span><span class="p">.</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="c1">// Verify the credential</span>
     <span class="kd">val</span> <span class="py">verificationResult</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
-    
+
     <span class="n">verificationResult</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
         <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">verification</span> <span class="p">-&gt;</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
@@ -1152,7 +1152,7 @@
                 <span class="nf">println</span><span class="p">(</span><span class="s">"   Proof valid: ${verification.proofValid}"</span><span class="p">)</span>
                 <span class="nf">println</span><span class="p">(</span><span class="s">"   Not expired: ${verification.notExpired}"</span><span class="p">)</span>
                 <span class="nf">println</span><span class="p">(</span><span class="s">"   Not revoked: ${verification.notRevoked}"</span><span class="p">)</span>
-                
+
                 <span class="k">if</span> <span class="p">(</span><span class="n">verification</span><span class="p">.</span><span class="n">warnings</span><span class="p">.</span><span class="nf">isNotEmpty</span><span class="p">())</span> <span class="p">{</span>
                     <span class="nf">println</span><span class="p">(</span><span class="s">"   Warnings: ${verification.warnings}"</span><span class="p">)</span>
                 <span class="p">}</span>
@@ -1170,13 +1170,13 @@
 
 <p><strong>What this does:</strong> Verifies the credential’s proof, expiration, and revocation status.</p>
 <h3 id="step-4-add-expiration-date">
-  
-  
+
+
     <a href="#step-4-add-expiration-date" class="anchor-heading" aria-labelledby="step-4-add-expiration-date"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Add Expiration Date
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1208,12 +1208,12 @@
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// ... (create DIDs) ...</span>
-    
+
     <span class="c1">// Issue credential with expiration date (1 year from now)</span>
     <span class="kd">val</span> <span class="py">expirationDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">plus</span><span class="p">(</span><span class="mi">365</span><span class="p">,</span> <span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">DAYS</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">credentialResult</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">issuerDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">issuerKeyId</span> <span class="p">=</span> <span class="n">issuerKeyId</span><span class="p">,</span>
@@ -1225,20 +1225,20 @@
         <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"EducationalCredential"</span><span class="p">),</span>
         <span class="n">expirationDate</span> <span class="p">=</span> <span class="n">expirationDate</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// ... (verify credential) ...</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
 <p><strong>What this does:</strong> Adds an expiration date to the credential, demonstrating credential lifecycle management.</p>
 <h3 id="key-takeaways-1">
-  
-  
+
+
     <a href="#key-takeaways-1" class="anchor-heading" aria-labelledby="key-takeaways-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Takeaways
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>Credentials contain claims about a subject (holder)</li>
@@ -1247,13 +1247,13 @@
   <li>Always check verification warnings, not just validity</li>
 </ul>
 <h3 id="next-steps-1">
-  
-  
+
+
     <a href="#next-steps-1" class="anchor-heading" aria-labelledby="next-steps-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>Add more claims to credentials</li>
@@ -1261,24 +1261,24 @@
   <li>Read <a href="/trustweave/core-concepts/verifiable-credentials/">Core Concepts: Verifiable Credentials</a></li>
 </ul><hr />
 <h2 id="tutorial-3-managing-credentials-with-wallets">
-  
-  
+
+
     <a href="#tutorial-3-managing-credentials-with-wallets" class="anchor-heading" aria-labelledby="tutorial-3-managing-credentials-with-wallets"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Tutorial 3: Managing Credentials with Wallets
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>Duration:</strong> 25-30 minutes<br />
 <strong>Goal:</strong> Store, organize, and query credentials using wallets</p>
 <h3 id="what-youll-learn-2">
-  
-  
+
+
     <a href="#what-youll-learn-2" class="anchor-heading" aria-labelledby="what-youll-learn-2"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Learn
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>What wallets are and their purpose</li>
@@ -1288,13 +1288,13 @@
   <li>Wallet organization features</li>
 </ul>
 <h3 id="step-1-create-a-wallet">
-  
-  
+
+
     <a href="#step-1-create-a-wallet" class="anchor-heading" aria-labelledby="step-1-create-a-wallet"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Create a Wallet
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1324,16 +1324,16 @@
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// Create holder DID</span>
     <span class="kd">val</span> <span class="py">holderDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// Create wallet for the holder</span>
     <span class="kd">val</span> <span class="py">walletResult</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">createWallet</span><span class="p">(</span>
         <span class="n">holderDid</span> <span class="p">=</span> <span class="n">holderDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">provider</span> <span class="p">=</span> <span class="nc">WalletProvider</span><span class="p">.</span><span class="nc">InMemory</span>  <span class="c1">// For testing</span>
     <span class="p">)</span>
-    
+
     <span class="n">walletResult</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
         <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">wallet</span> <span class="p">-&gt;</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Wallet created: ${wallet.walletId}"</span><span class="p">)</span>
@@ -1348,13 +1348,13 @@
 
 <p><strong>What this does:</strong> Creates a wallet for storing credentials. Wallets provide secure storage and management.</p>
 <h3 id="step-2-store-credentials">
-  
-  
+
+
     <a href="#step-2-store-credentials" class="anchor-heading" aria-labelledby="step-2-store-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Store Credentials
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1381,18 +1381,18 @@
 23
 </pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// Create DIDs and issue credential (from Tutorial 2)</span>
     <span class="kd">val</span> <span class="py">issuerDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">holderDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="cm">/* ... issue credential ... */</span>
-    
+
     <span class="c1">// Create wallet</span>
     <span class="kd">val</span> <span class="py">wallet</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">createWallet</span><span class="p">(</span><span class="n">holderDid</span><span class="p">.</span><span class="n">id</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="c1">// Store credential in wallet</span>
     <span class="kd">val</span> <span class="py">storeResult</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">storeCredential</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
-    
+
     <span class="n">storeResult</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
         <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">storedId</span> <span class="p">-&gt;</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Credential stored: $storedId"</span><span class="p">)</span>
@@ -1406,13 +1406,13 @@
 
 <p><strong>What this does:</strong> Stores a credential in the wallet, making it available for later retrieval.</p>
 <h3 id="step-3-query-credentials">
-  
-  
+
+
     <a href="#step-3-query-credentials" class="anchor-heading" aria-labelledby="step-3-query-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Query Credentials
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1437,19 +1437,19 @@
 21
 </pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// ... (create wallet and store credentials) ...</span>
-    
+
     <span class="c1">// Query all credentials</span>
     <span class="kd">val</span> <span class="py">allCredentials</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">queryCredentials</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Total credentials: ${allCredentials.size}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Query by type</span>
     <span class="kd">val</span> <span class="py">educationalCreds</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">queryCredentials</span><span class="p">(</span>
         <span class="n">type</span> <span class="p">=</span> <span class="s">"EducationalCredential"</span>
     <span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Educational credentials: ${educationalCreds.size}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Query by issuer</span>
     <span class="kd">val</span> <span class="py">issuerCreds</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">queryCredentials</span><span class="p">(</span>
         <span class="n">issuer</span> <span class="p">=</span> <span class="n">issuerDid</span><span class="p">.</span><span class="n">id</span>
@@ -1460,13 +1460,13 @@
 
 <p><strong>What this does:</strong> Demonstrates querying credentials by various criteria.</p>
 <h3 id="step-4-use-organization-features">
-  
-  
+
+
     <a href="#step-4-use-organization-features" class="anchor-heading" aria-labelledby="step-4-use-organization-features"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Use Organization Features
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1503,32 +1503,32 @@
 33
 </pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// Create wallet with organization features enabled</span>
     <span class="kd">val</span> <span class="py">wallet</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">createWallet</span><span class="p">(</span><span class="n">holderDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span> <span class="p">{</span>
         <span class="n">enableOrganization</span> <span class="p">=</span> <span class="k">true</span>
     <span class="p">}.</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="c1">// Store credentials</span>
     <span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="cm">/* ... */</span>
     <span class="n">wallet</span><span class="p">.</span><span class="nf">storeCredential</span><span class="p">(</span><span class="n">credential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="c1">// Use organization features</span>
     <span class="n">wallet</span><span class="p">.</span><span class="nf">withOrganization</span> <span class="p">{</span> <span class="n">org</span> <span class="p">-&gt;</span>
         <span class="c1">// Create a collection</span>
         <span class="kd">val</span> <span class="py">collection</span> <span class="p">=</span> <span class="n">org</span><span class="p">.</span><span class="nf">createCollection</span><span class="p">(</span><span class="s">"Education"</span><span class="p">)</span>
-        
+
         <span class="c1">// Add credential to collection</span>
         <span class="n">org</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">collection</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="n">credential</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
-        
+
         <span class="c1">// Tag credential</span>
         <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">credential</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="s">"diploma"</span><span class="p">)</span>
         <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">credential</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="s">"bachelor"</span><span class="p">)</span>
-        
+
         <span class="c1">// Query by collection</span>
         <span class="kd">val</span> <span class="py">educationCreds</span> <span class="p">=</span> <span class="n">org</span><span class="p">.</span><span class="nf">queryByCollection</span><span class="p">(</span><span class="n">collection</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"Education collection: ${educationCreds.size} credentials"</span><span class="p">)</span>
-        
+
         <span class="c1">// Query by tag</span>
         <span class="kd">val</span> <span class="py">diplomaCreds</span> <span class="p">=</span> <span class="n">org</span><span class="p">.</span><span class="nf">queryByTag</span><span class="p">(</span><span class="s">"diploma"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"Diploma credentials: ${diplomaCreds.size}"</span><span class="p">)</span>
@@ -1538,13 +1538,13 @@
 
 <p><strong>What this does:</strong> Demonstrates wallet organization features: collections, tags, and metadata.</p>
 <h3 id="key-takeaways-2">
-  
-  
+
+
     <a href="#key-takeaways-2" class="anchor-heading" aria-labelledby="key-takeaways-2"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Takeaways
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>Wallets provide secure credential storage</li>
@@ -1553,13 +1553,13 @@
   <li>Query capabilities enable efficient credential retrieval</li>
 </ul>
 <h3 id="next-steps-2">
-  
-  
+
+
     <a href="#next-steps-2" class="anchor-heading" aria-labelledby="next-steps-2"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>Explore presentation features (selective disclosure)</li>
@@ -1568,24 +1568,24 @@
   <li>Complete <a href="/trustweave/tutorials/wallet-api-tutorial/">Wallet API Tutorial</a></li>
 </ul><hr />
 <h2 id="tutorial-4-building-a-complete-workflow">
-  
-  
+
+
     <a href="#tutorial-4-building-a-complete-workflow" class="anchor-heading" aria-labelledby="tutorial-4-building-a-complete-workflow"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Tutorial 4: Building a Complete Workflow
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>Duration:</strong> 30-35 minutes<br />
 <strong>Goal:</strong> Build an end-to-end issuer-holder-verifier workflow</p>
 <h3 id="what-youll-learn-3">
-  
-  
+
+
     <a href="#what-youll-learn-3" class="anchor-heading" aria-labelledby="what-youll-learn-3"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Learn
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>Complete credential lifecycle</li>
@@ -1594,13 +1594,13 @@
   <li>Real-world workflow patterns</li>
 </ul>
 <h3 id="step-1-setup-all-parties">
-  
-  
+
+
     <a href="#step-1-setup-all-parties" class="anchor-heading" aria-labelledby="step-1-setup-all-parties"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Setup All Parties
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1623,18 +1623,18 @@
 19
 </pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// Issuer: University issuing degrees</span>
     <span class="kd">val</span> <span class="py">issuerDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">issuerKeyId</span> <span class="p">=</span> <span class="n">issuerDid</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">first</span><span class="p">().</span><span class="n">id</span>
-    
+
     <span class="c1">// Holder: Student receiving degree</span>
     <span class="kd">val</span> <span class="py">holderDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">holderWallet</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">createWallet</span><span class="p">(</span><span class="n">holderDid</span><span class="p">.</span><span class="n">id</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="c1">// Verifier: Employer verifying degree</span>
     <span class="kd">val</span> <span class="py">verifierDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ All parties set up"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Issuer: ${issuerDid.id}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Holder: ${holderDid.id}"</span><span class="p">)</span>
@@ -1644,13 +1644,13 @@
 
 <p><strong>What this does:</strong> Sets up the three parties in a typical credential workflow.</p>
 <h3 id="step-2-issue-credential-issuer">
-  
-  
+
+
     <a href="#step-2-issue-credential-issuer" class="anchor-heading" aria-labelledby="step-2-issue-credential-issuer"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Issue Credential (Issuer)
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1675,9 +1675,9 @@
 21
 </pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// ... (setup parties) ...</span>
-    
+
     <span class="c1">// ISSUER: Issue credential</span>
     <span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">issuerDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
@@ -1691,18 +1691,18 @@
         <span class="p">),</span>
         <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"EducationalCredential"</span><span class="p">)</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Credential issued by issuer"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-3-store-credential-holder">
-  
-  
+
+
     <a href="#step-3-store-credential-holder" class="anchor-heading" aria-labelledby="step-3-store-credential-holder"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Store Credential (Holder)
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1715,22 +1715,22 @@
 9
 </pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// ... (setup and issue) ...</span>
-    
+
     <span class="c1">// HOLDER: Store credential in wallet</span>
     <span class="kd">val</span> <span class="py">storedId</span> <span class="p">=</span> <span class="n">holderWallet</span><span class="p">.</span><span class="nf">storeCredential</span><span class="p">(</span><span class="n">credential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Credential stored by holder: $storedId"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-4-create-presentation-holder">
-  
-  
+
+
     <a href="#step-4-create-presentation-holder" class="anchor-heading" aria-labelledby="step-4-create-presentation-holder"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Create Presentation (Holder)
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1764,9 +1764,9 @@
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// ... (setup, issue, store) ...</span>
-    
+
     <span class="c1">// HOLDER: Create presentation for verifier</span>
     <span class="kd">val</span> <span class="py">presentationResult</span> <span class="p">=</span> <span class="n">holderWallet</span><span class="p">.</span><span class="nf">withPresentation</span> <span class="p">{</span> <span class="n">pres</span> <span class="p">-&gt;</span>
         <span class="n">pres</span><span class="p">.</span><span class="nf">createPresentation</span><span class="p">(</span>
@@ -1776,7 +1776,7 @@
             <span class="n">domain</span> <span class="p">=</span> <span class="s">"example-employer.com"</span>
         <span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="n">presentationResult</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
         <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">presentation</span> <span class="p">-&gt;</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Presentation created by holder"</span><span class="p">)</span>
@@ -1792,13 +1792,13 @@
 
 <p><strong>What this does:</strong> Creates a verifiable presentation that the holder can share with the verifier.</p>
 <h3 id="step-5-verify-presentation-verifier">
-  
-  
+
+
     <a href="#step-5-verify-presentation-verifier" class="anchor-heading" aria-labelledby="step-5-verify-presentation-verifier"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Verify Presentation (Verifier)
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1832,18 +1832,18 @@
 30
 </pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// ... (complete workflow above) ...</span>
-    
+
     <span class="kd">val</span> <span class="py">presentation</span> <span class="p">=</span> <span class="n">presentationResult</span><span class="p">.</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="c1">// VERIFIER: Verify presentation</span>
     <span class="kd">val</span> <span class="py">verificationResult</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyPresentation</span><span class="p">(</span>
         <span class="n">presentation</span> <span class="p">=</span> <span class="n">presentation</span><span class="p">,</span>
         <span class="n">challenge</span> <span class="p">=</span> <span class="s">"verifier-challenge-123"</span><span class="p">,</span>  <span class="c1">// Must match</span>
         <span class="n">domain</span> <span class="p">=</span> <span class="s">"example-employer.com"</span>  <span class="c1">// Must match</span>
     <span class="p">)</span>
-    
+
     <span class="n">verificationResult</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
         <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">verification</span> <span class="p">-&gt;</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
@@ -1864,13 +1864,13 @@
 
 <p><strong>What this does:</strong> Verifies the presentation, ensuring credentials are valid and the presentation proof is correct.</p>
 <h3 id="step-6-selective-disclosure-advanced">
-  
-  
+
+
     <a href="#step-6-selective-disclosure-advanced" class="anchor-heading" aria-labelledby="step-6-selective-disclosure-advanced"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 6: Selective Disclosure (Advanced)
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1896,9 +1896,9 @@
 22
 </pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// ... (setup and issue) ...</span>
-    
+
     <span class="c1">// HOLDER: Create presentation with selective disclosure</span>
     <span class="c1">// Only reveal degree and university, hide name and graduation date</span>
     <span class="kd">val</span> <span class="py">presentation</span> <span class="p">=</span> <span class="n">holderWallet</span><span class="p">.</span><span class="nf">withPresentation</span> <span class="p">{</span> <span class="n">pres</span> <span class="p">-&gt;</span>
@@ -1912,7 +1912,7 @@
             <span class="p">)</span>
         <span class="p">)</span>
     <span class="p">}.</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Presentation with selective disclosure created"</span><span class="p">)</span>
     <span class="c1">// Verifier only sees degree and university, not name or graduation date</span>
 <span class="p">}</span>
@@ -1920,13 +1920,13 @@
 
 <p><strong>What this does:</strong> Demonstrates selective disclosure, allowing holders to reveal only specific fields.</p>
 <h3 id="key-takeaways-3">
-  
-  
+
+
     <a href="#key-takeaways-3" class="anchor-heading" aria-labelledby="key-takeaways-3"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Takeaways
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>Three-party workflow: issuer → holder → verifier</li>
@@ -1935,13 +1935,13 @@
   <li>Selective disclosure protects privacy</li>
 </ul>
 <h3 id="next-steps-3">
-  
-  
+
+
     <a href="#next-steps-3" class="anchor-heading" aria-labelledby="next-steps-3"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>Add revocation checking</li>
@@ -1950,24 +1950,24 @@
   <li>Explore <a href="/trustweave/scenarios/README/">Scenarios</a> for domain-specific workflows</li>
 </ul><hr />
 <h2 id="tutorial-5-adding-blockchain-anchoring">
-  
-  
+
+
     <a href="#tutorial-5-adding-blockchain-anchoring" class="anchor-heading" aria-labelledby="tutorial-5-adding-blockchain-anchoring"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Tutorial 5: Adding Blockchain Anchoring
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>Duration:</strong> 25-30 minutes<br />
 <strong>Goal:</strong> Anchor data to blockchain for tamper evidence</p>
 <h3 id="what-youll-learn-4">
-  
-  
+
+
     <a href="#what-youll-learn-4" class="anchor-heading" aria-labelledby="what-youll-learn-4"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Learn
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>What blockchain anchoring is</li>
@@ -1976,13 +1976,13 @@
   <li>When to use anchoring</li>
 </ul>
 <h3 id="step-1-register-blockchain-client">
-  
-  
+
+
     <a href="#step-1-register-blockchain-client" class="anchor-heading" aria-labelledby="step-1-register-blockchain-client"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Register Blockchain Client
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -2019,20 +2019,20 @@
             <span class="p">)</span>
         <span class="p">}</span>
     <span class="p">}</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Blockchain client registered"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
 <p><strong>What this does:</strong> Registers a blockchain client for anchoring operations.</p>
 <h3 id="step-2-anchor-data">
-  
-  
+
+
     <a href="#step-2-anchor-data" class="anchor-heading" aria-labelledby="step-2-anchor-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Anchor Data
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -2091,21 +2091,21 @@
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
         <span class="c1">// ... (register blockchain client) ...</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Create data to anchor</span>
     <span class="kd">val</span> <span class="py">data</span> <span class="p">=</span> <span class="nc">ImportantData</span><span class="p">(</span>
         <span class="n">id</span> <span class="p">=</span> <span class="s">"data-123"</span><span class="p">,</span>
         <span class="n">timestamp</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">(),</span>
         <span class="n">value</span> <span class="p">=</span> <span class="s">"Important information"</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// Anchor to blockchain</span>
     <span class="kd">val</span> <span class="py">anchorResult</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">blockchains</span><span class="p">.</span><span class="nf">anchor</span><span class="p">(</span>
         <span class="n">data</span> <span class="p">=</span> <span class="n">data</span><span class="p">,</span>
         <span class="n">serializer</span> <span class="p">=</span> <span class="nc">ImportantData</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
         <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span>
     <span class="p">)</span>
-    
+
     <span class="n">anchorResult</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
         <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">anchor</span> <span class="p">-&gt;</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Data anchored"</span><span class="p">)</span>
@@ -2122,13 +2122,13 @@
 
 <p><strong>What this does:</strong> Anchors data to the blockchain, creating a tamper-evident timestamp.</p>
 <h3 id="step-3-read-anchored-data">
-  
-  
+
+
     <a href="#step-3-read-anchored-data" class="anchor-heading" aria-labelledby="step-3-read-anchored-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Read Anchored Data
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -2157,16 +2157,16 @@
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
         <span class="c1">// ... (register blockchain client) ...</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// ... (anchor data) ...</span>
     <span class="kd">val</span> <span class="py">anchorRef</span> <span class="p">=</span> <span class="n">anchorResult</span><span class="p">.</span><span class="nf">getOrThrow</span><span class="p">().</span><span class="n">ref</span>
-    
+
     <span class="c1">// Read anchored data</span>
     <span class="kd">val</span> <span class="py">readResult</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">readAnchor</span><span class="p">&lt;</span><span class="nc">ImportantData</span><span class="p">&gt;(</span>
         <span class="n">ref</span> <span class="p">=</span> <span class="n">anchorRef</span><span class="p">,</span>
         <span class="n">serializer</span> <span class="p">=</span> <span class="nc">ImportantData</span><span class="p">.</span><span class="nf">serializer</span><span class="p">()</span>
     <span class="p">)</span>
-    
+
     <span class="n">readResult</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
         <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">data</span> <span class="p">-&gt;</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Read anchored data: $data"</span><span class="p">)</span>
@@ -2180,13 +2180,13 @@
 
 <p><strong>What this does:</strong> Reads anchored data from the blockchain and verifies it matches the on-chain digest.</p>
 <h3 id="step-4-anchor-credential-status-list">
-  
-  
+
+
     <a href="#step-4-anchor-credential-status-list" class="anchor-heading" aria-labelledby="step-4-anchor-credential-status-list"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Anchor Credential Status List
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -2221,13 +2221,13 @@
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
         <span class="c1">// ... (register blockchain client) ...</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Create status list for revocation</span>
     <span class="kd">val</span> <span class="py">statusList</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">createStatusList</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">issuerDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">purpose</span> <span class="p">=</span> <span class="nc">StatusPurpose</span><span class="p">.</span><span class="nc">REVOCATION</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="c1">// Anchor status list to blockchain</span>
     <span class="c1">// This makes revocation status tamper-evident</span>
     <span class="kd">val</span> <span class="py">anchorResult</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">blockchains</span><span class="p">.</span><span class="nf">anchor</span><span class="p">(</span>
@@ -2235,7 +2235,7 @@
         <span class="n">serializer</span> <span class="p">=</span> <span class="nc">StatusListCredential</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
         <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span>
     <span class="p">)</span>
-    
+
     <span class="n">anchorResult</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>
         <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">anchor</span> <span class="p">-&gt;</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Status list anchored"</span><span class="p">)</span>
@@ -2250,13 +2250,13 @@
 
 <p><strong>What this does:</strong> Demonstrates anchoring revocation status lists for tamper-evident revocation checking.</p>
 <h3 id="key-takeaways-4">
-  
-  
+
+
     <a href="#key-takeaways-4" class="anchor-heading" aria-labelledby="key-takeaways-4"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Takeaways
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>Anchoring creates tamper-evident timestamps</li>
@@ -2265,13 +2265,13 @@
   <li>Different blockchains have different latency and cost characteristics</li>
 </ul>
 <h3 id="next-steps-4">
-  
-  
+
+
     <a href="#next-steps-4" class="anchor-heading" aria-labelledby="next-steps-4"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>Explore different blockchain options</li>
@@ -2280,13 +2280,13 @@
   <li>Read <a href="/trustweave/core-concepts/blockchain-anchored-revocation/">Blockchain-Anchored Revocation</a></li>
 </ul><hr />
 <h2 id="whats-next">
-  
-  
+
+
     <a href="#whats-next" class="anchor-heading" aria-labelledby="whats-next"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What’s Next?
-  
-  
+
+
 </h2>
-    
+
 
 <p>After completing this tutorial series, you’re ready to:</p>
 
@@ -2303,13 +2303,13 @@
   <li><strong>Contribute</strong>: Help improve TrustWeave by <a href="/trustweave/contributing/creating-plugins/">creating plugins</a></li>
 </ol>
 <h2 id="additional-resources">
-  
-  
+
+
     <a href="#additional-resources" class="anchor-heading" aria-labelledby="additional-resources"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Additional Resources
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><a href="/trustweave/api-reference/core-api/">API Reference</a> - Complete API documentation</li>
@@ -2319,17 +2319,17 @@
   <li><a href="/trustweave/faq/">FAQ</a> - Frequently asked questions</li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -2361,7 +2361,7 @@
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -2371,12 +2371,12 @@
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -2398,12 +2398,12 @@
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -2412,12 +2412,12 @@
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -2425,7 +2425,7 @@
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -2433,31 +2433,31 @@
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -2469,7 +2469,7 @@
 
 
 
-  
+
 </body>
 </html>
 

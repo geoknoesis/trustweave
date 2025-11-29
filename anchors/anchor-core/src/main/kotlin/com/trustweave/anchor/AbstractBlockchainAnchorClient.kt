@@ -10,13 +10,13 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Abstract base class for blockchain anchor client implementations.
- * 
+ *
  * Provides common functionality shared across blockchain adapters:
  * - In-memory fallback storage for testing
  * - Common error handling patterns
  * - AnchorRef construction helpers
  * - Transaction hash generation utilities
- * 
+ *
  * Subclasses should implement:
  * - [canSubmitTransaction]: Check if credentials are available for real transactions
  * - [submitTransactionToBlockchain]: Submit transaction to actual blockchain
@@ -44,7 +44,7 @@ abstract class AbstractBlockchainAnchorClient(
 
     /**
      * Submits a transaction to the blockchain and returns the transaction hash.
-     * 
+     *
      * @param payloadBytes The payload data as bytes
      * @return The transaction hash
      * @throws TrustWeaveException if submission fails
@@ -53,7 +53,7 @@ abstract class AbstractBlockchainAnchorClient(
 
     /**
      * Reads a transaction from the blockchain.
-     * 
+     *
      * @param txHash The transaction hash
      * @return The AnchorResult containing the payload
      * @throws TrustWeaveException.NotFound if transaction is not found
@@ -73,7 +73,7 @@ abstract class AbstractBlockchainAnchorClient(
     /**
      * Builds extra metadata for AnchorRef.
      * Subclasses can override to add chain-specific metadata.
-     * 
+     *
      * @param mediaType The media type of the payload
      * @return Map of extra metadata
      */
@@ -98,7 +98,7 @@ abstract class AbstractBlockchainAnchorClient(
     ): AnchorResult = withContext(Dispatchers.IO) {
         val payloadJson = Json.encodeToString(JsonElement.serializer(), payload)
         val payloadBytes = payloadJson.toByteArray(StandardCharsets.UTF_8)
-        
+
         try {
             // Submit transaction to blockchain or use fallback storage
             val txHash = if (canSubmitTransaction()) {
@@ -126,7 +126,7 @@ abstract class AbstractBlockchainAnchorClient(
                 contract = getContractAddress(),
                 extra = buildExtraMetadata(mediaType)
             )
-            
+
             AnchorResult(
                 ref = ref,
                 payload = payload,
@@ -166,7 +166,7 @@ abstract class AbstractBlockchainAnchorClient(
                 reason = "Failed to read payload from ${getBlockchainName()}: ${e.message ?: "Unknown error"}"
             ).apply { initCause(e) }
             }
-            
+
             result
         } catch (e: CoreTrustWeaveException.NotFound) {
             throw e

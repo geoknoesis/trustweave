@@ -10,8 +10,10 @@ dependencies {
     implementation(project(":kms:kms-core"))
     implementation(project(":anchors:anchor-core"))
     implementation(project(":credentials:credential-core"))
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.serialization.json)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    
+
     // Test dependencies
     testImplementation(project(":testkit"))
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")

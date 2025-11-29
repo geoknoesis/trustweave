@@ -64,7 +64,7 @@ val client = GanacheBlockchainAnchorClient(chainId.toString(), options)
 client.use {
     val payload = buildJsonObject { put("data", "test") }
     val anchorResult = it.writePayload(payload)
-    
+
     // Read back from blockchain
     val retrieved = it.readPayload(anchorResult.ref)
 }

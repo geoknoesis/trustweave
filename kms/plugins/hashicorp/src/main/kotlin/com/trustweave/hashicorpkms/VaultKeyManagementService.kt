@@ -4,10 +4,11 @@ import com.bettercloud.vault.Vault
 import com.bettercloud.vault.VaultException
 import com.bettercloud.vault.response.LogicalResponse
 import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.core.types.KeyId
 import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyHandle
 import com.trustweave.kms.KeyManagementService
-import com.trustweave.kms.KeyNotFoundException
+import com.trustweave.kms.exception.KmsException
 import com.trustweave.kms.UnsupportedAlgorithmException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -16,13 +17,13 @@ import java.util.UUID
 
 /**
  * HashiCorp Vault implementation of KeyManagementService using the Transit engine.
- * 
+ *
  * Supports all Vault Transit-compatible algorithms:
  * - Ed25519 (ed25519)
  * - secp256k1 (ecdsa-p256k1)
  * - P-256, P-384, P-521 (ecdsa-p256/384/521)
  * - RSA-2048, RSA-3072, RSA-4096 (rsa-2048/3072/4096)
- * 
+ *
  * **Example:**
  * ```kotlin
  * val config = VaultKmsConfig.builder()
@@ -70,12 +71,12 @@ class VaultKeyManagementService(
         try {
             val keyName = (options["keyName"] as? String) ?: generateKeyName(algorithm)
             val vaultKeyType = AlgorithmMapping.toVaultKeyType(algorithm)
-            
+
             // Create key in Vault Transit
             val createParams = mutableMapOf<String, Any>(
                 "type" to vaultKeyType
             )
-            
+
             // Add optional parameters
             (options["exportable"] as? Boolean)?.let {
                 createParams["exportable"] = it
@@ -83,64 +84,75 @@ class VaultKeyManagementService(
             (options["allowPlaintextBackup"] as? Boolean)?.let {
                 createParams["allow_plaintext_backup"] = it
             }
-            
+
             val createPath = "${config.transitPath}/keys/$keyName"
             vaultClient.logical().write(createPath, createParams)
-            
+
             // Get public key
             val keyInfoPath = "${config.transitPath}/keys/$keyName"
             val keyInfo = vaultClient.logical().read(keyInfoPath)
-            
+
             val publicKeyPem = keyInfo.data["keys"]?.let { keys ->
                 // Get the latest version's public key
                 val latestVersion = keyInfo.data["latest_version"] as? String ?: "1"
                 val versionData = (keys as? Map<*, *>)?.get(latestVersion) as? Map<*, *>
                 versionData?.get("public_key") as? String
-            } ?: throw TrustWeaveException("Failed to retrieve public key from Vault")
-            
+            } ?: throw TrustWeaveException.Unknown(
+                message = "Failed to retrieve public key from Vault"
+            )
+
             // Convert PEM to JWK
             val publicKeyJwk = AlgorithmMapping.publicKeyPemToJwk(publicKeyPem, algorithm)
-            
+
             // Full key path for identification
-            val keyId = "${config.transitPath}/keys/$keyName"
+            val keyIdStr = "${config.transitPath}/keys/$keyName"
 
             KeyHandle(
-                id = keyId,
+                id = KeyId(keyIdStr),
                 algorithm = algorithm.name,
                 publicKeyJwk = publicKeyJwk
             )
         } catch (e: VaultException) {
             throw mapVaultException(e, "Failed to generate key")
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to generate key: ${e.message}", e)
+            throw TrustWeaveException.Unknown(
+                message = "Failed to generate key: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
     }
 
-    override suspend fun getPublicKey(keyId: String): KeyHandle = withContext(Dispatchers.IO) {
+    override suspend fun getPublicKey(keyId: KeyId): KeyHandle = withContext(Dispatchers.IO) {
         try {
-            val keyName = AlgorithmMapping.resolveKeyName(keyId, config)
+            val keyName = AlgorithmMapping.resolveKeyName(keyId.value, config)
             val keyInfoPath = "${config.transitPath}/keys/$keyName"
-            
+
             val keyInfo = vaultClient.logical().read(keyInfoPath)
-            
+
             if (keyInfo.data.isEmpty()) {
-                throw KeyNotFoundException("Key not found: $keyId")
+                throw KmsException.KeyNotFound(keyId = keyId.value)
             }
-            
+
             val keyType = keyInfo.data["type"] as? String
-                ?: throw TrustWeaveException("Key type not found in Vault response")
-            
+                ?: throw TrustWeaveException.Unknown(
+                    message = "Key type not found in Vault response"
+                )
+
             val algorithm = AlgorithmMapping.fromVaultKeyType(keyType)
-                ?: throw TrustWeaveException("Unknown key type: $keyType")
-            
+                ?: throw TrustWeaveException.Unknown(
+                    message = "Unknown key type: $keyType"
+                )
+
             val latestVersion = keyInfo.data["latest_version"] as? String ?: "1"
             val keys = keyInfo.data["keys"] as? Map<*, *>
             val versionData = keys?.get(latestVersion) as? Map<*, *>
             val publicKeyPem = versionData?.get("public_key") as? String
-                ?: throw TrustWeaveException("Public key not found for key: $keyId")
-            
+                ?: throw TrustWeaveException.Unknown(
+                    message = "Public key not found for key: ${keyId.value}"
+                )
+
             val publicKeyJwk = AlgorithmMapping.publicKeyPemToJwk(publicKeyPem, algorithm)
-            
+
             KeyHandle(
                 id = keyId,
                 algorithm = algorithm.name,
@@ -149,37 +161,44 @@ class VaultKeyManagementService(
         } catch (e: VaultException) {
             val httpCode = getHttpCode(e)
             if (httpCode == 404) {
-                throw KeyNotFoundException("Key not found: $keyId", e)
+                throw KmsException.KeyNotFound(keyId = keyId.value)
             }
             throw mapVaultException(e, "Failed to get public key")
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to get public key: ${e.message}", e)
+            throw TrustWeaveException.Unknown(
+                message = "Failed to get public key: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
     }
 
     override suspend fun sign(
-        keyId: String,
+        keyId: KeyId,
         data: ByteArray,
         algorithm: Algorithm?
     ): ByteArray = withContext(Dispatchers.IO) {
         try {
-            val keyName = AlgorithmMapping.resolveKeyName(keyId, config)
-            
+            val keyName = AlgorithmMapping.resolveKeyName(keyId.value, config)
+
             // Determine signing algorithm
             val signingAlgorithm = algorithm ?: run {
                 val keyInfoPath = "${config.transitPath}/keys/$keyName"
                 val keyInfo = vaultClient.logical().read(keyInfoPath)
                 val keyType = keyInfo.data["type"] as? String
-                    ?: throw TrustWeaveException("Cannot determine signing algorithm for key: $keyId")
+                    ?: throw TrustWeaveException.Unknown(
+                        message = "Cannot determine signing algorithm for key: ${keyId.value}"
+                    )
                 AlgorithmMapping.fromVaultKeyType(keyType)
-                    ?: throw TrustWeaveException("Cannot determine signing algorithm for key: $keyId")
+                    ?: throw TrustWeaveException.Unknown(
+                        message = "Cannot determine signing algorithm for key: ${keyId.value}"
+                    )
             }
-            
+
             val hashAlgorithm = AlgorithmMapping.toVaultHashAlgorithm(signingAlgorithm)
-            
+
             // Base64 encode the data
             val base64Data = Base64.getEncoder().encodeToString(data)
-            
+
             // Sign using Vault Transit
             val signPath = "${config.transitPath}/sign/$keyName"
             val signParams = mapOf(
@@ -187,32 +206,37 @@ class VaultKeyManagementService(
                 "hash_algorithm" to hashAlgorithm,
                 "marshaling_algorithm" to "asn1"
             )
-            
+
             val signResponse = vaultClient.logical().write(signPath, signParams)
             val signature = signResponse.data["signature"] as? String
-                ?: throw TrustWeaveException("Signature not found in Vault response")
-            
+                ?: throw TrustWeaveException.Unknown(
+                    message = "Signature not found in Vault response"
+                )
+
             // Extract signature from Vault format (vault:v1:base64signature)
             val signatureBase64 = signature.substringAfter(":")
                 .substringAfter(":")
-            
+
             Base64.getDecoder().decode(signatureBase64)
         } catch (e: VaultException) {
             val httpCode = getHttpCode(e)
             if (httpCode == 404) {
-                throw KeyNotFoundException("Key not found: $keyId", e)
+                throw KmsException.KeyNotFound(keyId = keyId.value)
             }
             throw mapVaultException(e, "Failed to sign data")
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to sign data: ${e.message}", e)
+            throw TrustWeaveException.Unknown(
+                message = "Failed to sign data: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
     }
 
-    override suspend fun deleteKey(keyId: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deleteKey(keyId: KeyId): Boolean = withContext(Dispatchers.IO) {
         try {
-            val keyName = AlgorithmMapping.resolveKeyName(keyId, config)
+            val keyName = AlgorithmMapping.resolveKeyName(keyId.value, config)
             val deletePath = "${config.transitPath}/keys/$keyName"
-            
+
             // Vault Transit doesn't support key deletion by default
             // Keys can be rotated or archived, but deletion requires special configuration
             // For now, we'll attempt to delete and return false if not supported
@@ -275,14 +299,22 @@ class VaultKeyManagementService(
     private fun mapVaultException(e: VaultException, operation: String): Exception {
         val httpCode = getHttpCode(e)
         return when (httpCode) {
-            404 -> KeyNotFoundException("Key not found: ${e.message}", e)
-            403 -> TrustWeaveException(
-                "Access denied to Vault. Check Vault policies: ${e.message}", e
+            404 -> {
+                val errorMessage = e.message ?: "Key not found"
+                KmsException.KeyNotFound(keyId = errorMessage)
+            }
+            403 -> TrustWeaveException.Unknown(
+                message = "Access denied to Vault. Check Vault policies: ${e.message ?: "Unknown error"}",
+                cause = e
             )
-            401 -> TrustWeaveException(
-                "Authentication failed. Check Vault token or credentials: ${e.message}", e
+            401 -> TrustWeaveException.Unknown(
+                message = "Authentication failed. Check Vault token or credentials: ${e.message ?: "Unknown error"}",
+                cause = e
             )
-            else -> TrustWeaveException("$operation: ${e.message}", e)
+            else -> TrustWeaveException.Unknown(
+                message = "$operation: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
     }
 

@@ -4,7 +4,7 @@ import kotlinx.coroutines.runBlocking
 
 /**
  * News Industry Scenario Example
- * 
+ *
  * This example demonstrates content provenance and authenticity for news.
  * Full implementation coming soon - see docs/getting-started/news-industry-scenario.md
  */

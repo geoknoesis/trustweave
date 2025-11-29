@@ -72,16 +72,16 @@ foreach ($ext in $fileExtensions) {
         $_.FullName -notlike "*\final-*.ps1" -and
         $_.FullName -notlike "*\update-*.ps1"
     }
-    
+
     foreach ($file in $files) {
         try {
             $content = Get-Content $file.FullName -Raw -ErrorAction SilentlyContinue
             if ($null -eq $content) { continue }
-            
+
             $originalContent = $content
             $fileModified = $false
             $fileReplacements = 0
-            
+
             foreach ($replacement in $replacements) {
                 if ($content -match $replacement.Pattern) {
                     $matches = ([regex]::Matches($content, $replacement.Pattern))
@@ -90,11 +90,11 @@ foreach ($ext in $fileExtensions) {
                     $fileModified = $true
                 }
             }
-            
+
             if ($fileModified) {
                 $totalFiles++
                 $totalReplacements += $fileReplacements
-                
+
                 if ($DryRun) {
                     Write-Host "  [DRY RUN] Would update: $($file.FullName)" -ForegroundColor Cyan
                     Write-Host "    Replacements: $fileReplacements" -ForegroundColor Gray

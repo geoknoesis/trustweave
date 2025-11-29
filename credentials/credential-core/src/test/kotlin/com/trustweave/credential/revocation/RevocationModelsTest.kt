@@ -19,14 +19,14 @@ class RevocationModelsTest {
             verificationMethod = "did:key:issuer#key-1",
             proofPurpose = "assertionMethod"
         )
-        
+
         val subject = StatusListSubject(
             id = "https://example.com/status-list/1",
             type = "StatusList2021",
             statusPurpose = "revocation",
             encodedList = "H4sIAAAAAAAAA+3BMQEAAADCoPVPbQwfoAAAAAAAAAAAAAAAAAAAAIC3AYbSVKsAQAAA"
         )
-        
+
         val statusList = StatusListCredential(
             id = "https://example.com/status-list-credential/1",
             type = listOf("VerifiableCredential", "StatusList2021Credential"),
@@ -35,7 +35,7 @@ class RevocationModelsTest {
             issuanceDate = "2024-01-01T00:00:00Z",
             proof = proof
         )
-        
+
         assertEquals("https://example.com/status-list-credential/1", statusList.id)
         assertEquals(2, statusList.type.size)
         assertEquals("did:key:issuer", statusList.issuer)
@@ -48,7 +48,7 @@ class RevocationModelsTest {
             id = "https://example.com/status-list/1",
             encodedList = "H4sIAAAAAAAAA+3BMQEAAADCoPVPbQwfoAAAAAAAAAAAAAAAAAAAAIC3AYbSVKsAQAAA"
         )
-        
+
         val statusList = StatusListCredential(
             id = "https://example.com/status-list-credential/1",
             type = listOf("VerifiableCredential"),
@@ -56,7 +56,7 @@ class RevocationModelsTest {
             credentialSubject = subject,
             issuanceDate = "2024-01-01T00:00:00Z"
         )
-        
+
         assertNull(statusList.proof)
     }
 
@@ -68,7 +68,7 @@ class RevocationModelsTest {
             statusPurpose = "suspension",
             encodedList = "H4sIAAAAAAAAA+3BMQEAAADCoPVPbQwfoAAAAAAAAAAAAAAAAAAAAIC3AYbSVKsAQAAA"
         )
-        
+
         assertEquals("https://example.com/status-list/1", subject.id)
         assertEquals("StatusList2021", subject.type)
         assertEquals("suspension", subject.statusPurpose)
@@ -81,7 +81,7 @@ class RevocationModelsTest {
             id = "https://example.com/status-list/1",
             encodedList = "H4sIAAAAAAAAA+3BMQEAAADCoPVPbQwfoAAAAAAAAAAAAAAAAAAAAIC3AYbSVKsAQAAA"
         )
-        
+
         assertEquals("StatusList2021", subject.type)
         assertEquals("revocation", subject.statusPurpose)
     }
@@ -94,7 +94,7 @@ class RevocationModelsTest {
             statusListId = "https://example.com/status-list/1",
             reason = "Credential compromised"
         )
-        
+
         assertTrue(status.revoked)
         assertFalse(status.suspended)
         assertEquals("https://example.com/status-list/1", status.statusListId)
@@ -104,7 +104,7 @@ class RevocationModelsTest {
     @Test
     fun `test RevocationStatus with defaults`() {
         val status = RevocationStatus(revoked = false)
-        
+
         assertFalse(status.revoked)
         assertFalse(status.suspended)
         assertNull(status.statusListId)

@@ -35,7 +35,7 @@ dependencies {
     implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
-    
+
     // JSON processing (included automatically)
     implementation("org.jose4j:jose4j:0.9.5")
 }
@@ -140,7 +140,7 @@ val kms = InMemoryKeyManagementService()
 
 val TrustWeave = TrustWeave.create {
     this.kms = kms
-    
+
     didMethods {
         + JwkDidMethod(kms)
     }

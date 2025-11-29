@@ -117,7 +117,7 @@ flowchart TD
     A["Security Authority<br/>Verifies Personnel<br/>Issues Clearance Credential"] -->|issues| B["Security Clearance Credential<br/>Personnel DID<br/>Clearance Level<br/>Cryptographic Proof"]
     B -->|stored in| C["Personnel Wallet<br/>Stores clearance credential<br/>Maintains privacy<br/>Controls disclosure"]
     C -->|presents| D["Classified System<br/>Top Secret, Secret, Confidential<br/>Verifies clearance only<br/>No identity revealed"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -139,10 +139,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 dependencies {
     // Core TrustWeave modules
     implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -170,39 +170,39 @@ fun main() = runBlocking {
     println("=".repeat(70))
     println("Security Clearance & Access Control Scenario - Complete End-to-End Example")
     println("=".repeat(70))
-    
+
     // Step 1: Create TrustWeave instance
     val TrustWeave = TrustWeave.create()
     println("\n✅ TrustWeave initialized")
-    
+
     // Step 2: Create DIDs for security authority, personnel, and classified systems
     val securityAuthorityDidDoc = TrustWeave.dids.create()
     val securityAuthorityDid = securityAuthorityDidDoc.id
     val securityAuthorityKeyId = securityAuthorityDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val personnel1DidDoc = TrustWeave.dids.create()
     val personnel1Did = personnel1DidDoc.id
-    
+
     val personnel2DidDoc = TrustWeave.dids.create()
     val personnel2Did = personnel2DidDoc.id
-    
+
     val topSecretSystemDidDoc = TrustWeave.dids.create()
     val topSecretSystemDid = topSecretSystemDidDoc.id
-    
+
     val secretSystemDidDoc = TrustWeave.dids.create()
     val secretSystemDid = secretSystemDidDoc.id
-    
+
     val confidentialSystemDidDoc = TrustWeave.dids.create()
     val confidentialSystemDid = confidentialSystemDidDoc.id
-    
+
     println("✅ Security Authority DID: $securityAuthorityDid")
     println("✅ Personnel 1 DID: $personnel1Did")
     println("✅ Personnel 2 DID: $personnel2Did")
     println("✅ Top Secret System DID: $topSecretSystemDid")
     println("✅ Secret System DID: $secretSystemDid")
     println("✅ Confidential System DID: $confidentialSystemDid")
-    
+
     // Step 3: Issue Top Secret clearance for Personnel 1
     val topSecretClearance = TrustWeave.issueCredential(
         issuerDid = securityAuthorityDid,
@@ -227,12 +227,12 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "SecurityClearanceCredential", "TopSecretClearance"),
         expirationDate = Instant.now().plus(5, ChronoUnit.YEARS).toString()
     ).getOrThrow()
-    
+
     println("\n✅ Top Secret clearance credential issued: ${topSecretClearance.id}")
     println("   Clearance Level: Top Secret/SCI")
     println("   Personnel: ${personnel1Did.take(20)}...")
     println("   Note: Full identity NOT included for privacy")
-    
+
     // Step 4: Issue Secret clearance for Personnel 2
     val secretClearance = TrustWeave.issueCredential(
         issuerDid = securityAuthorityDid,
@@ -256,11 +256,11 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "SecurityClearanceCredential", "SecretClearance"),
         expirationDate = Instant.now().plus(5, ChronoUnit.YEARS).toString()
     ).getOrThrow()
-    
+
     println("✅ Secret clearance credential issued: ${secretClearance.id}")
     println("   Clearance Level: Secret")
     println("   Personnel: ${personnel2Did.take(20)}...")
-    
+
     // Step 5: Create personnel wallets and store clearance credentials
     val personnel1Wallet = TrustWeave.createWallet(
         holderDid = personnel1Did,
@@ -269,7 +269,7 @@ fun main() = runBlocking {
             enablePresentation = true
         }.build()
     ).getOrThrow()
-    
+
     val personnel2Wallet = TrustWeave.createWallet(
         holderDid = personnel2Did,
         options = WalletCreationOptionsBuilder().apply {
@@ -277,12 +277,12 @@ fun main() = runBlocking {
             enablePresentation = true
         }.build()
     ).getOrThrow()
-    
+
     val topSecretCredentialId = personnel1Wallet.store(topSecretClearance)
     val secretCredentialId = personnel2Wallet.store(secretClearance)
-    
+
     println("\n✅ Clearance credentials stored in wallets")
-    
+
     // Step 6: Organize credentials
     personnel1Wallet.withOrganization { org ->
         val clearanceCollectionId = org.createCollection("Security Clearances", "Security clearance credentials")
@@ -290,31 +290,31 @@ fun main() = runBlocking {
         org.tagCredential(topSecretCredentialId, setOf("clearance", "top-secret", "ts-sci", "classified", "high-security"))
         println("✅ Personnel 1 clearance organized")
     }
-    
+
     personnel2Wallet.withOrganization { org ->
         val clearanceCollectionId = org.createCollection("Security Clearances", "Security clearance credentials")
         org.addToCollection(secretCredentialId, clearanceCollectionId)
         org.tagCredential(secretCredentialId, setOf("clearance", "secret", "classified", "security"))
         println("✅ Personnel 2 clearance organized")
     }
-    
+
     // Step 7: Top Secret system access control
     println("\n🔐 Top Secret System Access Control:")
-    
+
     val topSecretVerification = TrustWeave.verifyCredential(topSecretClearance).getOrThrow()
-    
+
     if (topSecretVerification.valid) {
         val credentialSubject = topSecretClearance.credentialSubject
         val securityClearance = credentialSubject.jsonObject["securityClearance"]?.jsonObject
         val clearanceLevel = securityClearance?.get("clearanceLevel")?.jsonPrimitive?.content
         val clearanceType = securityClearance?.get("clearanceType")?.jsonPrimitive?.content
         val needToKnow = securityClearance?.get("needToKnow")?.jsonPrimitive?.content?.toBoolean() ?: false
-        
+
         println("✅ Clearance Credential: VALID")
         println("   Clearance Level: $clearanceLevel")
         println("   Clearance Type: $clearanceType")
         println("   Need to Know: $needToKnow")
-        
+
         if (clearanceLevel == "Top Secret" && needToKnow) {
             println("✅ Clearance requirement MET")
             println("✅ Need to know verified")
@@ -327,22 +327,22 @@ fun main() = runBlocking {
         println("❌ Clearance Credential: INVALID")
         println("❌ Access DENIED")
     }
-    
+
     // Step 8: Secret system access control
     println("\n🔐 Secret System Access Control:")
-    
+
     val secretVerification = TrustWeave.verifyCredential(secretClearance).getOrThrow()
-    
+
     if (secretVerification.valid) {
         val credentialSubject = secretClearance.credentialSubject
         val securityClearance = credentialSubject.jsonObject["securityClearance"]?.jsonObject
         val clearanceLevel = securityClearance?.get("clearanceLevel")?.jsonPrimitive?.content
         val needToKnow = securityClearance?.get("needToKnow")?.jsonPrimitive?.content?.toBoolean() ?: false
-        
+
         println("✅ Clearance Credential: VALID")
         println("   Clearance Level: $clearanceLevel")
         println("   Need to Know: $needToKnow")
-        
+
         if ((clearanceLevel == "Secret" || clearanceLevel == "Top Secret") && needToKnow) {
             println("✅ Clearance requirement MET")
             println("✅ Access GRANTED to Secret system")
@@ -354,22 +354,22 @@ fun main() = runBlocking {
         println("❌ Clearance Credential: INVALID")
         println("❌ Access DENIED")
     }
-    
+
     // Step 9: Confidential system access control
     println("\n🔐 Confidential System Access Control:")
-    
+
     // Personnel 2 attempts to access Confidential system (lower clearance)
     val confidentialVerification = TrustWeave.verifyCredential(secretClearance).getOrThrow()
-    
+
     if (confidentialVerification.valid) {
         val credentialSubject = secretClearance.credentialSubject
         val securityClearance = credentialSubject.jsonObject["securityClearance"]?.jsonObject
         val clearanceLevel = securityClearance?.get("clearanceLevel")?.jsonPrimitive?.content
-        
+
         println("✅ Clearance Credential: VALID")
         println("   Clearance Level: $clearanceLevel")
         println("   Required Level: Confidential (or higher)")
-        
+
         // Secret clearance is higher than Confidential, so access is granted
         if (clearanceLevel == "Secret" || clearanceLevel == "Top Secret") {
             println("✅ Clearance requirement MET (higher clearance accepted)")
@@ -385,23 +385,23 @@ fun main() = runBlocking {
         println("❌ Clearance Credential: INVALID")
         println("❌ Access DENIED")
     }
-    
+
     // Step 10: Multi-level access control demonstration
     println("\n🔐 Multi-Level Access Control Demonstration:")
-    
+
     val clearanceLevels = mapOf(
         "Top Secret" to 4,
         "Secret" to 3,
         "Confidential" to 2,
         "Unclassified" to 1
     )
-    
+
     fun hasRequiredClearance(personnelClearance: String, requiredClearance: String): Boolean {
         val personnelLevel = clearanceLevels[personnelClearance] ?: 0
         val requiredLevel = clearanceLevels[requiredClearance] ?: 0
         return personnelLevel >= requiredLevel
     }
-    
+
     val testCases = listOf(
         Triple("Top Secret", "Top Secret", true),
         Triple("Top Secret", "Secret", true),
@@ -411,13 +411,13 @@ fun main() = runBlocking {
         Triple("Secret", "Top Secret", false),
         Triple("Confidential", "Top Secret", false)
     )
-    
+
     testCases.forEach { (personnel, required, expected) ->
         val hasAccess = hasRequiredClearance(personnel, required)
         val status = if (hasAccess == expected) "✅" else "❌"
         println("   $status Personnel: $personnel, Required: $required, Access: $hasAccess")
     }
-    
+
     // Step 11: Create privacy-preserving clearance presentation
     val clearancePresentation = personnel1Wallet.withPresentation { pres ->
         pres.createPresentation(
@@ -429,12 +429,12 @@ fun main() = runBlocking {
             )
         )
     } ?: error("Presentation capability not available")
-    
+
     println("\n✅ Privacy-preserving clearance presentation created")
     println("   Holder: ${clearancePresentation.holder}")
     println("   Credentials: ${clearancePresentation.verifiableCredential.size}")
     println("   Note: Only clearance level shared, no personal details")
-    
+
     // Step 12: Demonstrate privacy - verify no personal information is exposed
     println("\n🔒 Privacy Verification:")
     val presentationCredential = clearancePresentation.verifiableCredential.firstOrNull()
@@ -444,30 +444,30 @@ fun main() = runBlocking {
         val hasSSN = subject.jsonObject.containsKey("ssn")
         val hasAddress = subject.jsonObject.containsKey("address")
         val hasClearanceLevel = subject.jsonObject.containsKey("securityClearance")
-        
+
         println("   Full Name exposed: $hasFullName ❌")
         println("   SSN exposed: $hasSSN ❌")
         println("   Address exposed: $hasAddress ❌")
         println("   Clearance level only: $hasClearanceLevel ✅")
         println("✅ Privacy preserved - only clearance information shared")
     }
-    
+
     // Step 13: Display wallet statistics
     val stats1 = personnel1Wallet.getStatistics()
     val stats2 = personnel2Wallet.getStatistics()
-    
+
     println("\n📊 Personnel 1 Wallet Statistics:")
     println("   Total credentials: ${stats1.totalCredentials}")
     println("   Valid credentials: ${stats1.validCredentials}")
     println("   Collections: ${stats1.collectionsCount}")
     println("   Tags: ${stats1.tagsCount}")
-    
+
     println("\n📊 Personnel 2 Wallet Statistics:")
     println("   Total credentials: ${stats2.totalCredentials}")
     println("   Valid credentials: ${stats2.validCredentials}")
     println("   Collections: ${stats2.collectionsCount}")
     println("   Tags: ${stats2.tagsCount}")
-    
+
     // Step 14: Summary
     println("\n" + "=".repeat(70))
     println("✅ SECURITY CLEARANCE & ACCESS CONTROL SYSTEM COMPLETE")

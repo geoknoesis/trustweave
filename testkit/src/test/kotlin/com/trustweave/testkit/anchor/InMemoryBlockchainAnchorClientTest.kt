@@ -1,7 +1,7 @@
 package com.trustweave.testkit.anchor
 
 import com.trustweave.anchor.*
-import com.trustweave.core.exception.NotFoundException
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
@@ -46,7 +46,7 @@ class InMemoryBlockchainAnchorClientTest {
         val client = InMemoryBlockchainAnchorClient("test:chain")
         val ref = AnchorRef("test:chain", "nonexistent")
 
-        assertThrows<NotFoundException> {
+        assertThrows<TrustWeaveException.NotFound> {
             client.readPayload(ref)
         }
     }

@@ -102,9 +102,9 @@ layout: null
 </head>
 <body>
     {% include site-header.html %}
-    
+
     <!-- Your page content -->
-    
+
     {% include site-footer.html %}
 </body>
 </html>
@@ -154,4 +154,6 @@ Your markdown content here.
 - External links (GitHub) open in new tabs
 - Internal anchor links use smooth scrolling
 - Mobile menu automatically closes when a link is clicked
+
+
 

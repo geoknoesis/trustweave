@@ -190,11 +190,11 @@ fun createOffer(request: CredentialOfferRequest) {
 // Reuse registry instance
 class CredentialService {
     private val registry = CredentialExchangeProtocolRegistry()
-    
+
     init {
         registry.register(DidCommExchangeProtocol(didCommService))
     }
-    
+
     suspend fun createOffer(request: CredentialOfferRequest) {
         return registry.offerCredential("didcomm", request)
     }
@@ -422,7 +422,7 @@ suspend fun offerWithFallback(
     request: CredentialOfferRequest
 ): CredentialOfferResponse {
     val protocols = listOf("didcomm", "oidc4vci", "chapi")
-    
+
     for (protocol in protocols) {
         if (registry.isRegistered(protocol)) {
             try {
@@ -433,7 +433,7 @@ suspend fun offerWithFallback(
             }
         }
     }
-    
+
     throw IllegalStateException("All protocols failed")
 }
 ```
@@ -597,12 +597,12 @@ fun testOfferCredential() {
 fun testOfferCredential_MultipleProtocols() {
     registry.register(DidCommExchangeProtocol(didCommService))
     registry.register(Oidc4VciExchangeProtocol(oidc4vciService))
-    
+
     val didCommOffer = runBlocking {
         registry.offerCredential("didcomm", request)
     }
     assertNotNull(didCommOffer)
-    
+
     val oidcOffer = runBlocking {
         registry.offerCredential("oidc4vci", request)
     }

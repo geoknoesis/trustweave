@@ -4,8 +4,7 @@ import com.trustweave.credential.CredentialVerificationOptions
 import com.trustweave.credential.models.CredentialStatus
 import com.trustweave.credential.models.Proof
 import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.did.CredentialDidResolver
-import com.trustweave.credential.did.CredentialDidResolution
+import com.trustweave.did.resolver.DidResolver
 import com.trustweave.util.booleanDidResolver
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
@@ -29,9 +28,9 @@ class CredentialVerifierAdditionalBranchCoverageTest {
         val pastDate = java.time.Instant.now().minusSeconds(86400).toString()
         val credential = createTestCredential(expirationDate = pastDate)
         val options = CredentialVerificationOptions(checkExpiration = false)
-        
+
         val result = verifier.verify(credential, options)
-        
+
         assertTrue(result.notExpired) // Should be true when checkExpiration is false
     }
 
@@ -45,9 +44,9 @@ class CredentialVerifierAdditionalBranchCoverageTest {
             )
         )
         val options = CredentialVerificationOptions(checkRevocation = false)
-        
+
         val result = verifier.verify(credential, options)
-        
+
         assertTrue(result.notRevoked) // Should be true when checkRevocation is false
     }
 
@@ -61,9 +60,9 @@ class CredentialVerifierAdditionalBranchCoverageTest {
             )
         )
         val options = CredentialVerificationOptions(validateSchema = false)
-        
+
         val result = verifier.verify(credential, options)
-        
+
         assertTrue(result.schemaValid) // Should be true when validateSchema is false
     }
 
@@ -82,13 +81,13 @@ class CredentialVerifierAdditionalBranchCoverageTest {
         com.trustweave.credential.schema.SchemaValidatorRegistry.register(
             com.trustweave.credential.schema.JsonSchemaValidator()
         )
-        
+
         val verifier = CredentialVerifier()
         val credential = createTestCredential(credentialSchema = schema)
         val options = CredentialVerificationOptions(validateSchema = true)
-        
+
         val result = verifier.verify(credential, options)
-        
+
         assertNotNull(result)
     }
 
@@ -97,9 +96,9 @@ class CredentialVerifierAdditionalBranchCoverageTest {
         val verifier = CredentialVerifier()
         val credential = createTestCredential()
         val options = CredentialVerificationOptions(verifyBlockchainAnchor = false)
-        
+
         val result = verifier.verify(credential, options)
-        
+
         assertTrue(result.blockchainAnchorValid) // Should be true when verifyBlockchainAnchor is false
     }
 
@@ -107,9 +106,9 @@ class CredentialVerifierAdditionalBranchCoverageTest {
     fun `test CredentialVerifier verify with resolveDid returning false`() = runBlocking {
         val verifier = CredentialVerifier(booleanDidResolver { false })
         val credential = createTestCredential()
-        
+
         val result = verifier.verify(credential)
-        
+
         assertFalse(result.issuerValid)
         assertFalse(result.valid)
     }
@@ -117,15 +116,15 @@ class CredentialVerifierAdditionalBranchCoverageTest {
     @Test
     fun `test CredentialVerifier verify with resolveDid throwing exception`() = runBlocking {
         val verifier = CredentialVerifier(
-            CredentialDidResolver { throw RuntimeException("DID resolution failed") }
+            defaultDidResolver = DidResolver { throw RuntimeException("DID resolution failed") }
         )
         val credential = createTestCredential()
-        
+
         val result = verifier.verify(credential)
-        
+
         assertFalse(result.issuerValid)
         assertFalse(result.valid)
-        assertTrue(result.errors.any { it.contains("DID") || it.contains("resolution") })
+        assertTrue(result.allErrors.any { it.contains("DID") || it.contains("resolution") })
     }
 
     @Test
@@ -134,9 +133,9 @@ class CredentialVerifierAdditionalBranchCoverageTest {
         val pastDate = java.time.Instant.now().minusSeconds(86400).toString()
         val credential = createTestCredential(expirationDate = pastDate)
         val options = CredentialVerificationOptions(checkExpiration = true)
-        
+
         val result = verifier.verify(credential, options)
-        
+
         assertFalse(result.notExpired)
         assertFalse(result.valid)
     }
@@ -151,12 +150,12 @@ class CredentialVerifierAdditionalBranchCoverageTest {
             )
         )
         val options = CredentialVerificationOptions(checkRevocation = true)
-        
+
         val result = verifier.verify(credential, options)
-        
+
         // Current implementation adds warning but doesn't set notRevoked to false
         // This is expected behavior for placeholder implementation
-        assertTrue(result.warnings.any { it.contains("Revocation") || it.contains("revocation") })
+        assertTrue(result.allWarnings.any { it.contains("Revocation") || it.contains("revocation") })
     }
 
     @Test
@@ -164,10 +163,10 @@ class CredentialVerifierAdditionalBranchCoverageTest {
         val verifier = CredentialVerifier()
         val credential = createTestCredential(expirationDate = "invalid-date")
         val options = CredentialVerificationOptions(checkExpiration = true)
-        
+
         val result = verifier.verify(credential, options)
-        
-        assertTrue(result.warnings.any { it.contains("expiration date") || it.contains("format") })
+
+        assertTrue(result.allWarnings.any { it.contains("expiration date") || it.contains("format") })
     }
 
     private fun createTestCredential(

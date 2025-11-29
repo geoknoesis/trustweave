@@ -33,17 +33,17 @@ object IntegrityVerifier {
             }
         }
         val computedDigest = DigestUtils.sha256DigestMultibase(vcWithoutMetadata)
-        
+
         // Read anchor from blockchain
         val client = registry.get(anchorRef.chainId)
             ?: throw com.trustweave.anchor.exceptions.BlockchainException.ChainNotRegistered(
                 chainId = anchorRef.chainId,
-                availableChains = registry.keys.toList()
+                availableChains = registry.getAllChainIds()
             )
-        
+
         val anchorResult = client.readPayload(anchorRef)
         val anchoredPayload = anchorResult.payload.jsonObject
-        
+
         // Extract digest from anchored payload (could be "digestMultibase" or "vcDigest")
         val anchoredDigest = anchoredPayload["digestMultibase"]?.jsonPrimitive?.content
             ?: anchoredPayload["vcDigest"]?.jsonPrimitive?.content
@@ -52,7 +52,7 @@ object IntegrityVerifier {
                 reason = "Anchored payload does not contain digestMultibase or vcDigest",
                 value = anchoredPayload.toString()
             )
-        
+
         computedDigest == anchoredDigest
     }
 
@@ -100,7 +100,7 @@ object IntegrityVerifier {
         registry: BlockchainAnchorRegistry
     ): IntegrityVerificationResult = withContext(Dispatchers.IO) {
         val results = mutableListOf<VerificationStep>()
-        
+
         // Step 1: Verify VC digest matches blockchain anchor
         // Compute digest from VC without metadata fields (digestMultibase, evidence, credentialStatus)
         // Note: 'issued' is included in digest computation as it's part of the VC content
@@ -118,7 +118,7 @@ object IntegrityVerifier {
             false
         }
         results.add(VerificationStep("VC Digest", vcValid, vcDigest))
-        
+
         // Step 2: Verify Linkset digest matches VC reference
         // Compute digest from Linkset without digestMultibase field (to avoid circular dependency)
         val linksetWithoutDigest = buildJsonObject {
@@ -132,7 +132,7 @@ object IntegrityVerifier {
         val linksetRef = vc["links"]?.jsonObject?.get("digestMultibase")?.jsonPrimitive?.content
             ?: vc["linksetDigest"]?.jsonPrimitive?.content
             ?: vc["linkset"]?.jsonObject?.get("digestMultibase")?.jsonPrimitive?.content
-        
+
         // If VC references linkset digest, verify it matches; otherwise just verify linkset has valid digest
         val linksetValid = if (linksetRef != null) {
             linksetDigest == linksetRef
@@ -141,15 +141,15 @@ object IntegrityVerifier {
             linksetDigest.startsWith("u")
         }
         results.add(VerificationStep("Linkset Digest", linksetValid, linksetDigest))
-        
+
         // Step 3: Verify each artifact digest matches Linkset link
         val links = linkset["links"]?.jsonArray ?: buildJsonArray { }
         val artifactResults = mutableListOf<VerificationStep>()
-        
+
         for (linkElement in links) {
             val link = Json.decodeFromJsonElement<Link>(linkElement)
             val artifact = artifacts[link.href]
-            
+
             if (artifact != null) {
                 // Extract content from artifact for digest computation
                 val content = artifact["content"] ?: artifact
@@ -160,9 +160,9 @@ object IntegrityVerifier {
                 artifactResults.add(VerificationStep("Artifact: ${link.href}", false, null, "Artifact not found"))
             }
         }
-        
+
         results.addAll(artifactResults)
-        
+
         val allValid = results.all { it.valid }
         IntegrityVerificationResult(
             valid = allValid,
@@ -175,16 +175,16 @@ object IntegrityVerifier {
      */
     fun discoverAnchorFromEvidence(vc: JsonObject): AnchorRef? {
         val evidence = vc["evidence"]?.jsonArray ?: return null
-        
+
         for (evidenceElement in evidence) {
             val evidenceObj = evidenceElement.jsonObject
             val type = evidenceObj["type"]?.jsonPrimitive?.content
-            
+
             // Check if this is a BlockchainAnchorEvidence (type may be missing if default value wasn't serialized)
             // Also check if it has the required fields (chainId and txHash)
             val chainId = evidenceObj["chainId"]?.jsonPrimitive?.content
             val txHash = evidenceObj["txHash"]?.jsonPrimitive?.content
-            
+
             if ((type == "BlockchainAnchorEvidence" || type == null) && chainId != null && txHash != null) {
                 val contract = evidenceObj["contract"]?.jsonPrimitive?.content
                 return AnchorRef(
@@ -194,7 +194,7 @@ object IntegrityVerifier {
                 )
             }
         }
-        
+
         return null
     }
 
@@ -207,16 +207,16 @@ object IntegrityVerifier {
         didDocument: JsonObject
     ): AnchorRef? {
         val services = didDocument["service"]?.jsonArray ?: return null
-        
+
         for (serviceElement in services) {
             val service = serviceElement.jsonObject
             val type = service["type"]?.jsonPrimitive?.content
-            
+
             if (type == "AnchorService") {
                 val endpoint = service["serviceEndpoint"]?.jsonObject
                 val chainId = endpoint?.get("chainId")?.jsonPrimitive?.content
                 val anchorLookup = endpoint?.get("anchorLookup")?.jsonPrimitive?.content
-                
+
                 if (chainId != null && anchorLookup != null) {
                     // In practice, you would resolve the anchorLookup pattern
                     // For testing, we'll return a placeholder
@@ -224,7 +224,7 @@ object IntegrityVerifier {
                 }
             }
         }
-        
+
         return null
     }
 
@@ -234,7 +234,7 @@ object IntegrityVerifier {
      */
     fun discoverAnchorFromStatusService(statusResponse: StatusResponse): AnchorRef? {
         val anchor = statusResponse.anchor ?: return null
-        
+
         return AnchorRef(
             chainId = anchor.chainId,
             txHash = anchor.txHash,
@@ -258,7 +258,7 @@ object IntegrityVerifier {
      */
     fun discoverAnchorFromManifest(manifest: AnchorManifest): AnchorRef? {
         val context = manifest.anchorContext
-        
+
         // For manifest, we return the context - individual digests would be verified separately
         return AnchorRef(
             chainId = context.chainId,

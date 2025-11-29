@@ -5,25 +5,25 @@ import java.time.Instant
 
 /**
  * Unified wallet interface.
- * 
+ *
  * A wallet is a composition of capability interfaces. All wallets must implement
  * CredentialStorage. Other capabilities are optional and can be checked using
  * Kotlin's type system (e.g., `wallet is CredentialOrganization`).
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val wallet: Wallet = createWallet()
- * 
+ *
  * // Core operations (always available)
  * val id = wallet.store(credential)
  * val credential = wallet.get(id)
- * 
+ *
  * // Optional capabilities (type-safe check)
  * if (wallet is CredentialOrganization) {
  *     wallet.createCollection("My Collection")
  *     wallet.tagCredential(id, setOf("important"))
  * }
- * 
+ *
  * if (wallet is CredentialPresentation) {
  *     val presentation = wallet.createPresentation(
  *         credentialIds = listOf(id),
@@ -31,12 +31,12 @@ import java.time.Instant
  *         options = PresentationOptions(...)
  *     )
  * }
- * 
+ *
  * if (wallet is DidManagement) {
  *     val did = wallet.createDid("key")
  *     println("Wallet DID: ${wallet.walletDid}")
  * }
- * 
+ *
  * // Get statistics
  * val stats = wallet.getStatistics()
  * println("Total credentials: ${stats.totalCredentials}")
@@ -47,10 +47,10 @@ interface Wallet : CredentialStorage {
      * Wallet identifier (DID or UUID).
      */
     val walletId: String
-    
+
     /**
      * Wallet capabilities for runtime discovery.
-     * 
+     *
      * Useful for UI or dynamic feature detection.
      * For compile-time type safety, use `wallet is CredentialOrganization` instead.
      */
@@ -69,44 +69,44 @@ interface Wallet : CredentialStorage {
             keyManagement = this is KeyManagement,
             credentialIssuance = this is CredentialIssuance
         )
-    
+
     /**
      * Check if wallet supports a capability.
-     * 
+     *
      * **Note**: For compile-time type safety, prefer `wallet is CredentialOrganization` instead.
      * For runtime discovery, use `wallet.capabilities.supports("collections")`.
-     * 
+     *
      * **Example**:
      * ```kotlin
      * // Compile-time type safety (preferred)
      * if (wallet is CredentialOrganization) {
      *     wallet.createCollection("My Collection")
      * }
-     * 
+     *
      * // Runtime discovery (for UI)
      * if (wallet.capabilities.collections) {
      *     // Show collection UI
      * }
      * ```
      */
-    
+
     /**
      * Get wallet statistics.
-     * 
+     *
      * Provides an overview of credentials and wallet state.
-     * 
+     *
      * **Example**:
      * ```kotlin
      * val stats = wallet.getStatistics()
      * println("Valid credentials: ${stats.validCredentials}/${stats.totalCredentials}")
      * ```
-     * 
+     *
      * @return Wallet statistics
      */
     suspend fun getStatistics(): WalletStatistics {
         val credentials = list()
         val now = Instant.now()
-        
+
         return WalletStatistics(
             totalCredentials = credentials.size,
             validCredentials = credentials.count { credential ->
@@ -153,7 +153,7 @@ interface Wallet : CredentialStorage {
 
 /**
  * Extension function for type-safe capability access.
- * 
+ *
  * **Example**:
  * ```kotlin
  * wallet.withOrganization { org ->

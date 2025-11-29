@@ -5,19 +5,19 @@ import com.trustweave.did.registrar.model.*
 
 /**
  * Protocol adapter for Universal Registrar implementations.
- * 
+ *
  * Similar to [UniversalResolverProtocolAdapter], this interface abstracts
  * the differences between various Universal Registrar implementations:
  * - Standard Universal Registrar (dev.uniregistrar.io)
  * - GoDiddy Universal Registrar
  * - Custom registrar implementations
- * 
+ *
  * Different implementations may use different:
  * - Endpoint patterns (e.g., `/1.0/operations` vs `/1.0.0/operations`)
  * - Request/response formats
  * - Authentication mechanisms
  * - Error handling
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val adapter = StandardUniversalRegistrarAdapter()
@@ -29,10 +29,10 @@ import com.trustweave.did.registrar.model.*
  * ```
  */
 interface UniversalRegistrarProtocolAdapter {
-    
+
     /**
      * Creates a new DID using the Universal Registrar protocol.
-     * 
+     *
      * @param baseUrl Base URL of the Universal Registrar instance
      * @param method DID method name (e.g., "web", "key", "ion")
      * @param options Creation options (key management mode, secrets, etc.)
@@ -43,10 +43,10 @@ interface UniversalRegistrarProtocolAdapter {
         method: String,
         options: CreateDidOptions
     ): DidRegistrationResponse
-    
+
     /**
      * Updates a DID Document using the Universal Registrar protocol.
-     * 
+     *
      * @param baseUrl Base URL of the Universal Registrar instance
      * @param did The DID to update
      * @param document The updated DID Document
@@ -59,10 +59,10 @@ interface UniversalRegistrarProtocolAdapter {
         document: DidDocument,
         options: UpdateDidOptions
     ): DidRegistrationResponse
-    
+
     /**
      * Deactivates a DID using the Universal Registrar protocol.
-     * 
+     *
      * @param baseUrl Base URL of the Universal Registrar instance
      * @param did The DID to deactivate
      * @param options Deactivation options (authorization secrets, etc.)
@@ -73,10 +73,10 @@ interface UniversalRegistrarProtocolAdapter {
         did: String,
         options: DeactivateDidOptions
     ): DidRegistrationResponse
-    
+
     /**
      * Gets the status of a long-running operation.
-     * 
+     *
      * @param baseUrl Base URL of the Universal Registrar instance
      * @param jobId Job identifier from a previous operation
      * @return Registration response with current didState

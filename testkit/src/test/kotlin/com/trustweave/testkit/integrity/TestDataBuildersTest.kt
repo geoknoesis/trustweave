@@ -18,7 +18,7 @@ class TestDataBuildersTest {
             TestDataBuilders.buildAnchorEvidence("algorand:testnet", "tx-123", "digest-123")
         )
         val credentialStatus = TestDataBuilders.buildCredentialStatus("https://example.com/status/1")
-        
+
         val vc = TestDataBuilders.buildVc(
             issuerDid = "did:key:issuer",
             subject = subject,
@@ -28,7 +28,7 @@ class TestDataBuildersTest {
             vcId = "https://example.com/credentials/1",
             issued = "2024-01-01T00:00:00Z"
         )
-        
+
         assertEquals("did:key:issuer", vc["issuer"]?.jsonPrimitive?.content)
         assertTrue(vc.containsKey("evidence"))
         assertTrue(vc.containsKey("credentialStatus"))
@@ -38,13 +38,13 @@ class TestDataBuildersTest {
     @Test
     fun `test buildVc with defaults`() {
         val subject = buildJsonObject { put("id", "did:key:subject") }
-        
+
         val vc = TestDataBuilders.buildVc(
             issuerDid = "did:key:issuer",
             subject = subject,
             digestMultibase = "digest-123"
         )
-        
+
         assertTrue(vc.containsKey("type"))
         assertTrue(vc.containsKey("issuer"))
         assertTrue(vc.containsKey("credentialSubject"))
@@ -54,13 +54,13 @@ class TestDataBuildersTest {
     @Test
     fun `test buildVc with empty digestMultibase`() {
         val subject = buildJsonObject { put("id", "did:key:subject") }
-        
+
         val vc = TestDataBuilders.buildVc(
             issuerDid = "did:key:issuer",
             subject = subject,
             digestMultibase = ""
         )
-        
+
         assertFalse(vc.containsKey("digestMultibase"))
     }
 
@@ -70,9 +70,9 @@ class TestDataBuildersTest {
             TestDataBuilders.buildLink("https://example.com/artifact1", "digest-1"),
             TestDataBuilders.buildLink("https://example.com/artifact2", "digest-2", "Dataset", "item")
         )
-        
+
         val linkset = TestDataBuilders.buildLinkset("linkset-digest", links, "https://example.com/linkset/1")
-        
+
         assertEquals("https://example.com/linkset/1", linkset["id"]?.jsonPrimitive?.content)
         assertEquals("linkset-digest", linkset["digestMultibase"]?.jsonPrimitive?.content)
         assertTrue(linkset.containsKey("links"))
@@ -86,7 +86,7 @@ class TestDataBuildersTest {
             type = "Dataset",
             rel = "item"
         )
-        
+
         assertEquals("https://example.com/artifact", link.href)
         assertEquals("digest-123", link.digestMultibase)
         assertEquals("Dataset", link.type)
@@ -96,7 +96,7 @@ class TestDataBuildersTest {
     @Test
     fun `test buildLink with defaults`() {
         val link = TestDataBuilders.buildLink("https://example.com/artifact", "digest-123")
-        
+
         assertNull(link.type)
         assertNull(link.rel)
     }
@@ -104,7 +104,7 @@ class TestDataBuildersTest {
     @Test
     fun `test buildArtifact`() {
         val content = buildJsonObject { put("title", "Test Dataset") }
-        
+
         val artifact = TestDataBuilders.buildArtifact(
             id = "artifact-1",
             type = "Metadata",
@@ -112,7 +112,7 @@ class TestDataBuildersTest {
             digestMultibase = "digest-123",
             mediaType = "application/json"
         )
-        
+
         assertEquals("artifact-1", artifact["id"]?.jsonPrimitive?.content)
         assertEquals("Metadata", artifact["type"]?.jsonPrimitive?.content)
         assertEquals("digest-123", artifact["digestMultibase"]?.jsonPrimitive?.content)
@@ -128,7 +128,7 @@ class TestDataBuildersTest {
             network = "testnet",
             contract = "app-456"
         )
-        
+
         assertEquals("algorand:testnet", evidence.chainId)
         assertEquals("tx-123", evidence.txHash)
         assertEquals("digest-123", evidence.digestMultibase)
@@ -142,7 +142,7 @@ class TestDataBuildersTest {
             statusServiceUrl = "https://example.com/status/1",
             statusListIndex = "0"
         )
-        
+
         assertEquals("https://example.com/status/1", status.id)
         assertEquals("StatusList2021Entry", status.type)
         assertEquals("revocation", status.statusPurpose)
@@ -156,7 +156,7 @@ class TestDataBuildersTest {
             anchorLookupPattern = "https://algoexplorer.io/tx/{txHash}",
             baseUrl = "https://anchor.example.com"
         )
-        
+
         assertEquals("#anchor-service", service.id)
         assertEquals("AnchorService", service.type)
         assertEquals("algorand:testnet", service.serviceEndpoint.chainId)
@@ -170,9 +170,9 @@ class TestDataBuildersTest {
             txHash = "tx-123",
             digestMultibase = "digest-123"
         )
-        
+
         val response = TestDataBuilders.buildStatusResponse("active", anchorInfo)
-        
+
         assertEquals("active", response.revocationStatus)
         assertNotNull(response.anchor)
         assertEquals("algorand:testnet", response.anchor?.chainId)
@@ -187,7 +187,7 @@ class TestDataBuildersTest {
             timestamp = 1234567890L,
             contract = "app-456"
         )
-        
+
         assertEquals("algorand:testnet", anchorInfo.chainId)
         assertEquals("tx-123", anchorInfo.txHash)
         assertEquals("digest-123", anchorInfo.digestMultibase)
@@ -204,7 +204,7 @@ class TestDataBuildersTest {
             contract = "app-456",
             issuer = "did:key:issuer"
         )
-        
+
         assertEquals("manifest-1", manifest.id)
         assertEquals("algorand:testnet", manifest.anchorContext.chainId)
         assertEquals(3, manifest.anchoredDigests.size)
@@ -219,7 +219,7 @@ class TestDataBuildersTest {
             title = "Test Dataset",
             description = "A test dataset"
         )
-        
+
         assertEquals("metadata-1", artifact["id"]?.jsonPrimitive?.content)
         assertEquals("Metadata", artifact["type"]?.jsonPrimitive?.content)
         assertNotNull(digest)
@@ -233,7 +233,7 @@ class TestDataBuildersTest {
             activity = "Data Collection",
             agent = "did:key:agent"
         )
-        
+
         assertEquals("provenance-1", artifact["id"]?.jsonPrimitive?.content)
         assertEquals("Provenance", artifact["type"]?.jsonPrimitive?.content)
         assertNotNull(digest)
@@ -247,7 +247,7 @@ class TestDataBuildersTest {
             qualityScore = 0.96,
             metrics = metrics
         )
-        
+
         assertEquals("quality-1", artifact["id"]?.jsonPrimitive?.content)
         assertEquals("QualityReport", artifact["type"]?.jsonPrimitive?.content)
         assertNotNull(digest)

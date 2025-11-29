@@ -16,9 +16,9 @@ class DidMethodProviderTest {
     @Test
     fun `test DidMethodProvider create method`() {
         val provider = createMockProvider()
-        
+
         val method = provider.create("test")
-        
+
         assertNotNull(method)
         assertEquals("test", method?.method)
     }
@@ -26,23 +26,23 @@ class DidMethodProviderTest {
     @Test
     fun `test DidMethodProvider create returns null for unsupported method`() {
         val provider = createMockProvider()
-        
+
         val method = provider.create("unsupported")
-        
+
         assertNull(method)
     }
 
     @Test
     fun `test DidMethodProvider name property`() {
         val provider = createMockProvider()
-        
+
         assertEquals("mock", provider.name)
     }
 
     @Test
     fun `test DidMethodProvider supportedMethods property`() {
         val provider = createMockProvider()
-        
+
         assertEquals(listOf("test", "mock"), provider.supportedMethods)
     }
 
@@ -50,25 +50,25 @@ class DidMethodProviderTest {
         return object : DidMethodProvider {
             override val name = "mock"
             override val supportedMethods = listOf("test", "mock")
-            
+
             override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
                 if (!supportedMethods.contains(methodName)) {
                     return null
                 }
-                
+
                 return object : DidMethod {
                     override val method = methodName
-                    
+
                     override suspend fun createDid(options: DidCreationOptions) = DidDocument(
                         id = "did:$methodName:123"
                     )
-                    
-                    override suspend fun resolveDid(did: String) = DidResolutionResult(
+
+                    override suspend fun resolveDid(did: String) = DidResolutionResult.Success(
                         document = DidDocument(id = did)
                     )
-                    
+
                     override suspend fun updateDid(did: String, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
-                    
+
                     override suspend fun deactivateDid(did: String) = true
                 }
             }

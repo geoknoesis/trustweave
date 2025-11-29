@@ -4,7 +4,7 @@ import com.trustweave.credential.exchange.exception.ExchangeException
 
 /**
  * OIDC4VCI-specific exception types.
- * 
+ *
  * These exceptions extend ExchangeException and provide OIDC4VCI-specific error information.
  * All OIDC4VCI exceptions are part of the ExchangeException hierarchy for consistent handling.
  */
@@ -14,10 +14,10 @@ sealed class Oidc4VciException(
     override val context: Map<String, Any?> = emptyMap(),
     override val cause: Throwable? = null
 ) : ExchangeException(code, message, context, cause) {
-    
+
     /**
      * Exception thrown when an OIDC4VCI HTTP request fails.
-     * 
+     *
      * @param url The URL that was requested
      * @param statusCode The HTTP status code (if available)
      * @param reason The reason the request failed
@@ -38,10 +38,10 @@ sealed class Oidc4VciException(
         ).filterValues { it != null },
         cause = cause
     )
-    
+
     /**
      * Exception thrown when OIDC4VCI token exchange fails.
-     * 
+     *
      * @param reason The reason token exchange failed
      * @param credentialIssuer The credential issuer URL (if available)
      * @param cause The underlying exception
@@ -59,10 +59,10 @@ sealed class Oidc4VciException(
         ).filterValues { it != null },
         cause = cause
     )
-    
+
     /**
      * Exception thrown when OIDC4VCI metadata fetch fails.
-     * 
+     *
      * @param credentialIssuer The credential issuer URL
      * @param reason The reason metadata fetch failed
      * @param cause The underlying exception
@@ -80,10 +80,10 @@ sealed class Oidc4VciException(
         ),
         cause = cause
     )
-    
+
     /**
      * Exception thrown when OIDC4VCI credential request fails.
-     * 
+     *
      * @param reason The reason credential request failed
      * @param credentialIssuer The credential issuer URL (if available)
      * @param cause The underlying exception

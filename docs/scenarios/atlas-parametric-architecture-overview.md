@@ -103,8 +103,8 @@ This document shows how **TrustWeave** serves as the trust and integrity foundat
 
 **Flow:**
 ```
-Create Contract → Bind (VC + Anchor) → Activate → 
-Sentinel-1 SAR → EO Provider → Issues VC → Execute Contract → 
+Create Contract → Bind (VC + Anchor) → Activate →
+Sentinel-1 SAR → EO Provider → Issues VC → Execute Contract →
 Automatic Payout
 ```
 
@@ -117,8 +117,8 @@ Automatic Payout
 
 **Flow:**
 ```
-Create Contract → Bind (VC + Anchor) → Activate → 
-MODIS LST → EO Provider → Issues VC → Execute Contract → 
+Create Contract → Bind (VC + Anchor) → Activate →
+MODIS LST → EO Provider → Issues VC → Execute Contract →
 Automatic Payout
 ```
 
@@ -131,8 +131,8 @@ Automatic Payout
 
 **Flow:**
 ```
-Create Contract → Bind (VC + Anchor) → Activate → 
-AOD + Irradiance → EO Provider → Issues VC → Execute Contract → 
+Create Contract → Bind (VC + Anchor) → Activate →
+AOD + Irradiance → EO Provider → Issues VC → Execute Contract →
 Automatic Payout
 ```
 

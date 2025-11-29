@@ -9,7 +9,7 @@ import java.util.Base64
 object AlgorithmMapping {
     /**
      * Maps TrustWeave Algorithm to Vault Transit key type.
-     * 
+     *
      * @param algorithm TrustWeave algorithm
      * @return Vault Transit key type string
      * @throws IllegalArgumentException if algorithm is not supported by Vault Transit
@@ -32,10 +32,10 @@ object AlgorithmMapping {
             else -> throw IllegalArgumentException("Algorithm ${algorithm.name} is not supported by Vault Transit")
         }
     }
-    
+
     /**
      * Parses Vault Transit key type to TrustWeave Algorithm.
-     * 
+     *
      * @param keyType Vault Transit key type string
      * @return TrustWeave Algorithm, or null if not recognized
      */
@@ -52,10 +52,10 @@ object AlgorithmMapping {
             else -> null
         }
     }
-    
+
     /**
      * Maps TrustWeave Algorithm to Vault Transit hash algorithm for signing.
-     * 
+     *
      * @param algorithm TrustWeave algorithm
      * @return Vault Transit hash algorithm string
      */
@@ -70,13 +70,13 @@ object AlgorithmMapping {
             else -> "sha2-256"
         }
     }
-    
+
     /**
      * Resolves a key identifier to a Vault Transit key name.
-     * 
+     *
      * Vault Transit uses key names (not IDs) to identify keys.
      * The key name should be URL-safe and descriptive.
-     * 
+     *
      * @param keyId Key identifier (can be key name or full path)
      * @param config Vault configuration
      * @return Resolved key name for Vault API
@@ -85,7 +85,7 @@ object AlgorithmMapping {
         // If keyId already contains the transit path, extract just the key name
         val transitPrefix = "${config.transitPath}/keys/"
         val transitPrefixWithSlash = "/${config.transitPath}/keys/"
-        
+
         return when {
             keyId.startsWith(transitPrefix) -> keyId.substringAfter(transitPrefix)
             keyId.startsWith(transitPrefixWithSlash) -> keyId.substringAfter(transitPrefixWithSlash)
@@ -93,10 +93,10 @@ object AlgorithmMapping {
             else -> keyId
         }
     }
-    
+
     /**
      * Converts Vault Transit public key (PEM format) to JWK format.
-     * 
+     *
      * @param publicKeyPem PEM-encoded public key from Vault
      * @param algorithm The algorithm type
      * @return JWK map representation
@@ -113,7 +113,7 @@ object AlgorithmMapping {
                         .replace("-----END PUBLIC KEY-----", "")
                         .replace("\n", "")
                         .replace(" ", "")
-                    
+
                     val keyBytes = Base64.getDecoder().decode(base64Key)
                     // Ed25519 public key is 32 bytes, typically at the end of the DER structure
                     val rawKey = if (keyBytes.size >= 32) {
@@ -121,7 +121,7 @@ object AlgorithmMapping {
                     } else {
                         keyBytes
                     }
-                    
+
                     return mapOf(
                         "kty" to "OKP",
                         "crv" to "Ed25519",
@@ -138,7 +138,7 @@ object AlgorithmMapping {
                         is Algorithm.P521 -> "P-521"
                         else -> "unknown"
                     }
-                    
+
                     // In production, parse PEM properly using BouncyCastle or similar
                     return mapOf(
                         "kty" to "EC",

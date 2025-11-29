@@ -6,7 +6,7 @@ import com.trustweave.kms.spi.KeyManagementServiceProvider
 
 class UtimacoKeyManagementServiceProvider : KeyManagementServiceProvider {
     override val name: String = "utimaco"
-    
+
     override val supportedAlgorithms: Set<Algorithm> = UtimacoKeyManagementService.SUPPORTED_ALGORITHMS
 
     override fun create(options: Map<String, Any?>): KeyManagementService {

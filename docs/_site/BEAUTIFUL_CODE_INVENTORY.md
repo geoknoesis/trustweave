@@ -105,7 +105,7 @@ val trustLayer = TrustLayer.build {
         provider("inMemory")
         algorithm("Ed25519")
     }
-    
+
     did {
         method("key") {
             algorithm("Ed25519")
@@ -114,7 +114,7 @@ val trustLayer = TrustLayer.build {
             domain("example.com")
         }
     }
-    
+
     anchor {
         chain("algorand:testnet") {
             provider("algorand")
@@ -123,7 +123,7 @@ val trustLayer = TrustLayer.build {
             provider("polygon")
         }
     }
-    
+
     trust {
         provider("inMemory")
     }

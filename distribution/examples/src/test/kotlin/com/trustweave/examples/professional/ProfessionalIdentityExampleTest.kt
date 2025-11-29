@@ -10,7 +10,7 @@ import kotlin.test.*
 
 /**
  * Unit tests for Professional Identity scenario.
- * 
+ *
  * Verifies that the professional identity wallet workflow behaves correctly:
  * - Multiple credential types (education, employment, certifications)
  * - Credential organization (collections, tags)
@@ -27,10 +27,10 @@ class ProfessionalIdentityExampleTest {
         val originalOut = System.out
         try {
             System.setOut(java.io.PrintStream(output))
-            
+
             // Execute main function
             main()
-            
+
             // Verify output contains expected content
             val outputString = output.toString()
             assertTrue(outputString.contains("Professional Identity Wallet Scenario"), "Should print scenario title")
@@ -49,12 +49,12 @@ class ProfessionalIdentityExampleTest {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val professionalDid = didMethod.createDid()
-        
+
         val wallet = InMemoryWallet(
             walletDid = professionalDid.id,
             holderDid = professionalDid.id
         )
-        
+
         // Store education credentials
         val bachelorDegree = createEducationCredential(
             issuerDid = "did:key:university",
@@ -114,12 +114,12 @@ class ProfessionalIdentityExampleTest {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val professionalDid = didMethod.createDid()
-        
+
         val wallet = InMemoryWallet(
             walletDid = professionalDid.id,
             holderDid = professionalDid.id
         )
-        
+
         // Store credentials
         val bachelorDegree = createEducationCredential(
             issuerDid = "did:key:university",
@@ -159,7 +159,7 @@ class ProfessionalIdentityExampleTest {
         // Verify collections
         val collections = wallet.listCollections()
         assertEquals(2, collections.size)
-        
+
         val education = wallet.getCollection(educationCollection)
         assertNotNull(education)
         assertTrue(education?.credentialCount ?: 0 > 0, "Education collection should contain credentials")
@@ -171,12 +171,12 @@ class ProfessionalIdentityExampleTest {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val professionalDid = didMethod.createDid()
-        
+
         val wallet = InMemoryWallet(
             walletDid = professionalDid.id,
             holderDid = professionalDid.id
         )
-        
+
         // Store credential
         val bachelorDegree = createEducationCredential(
             issuerDid = "did:key:university",
@@ -209,12 +209,12 @@ class ProfessionalIdentityExampleTest {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val professionalDid = didMethod.createDid()
-        
+
         val wallet = InMemoryWallet(
             walletDid = professionalDid.id,
             holderDid = professionalDid.id
         )
-        
+
         // Store multiple credential types
         val bachelorDegree = createEducationCredential(
             issuerDid = "did:key:university",
@@ -239,7 +239,7 @@ class ProfessionalIdentityExampleTest {
 
         // Query by type
         val certifications = wallet.query {
-            type("CertificationCredential")
+            byType("CertificationCredential")
         }
         assertEquals(1, certifications.size)
         assertTrue(certifications.first().type.contains("CertificationCredential"))
@@ -251,12 +251,12 @@ class ProfessionalIdentityExampleTest {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val professionalDid = didMethod.createDid()
-        
+
         val wallet = InMemoryWallet(
             walletDid = professionalDid.id,
             holderDid = professionalDid.id
         )
-        
+
         // Store credentials
         val masterDegree = createEducationCredential(
             issuerDid = "did:key:university",
@@ -308,12 +308,12 @@ class ProfessionalIdentityExampleTest {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val professionalDid = didMethod.createDid()
-        
+
         val wallet = InMemoryWallet(
             walletDid = professionalDid.id,
             holderDid = professionalDid.id
         )
-        
+
         // Store credentials
         val masterDegree = createEducationCredential(
             issuerDid = "did:key:university",
@@ -357,12 +357,12 @@ class ProfessionalIdentityExampleTest {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val professionalDid = didMethod.createDid()
-        
+
         val wallet = InMemoryWallet(
             walletDid = professionalDid.id,
             holderDid = professionalDid.id
         )
-        
+
         // Store expired certification
         val expiredCert = createCertificationCredential(
             issuerDid = "did:key:aws",
@@ -389,7 +389,7 @@ class ProfessionalIdentityExampleTest {
 
         // Query active certifications
         val activeCerts = wallet.query {
-            type("CertificationCredential")
+            byType("CertificationCredential")
             notExpired()
         }
         assertEquals(1, activeCerts.size)

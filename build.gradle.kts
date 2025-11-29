@@ -20,7 +20,7 @@ subprojects {
     // This centralizes all build outputs under the project root for easier cleanup and organization.
     // Each subproject's build output will be in build/<project-path>/ (e.g., build/did/core/)
     buildDir = file("${rootProject.buildDir}/${project.path.replace(":", "/")}")
-    
+
     // Automatically set artifact name based on project path to avoid conflicts
     // Converts project path (e.g., ":did:did-core") to artifact name (e.g., "did-did-core")
     // This prevents conflicts when multiple modules have the same final segment
@@ -35,14 +35,14 @@ subprojects {
             val artifactName = project.path
                 .removePrefix(":")  // Remove leading colon
                 .replace(":", "-")   // Replace colons with hyphens
-            
+
             // Set archivesName on BasePluginExtension (affects all archive tasks)
             extensions.findByType<org.gradle.api.plugins.BasePluginExtension>()?.let {
                 it.archivesName.set(artifactName)
             }
         }
     }
-    
+
     afterEvaluate {
         // Standardize test dependencies across all modules.
         // This ensures consistency and makes it easier to update test dependency versions.
@@ -52,6 +52,7 @@ subprojects {
             project.dependencies {
                 add("testImplementation", libs.bundles.test)
                 add("testRuntimeOnly", libs.junit.jupiter.engine)
+                add("testRuntimeOnly", libs.junit.platform.launcher)
             }
         }
         // Configure Kotlin compiler options for all subprojects.
@@ -67,7 +68,7 @@ subprojects {
                 freeCompilerArgs.add("-Xjsr305=strict")
             }
         }
-        
+
         // Configure Java toolchain to ensure all subprojects use Java 21.
         // Without this, Gradle may use whatever Java version is available on the system,
         // leading to inconsistent build results across different environments.
@@ -76,7 +77,7 @@ subprojects {
                 languageVersion.set(org.gradle.jvm.toolchain.JavaLanguageVersion.of(21))
             }
         }
-        
+
         // Configure all test tasks to use JUnit Platform (JUnit 5).
         // Without this, Gradle defaults to JUnit 4, which doesn't match our JUnit Jupiter dependencies.
         tasks.withType<Test>().configureEach {

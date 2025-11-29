@@ -7,7 +7,7 @@ import com.trustweave.services.VerificationConfig
 
 /**
  * Extension function to verify a credential using TrustWeave.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val result = credential.verify(trustweave)
@@ -22,7 +22,7 @@ suspend fun VerifiableCredential.verify(
 
 /**
  * Extension function to resolve a DID using TrustWeave.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val result = "did:key:...".resolveDid(trustweave)

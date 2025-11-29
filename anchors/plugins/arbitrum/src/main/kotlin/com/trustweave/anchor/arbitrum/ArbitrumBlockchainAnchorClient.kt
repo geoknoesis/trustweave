@@ -14,10 +14,10 @@ import java.nio.charset.StandardCharsets
 
 /**
  * Arbitrum blockchain anchor client implementation.
- * 
+ *
  * Supports Arbitrum One mainnet and Arbitrum Sepolia testnet chains.
  * Uses Ethereum-compatible transaction data fields to store payload data.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val options = mapOf(
@@ -31,11 +31,11 @@ class ArbitrumBlockchainAnchorClient(
     chainId: String,
     options: Map<String, Any?> = emptyMap()
 ) : AbstractBlockchainAnchorClient(chainId, options), java.io.Closeable {
-    
+
     companion object {
         const val MAINNET = "eip155:42161"  // Arbitrum One mainnet
         const val ARBITRUM_SEPOLIA = "eip155:421614" // Arbitrum Sepolia testnet
-        
+
         // Network RPC endpoints
         private const val MAINNET_RPC_URL = "https://arb1.arbitrum.io/rpc"
         private const val ARBITRUM_SEPOLIA_RPC_URL = "https://sepolia-rollup.arbitrum.io/rpc"
@@ -53,7 +53,7 @@ class ArbitrumBlockchainAnchorClient(
         require(chainIdNum == 42161 || chainIdNum == 421614) {
             "Unsupported Arbitrum chain ID: $chainId. Use 'eip155:42161' (mainnet) or 'eip155:421614' (Arbitrum Sepolia testnet)"
         }
-        
+
         // Initialize Web3j client based on chain
         val rpcUrl = when (chainId) {
             MAINNET -> options["rpcUrl"] as? String ?: MAINNET_RPC_URL
@@ -140,7 +140,7 @@ class ArbitrumBlockchainAnchorClient(
 
         val signedTransaction = org.web3j.crypto.TransactionEncoder.signMessage(rawTransaction, creds)
         val hexValue = org.web3j.utils.Numeric.toHexString(signedTransaction)
-        
+
         val ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send()
         if (ethSendTransaction.hasError()) {
             val error = ethSendTransaction.error
@@ -175,13 +175,13 @@ class ArbitrumBlockchainAnchorClient(
         val dataBytes = org.web3j.utils.Numeric.hexStringToByteArray(input)
         val payloadJson = String(dataBytes, StandardCharsets.UTF_8)
         val payload = Json.parseToJsonElement(payloadJson)
-        
+
         val blockNumber = try {
             receipt.blockNumber?.toLong()
         } catch (e: Exception) {
             null
         }
-        
+
         return AnchorResult(
             ref = buildAnchorRef(
                 txHash = txHash,

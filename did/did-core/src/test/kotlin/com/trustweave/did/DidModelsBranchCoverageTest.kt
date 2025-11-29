@@ -62,7 +62,7 @@ class DidModelsBranchCoverageTest {
             publicKeyJwk = mapOf("kty" to "OKP", "crv" to "Ed25519"),
             publicKeyMultibase = "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
         )
-        
+
         assertEquals("did:key:123#key-1", vm.id)
         assertEquals("Ed25519VerificationKey2020", vm.type)
         assertNotNull(vm.publicKeyJwk)
@@ -76,7 +76,7 @@ class DidModelsBranchCoverageTest {
             type = "Ed25519VerificationKey2020",
             controller = "did:key:123"
         )
-        
+
         assertNull(vm.publicKeyJwk)
         assertNull(vm.publicKeyMultibase)
     }
@@ -88,7 +88,7 @@ class DidModelsBranchCoverageTest {
             type = "LinkedDomains",
             serviceEndpoint = "https://example.com"
         )
-        
+
         assertEquals("https://example.com", service.serviceEndpoint)
     }
 
@@ -100,7 +100,7 @@ class DidModelsBranchCoverageTest {
             type = "DIDCommMessaging",
             serviceEndpoint = endpoint
         )
-        
+
         assertEquals(endpoint, service.serviceEndpoint)
     }
 
@@ -112,7 +112,7 @@ class DidModelsBranchCoverageTest {
             type = "LinkedDomains",
             serviceEndpoint = endpoint
         )
-        
+
         assertEquals(endpoint, service.serviceEndpoint)
     }
 
@@ -140,7 +140,7 @@ class DidModelsBranchCoverageTest {
                 )
             )
         )
-        
+
         assertEquals("did:key:123", doc.id)
         assertEquals(1, doc.alsoKnownAs.size)
         assertEquals(1, doc.verificationMethod.size)
@@ -150,7 +150,7 @@ class DidModelsBranchCoverageTest {
     @Test
     fun `test DidDocument constructor with minimal fields`() {
         val doc = DidDocument(id = "did:key:123")
-        
+
         assertEquals("did:key:123", doc.id)
         assertTrue(doc.alsoKnownAs.isEmpty())
         assertTrue(doc.verificationMethod.isEmpty())
@@ -160,14 +160,14 @@ class DidModelsBranchCoverageTest {
     @Test
     fun `test DidResolutionResult constructor with document`() {
         val doc = DidDocument(id = "did:key:123")
-        val result = DidResolutionResult(
+        val result = DidResolutionResult.Success(
             document = doc,
             documentMetadata = DidDocumentMetadata(
                 created = Instant.parse("2024-01-01T00:00:00Z")
             ),
             resolutionMetadata = mapOf("duration" to 100)
         )
-        
+
         assertNotNull(result.document)
         assertNotNull(result.documentMetadata.created)
         assertEquals(1, result.resolutionMetadata.size)
@@ -175,22 +175,20 @@ class DidModelsBranchCoverageTest {
 
     @Test
     fun `test DidResolutionResult constructor without document`() {
-        val result = DidResolutionResult(
-            document = null,
-            documentMetadata = DidDocumentMetadata(),
+        val result = DidResolutionResult.Failure.NotFound(
+            did = com.trustweave.core.types.Did("did:key:test"),
             resolutionMetadata = mapOf("error" to "notFound")
         )
-        
-        assertNull(result.document)
-        assertNull(result.documentMetadata.created)
+
+        assertTrue(result is DidResolutionResult.Failure.NotFound)
         assertEquals(1, result.resolutionMetadata.size)
     }
 
     @Test
     fun `test DidResolutionResult constructor with defaults`() {
         val doc = DidDocument(id = "did:key:123")
-        val result = DidResolutionResult(document = doc)
-        
+        val result = DidResolutionResult.Success(document = doc)
+
         assertNotNull(result.document)
         assertNull(result.documentMetadata.created)
         assertTrue(result.resolutionMetadata.isEmpty())

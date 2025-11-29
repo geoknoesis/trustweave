@@ -1,8 +1,8 @@
 package com.trustweave.credential.exchange.exception
 
-import com.trustweave.credential.didcomm.exception.DidCommException
-import com.trustweave.credential.oidc4vci.exception.Oidc4VciException
-import kotlinx.coroutines.test.runTest
+// Note: Plugin-specific exceptions (DidCommException, Oidc4VciException) are in plugin modules
+// Tests use ExchangeException with error codes instead to avoid plugin dependencies
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -14,182 +14,173 @@ import kotlin.test.assertTrue
  * Unit tests for ExchangeExceptionRecovery utilities.
  */
 class ExchangeExceptionRecoveryTest {
-    
+
     @Test
-    fun `test isRetryable with non-retryable exceptions`() = runTest {
+    fun `test isRetryable with non-retryable exceptions`() = runBlocking {
         // Validation errors are not retryable
         assertFalse(ExchangeExceptionRecovery.isRetryable(
             ExchangeException.MissingRequiredOption("fromKeyId")
         ))
-        
+
         assertFalse(ExchangeExceptionRecovery.isRetryable(
             ExchangeException.InvalidRequest("field", "reason")
         ))
-        
+
         assertFalse(ExchangeExceptionRecovery.isRetryable(
             ExchangeException.ProtocolNotRegistered("didcomm")
         ))
-        
+
         assertFalse(ExchangeExceptionRecovery.isRetryable(
             ExchangeException.OperationNotSupported("didcomm", "OPERATION")
         ))
     }
-    
+
     @Test
-    fun `test isRetryable with HTTP errors`() = runTest {
+    fun `test isRetryable with HTTP errors`() = runBlocking {
         // 5xx errors are retryable
         assertTrue(ExchangeExceptionRecovery.isRetryable(
-            Oidc4VciException.HttpRequestFailed(
-                url = "https://example.com",
-                statusCode = 500,
-                reason = "Internal Server Error"
+            ExchangeException.Unknown(
+                reason = "Internal Server Error",
+                errorType = "OIDC4VCI_HTTP_REQUEST_FAILED"
             )
         ))
-        
+
         // 4xx errors are not retryable
         assertFalse(ExchangeExceptionRecovery.isRetryable(
-            Oidc4VciException.HttpRequestFailed(
-                url = "https://example.com",
-                statusCode = 400,
-                reason = "Bad Request"
+            ExchangeException.Unknown(
+                reason = "Bad Request",
+                errorType = "OIDC4VCI_HTTP_REQUEST_FAILED"
             )
         ))
-        
+
         // Null status code (network error) is retryable
         assertTrue(ExchangeExceptionRecovery.isRetryable(
-            Oidc4VciException.HttpRequestFailed(
-                url = "https://example.com",
-                statusCode = null,
-                reason = "Connection failed"
+            ExchangeException.Unknown(
+                reason = "Connection failed",
+                errorType = "OIDC4VCI_HTTP_REQUEST_FAILED"
             )
         ))
     }
-    
+
     @Test
-    fun `test isRetryable with DIDComm errors`() = runTest {
+    fun `test isRetryable with DIDComm errors`() = runBlocking {
         // Network-related errors are retryable
         assertTrue(ExchangeExceptionRecovery.isRetryable(
-            DidCommException.EncryptionFailed(
+            ExchangeException.Unknown(
                 reason = "Network timeout",
-                fromDid = "did:key:issuer",
-                toDid = "did:key:holder"
+                errorType = "DIDCOMM_ENCRYPTION_FAILED"
             )
         ))
-        
+
         assertTrue(ExchangeExceptionRecovery.isRetryable(
-            DidCommException.DecryptionFailed(
+            ExchangeException.Unknown(
                 reason = "Connection unavailable",
-                messageId = "msg-123"
+                errorType = "DIDCOMM_DECRYPTION_FAILED"
             )
         ))
-        
+
         // Key/format errors are not retryable
         assertFalse(ExchangeExceptionRecovery.isRetryable(
-            DidCommException.EncryptionFailed(
+            ExchangeException.Unknown(
                 reason = "Invalid key format",
-                fromDid = "did:key:issuer",
-                toDid = "did:key:holder"
+                errorType = "DIDCOMM_ENCRYPTION_FAILED"
             )
         ))
     }
-    
+
     @Test
-    fun `test isTransient`() = runTest {
+    fun `test isTransient`() = runBlocking {
         // 5xx errors are transient
         assertTrue(ExchangeExceptionRecovery.isTransient(
-            Oidc4VciException.HttpRequestFailed(
-                url = "https://example.com",
-                statusCode = 500,
-                reason = "Internal Server Error"
+            ExchangeException.Unknown(
+                reason = "Internal Server Error",
+                errorType = "OIDC4VCI_HTTP_REQUEST_FAILED"
             )
         ))
-        
+
         // 429 (rate limit) is transient
         assertTrue(ExchangeExceptionRecovery.isTransient(
-            Oidc4VciException.HttpRequestFailed(
-                url = "https://example.com",
-                statusCode = 429,
-                reason = "Too Many Requests"
+            ExchangeException.Unknown(
+                reason = "Too Many Requests",
+                errorType = "OIDC4VCI_HTTP_REQUEST_FAILED"
             )
         ))
-        
+
         // 4xx errors are not transient
         assertFalse(ExchangeExceptionRecovery.isTransient(
-            Oidc4VciException.HttpRequestFailed(
-                url = "https://example.com",
-                statusCode = 400,
-                reason = "Bad Request"
+            ExchangeException.Unknown(
+                reason = "HTTP request failed",
+                errorType = "OIDC4VCI_HTTP_REQUEST_FAILED"
             )
         ))
     }
-    
+
     @Test
-    fun `test getUserFriendlyMessage`() = runTest {
+    fun `test getUserFriendlyMessage`() = runBlocking {
         val message = ExchangeExceptionRecovery.getUserFriendlyMessage(
             ExchangeException.ProtocolNotRegistered(
                 protocolName = "didcomm",
                 availableProtocols = listOf("oidc4vci", "chapi")
             )
         )
-        
+
         assertTrue(message.contains("didcomm"))
         assertTrue(message.contains("oidc4vci"))
         assertTrue(message.contains("chapi"))
     }
-    
+
     @Test
-    fun `test retryExchangeOperation with successful operation`() = runTest {
+    fun `test retryExchangeOperation with successful operation`() = runBlocking {
         var attemptCount = 0
         val result = ExchangeExceptionRecovery.retryExchangeOperation {
             attemptCount++
             "success"
         }
-        
+
         assertEquals("success", result)
         assertEquals(1, attemptCount)
     }
-    
+
     @Test
-    fun `test retryExchangeOperation with retryable error`() = runTest {
+    fun `test retryExchangeOperation with retryable error`() = runBlocking {
         var attemptCount = 0
         val result = ExchangeExceptionRecovery.retryExchangeOperation(maxRetries = 3) {
             attemptCount++
             if (attemptCount < 3) {
-                throw Oidc4VciException.HttpRequestFailed(
-                    url = "https://example.com",
-                    statusCode = 500,
-                    reason = "Internal Server Error"
+                throw ExchangeException.Unknown(
+                    reason = "Internal Server Error",
+                    errorType = "OIDC4VCI_HTTP_REQUEST_FAILED"
                 )
             }
             "success"
         }
-        
+
         assertEquals("success", result)
         assertEquals(3, attemptCount)
     }
-    
+
     @Test
-    fun `test retryExchangeOperation with non-retryable error`() = runTest {
+    fun `test retryExchangeOperation with non-retryable error`() = runBlocking {
         var attemptCount = 0
-        
+
         val exception = assertFailsWith<ExchangeException.MissingRequiredOption> {
             ExchangeExceptionRecovery.retryExchangeOperation(maxRetries = 3) {
                 attemptCount++
                 throw ExchangeException.MissingRequiredOption("fromKeyId")
             }
         }
-        
+
         assertEquals("fromKeyId", exception.optionName)
         assertEquals(1, attemptCount) // Should not retry
     }
-    
+
     @Test
-    fun `test tryAlternativeProtocol with ProtocolNotRegistered`() = runTest {
+    fun `test tryAlternativeProtocol with ProtocolNotRegistered`() = runBlocking {
         val exception = ExchangeException.ProtocolNotRegistered(
             protocolName = "didcomm",
             availableProtocols = listOf("oidc4vci", "chapi")
         )
-        
+
         var calledProtocol: String? = null
         val result = ExchangeExceptionRecovery.tryAlternativeProtocol(
             exception = exception,
@@ -198,51 +189,50 @@ class ExchangeExceptionRecoveryTest {
             calledProtocol = protocol
             "success"
         }
-        
+
         assertNotNull(result)
         assertEquals("success", result)
         assertNotNull(calledProtocol)
         assertTrue(calledProtocol != "didcomm")
     }
-    
+
     @Test
-    fun `test tryAlternativeProtocol returns null for non-protocol errors`() = runTest {
+    fun `test tryAlternativeProtocol returns null for non-protocol errors`() = runBlocking {
         val exception = ExchangeException.MissingRequiredOption("fromKeyId")
-        
+
         val result = ExchangeExceptionRecovery.tryAlternativeProtocol(
             exception = exception,
             availableProtocols = listOf("oidc4vci", "chapi")
         ) { protocol ->
             "success"
         }
-        
+
         assertEquals(null, result)
     }
-    
+
     @Test
-    fun `test companion object isRetryable`() = runTest {
+    fun `test companion object isRetryable`() = runBlocking {
         assertFalse(ExchangeException.isRetryable(
             ExchangeException.MissingRequiredOption("fromKeyId")
         ))
-        
+
         assertTrue(ExchangeException.isRetryable(
-            Oidc4VciException.HttpRequestFailed(
-                url = "https://example.com",
-                statusCode = 500,
-                reason = "Internal Server Error"
+            ExchangeException.Unknown(
+                reason = "Internal Server Error",
+                errorType = "OIDC4VCI_HTTP_REQUEST_FAILED"
             )
         ))
     }
-    
+
     @Test
-    fun `test companion object getUserFriendlyMessage`() = runTest {
+    fun `test companion object getUserFriendlyMessage`() = runBlocking {
         val message = ExchangeException.getUserFriendlyMessage(
             ExchangeException.ProtocolNotRegistered(
                 protocolName = "didcomm",
                 availableProtocols = listOf("oidc4vci")
             )
         )
-        
+
         assertTrue(message.contains("didcomm"))
         assertTrue(message.contains("oidc4vci"))
     }

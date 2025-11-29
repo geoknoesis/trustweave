@@ -8,13 +8,13 @@ import kotlinx.serialization.json.*
 
 /**
  * Factory for creating Thales CipherTrust Manager HTTP clients.
- * 
+ *
  * Handles authentication (API key, username/password, or OAuth2) and client configuration.
  */
 object ThalesKmsClientFactory {
     /**
      * Creates an HTTP client for Thales CipherTrust Manager API.
-     * 
+     *
      * @param config Thales CipherTrust configuration
      * @return Configured HTTP client with authentication
      */
@@ -23,7 +23,7 @@ object ThalesKmsClientFactory {
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)
-        
+
         // Add authentication interceptor
         clientBuilder.addInterceptor { chain ->
             val originalRequest = chain.request()
@@ -52,13 +52,13 @@ object ThalesKmsClientFactory {
                 .build()
             chain.proceed(authenticatedRequest)
         }
-        
+
         return clientBuilder.build()
     }
-    
+
     /**
      * Gets OAuth2 access token using client credentials flow.
-     * 
+     *
      * Thales CipherTrust Manager typically uses OAuth2 client credentials flow:
      * POST /oauth/token with grant_type=client_credentials
      */
@@ -66,9 +66,9 @@ object ThalesKmsClientFactory {
         if (config.clientId == null || config.clientSecret == null) {
             throw IllegalArgumentException("clientId and clientSecret are required for OAuth2 authentication")
         }
-        
+
         val tokenEndpoint = "${config.baseUrl}/oauth/token"
-        
+
         val requestBody = buildJsonObject {
             put("grant_type", "client_credentials")
             put("client_id", config.clientId)
@@ -77,31 +77,31 @@ object ThalesKmsClientFactory {
                 put("scope", config.scope)
             }
         }
-        
+
         val request = Request.Builder()
             .url(tokenEndpoint)
             .post(requestBody.toString().toRequestBody("application/json".toMediaType()))
             .addHeader("Content-Type", "application/json")
             .addHeader("Accept", "application/json")
             .build()
-        
+
         val client = OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .build()
-        
+
         return try {
             val response = client.newCall(request).execute()
             val responseBody = response.body?.string()
-            
+
             if (!response.isSuccessful) {
                 throw RuntimeException("OAuth2 token acquisition failed: ${response.code} - ${response.message}. Response: $responseBody")
             }
-            
+
             val jsonResponse = Json.parseToJsonElement(responseBody ?: "{}").jsonObject
             val accessToken = jsonResponse["access_token"]?.jsonPrimitive?.content
                 ?: throw RuntimeException("No access_token in OAuth2 response")
-            
+
             // Note: In production, this token should be cached with expiration time
             // The token expiration is typically in the "expires_in" field (seconds)
             accessToken

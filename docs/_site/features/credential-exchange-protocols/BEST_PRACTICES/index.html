@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,34 +591,34 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="credential-exchange-protocols---best-practices">
-  
-  
+
+
     <a href="#credential-exchange-protocols---best-practices" class="anchor-heading" aria-labelledby="credential-exchange-protocols---best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Credential Exchange Protocols - Best Practices
-  
-  
+
+
 </h1>
-    
+
 
 <p>Guidelines and best practices for using credential exchange protocols effectively and securely.</p>
 <h2 id="table-of-contents">
-  
-  
+
+
     <a href="#table-of-contents" class="anchor-heading" aria-labelledby="table-of-contents"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Table of Contents
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><a href="#security-best-practices">Security Best Practices</a></li>
@@ -629,21 +629,21 @@
   <li><a href="#testing">Testing</a></li>
 </ol><hr />
 <h2 id="security-best-practices">
-  
-  
+
+
     <a href="#security-best-practices" class="anchor-heading" aria-labelledby="security-best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Security Best Practices
-  
-  
+
+
 </h2>
-    
+
 <h3 id="1-always-validate-inputs">
-  
-  
+
+
     <a href="#1-always-validate-inputs" class="anchor-heading" aria-labelledby="1-always-validate-inputs"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Always Validate Inputs
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -675,13 +675,13 @@
 
 <p><strong>Why:</strong> Early validation provides better error messages and prevents security issues.</p><hr />
 <h3 id="2-use-secure-key-management">
-  
-  
+
+
     <a href="#2-use-secure-key-management" class="anchor-heading" aria-labelledby="2-use-secure-key-management"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Use Secure Key Management
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -711,13 +711,13 @@
 
 <p><strong>Why:</strong> Secure key management prevents key theft and unauthorized access.</p><hr />
 <h3 id="3-always-encrypt-messages">
-  
-  
+
+
     <a href="#3-always-encrypt-messages" class="anchor-heading" aria-labelledby="3-always-encrypt-messages"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Always Encrypt Messages
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -751,13 +751,13 @@
 
 <p><strong>Why:</strong> Encryption protects message confidentiality and integrity.</p><hr />
 <h3 id="4-verify-credentials-before-use">
-  
-  
+
+
     <a href="#4-verify-credentials-before-use" class="anchor-heading" aria-labelledby="4-verify-credentials-before-use"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Verify Credentials Before Use
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -797,13 +797,13 @@
 
 <p><strong>Why:</strong> Verification ensures credential authenticity and validity.</p><hr />
 <h3 id="5-use-secure-did-resolution">
-  
-  
+
+
     <a href="#5-use-secure-did-resolution" class="anchor-heading" aria-labelledby="5-use-secure-did-resolution"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5. Use Secure DID Resolution
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -829,13 +829,13 @@
 
 <p><strong>Why:</strong> Secure DID resolution ensures you’re using correct keys and identities.</p><hr />
 <h3 id="6-implement-proper-error-handling">
-  
-  
+
+
     <a href="#6-implement-proper-error-handling" class="anchor-heading" aria-labelledby="6-implement-proper-error-handling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6. Implement Proper Error Handling
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -869,21 +869,21 @@
 
 <p><strong>Why:</strong> Proper error handling prevents information leakage and improves security.</p><hr />
 <h2 id="performance-optimization">
-  
-  
+
+
     <a href="#performance-optimization" class="anchor-heading" aria-labelledby="performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Performance Optimization
-  
-  
+
+
 </h2>
-    
+
 <h3 id="1-reuse-registry-instances">
-  
-  
+
+
     <a href="#1-reuse-registry-instances" class="anchor-heading" aria-labelledby="1-reuse-registry-instances"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Reuse Registry Instances
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -916,11 +916,11 @@
 </pre></td><td class="rouge-code"><pre><span class="c1">// Reuse registry instance</span>
 <span class="kd">class</span> <span class="nc">CredentialService</span> <span class="p">{</span>
     <span class="k">private</span> <span class="kd">val</span> <span class="py">registry</span> <span class="p">=</span> <span class="nc">CredentialExchangeProtocolRegistry</span><span class="p">()</span>
-    
+
     <span class="nf">init</span> <span class="p">{</span>
         <span class="n">registry</span><span class="p">.</span><span class="nf">register</span><span class="p">(</span><span class="nc">DidCommExchangeProtocol</span><span class="p">(</span><span class="n">didCommService</span><span class="p">))</span>
     <span class="p">}</span>
-    
+
     <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">createOffer</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="nc">CredentialOfferRequest</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">return</span> <span class="n">registry</span><span class="p">.</span><span class="nf">offerCredential</span><span class="p">(</span><span class="s">"didcomm"</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
     <span class="p">}</span>
@@ -929,13 +929,13 @@
 
 <p><strong>Why:</strong> Reusing instances reduces overhead and improves performance.</p><hr />
 <h3 id="2-use-connection-pooling-for-database-storage">
-  
-  
+
+
     <a href="#2-use-connection-pooling-for-database-storage" class="anchor-heading" aria-labelledby="2-use-connection-pooling-for-database-storage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Use Connection Pooling for Database Storage
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -965,13 +965,13 @@
 
 <p><strong>Why:</strong> Connection pooling improves database performance and resource usage.</p><hr />
 <h3 id="3-cache-did-documents">
-  
-  
+
+
     <a href="#3-cache-did-documents" class="anchor-heading" aria-labelledby="3-cache-did-documents"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Cache DID Documents
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1005,13 +1005,13 @@
 
 <p><strong>Why:</strong> Caching reduces network calls and improves performance.</p><hr />
 <h3 id="4-use-async-operations">
-  
-  
+
+
     <a href="#4-use-async-operations" class="anchor-heading" aria-labelledby="4-use-async-operations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Use Async Operations
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1039,13 +1039,13 @@
 
 <p><strong>Why:</strong> Async operations improve concurrency and responsiveness.</p><hr />
 <h3 id="5-batch-operations-when-possible">
-  
-  
+
+
     <a href="#5-batch-operations-when-possible" class="anchor-heading" aria-labelledby="5-batch-operations-when-possible"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5. Batch Operations When Possible
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1081,21 +1081,21 @@
 
 <p><strong>Why:</strong> Batch processing improves throughput and efficiency.</p><hr />
 <h2 id="error-handling">
-  
-  
+
+
     <a href="#error-handling" class="anchor-heading" aria-labelledby="error-handling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Error Handling
-  
-  
+
+
 </h2>
-    
+
 <h3 id="1-always-handle-errors">
-  
-  
+
+
     <a href="#1-always-handle-errors" class="anchor-heading" aria-labelledby="1-always-handle-errors"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Always Handle Errors
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1127,13 +1127,13 @@
 
 <p><strong>Why:</strong> Error handling prevents crashes and improves reliability.</p><hr />
 <h3 id="2-provide-user-friendly-error-messages">
-  
-  
+
+
     <a href="#2-provide-user-friendly-error-messages" class="anchor-heading" aria-labelledby="2-provide-user-friendly-error-messages"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Provide User-Friendly Error Messages
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1175,13 +1175,13 @@
 
 <p><strong>Why:</strong> User-friendly messages improve user experience.</p><hr />
 <h3 id="3-log-errors-for-debugging">
-  
-  
+
+
     <a href="#3-log-errors-for-debugging" class="anchor-heading" aria-labelledby="3-log-errors-for-debugging"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Log Errors for Debugging
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1211,21 +1211,21 @@
 
 <p><strong>Why:</strong> Logging helps with debugging and troubleshooting.</p><hr />
 <h2 id="protocol-selection">
-  
-  
+
+
     <a href="#protocol-selection" class="anchor-heading" aria-labelledby="protocol-selection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Protocol Selection
-  
-  
+
+
 </h2>
-    
+
 <h3 id="1-choose-protocol-based-on-requirements">
-  
-  
+
+
     <a href="#1-choose-protocol-based-on-requirements" class="anchor-heading" aria-labelledby="1-choose-protocol-based-on-requirements"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Choose Protocol Based on Requirements
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Decision Tree:</strong></p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1250,13 +1250,13 @@
 
 <p><strong>Why:</strong> Choosing the right protocol improves security, performance, and compatibility.</p><hr />
 <h3 id="2-support-multiple-protocols">
-  
-  
+
+
     <a href="#2-support-multiple-protocols" class="anchor-heading" aria-labelledby="2-support-multiple-protocols"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Support Multiple Protocols
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1290,7 +1290,7 @@
     <span class="n">request</span><span class="p">:</span> <span class="nc">CredentialOfferRequest</span>
 <span class="p">):</span> <span class="nc">CredentialOfferResponse</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">protocols</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"didcomm"</span><span class="p">,</span> <span class="s">"oidc4vci"</span><span class="p">,</span> <span class="s">"chapi"</span><span class="p">)</span>
-    
+
     <span class="k">for</span> <span class="p">(</span><span class="n">protocol</span> <span class="k">in</span> <span class="n">protocols</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">registry</span><span class="p">.</span><span class="nf">isRegistered</span><span class="p">(</span><span class="n">protocol</span><span class="p">))</span> <span class="p">{</span>
             <span class="k">try</span> <span class="p">{</span>
@@ -1301,28 +1301,28 @@
             <span class="p">}</span>
         <span class="p">}</span>
     <span class="p">}</span>
-    
+
     <span class="k">throw</span> <span class="nc">IllegalStateException</span><span class="p">(</span><span class="s">"All protocols failed"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
 <p><strong>Why:</strong> Multiple protocols provide redundancy and flexibility.</p><hr />
 <h2 id="design-patterns">
-  
-  
+
+
     <a href="#design-patterns" class="anchor-heading" aria-labelledby="design-patterns"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Design Patterns
-  
-  
+
+
 </h2>
-    
+
 <h3 id="1-use-factory-pattern-for-service-creation">
-  
-  
+
+
     <a href="#1-use-factory-pattern-for-service-creation" class="anchor-heading" aria-labelledby="1-use-factory-pattern-for-service-creation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Use Factory Pattern for Service Creation
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1340,13 +1340,13 @@
 
 <p><strong>Why:</strong> Factory pattern provides consistent creation and configuration.</p><hr />
 <h3 id="2-use-registry-pattern-for-protocol-management">
-  
-  
+
+
     <a href="#2-use-registry-pattern-for-protocol-management" class="anchor-heading" aria-labelledby="2-use-registry-pattern-for-protocol-management"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Use Registry Pattern for Protocol Management
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1368,13 +1368,13 @@
 
 <p><strong>Why:</strong> Registry pattern provides centralized management and discovery.</p><hr />
 <h3 id="3-use-strategy-pattern-for-protocol-selection">
-  
-  
+
+
     <a href="#3-use-strategy-pattern-for-protocol-selection" class="anchor-heading" aria-labelledby="3-use-strategy-pattern-for-protocol-selection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Use Strategy Pattern for Protocol Selection
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1416,21 +1416,21 @@
 
 <p><strong>Why:</strong> Strategy pattern provides flexible protocol selection.</p><hr />
 <h2 id="testing">
-  
-  
+
+
     <a href="#testing" class="anchor-heading" aria-labelledby="testing"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Testing
-  
-  
+
+
 </h2>
-    
+
 <h3 id="1-use-in-memory-implementations-for-testing">
-  
-  
+
+
     <a href="#1-use-in-memory-implementations-for-testing" class="anchor-heading" aria-labelledby="1-use-in-memory-implementations-for-testing"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Use In-Memory Implementations for Testing
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1452,13 +1452,13 @@
 
 <p><strong>Why:</strong> In-memory implementations are faster and don’t require external services.</p><hr />
 <h3 id="2-test-error-scenarios">
-  
-  
+
+
     <a href="#2-test-error-scenarios" class="anchor-heading" aria-labelledby="2-test-error-scenarios"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Test Error Scenarios
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1528,13 +1528,13 @@
 
 <p><strong>Why:</strong> Testing error scenarios improves reliability and robustness.</p><hr />
 <h3 id="3-test-protocol-switching">
-  
-  
+
+
     <a href="#3-test-protocol-switching" class="anchor-heading" aria-labelledby="3-test-protocol-switching"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Test Protocol Switching
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>❌ Bad:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1573,12 +1573,12 @@
 <span class="k">fun</span> <span class="nf">testOfferCredential_MultipleProtocols</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">registry</span><span class="p">.</span><span class="nf">register</span><span class="p">(</span><span class="nc">DidCommExchangeProtocol</span><span class="p">(</span><span class="n">didCommService</span><span class="p">))</span>
     <span class="n">registry</span><span class="p">.</span><span class="nf">register</span><span class="p">(</span><span class="nc">Oidc4VciExchangeProtocol</span><span class="p">(</span><span class="n">oidc4vciService</span><span class="p">))</span>
-    
+
     <span class="kd">val</span> <span class="py">didCommOffer</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
         <span class="n">registry</span><span class="p">.</span><span class="nf">offerCredential</span><span class="p">(</span><span class="s">"didcomm"</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
     <span class="p">}</span>
     <span class="nf">assertNotNull</span><span class="p">(</span><span class="n">didCommOffer</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">oidcOffer</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
         <span class="n">registry</span><span class="p">.</span><span class="nf">offerCredential</span><span class="p">(</span><span class="s">"oidc4vci"</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
     <span class="p">}</span>
@@ -1588,13 +1588,13 @@
 
 <p><strong>Why:</strong> Testing multiple protocols ensures compatibility and flexibility.</p><hr />
 <h2 id="related-documentation">
-  
-  
+
+
     <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><strong><a href="/trustweave/features/credential-exchange-protocols/QUICK_START.md">Quick Start</a></strong> - Get started quickly</li>
@@ -1604,17 +1604,17 @@
   <li><strong><a href="/trustweave/security/README/">Security</a></strong> - Security guidelines</li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -1646,7 +1646,7 @@
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -1656,12 +1656,12 @@
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -1683,12 +1683,12 @@
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -1697,12 +1697,12 @@
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -1710,7 +1710,7 @@
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -1718,31 +1718,31 @@
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -1754,7 +1754,7 @@
 
 
 
-  
+
 </body>
 </html>
 

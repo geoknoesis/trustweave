@@ -23,9 +23,9 @@ class CredentialTemplateServiceBranchCoverageTest {
     @Test
     fun `test CredentialTemplateService createTemplate stores template`() = runBlocking {
         val template = createTestTemplate()
-        
+
         val created = service.createTemplate(template)
-        
+
         assertEquals(template, created)
         assertEquals(template, service.getTemplate(template.id))
     }
@@ -39,18 +39,18 @@ class CredentialTemplateServiceBranchCoverageTest {
     fun `test CredentialTemplateService issueFromTemplate with all required fields`() = runBlocking {
         val template = createTestTemplate(requiredFields = listOf("name", "email"))
         service.createTemplate(template)
-        
+
         val subject = buildJsonObject {
             put("name", "John Doe")
             put("email", "john@example.com")
         }
-        
+
         val credential = service.issueFromTemplate(
             template.id,
             subject,
             mapOf("issuer" to "did:key:issuer")
         )
-        
+
         assertNotNull(credential)
         assertEquals("did:key:issuer", credential.issuer)
         assertEquals(template.type, credential.type)
@@ -61,7 +61,7 @@ class CredentialTemplateServiceBranchCoverageTest {
         val subject = buildJsonObject {
             put("name", "John Doe")
         }
-        
+
         assertFailsWith<IllegalArgumentException> {
             service.issueFromTemplate("non-existent", subject)
         }
@@ -71,12 +71,12 @@ class CredentialTemplateServiceBranchCoverageTest {
     fun `test CredentialTemplateService issueFromTemplate throws when required field missing`() = runBlocking {
         val template = createTestTemplate(requiredFields = listOf("name", "email"))
         service.createTemplate(template)
-        
+
         val subject = buildJsonObject {
             put("name", "John Doe")
             // Missing email
         }
-        
+
         assertFailsWith<IllegalArgumentException> {
             service.issueFromTemplate(template.id, subject, mapOf("issuer" to "did:key:issuer"))
         }
@@ -86,13 +86,13 @@ class CredentialTemplateServiceBranchCoverageTest {
     fun `test CredentialTemplateService issueFromTemplate uses default issuer`() = runBlocking {
         val template = createTestTemplate(defaultIssuer = "did:key:default-issuer")
         service.createTemplate(template)
-        
+
         val subject = buildJsonObject {
             put("name", "John Doe")
         }
-        
+
         val credential = service.issueFromTemplate(template.id, subject)
-        
+
         assertEquals("did:key:default-issuer", credential.issuer)
     }
 
@@ -100,17 +100,17 @@ class CredentialTemplateServiceBranchCoverageTest {
     fun `test CredentialTemplateService issueFromTemplate uses options issuer over default`() = runBlocking {
         val template = createTestTemplate(defaultIssuer = "did:key:default-issuer")
         service.createTemplate(template)
-        
+
         val subject = buildJsonObject {
             put("name", "John Doe")
         }
-        
+
         val credential = service.issueFromTemplate(
             template.id,
             subject,
             mapOf("issuer" to "did:key:custom-issuer")
         )
-        
+
         assertEquals("did:key:custom-issuer", credential.issuer)
     }
 
@@ -118,11 +118,11 @@ class CredentialTemplateServiceBranchCoverageTest {
     fun `test CredentialTemplateService issueFromTemplate throws when no issuer`() = runBlocking {
         val template = createTestTemplate(defaultIssuer = null)
         service.createTemplate(template)
-        
+
         val subject = buildJsonObject {
             put("name", "John Doe")
         }
-        
+
         assertFailsWith<IllegalArgumentException> {
             service.issueFromTemplate(template.id, subject)
         }
@@ -132,17 +132,17 @@ class CredentialTemplateServiceBranchCoverageTest {
     fun `test CredentialTemplateService issueFromTemplate calculates expiration date`() = runBlocking {
         val template = createTestTemplate(defaultValidityDays = 365)
         service.createTemplate(template)
-        
+
         val subject = buildJsonObject {
             put("name", "John Doe")
         }
-        
+
         val credential = service.issueFromTemplate(
             template.id,
             subject,
             mapOf("issuer" to "did:key:issuer")
         )
-        
+
         assertNotNull(credential.expirationDate)
     }
 
@@ -150,17 +150,17 @@ class CredentialTemplateServiceBranchCoverageTest {
     fun `test CredentialTemplateService issueFromTemplate with custom ID`() = runBlocking {
         val template = createTestTemplate()
         service.createTemplate(template)
-        
+
         val subject = buildJsonObject {
             put("name", "John Doe")
         }
-        
+
         val credential = service.issueFromTemplate(
             template.id,
             subject,
             mapOf("issuer" to "did:key:issuer", "id" to "custom-credential-id")
         )
-        
+
         assertEquals("custom-credential-id", credential.id)
     }
 
@@ -168,17 +168,17 @@ class CredentialTemplateServiceBranchCoverageTest {
     fun `test CredentialTemplateService issueFromTemplate without expiration`() = runBlocking {
         val template = createTestTemplate(defaultValidityDays = null)
         service.createTemplate(template)
-        
+
         val subject = buildJsonObject {
             put("name", "John Doe")
         }
-        
+
         val credential = service.issueFromTemplate(
             template.id,
             subject,
             mapOf("issuer" to "did:key:issuer")
         )
-        
+
         assertNull(credential.expirationDate)
     }
 
@@ -188,9 +188,9 @@ class CredentialTemplateServiceBranchCoverageTest {
         val template2 = createTestTemplate(id = "template-2")
         service.createTemplate(template1)
         service.createTemplate(template2)
-        
+
         val templates = service.listTemplates()
-        
+
         assertEquals(2, templates.size)
     }
 
@@ -198,9 +198,9 @@ class CredentialTemplateServiceBranchCoverageTest {
     fun `test CredentialTemplateService deleteTemplate returns true`() = runBlocking {
         val template = createTestTemplate()
         service.createTemplate(template)
-        
+
         val deleted = service.deleteTemplate(template.id)
-        
+
         assertTrue(deleted)
         assertNull(service.getTemplate(template.id))
     }
@@ -208,7 +208,7 @@ class CredentialTemplateServiceBranchCoverageTest {
     @Test
     fun `test CredentialTemplateService deleteTemplate returns false`() {
         val deleted = service.deleteTemplate("non-existent")
-        
+
         assertFalse(deleted)
     }
 
@@ -218,9 +218,9 @@ class CredentialTemplateServiceBranchCoverageTest {
         val template2 = createTestTemplate(id = "template-2")
         service.createTemplate(template1)
         service.createTemplate(template2)
-        
+
         service.clear()
-        
+
         assertTrue(service.listTemplates().isEmpty())
     }
 
@@ -231,19 +231,19 @@ class CredentialTemplateServiceBranchCoverageTest {
             optionalFields = listOf("email", "phone")
         )
         service.createTemplate(template)
-        
+
         val subject = buildJsonObject {
             put("name", "John Doe")
             put("email", "john@example.com")
             put("phone", "123-456-7890")
         }
-        
+
         val credential = service.issueFromTemplate(
             template.id,
             subject,
             mapOf("issuer" to "did:key:issuer")
         )
-        
+
         assertNotNull(credential)
     }
 

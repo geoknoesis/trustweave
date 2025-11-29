@@ -16,10 +16,10 @@ import java.nio.charset.StandardCharsets
 
 /**
  * Algorand blockchain anchor client implementation.
- * 
+ *
  * Supports Algorand mainnet, testnet, and betanet chains.
  * Uses Algorand transaction note fields to store payload data.
- * 
+ *
  * **Type-Safe Options**: Use [AlgorandOptions] for type-safe configuration:
  * ```
  * val options = AlgorandOptions(
@@ -33,7 +33,7 @@ class AlgorandBlockchainAnchorClient(
     chainId: String,
     options: Map<String, Any?> = emptyMap()
 ) : AbstractBlockchainAnchorClient(chainId, options) {
-    
+
     /**
      * Convenience constructor using type-safe [AlgorandOptions].
      */
@@ -43,7 +43,7 @@ class AlgorandBlockchainAnchorClient(
         const val MAINNET = "algorand:mainnet"
         const val TESTNET = "algorand:testnet"
         const val BETANET = "algorand:betanet"
-        
+
         // Network endpoints
         private const val MAINNET_ALGOD_URL = "https://mainnet-api.algonode.cloud"
         private const val TESTNET_ALGOD_URL = "https://testnet-api.algonode.cloud"
@@ -57,7 +57,7 @@ class AlgorandBlockchainAnchorClient(
         require(chainId.startsWith("algorand:")) {
             "Invalid chain ID for Algorand: $chainId"
         }
-        
+
         // Initialize Algod client based on chain
         val algodUrl = when (chainId) {
             MAINNET -> options["algodUrl"] as? String ?: MAINNET_ALGOD_URL
@@ -65,7 +65,7 @@ class AlgorandBlockchainAnchorClient(
             BETANET -> options["algodUrl"] as? String ?: BETANET_ALGOD_URL
             else -> throw IllegalArgumentException("Unsupported chain: $chainId")
         }
-        
+
         val algodToken = options["algodToken"] as? String ?: ""
         // AlgodClient constructor: (host: String, port: Int, token: String)
         val url = java.net.URI.create(algodUrl).toURL()
@@ -129,7 +129,7 @@ class AlgorandBlockchainAnchorClient(
 
         val signedTx = account.signTransaction(tx)
         val txBytes = Encoder.encodeToMsgPack(signedTx)
-        
+
         // Submit transaction to network and get response
         val response = try {
             algodClient.RawTransaction().rawtxn(txBytes).execute()
@@ -140,7 +140,7 @@ class AlgorandBlockchainAnchorClient(
                 operation = "submitTransaction"
             )
         }
-        
+
         // Extract transaction ID from response
         // The response should contain the transaction ID
         val txid = try {
@@ -166,14 +166,14 @@ class AlgorandBlockchainAnchorClient(
             chainId = chainId,
             operation = "submitTransaction"
         )
-        
+
         return txid
     }
 
     private suspend fun readTransactionFromBlockchainImpl(txHash: String): AnchorResult {
         val txInfo = algodClient.PendingTransactionInformation(txHash).execute().body()
             ?: throw TrustWeaveException.NotFound(resource = "Transaction not found: $txHash")
-        
+
         // Use proper SDK API methods instead of reflection
         val transaction: TransactionResponse? = try {
             // PendingTransactionResponse should have a transaction property
@@ -183,11 +183,11 @@ class AlgorandBlockchainAnchorClient(
         } catch (e: Exception) {
             null
         }
-        
+
         if (transaction == null) {
             throw TrustWeaveException.NotFound(resource = "Transaction not found: $txHash")
         }
-        
+
         // Extract note from transaction
         val note: ByteArray? = try {
             // Try to get note using proper API methods
@@ -205,16 +205,16 @@ class AlgorandBlockchainAnchorClient(
         } catch (e: Exception) {
             null
         }
-        
+
         if (note == null) {
             throw TrustWeaveException.NotFound(
                 resource = "Transaction note not found: $txHash. Transaction may not contain note data."
             )
         }
-        
+
         val payloadJson = String(note, StandardCharsets.UTF_8)
         val payload = Json.parseToJsonElement(payloadJson)
-        
+
         // Extract confirmed round using proper API
         val confirmedRound: Long? = try {
             txInfo.javaClass.methods.find { it.name == "getConfirmedRound" }?.invoke(txInfo) as? Long
@@ -222,7 +222,7 @@ class AlgorandBlockchainAnchorClient(
         } catch (e: Exception) {
             null
         }
-        
+
         return AnchorResult(
             ref = buildAnchorRef(
                 txHash = txHash,

@@ -6,6 +6,7 @@ import com.trustweave.core.util.DigestUtils
 import com.trustweave.did.DidDocument
 import com.trustweave.did.VerificationMethod
 import com.trustweave.did.resolver.DidResolver
+import com.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -15,7 +16,7 @@ import java.util.Base64
 
 /**
  * Signature verifier for cryptographic proofs.
- * 
+ *
  * Supports multiple proof types:
  * - Ed25519Signature2020: Ed25519 signatures
  * - JsonWebSignature2020: JWT-based signatures
@@ -29,10 +30,10 @@ class SignatureVerifier(
         encodeDefaults = false
         ignoreUnknownKeys = true
     }
-    
+
     /**
      * Verify a proof signature.
-     * 
+     *
      * @param credential Credential to verify
      * @param proof Proof to verify
      * @return true if signature is valid
@@ -51,7 +52,7 @@ class SignatureVerifier(
             false
         }
     }
-    
+
     /**
      * Verify JWT-based proof (JsonWebSignature2020).
      */
@@ -60,22 +61,22 @@ class SignatureVerifier(
         proof: Proof
     ): Boolean {
         val jws = proof.jws ?: return false
-        
+
         try {
             // Parse JWT (using reflection to avoid direct dependency on nimbus-jose-jwt)
             val signedJwtClass = Class.forName("com.nimbusds.jwt.SignedJWT")
             val parseMethod = signedJwtClass.getMethod("parse", String::class.java)
             val signedJwt = parseMethod.invoke(null, jws)
-            
+
             // Resolve verification method
             val verificationMethod = resolveVerificationMethod(proof.verificationMethod) ?: return false
-            
+
             // Extract public key from verification method
             val publicKey = extractPublicKeyFromVerificationMethod(verificationMethod) ?: return false
-            
+
             // Create verifier based on key type
             val verifier = createJwsVerifier(publicKey) ?: return false
-            
+
             // Verify signature
             val verifyMethod = signedJwtClass.getMethod("verify", Class.forName("com.nimbusds.jose.JWSVerifier"))
             return verifyMethod.invoke(signedJwt, verifier) as Boolean
@@ -84,7 +85,7 @@ class SignatureVerifier(
             return false
         }
     }
-    
+
     /**
      * Verify JSON-LD proof (Ed25519Signature2020, BbsBlsSignature2020, etc.).
      */
@@ -93,21 +94,21 @@ class SignatureVerifier(
         proof: Proof
     ): Boolean {
         val proofValue = proof.proofValue ?: return false
-        
+
         try {
             // Resolve verification method
             val verificationMethod = resolveVerificationMethod(proof.verificationMethod) ?: return false
-            
+
             // Create proof document (credential without proof)
             val proofDocument = createProofDocument(credential, proof)
-            
+
             // Canonicalize proof document
             val canonicalDocument = DigestUtils.canonicalizeJson(proofDocument)
             val documentBytes = canonicalDocument.toByteArray(Charsets.UTF_8)
-            
+
             // Decode signature
             val signature = decodeSignature(proofValue) ?: return false
-            
+
             // Verify based on proof type
             return when (proof.type) {
                 "Ed25519Signature2020" -> verifyEd25519Signature(documentBytes, signature, verificationMethod)
@@ -118,7 +119,7 @@ class SignatureVerifier(
             return false
         }
     }
-    
+
     /**
      * Resolve verification method from DID document.
      */
@@ -131,17 +132,19 @@ class SignatureVerifier(
             verificationMethodId
         }
         System.err.println("[DEBUG resolveVerificationMethod] Extracted DID: $did")
-        
+
         // Resolve DID document
-        val resolutionResult = didResolver.resolve(did)
-        val document = resolutionResult?.document
-        if (document == null) {
-            System.err.println("[DEBUG resolveVerificationMethod] Failed to resolve DID")
-            return null
+        val resolutionResult = didResolver.resolve(com.trustweave.core.types.Did(did))
+        val document = when (resolutionResult) {
+            is DidResolutionResult.Success -> resolutionResult.document
+            else -> {
+                System.err.println("[DEBUG resolveVerificationMethod] Failed to resolve DID")
+                return null
+            }
         }
-        
+
         System.err.println("[DEBUG resolveVerificationMethod] Document resolved successfully")
-        
+
         // Find verification method
         val methodId = if (verificationMethodId.contains("#")) {
             verificationMethodId.substringAfter("#")
@@ -150,7 +153,7 @@ class SignatureVerifier(
         }
         System.err.println("[DEBUG resolveVerificationMethod] Looking for method ID: $methodId")
         System.err.println("[DEBUG resolveVerificationMethod] Available verification methods: ${document.verificationMethod.map { it.id }}")
-        
+
         // Check direct verification methods
         val directMethod = document.verificationMethod.find { vm ->
             vm.id == verificationMethodId || vm.id.endsWith("#$methodId")
@@ -163,7 +166,7 @@ class SignatureVerifier(
             }
             return directMethod
         }
-        
+
         // Check authentication references
         val authRef = document.authentication.find { ref ->
             ref == verificationMethodId || ref.endsWith("#$methodId")
@@ -173,7 +176,7 @@ class SignatureVerifier(
                 vm.id == authRef || vm.id.endsWith(authRef.substringAfter("#"))
             }
         }
-        
+
         // Check assertion method references
         val assertionRef = document.assertionMethod.find { ref ->
             ref == verificationMethodId || ref.endsWith("#$methodId")
@@ -183,10 +186,10 @@ class SignatureVerifier(
                 vm.id == assertionRef || vm.id.endsWith(assertionRef.substringAfter("#"))
             }
         }
-        
+
         return null
     }
-    
+
     /**
      * Convert map to DidDocument (for JSON-based resolvers).
      */
@@ -202,15 +205,15 @@ class SignatureVerifier(
                     publicKeyMultibase = vm["publicKeyMultibase"] as? String
                 )
             } ?: emptyList()
-            
+
             val authentication = (map["authentication"] as? List<*>)?.mapNotNull { it as? String }
                 ?: (map["authentication"] as? String)?.let { listOf(it) }
                 ?: emptyList()
-            
+
             val assertionMethod = (map["assertionMethod"] as? List<*>)?.mapNotNull { it as? String }
                 ?: (map["assertionMethod"] as? String)?.let { listOf(it) }
                 ?: emptyList()
-            
+
             return DidDocument(
                 id = did,
                 verificationMethod = verificationMethod,
@@ -221,7 +224,7 @@ class SignatureVerifier(
             return null
         }
     }
-    
+
     /**
      * Extract public key from verification method.
      */
@@ -229,23 +232,23 @@ class SignatureVerifier(
         verificationMethod: VerificationMethod
     ): PublicKey? {
         System.err.println("[DEBUG extractPublicKeyFromVerificationMethod] verificationMethod: id=${verificationMethod.id}, type=${verificationMethod.type}, hasJwk=${verificationMethod.publicKeyJwk != null}, hasMultibase=${verificationMethod.publicKeyMultibase != null}")
-        
+
         // Try JWK first
         verificationMethod.publicKeyJwk?.let { jwkMap ->
             System.err.println("[DEBUG extractPublicKeyFromVerificationMethod] Attempting JWK extraction, JWK keys: ${jwkMap.keys}")
             return extractPublicKeyFromJwk(jwkMap)
         }
-        
+
         // Try multibase
         verificationMethod.publicKeyMultibase?.let { multibase ->
             System.err.println("[DEBUG extractPublicKeyFromVerificationMethod] Attempting multibase extraction: ${multibase.take(50)}")
             return extractPublicKeyFromMultibase(multibase, verificationMethod.type)
         }
-        
+
         System.err.println("[DEBUG extractPublicKeyFromVerificationMethod] No public key found in verification method")
         return null
     }
-    
+
     /**
      * Extract public key from JWK.
      */
@@ -258,10 +261,10 @@ class SignatureVerifier(
             val jwkJson = jwkMap.toJsonString()
             System.err.println("[DEBUG extractPublicKeyFromJwk] JWK JSON: $jwkJson")
             val jwk = parseMethod.invoke(null, jwkJson)
-            
+
             val jwkType = jwk.javaClass.simpleName
             System.err.println("[DEBUG extractPublicKeyFromJwk] JWK type: $jwkType")
-            
+
             return when {
                 jwkType == "OctetKeyPair" -> {
                     // Ed25519
@@ -294,7 +297,7 @@ class SignatureVerifier(
             return extractPublicKeyFromJwkManual(jwkMap)
         }
     }
-    
+
     /**
      * Manual JWK parsing (fallback when nimbus-jose-jwt is not available).
      */
@@ -308,7 +311,7 @@ class SignatureVerifier(
                 return null
             }
             System.err.println("[DEBUG extractPublicKeyFromJwkManual] kty: $kty")
-            
+
             return when (kty) {
                 "OKP" -> {
                     System.err.println("[DEBUG extractPublicKeyFromJwkManual] Processing OKP (Octet Key Pair)")
@@ -319,7 +322,7 @@ class SignatureVerifier(
                         System.err.println("[DEBUG extractPublicKeyFromJwkManual] crv is not Ed25519")
                         return null
                     }
-                    
+
                     val x = jwkMap["x"] as? String
                     if (x == null) {
                         System.err.println("[DEBUG extractPublicKeyFromJwkManual] Missing 'x' field")
@@ -328,15 +331,15 @@ class SignatureVerifier(
                     System.err.println("[DEBUG extractPublicKeyFromJwkManual] x (first 20 chars): ${x.take(20)}")
                     val xBytes = Base64.getUrlDecoder().decode(x)
                     System.err.println("[DEBUG extractPublicKeyFromJwkManual] xBytes length: ${xBytes.size}")
-                    
+
                     // Ed25519 public key must be exactly 32 bytes (raw format per JWK spec)
                     if (xBytes.size != 32) {
                         System.err.println("[DEBUG extractPublicKeyFromJwkManual] xBytes size is invalid: expected 32 bytes, got ${xBytes.size}")
                         return null
                     }
-                    
+
                     val rawKey = xBytes
-                    
+
                     // Create Ed25519 public key using EdECPublicKeySpec (Java 15+)
                     try {
                         System.err.println("[DEBUG extractPublicKeyFromJwkManual] Attempting EdECPublicKeySpec extraction")
@@ -345,11 +348,11 @@ class SignatureVerifier(
                         val paramsClass = Class.forName("java.security.spec.NamedParameterSpec")
                         val ed25519Field = paramsClass.getField("ED25519")
                         val params = ed25519Field.get(null)
-                        
+
                         val keySpecClass = Class.forName("java.security.spec.EdECPublicKeySpec")
                         val keySpecConstructor = keySpecClass.getConstructor(paramsClass, ByteArray::class.java)
                         val keySpec = keySpecConstructor.newInstance(params, rawKey)
-                        
+
                         val publicKey = keyFactory.generatePublic(keySpec as java.security.spec.KeySpec)
                         System.err.println("[DEBUG extractPublicKeyFromJwkManual] Successfully extracted Ed25519 public key using EdECPublicKeySpec")
                         return publicKey
@@ -366,7 +369,7 @@ class SignatureVerifier(
                                 0x03, 0x21,  // BIT STRING
                                 0x00  // number of unused bits
                             ) + rawKey
-                            
+
                             val keyFactory = KeyFactory.getInstance("Ed25519")
                             val keySpec = X509EncodedKeySpec(derBytes)
                             val publicKey = keyFactory.generatePublic(keySpec)
@@ -384,10 +387,10 @@ class SignatureVerifier(
                     val crv = jwkMap["crv"] as? String ?: return null
                     val x = jwkMap["x"] as? String ?: return null
                     val y = jwkMap["y"] as? String ?: return null
-                    
+
                     val xBytes = Base64.getUrlDecoder().decode(x)
                     val yBytes = Base64.getUrlDecoder().decode(y)
-                    
+
                     // Use standard curve names
                     val curveName = when (crv) {
                         "P-256" -> "secp256r1"
@@ -396,19 +399,19 @@ class SignatureVerifier(
                         "secp256k1" -> "secp256k1"
                         else -> return null
                     }
-                    
+
                     try {
                         val keyFactory = KeyFactory.getInstance("EC")
                         val ecPoint = ECPoint(
                             java.math.BigInteger(1, xBytes),
                             java.math.BigInteger(1, yBytes)
                         )
-                        
+
                         // Try to get curve parameters using AlgorithmParameters
                         val params = java.security.AlgorithmParameters.getInstance("EC")
                         params.init(java.security.spec.ECGenParameterSpec(curveName))
                         val ecParameterSpec = params.getParameterSpec(java.security.spec.ECParameterSpec::class.java)
-                        
+
                         val keySpec = java.security.spec.ECPublicKeySpec(ecPoint, ecParameterSpec)
                         keyFactory.generatePublic(keySpec)
                     } catch (e: Exception) {
@@ -420,13 +423,13 @@ class SignatureVerifier(
                     // RSA
                     val n = jwkMap["n"] as? String ?: return null
                     val e = jwkMap["e"] as? String ?: return null
-                    
+
                     val nBytes = Base64.getUrlDecoder().decode(n)
                     val eBytes = Base64.getUrlDecoder().decode(e)
-                    
+
                     val modulus = java.math.BigInteger(1, nBytes)
                     val exponent = java.math.BigInteger(1, eBytes)
-                    
+
                     val keyFactory = KeyFactory.getInstance("RSA")
                     val keySpec = RSAPublicKeySpec(modulus, exponent)
                     keyFactory.generatePublic(keySpec)
@@ -437,7 +440,7 @@ class SignatureVerifier(
             return null
         }
     }
-    
+
     /**
      * Extract public key from multibase encoding.
      */
@@ -447,9 +450,9 @@ class SignatureVerifier(
             if (!multibase.startsWith("z")) {
                 return null
             }
-            
+
             val decoded = decodeBase58(multibase.substring(1))
-            
+
             // Parse based on key type
             return when {
                 keyType.contains("Ed25519") -> {
@@ -463,7 +466,7 @@ class SignatureVerifier(
             return null
         }
     }
-    
+
     /**
      * Create JWS verifier from public key (using reflection to avoid direct dependency).
      */
@@ -474,7 +477,7 @@ class SignatureVerifier(
                     val ecKeyClass = Class.forName("com.nimbusds.jose.jwk.ECKey")
                     val parseMethod = ecKeyClass.getMethod("parse", PublicKey::class.java)
                     val ecKey = parseMethod.invoke(null, publicKey)
-                    
+
                     val verifierClass = Class.forName("com.nimbusds.jose.crypto.ECDSAVerifier")
                     val constructor = verifierClass.getConstructor(ecKeyClass)
                     constructor.newInstance(ecKey)
@@ -483,7 +486,7 @@ class SignatureVerifier(
                     val rsaKeyClass = Class.forName("com.nimbusds.jose.jwk.RSAKey")
                     val parseMethod = rsaKeyClass.getMethod("parse", PublicKey::class.java)
                     val rsaKey = parseMethod.invoke(null, publicKey)
-                    
+
                     val verifierClass = Class.forName("com.nimbusds.jose.crypto.RSASSAVerifier")
                     val constructor = verifierClass.getConstructor(rsaKeyClass)
                     constructor.newInstance(rsaKey)
@@ -492,7 +495,7 @@ class SignatureVerifier(
                     val okpClass = Class.forName("com.nimbusds.jose.jwk.OctetKeyPair")
                     val parseMethod = okpClass.getMethod("parse", PublicKey::class.java)
                     val okp = parseMethod.invoke(null, publicKey)
-                    
+
                     val verifierClass = Class.forName("com.nimbusds.jose.crypto.Ed25519Verifier")
                     val constructor = verifierClass.getConstructor(okpClass)
                     constructor.newInstance(okp)
@@ -503,7 +506,7 @@ class SignatureVerifier(
             null
         }
     }
-    
+
     /**
      * Verify Ed25519 signature.
      */
@@ -520,7 +523,7 @@ class SignatureVerifier(
                 return false
             }
             System.err.println("[DEBUG verifyEd25519Signature] Public key extracted: algorithm=${publicKey.algorithm}, format=${publicKey.format}")
-            
+
             // Try Ed25519 signature verification
             System.err.println("[DEBUG verifyEd25519Signature] Creating Signature instance...")
             val signatureInstance = Signature.getInstance("Ed25519")
@@ -536,10 +539,10 @@ class SignatureVerifier(
             return false
         }
     }
-    
+
     /**
      * Verify BBS+ signature.
-     * 
+     *
      * Attempts to use BBS+ library if available via reflection.
      * Falls back to basic validation if library is not available.
      */
@@ -552,15 +555,15 @@ class SignatureVerifier(
             // Try to use BBS+ library if available via reflection
             // This would use mattr-bbs-signatures or similar library
             // For now, we do basic validation
-            
+
             // Extract public key from verification method
             val publicKey = extractPublicKeyFromVerificationMethod(verificationMethod) ?: return false
-            
+
             // In a full implementation, this would:
             // 1. Extract BLS12-381 public key from verification method
             // 2. Use BBS+ library to verify signature against canonical data
             // 3. Return verification result
-            
+
             // Placeholder: basic structure validation
             // Full implementation requires BBS+ library
             return signature.isNotEmpty() && data.isNotEmpty()
@@ -568,7 +571,7 @@ class SignatureVerifier(
             return false
         }
     }
-    
+
     /**
      * Create proof document (credential without proof).
      */
@@ -581,10 +584,10 @@ class SignatureVerifier(
             encodeDefaults = false
             ignoreUnknownKeys = true
         }
-        
+
         // Serialize credential without proof
         val credentialJson = json.encodeToJsonElement(credential.copy(proof = null))
-        
+
         // Add proof options (without proofValue)
         val proofOptions = buildJsonObject {
             put("type", proof.type)
@@ -594,7 +597,7 @@ class SignatureVerifier(
             proof.challenge?.let { put("challenge", it) }
             proof.domain?.let { put("domain", it) }
         }
-        
+
         val proofDocument = buildJsonObject {
             // Add all credential fields
             credentialJson.jsonObject.entries.forEach { (key, value) ->
@@ -602,10 +605,10 @@ class SignatureVerifier(
             }
             put("proof", proofOptions)
         }
-        
+
         return json.encodeToString(JsonObject.serializer(), proofDocument)
     }
-    
+
     /**
      * Decode signature from multibase or base64.
      */
@@ -622,7 +625,7 @@ class SignatureVerifier(
             null
         }
     }
-    
+
     /**
      * Decode base58 string.
      */
@@ -630,7 +633,7 @@ class SignatureVerifier(
         val alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
         var num = java.math.BigInteger.ZERO
         var leadingZeros = 0
-        
+
         // Count leading zeros
         for (char in input) {
             if (char == '1') {
@@ -639,7 +642,7 @@ class SignatureVerifier(
                 break
             }
         }
-        
+
         // Convert from base58
         for (char in input) {
             val index = alphabet.indexOf(char)
@@ -649,21 +652,21 @@ class SignatureVerifier(
             num = num.multiply(java.math.BigInteger.valueOf(58))
             num = num.add(java.math.BigInteger.valueOf(index.toLong()))
         }
-        
+
         // Convert to byte array
         val bytes = num.toByteArray()
-        
+
         // Remove leading zero byte if present
         val result = if (bytes.isNotEmpty() && bytes[0] == 0.toByte()) {
             bytes.sliceArray(1..bytes.lastIndex)
         } else {
             bytes
         }
-        
+
         // Add leading zeros
         return ByteArray(leadingZeros) { 0 } + result
     }
-    
+
     /**
      * Convert map to JSON string.
      */

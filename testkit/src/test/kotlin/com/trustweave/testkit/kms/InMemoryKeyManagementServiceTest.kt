@@ -1,5 +1,6 @@
 package com.trustweave.testkit.kms
 
+import com.trustweave.core.types.KeyId
 import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyNotFoundException
 import com.trustweave.kms.UnsupportedAlgorithmException
@@ -57,7 +58,7 @@ class InMemoryKeyManagementServiceTest {
     fun `test generate key with custom key ID`() = runBlocking {
         val handle = kms.generateKey("Ed25519", mapOf("keyId" to "custom-key-123"))
 
-        assertEquals("custom-key-123", handle.id)
+        assertEquals("custom-key-123", handle.id.value)
     }
 
     @Test
@@ -66,16 +67,16 @@ class InMemoryKeyManagementServiceTest {
             kms.generateKey("RSA", emptyMap())
         }
     }
-    
+
     @Test
     fun `test get supported algorithms`() = runBlocking {
         val supported = kms.getSupportedAlgorithms()
-        
+
         assertTrue(supported.contains(Algorithm.Ed25519))
         assertTrue(supported.contains(Algorithm.Secp256k1))
         assertEquals(2, supported.size)
     }
-    
+
     @Test
     fun `test supports algorithm`() = runBlocking {
         assertTrue(kms.supportsAlgorithm(Algorithm.Ed25519))
@@ -83,7 +84,7 @@ class InMemoryKeyManagementServiceTest {
         assertFalse(kms.supportsAlgorithm(Algorithm.P256))
         assertFalse(kms.supportsAlgorithm(Algorithm.RSA.RSA_2048))
     }
-    
+
     @Test
     fun `test supports algorithm by name`() = runBlocking {
         assertTrue(kms.supportsAlgorithm("Ed25519"))
@@ -92,15 +93,15 @@ class InMemoryKeyManagementServiceTest {
         assertFalse(kms.supportsAlgorithm("P-256"))
         assertFalse(kms.supportsAlgorithm("invalid"))
     }
-    
+
     @Test
     fun `test generate key with Algorithm type`() = runBlocking {
         val handle = kms.generateKey(Algorithm.Ed25519, emptyMap())
-        
+
         assertNotNull(handle)
         assertEquals("Ed25519", handle.algorithm)
     }
-    
+
     @Test
     fun `test generate key with unsupported Algorithm type throws exception`() = runBlocking {
         assertFailsWith<UnsupportedAlgorithmException> {
@@ -112,7 +113,7 @@ class InMemoryKeyManagementServiceTest {
     fun `test get public key`() = runBlocking {
         val handle = kms.generateKey("Ed25519", mapOf("keyId" to "key-1"))
 
-        val retrieved = kms.getPublicKey("key-1")
+        val retrieved = kms.getPublicKey(KeyId("key-1"))
 
         assertEquals(handle.id, retrieved.id)
         assertEquals(handle.algorithm, retrieved.algorithm)
@@ -122,7 +123,7 @@ class InMemoryKeyManagementServiceTest {
     @Test
     fun `test get non-existent key throws exception`() = runBlocking {
         assertFailsWith<KeyNotFoundException> {
-            kms.getPublicKey("non-existent-key")
+            kms.getPublicKey(KeyId("non-existent-key"))
         }
     }
 
@@ -131,7 +132,7 @@ class InMemoryKeyManagementServiceTest {
         val handle = kms.generateKey("Ed25519", mapOf("keyId" to "signing-key"))
         val data = "test data".toByteArray()
 
-        val signature = kms.sign("signing-key", data)
+        val signature = kms.sign(KeyId("signing-key"), data)
 
         assertNotNull(signature)
         assertTrue(signature.isNotEmpty())
@@ -142,7 +143,7 @@ class InMemoryKeyManagementServiceTest {
         val handle = kms.generateKey("Ed25519", mapOf("keyId" to "signing-key"))
         val data = "test data".toByteArray()
 
-        val signature = kms.sign("signing-key", data, Algorithm.Ed25519)
+        val signature = kms.sign(KeyId("signing-key"), data, Algorithm.Ed25519)
 
         assertNotNull(signature)
         assertTrue(signature.isNotEmpty())
@@ -154,7 +155,7 @@ class InMemoryKeyManagementServiceTest {
             val handle = kms.generateKey("SECP256K1", mapOf("keyId" to "ecdsa-key"))
             val data = "test data".toByteArray()
 
-            val signature = kms.sign("ecdsa-key", data, "SHA256withECDSA")
+            val signature = kms.sign(KeyId("ecdsa-key"), data, "SHA256withECDSA")
 
             assertNotNull(signature)
             assertTrue(signature.isNotEmpty())
@@ -169,7 +170,7 @@ class InMemoryKeyManagementServiceTest {
         val data = "test data".toByteArray()
 
         assertFailsWith<KeyNotFoundException> {
-            kms.sign("non-existent-key", data)
+            kms.sign(KeyId("non-existent-key"), data)
         }
     }
 
@@ -177,17 +178,17 @@ class InMemoryKeyManagementServiceTest {
     fun `test delete key`() = runBlocking {
         val handle = kms.generateKey("Ed25519", mapOf("keyId" to "key-to-delete"))
 
-        val deleted = kms.deleteKey("key-to-delete")
+        val deleted = kms.deleteKey(KeyId("key-to-delete"))
 
         assertTrue(deleted)
         assertFailsWith<KeyNotFoundException> {
-            kms.getPublicKey("key-to-delete")
+            kms.getPublicKey(KeyId("key-to-delete"))
         }
     }
 
     @Test
     fun `test delete non-existent key returns false`() = runBlocking {
-        val deleted = kms.deleteKey("non-existent-key")
+        val deleted = kms.deleteKey(KeyId("non-existent-key"))
 
         assertFalse(deleted)
     }
@@ -200,10 +201,10 @@ class InMemoryKeyManagementServiceTest {
         kms.clear()
 
         assertFailsWith<KeyNotFoundException> {
-            kms.getPublicKey("key-1")
+            kms.getPublicKey(KeyId("key-1"))
         }
         assertFailsWith<KeyNotFoundException> {
-            kms.getPublicKey("key-2")
+            kms.getPublicKey(KeyId("key-2"))
         }
     }
 
@@ -213,8 +214,8 @@ class InMemoryKeyManagementServiceTest {
             val key1 = kms.generateKey("Ed25519", mapOf("keyId" to "key-1"))
             val key2 = kms.generateKey("SECP256K1", mapOf("keyId" to "key-2"))
 
-            val retrieved1 = kms.getPublicKey("key-1")
-            val retrieved2 = kms.getPublicKey("key-2")
+            val retrieved1 = kms.getPublicKey(KeyId("key-1"))
+            val retrieved2 = kms.getPublicKey(KeyId("key-2"))
 
             assertEquals("Ed25519", retrieved1.algorithm)
             assertEquals("SECP256K1", retrieved2.algorithm)
@@ -230,8 +231,8 @@ class InMemoryKeyManagementServiceTest {
         val handle = kms.generateKey("Ed25519", mapOf("keyId" to "consistent-key"))
         val data = "same data".toByteArray()
 
-        val sig1 = kms.sign("consistent-key", data)
-        val sig2 = kms.sign("consistent-key", data)
+        val sig1 = kms.sign(KeyId("consistent-key"), data)
+        val sig2 = kms.sign(KeyId("consistent-key"), data)
 
         // Signatures should be consistent (same key, same data)
         assertTrue(sig1.contentEquals(sig2))
@@ -243,8 +244,8 @@ class InMemoryKeyManagementServiceTest {
         val data1 = "data 1".toByteArray()
         val data2 = "data 2".toByteArray()
 
-        val sig1 = kms.sign("different-key", data1)
-        val sig2 = kms.sign("different-key", data2)
+        val sig1 = kms.sign(KeyId("different-key"), data1)
+        val sig2 = kms.sign(KeyId("different-key"), data2)
 
         // Signatures should be different for different data
         assertFalse(sig1.contentEquals(sig2))

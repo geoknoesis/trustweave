@@ -108,16 +108,16 @@ Carbon markets need:
 dependencies {
     // Core TrustWeave modules
     implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
-    
+
     // Test kit for in-memory implementations
     testImplementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
-    
+
     // Optional: Algorand adapter for real blockchain anchoring
     implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -142,11 +142,11 @@ fun main() = runBlocking {
     println("=".repeat(70))
     println("Carbon Markets & Digital MRV - Complete Example")
     println("=".repeat(70))
-    
+
     // Step 1: Create TrustWeave instance with blockchain
     val TrustWeave = TrustWeave.create()
     println("\n✅ TrustWeave initialized")
-    
+
     // Step 2: Create DIDs for carbon credit issuer, verifier, and buyer
     val issuerDid = TrustWeave.dids.create()
     Result.success(issuerDid).fold(
@@ -156,7 +156,7 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     val verifierDid = TrustWeave.dids.create()
     Result.success(verifierDid).fold(
         onSuccess = { it },
@@ -165,7 +165,7 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     val buyerDid = TrustWeave.dids.create()
     Result.success(buyerDid).fold(
         onSuccess = { it },
@@ -174,11 +174,11 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     println("✅ Issuer DID: ${issuerDid.id}")
     println("✅ Verifier DID: ${verifierDid.id}")
     println("✅ Buyer DID: ${buyerDid.id}")
-    
+
     // Step 3: Create EO data evidence (forest carbon sequestration)
     val eoEvidence = buildJsonObject {
         put("id", "eo-evidence-forest-2024")
@@ -200,13 +200,13 @@ fun main() = runBlocking {
         })
         put("timestamp", Instant.now().toString())
     }
-    
+
     val eoEvidenceDigest = DigestUtils.sha256DigestMultibase(eoEvidence)
-    
+
     // Step 4: Verifier issues verification credential
     val verifierKeyId = verifierDid.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val verificationCredential = TrustWeave.issueCredential(
         issuerDid = verifierDid.id,
         issuerKeyId = verifierKeyId,
@@ -228,13 +228,13 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     println("✅ Verification Credential issued: ${verificationCredential.id}")
-    
+
     // Step 5: Issuer issues carbon credit credential
     val issuerKeyId = issuerDid.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val carbonCredit = TrustWeave.issueCredential(
         issuerDid = issuerDid.id,
         issuerKeyId = issuerKeyId,
@@ -262,11 +262,11 @@ fun main() = runBlocking {
             return@runBlocking
         }
     )
-    
+
     println("✅ Carbon Credit issued: ${carbonCredit.id}")
     println("   Amount: 5000 tCO2e")
     println("   Status: issued")
-    
+
     // Step 6: Anchor credit to blockchain (prevent double counting)
     val anchorResult = TrustWeave.blockchains.anchor(
         data = carbonCredit,
@@ -282,7 +282,7 @@ fun main() = runBlocking {
             null
         }
     )
-    
+
     // Step 7: Track credit sale (update status)
     if (anchorResult != null) {
         // Create sale credential
@@ -312,11 +312,11 @@ fun main() = runBlocking {
                 return@runBlocking
             }
         )
-        
+
         println("✅ Sale Credential issued: ${saleCredential.id}")
         println("   Buyer: ${buyerDid.id}")
         println("   Price: $250,000 USD")
-        
+
         // Step 8: Verify credit not already sold (double counting prevention)
         val creditStatus = checkCreditStatus(carbonCredit.id, anchorResult.ref)
         if (creditStatus == "sold") {
@@ -324,11 +324,11 @@ fun main() = runBlocking {
             println("   Double counting prevented by blockchain anchor")
             return@runBlocking
         }
-        
+
         // Step 9: Retire credit (final state)
         val buyerKeyId = buyerDid.verificationMethod.firstOrNull()?.id
             ?: error("No verification method found")
-        
+
         val retirementCredential = TrustWeave.issueCredential(
             issuerDid = buyerDid.id,
             issuerKeyId = buyerKeyId,
@@ -352,12 +352,12 @@ fun main() = runBlocking {
                 return@runBlocking
             }
         )
-        
+
         println("✅ Retirement Credential issued: ${retirementCredential.id}")
         println("   Status: retired")
         println("   Credit cannot be re-sold (double counting prevented)")
     }
-    
+
     // Step 10: Verify complete lifecycle
     println("\n📊 Carbon Credit Lifecycle:")
     println("   1. Issued: ${carbonCredit.id}")
@@ -366,7 +366,7 @@ fun main() = runBlocking {
     println("   4. Sold: Sale credential issued")
     println("   5. Retired: Retirement credential issued")
     println("   ✅ Complete lifecycle tracked with VCs")
-    
+
     println("\n" + "=".repeat(70))
     println("✅ Carbon Markets & dMRV Scenario Complete!")
     println("=".repeat(70))
@@ -374,7 +374,7 @@ fun main() = runBlocking {
 
 // Helper function to check credit status on blockchain
 suspend fun checkCreditStatus(
-    creditId: String, 
+    creditId: String,
     anchorRef: com.trustweave.anchor.AnchorRef
 ): String {
     // In production, query blockchain for credit status
@@ -429,13 +429,13 @@ suspend fun preventDoubleCounting(
 ): Boolean {
     // Check blockchain for credit status
     val status = queryBlockchainStatus(creditId, anchorRef)
-    
+
     if (status == "retired" || status == "sold") {
         println("❌ Credit already used: $status")
         println("   Double counting prevented!")
         return false
     }
-    
+
     return true
 }
 ```

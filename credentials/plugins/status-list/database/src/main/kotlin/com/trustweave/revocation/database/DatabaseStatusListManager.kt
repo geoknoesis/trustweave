@@ -13,36 +13,36 @@ import javax.sql.DataSource
 
 /**
  * Database-backed status list manager implementation.
- * 
+ *
  * Provides persistent status list management using a relational database.
  * Supports PostgreSQL, MySQL, and H2 databases.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val manager = DatabaseStatusListManager(dataSource = dataSource)
- * 
+ *
  * val statusList = manager.createStatusList(
  *     issuerDid = "did:key:...",
  *     purpose = StatusPurpose.REVOCATION
  * )
- * 
+ *
  * manager.revokeCredential("cred-123", statusList.id)
  * ```
  */
 class DatabaseStatusListManager(
     private val dataSource: DataSource
 ) : StatusListManager {
-    
+
     private val json = Json {
         prettyPrint = false
         encodeDefaults = false
         ignoreUnknownKeys = true
     }
-    
+
     init {
         initializeSchema()
     }
-    
+
     /**
      * Initialize database schema.
      */
@@ -65,7 +65,7 @@ class DatabaseStatusListManager(
                         INDEX idx_purpose (purpose)
                     )
                 """).execute()
-                
+
                 // Credential indices table
                 conn.prepareStatement("""
                     CREATE TABLE IF NOT EXISTS credential_indices (
@@ -79,7 +79,7 @@ class DatabaseStatusListManager(
                         INDEX idx_credential (credential_id)
                     )
                 """).execute()
-                
+
                 // Next index tracking
                 conn.prepareStatement("""
                     CREATE TABLE IF NOT EXISTS status_list_next_index (
@@ -88,7 +88,7 @@ class DatabaseStatusListManager(
                         FOREIGN KEY (status_list_id) REFERENCES status_lists(id) ON DELETE CASCADE
                     )
                 """).execute()
-                
+
                 conn.commit()
             } catch (e: Exception) {
                 conn.rollback()
@@ -96,7 +96,7 @@ class DatabaseStatusListManager(
             }
         }
     }
-    
+
     override suspend fun createStatusList(
         issuerDid: String,
         purpose: StatusPurpose,
@@ -118,7 +118,7 @@ class DatabaseStatusListManager(
             ),
             issuanceDate = Instant.now().toString()
         ))
-        
+
         dataSource.connection.use { conn ->
             conn.autoCommit = false
             try {
@@ -133,52 +133,52 @@ class DatabaseStatusListManager(
                 stmt.setString(5, encodedList)
                 stmt.setString(6, statusListJson)
                 stmt.executeUpdate()
-                
+
                 val nextIndexStmt = conn.prepareStatement("""
                     INSERT INTO status_list_next_index (status_list_id, next_index)
                     VALUES (?, 0)
                 """)
                 nextIndexStmt.setString(1, id)
                 nextIndexStmt.executeUpdate()
-                
+
                 conn.commit()
             } catch (e: Exception) {
                 conn.rollback()
                 throw RuntimeException("Failed to create status list: ${e.message}", e)
             }
         }
-        
+
         json.decodeFromString(StatusListCredential.serializer(), statusListJson)
     }
-    
+
     override suspend fun revokeCredential(
         credentialId: String,
         statusListId: String
     ): Boolean = withContext(Dispatchers.IO) {
         updateCredentialStatus(credentialId, statusListId, revoked = true, suspended = null)
     }
-    
+
     override suspend fun suspendCredential(
         credentialId: String,
         statusListId: String
     ): Boolean = withContext(Dispatchers.IO) {
         updateCredentialStatus(credentialId, statusListId, revoked = null, suspended = true)
     }
-    
+
     override suspend fun unrevokeCredential(
         credentialId: String,
         statusListId: String
     ): Boolean = withContext(Dispatchers.IO) {
         updateCredentialStatus(credentialId, statusListId, revoked = false, suspended = null)
     }
-    
+
     override suspend fun unsuspendCredential(
         credentialId: String,
         statusListId: String
     ): Boolean = withContext(Dispatchers.IO) {
         updateCredentialStatus(credentialId, statusListId, revoked = null, suspended = false)
     }
-    
+
     private suspend fun updateCredentialStatus(
         credentialId: String,
         statusListId: String,
@@ -191,14 +191,14 @@ class DatabaseStatusListManager(
                 // Get status list
                 val statusList = getStatusListFromDb(statusListId) ?: return@withContext false
                 val purpose = statusList.credentialSubject.statusPurpose
-                
+
                 // Validate purpose matches operation
                 if (revoked != null && purpose != "revocation") return@withContext false
                 if (suspended != null && purpose != "suspension") return@withContext false
-                
+
                 // Get or assign index
                 val index = getOrAssignIndex(credentialId, statusListId, conn)
-                
+
                 // Load and update bit set
                 val bitSet = decodeBitSet(statusList.credentialSubject.encodedList)
                 if (revoked != null) {
@@ -206,7 +206,7 @@ class DatabaseStatusListManager(
                 } else if (suspended != null) {
                     bitSet.set(index, suspended)
                 }
-                
+
                 // Update encoded list
                 val newEncodedList = encodeBitSet(bitSet, bitSet.size())
                 val updatedStatusList = statusList.copy(
@@ -214,10 +214,10 @@ class DatabaseStatusListManager(
                         encodedList = newEncodedList
                     )
                 )
-                
+
                 // Save to database
                 val updateStmt = conn.prepareStatement("""
-                    UPDATE status_lists 
+                    UPDATE status_lists
                     SET encoded_list = ?, status_list_data = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                 """)
@@ -225,7 +225,7 @@ class DatabaseStatusListManager(
                 updateStmt.setString(2, json.encodeToString(StatusListCredential.serializer(), updatedStatusList))
                 updateStmt.setString(3, statusListId)
                 updateStmt.executeUpdate()
-                
+
                 conn.commit()
                 true
             } catch (e: Exception) {
@@ -234,7 +234,7 @@ class DatabaseStatusListManager(
             }
         }
     }
-    
+
     override suspend fun checkRevocationStatus(
         credential: VerifiableCredential
     ): RevocationStatus = withContext(Dispatchers.IO) {
@@ -242,11 +242,11 @@ class DatabaseStatusListManager(
             revoked = false,
             suspended = false
         )
-        
-        val statusListId = credentialStatus.statusListCredential 
-            ?: credentialStatus.id 
+
+        val statusListId = credentialStatus.statusListCredential
+            ?: credentialStatus.id
             ?: return@withContext RevocationStatus(revoked = false, suspended = false)
-        
+
         val index = credentialStatus.statusListIndex?.toIntOrNull()
             ?: getCredentialIndex(credential.id ?: return@withContext RevocationStatus(
                 revoked = false,
@@ -258,10 +258,10 @@ class DatabaseStatusListManager(
                 suspended = false,
                 statusListId = statusListId
             )
-        
+
         checkStatusByIndex(statusListId, index)
     }
-    
+
     override suspend fun checkStatusByIndex(
         statusListId: String,
         index: Int
@@ -271,18 +271,18 @@ class DatabaseStatusListManager(
             suspended = false,
             statusListId = statusListId
         )
-        
+
         val bitSet = decodeBitSet(statusList.credentialSubject.encodedList)
         val purpose = statusList.credentialSubject.statusPurpose
         val isSet = bitSet.get(index)
-        
+
         RevocationStatus(
             revoked = isSet && purpose == "revocation",
             suspended = isSet && purpose == "suspension",
             statusListId = statusListId
         )
     }
-    
+
     override suspend fun checkStatusByCredentialId(
         credentialId: String,
         statusListId: String
@@ -293,10 +293,10 @@ class DatabaseStatusListManager(
                 suspended = false,
                 statusListId = statusListId
             )
-        
+
         checkStatusByIndex(statusListId, index)
     }
-    
+
     override suspend fun getCredentialIndex(
         credentialId: String,
         statusListId: String
@@ -316,7 +316,7 @@ class DatabaseStatusListManager(
             }
         }
     }
-    
+
     override suspend fun assignCredentialIndex(
         credentialId: String,
         statusListId: String,
@@ -342,7 +342,7 @@ class DatabaseStatusListManager(
                     // Auto-assign next available index
                     getNextAvailableIndex(statusListId, conn)
                 }
-                
+
                 val insertStmt = conn.prepareStatement("""
                     INSERT INTO credential_indices (credential_id, status_list_id, index_value)
                     VALUES (?, ?, ?)
@@ -353,7 +353,7 @@ class DatabaseStatusListManager(
                 insertStmt.setInt(3, assignedIndex)
                 insertStmt.setInt(4, assignedIndex)
                 insertStmt.executeUpdate()
-                
+
                 conn.commit()
                 assignedIndex
             } catch (e: Exception) {
@@ -362,40 +362,40 @@ class DatabaseStatusListManager(
             }
         }
     }
-    
+
     override suspend fun updateStatusList(
         statusListId: String,
         revokedIndices: List<Int>
     ): StatusListCredential = withContext(Dispatchers.IO) {
-        val statusList = getStatusListFromDb(statusListId) 
+        val statusList = getStatusListFromDb(statusListId)
             ?: throw IllegalArgumentException("Status list not found: $statusListId")
-        
+
         val bitSet = decodeBitSet(statusList.credentialSubject.encodedList)
         for (index in revokedIndices) {
             bitSet.set(index, true)
         }
-        
+
         val newEncodedList = encodeBitSet(bitSet, bitSet.size())
         val updatedStatusList = statusList.copy(
             credentialSubject = statusList.credentialSubject.copy(
                 encodedList = newEncodedList
             )
         )
-        
+
         updateStatusListInDb(statusListId, updatedStatusList, newEncodedList)
         updatedStatusList
     }
-    
+
     override suspend fun updateStatusListBatch(
         statusListId: String,
         updates: List<StatusUpdate>
     ): StatusListCredential = withContext(Dispatchers.IO) {
-        val statusList = getStatusListFromDb(statusListId) 
+        val statusList = getStatusListFromDb(statusListId)
             ?: throw IllegalArgumentException("Status list not found: $statusListId")
-        
+
         val bitSet = decodeBitSet(statusList.credentialSubject.encodedList)
         val purpose = statusList.credentialSubject.statusPurpose
-        
+
         for (update in updates) {
             val revoked = update.revoked
             val suspended = update.suspended
@@ -405,22 +405,22 @@ class DatabaseStatusListManager(
                 bitSet.set(update.index, suspended)
             }
         }
-        
+
         val newEncodedList = encodeBitSet(bitSet, bitSet.size())
         val updatedStatusList = statusList.copy(
             credentialSubject = statusList.credentialSubject.copy(
                 encodedList = newEncodedList
             )
         )
-        
+
         updateStatusListInDb(statusListId, updatedStatusList, newEncodedList)
         updatedStatusList
     }
-    
+
     override suspend fun getStatusList(statusListId: String): StatusListCredential? = withContext(Dispatchers.IO) {
         getStatusListFromDb(statusListId)
     }
-    
+
     override suspend fun listStatusLists(issuerDid: String?): List<StatusListCredential> = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             val sql = if (issuerDid != null) {
@@ -441,7 +441,7 @@ class DatabaseStatusListManager(
             results
         }
     }
-    
+
     override suspend fun deleteStatusList(statusListId: String): Boolean = withContext(Dispatchers.IO) {
         dataSource.connection.use { conn ->
             conn.autoCommit = false
@@ -457,10 +457,10 @@ class DatabaseStatusListManager(
             }
         }
     }
-    
+
     override suspend fun getStatusListStatistics(statusListId: String): StatusListStatistics? = withContext(Dispatchers.IO) {
         val statusList = getStatusListFromDb(statusListId) ?: return@withContext null
-        
+
         dataSource.connection.use { conn ->
             val usedIndicesStmt = conn.prepareStatement("""
                 SELECT COUNT(*) as count FROM credential_indices WHERE status_list_id = ?
@@ -468,14 +468,14 @@ class DatabaseStatusListManager(
             usedIndicesStmt.setString(1, statusListId)
             val usedRs = usedIndicesStmt.executeQuery()
             val usedIndices = if (usedRs.next()) usedRs.getInt("count") else 0
-            
+
             val bitSet = decodeBitSet(statusList.credentialSubject.encodedList)
             val totalCapacity = bitSet.size()
             val purpose = statusList.credentialSubject.statusPurpose
             val revokedCount = if (purpose == "revocation") bitSet.cardinality() else 0
             val suspendedCount = if (purpose == "suspension") bitSet.cardinality() else 0
             val availableIndices = totalCapacity - usedIndices
-            
+
             StatusListStatistics(
                 statusListId = statusListId,
                 totalCapacity = totalCapacity,
@@ -487,29 +487,29 @@ class DatabaseStatusListManager(
             )
         }
     }
-    
+
     override suspend fun revokeCredentials(
         credentialIds: List<String>,
         statusListId: String
     ): Map<String, Boolean> = withContext(Dispatchers.IO) {
         val statusList = getStatusListFromDb(statusListId) ?: return@withContext credentialIds.associateWith { false }
-        
+
         if (statusList.credentialSubject.statusPurpose != "revocation") {
             return@withContext credentialIds.associateWith { false }
         }
-        
+
         dataSource.connection.use { conn ->
             conn.autoCommit = false
             try {
                 val bitSet = decodeBitSet(statusList.credentialSubject.encodedList)
                 val results = mutableMapOf<String, Boolean>()
-                
+
                 for (credentialId in credentialIds) {
                     val index = getOrAssignIndex(credentialId, statusListId, conn)
                     bitSet.set(index, true)
                     results[credentialId] = true
                 }
-                
+
                 val newEncodedList = encodeBitSet(bitSet, bitSet.size())
                 val updatedStatusList = statusList.copy(
                     credentialSubject = statusList.credentialSubject.copy(
@@ -517,7 +517,7 @@ class DatabaseStatusListManager(
                     )
                 )
                 updateStatusListInDb(statusListId, updatedStatusList, newEncodedList, conn)
-                
+
                 conn.commit()
                 results
             } catch (e: Exception) {
@@ -526,39 +526,39 @@ class DatabaseStatusListManager(
             }
         }
     }
-    
+
     override suspend fun expandStatusList(
         statusListId: String,
         additionalSize: Int
     ): StatusListCredential = withContext(Dispatchers.IO) {
-        val statusList = getStatusListFromDb(statusListId) 
+        val statusList = getStatusListFromDb(statusListId)
             ?: throw IllegalArgumentException("Status list not found: $statusListId")
-        
+
         val currentBitSet = decodeBitSet(statusList.credentialSubject.encodedList)
         val currentSize = currentBitSet.size()
         val newSize = currentSize + additionalSize
         val newBitSet = BitSet(newSize)
-        
+
         // Copy existing bits
         for (i in 0 until currentSize) {
             if (currentBitSet.get(i)) {
                 newBitSet.set(i, true)
             }
         }
-        
+
         val newEncodedList = encodeBitSet(newBitSet, newSize)
         val updatedStatusList = statusList.copy(
             credentialSubject = statusList.credentialSubject.copy(
                 encodedList = newEncodedList
             )
         )
-        
+
         updateStatusListInDb(statusListId, updatedStatusList, newEncodedList)
         updatedStatusList
     }
-    
+
     // Helper methods
-    
+
     private fun getStatusListFromDb(statusListId: String): StatusListCredential? {
         return dataSource.connection.use { conn ->
             val stmt = conn.prepareStatement("SELECT status_list_data FROM status_lists WHERE id = ?")
@@ -572,7 +572,7 @@ class DatabaseStatusListManager(
             }
         }
     }
-    
+
     private fun updateStatusListInDb(
         statusListId: String,
         statusList: StatusListCredential,
@@ -582,7 +582,7 @@ class DatabaseStatusListManager(
         val connection = conn ?: dataSource.connection
         try {
             val stmt = connection.prepareStatement("""
-                UPDATE status_lists 
+                UPDATE status_lists
                 SET encoded_list = ?, status_list_data = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             """)
@@ -596,7 +596,7 @@ class DatabaseStatusListManager(
             }
         }
     }
-    
+
     private fun getOrAssignIndex(
         credentialId: String,
         statusListId: String,
@@ -613,7 +613,7 @@ class DatabaseStatusListManager(
         if (rs.next()) {
             return rs.getInt("index_value")
         }
-        
+
         // Assign new index
         return getNextAvailableIndex(statusListId, conn).also { index ->
             val insertStmt = conn.prepareStatement("""
@@ -626,7 +626,7 @@ class DatabaseStatusListManager(
             insertStmt.executeUpdate()
         }
     }
-    
+
     private fun getNextAvailableIndex(statusListId: String, conn: java.sql.Connection): Int {
         // Get current next index
         val getStmt = conn.prepareStatement("""
@@ -634,13 +634,13 @@ class DatabaseStatusListManager(
         """)
         getStmt.setString(1, statusListId)
         val rs = getStmt.executeQuery()
-        
+
         var next = if (rs.next()) {
             rs.getInt("next_index")
         } else {
             0
         }
-        
+
         // Find next available index (skip already assigned ones)
         while (true) {
             val checkStmt = conn.prepareStatement("""
@@ -655,7 +655,7 @@ class DatabaseStatusListManager(
             }
             next++
         }
-        
+
         // Update next index
         val updateStmt = conn.prepareStatement("""
             INSERT INTO status_list_next_index (status_list_id, next_index)
@@ -666,10 +666,10 @@ class DatabaseStatusListManager(
         updateStmt.setInt(2, next + 1)
         updateStmt.setInt(3, next + 1)
         updateStmt.executeUpdate()
-        
+
         return next
     }
-    
+
     private fun encodeBitSet(bitSet: BitSet, size: Int): String {
         val bytes = ByteArray((size + 7) / 8)
         for (i in 0 until size) {
@@ -681,7 +681,7 @@ class DatabaseStatusListManager(
         }
         return Base64.getEncoder().encodeToString(bytes)
     }
-    
+
     private fun decodeBitSet(encoded: String): BitSet {
         val bytes = Base64.getDecoder().decode(encoded)
         val bitSet = BitSet(bytes.size * 8)

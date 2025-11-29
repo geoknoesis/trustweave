@@ -17,14 +17,14 @@ class CredentialServiceInterfaceContractTest {
     @Test
     fun `test CredentialService providerName returns name`() = runBlocking {
         val service = createMockService("test-provider")
-        
+
         assertEquals("test-provider", service.providerName)
     }
 
     @Test
     fun `test CredentialService supportedProofTypes returns list`() = runBlocking {
         val service = createMockService("test-provider")
-        
+
         assertTrue(service.supportedProofTypes.isNotEmpty())
         assertTrue(service.supportedProofTypes.contains("Ed25519Signature2020"))
     }
@@ -32,7 +32,7 @@ class CredentialServiceInterfaceContractTest {
     @Test
     fun `test CredentialService supportedSchemaFormats returns list`() = runBlocking {
         val service = createMockService("test-provider")
-        
+
         assertTrue(service.supportedSchemaFormats.isNotEmpty())
     }
 
@@ -44,9 +44,9 @@ class CredentialServiceInterfaceContractTest {
             proofType = "Ed25519Signature2020",
             keyId = "key-1"
         )
-        
+
         val issued = service.issueCredential(credential, options)
-        
+
         assertNotNull(issued.proof)
         assertEquals("Ed25519Signature2020", issued.proof?.type)
     }
@@ -64,11 +64,12 @@ class CredentialServiceInterfaceContractTest {
             )
         )
         val options = CredentialVerificationOptions()
-        
+
         val result = service.verifyCredential(credential, options)
-        
+
         assertNotNull(result)
-        assertNotNull(result.valid)
+        // Check that result is either Valid or Invalid (sealed class)
+        assertTrue(result is CredentialVerificationResult.Valid || result is CredentialVerificationResult.Invalid)
     }
 
     @Test
@@ -81,9 +82,9 @@ class CredentialServiceInterfaceContractTest {
             proofType = "Ed25519Signature2020",
             keyId = "key-1"
         )
-        
+
         val presentation = service.createPresentation(listOf(cred1, cred2), options)
-        
+
         assertNotNull(presentation)
         assertEquals(2, presentation.verifiableCredential.size)
         assertEquals("did:key:holder", presentation.holder)
@@ -107,10 +108,11 @@ class CredentialServiceInterfaceContractTest {
             )
         )
         val options = PresentationVerificationOptions()
-        
+
         val result = service.verifyPresentation(presentation, options)
-        
+
         assertNotNull(result)
+        // PresentationVerificationResult still uses data class for now
         assertNotNull(result.valid)
     }
 
@@ -126,9 +128,9 @@ class CredentialServiceInterfaceContractTest {
             anchorToBlockchain = true,
             chainId = "algorand:testnet"
         )
-        
+
         val issued = service.issueCredential(credential, options)
-        
+
         assertNotNull(issued.proof)
         assertEquals("challenge-123", issued.proof?.challenge)
         assertEquals("example.com", issued.proof?.domain)
@@ -152,9 +154,9 @@ class CredentialServiceInterfaceContractTest {
             validateSchema = true,
             verifyBlockchainAnchor = true
         )
-        
+
         val result = service.verifyCredential(credential, options)
-        
+
         assertNotNull(result)
     }
 
@@ -163,7 +165,7 @@ class CredentialServiceInterfaceContractTest {
             override val providerName: String = providerName
             override val supportedProofTypes: List<String> = listOf("Ed25519Signature2020", "JsonWebSignature2020")
             override val supportedSchemaFormats: List<SchemaFormat> = listOf(SchemaFormat.JSON_SCHEMA)
-            
+
             override suspend fun issueCredential(
                 credential: VerifiableCredential,
                 options: CredentialIssuanceOptions
@@ -180,7 +182,7 @@ class CredentialServiceInterfaceContractTest {
                     )
                 )
             }
-            
+
             override suspend fun verifyCredential(
                 credential: VerifiableCredential,
                 options: CredentialVerificationOptions
@@ -194,15 +196,26 @@ class CredentialServiceInterfaceContractTest {
                     }
                 } ?: true
                 val notRevoked = credential.credentialStatus == null
-                
-                return CredentialVerificationResult(
-                    valid = proofValid && notExpired && notRevoked,
-                    proofValid = proofValid,
-                    notExpired = notExpired,
-                    notRevoked = notRevoked
-                )
+
+                return when {
+                    !proofValid -> CredentialVerificationResult.Invalid.InvalidProof(
+                        credential, "Proof is missing", listOf("Proof is missing")
+                    )
+                    !notExpired -> {
+                        val expiredAt = credential.expirationDate?.let {
+                            try { java.time.Instant.parse(it) } catch (e: Exception) { null }
+                        } ?: java.time.Instant.now()
+                        CredentialVerificationResult.Invalid.Expired(
+                            credential, expiredAt, listOf("Credential has expired")
+                        )
+                    }
+                    !notRevoked -> CredentialVerificationResult.Invalid.Revoked(
+                        credential, java.time.Instant.now(), listOf("Credential is revoked")
+                    )
+                    else -> CredentialVerificationResult.Valid(credential)
+                }
             }
-            
+
             override suspend fun createPresentation(
                 credentials: List<VerifiableCredential>,
                 options: PresentationOptions
@@ -217,14 +230,14 @@ class CredentialServiceInterfaceContractTest {
                     domain = options.domain
                 )
             }
-            
+
             override suspend fun verifyPresentation(
                 presentation: VerifiablePresentation,
                 options: PresentationVerificationOptions
             ): PresentationVerificationResult {
                 val proofValid = presentation.proof != null
                 val challengeValid = !options.verifyChallenge || presentation.challenge == options.expectedChallenge
-                
+
                 return PresentationVerificationResult(
                     valid = proofValid && challengeValid,
                     presentationProofValid = proofValid,

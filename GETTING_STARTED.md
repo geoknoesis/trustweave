@@ -91,7 +91,7 @@ fun main() {
         put("vcId", "vc-12345")
         put("issuer", "did:web:example.com")
     }
-    
+
     // Canonicalize and compute digest
     val digest = DigestUtils.sha256DigestMultibase(json)
     println("Digest: $digest") // e.g., "uABC123..."
@@ -109,14 +109,14 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     // Create TrustWeave instance
     val TrustWeave = trustweave.create()
-    
+
     // Use native did:key plugin (most widely-used)
     // Add dependency: implementation("com.trustweave.did:key:1.0.0-SNAPSHOT")
-    
+
     // Create a DID with error handling
     val document = trustweave.dids.create()
     println("Created DID: ${document.id}")
-    
+
     // Resolve the DID
     val resolution = trustweave.dids.resolve(document.id)
     val resolveResult = Result.success(resolution)
@@ -157,7 +157,7 @@ fun main() = runBlocking {
             }
         }
     )
-    
+
     // Or use simple API for straightforward cases
     // Use native did:key (most widely-used)
     val document2 = trustweave.dids.create("key") {
@@ -180,7 +180,7 @@ fun main() = runBlocking {
     // Setup: Create KMS and DID method
     val kms = InMemoryKeyManagementService()
     val didMethod = DidKeyMockMethod(kms)
-    
+
     // Create a DID with typed options
     val options = DidCreationOptions(
         algorithm = DidCreationOptions.KeyAlgorithm.ED25519,
@@ -208,7 +208,7 @@ import kotlinx.serialization.json.put
 fun main() = runBlocking {
     // Create a wallet using the new factory
     val wallet = Wallets.inMemory(holderDid = "did:key:holder")
-    
+
     // Store a credential
     val credential = VerifiableCredential(
         type = listOf("VerifiableCredential", "PersonCredential"),
@@ -220,16 +220,16 @@ fun main() = runBlocking {
         },
         issuanceDate = "2023-01-01T00:00:00Z"
     )
-    
+
     val credentialId = wallet.store(credential)
-    
+
     // Organize credentials
     if (wallet is CredentialOrganization) {
         val collection = wallet.createCollection("Work Credentials")
         wallet.addToCollection(credentialId, collection)
         wallet.tagCredential(credentialId, setOf("important", "verified"))
     }
-    
+
     // Query credentials
     val credentials = wallet.query {
         byIssuer("did:key:issuer")
@@ -249,7 +249,7 @@ fun main() = runBlocking {
         property("connectionString", System.getenv("WALLET_DB_URL"))
     }.getOrThrow()
     println("Custom wallet provider registered: ${customWallet.javaClass.simpleName}")
-    
+
     // Create a presentation
     if (wallet is CredentialPresentation) {
         val presentation = wallet.createPresentation(
@@ -262,7 +262,7 @@ fun main() = runBlocking {
         )
         println("Created presentation with ${presentation.verifiableCredential.size} credentials")
     }
-    
+
     // Get wallet statistics
     val stats = wallet.getStatistics()
     println("Wallet has ${stats.totalCredentials} credentials")
@@ -321,28 +321,28 @@ fun main() = runBlocking {
 val blockchainRegistry = BlockchainAnchorRegistry().apply {
     register("algorand:mainnet", client)
 }
-    
+
     // Create a digest object
     val digest = VerifiableCredentialDigest(
         vcId = "vc-12345",
         vcDigest = "uABC123..."
     )
-    
+
     // Anchor it
 val result = blockchainRegistry.anchorTyped(
         value = digest,
         serializer = VerifiableCredentialDigest.serializer(),
         targetChainId = "algorand:mainnet"
     )
-    
+
     println("Anchored at: ${result.ref.txHash}")
-    
+
     // Read it back
 val retrieved = blockchainRegistry.readTyped<VerifiableCredentialDigest>(
         ref = result.ref,
         serializer = VerifiableCredentialDigest.serializer()
     )
-    
+
     println("Retrieved: ${retrieved.vcId}")
 }
 ```
@@ -375,16 +375,16 @@ fun main() = runBlocking {
     val kms = InMemoryKeyManagementService()
     val didMethod = DidKeyMockMethod(kms)
     val anchorClient = InMemoryBlockchainAnchorClient("algorand:mainnet")
-    
+
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
     val blockchainRegistry = BlockchainAnchorRegistry().apply {
         register("algorand:mainnet", anchorClient)
     }
-    
+
     // 2. Create a DID for the issuer
     val issuerDoc = didMethod.createDid()
     val issuerDid = issuerDoc.id
-    
+
     // 3. Create a verifiable credential payload
     val vcPayload = buildJsonObject {
         put("vcId", "vc-12345")
@@ -394,33 +394,33 @@ fun main() = runBlocking {
             put("type", "Person")
         })
     }
-    
+
     // 4. Compute digest
     val digest = DigestUtils.sha256DigestMultibase(vcPayload)
-    
+
     // 5. Create digest object and anchor it
     val digestObj = VerifiableCredentialDigest(
         vcId = "vc-12345",
         vcDigest = digest,
         issuer = issuerDid
     )
-    
+
     val anchorResult = blockchainRegistry.anchorTyped(
         value = digestObj,
         serializer = VerifiableCredentialDigest.serializer(),
         targetChainId = "algorand:mainnet"
     )
-    
+
     println("Issuer DID: $issuerDid")
     println("VC Digest: $digest")
     println("Anchored at: ${anchorResult.ref.txHash}")
-    
+
     // 6. Verify by reading back
     val retrieved = blockchainRegistry.readTyped<VerifiableCredentialDigest>(
         ref = anchorResult.ref,
         serializer = VerifiableCredentialDigest.serializer()
     )
-    
+
     assert(retrieved.vcDigest == digest)
     println("Verification successful!")
 }
@@ -432,4 +432,6 @@ fun main() = runBlocking {
 - Explore [Architecture & Modules](ARCHITECTURE.md) for detailed module information
 - Check out [Available Plugins](PLUGINS.md) for integration options
 - See [Development Guide](DEVELOPMENT.md) for building and testing
+
+
 

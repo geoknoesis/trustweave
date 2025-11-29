@@ -15,7 +15,7 @@ class AzureKmsConfigTest {
             "tenantId" to "tenant-id",
             "endpointOverride" to "https://localhost:8443"
         ))
-        
+
         assertEquals("https://myvault.vault.azure.net", config.vaultUrl)
         assertEquals("client-id", config.clientId)
         assertEquals("client-secret", config.clientSecret)
@@ -36,7 +36,7 @@ class AzureKmsConfigTest {
             .vaultUrl("https://testvault.vault.azure.net")
             .clientId("test-client-id")
             .build()
-        
+
         assertEquals("https://testvault.vault.azure.net", config.vaultUrl)
         assertEquals("test-client-id", config.clientId)
     }

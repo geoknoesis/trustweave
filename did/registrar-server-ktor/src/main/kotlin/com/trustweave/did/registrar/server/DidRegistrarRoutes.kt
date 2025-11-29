@@ -38,7 +38,7 @@ fun Routing.configureDidRegistrarRoutes(
     registrar: DidRegistrar,
     jobStorage: JobStorage
 ) {
-    
+
     /**
      * POST /1.0/dids
      *

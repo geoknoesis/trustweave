@@ -32,22 +32,22 @@ class CredentialIssuerTest {
         proofRegistry = ProofGeneratorRegistry()
         SchemaRegistry.clear()
         SchemaValidatorRegistry.clear()
-        
+
         // Register JSON Schema validator
         SchemaValidatorRegistry.register(JsonSchemaValidator())
-        
+
         // Create a simple mock signer for testing
         val signer: suspend (ByteArray, String) -> ByteArray = { _, _ ->
             // Simple mock signature - just return a fixed byte array
             "mock-signature-${UUID.randomUUID()}".toByteArray()
         }
-        
+
         val proofGenerator = Ed25519ProofGenerator(
             signer = signer,
             getPublicKeyId = { "did:key:issuer123#key-1" }
         )
         proofRegistry.register(proofGenerator)
-        
+
         issuer = CredentialIssuer(
             proofGenerator = proofGenerator,
             resolveDid = { did -> did == issuerDid },
@@ -65,13 +65,13 @@ class CredentialIssuerTest {
     @Test
     fun `test issue credential successfully`() = runBlocking {
         val credential = createTestCredential()
-        
+
         val issued = issuer.issue(
             credential = credential,
             issuerDid = issuerDid,
             keyId = keyId
         )
-        
+
         assertNotNull(issued.proof)
         assertEquals("Ed25519Signature2020", issued.proof.type)
         assertEquals(issuerDid, issued.issuer)
@@ -86,14 +86,14 @@ class CredentialIssuerTest {
             challenge = "challenge-123",
             domain = "example.com"
         )
-        
+
         val issued = issuer.issue(
             credential = credential,
             issuerDid = issuerDid,
             keyId = keyId,
             options = options
         )
-        
+
         assertNotNull(issued.proof)
         assertEquals("challenge-123", issued.proof.challenge)
         assertEquals("example.com", issued.proof.domain)
@@ -102,7 +102,7 @@ class CredentialIssuerTest {
     @Test
     fun `test issue credential fails when issuer DID mismatch`() = runBlocking {
         val credential = createTestCredential(issuerDid = "did:key:different")
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuer.issue(
                 credential = credential,
@@ -115,7 +115,7 @@ class CredentialIssuerTest {
     @Test
     fun `test issue credential fails when missing VerifiableCredential type`() = runBlocking {
         val credential = createTestCredential(types = listOf("PersonCredential"))
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuer.issue(
                 credential = credential,
@@ -128,7 +128,7 @@ class CredentialIssuerTest {
     @Test
     fun `test issue credential fails when issuer is blank`() = runBlocking {
         val credential = createTestCredential(issuerDid = "")
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuer.issue(
                 credential = credential,
@@ -141,7 +141,7 @@ class CredentialIssuerTest {
     @Test
     fun `test issue credential fails when issuanceDate is blank`() = runBlocking {
         val credential = createTestCredential(issuanceDate = "")
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuer.issue(
                 credential = credential,
@@ -158,7 +158,7 @@ class CredentialIssuerTest {
             proofRegistry = proofRegistry
         )
         val credential = createTestCredential()
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuerWithFailedDid.issue(
                 credential = credential,
@@ -184,17 +184,17 @@ class CredentialIssuerTest {
             })
         }
         SchemaRegistry.registerSchema(schema, schemaDefinition)
-        
+
         val credential = createTestCredential(
             schema = schema
         )
-        
+
         val issued = issuer.issue(
             credential = credential,
             issuerDid = issuerDid,
             keyId = keyId
         )
-        
+
         assertNotNull(issued.proof)
         assertEquals(schemaId, issued.credentialSchema?.id)
     }
@@ -216,7 +216,7 @@ class CredentialIssuerTest {
             })
         }
         SchemaRegistry.registerSchema(schema, schemaDefinition)
-        
+
         val credential = createTestCredential(
             schema = schema,
             subject = buildJsonObject {
@@ -224,7 +224,7 @@ class CredentialIssuerTest {
                 put("id", "did:key:subject")
             }
         )
-        
+
         // Note: Current JsonSchemaValidator implementation doesn't fully parse required fields
         // So this test may not fail as expected until full implementation
         // For now, we'll test that the schema validation is called
@@ -250,14 +250,14 @@ class CredentialIssuerTest {
             proofRegistry = proofRegistry
         )
         val credential = createTestCredential()
-        
+
         val issued = issuerWithoutGenerator.issue(
             credential = credential,
             issuerDid = issuerDid,
             keyId = keyId,
             options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
         )
-        
+
         assertNotNull(issued.proof)
         assertEquals("Ed25519Signature2020", issued.proof.type)
     }
@@ -271,7 +271,7 @@ class CredentialIssuerTest {
             proofRegistry = emptyRegistry
         )
         val credential = createTestCredential()
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuerWithoutGenerator.issue(
                 credential = credential,
@@ -286,13 +286,13 @@ class CredentialIssuerTest {
     fun `test issue credential with expiration date`() = runBlocking {
         val expirationDate = java.time.Instant.now().plusSeconds(86400).toString()
         val credential = createTestCredential(expirationDate = expirationDate)
-        
+
         val issued = issuer.issue(
             credential = credential,
             issuerDid = issuerDid,
             keyId = keyId
         )
-        
+
         assertEquals(expirationDate, issued.expirationDate)
         assertNotNull(issued.proof)
     }
@@ -305,13 +305,13 @@ class CredentialIssuerTest {
                 type = "StatusList2021Entry"
             )
         )
-        
+
         val issued = issuer.issue(
             credential = credential,
             issuerDid = issuerDid,
             keyId = keyId
         )
-        
+
         assertNotNull(issued.credentialStatus)
         assertEquals("StatusList2021Entry", issued.credentialStatus.type)
     }

@@ -22,7 +22,7 @@ class PresentationRequestTest {
             domain = "example.com",
             expires = "2024-12-31T23:59:59Z"
         )
-        
+
         assertEquals("request-123", request.id)
         assertEquals(query, request.query)
         assertEquals("challenge-123", request.challenge)
@@ -37,7 +37,7 @@ class PresentationRequestTest {
             query = query,
             challenge = "challenge-123"
         )
-        
+
         assertNotNull(request.id) // Auto-generated UUID
         assertEquals(query, request.query)
         assertEquals("challenge-123", request.challenge)
@@ -58,7 +58,7 @@ class PresentationRequestTest {
             query = query,
             challenge = "challenge-123"
         )
-        
+
         assertEquals(request1, request2)
     }
 
@@ -69,7 +69,7 @@ class PresentationRequestTest {
             query = query,
             challenge = "challenge-123"
         )
-        
+
         val str = request.toString()
         assertTrue(str.contains("challenge-123"))
     }
@@ -81,9 +81,9 @@ class PresentationRequestTest {
             query = query,
             challenge = "challenge-123"
         )
-        
+
         val copied = request.copy(domain = "example.com")
-        
+
         assertEquals(request.id, copied.id)
         assertEquals(request.query, copied.query)
         assertEquals(request.challenge, copied.challenge)
@@ -98,7 +98,7 @@ class PresentationRequestTest {
             requiredFields = listOf("name", "email", "age"),
             issuer = "did:key:issuer"
         )
-        
+
         assertEquals("CredentialQuery", query.type)
         assertEquals(2, query.credentialTypes?.size)
         assertEquals(3, query.requiredFields?.size)
@@ -108,7 +108,7 @@ class PresentationRequestTest {
     @Test
     fun `test PresentationQuery with defaults`() {
         val query = PresentationQuery(type = "DIDAuthentication")
-        
+
         assertEquals("DIDAuthentication", query.type)
         assertNull(query.credentialTypes)
         assertNull(query.requiredFields)
@@ -122,7 +122,7 @@ class PresentationRequestTest {
             credentialTypes = emptyList(),
             requiredFields = emptyList()
         )
-        
+
         assertNotNull(query.credentialTypes)
         assertTrue(query.credentialTypes!!.isEmpty())
         assertNotNull(query.requiredFields)
@@ -141,7 +141,7 @@ class PresentationRequestTest {
             credentialTypes = listOf("PersonCredential"),
             issuer = "did:key:issuer"
         )
-        
+
         assertEquals(query1, query2)
     }
 
@@ -151,7 +151,7 @@ class PresentationRequestTest {
             type = "CredentialQuery",
             credentialTypes = listOf("PersonCredential")
         )
-        
+
         val str = query.toString()
         assertTrue(str.contains("CredentialQuery"))
     }
@@ -159,12 +159,12 @@ class PresentationRequestTest {
     @Test
     fun `test PresentationQuery copy`() {
         val query = PresentationQuery(type = "DIDAuthentication")
-        
+
         val copied = query.copy(
             credentialTypes = listOf("PersonCredential"),
             issuer = "did:key:issuer"
         )
-        
+
         assertEquals(query.type, copied.type)
         assertEquals(1, copied.credentialTypes?.size)
         assertEquals("did:key:issuer", copied.issuer)
@@ -177,7 +177,7 @@ class PresentationRequestTest {
             query = query,
             challenge = "auth-challenge"
         )
-        
+
         assertEquals("DIDAuthentication", request.query.type)
     }
 
@@ -191,7 +191,7 @@ class PresentationRequestTest {
             query = query,
             challenge = "challenge-123"
         )
-        
+
         assertEquals(3, request.query.credentialTypes?.size)
     }
 
@@ -205,7 +205,7 @@ class PresentationRequestTest {
             query = query,
             challenge = "challenge-123"
         )
-        
+
         assertEquals(4, request.query.requiredFields?.size)
     }
 }

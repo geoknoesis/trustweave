@@ -34,7 +34,7 @@ val offer = registry.offerCredential("didcomm", request)
 
 ### ✅ DIDComm V2
 
-**Status**: Production Ready  
+**Status**: Production Ready
 **Documentation**: [DIDComm Protocol](./didcomm.md)
 
 - Full protocol support (offer, request, issue, proof request, proof presentation)
@@ -45,7 +45,7 @@ val offer = registry.offerCredential("didcomm", request)
 
 ### ✅ OIDC4VCI
 
-**Status**: Production Ready  
+**Status**: Production Ready
 **Documentation**: [OIDC4VCI Protocol](./oidc4vci.md)
 
 - Credential issuance flow
@@ -56,7 +56,7 @@ val offer = registry.offerCredential("didcomm", request)
 
 ### ✅ CHAPI
 
-**Status**: Production Ready  
+**Status**: Production Ready
 **Documentation**: [CHAPI Protocol](./chapi.md)
 
 - Browser-compatible message generation

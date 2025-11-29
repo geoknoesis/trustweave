@@ -117,7 +117,7 @@ flowchart TD
     B -->|stored in| C["Attendee Wallet<br/>Stores ticket<br/>Manages transfers<br/>Tracks attendance"]
     C -->|presents| D["Venue Access Control<br/>Verifies ticket cryptographically<br/>Checks transfer status<br/>Grants/denies access"]
     C -->|transfers| E["Ticket Transfer<br/>Verifies transfer authorization<br/>Updates ticket holder<br/>Maintains transfer chain"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -140,10 +140,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 dependencies {
     // Core TrustWeave modules
     implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -171,31 +171,31 @@ fun main() = runBlocking {
     println("=".repeat(70))
     println("Event Ticketing and Access Control Scenario - Complete End-to-End Example")
     println("=".repeat(70))
-    
+
     // Step 1: Create TrustWeave instance
     val TrustWeave = TrustWeave.create()
     println("\n✅ TrustWeave initialized")
-    
+
     // Step 2: Create DIDs for event organizer, attendee, and venue
     val organizerDidDoc = TrustWeave.dids.create()
     val organizerDid = organizerDidDoc.id
     val organizerKeyId = organizerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val attendeeDidDoc = TrustWeave.dids.create()
     val attendeeDid = attendeeDidDoc.id
-    
+
     val newAttendeeDidDoc = TrustWeave.dids.create()
     val newAttendeeDid = newAttendeeDidDoc.id
-    
+
     val venueDidDoc = TrustWeave.dids.create()
     val venueDid = venueDidDoc.id
-    
+
     println("✅ Event Organizer DID: $organizerDid")
     println("✅ Attendee DID: $attendeeDid")
     println("✅ New Attendee DID (for transfer): $newAttendeeDid")
     println("✅ Venue DID: $venueDid")
-    
+
     // Step 3: Issue event ticket credential
     val ticketCredential = TrustWeave.issueCredential(
         issuerDid = organizerDid,
@@ -221,12 +221,12 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "EventTicketCredential", "TicketCredential"),
         expirationDate = "2024-06-15T23:59:59Z"
     ).getOrThrow()
-    
+
     println("\n✅ Event ticket credential issued: ${ticketCredential.id}")
     println("   Event: Tech Conference 2024")
     println("   Ticket Number: TC2024-001234")
     println("   Seat: A-42 (VIP)")
-    
+
     // Step 4: Create attendee wallet and store ticket
     val attendeeWallet = TrustWeave.createWallet(
         holderDid = attendeeDid,
@@ -235,10 +235,10 @@ fun main() = runBlocking {
             enablePresentation = true
         }.build()
     ).getOrThrow()
-    
+
     val ticketCredentialId = attendeeWallet.store(ticketCredential)
     println("✅ Ticket stored in attendee wallet: $ticketCredentialId")
-    
+
     // Step 5: Organize ticket in wallet
     attendeeWallet.withOrganization { org ->
         val eventsCollectionId = org.createCollection("Events", "Event tickets and passes")
@@ -246,32 +246,32 @@ fun main() = runBlocking {
         org.tagCredential(ticketCredentialId, setOf("event", "ticket", "tech-conference", "vip", "transferable"))
         println("✅ Ticket organized in wallet")
     }
-    
+
     // Step 6: Verify ticket before venue entry
     println("\n🎫 Pre-Entry Ticket Verification:")
-    
+
     val ticketVerification = TrustWeave.verifyCredential(ticketCredential).getOrThrow()
-    
+
     if (ticketVerification.valid) {
         println("✅ Ticket Credential: VALID")
         println("   Proof valid: ${ticketVerification.proofValid}")
         println("   Issuer valid: ${ticketVerification.issuerValid}")
-        
+
         // Check if ticket is expired
         val expirationDate = ticketCredential.expirationDate?.let { Instant.parse(it) }
         val isExpired = expirationDate?.isBefore(Instant.now()) ?: false
-        
+
         if (isExpired) {
             println("❌ Ticket is EXPIRED")
             println("❌ Entry DENIED")
         } else {
             println("✅ Ticket is valid and not expired")
-            
+
             // Check event date
             val credentialSubject = ticketCredential.credentialSubject
             val ticket = credentialSubject.jsonObject["ticket"]?.jsonObject
             val eventDate = ticket?.get("eventDate")?.jsonPrimitive?.content
-            
+
             println("   Event Date: $eventDate")
             println("✅ Entry APPROVED")
         }
@@ -280,22 +280,22 @@ fun main() = runBlocking {
         println("   Errors: ${ticketVerification.errors}")
         println("❌ Entry DENIED")
     }
-    
+
     // Step 7: Ticket transfer to new attendee
     println("\n🔄 Ticket Transfer Process:")
-    
+
     // Verify transfer is allowed
     val credentialSubject = ticketCredential.credentialSubject
     val ticket = credentialSubject.jsonObject["ticket"]?.jsonObject
     val transferable = ticket?.get("transferable")?.jsonPrimitive?.content?.toBoolean() ?: false
     val transferCount = ticket?.get("transferCount")?.jsonPrimitive?.content?.toInt() ?: 0
     val maxTransfers = ticket?.get("maxTransfers")?.jsonPrimitive?.content?.toInt() ?: 0
-    
+
     if (transferable && transferCount < maxTransfers) {
         println("✅ Ticket is transferable")
         println("   Current transfer count: $transferCount")
         println("   Maximum transfers: $maxTransfers")
-        
+
         // Issue new ticket credential to new attendee (in real system, this would be signed by original holder)
         // For this example, we'll issue a transfer credential from the organizer
         val transferredTicketCredential = TrustWeave.issueCredential(
@@ -324,12 +324,12 @@ fun main() = runBlocking {
             types = listOf("VerifiableCredential", "EventTicketCredential", "TicketCredential", "TransferredTicketCredential"),
             expirationDate = "2024-06-15T23:59:59Z"
         ).getOrThrow()
-        
+
         println("✅ Ticket transferred to new attendee")
         println("   New holder: $newAttendeeDid")
         println("   Transfer count: 1")
         println("   Further transfers: DISABLED")
-        
+
         // Store in new attendee's wallet
         val newAttendeeWallet = TrustWeave.createWallet(
             holderDid = newAttendeeDid,
@@ -338,29 +338,29 @@ fun main() = runBlocking {
                 enablePresentation = true
             }.build()
         ).getOrThrow()
-        
+
         val transferredTicketId = newAttendeeWallet.store(transferredTicketCredential)
         newAttendeeWallet.withOrganization { org ->
             val eventsCollectionId = org.createCollection("Events", "Event tickets and passes")
             org.addToCollection(transferredTicketId, eventsCollectionId)
             org.tagCredential(transferredTicketId, setOf("event", "ticket", "tech-conference", "vip", "transferred"))
         }
-        
+
         println("✅ Transferred ticket stored in new attendee wallet")
-        
+
         // Step 8: Verify transferred ticket at venue
         println("\n🎫 Transferred Ticket Verification at Venue:")
-        
+
         val transferredTicketVerification = TrustWeave.verifyCredential(transferredTicketCredential).getOrThrow()
-        
+
         if (transferredTicketVerification.valid) {
             println("✅ Transferred Ticket Credential: VALID")
-            
+
             // Check transfer chain
             val transferredTicket = transferredTicketCredential.credentialSubject.jsonObject["ticket"]?.jsonObject
             val transferredFrom = transferredTicket?.get("transferredFrom")?.jsonPrimitive?.content
             val transferCount = transferredTicket?.get("transferCount")?.jsonPrimitive?.content?.toInt() ?: 0
-            
+
             println("   Original holder: $transferredFrom")
             println("   Current holder: $newAttendeeDid")
             println("   Transfer count: $transferCount")
@@ -372,7 +372,7 @@ fun main() = runBlocking {
     } else {
         println("❌ Ticket is not transferable or transfer limit reached")
     }
-    
+
     // Step 9: Create presentation for venue access
     val accessPresentation = attendeeWallet.withPresentation { pres ->
         pres.createPresentation(
@@ -384,11 +384,11 @@ fun main() = runBlocking {
             )
         )
     } ?: error("Presentation capability not available")
-    
+
     println("\n✅ Access presentation created for venue")
     println("   Holder: ${accessPresentation.holder}")
     println("   Credentials: ${accessPresentation.verifiableCredential.size}")
-    
+
     // Step 10: Display wallet statistics
     val stats = attendeeWallet.getStatistics()
     println("\n📊 Attendee Wallet Statistics:")
@@ -396,7 +396,7 @@ fun main() = runBlocking {
     println("   Valid credentials: ${stats.validCredentials}")
     println("   Collections: ${stats.collectionsCount}")
     println("   Tags: ${stats.tagsCount}")
-    
+
     // Step 11: Summary
     println("\n" + "=".repeat(70))
     println("✅ EVENT TICKETING SYSTEM COMPLETE")

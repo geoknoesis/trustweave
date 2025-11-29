@@ -16,7 +16,7 @@ import java.time.Instant
 
 /**
  * Earth Observation (EO) Data Integrity Example - Complete Scenario
- * 
+ *
  * This example demonstrates a comprehensive EO data integrity workflow using TrustWeave:
  * 1. Setup TrustWeave with blockchain anchoring
  * 2. Create DID for data provider
@@ -27,7 +27,7 @@ import java.time.Instant
  * 7. Read back anchored data
  * 8. Verify the complete integrity chain
  * 9. Verify the Verifiable Credential
- * 
+ *
  * This scenario demonstrates:
  * - DID creation and resolution
  * - Artifact creation with cryptographic digests
@@ -36,7 +36,7 @@ import java.time.Instant
  * - Blockchain anchoring
  * - Integrity chain verification
  * - Error handling with Result types and TrustWeaveError
- * 
+ *
  * Run: `./gradlew :TrustWeave-examples:runEarthObservation`
  */
 fun main() = runBlocking {
@@ -44,11 +44,11 @@ fun main() = runBlocking {
     println("Earth Observation - Complete Data Integrity Scenario")
     println("=".repeat(70))
     println()
-    
+
     // Step 1: Setup TrustWeave with blockchain anchoring
     println("Step 1: Setting up TrustWeave with blockchain anchoring...")
     val chainId = "algorand:testnet"
-    
+
     // Create TrustWeave instance with in-memory blockchain client for testing
     // In production, use AlgorandBlockchainAnchorClient or other blockchain clients
     // IMPORTANT: Store the client reference so we can reuse it for verification
@@ -63,14 +63,14 @@ fun main() = runBlocking {
     println("  - Mode: In-memory (for testing)")
     println("  - Note: In production, use real blockchain clients (Algorand, Ethereum, etc.)")
     println()
-    
+
     // Step 2: Create DID for data provider
     println("Step 2: Creating DID for data provider...")
     println("\n📤 REQUEST: Create DID")
     println("  Purpose: Generate a decentralized identifier for the data provider")
     println("  Method: key (default)")
     println("  Parameters: Using default DID creation options")
-    
+
     val issuerDid = try {
         trustweave.dids.create()
     } catch (error: TrustWeaveError.DidMethodNotRegistered) {
@@ -85,7 +85,7 @@ fun main() = runBlocking {
         println("  ✗ Error Type: ${error::class.simpleName}")
         return@runBlocking
     }
-    
+
     println("\n📥 RESPONSE: DID Created Successfully")
     println("  ✓ DID Document ID: ${issuerDid.id}")
     println("  ✓ Verification Methods Count: ${issuerDid.verificationMethod.size}")
@@ -103,12 +103,12 @@ fun main() = runBlocking {
     }
     val issuerKeyId = issuerDid.verificationMethod.first().id
     println("\n  ✓ Selected Issuer Key ID: $issuerKeyId")
-    
+
     // Resolve the DID to verify it's accessible
     println("\n📤 REQUEST: Resolve DID")
     println("  Purpose: Verify DID is accessible and can be resolved")
     println("  DID: ${issuerDid.id}")
-    
+
     try {
         val resolution = trustweave.dids.resolve(issuerDid.id)
         println("\n📥 RESPONSE: DID Resolution")
@@ -125,17 +125,17 @@ fun main() = runBlocking {
         println("  ✗ Error: ${error.message}")
     }
     println()
-    
+
     // Step 3: Create Artifacts (Metadata, Provenance, Quality)
     println("Step 3: Creating EO dataset artifacts...")
     println("\n" + "─".repeat(70))
     println("ARTIFACT TRACEABILITY - Complete Request/Response Logging")
     println("─".repeat(70))
-    
+
     // Artifacts are the actual data documents that describe the EO dataset.
     // Each artifact gets a cryptographic digest (hash) that acts as a fingerprint.
     // If the artifact changes, the digest changes - making tampering detectable.
-    
+
     // 1. Metadata Artifact: Describes WHAT the data is
     println("\n📤 REQUEST: Create Metadata Artifact")
     println("  Purpose: Create metadata document describing WHAT the EO dataset is")
@@ -144,13 +144,13 @@ fun main() = runBlocking {
     println("    - ID: metadata-1")
     println("    - Title: Sentinel-2 L2A Dataset - Central Europe")
     println("    - Description: Atmospherically corrected Sentinel-2 Level 2A product covering Central Europe region")
-    
+
     val (metadataArtifact, metadataDigest) = TestDataBuilders.createMetadataArtifact(
         id = "metadata-1",
         title = "Sentinel-2 L2A Dataset - Central Europe",
         description = "Atmospherically corrected Sentinel-2 Level 2A product covering Central Europe region"
     )
-    
+
     println("\n📥 RESPONSE: Metadata Artifact Created")
     println("  ✓ Artifact ID: ${metadataArtifact["id"]?.jsonPrimitive?.content}")
     println("  ✓ Artifact Type: ${metadataArtifact["type"]?.jsonPrimitive?.content}")
@@ -159,7 +159,7 @@ fun main() = runBlocking {
     println("\n  Full Artifact Document:")
     val artifactJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
     println(artifactJson.encodeToString(JsonObject.serializer(), metadataArtifact))
-    
+
     // 2. Provenance Artifact: Describes WHERE the data came from
     println("\n" + "─".repeat(70))
     println("\n📤 REQUEST: Create Provenance Artifact")
@@ -169,13 +169,13 @@ fun main() = runBlocking {
     println("    - ID: provenance-1")
     println("    - Activity: EO Data Collection")
     println("    - Agent: ${issuerDid.id}")
-    
+
     val (provenanceArtifact, provenanceDigest) = TestDataBuilders.createProvenanceArtifact(
         id = "provenance-1",
         activity = "EO Data Collection",
         agent = issuerDid.id  // Links back to the DID we created in Step 2
     )
-    
+
     println("\n📥 RESPONSE: Provenance Artifact Created")
     println("  ✓ Artifact ID: ${provenanceArtifact["id"]?.jsonPrimitive?.content}")
     println("  ✓ Artifact Type: ${provenanceArtifact["type"]?.jsonPrimitive?.content}")
@@ -183,7 +183,7 @@ fun main() = runBlocking {
     println("  ✓ Media Type: ${provenanceArtifact["mediaType"]?.jsonPrimitive?.content ?: "application/json"}")
     println("\n  Full Artifact Document:")
     println(artifactJson.encodeToString(JsonObject.serializer(), provenanceArtifact))
-    
+
     // 3. Quality Report Artifact: Describes HOW GOOD the data is
     println("\n" + "─".repeat(70))
     println("\n📤 REQUEST: Create Quality Report Artifact")
@@ -203,13 +203,13 @@ fun main() = runBlocking {
     qualityMetrics.forEach { (key, value) ->
         println("      - $key: $value")
     }
-    
+
     val (qualityArtifact, qualityDigest) = TestDataBuilders.createQualityReportArtifact(
         id = "quality-1",
         qualityScore = 0.95,  // 95% quality score
         metrics = qualityMetrics
     )
-    
+
     println("\n📥 RESPONSE: Quality Report Artifact Created")
     println("  ✓ Artifact ID: ${qualityArtifact["id"]?.jsonPrimitive?.content}")
     println("  ✓ Artifact Type: ${qualityArtifact["type"]?.jsonPrimitive?.content}")
@@ -217,7 +217,7 @@ fun main() = runBlocking {
     println("  ✓ Media Type: ${qualityArtifact["mediaType"]?.jsonPrimitive?.content ?: "application/json"}")
     println("\n  Full Artifact Document:")
     println(artifactJson.encodeToString(JsonObject.serializer(), qualityArtifact))
-    
+
     println("\n" + "─".repeat(70))
     println("✓ All artifacts created successfully")
     println("  Summary:")
@@ -227,7 +227,7 @@ fun main() = runBlocking {
     println("  Each artifact has a unique digest (fingerprint) that proves its integrity")
     println("─".repeat(70))
     println()
-    
+
     // Step 4: Create Linkset
     println("Step 4: Creating Linkset...")
     println("\n📤 REQUEST: Create Linkset")
@@ -238,11 +238,11 @@ fun main() = runBlocking {
     println("    1. metadata-1 (Digest: $metadataDigest)")
     println("    2. provenance-1 (Digest: $provenanceDigest)")
     println("    3. quality-1 (Digest: $qualityDigest)")
-    
+
     // A Linkset is like a table of contents that links all artifacts together.
     // It contains references (links) to each artifact along with its digest.
     // This allows us to verify that all artifacts are present and untampered.
-    
+
     // Create links to each artifact
     val links = listOf(
         TestDataBuilders.buildLink(
@@ -261,7 +261,7 @@ fun main() = runBlocking {
             type = "QualityReport"
         )
     )
-    
+
     // IMPORTANT: We compute the Linkset digest BEFORE adding it to the Linkset
     // This avoids a circular dependency (digest depends on Linkset, but Linkset contains digest)
     // CRITICAL: The digest must be computed from the same structure that will be verified
@@ -272,17 +272,17 @@ fun main() = runBlocking {
         put("@context", "https://www.w3.org/ns/json-ld#")
         put("links", Json.encodeToJsonElement(links))
     }
-    
+
     // Compute the digest of the Linkset (this becomes the Linkset's fingerprint)
     val linksetDigest = DigestUtils.sha256DigestMultibase(linksetWithoutDigest)
-    
+
     // Now build the complete Linkset WITH the digest
     val linksetWithDigest = TestDataBuilders.buildLinkset(
         digestMultibase = linksetDigest,
         links = links,
         linksetId = linksetId
     )
-    
+
     println("\n📥 RESPONSE: Linkset Created")
     println("  ✓ Linkset ID: $linksetId")
     println("  ✓ Digest (Multibase): $linksetDigest")
@@ -296,7 +296,7 @@ fun main() = runBlocking {
         println("       Digest: ${link.digestMultibase}")
     }
     println()
-    
+
     // Step 5: Issue Verifiable Credential
     println("Step 5: Issuing Verifiable Credential...")
     println("\n📤 REQUEST: Issue Verifiable Credential")
@@ -309,13 +309,13 @@ fun main() = runBlocking {
     println("    - Issuer DID: ${issuerDid.id}")
     println("    - Issuer Key ID: $issuerKeyId")
     println("    - Credential Types: EarthObservationCredential, VerifiableCredential")
-    
+
     // A Verifiable Credential (VC) is like a digital certificate that attests to something.
     // In our case, it attests that:
     // - A specific EO dataset exists
     // - It has associated metadata, provenance, and quality reports
     // - These are linked together via the Linkset
-    
+
     // The "subject" is what the credential is about - our EO dataset
     // We include the Linkset digest in the credential subject
     val credentialSubject = buildJsonObject {
@@ -340,7 +340,7 @@ fun main() = runBlocking {
     println("  Credential Subject:")
     val subjectJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
     println(subjectJson.encodeToString(JsonObject.serializer(), credentialSubject))
-    
+
     // Issue the credential using TrustWeave facade
     val credential = trustweave.credentials.issue(
         issuer = issuerDid.id,
@@ -352,7 +352,7 @@ fun main() = runBlocking {
         ),
         types = listOf("EarthObservationCredential", "VerifiableCredential")
     )
-    
+
     println("\n📥 RESPONSE: Credential Issued Successfully")
     println("  ✓ Credential ID: ${credential.id}")
     println("  ✓ Issuer: ${credential.issuer}")
@@ -368,9 +368,9 @@ fun main() = runBlocking {
     println("\n  Full Credential Document:")
     val credentialJsonFormatter = Json { prettyPrint = true; ignoreUnknownKeys = true }
     println(credentialJsonFormatter.encodeToString(VerifiableCredential.serializer(), credential))
-    
+
     println()
-    
+
     // Step 6: Verify the credential
     println("Step 6: Verifying credential...")
     println("\n📤 REQUEST: Verify Verifiable Credential")
@@ -381,9 +381,9 @@ fun main() = runBlocking {
     println("    - Issuer DID resolution and validation")
     println("    - Expiration check")
     println("    - Revocation status check")
-    
+
     val verification = trustweave.credentials.verify(credential)
-    
+
     println("\n📥 RESPONSE: Credential Verification Result")
     if (verification.valid) {
         println("  ✓ Overall Status: VALID")
@@ -411,7 +411,7 @@ fun main() = runBlocking {
         }
     }
     println()
-    
+
     // Step 7: Anchor VC digest to blockchain
     println("Step 7: Anchoring VC digest to blockchain...")
     println("\n📤 REQUEST: Anchor Data to Blockchain")
@@ -419,14 +419,14 @@ fun main() = runBlocking {
     println("  Chain ID: $chainId")
     println("  Mode: In-memory (for testing)")
     println("  Note: In production, this would write to a real blockchain")
-    
+
     // Convert credential to JsonElement for anchoring
     val anchorJson = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
     }
     val credentialJson = anchorJson.encodeToJsonElement(VerifiableCredential.serializer(), credential)
-    
+
     // Add linksetDigest at top level for integrity verification
     // This must be done BEFORE computing the VC digest
     val credentialWithLinksetRef = buildJsonObject {
@@ -436,7 +436,7 @@ fun main() = runBlocking {
         // Add linkset digest reference at top level for verification
         put("linksetDigest", linksetDigest)
     }
-    
+
     // Compute VC digest for anchoring (without metadata fields)
     val vcWithoutMetadata = buildJsonObject {
         credentialWithLinksetRef.entries.forEach { (key, value) ->
@@ -446,7 +446,7 @@ fun main() = runBlocking {
         }
     }
     val vcDigest = DigestUtils.sha256DigestMultibase(vcWithoutMetadata)
-    
+
     // Compute VC digest for anchoring
     // In production, you might want to anchor just the digest to save space
     val vcDigestPayload = buildJsonObject {
@@ -459,7 +459,7 @@ fun main() = runBlocking {
     }
     println("  Payload to anchor:")
     println(anchorJson.encodeToString(JsonObject.serializer(), vcDigestPayload))
-    
+
     val anchor = try {
         trustweave.blockchains.anchor(
             data = vcDigestPayload,
@@ -491,7 +491,7 @@ fun main() = runBlocking {
         }
         return@runBlocking
     }
-    
+
     println("\n📥 RESPONSE: Data Anchored Successfully")
     println("  ✓ Chain ID: ${anchor.ref.chainId}")
     println("  ✓ Transaction Hash: ${anchor.ref.txHash}")
@@ -502,7 +502,7 @@ fun main() = runBlocking {
         println("    - Contract: $it")
     }
     println()
-    
+
     // Step 8: Read back anchored data
     println("Step 8: Reading anchored data from blockchain...")
     println("\n📤 REQUEST: Read Anchored Data from Blockchain")
@@ -510,7 +510,7 @@ fun main() = runBlocking {
     println("  Anchor Reference:")
     println("    - Chain ID: ${anchor.ref.chainId}")
     println("    - Transaction Hash: ${anchor.ref.txHash}")
-    
+
     val readJson = try {
         trustweave.blockchains.read<JsonElement>(
             ref = anchor.ref,
@@ -521,7 +521,7 @@ fun main() = runBlocking {
         println("  ✗ Error: ${error.message}")
         return@runBlocking
     }
-    
+
     println("\n📥 RESPONSE: Anchored Data Retrieved")
     println("  ✓ Status: Successfully read from blockchain")
     println("  ✓ VC ID: ${readJson.jsonObject["vcId"]?.jsonPrimitive?.content}")
@@ -531,7 +531,7 @@ fun main() = runBlocking {
     println("  ✓ Timestamp: ${readJson.jsonObject["timestamp"]?.jsonPrimitive?.content}")
     println("\n  Full Anchored Payload:")
     println(anchorJson.encodeToString(JsonObject.serializer(), readJson.jsonObject))
-    
+
     // Verify data integrity
     val readVcDigest = readJson.jsonObject["vcDigest"]?.jsonPrimitive?.content
     println("\n  Integrity Verification:")
@@ -544,7 +544,7 @@ fun main() = runBlocking {
         return@runBlocking
     }
     println()
-    
+
     // Step 9: Verify integrity chain
     println("Step 9: Verifying integrity chain...")
     println("\n📤 REQUEST: Verify Complete Integrity Chain")
@@ -558,12 +558,12 @@ fun main() = runBlocking {
     println("    - Linkset ID: linkset-eo-sentinel2-l2a-xyz")
     println("    - Artifacts: metadata-1, provenance-1, quality-1")
     println("    - Anchor Reference: ${anchor.ref.txHash}")
-    
+
     // Verification checks the entire integrity chain from bottom to top:
     // 1. Verify each artifact's digest matches its link in the Linkset
     // 2. Verify the Linkset digest matches the reference in the VC
     // 3. Verify the VC digest matches what's stored on the blockchain
-    
+
     // Create a map of artifacts (keyed by their IDs for easy lookup)
     val artifacts = mapOf(
         "metadata-1" to metadataArtifact,
@@ -575,7 +575,7 @@ fun main() = runBlocking {
         val artifactDigest = artifact["digestMultibase"]?.jsonPrimitive?.content ?: "N/A"
         println("    - $id: $artifactDigest")
     }
-    
+
     // Use the same VC structure that was used for anchoring (with linksetDigest at top level)
     // Add VC digest to the VC object for verification
     val vcWithDigest = buildJsonObject {
@@ -584,7 +584,7 @@ fun main() = runBlocking {
         }
         put("digestMultibase", vcDigest)
     }
-    
+
     // Debug: Show what we're verifying
     println("  Debug Information:")
     println("    - VC Digest (computed for anchoring): $vcDigest")
@@ -595,7 +595,7 @@ fun main() = runBlocking {
     if (vcLinksetRef != linksetDigest) {
         println("    ⚠ WARNING: VC linksetDigest ($vcLinksetRef) does not match expected ($linksetDigest)")
     }
-    
+
     // CRITICAL: The blockchain registry must use the SAME client instance that was used for anchoring
     // Since InMemoryBlockchainAnchorClient stores data in memory, each new instance is empty
     // We stored the client reference at the beginning, so we can reuse it here
@@ -603,7 +603,7 @@ fun main() = runBlocking {
     val verificationRegistry = DefaultBlockchainAnchorRegistry().apply {
         register(chainId, anchorClient)  // Use the SAME client instance
     }
-    
+
     // Perform the complete integrity verification
     val integrityResult = IntegrityVerifier.verifyIntegrityChain(
         vc = vcWithDigest,
@@ -612,7 +612,7 @@ fun main() = runBlocking {
         anchorRef = anchor.ref,
         registry = verificationRegistry
     )
-    
+
     // Display verification results
     println("\n📥 RESPONSE: Integrity Chain Verification Result")
     if (integrityResult.valid) {
@@ -648,10 +648,10 @@ fun main() = runBlocking {
         return@runBlocking
     }
     println()
-    
+
     // Step 10: Demonstrate error handling scenarios
     println("Step 10: Demonstrating error handling...")
-    
+
     // Test invalid chain ID
     println("  Testing invalid chain ID...")
     try {
@@ -670,7 +670,7 @@ fun main() = runBlocking {
         println("  ✓ Error handling works: ${error.message}")
     }
     println()
-    
+
     // Summary
     println("=".repeat(70))
     println("Scenario Summary")

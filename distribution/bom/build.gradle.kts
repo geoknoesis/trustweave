@@ -29,19 +29,19 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["javaPlatform"])
-            
+
             pom {
                 name.set("TrustWeave BOM")
                 description.set("Bill of Materials for TrustWeave modules")
                 url.set("https://github.com/geoknoesis/trustweave")
-                
+
                 licenses {
                     license {
                         name.set("AGPL-3.0")
                         url.set("https://www.gnu.org/licenses/agpl-3.0.txt")
                     }
                 }
-                
+
                 developers {
                     developer {
                         id.set("trustweave-team")

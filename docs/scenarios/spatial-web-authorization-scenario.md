@@ -121,7 +121,7 @@ flowchart TD
     C -->|requires authorization| D["Authorization Credential<br/>Agent DID<br/>Activity Type<br/>Domain Scope<br/>Constraints time resources<br/>Proof cryptographic"]
     D -->|anchors to blockchain| E["Blockchain Anchor<br/>Immutable authorization record<br/>Domain relationships<br/>Audit trail"]
     E -->|verifies before activity| F["Activity Execution<br/>Permission Check<br/>Domain Validation<br/>Activity Logging"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -192,13 +192,13 @@ dependencies {
     implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    
+
     // Test kit for in-memory implementations
     implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -266,26 +266,26 @@ data class ActivityAuthorization(
 
 fun main() = runBlocking {
     println("=== Spatial Web Authorization Scenario ===\n")
-    
+
     // Step 1: Setup services
     println("Step 1: Setting up services...")
     val domainAuthorityKms = InMemoryKeyManagementService()
     val agentKms = InMemoryKeyManagementService()
-    
+
     val didMethod = DidKeyMockMethod(domainAuthorityKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
-    
+
     // Setup blockchain for anchoring
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
     val blockchainRegistry = BlockchainAnchorRegistry().apply {
         register("eip155:1", anchorClient)
     }
-    
+
     // Step 2: Create DIDs for domain authority
     println("\nStep 2: Creating domain authority DID...")
     val domainAuthorityDid = didMethod.createDid()
     println("Domain Authority DID: ${domainAuthorityDid.id}")
-    
+
     // Step 3: Create spatial domain
     println("\nStep 3: Creating spatial domain...")
     val airspaceDomain = SpatialDomain(
@@ -309,26 +309,26 @@ fun main() = runBlocking {
     println("Created domain: ${airspaceDomain.domainId}")
     println("  Boundary: (${airspaceDomain.boundary.minLat}, ${airspaceDomain.boundary.minLon}) to (${airspaceDomain.boundary.maxLat}, ${airspaceDomain.boundary.maxLon})")
     println("  Allowed activities: ${airspaceDomain.allowedActivities.joinToString()}")
-    
+
     // Step 4: Create entity DIDs
     println("\nStep 4: Creating entity DIDs...")
-    
+
     // Agent: Drone
     val droneAgentDid = didMethod.createDid()
     println("Agent (Drone) DID: ${droneAgentDid.id}")
-    
+
     // Activity: Data Collection
     val dataCollectionActivityDid = didMethod.createDid()
     println("Activity (Data Collection) DID: ${dataCollectionActivityDid.id}")
-    
+
     // Thing: Environmental Sensor
     val sensorThingDid = didMethod.createDid()
     println("Thing (Sensor) DID: ${sensorThingDid.id}")
-    
+
     // Spatial Feature: Monitoring Zone
     val monitoringZoneDid = didMethod.createDid()
     println("Spatial Feature (Monitoring Zone) DID: ${monitoringZoneDid.id}")
-    
+
     // Step 5: Create authorization credential
     println("\nStep 5: Creating activity authorization credential...")
     val authorizationCredential = VerifiableCredential(
@@ -361,7 +361,7 @@ fun main() = runBlocking {
             schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
         )
     )
-    
+
     // Step 6: Issue credential with proof
     println("\nStep 6: Issuing authorization credential...")
     val authorityKey = domainAuthorityKms.generateKey("Ed25519")
@@ -371,26 +371,26 @@ fun main() = runBlocking {
     )
 
     val proofRegistry = ProofGeneratorRegistry().apply { register(proofGenerator) }
-    
+
     val credentialIssuer = CredentialIssuer(
         proofGenerator = proofGenerator,
         resolveDid = { did -> didRegistry.resolve(did) != null },
         proofRegistry = proofRegistry
     )
-    
+
     val issuedCredential = credentialIssuer.issue(
         credential = authorizationCredential,
         issuerDid = domainAuthorityDid.id,
         keyId = authorityKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Authorization credential issued:")
     println("  - Agent: ${droneAgentDid.id}")
     println("  - Activity: data-collection")
     println("  - Domain: ${airspaceDomain.domainId}")
     println("  - Has proof: ${issuedCredential.proof != null}")
-    
+
     // Step 7: Anchor authorization to blockchain
     println("\nStep 7: Anchoring authorization to blockchain...")
     val credentialDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
@@ -399,7 +399,7 @@ fun main() = runBlocking {
             issuedCredential
         )
     )
-    
+
     val activityAuth = ActivityAuthorization(
         agentDid = droneAgentDid.id,
         activityDid = dataCollectionActivityDid.id,
@@ -410,34 +410,34 @@ fun main() = runBlocking {
         ),
         credentialDigest = credentialDigest
     )
-    
+
     val anchorResult = blockchainRegistry.anchorTyped(
         value = activityAuth,
         serializer = ActivityAuthorization.serializer(),
         targetChainId = "eip155:137"
     )
-    
+
     println("Authorization anchored:")
     println("  - Transaction hash: ${anchorResult.ref.txHash}")
     println("  - Chain ID: ${anchorResult.ref.chainId}")
     println("  - Digest: $credentialDigest")
-    
+
     // Step 8: Create agent wallet and store credential
     println("\nStep 8: Creating agent wallet...")
     val agentWallet = InMemoryWallet(
         walletDid = droneAgentDid.id,
         holderDid = droneAgentDid.id
     )
-    
+
     val credentialId = agentWallet.store(issuedCredential)
     println("Credential stored in agent wallet: $credentialId")
-    
+
     // Step 9: Verify authorization before activity
     println("\nStep 9: Verifying authorization before activity...")
     val verifier = CredentialVerifier(
     defaultDidResolver = didRegistry.resolveDid
     )
-    
+
     val verificationResult = verifier.verify(
         credential = issuedCredential,
         options = CredentialVerificationOptions(
@@ -447,7 +447,7 @@ fun main() = runBlocking {
         didResolver = didRegistry.resolveDid
         )
     )
-    
+
     if (verificationResult.valid) {
         println("✅ Authorization credential is valid!")
         println("  - Proof valid: ${verificationResult.proofValid}")
@@ -457,7 +457,7 @@ fun main() = runBlocking {
         println("❌ Authorization verification failed:")
         verificationResult.errors.forEach { println("  - $it") }
     }
-    
+
     // Step 10: Check domain authorization
     println("\nStep 10: Checking domain authorization...")
     val isAuthorized = checkDomainAuthorization(
@@ -467,13 +467,13 @@ fun main() = runBlocking {
         credential = issuedCredential,
         currentLocation = Pair(37.7749, -122.4194) // San Francisco
     )
-    
+
     if (isAuthorized) {
         println("✅ Agent is authorized to perform 'data-collection' in domain '${airspaceDomain.domainId}'")
     } else {
         println("❌ Agent is NOT authorized")
     }
-    
+
     // Step 11: Create activity presentation
     println("\nStep 11: Creating activity presentation...")
     val activityPresentation = agentWallet.createPresentation(
@@ -485,12 +485,12 @@ fun main() = runBlocking {
             challenge = "activity-request-${Instant.now().toEpochMilli()}"
         )
     )
-    
+
     println("Activity presentation created:")
     println("  - Holder: ${activityPresentation.holder}")
     println("  - Credentials: ${activityPresentation.verifiableCredential.size}")
     println("  - Challenge: ${activityPresentation.challenge}")
-    
+
     println("\n=== Scenario Complete ===")
 }
 
@@ -507,33 +507,33 @@ fun checkDomainAuthorization(
     // 1. Verify credential is for this agent
     val credentialAgentDid = credential.credentialSubject.jsonObject["id"]?.jsonPrimitive?.content
     if (credentialAgentDid != agentDid) return false
-    
+
     // 2. Verify activity type matches
     val authActivityType = credential.credentialSubject.jsonObject["authorization"]?.jsonObject
         ?.get("activityType")?.jsonPrimitive?.content
     if (authActivityType != activityType) return false
-    
+
     // 3. Verify domain matches
     val authDomainId = credential.credentialSubject.jsonObject["authorization"]?.jsonObject
         ?.get("domainId")?.jsonPrimitive?.content
     if (authDomainId != domain.domainId) return false
-    
+
     // 4. Verify activity is allowed in domain
     if (!domain.allowedActivities.contains(activityType)) return false
-    
+
     // 5. Verify location is within domain boundary
     val (lat, lon) = currentLocation
     val inBoundary = lat >= domain.boundary.minLat &&
             lat <= domain.boundary.maxLat &&
             lon >= domain.boundary.minLon &&
             lon <= domain.boundary.maxLon
-    
+
     if (!inBoundary) return false
-    
+
     // 6. Check constraints (time, altitude, etc.)
     val constraints = credential.credentialSubject.jsonObject["authorization"]?.jsonObject
         ?.get("constraints")?.jsonObject
-    
+
     // Check time window if specified
     constraints?.get("timeWindow")?.jsonPrimitive?.content?.let { timeWindow ->
         // Parse ISO 8601 interval (simplified)
@@ -541,7 +541,7 @@ fun checkDomainAuthorization(
         // In production, properly parse the interval
         // For now, assume it's valid if constraint exists
     }
-    
+
     return true
 }
 
@@ -811,7 +811,7 @@ fun verifyMultiDomainAuthorization(
         credential.credentialSubject.jsonObject["authorization"]?.jsonObject
             ?.get("domainId")?.jsonPrimitive?.content
     }.toSet()
-    
+
     return requiredDomains.all { it in authorizedDomains }
 }
 ```
@@ -835,23 +835,23 @@ fun checkConstraints(
     currentConditions: CurrentConditions
 ): Boolean {
     val constraints = extractConstraints(credential)
-    
+
     // Check altitude
     constraints.maxAltitude?.let {
         if (currentConditions.altitude > it) return false
     }
-    
+
     // Check time window
     constraints.timeWindow?.let { (start, end) ->
         val now = Instant.now()
         if (now.isBefore(start) || now.isAfter(end)) return false
     }
-    
+
     // Check weather conditions
     constraints.weatherConditions?.let { allowedConditions ->
         if (currentConditions.weather !in allowedConditions) return false
     }
-    
+
     return true
 }
 ```
@@ -939,7 +939,7 @@ fun authorizeDroneOperation(
     if (!operatorCert.valid) {
         throw IllegalArgumentException("Operator not certified")
     }
-    
+
     // Check flight plan is within domain boundaries
     val flightPathInDomain = flightPlan.waypoints.all { waypoint ->
         isWithinBoundary(waypoint.location, airspaceDomain.boundary)
@@ -947,7 +947,7 @@ fun authorizeDroneOperation(
     if (!flightPathInDomain) {
         throw IllegalArgumentException("Flight plan outside domain")
     }
-    
+
     // Create authorization credential
     return createAuthorizationCredential(
         agentDid = droneDid,
@@ -978,11 +978,11 @@ fun authorizeSensorDataCollection(
     // Verify sensor capabilities match requirements
     val sensorCapabilities = getSensorCapabilities(sensorDid)
     val requiredCapabilities = monitoringDomain.requiredCapabilities
-    
+
     if (!requiredCapabilities.all { it in sensorCapabilities }) {
         throw IllegalArgumentException("Sensor lacks required capabilities")
     }
-    
+
     // Create authorization with data type constraints
     return createAuthorizationCredential(
         agentDid = sensorDid,
@@ -1014,11 +1014,11 @@ fun authorizeVehicleRoute(
     val segmentsByDomain = route.groupBy { segment ->
         findDomainForLocation(segment.location, domains.values)
     }
-    
+
     // Request authorization for each domain
     return segmentsByDomain.mapNotNull { (domain, segments) ->
         if (domain == null) return@mapNotNull null
-        
+
         createAuthorizationCredential(
             agentDid = vehicleDid,
             activityDid = "transportation",
@@ -1052,7 +1052,7 @@ fun authorizeMonitoringActivities(
     if (!researcherCreds.valid) {
         throw IllegalArgumentException("Researcher not authorized")
     }
-    
+
     // Create authorizations for each zone-activity combination
     return monitoringZones.flatMap { zone ->
         activities.map { activity ->

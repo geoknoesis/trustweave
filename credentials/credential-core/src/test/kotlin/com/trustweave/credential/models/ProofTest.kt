@@ -18,7 +18,7 @@ class ProofTest {
             proofPurpose = "assertionMethod",
             proofValue = "zSignatureValue"
         )
-        
+
         assertEquals("Ed25519Signature2020", proof.type)
         assertEquals("did:key:issuer#key-1", proof.verificationMethod)
         assertEquals("assertionMethod", proof.proofPurpose)
@@ -35,7 +35,7 @@ class ProofTest {
             proofPurpose = "assertionMethod",
             jws = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
         )
-        
+
         assertEquals("JsonWebSignature2020", proof.type)
         assertNotNull(proof.jws)
         assertNull(proof.proofValue)
@@ -51,7 +51,7 @@ class ProofTest {
             challenge = "challenge-123",
             domain = "example.com"
         )
-        
+
         assertEquals("authentication", proof.proofPurpose)
         assertEquals("challenge-123", proof.challenge)
         assertEquals("example.com", proof.domain)
@@ -65,7 +65,7 @@ class ProofTest {
             verificationMethod = "did:key:issuer#key-1",
             proofPurpose = "assertionMethod"
         )
-        
+
         assertNull(proof.proofValue)
         assertNull(proof.jws)
         assertNull(proof.challenge)

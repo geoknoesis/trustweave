@@ -27,9 +27,9 @@ class SchemaValidatorRegistryEdgeCasesTest {
                 put("name", buildJsonObject { put("type", "string") })
             })
         }
-        
+
         val format = SchemaValidatorRegistry.detectSchemaFormat(schema)
-        
+
         assertEquals(SchemaFormat.JSON_SCHEMA, format)
     }
 
@@ -39,9 +39,9 @@ class SchemaValidatorRegistryEdgeCasesTest {
             put("@context", "http://www.w3.org/ns/shacl")
             put("sh:targetClass", "Person")
         }
-        
+
         val format = SchemaValidatorRegistry.detectSchemaFormat(schema)
-        
+
         assertEquals(SchemaFormat.SHACL, format)
     }
 
@@ -52,9 +52,9 @@ class SchemaValidatorRegistryEdgeCasesTest {
                 put("sh", "http://www.w3.org/ns/shacl#")
             })
         }
-        
+
         val format = SchemaValidatorRegistry.detectSchemaFormat(schema)
-        
+
         assertEquals(SchemaFormat.SHACL, format)
     }
 
@@ -63,9 +63,9 @@ class SchemaValidatorRegistryEdgeCasesTest {
         val schema = buildJsonObject {
             put("unknown", "value")
         }
-        
+
         val format = SchemaValidatorRegistry.detectSchemaFormat(schema)
-        
+
         assertEquals(SchemaFormat.JSON_SCHEMA, format)
     }
 
@@ -78,7 +78,7 @@ class SchemaValidatorRegistryEdgeCasesTest {
             issuanceDate = "2024-01-01T00:00:00Z"
         )
         val schema = buildJsonObject { put("type", "object") }
-        
+
         assertFailsWith<IllegalArgumentException> {
             SchemaValidatorRegistry.validate(credential, schema)
         }
@@ -88,7 +88,7 @@ class SchemaValidatorRegistryEdgeCasesTest {
     fun `test validateCredentialSubject throws when no validator registered`() = runBlocking {
         val subject = buildJsonObject { put("id", "did:key:subject") }
         val schema = buildJsonObject { put("type", "object") }
-        
+
         assertFailsWith<IllegalArgumentException> {
             SchemaValidatorRegistry.validateCredentialSubject(subject, schema)
         }
@@ -97,9 +97,9 @@ class SchemaValidatorRegistryEdgeCasesTest {
     @Test
     fun `test hasValidator`() {
         assertFalse(SchemaValidatorRegistry.hasValidator(SchemaFormat.JSON_SCHEMA))
-        
+
         SchemaValidatorRegistry.register(JsonSchemaValidator())
-        
+
         assertTrue(SchemaValidatorRegistry.hasValidator(SchemaFormat.JSON_SCHEMA))
         assertFalse(SchemaValidatorRegistry.hasValidator(SchemaFormat.SHACL))
     }
@@ -107,9 +107,9 @@ class SchemaValidatorRegistryEdgeCasesTest {
     @Test
     fun `test getRegisteredFormats`() {
         assertTrue(SchemaValidatorRegistry.getRegisteredFormats().isEmpty())
-        
+
         SchemaValidatorRegistry.register(JsonSchemaValidator())
-        
+
         val formats = SchemaValidatorRegistry.getRegisteredFormats()
         assertEquals(1, formats.size)
         assertTrue(formats.contains(SchemaFormat.JSON_SCHEMA))
@@ -119,9 +119,9 @@ class SchemaValidatorRegistryEdgeCasesTest {
     fun `test unregister validator`() {
         SchemaValidatorRegistry.register(JsonSchemaValidator())
         assertTrue(SchemaValidatorRegistry.hasValidator(SchemaFormat.JSON_SCHEMA))
-        
+
         SchemaValidatorRegistry.unregister(SchemaFormat.JSON_SCHEMA)
-        
+
         assertFalse(SchemaValidatorRegistry.hasValidator(SchemaFormat.JSON_SCHEMA))
     }
 }

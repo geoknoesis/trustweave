@@ -4,15 +4,15 @@ import com.trustweave.core.exception.TrustWeaveException
 
 /**
  * ServiceNow integration for trustweave.
- * 
+ *
  * Provides integration with ServiceNow for:
  * - Verifiable Credential issuance and verification
  * - DID management within ServiceNow
  * - Credential storage in ServiceNow tables
- * 
+ *
  * **Note:** This is a placeholder implementation. Full implementation requires
  * ServiceNow REST API integration and table schema design.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val integration = ServiceNowIntegration(
@@ -20,7 +20,7 @@ import com.trustweave.core.exception.TrustWeaveException
  *     username = "admin",
  *     password = "password"
  * )
- * 
+ *
  * // Issue credential to ServiceNow record
  * val credential = integration.issueCredential(
  *     tableName = "sys_user",
@@ -39,10 +39,10 @@ class ServiceNowIntegration(
         require(username.isNotBlank()) { "ServiceNow username must be specified" }
         require(password.isNotBlank()) { "ServiceNow password must be specified" }
     }
-    
+
     /**
      * Issues a verifiable credential to a ServiceNow record.
-     * 
+     *
      * @param tableName ServiceNow table name (e.g., "sys_user")
      * @param recordId ServiceNow record sys_id
      * @param credentialType Type of credential to issue
@@ -54,22 +54,22 @@ class ServiceNowIntegration(
         credentialType: String
     ): Any {
         // TODO: Implement ServiceNow credential issuance
-        throw TrustWeaveException(
-            "ServiceNow integration requires ServiceNow REST API implementation. " +
+        throw TrustWeaveException.Unknown(
+            message = "ServiceNow integration requires ServiceNow REST API implementation. " +
             "Structure is ready for implementation."
         )
     }
-    
+
     /**
      * Verifies a verifiable credential from ServiceNow.
-     * 
+     *
      * @param credentialId ServiceNow credential record ID
      * @return Verification result
      */
     suspend fun verifyCredential(credentialId: String): Any {
         // TODO: Implement ServiceNow credential verification
-        throw TrustWeaveException(
-            "ServiceNow integration requires ServiceNow REST API implementation. " +
+        throw TrustWeaveException.Unknown(
+            message = "ServiceNow integration requires ServiceNow REST API implementation. " +
             "Structure is ready for implementation."
         )
     }

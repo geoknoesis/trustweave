@@ -26,7 +26,7 @@ dependencies {
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
-    
+
     // Algorand SDK
     implementation("com.algorand:algosdk:2.7.0")
 }
@@ -112,11 +112,11 @@ runBlocking {
         privateKey = "..."
     )
     val client = AlgorandBlockchainAnchorClient("algorand:testnet", options)
-    
+
     // Anchor data
     val payload = "Hello, Algorand!".toByteArray()
     val result = client.writePayload(payload)
-    
+
     result.fold(
         onSuccess = { anchorResult ->
             println("Anchored to: ${anchorResult.anchorRef.chainId}")
@@ -168,7 +168,7 @@ runBlocking {
         privateKey = "..."
     )
     val client = AlgorandBlockchainAnchorClient("algorand:testnet", options)
-    
+
     // Register with TrustWeave
     val TrustWeave = TrustWeave.create()
     // Register during TrustWeave.create { }
@@ -177,7 +177,7 @@ runBlocking {
             "algorand:testnet" to client
         }
     }
-    
+
     // Anchor credential
     val credential = /* your credential */
     val anchorResult = TrustWeave.blockchains.anchor(
@@ -185,7 +185,7 @@ runBlocking {
         serializer = VerifiableCredential.serializer(),
         chainId = "algorand:testnet"
     )
-    
+
     anchorResult.fold(
         onSuccess = { result ->
             println("Anchored: ${result.anchorRef.transactionHash}")

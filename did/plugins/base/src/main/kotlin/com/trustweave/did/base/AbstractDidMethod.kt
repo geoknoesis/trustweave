@@ -10,29 +10,29 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Abstract base class for DID method implementations.
- * 
+ *
  * Provides common functionality shared across DID method adapters:
  * - In-memory document storage for testing
  * - Common updateDid and deactivateDid implementations
  * - Document metadata helpers
  * - Error handling patterns
- * 
+ *
  * Subclasses should implement:
  * - [createDid]: Create a new DID and return its initial DID Document
  * - [resolveDid]: Resolve a DID to its DID Document
- * 
+ *
  * Pattern: Similar to `AbstractBlockchainAnchorClient` (~40% code reduction).
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * class MyDidMethod(
  *     kms: KeyManagementService
  * ) : AbstractDidMethod("mymethod", kms) {
- *     
+ *
  *     override suspend fun createDid(options: DidCreationOptions): DidDocument {
  *         // Implement method-specific creation logic
  *     }
- *     
+ *
  *     override suspend fun resolveDid(did: String): DidResolutionResult {
  *         // Implement method-specific resolution logic
  *     }
@@ -49,7 +49,7 @@ abstract class AbstractDidMethod(
      * Used by default implementations of updateDid and deactivateDid.
      */
     protected val documents = ConcurrentHashMap<String, DidDocument>()
-    
+
     /**
      * Document metadata storage.
      */
@@ -57,7 +57,7 @@ abstract class AbstractDidMethod(
 
     /**
      * Default implementation of updateDid using in-memory storage.
-     * 
+     *
      * Subclasses can override for methods that require external updates.
      */
     override suspend fun updateDid(
@@ -65,32 +65,32 @@ abstract class AbstractDidMethod(
         updater: (DidDocument) -> DidDocument
     ): DidDocument = withContext(Dispatchers.IO) {
         validateDidFormat(did)
-        
+
         val current = documents[did]
             ?: throw com.trustweave.did.exception.DidException.DidNotFound(
                 did = did,
                 availableMethods = listOf(method)
             )
-        
+
         val updated = updater(current)
-        
+
         // Update document and metadata
         documents[did] = updated
         val now = Instant.now()
         documentMetadata[did] = (documentMetadata[did] ?: DidDocumentMetadata(created = now))
             .copy(updated = now)
-        
+
         updated
     }
 
     /**
      * Default implementation of deactivateDid using in-memory storage.
-     * 
+     *
      * Subclasses can override for methods that require external deactivation.
      */
     override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
         validateDidFormat(did)
-        
+
         val removed = documents.remove(did) != null
         documentMetadata.remove(did)
         removed
@@ -98,7 +98,7 @@ abstract class AbstractDidMethod(
 
     /**
      * Validates that the DID matches this method's format.
-     * 
+     *
      * @param did The DID to validate
      * @throws IllegalArgumentException if the DID format is invalid
      */
@@ -110,9 +110,9 @@ abstract class AbstractDidMethod(
 
     /**
      * Stores a DID document in memory.
-     * 
+     *
      * Useful for methods that need to cache resolved documents.
-     * 
+     *
      * @param did The DID identifier
      * @param document The DID document
      * @param created Optional creation timestamp (defaults to now)
@@ -128,7 +128,7 @@ abstract class AbstractDidMethod(
 
     /**
      * Gets a stored DID document.
-     * 
+     *
      * @param did The DID identifier
      * @return The DID document or null if not found
      */
@@ -138,7 +138,7 @@ abstract class AbstractDidMethod(
 
     /**
      * Gets document metadata.
-     * 
+     *
      * @param did The DID identifier
      * @return The document metadata or null if not found
      */
@@ -148,7 +148,7 @@ abstract class AbstractDidMethod(
 
     /**
      * Creates resolution metadata for successful resolution.
-     * 
+     *
      * @return Map of resolution metadata
      */
     protected fun createSuccessResolutionMetadata(): Map<String, Any?> {
@@ -160,7 +160,7 @@ abstract class AbstractDidMethod(
 
     /**
      * Creates resolution metadata for error cases.
-     * 
+     *
      * @param error Error code
      * @param message Error message
      * @return Map of resolution metadata

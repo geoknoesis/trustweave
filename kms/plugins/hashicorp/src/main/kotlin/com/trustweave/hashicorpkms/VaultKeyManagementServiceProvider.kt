@@ -6,9 +6,9 @@ import com.trustweave.kms.spi.KeyManagementServiceProvider
 
 /**
  * SPI provider for HashiCorp Vault KeyManagementService.
- * 
+ *
  * Automatically discovered via Java ServiceLoader when the module is on the classpath.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val providers = ServiceLoader.load(KeyManagementServiceProvider::class.java)
@@ -21,7 +21,7 @@ import com.trustweave.kms.spi.KeyManagementServiceProvider
  */
 class VaultKeyManagementServiceProvider : KeyManagementServiceProvider {
     override val name: String = "vault"
-    
+
     override val supportedAlgorithms: Set<Algorithm> = VaultKeyManagementService.SUPPORTED_ALGORITHMS
 
     override fun create(options: Map<String, Any?>): KeyManagementService {
@@ -36,7 +36,7 @@ class VaultKeyManagementServiceProvider : KeyManagementServiceProvider {
                     e
                 )
         }
-        
+
         return VaultKeyManagementService(config)
     }
 }

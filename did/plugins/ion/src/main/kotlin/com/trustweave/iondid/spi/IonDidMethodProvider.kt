@@ -10,7 +10,7 @@ import java.util.ServiceLoader
 
 /**
  * SPI provider for did:ion method.
- * 
+ *
  * Automatically discovers did:ion method when this module is on the classpath.
  */
 class IonDidMethodProvider : DidMethodProvider {
@@ -47,11 +47,11 @@ class IonDidMethodProvider : DidMethodProvider {
      */
     private fun createConfig(options: DidCreationOptions): IonDidConfig {
         val configMap = options.additionalProperties
-        
-        require(configMap.containsKey("ionNodeUrl")) { 
-            "ionNodeUrl is required for did:ion" 
+
+        require(configMap.containsKey("ionNodeUrl")) {
+            "ionNodeUrl is required for did:ion"
         }
-        
+
         return IonDidConfig.fromMap(configMap)
     }
 }

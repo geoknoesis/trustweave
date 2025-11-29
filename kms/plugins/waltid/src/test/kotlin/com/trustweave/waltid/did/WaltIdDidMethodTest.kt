@@ -1,6 +1,7 @@
 package com.trustweave.waltid.did
 
 import com.trustweave.did.*
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -31,9 +32,10 @@ class WaltIdKeyMethodTest {
 
         val result = method.resolveDid(document.id)
 
-        assertNotNull(result.document)
-        assertEquals(document.id, result.document?.id)
-        assertEquals("key", result.resolutionMetadata["method"])
+        assertTrue(result is DidResolutionResult.Success)
+        val successResult = result as DidResolutionResult.Success
+        assertEquals(document.id, successResult.document.id)
+        assertEquals("key", successResult.resolutionMetadata["method"])
     }
 
     @Test
@@ -59,7 +61,7 @@ class WaltIdKeyMethodTest {
 
         assertTrue(deactivated)
         val result = method.resolveDid(document.id)
-        assertEquals(null, result.document)
+        assertTrue(result is DidResolutionResult.Failure.NotFound || result !is DidResolutionResult.Success)
     }
 }
 
@@ -101,7 +103,7 @@ class WaltIdDidMethodProviderTest {
     fun provider_shouldCreateDidKeyMethod() {
         val kms = InMemoryKeyManagementService()
         val provider = WaltIdDidMethodProvider()
-        
+
         assertEquals("waltid", provider.name)
         assertTrue(provider.supportedMethods.contains("key"))
         assertTrue(provider.supportedMethods.contains("web"))

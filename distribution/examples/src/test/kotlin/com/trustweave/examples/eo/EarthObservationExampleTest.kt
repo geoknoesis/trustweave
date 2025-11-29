@@ -1,6 +1,7 @@
 package com.trustweave.examples.eo
 
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
+import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.integrity.IntegrityVerifier
@@ -8,12 +9,13 @@ import com.trustweave.testkit.integrity.TestDataBuilders
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 
 /**
  * Unit tests for Earth Observation scenario.
- * 
+ *
  * Verifies that the EO data integrity workflow behaves correctly:
  * - DID creation for data provider
  * - Artifact creation (metadata, provenance, quality)
@@ -31,10 +33,10 @@ class EarthObservationExampleTest {
         val originalOut = System.out
         try {
             System.setOut(java.io.PrintStream(output))
-            
+
             // Execute main function
             main()
-            
+
             // Verify output contains expected content
             val outputString = output.toString()
             assertTrue(outputString.contains("Earth Observation") && outputString.contains("Data Integrity"), "Should print scenario title")
@@ -53,7 +55,7 @@ class EarthObservationExampleTest {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        
+
         val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
 
@@ -67,7 +69,7 @@ class EarthObservationExampleTest {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        
+
         val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
 
@@ -111,7 +113,7 @@ class EarthObservationExampleTest {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        
+
         val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
 
@@ -157,7 +159,7 @@ class EarthObservationExampleTest {
             put("@context", "https://www.w3.org/ns/json-ld#")
             put("links", Json.encodeToJsonElement(links))
         }
-        val linksetDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
+        val linksetDigest = DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
         val linkset = TestDataBuilders.buildLinkset(
             digestMultibase = linksetDigest,
             links = links,
@@ -178,7 +180,7 @@ class EarthObservationExampleTest {
         val didMethod = DidKeyMockMethod(kms)
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
-        
+
         val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
 
@@ -201,7 +203,7 @@ class EarthObservationExampleTest {
             put("@context", "https://www.w3.org/ns/json-ld#")
             put("links", Json.encodeToJsonElement(links))
         }
-        val linksetDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
+        val linksetDigest = DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
         val linkset = TestDataBuilders.buildLinkset(
             digestMultibase = linksetDigest,
             links = links,
@@ -237,7 +239,7 @@ class EarthObservationExampleTest {
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
         val blockchainRegistry = DefaultBlockchainAnchorRegistry().apply { register(chainId, anchorClient) }
-        
+
         val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
 
@@ -282,7 +284,7 @@ class EarthObservationExampleTest {
                 }
             }
         }
-        val linksetDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
+        val linksetDigest = DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
         // Build final linkset with computed digest
         val linkset = TestDataBuilders.buildLinkset(
             digestMultibase = linksetDigest,
@@ -299,7 +301,7 @@ class EarthObservationExampleTest {
             subject = vcSubject,
             digestMultibase = ""
         )
-        
+
         // Add linkset digest reference at top level BEFORE computing digest
         // Use "linksetDigest" as a top-level string field (not nested object)
         val credentialWithLinksetRef = buildJsonObject {
@@ -309,7 +311,7 @@ class EarthObservationExampleTest {
             // Add linkset digest reference at top level for verification
             put("linksetDigest", linksetDigest)
         }
-        
+
         // Compute VC digest (without metadata fields) - linkset reference is included
         val vcWithoutMetadata = buildJsonObject {
             credentialWithLinksetRef.entries.forEach { (key, value) ->
@@ -318,8 +320,8 @@ class EarthObservationExampleTest {
                 }
             }
         }
-        val vcDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(vcWithoutMetadata as JsonElement)
-        
+        val vcDigest = DigestUtils.sha256DigestMultibase(vcWithoutMetadata as JsonElement)
+
         // Add VC digest to credential
         val credentialWithDigest = buildJsonObject {
             credentialWithLinksetRef.entries.forEach { (key, value) ->
@@ -356,17 +358,17 @@ class EarthObservationExampleTest {
         val vcStep = verificationResult.steps.find { it.name == "VC Digest" }
         assertNotNull(vcStep, "VC Digest step should exist")
         assertTrue(vcStep?.valid == true, "VC Digest verification failed: ${vcStep?.error}")
-        
+
         val linksetStep = verificationResult.steps.find { it.name == "Linkset Digest" }
         assertNotNull(linksetStep, "Linkset Digest step should exist")
         assertTrue(linksetStep?.valid == true, "Linkset Digest verification failed: ${linksetStep?.error}")
-        
+
         val artifactSteps = verificationResult.steps.filter { it.name.contains("Artifact") }
         assertTrue(artifactSteps.isNotEmpty(), "Should have artifact verification steps")
         artifactSteps.forEach { step ->
             assertTrue(step.valid, "Artifact verification failed for ${step.name}: ${step.error}")
         }
-        
+
         assertTrue(verificationResult.valid, "All verification steps should pass")
     }
 
@@ -377,7 +379,7 @@ class EarthObservationExampleTest {
         val didMethod = DidKeyMockMethod(kms)
         val chainId = "algorand:testnet"
         val anchorClient = InMemoryBlockchainAnchorClient(chainId)
-        
+
         val issuerDoc = didMethod.createDid()
         val issuerDid = issuerDoc.id
 
@@ -400,7 +402,7 @@ class EarthObservationExampleTest {
             put("@context", "https://www.w3.org/ns/json-ld#")
             put("links", Json.encodeToJsonElement(links))
         }
-        val linksetDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
+        val linksetDigest = DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
         val linkset = TestDataBuilders.buildLinkset(
             digestMultibase = linksetDigest,
             links = links

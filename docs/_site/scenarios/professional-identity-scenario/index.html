@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,34 +591,34 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="professional-identity-wallet-scenario">
-  
-  
+
+
     <a href="#professional-identity-wallet-scenario" class="anchor-heading" aria-labelledby="professional-identity-wallet-scenario"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Professional Identity Wallet Scenario
-  
-  
+
+
 </h1>
-    
+
 
 <p>This guide demonstrates how professionals can build a comprehensive digital identity wallet using TrustWeave. You’ll learn how to manage multiple credentials (education, work experience, certifications), organize them effectively, and create targeted presentations for different purposes.</p>
 <h2 id="what-youll-build">
-  
-  
+
+
     <a href="#what-youll-build" class="anchor-heading" aria-labelledby="what-youll-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Build
-  
-  
+
+
 </h2>
-    
+
 
 <p>By the end of this tutorial, you’ll have:</p>
 
@@ -631,21 +631,21 @@
   <li>✅ Built a credential verification system</li>
 </ul>
 <h2 id="big-picture--significance">
-  
-  
+
+
     <a href="#big-picture--significance" class="anchor-heading" aria-labelledby="big-picture--significance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Big Picture &amp; Significance
-  
-  
+
+
 </h2>
-    
+
 <h3 id="the-professional-identity-challenge">
-  
-  
+
+
     <a href="#the-professional-identity-challenge" class="anchor-heading" aria-labelledby="the-professional-identity-challenge"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Professional Identity Challenge
-  
-  
+
+
 </h3>
-    
+
 
 <p>Professionals accumulate credentials throughout their careers, but managing them effectively is challenging. Traditional systems scatter credentials across platforms, make verification difficult, and don’t respect privacy.</p>
 
@@ -668,13 +668,13 @@
   <li><strong>Career Mobility</strong>: Easy credential sharing enables career opportunities</li>
 </ol>
 <h3 id="the-credential-management-problem">
-  
-  
+
+
     <a href="#the-credential-management-problem" class="anchor-heading" aria-labelledby="the-credential-management-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Credential Management Problem
-  
-  
+
+
 </h3>
-    
+
 
 <p>Traditional credential systems face critical issues:</p>
 <ul>
@@ -685,21 +685,21 @@
   <li><strong>No Organization</strong>: Hard to find and manage credentials</li>
 </ul>
 <h2 id="value-proposition">
-  
-  
+
+
     <a href="#value-proposition" class="anchor-heading" aria-labelledby="value-proposition"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Value Proposition
-  
-  
+
+
 </h2>
-    
+
 <h3 id="problems-solved">
-  
-  
+
+
     <a href="#problems-solved" class="anchor-heading" aria-labelledby="problems-solved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Problems Solved
-  
-  
+
+
 </h3>
-    
+
 
 <ol>
   <li><strong>Unified Storage</strong>: All credentials in one wallet</li>
@@ -711,13 +711,13 @@
   <li><strong>Efficiency</strong>: Streamlined credential management</li>
 </ol>
 <h3 id="business-benefits">
-  
-  
+
+
     <a href="#business-benefits" class="anchor-heading" aria-labelledby="business-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Business Benefits
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>For Professionals</strong>:</p>
 <ul>
@@ -743,13 +743,13 @@
   <li><strong>Reputation</strong>: Enhanced trust through verifiable credentials</li>
 </ul>
 <h3 id="roi-considerations">
-  
-  
+
+
     <a href="#roi-considerations" class="anchor-heading" aria-labelledby="roi-considerations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ROI Considerations
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>Time Savings</strong>: 80% reduction in credential management time</li>
@@ -758,13 +758,13 @@
   <li><strong>Career Opportunities</strong>: Easier credential sharing enables opportunities</li>
 </ul>
 <h2 id="understanding-the-problem">
-  
-  
+
+
     <a href="#understanding-the-problem" class="anchor-heading" aria-labelledby="understanding-the-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Understanding the Problem
-  
-  
+
+
 </h2>
-    
+
 
 <p>Professionals accumulate many credentials throughout their careers:</p>
 
@@ -793,30 +793,30 @@
   <li><strong>Instant verification</strong>: Cryptographic proof without intermediaries</li>
 </ul>
 <h2 id="how-it-works-professional-identity-flow">
-  
-  
+
+
     <a href="#how-it-works-professional-identity-flow" class="anchor-heading" aria-labelledby="how-it-works-professional-identity-flow"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How It Works: Professional Identity Flow
-  
-  
+
+
 </h2>
-    
+
 
 <pre><code class="language-mermaid">flowchart TD
     A["Multiple Issuers&lt;br/&gt;Universities&lt;br/&gt;Employers&lt;br/&gt;Certification Bodies&lt;br/&gt;Skills Verifiers"] --&gt;|issue credentials| B["Professional Wallet&lt;br/&gt;Education Collection&lt;br/&gt;Work Collection&lt;br/&gt;Certifications Collection"]
     B --&gt;|creates presentations| C["Targeted Presentations&lt;br/&gt;Job Application selective&lt;br/&gt;Professional Profile public&lt;br/&gt;Contract Negotiation detailed"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
 </code></pre>
 <h2 id="prerequisites">
-  
-  
+
+
     <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li>Java 21+</li>
@@ -825,13 +825,13 @@
   <li>Basic understanding of Kotlin and coroutines</li>
 </ul>
 <h2 id="step-1-add-dependencies">
-  
-  
+
+
     <a href="#step-1-add-dependencies" class="anchor-heading" aria-labelledby="step-1-add-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Add Dependencies
-  
-  
+
+
 </h2>
-    
+
 
 <p>Add TrustWeave dependencies to your <code class="language-plaintext highlighter-rouge">build.gradle.kts</code>. These modules cover DID creation, wallet storage, and the in-memory tooling used for professional identity flows.</p>
 
@@ -859,13 +859,13 @@
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    
+
     <span class="c1">// Test kit for in-memory implementations</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    
+
     <span class="c1">// Kotlinx Serialization</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
-    
+
     <span class="c1">// Coroutines</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"</span><span class="p">)</span>
 <span class="p">}</span>
@@ -873,13 +873,13 @@
 
 <p><strong>Result:</strong> Syncing these dependencies prepares Gradle to compile every example below without further configuration.</p>
 <h2 id="step-2-complete-example">
-  
-  
+
+
     <a href="#step-2-complete-example" class="anchor-heading" aria-labelledby="step-2-complete-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Complete Example
-  
-  
+
+
 </h2>
-    
+
 
 <p>Here’s the full professional identity wallet flow. Execute it once to see the end-to-end experience before exploring the step-by-step explanations.</p>
 
@@ -1240,16 +1240,16 @@
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"=== Professional Identity Wallet Scenario ===\n"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 1: Setup</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Step 1: Setting up services..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">didMethod</span> <span class="p">=</span> <span class="nc">DidKeyMockMethod</span><span class="p">(</span><span class="n">kms</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">didRegistry</span> <span class="p">=</span> <span class="nc">DidMethodRegistry</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span> <span class="nf">register</span><span class="p">(</span><span class="n">didMethod</span><span class="p">)</span> <span class="p">}</span>
-    
+
     <span class="kd">val</span> <span class="py">professionalDid</span> <span class="p">=</span> <span class="n">didMethod</span><span class="p">.</span><span class="nf">createDid</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Professional DID: ${professionalDid.id}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 2: Create professional wallet</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 2: Creating professional wallet..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">wallet</span> <span class="p">=</span> <span class="nc">InMemoryWallet</span><span class="p">(</span>
@@ -1257,7 +1257,7 @@
         <span class="n">holderDid</span> <span class="p">=</span> <span class="n">professionalDid</span><span class="p">.</span><span class="n">id</span>
     <span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Wallet created: ${wallet.walletId}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 3: Store education credentials</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 3: Storing education credentials..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">bachelorDegree</span> <span class="p">=</span> <span class="nf">createEducationCredential</span><span class="p">(</span>
@@ -1269,7 +1269,7 @@
         <span class="n">year</span> <span class="p">=</span> <span class="s">"2018"</span>
     <span class="p">)</span>
     <span class="kd">val</span> <span class="py">bachelorId</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">bachelorDegree</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">masterDegree</span> <span class="p">=</span> <span class="nf">createEducationCredential</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="s">"did:key:university"</span><span class="p">,</span>
         <span class="n">holderDid</span> <span class="p">=</span> <span class="n">professionalDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
@@ -1279,9 +1279,9 @@
         <span class="n">year</span> <span class="p">=</span> <span class="s">"2020"</span>
     <span class="p">)</span>
     <span class="kd">val</span> <span class="py">masterId</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">masterDegree</span><span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Stored ${wallet.list().size} education credentials"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 4: Store work experience credentials</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 4: Storing work experience credentials..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">job1</span> <span class="p">=</span> <span class="nf">createEmploymentCredential</span><span class="p">(</span>
@@ -1298,7 +1298,7 @@
         <span class="p">)</span>
     <span class="p">)</span>
     <span class="kd">val</span> <span class="py">job1Id</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">job1</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">job2</span> <span class="p">=</span> <span class="nf">createEmploymentCredential</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="s">"did:key:company2"</span><span class="p">,</span>
         <span class="n">holderDid</span> <span class="p">=</span> <span class="n">professionalDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
@@ -1312,9 +1312,9 @@
         <span class="p">)</span>
     <span class="p">)</span>
     <span class="kd">val</span> <span class="py">job2Id</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">job2</span><span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Stored ${wallet.list().size} total credentials"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 5: Store certifications</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 5: Storing certifications..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">awsCert</span> <span class="p">=</span> <span class="nf">createCertificationCredential</span><span class="p">(</span>
@@ -1327,7 +1327,7 @@
         <span class="n">credentialId</span> <span class="p">=</span> <span class="s">"AWS-12345"</span>
     <span class="p">)</span>
     <span class="kd">val</span> <span class="py">awsCertId</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">awsCert</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">kubernetesCert</span> <span class="p">=</span> <span class="nf">createCertificationCredential</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="s">"did:key:cncf"</span><span class="p">,</span>
         <span class="n">holderDid</span> <span class="p">=</span> <span class="n">professionalDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
@@ -1338,12 +1338,12 @@
         <span class="n">credentialId</span> <span class="p">=</span> <span class="s">"CKA-67890"</span>
     <span class="p">)</span>
     <span class="kd">val</span> <span class="py">k8sCertId</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">kubernetesCert</span><span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Stored ${wallet.list().size} total credentials"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 6: Organize credentials</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 6: Organizing credentials..."</span><span class="p">)</span>
-    
+
     <span class="c1">// Create collections</span>
     <span class="kd">val</span> <span class="py">educationCollection</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">createCollection</span><span class="p">(</span>
         <span class="n">name</span> <span class="p">=</span> <span class="s">"Education"</span><span class="p">,</span>
@@ -1357,7 +1357,7 @@
         <span class="n">name</span> <span class="p">=</span> <span class="s">"Certifications"</span><span class="p">,</span>
         <span class="n">description</span> <span class="p">=</span> <span class="s">"Professional licenses and certifications"</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// Add credentials to collections</span>
     <span class="n">wallet</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">bachelorId</span><span class="p">,</span> <span class="n">educationCollection</span><span class="p">)</span>
     <span class="n">wallet</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">masterId</span><span class="p">,</span> <span class="n">educationCollection</span><span class="p">)</span>
@@ -1365,7 +1365,7 @@
     <span class="n">wallet</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">job2Id</span><span class="p">,</span> <span class="n">workCollection</span><span class="p">)</span>
     <span class="n">wallet</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">awsCertId</span><span class="p">,</span> <span class="n">certificationsCollection</span><span class="p">)</span>
     <span class="n">wallet</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">k8sCertId</span><span class="p">,</span> <span class="n">certificationsCollection</span><span class="p">)</span>
-    
+
     <span class="c1">// Add tags</span>
     <span class="n">wallet</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">bachelorId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"education"</span><span class="p">,</span> <span class="s">"degree"</span><span class="p">,</span> <span class="s">"bachelor"</span><span class="p">,</span> <span class="s">"computer-science"</span><span class="p">))</span>
     <span class="n">wallet</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">masterId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"education"</span><span class="p">,</span> <span class="s">"degree"</span><span class="p">,</span> <span class="s">"master"</span><span class="p">,</span> <span class="s">"software-engineering"</span><span class="p">))</span>
@@ -1373,7 +1373,7 @@
     <span class="n">wallet</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">job2Id</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"work"</span><span class="p">,</span> <span class="s">"employment"</span><span class="p">,</span> <span class="s">"senior-engineer"</span><span class="p">,</span> <span class="s">"current"</span><span class="p">))</span>
     <span class="n">wallet</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">awsCertId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"certification"</span><span class="p">,</span> <span class="s">"cloud"</span><span class="p">,</span> <span class="s">"aws"</span><span class="p">,</span> <span class="s">"active"</span><span class="p">))</span>
     <span class="n">wallet</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">k8sCertId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"certification"</span><span class="p">,</span> <span class="s">"kubernetes"</span><span class="p">,</span> <span class="s">"cncf"</span><span class="p">,</span> <span class="s">"active"</span><span class="p">))</span>
-    
+
     <span class="c1">// Add metadata</span>
     <span class="n">wallet</span><span class="p">.</span><span class="nf">addMetadata</span><span class="p">(</span><span class="n">bachelorId</span><span class="p">,</span> <span class="nf">mapOf</span><span class="p">(</span>
         <span class="s">"gpa"</span> <span class="n">to</span> <span class="s">"3.8"</span><span class="p">,</span>
@@ -1383,13 +1383,13 @@
         <span class="s">"salary_range"</span> <span class="n">to</span> <span class="s">"confidential"</span><span class="p">,</span>
         <span class="s">"team_size"</span> <span class="n">to</span> <span class="mi">8</span>
     <span class="p">))</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"Created ${wallet.listCollections().size} collections"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Total tags: ${wallet.getAllTags().size}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 7: Query credentials</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 7: Querying credentials..."</span><span class="p">)</span>
-    
+
     <span class="c1">// Find all active certifications</span>
     <span class="kd">val</span> <span class="py">activeCerts</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">query</span> <span class="p">{</span>
         <span class="nf">byType</span><span class="p">(</span><span class="s">"CertificationCredential"</span><span class="p">)</span>
@@ -1397,21 +1397,21 @@
         <span class="nf">valid</span><span class="p">()</span>
     <span class="p">}</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Active certifications: ${activeCerts.size}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Find current employment</span>
     <span class="kd">val</span> <span class="py">currentJobs</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">query</span> <span class="p">{</span>
         <span class="nf">byType</span><span class="p">(</span><span class="s">"EmploymentCredential"</span><span class="p">)</span>
         <span class="c1">// Add custom filter for current positions</span>
     <span class="p">}</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Current positions: ${currentJobs.size}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Find credentials by tag</span>
     <span class="kd">val</span> <span class="py">cloudCredentials</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">findByTag</span><span class="p">(</span><span class="s">"cloud"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Cloud-related credentials: ${cloudCredentials.size}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 8: Create targeted presentations</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 8: Creating targeted presentations..."</span><span class="p">)</span>
-    
+
     <span class="c1">// Presentation for job application (selective disclosure)</span>
     <span class="kd">val</span> <span class="py">jobApplicationPresentation</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">createSelectiveDisclosure</span><span class="p">(</span>
         <span class="n">credentialIds</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="n">masterId</span><span class="p">,</span> <span class="n">job1Id</span><span class="p">,</span> <span class="n">job2Id</span><span class="p">,</span> <span class="n">awsCertId</span><span class="p">),</span>
@@ -1434,7 +1434,7 @@
         <span class="p">)</span>
     <span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Job application presentation created with ${jobApplicationPresentation.verifiableCredential.size} credentials"</span><span class="p">)</span>
-    
+
     <span class="c1">// Presentation for professional profile (public)</span>
     <span class="kd">val</span> <span class="py">profilePresentation</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">createPresentation</span><span class="p">(</span>
         <span class="n">credentialIds</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="n">masterId</span><span class="p">,</span> <span class="n">job2Id</span><span class="p">,</span> <span class="n">awsCertId</span><span class="p">,</span> <span class="n">k8sCertId</span><span class="p">),</span>
@@ -1445,14 +1445,14 @@
         <span class="p">)</span>
     <span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Professional profile presentation created"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 9: Archive old credentials</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 9: Archiving old credentials..."</span><span class="p">)</span>
     <span class="c1">// Archive first job since it's completed</span>
     <span class="n">wallet</span><span class="p">.</span><span class="nf">archive</span><span class="p">(</span><span class="n">job1Id</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">archived</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">getArchived</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Archived credentials: ${archived.size}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 10: Wallet statistics</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 10: Wallet statistics..."</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">stats</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">getStatistics</span><span class="p">()</span>
@@ -1464,21 +1464,21 @@
         Tags: ${stats.tagsCount}
         Archived: ${stats.archivedCount}
     """</span><span class="p">.</span><span class="nf">trimIndent</span><span class="p">())</span>
-    
+
     <span class="c1">// Step 11: Export for different purposes</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 11: Exporting credentials for different purposes..."</span><span class="p">)</span>
-    
+
     <span class="c1">// Export education credentials only</span>
     <span class="kd">val</span> <span class="py">educationCreds</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">getCredentialsInCollection</span><span class="p">(</span><span class="n">educationCollection</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Education credentials available for export: ${educationCreds.size}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Export active certifications</span>
     <span class="kd">val</span> <span class="py">activeCertifications</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">query</span> <span class="p">{</span>
         <span class="nf">byType</span><span class="p">(</span><span class="s">"CertificationCredential"</span><span class="p">)</span>
         <span class="nf">notExpired</span><span class="p">()</span>
     <span class="p">}</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Active certifications available: ${activeCertifications.size}"</span><span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n=== Scenario Complete ==="</span><span class="p">)</span>
 <span class="p">}</span>
 
@@ -1569,21 +1569,21 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="key-features-demonstrated">
-  
-  
+
+
     <a href="#key-features-demonstrated" class="anchor-heading" aria-labelledby="key-features-demonstrated"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Features Demonstrated
-  
-  
+
+
 </h2>
-    
+
 <h3 id="1-multi-type-credential-management">
-  
-  
+
+
     <a href="#1-multi-type-credential-management" class="anchor-heading" aria-labelledby="1-multi-type-credential-management"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Multi-Type Credential Management
-  
-  
+
+
 </h3>
-    
+
 
 <p>Store different types of credentials in one wallet:</p>
 
@@ -1605,13 +1605,13 @@
 <span class="kd">val</span> <span class="py">certId</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">certificationCredential</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="2-organization-with-collections">
-  
-  
+
+
     <a href="#2-organization-with-collections" class="anchor-heading" aria-labelledby="2-organization-with-collections"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Organization with Collections
-  
-  
+
+
 </h3>
-    
+
 
 <p>Group related credentials:</p>
 
@@ -1631,13 +1631,13 @@
 <span class="n">wallet</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">certId</span><span class="p">,</span> <span class="n">certCollection</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="3-tagging-for-easy-discovery">
-  
-  
+
+
     <a href="#3-tagging-for-easy-discovery" class="anchor-heading" aria-labelledby="3-tagging-for-easy-discovery"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Tagging for Easy Discovery
-  
-  
+
+
 </h3>
-    
+
 
 <p>Tag credentials for flexible querying:</p>
 
@@ -1655,13 +1655,13 @@
 <span class="kd">val</span> <span class="py">cloudCreds</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">findByTag</span><span class="p">(</span><span class="s">"cloud"</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="4-selective-disclosure">
-  
-  
+
+
     <a href="#4-selective-disclosure" class="anchor-heading" aria-labelledby="4-selective-disclosure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Selective Disclosure
-  
-  
+
+
 </h3>
-    
+
 
 <p>Share only what’s needed:</p>
 
@@ -1691,13 +1691,13 @@
 <span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="5-advanced-querying">
-  
-  
+
+
     <a href="#5-advanced-querying" class="anchor-heading" aria-labelledby="5-advanced-querying"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5. Advanced Querying
-  
-  
+
+
 </h3>
-    
+
 
 <p>Find credentials efficiently:</p>
 
@@ -1737,21 +1737,21 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="real-world-use-cases">
-  
-  
+
+
     <a href="#real-world-use-cases" class="anchor-heading" aria-labelledby="real-world-use-cases"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Use Cases
-  
-  
+
+
 </h2>
-    
+
 <h3 id="job-application">
-  
-  
+
+
     <a href="#job-application" class="anchor-heading" aria-labelledby="job-application"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Job Application
-  
-  
+
+
 </h3>
-    
+
 
 <p>Create a presentation showing relevant credentials:</p>
 
@@ -1783,7 +1783,7 @@
 <span class="p">):</span> <span class="nc">VerifiablePresentation</span> <span class="p">{</span>
     <span class="c1">// Find relevant credentials based on job requirements</span>
     <span class="kd">val</span> <span class="py">relevantCreds</span> <span class="p">=</span> <span class="nf">findRelevantCredentials</span><span class="p">(</span><span class="n">wallet</span><span class="p">,</span> <span class="n">jobRequirements</span><span class="p">)</span>
-    
+
     <span class="k">return</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">createSelectiveDisclosure</span><span class="p">(</span>
         <span class="n">credentialIds</span> <span class="p">=</span> <span class="n">relevantCreds</span><span class="p">.</span><span class="nf">map</span> <span class="p">{</span> <span class="n">it</span><span class="p">.</span><span class="n">id</span><span class="o">!!</span> <span class="p">},</span>
         <span class="n">disclosedFields</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span>
@@ -1801,13 +1801,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="professional-profile">
-  
-  
+
+
     <a href="#professional-profile" class="anchor-heading" aria-labelledby="professional-profile"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Professional Profile
-  
-  
+
+
 </h3>
-    
+
 
 <p>Create a public profile:</p>
 
@@ -1831,7 +1831,7 @@
         <span class="nf">byTypes</span><span class="p">(</span><span class="s">"EducationCredential"</span><span class="p">,</span> <span class="s">"CertificationCredential"</span><span class="p">)</span>
         <span class="nf">valid</span><span class="p">()</span>
     <span class="p">}</span>
-    
+
     <span class="k">return</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">createPresentation</span><span class="p">(</span>
         <span class="n">credentialIds</span> <span class="p">=</span> <span class="n">publicCreds</span><span class="p">.</span><span class="nf">mapNotNull</span> <span class="p">{</span> <span class="n">it</span><span class="p">.</span><span class="n">id</span> <span class="p">},</span>
         <span class="n">holderDid</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="n">holderDid</span><span class="p">,</span>
@@ -1843,13 +1843,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="contract-negotiation">
-  
-  
+
+
     <a href="#contract-negotiation" class="anchor-heading" aria-labelledby="contract-negotiation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Contract Negotiation
-  
-  
+
+
 </h3>
-    
+
 
 <p>Share detailed credentials:</p>
 
@@ -1867,7 +1867,7 @@
 12
 </pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">createDetailedPresentation</span><span class="p">(</span><span class="n">wallet</span><span class="p">:</span> <span class="nc">Wallet</span><span class="p">):</span> <span class="nc">VerifiablePresentation</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">allCreds</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">list</span><span class="p">()</span>
-    
+
     <span class="k">return</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">createPresentation</span><span class="p">(</span>
         <span class="n">credentialIds</span> <span class="p">=</span> <span class="n">allCreds</span><span class="p">.</span><span class="nf">mapNotNull</span> <span class="p">{</span> <span class="n">it</span><span class="p">.</span><span class="n">id</span> <span class="p">},</span>
         <span class="n">holderDid</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="n">holderDid</span><span class="p">,</span>
@@ -1879,13 +1879,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="best-practices">
-  
-  
+
+
     <a href="#best-practices" class="anchor-heading" aria-labelledby="best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Best Practices
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Organize Early</strong>: Create collections and tags when storing credentials</li>
@@ -1896,13 +1896,13 @@
   <li><strong>Monitor Expiration</strong>: Regularly check for expired credentials</li>
 </ol>
 <h2 id="benefits">
-  
-  
+
+
     <a href="#benefits" class="anchor-heading" aria-labelledby="benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Benefits
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Unified Management</strong>: All credentials in one place</li>
@@ -1912,13 +1912,13 @@
   <li><strong>Portable</strong>: You control your credentials</li>
 </ol>
 <h2 id="next-steps">
-  
-  
+
+
     <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li>Learn about <a href="/trustweave/tutorials/wallet-api-tutorial/">Wallet API Tutorial</a></li>
@@ -1926,17 +1926,17 @@
   <li>Check out <a href="/trustweave/core-concepts/verifiable-credentials/">Verifiable Credentials</a></li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -1968,7 +1968,7 @@
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -1978,12 +1978,12 @@
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -2005,12 +2005,12 @@
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -2019,12 +2019,12 @@
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -2032,7 +2032,7 @@
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -2040,31 +2040,31 @@
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -2076,7 +2076,7 @@
 
 
 
-  
+
 </body>
 </html>
 

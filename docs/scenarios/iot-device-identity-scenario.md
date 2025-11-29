@@ -125,7 +125,7 @@ flowchart TD
     A["Device Manufacturer<br/>Creates Device DID<br/>Issues Device Attestation<br/>Certifies Device Capabilities"] -->|issues credentials| B["Device Credentials<br/>Device Attestation<br/>Capability Credentials<br/>Network Authorization<br/>Proof cryptographic"]
     B -->|device uses credentials| C["IoT Device<br/>Stores Credentials<br/>Authenticates to Network<br/>Communicates with Other Devices"]
     C -->|verifies before allowing| D["Network Gateway<br/>Verifies Device Identity<br/>Checks Authorization<br/>Grants Network Access"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -177,13 +177,13 @@ dependencies {
     implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    
+
     // Test kit for in-memory implementations
     implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -210,26 +210,26 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     println("=== IoT & Device Identity Scenario ===\n")
-    
+
     // Step 1: Setup services
     println("Step 1: Setting up services...")
-    
+
     // Separate KMS for manufacturer ensures manufacturer has independent keys
     // This is critical for security - manufacturer keys must be isolated
     val manufacturerKms = InMemoryKeyManagementService()
-    
+
     // Device KMS represents the device's own key management
     // In production, this would be a hardware security module (HSM) or secure element
     val deviceKms = InMemoryKeyManagementService()
-    
+
     // Network gateway KMS for network authorization
     val gatewayKms = InMemoryKeyManagementService()
-    
+
     // Register DID method for creating device identities
     // In production, use a real DID method like did:key or did:web
     val didMethod = DidKeyMockMethod(manufacturerKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
-    
+
     println("Services initialized")
 }
 ```
@@ -240,7 +240,7 @@ fun main() = runBlocking {
 
 **Why This Matters**: The manufacturer DID serves as a trust anchor - it proves the device came from a legitimate manufacturer. The device DID provides the device's persistent identity that will be used throughout its lifecycle.
 
-**Rationale**: 
+**Rationale**:
 - **Manufacturer DID**: Acts as trust anchor for device attestation
 - **Device DID**: Provides persistent device identity
 - **Separation**: Separate DIDs ensure proper identity isolation
@@ -248,25 +248,25 @@ fun main() = runBlocking {
 ```kotlin
     // Step 2: Create manufacturer DID
     println("\nStep 2: Creating manufacturer DID...")
-    
+
     // Manufacturer DID serves as trust anchor
     // All device attestation credentials will be issued by this DID
     // This proves devices are from legitimate manufacturer
     val manufacturerDid = didMethod.createDid()
     println("Manufacturer DID: ${manufacturerDid.id}")
-    
+
     // Step 3: Create device DID
     println("\nStep 3: Creating device DID...")
-    
+
     // Device DID provides persistent identity for the IoT device
     // This DID will be used throughout device lifecycle
     // Even if device changes networks or owners, DID persists
     val deviceDid = didMethod.createDid()
     println("Device DID: ${deviceDid.id}")
-    
+
     // Step 4: Create network gateway DID
     println("\nStep 4: Creating network gateway DID...")
-    
+
     // Gateway DID represents the network gateway that controls access
     // This DID will issue network authorization credentials
     val gatewayDid = didMethod.createDid()
@@ -297,7 +297,7 @@ import java.time.Instant
 
     // Step 5: Create device attestation credential
     println("\nStep 5: Creating device attestation credential...")
-    
+
     // Device attestation proves device is authentic and from manufacturer
     // This credential will be used to verify device authenticity throughout its lifecycle
     val deviceAttestation = VerifiableCredential(
@@ -322,7 +322,7 @@ import java.time.Instant
             schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
         )
     )
-    
+
     println("Device attestation credential created:")
     println("  - Model: SmartSensor Pro")
     println("  - Serial: SSP-2024-001234")
@@ -335,7 +335,7 @@ import java.time.Instant
 
 **Why This Matters**: The cryptographic proof ensures the credential cannot be tampered with and proves it came from the manufacturer. This is the foundation of device trust.
 
-**Rationale**: 
+**Rationale**:
 - **Key Generation**: Generate manufacturer's signing key
 - **Proof Generator**: Create proof generator that uses manufacturer's KMS
 - **Credential Issuance**: Sign credential with manufacturer's key
@@ -344,29 +344,29 @@ import java.time.Instant
 ```kotlin
     // Step 6: Issue device attestation credential
     println("\nStep 6: Issuing device attestation credential...")
-    
+
     // Generate manufacturer's signing key
     // In production, this key would be stored in a hardware security module (HSM)
     // The key must be kept secure - if compromised, all device attestations are at risk
     val manufacturerKey = manufacturerKms.generateKey("Ed25519")
-    
+
     // Create proof generator that uses manufacturer's KMS for signing
     // Ed25519 is chosen for its security and efficiency
     // The signer function wraps the KMS sign operation
     val manufacturerProofGenerator = Ed25519ProofGenerator(
-        signer = { data, keyId -> 
+        signer = { data, keyId ->
             // Sign the credential data with manufacturer's key
             // This creates cryptographic proof that manufacturer issued this credential
-            manufacturerKms.sign(keyId, data) 
+            manufacturerKms.sign(keyId, data)
         },
         getPublicKeyId = { keyId -> manufacturerKey.id }
     )
-    
+
     // Register proof generator in a local registry
     val manufacturerProofRegistry = ProofGeneratorRegistry().apply {
         register(manufacturerProofGenerator)
     }
-    
+
     // Create credential issuer that uses the proof generator
     // The resolveDid function checks if DIDs are valid (simplified for example)
     val manufacturerIssuer = CredentialIssuer(
@@ -374,7 +374,7 @@ import java.time.Instant
         resolveDid = { did -> didRegistry.resolve(did) != null },
         proofRegistry = manufacturerProofRegistry
     )
-    
+
     // Issue the credential with cryptographic proof
     // The proof is attached to the credential and can be verified by anyone
     val issuedAttestation = manufacturerIssuer.issue(
@@ -383,7 +383,7 @@ import java.time.Instant
         keyId = manufacturerKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Device attestation credential issued:")
     println("  - Has proof: ${issuedAttestation.proof != null}")
     println("  - Proof type: ${issuedAttestation.proof?.type}")
@@ -395,7 +395,7 @@ import java.time.Instant
 
 **Why This Matters**: Capability credentials enable other devices and systems to understand what a device can do without direct communication. This enables automated device discovery and integration.
 
-**Rationale**: 
+**Rationale**:
 - **Sensors**: Lists what sensors the device has (temperature, humidity, etc.)
 - **Actuators**: Lists what the device can control
 - **Communication**: Lists supported protocols (WiFi, Bluetooth, Zigbee)
@@ -405,7 +405,7 @@ import java.time.Instant
 ```kotlin
     // Step 7: Create device capability credential
     println("\nStep 7: Creating device capability credential...")
-    
+
     // Capability credential describes what the device can do
     // This enables other systems to understand device capabilities
     // Without this, systems would need to query device directly
@@ -423,27 +423,27 @@ import java.time.Instant
                     "motion",
                     "light"
                 ))
-                
+
                 // Actuators: What the device can control
                 put("actuators", listOf(
                     "led",
                     "buzzer"
                 ))
-                
+
                 // Communication protocols the device supports
                 put("communication", listOf(
                     "WiFi",
                     "Bluetooth",
                     "Zigbee"
                 ))
-                
+
                 // Processing capabilities
                 put("processing", buildJsonObject {
                     put("cpu", "ARM Cortex-M4")
                     put("ram", "256KB")
                     put("storage", "1MB")
                 })
-                
+
                 // Security features
                 put("security", listOf(
                     "secure-boot",
@@ -455,7 +455,7 @@ import java.time.Instant
         issuanceDate = Instant.now().toString(),
         expirationDate = null
     )
-    
+
     // Issue capability credential
     val issuedCapability = manufacturerIssuer.issue(
         credential = capabilityCredential,
@@ -463,7 +463,7 @@ import java.time.Instant
         keyId = manufacturerKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Device capability credential issued:")
     println("  - Sensors: temperature, humidity, motion, light")
     println("  - Communication: WiFi, Bluetooth, Zigbee")
@@ -484,7 +484,7 @@ import java.time.Instant
 ```kotlin
     // Step 8: Create network authorization credential
     println("\nStep 8: Creating network authorization credential...")
-    
+
     // Network authorization grants device permission to join network
     // This is issued by network gateway, not manufacturer
     // Gateway verifies device attestation before issuing authorization
@@ -512,7 +512,7 @@ import java.time.Instant
         issuanceDate = Instant.now().toString(),
         expirationDate = Instant.now().plus(365, java.time.temporal.ChronoUnit.DAYS).toString()
     )
-    
+
     // Issue network authorization
     val gatewayKey = gatewayKms.generateKey("Ed25519")
     val gatewayProofGenerator = Ed25519ProofGenerator(
@@ -522,20 +522,20 @@ import java.time.Instant
     val gatewayProofRegistry = ProofGeneratorRegistry().apply {
         register(gatewayProofGenerator)
     }
-    
+
     val gatewayIssuer = CredentialIssuer(
         proofGenerator = gatewayProofGenerator,
         resolveDid = { did -> didRegistry.resolve(did) != null },
         proofRegistry = gatewayProofRegistry
     )
-    
+
     val issuedNetworkAuth = gatewayIssuer.issue(
         credential = networkAuthorization,
         issuerDid = gatewayDid.id,
         keyId = gatewayKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Network authorization credential issued:")
     println("  - Network: Smart Home Network")
     println("  - Authorized resources: sensor-data, device-control")
@@ -550,7 +550,7 @@ import java.time.Instant
 2. Device has network authorization
 3. Credentials haven't expired or been revoked
 
-**Rationale**: 
+**Rationale**:
 - **Attestation Verification**: Ensures device is from legitimate manufacturer
 - **Authorization Verification**: Ensures device has permission to join network
 - **Expiration Check**: Ensures credentials are still valid
@@ -562,7 +562,7 @@ import com.trustweave.credential.CredentialVerificationOptions
 
     // Step 9: Verify device before network access
     println("\nStep 9: Verifying device before network access...")
-    
+
     // Create verifier to check device credentials
     // This verifier will check cryptographic proofs and credential validity
     val verifier = CredentialVerifier(
@@ -570,7 +570,7 @@ import com.trustweave.credential.CredentialVerificationOptions
             didRegistry.resolve(did).toCredentialDidResolution()
         }
     )
-    
+
     // First, verify device attestation
     // This proves device is authentic and from legitimate manufacturer
     val attestationVerification = verifier.verify(
@@ -581,15 +581,15 @@ import com.trustweave.credential.CredentialVerificationOptions
             validateSchema = true
         )
     )
-    
+
     if (!attestationVerification.valid) {
         println("❌ Device attestation verification failed:")
         attestationVerification.errors.forEach { println("  - $it") }
         return@runBlocking
     }
-    
+
     println("✅ Device attestation verified")
-    
+
     // Second, verify network authorization
     // This proves device has permission to join network
     val authorizationVerification = verifier.verify(
@@ -600,13 +600,13 @@ import com.trustweave.credential.CredentialVerificationOptions
             validateSchema = true
         )
     )
-    
+
     if (!authorizationVerification.valid) {
         println("❌ Network authorization verification failed:")
         authorizationVerification.errors.forEach { println("  - $it") }
         return@runBlocking
     }
-    
+
     println("✅ Network authorization verified")
     println("  - Device can join network")
 ```
@@ -626,11 +626,11 @@ import com.trustweave.credential.CredentialVerificationOptions
 ```kotlin
     // Step 10: Device-to-device communication
     println("\nStep 10: Setting up device-to-device communication...")
-    
+
     // Create second device for communication example
     val device2Did = didMethod.createDid()
     println("Second device DID: ${device2Did.id}")
-    
+
     // Device 1 wants to communicate with Device 2
     // First, Device 1 verifies Device 2's attestation
     // In a real scenario, Device 2 would present its attestation credential
@@ -646,20 +646,20 @@ import com.trustweave.credential.CredentialVerificationOptions
         },
         issuanceDate = Instant.now().toString()
     )
-    
+
     val issuedDevice2Attestation = manufacturerIssuer.issue(
         credential = device2Attestation,
         issuerDid = manufacturerDid.id,
         keyId = manufacturerKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     // Verify Device 2's attestation
     val device2Verification = verifier.verify(
         credential = issuedDevice2Attestation,
         options = CredentialVerificationOptions(checkRevocation = true)
     )
-    
+
     if (device2Verification.valid) {
         println("✅ Device 2 verified - secure communication can proceed")
         println("  - Device 1 can trust Device 2")
@@ -677,7 +677,7 @@ import com.trustweave.credential.CredentialVerificationOptions
 - **Trust**: Third parties can verify device identity independently
 - **Non-Repudiation**: Manufacturer cannot deny device issuance
 
-**Rationale**: 
+**Rationale**:
 - **Device Record**: Create structured record of device identity
 - **Blockchain Anchoring**: Anchor to blockchain for immutability
 - **Digest**: Cryptographic hash of device credentials
@@ -700,13 +700,13 @@ data class DeviceIdentityRecord(
 
     // Step 11: Anchor device identity to blockchain
     println("\nStep 11: Anchoring device identity to blockchain...")
-    
+
     // Setup blockchain client
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
     val blockchainRegistry = BlockchainAnchorRegistry().apply {
         register("eip155:1", anchorClient)
     }
-    
+
     // Compute digest of device attestation credential
     // This digest uniquely identifies the credential
     val attestationDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
@@ -715,7 +715,7 @@ data class DeviceIdentityRecord(
             issuedAttestation
         )
     )
-    
+
     // Create device identity record
     // This record will be permanently stored on blockchain
     val deviceIdentityRecord = DeviceIdentityRecord(
@@ -725,7 +725,7 @@ data class DeviceIdentityRecord(
         serialNumber = "SSP-2024-001234",
         attestationDigest = attestationDigest
     )
-    
+
     // Anchor to blockchain
     // This creates immutable record that cannot be tampered with
     val anchorResult = blockchainRegistry.anchorTyped(
@@ -733,7 +733,7 @@ data class DeviceIdentityRecord(
         serializer = DeviceIdentityRecord.serializer(),
         targetChainId = "eip155:137"
     )
-    
+
     println("Device identity anchored to blockchain:")
     println("  - Transaction hash: ${anchorResult.ref.txHash}")
     println("  - Provides immutable device identity record")
@@ -754,7 +754,7 @@ data class DeviceIdentityRecord(
 
 2. **DID Method Registration**: Register DID method for creating device identities. In production, use real DID methods like `did:key` or `did:web`.
 
-3. **Why Separation Matters**: 
+3. **Why Separation Matters**:
    - **Security**: If one system is compromised, others remain secure
    - **Scalability**: Each system can scale independently
    - **Compliance**: Meets security requirements for key isolation
@@ -1069,21 +1069,21 @@ fun authenticateSmartHomeDevice(
             didRegistry.resolve(did).toCredentialDidResolution()
         }
     )
-    
+
     val verification = verifier.verify(
         credential = deviceAttestation,
         options = CredentialVerificationOptions(checkRevocation = true)
     )
-    
+
     if (!verification.valid) return false
-    
+
     // Check if device is from trusted manufacturer
     val manufacturerDid = deviceAttestation.issuer
     val trustedManufacturers = listOf(
         "did:example:manufacturer1",
         "did:example:manufacturer2"
     )
-    
+
     return manufacturerDid in trustedManufacturers
 }
 ```
@@ -1101,11 +1101,11 @@ fun verifyDeviceCapabilities(
 ): Boolean {
     val capabilities = capabilityCredential.credentialSubject.jsonObject["capabilities"]?.jsonObject
         ?: return false
-    
+
     val deviceSensors = capabilities["sensors"]?.jsonArray
         ?.map { it.jsonPrimitive.content }
         ?: return false
-    
+
     // Check if device has all required capabilities
     return requiredCapabilities.all { it in deviceSensors }
 }
@@ -1129,18 +1129,18 @@ fun establishVehicleCommunication(
             didRegistry.resolve(did).toCredentialDidResolution()
         }
     )
-    
+
     // Verify both vehicle attestations
     val v1Verification = verifier.verify(
         credential = vehicle1Attestation,
         options = CredentialVerificationOptions(checkRevocation = true)
     )
-    
+
     val v2Verification = verifier.verify(
         credential = vehicle2Attestation,
         options = CredentialVerificationOptions(checkRevocation = true)
     )
-    
+
     // Both vehicles must be verified
     return v1Verification.valid && v2Verification.valid
 }

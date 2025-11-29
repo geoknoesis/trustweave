@@ -105,7 +105,7 @@ class MyEoTest : BaseEoIntegrationTest() {
     override fun createAnchorClient(chainId: String, options: Map<String, Any?>): BlockchainAnchorClient {
         return InMemoryBlockchainAnchorClient(chainId)
     }
-    
+
     @Test
     fun testEoScenario() = runBlocking {
         val result = runEoTestScenario()

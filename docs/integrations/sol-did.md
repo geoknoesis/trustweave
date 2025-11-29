@@ -27,7 +27,7 @@ dependencies {
     implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    
+
     // HTTP client for Solana RPC
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }
@@ -216,11 +216,11 @@ val anchorClient = InMemoryBlockchainAnchorClient("solana:devnet")
 
 val TrustWeave = TrustWeave.create {
     kms = InMemoryKeyManagementService()
-    
+
     blockchains {
         register("solana:devnet", anchorClient)
     }
-    
+
     didMethods {
         + SolDidMethod(kms!!, anchorClient, config)
     }

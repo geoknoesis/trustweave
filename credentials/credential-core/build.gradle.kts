@@ -9,16 +9,17 @@ dependencies {
     // The circular dependency bug is fixed by renaming modules to avoid multiple :core suffixes
     implementation(project(":common"))
     implementation(project(":did:did-core"))
-    
+
     // Kotlinx dependencies for serialization and coroutines
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.core)
-    
+
     // Database support (optional, for storage implementations)
     // Uncomment when using database storage:
     // implementation("com.zaxxer:HikariCP:5.0.1")
     // implementation("org.postgresql:postgresql:42.6.0")
-    
+
     testImplementation(project(":testkit"))
     testImplementation(project(":kms:kms-core"))
+    testImplementation(project(":trust"))
 }

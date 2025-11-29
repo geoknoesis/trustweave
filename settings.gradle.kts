@@ -5,7 +5,7 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
-    
+
     // Declare plugin versions here so subprojects can use them without specifying versions.
     // For example, subprojects can use kotlin("jvm") and Gradle will automatically use version 2.2.21.
     plugins {

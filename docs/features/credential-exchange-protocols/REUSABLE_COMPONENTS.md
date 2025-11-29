@@ -78,7 +78,7 @@ Many components implemented for DIDComm are reusable across other protocols (OID
 - **Usage**: All protocols can use this
 - **Example**:
   ```kotlin
-  val storage: ProtocolMessageStorage<DidCommMessage> = 
+  val storage: ProtocolMessageStorage<DidCommMessage> =
       PostgresMessageStorage(serializer, dataSource)
   ```
 
@@ -93,7 +93,7 @@ Many components implemented for DIDComm are reusable across other protocols (OID
       dataSource = dataSource,
       tableName = "didcomm_messages"
   )
-  
+
   // OIDC4VCI
   val oidcStorage = PostgresMessageStorage(
       serializer = Oidc4VciOffer.serializer(),
@@ -249,7 +249,7 @@ archiver.archiveMessages(policy)
        dataSource = dataSource,
        tableName = "didcomm_messages"
    )
-   
+
    val didCommStorage = DidCommMessageStorageAdapter(genericStorage)
    ```
 
@@ -273,7 +273,7 @@ archiver.archiveMessages(policy)
    ```kotlin
    // Before
    private val offers = mutableMapOf<String, Oidc4VciOffer>()
-   
+
    // After
    private val storage: ProtocolMessageStorage<Oidc4VciOffer> = ...
    ```

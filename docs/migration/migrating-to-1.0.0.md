@@ -75,7 +75,7 @@ try {
 ```kotlin
 val result = TrustWeave.anchor(data, serializer, chainId)
 result.fold(
-    onSuccess = { anchor -> 
+    onSuccess = { anchor ->
         println("Anchored: ${anchor.ref.txHash}")
     },
     onFailure = { error ->
@@ -114,7 +114,7 @@ try {
 ```kotlin
 val result = TrustWeave.createDid()
 result.fold(
-    onSuccess = { did -> 
+    onSuccess = { did ->
         println("Created: ${did.id}")
     },
     onFailure = { error ->
@@ -155,7 +155,7 @@ val TrustWeave = TrustWeave.create()
 // Initialize plugins
 TrustWeave.initialize().fold(
     onSuccess = { println("Plugins initialized") },
-    onFailure = { error -> 
+    onFailure = { error ->
         println("Initialization error: ${error.message}")
     }
 )

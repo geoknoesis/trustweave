@@ -10,9 +10,9 @@ import javax.sql.DataSource
 
 /**
  * Database-backed wallet factory implementation.
- * 
+ *
  * Supports PostgreSQL, MySQL, and H2 databases.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val factory = DatabaseWalletFactory()
@@ -30,31 +30,31 @@ import javax.sql.DataSource
  * ```
  */
 class DatabaseWalletFactory : WalletFactory {
-    
+
     override suspend fun create(
         providerName: String,
         walletId: String?,
         walletDid: String?,
         holderDid: String?,
         options: WalletCreationOptions
-    ): Any {
+    ): Wallet {
         if (providerName.lowercase() != "database") {
             throw IllegalArgumentException("Provider name must be 'database'")
         }
-        
+
         val finalWalletId = walletId ?: UUID.randomUUID().toString()
         val finalWalletDid = walletDid ?: "did:key:wallet-$finalWalletId"
-        val finalHolderDid = holderDid 
+        val finalHolderDid = holderDid
             ?: throw IllegalArgumentException("holderDid is required for DatabaseWallet")
-        
+
         val connectionString = options.storagePath
             ?: throw IllegalArgumentException("storagePath (JDBC connection string) is required")
-        
+
         val username = options.additionalProperties["username"] as? String
         val password = options.additionalProperties["password"] as? String
-        
+
         val dataSource = createDataSource(connectionString, username, password)
-        
+
         return DatabaseWallet(
             walletId = finalWalletId,
             walletDid = finalWalletDid,
@@ -62,7 +62,7 @@ class DatabaseWalletFactory : WalletFactory {
             dataSource = dataSource
         )
     }
-    
+
     private fun createDataSource(
         connectionString: String,
         username: String?,
@@ -77,7 +77,7 @@ class DatabaseWalletFactory : WalletFactory {
         config.connectionTimeout = 30000
         config.idleTimeout = 600000
         config.maxLifetime = 1800000
-        
+
         return HikariDataSource(config)
     }
 }

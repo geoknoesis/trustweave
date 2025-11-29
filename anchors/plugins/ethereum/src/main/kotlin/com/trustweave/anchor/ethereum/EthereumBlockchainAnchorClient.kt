@@ -13,10 +13,10 @@ import java.nio.charset.StandardCharsets
 
 /**
  * Ethereum mainnet blockchain anchor client implementation.
- * 
+ *
  * Supports Ethereum mainnet and Sepolia testnet chains.
  * Uses Ethereum transaction data fields to store payload data.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val options = mapOf(
@@ -30,11 +30,11 @@ class EthereumBlockchainAnchorClient(
     chainId: String,
     options: Map<String, Any?> = emptyMap()
 ) : AbstractBlockchainAnchorClient(chainId, options), java.io.Closeable {
-    
+
     companion object {
         const val MAINNET = "eip155:1"  // Ethereum mainnet
         const val SEPOLIA = "eip155:11155111" // Sepolia testnet
-        
+
         // Network RPC endpoints
         private const val MAINNET_RPC_URL = "https://eth.llamarpc.com"
         private const val SEPOLIA_RPC_URL = "https://eth-sepolia.g.alchemy.com/v2/demo"
@@ -52,7 +52,7 @@ class EthereumBlockchainAnchorClient(
         require(chainIdNum == 1 || chainIdNum == 11155111) {
             "Unsupported Ethereum chain ID: $chainId. Use 'eip155:1' (mainnet) or 'eip155:11155111' (Sepolia testnet)"
         }
-        
+
         // Initialize Web3j client based on chain
         val rpcUrl = when (chainId) {
             MAINNET -> options["rpcUrl"] as? String ?: MAINNET_RPC_URL
@@ -139,7 +139,7 @@ class EthereumBlockchainAnchorClient(
 
         val signedTransaction = org.web3j.crypto.TransactionEncoder.signMessage(rawTransaction, creds)
         val hexValue = org.web3j.utils.Numeric.toHexString(signedTransaction)
-        
+
         val ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send()
         if (ethSendTransaction.hasError()) {
             val error = ethSendTransaction.error
@@ -178,13 +178,13 @@ class EthereumBlockchainAnchorClient(
         val dataBytes = org.web3j.utils.Numeric.hexStringToByteArray(input)
         val payloadJson = String(dataBytes, StandardCharsets.UTF_8)
         val payload = Json.parseToJsonElement(payloadJson)
-        
+
         val blockNumber = try {
             receipt.blockNumber?.toLong()
         } catch (e: Exception) {
             null
         }
-        
+
         return AnchorResult(
             ref = buildAnchorRef(
                 txHash = txHash,

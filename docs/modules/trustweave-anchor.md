@@ -37,7 +37,7 @@ import com.trustweave.anchor.*
 
 interface BlockchainAnchorClient {
     val chainId: String  // CAIP-2 format: "eip155:1", "algorand:testnet", etc.
-    
+
     suspend fun writePayload(payload: ByteArray): AnchorResult
     suspend fun readPayload(anchorRef: AnchorRef): ByteArray?
 }
@@ -58,13 +58,13 @@ sealed class BlockchainAnchorClientOptions {
         val indexerUrl: String? = null,
         val privateKey: String
     ) : BlockchainAnchorClientOptions()
-    
+
     data class PolygonOptions(
         val rpcUrl: String,
         val chainId: Long,
         val privateKey: String
     ) : BlockchainAnchorClientOptions(), Closeable
-    
+
     // ... other options
 }
 ```
@@ -81,12 +81,12 @@ sealed class ChainId {
         object Mainnet : Algorand()
         object Testnet : Algorand()
     }
-    
+
     sealed class Polygon : ChainId() {
         data class Mainnet(val id: Long = 137) : Polygon()
         data class Mumbai(val id: Long = 80001) : Polygon()
     }
-    
+
     // ... other chain IDs
 }
 ```

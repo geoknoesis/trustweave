@@ -1,10 +1,11 @@
 package com.trustweave.azurekms
 
 import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.core.types.KeyId
 import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyHandle
 import com.trustweave.kms.KeyManagementService
-import com.trustweave.kms.KeyNotFoundException
+import com.trustweave.kms.exception.KmsException
 import com.trustweave.kms.UnsupportedAlgorithmException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -22,14 +23,14 @@ import java.util.UUID
 
 /**
  * Azure Key Vault implementation of KeyManagementService.
- * 
+ *
  * Supports Azure Key Vault-compatible algorithms:
  * - secp256k1 (P-256K)
  * - P-256, P-384, P-521 (P-256, P-384, P-521)
  * - RSA-2048, RSA-3072, RSA-4096
- * 
+ *
  * Note: Ed25519 is not directly supported by Azure Key Vault.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val config = AzureKmsConfig.builder()
@@ -75,20 +76,20 @@ class AzureKeyManagementService(
 
         try {
             val (keyType, curveName) = AlgorithmMapping.toAzureKeyType(algorithm)
-            
+
             val keyName = (options["keyName"] as? String) ?: "TrustWeave-key-${UUID.randomUUID()}"
-            
+
             // Create key options - Azure SDK CreateKeyOptions
             // Note: The Azure SDK CreateKeyOptions API may vary by version
             // For EC keys, the curve should be specified, but the exact method name may differ
             // This implementation creates keys with basic options; curve and operations
             // can be configured via Azure Key Vault defaults or enhanced with specific SDK version methods
             val createKeyOptions = CreateKeyOptions(keyName, keyType)
-            
+
             // Attempt to set curve name for EC keys using reflection (SDK version compatibility)
             if (curveName != null) {
                 try {
-                    val method = createKeyOptions.javaClass.getMethod("setCurveName", 
+                    val method = createKeyOptions.javaClass.getMethod("setCurveName",
                         com.azure.security.keyvault.keys.models.KeyCurveName::class.java)
                     method.invoke(createKeyOptions, curveName)
                 } catch (e: NoSuchMethodException) {
@@ -100,7 +101,7 @@ class AzureKeyManagementService(
 
             val keyVaultKey = keyClient.createKey(createKeyOptions)
             val keyId = keyVaultKey.id
-            
+
             // Get public key to include in KeyHandle
             // Azure Key Vault returns the public key in JWK format, but we need to extract it
             // We'll use the CryptographyClient to get the public key
@@ -118,7 +119,7 @@ class AzureKeyManagementService(
                     }
                 )
                 .buildClient()
-            
+
             // Get the public key from the key material
             val publicKeyBytes = when {
                 keyVaultKey.key is com.azure.security.keyvault.keys.models.JsonWebKey -> {
@@ -133,26 +134,29 @@ class AzureKeyManagementService(
                     extractPublicKeyBytesFromKeyVaultKey(keyVaultKey, algorithm)
                 }
             }
-            
+
             val publicKeyJwk = AlgorithmMapping.publicKeyToJwk(publicKeyBytes, algorithm)
 
             KeyHandle(
-                id = keyId ?: keyName, // Use key ID (includes version) or fallback to name
+                id = KeyId(keyId ?: keyName), // Use key ID (includes version) or fallback to name
                 algorithm = algorithm.name,
                 publicKeyJwk = publicKeyJwk
             )
         } catch (e: HttpResponseException) {
             throw mapAzureException(e, "Failed to generate key")
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to generate key: ${e.message}", e)
+            throw TrustWeaveException.Unknown(
+                message = "Failed to generate key: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
     }
 
-    override suspend fun getPublicKey(keyId: String): KeyHandle = withContext(Dispatchers.IO) {
+    override suspend fun getPublicKey(keyId: KeyId): KeyHandle = withContext(Dispatchers.IO) {
         try {
-            val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId)
+            val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
             val keyVaultKey = keyClient.getKey(resolvedKeyId)
-            
+
             val keyType = keyVaultKey.keyType
             val curveName = keyVaultKey.key?.curveName
             val keySize = when (keyType) {
@@ -163,36 +167,41 @@ class AzureKeyManagementService(
                 }
                 else -> null
             }
-            
+
             val algorithm = AlgorithmMapping.parseAlgorithmFromKeyType(keyType, curveName, keySize)
-                ?: throw TrustWeaveException("Unknown key type: $keyType")
-            
+                ?: throw TrustWeaveException.Unknown(
+                    message = "Unknown key type: $keyType"
+                )
+
             val publicKeyBytes = extractPublicKeyBytesFromKeyVaultKey(keyVaultKey, algorithm)
-            
+
             val publicKeyJwk = AlgorithmMapping.publicKeyToJwk(publicKeyBytes, algorithm)
 
             KeyHandle(
-                id = keyVaultKey.id ?: resolvedKeyId,
+                id = KeyId(keyVaultKey.id ?: resolvedKeyId),
                 algorithm = algorithm.name,
                 publicKeyJwk = publicKeyJwk
             )
         } catch (e: ResourceNotFoundException) {
-            throw KeyNotFoundException("Key not found: $keyId", e)
+            throw KmsException.KeyNotFound(keyId = keyId.value)
         } catch (e: HttpResponseException) {
             throw mapAzureException(e, "Failed to get public key")
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to get public key: ${e.message}", e)
+            throw TrustWeaveException.Unknown(
+                message = "Failed to get public key: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
     }
 
     override suspend fun sign(
-        keyId: String,
+        keyId: KeyId,
         data: ByteArray,
         algorithm: Algorithm?
     ): ByteArray = withContext(Dispatchers.IO) {
         try {
-            val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId)
-            
+            val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
+
             // Get key metadata to determine algorithm if not provided
             val signingAlgorithm = algorithm ?: run {
                 val keyVaultKey = keyClient.getKey(resolvedKeyId)
@@ -205,13 +214,15 @@ class AzureKeyManagementService(
                     }
                     else -> null
                 }
-                
+
                 AlgorithmMapping.parseAlgorithmFromKeyType(keyType, curveName, keySize)
-                    ?: throw TrustWeaveException("Cannot determine signing algorithm for key: $keyId")
+                    ?: throw TrustWeaveException.Unknown(
+                        message = "Cannot determine signing algorithm for key: ${keyId.value}"
+                    )
             }
-            
+
             val azureSignatureAlgorithm = AlgorithmMapping.toAzureSignatureAlgorithm(signingAlgorithm)
-            
+
             // Create cryptography client for signing
             val cryptographyClient = CryptographyClientBuilder()
                 .keyIdentifier(resolvedKeyId)
@@ -227,27 +238,30 @@ class AzureKeyManagementService(
                     }
                 )
                 .buildClient()
-            
+
             val signResult = cryptographyClient.sign(azureSignatureAlgorithm, data)
             signResult.signature
         } catch (e: ResourceNotFoundException) {
-            throw KeyNotFoundException("Key not found: $keyId", e)
+            throw KmsException.KeyNotFound(keyId = keyId.value)
         } catch (e: HttpResponseException) {
             throw mapAzureException(e, "Failed to sign data")
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to sign data: ${e.message}", e)
+            throw TrustWeaveException.Unknown(
+                message = "Failed to sign data: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
     }
 
-    override suspend fun deleteKey(keyId: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deleteKey(keyId: KeyId): Boolean = withContext(Dispatchers.IO) {
         try {
-            val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId)
-            
+            val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
+
             // Azure Key Vault supports soft delete and purge
             // We'll use beginDeleteKey which schedules deletion (soft delete)
             val deleteKeyOperation = keyClient.beginDeleteKey(resolvedKeyId)
             deleteKeyOperation.waitForCompletion()
-            
+
             // Optionally purge the key (hard delete) if requested
             // For now, we'll just soft delete
             true
@@ -256,7 +270,10 @@ class AzureKeyManagementService(
         } catch (e: HttpResponseException) {
             throw mapAzureException(e, "Failed to delete key")
         } catch (e: Exception) {
-            throw TrustWeaveException("Failed to delete key: ${e.message}", e)
+            throw TrustWeaveException.Unknown(
+                message = "Failed to delete key: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
     }
 
@@ -265,11 +282,21 @@ class AzureKeyManagementService(
      */
     private fun mapAzureException(e: HttpResponseException, operation: String): Exception {
         return when (e.response?.statusCode) {
-            404 -> KeyNotFoundException("Key not found: ${e.message}", e)
-            403 -> TrustWeaveException(
-                "Access denied to Azure Key Vault. Check permissions: ${e.message}", e
+            404 -> {
+                // Extract keyId from message if possible, otherwise use generic message
+                val errorMessage = e.message ?: "Key not found"
+                KmsException.KeyNotFound(
+                    keyId = errorMessage
+                )
+            }
+            403 -> TrustWeaveException.Unknown(
+                message = "Access denied to Azure Key Vault. Check permissions: ${e.message ?: "Unknown error"}",
+                cause = e
             )
-            else -> TrustWeaveException("$operation: ${e.message}", e)
+            else -> TrustWeaveException.Unknown(
+                message = "$operation: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
     }
 
@@ -283,7 +310,7 @@ class AzureKeyManagementService(
         val jwk = keyVaultKey.key
         return extractPublicKeyBytesFromJwk(jwk, algorithm)
     }
-    
+
     /**
      * Extracts public key bytes from Azure Key Vault JWK.
      */
@@ -299,7 +326,9 @@ class AzureKeyManagementService(
                 val x = jwk.x
                 val y = jwk.y
                 if (x == null || y == null) {
-                    throw TrustWeaveException("Missing x or y coordinates in EC key")
+                    throw TrustWeaveException.Unknown(
+                        message = "Missing x or y coordinates in EC key"
+                    )
                 }
                 // Reconstruct the public key in DER format
                 // This is a simplified approach - in production, you'd want to use a proper EC key factory
@@ -322,7 +351,9 @@ class AzureKeyManagementService(
                 val n = jwk.n
                 val e = jwk.e
                 if (n == null || e == null) {
-                    throw TrustWeaveException("Missing modulus or exponent in RSA key")
+                    throw TrustWeaveException.Unknown(
+                        message = "Missing modulus or exponent in RSA key"
+                    )
                 }
                 // Reconstruct RSA public key
                 // This is simplified - in production, use proper RSA key factory
@@ -334,7 +365,9 @@ class AzureKeyManagementService(
                 val publicKey = keyFactory.generatePublic(publicKeySpec)
                 publicKey.encoded
             }
-            else -> throw TrustWeaveException("Unsupported algorithm for key extraction: ${algorithm.name}")
+            else -> throw TrustWeaveException.Unknown(
+                message = "Unsupported algorithm for key extraction: ${algorithm.name}"
+            )
         }
     }
 

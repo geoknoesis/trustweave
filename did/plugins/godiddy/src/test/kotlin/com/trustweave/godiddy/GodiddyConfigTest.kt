@@ -11,7 +11,7 @@ class GodiddyConfigTest {
     @Test
     fun `test GodiddyConfig with default values`() {
         val config = GodiddyConfig()
-        
+
         assertEquals("https://api.godiddy.com", config.baseUrl)
         assertEquals(30000L, config.timeout)
         assertNull(config.apiKey)
@@ -24,7 +24,7 @@ class GodiddyConfigTest {
             timeout = 60000L,
             apiKey = "api-key-123"
         )
-        
+
         assertEquals("https://custom.godiddy.com", config.baseUrl)
         assertEquals(60000L, config.timeout)
         assertEquals("api-key-123", config.apiKey)
@@ -33,7 +33,7 @@ class GodiddyConfigTest {
     @Test
     fun `test GodiddyConfig default companion method`() {
         val config = GodiddyConfig.default()
-        
+
         assertEquals("https://api.godiddy.com", config.baseUrl)
         assertEquals(30000L, config.timeout)
         assertNull(config.apiKey)
@@ -46,9 +46,9 @@ class GodiddyConfigTest {
             property("timeout", 60000L)
             property("apiKey", "api-key-123")
         }
-        
+
         val config = GodiddyConfig.fromOptions(options)
-        
+
         assertEquals("https://custom.godiddy.com", config.baseUrl)
         assertEquals(60000L, config.timeout)
         assertEquals("api-key-123", config.apiKey)
@@ -59,9 +59,9 @@ class GodiddyConfigTest {
         val options = didCreationOptions {
             property("baseUrl", "https://custom.godiddy.com")
         }
-        
+
         val config = GodiddyConfig.fromOptions(options)
-        
+
         assertEquals("https://custom.godiddy.com", config.baseUrl)
         assertEquals(30000L, config.timeout) // Default value
         assertNull(config.apiKey)
@@ -70,7 +70,7 @@ class GodiddyConfigTest {
     @Test
     fun `test GodiddyConfig fromOptions with empty map`() {
         val config = GodiddyConfig.fromOptions(com.trustweave.did.DidCreationOptions())
-        
+
         assertEquals("https://api.godiddy.com", config.baseUrl)
         assertEquals(30000L, config.timeout)
         assertNull(config.apiKey)
@@ -83,9 +83,9 @@ class GodiddyConfigTest {
             property("timeout", null)
             property("apiKey", null)
         }
-        
+
         val config = GodiddyConfig.fromOptions(options)
-        
+
         assertEquals("https://api.godiddy.com", config.baseUrl) // Default
         assertEquals(30000L, config.timeout) // Default
         assertNull(config.apiKey)
@@ -96,9 +96,9 @@ class GodiddyConfigTest {
         val options = didCreationOptions {
             property("timeout", 45000) // Int instead of Long
         }
-        
+
         val config = GodiddyConfig.fromOptions(options)
-        
+
         assertEquals(45000L, config.timeout)
     }
 
@@ -107,9 +107,9 @@ class GodiddyConfigTest {
         val options = didCreationOptions {
             property("timeout", 45000.0) // Double
         }
-        
+
         val config = GodiddyConfig.fromOptions(options)
-        
+
         assertEquals(45000L, config.timeout)
     }
 
@@ -125,7 +125,7 @@ class GodiddyConfigTest {
             timeout = 60000L,
             apiKey = "api-key-123"
         )
-        
+
         assertEquals(config1, config2)
     }
 
@@ -133,7 +133,7 @@ class GodiddyConfigTest {
     fun `test GodiddyConfig copy`() {
         val original = GodiddyConfig()
         val copied = original.copy(apiKey = "new-key")
-        
+
         assertEquals(original.baseUrl, copied.baseUrl)
         assertEquals(original.timeout, copied.timeout)
         assertEquals("new-key", copied.apiKey)
@@ -142,7 +142,7 @@ class GodiddyConfigTest {
     @Test
     fun `test GodiddyConfig toString`() {
         val config = GodiddyConfig(apiKey = "test-key")
-        
+
         val str = config.toString()
         assertTrue(str.contains("GodiddyConfig"))
     }

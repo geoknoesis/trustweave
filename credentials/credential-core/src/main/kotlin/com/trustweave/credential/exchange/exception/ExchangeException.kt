@@ -9,10 +9,10 @@ import java.util.concurrent.TimeoutException
 
 /**
  * Credential exchange protocol-related exception types.
- * 
+ *
  * These exceptions provide structured error codes and context for exchange operations.
  * All exceptions extend TrustWeaveException for consistent error handling across TrustWeave.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * try {
@@ -36,14 +36,14 @@ open class ExchangeException(
     override val context: Map<String, Any?> = emptyMap(),
     override val cause: Throwable? = null
 ) : TrustWeaveException(code, message, context, cause) {
-    
+
     // ============================================================================
     // Registry-level exceptions
     // ============================================================================
-    
+
     /**
      * Exception thrown when a protocol is not registered in the registry.
-     * 
+     *
      * @param protocolName The name of the protocol that was requested
      * @param availableProtocols List of available protocol names
      */
@@ -62,10 +62,10 @@ open class ExchangeException(
             "availableProtocols" to availableProtocols
         )
     )
-    
+
     /**
      * Exception thrown when a protocol does not support the requested operation.
-     * 
+     *
      * @param protocolName The name of the protocol
      * @param operation The operation that was requested
      * @param supportedOperations List of operations supported by the protocol
@@ -87,14 +87,14 @@ open class ExchangeException(
             "supportedOperations" to supportedOperations
         )
     )
-    
+
     // ============================================================================
     // Request validation exceptions
     // ============================================================================
-    
+
     /**
      * Exception thrown when a required option is missing from the request.
-     * 
+     *
      * @param optionName The name of the missing option
      * @param protocolName The protocol that requires this option
      */
@@ -103,18 +103,18 @@ open class ExchangeException(
         val protocolName: String? = null
     ) : ExchangeException(
         code = "MISSING_REQUIRED_OPTION",
-        message = protocolName?.let { 
-            "Missing required option '$optionName' for protocol '$it'" 
+        message = protocolName?.let {
+            "Missing required option '$optionName' for protocol '$it'"
         } ?: "Missing required option: $optionName",
         context = mapOf(
             "optionName" to optionName,
             "protocolName" to protocolName
         ).filterValues { it != null }
     )
-    
+
     /**
      * Exception thrown when a request field is invalid.
-     * 
+     *
      * @param field The name of the invalid field
      * @param reason The reason the field is invalid
      * @param protocolName The protocol name (if applicable)
@@ -134,14 +134,14 @@ open class ExchangeException(
         ).filterValues { it != null },
         cause = cause
     )
-    
+
     // ============================================================================
     // Message/Resource not found exceptions
     // ============================================================================
-    
+
     /**
      * Exception thrown when a message is not found.
-     * 
+     *
      * @param messageId The ID of the message that was not found
      * @param messageType The type of message (e.g., "offer", "request")
      */
@@ -150,18 +150,18 @@ open class ExchangeException(
         val messageType: String? = null
     ) : ExchangeException(
         code = "MESSAGE_NOT_FOUND",
-        message = messageType?.let { 
-            "$it message not found: $messageId" 
+        message = messageType?.let {
+            "$it message not found: $messageId"
         } ?: "Message not found: $messageId",
         context = mapOf(
             "messageId" to messageId,
             "messageType" to messageType
         ).filterValues { it != null }
     )
-    
+
     /**
      * Exception thrown when a credential offer is not found.
-     * 
+     *
      * @param offerId The ID of the offer that was not found
      */
     data class OfferNotFound(
@@ -171,10 +171,10 @@ open class ExchangeException(
         message = "Credential offer not found: $offerId",
         context = mapOf("offerId" to offerId)
     )
-    
+
     /**
      * Exception thrown when a credential request is not found.
-     * 
+     *
      * @param requestId The ID of the request that was not found
      */
     data class RequestNotFound(
@@ -184,10 +184,10 @@ open class ExchangeException(
         message = "Credential request not found: $requestId",
         context = mapOf("requestId" to requestId)
     )
-    
+
     /**
      * Exception thrown when a proof request is not found.
-     * 
+     *
      * @param requestId The ID of the proof request that was not found
      */
     data class ProofRequestNotFound(
@@ -197,46 +197,46 @@ open class ExchangeException(
         message = "Proof request not found: $requestId",
         context = mapOf("requestId" to requestId)
     )
-    
+
     // ============================================================================
     // Generic/Unknown exceptions
     // ============================================================================
-    
+
     companion object {
         /**
          * Checks if an exception is retryable.
-         * 
+         *
          * @see ExchangeExceptionRecovery.isRetryable
          */
         fun isRetryable(exception: ExchangeException): Boolean {
             return ExchangeExceptionRecovery.isRetryable(exception)
         }
-        
+
         /**
          * Checks if an exception is transient.
-         * 
+         *
          * @see ExchangeExceptionRecovery.isTransient
          */
         fun isTransient(exception: ExchangeException): Boolean {
             return ExchangeExceptionRecovery.isTransient(exception)
         }
-        
+
         /**
          * Gets a user-friendly error message.
-         * 
+         *
          * @see ExchangeExceptionRecovery.getUserFriendlyMessage
          */
         fun getUserFriendlyMessage(exception: ExchangeException): String {
             return ExchangeExceptionRecovery.getUserFriendlyMessage(exception)
         }
     }
-    
+
     /**
      * Exception thrown when an unknown or unexpected error occurs.
-     * 
+     *
      * This exception should be used sparingly and only when the error cannot
      * be categorized into a more specific exception type.
-     * 
+     *
      * @param reason The reason for the error
      * @param errorType The type of the original error (if available)
      * @param cause The underlying exception
@@ -260,10 +260,10 @@ open class ExchangeException(
 
 /**
  * Extension function to convert any Throwable to an ExchangeException.
- * 
+ *
  * This function provides automatic conversion of standard exceptions
  * to structured ExchangeException types for consistent error handling.
- * 
+ *
  * **Usage:**
  * ```kotlin
  * try {

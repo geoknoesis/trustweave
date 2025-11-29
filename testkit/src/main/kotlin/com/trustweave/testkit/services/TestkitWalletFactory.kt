@@ -9,7 +9,7 @@ import java.util.UUID
 
 /**
  * Wallet Factory implementation for testkit.
- * 
+ *
  * Supports creating in-memory wallets for testing.
  * Can be extended to support other wallet types (database, file-based, etc.).
  */
@@ -43,7 +43,7 @@ class TestkitWalletFactory : WalletFactory {
             }
         }
     }
-    
+
     override suspend fun createInMemory(
         walletId: String?,
         walletDid: String?,

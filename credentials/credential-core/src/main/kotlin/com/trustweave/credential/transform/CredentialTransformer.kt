@@ -7,19 +7,19 @@ import kotlinx.serialization.json.*
 
 /**
  * Credential transformer interface.
- * 
+ *
  * Provides format conversion between different credential representations:
  * - JSON-LD (default W3C VC format)
  * - JWT (compact, widely supported)
  * - CBOR (binary, efficient)
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val transformer = CredentialTransformer()
- * 
+ *
  * // Convert to JWT
  * val jwt = transformer.toJwt(credential)
- * 
+ *
  * // Convert from JWT
  * val credential = transformer.fromJwt(jwt)
  * ```
@@ -30,13 +30,13 @@ class CredentialTransformer {
         encodeDefaults = false
         ignoreUnknownKeys = true
     }
-    
+
     /**
      * Convert credential to JWT format.
-     * 
+     *
      * Creates a JWT with the credential in the 'vc' claim.
      * Note: This creates an unsigned JWT. For signed JWTs, use a ProofGenerator.
-     * 
+     *
      * @param credential Credential to convert
      * @return JWT string (unsigned)
      */
@@ -46,46 +46,46 @@ class CredentialTransformer {
             val jwtClaimsSetClass = Class.forName("com.nimbusds.jwt.JWTClaimsSet")
             val builderClass = Class.forName("com.nimbusds.jwt.JWTClaimsSet\$Builder")
             val builder = builderClass.getDeclaredConstructor().newInstance()
-            
+
             // Set issuer
             val setIssuerMethod = builderClass.getMethod("issuer", String::class.java)
             setIssuerMethod.invoke(builder, credential.issuer)
-            
+
             // Set issued at
-            val issuedAt = credential.issuanceDate.let { 
-                java.time.Instant.parse(it).epochSecond 
+            val issuedAt = credential.issuanceDate.let {
+                java.time.Instant.parse(it).epochSecond
             }
             val setIssuedAtMethod = builderClass.getMethod("issueTime", java.util.Date::class.java)
             setIssuedAtMethod.invoke(builder, java.util.Date.from(java.time.Instant.ofEpochSecond(issuedAt)))
-            
+
             // Set expiration if present
             credential.expirationDate?.let { expirationDate ->
                 val expiration = java.time.Instant.parse(expirationDate).epochSecond
                 val setExpirationMethod = builderClass.getMethod("expirationTime", java.util.Date::class.java)
                 setExpirationMethod.invoke(builder, java.util.Date.from(java.time.Instant.ofEpochSecond(expiration)))
             }
-            
+
             // Set jti (credential ID)
             credential.id?.let { id ->
                 val setJtiMethod = builderClass.getMethod("jwtID", String::class.java)
                 setJtiMethod.invoke(builder, id)
             }
-            
+
             // Add vc claim with credential
             val credentialJson = json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
             val credentialMap = jsonElementToMap(credentialJson)
             val setClaimMethod = builderClass.getMethod("claim", String::class.java, Any::class.java)
             setClaimMethod.invoke(builder, "vc", credentialMap)
-            
+
             // Build claims set
             val buildMethod = builderClass.getMethod("build")
             val claimsSet = buildMethod.invoke(builder)
-            
+
             // Create unsigned JWT
             val unsignedJwtClass = Class.forName("com.nimbusds.jwt.PlainJWT")
             val unsignedJwtConstructor = unsignedJwtClass.getConstructor(jwtClaimsSetClass)
             val unsignedJwt = unsignedJwtConstructor.newInstance(claimsSet)
-            
+
             // Serialize to compact form
             val serializeMethod = unsignedJwtClass.getMethod("serialize")
             return serializeMethod.invoke(unsignedJwt) as String
@@ -97,7 +97,7 @@ class CredentialTransformer {
             return json.encodeToString(VerifiableCredential.serializer(), credential)
         }
     }
-    
+
     /**
      * Convert JsonElement to Map for JWT claims.
      */
@@ -111,7 +111,7 @@ class CredentialTransformer {
             else -> emptyMap()
         }
     }
-    
+
     /**
      * Convert JsonElement to value for JWT claims.
      */
@@ -135,13 +135,13 @@ class CredentialTransformer {
             else -> null
         }
     }
-    
+
     /**
      * Convert JWT to credential.
-     * 
+     *
      * Parses a JWT and extracts the credential from the 'vc' claim.
      * Note: This does not verify the signature. Use CredentialVerifier for verification.
-     * 
+     *
      * @param jwt JWT string
      * @return Verifiable credential
      */
@@ -150,7 +150,7 @@ class CredentialTransformer {
             // Use reflection to parse JWT if nimbus-jose-jwt is available
             val signedJwtClass = Class.forName("com.nimbusds.jwt.SignedJWT")
             val plainJwtClass = Class.forName("com.nimbusds.jwt.PlainJWT")
-            
+
             // Try parsing as SignedJWT first
             val jwtObject = try {
                 val parseMethod = signedJwtClass.getMethod("parse", String::class.java)
@@ -160,23 +160,23 @@ class CredentialTransformer {
                 val parseMethod = plainJwtClass.getMethod("parse", String::class.java)
                 parseMethod.invoke(null, jwt)
             }
-            
+
             // Get claims set
             val getJwtClaimsSetMethod = jwtObject.javaClass.getMethod("getJWTClaimsSet")
             val claimsSet = getJwtClaimsSetMethod.invoke(jwtObject)
-            
+
             // Get vc claim
             val getClaimMethod = claimsSet.javaClass.getMethod("getClaim", String::class.java)
             val vcClaim = getClaimMethod.invoke(claimsSet, "vc")
-            
+
             if (vcClaim == null) {
                 throw IllegalArgumentException("JWT does not contain 'vc' claim")
             }
-            
+
             // Convert claim to JsonObject
             val vcMap = vcClaim as? Map<*, *> ?: throw IllegalArgumentException("'vc' claim is not a valid object")
             val vcJson = mapToJsonObject(vcMap as Map<String, Any?>)
-            
+
             // Parse as VerifiableCredential
             return json.decodeFromJsonElement(VerifiableCredential.serializer(), vcJson)
         } catch (e: ClassNotFoundException) {
@@ -187,7 +187,7 @@ class CredentialTransformer {
             return json.decodeFromString(VerifiableCredential.serializer(), jwt)
         }
     }
-    
+
     /**
      * Convert Map to JsonObject.
      */
@@ -198,7 +198,7 @@ class CredentialTransformer {
             }
         }
     }
-    
+
     /**
      * Convert value to JsonElement.
      */
@@ -213,10 +213,10 @@ class CredentialTransformer {
             else -> kotlinx.serialization.json.JsonPrimitive(value.toString())
         }
     }
-    
+
     /**
      * Convert credential to JSON-LD format.
-     * 
+     *
      * @param credential Credential to convert
      * @return JSON-LD object
      */
@@ -226,20 +226,20 @@ class CredentialTransformer {
         val element = Json.parseToJsonElement(jsonString)
         return element.jsonObject
     }
-    
+
     /**
      * Convert JSON-LD to credential.
-     * 
+     *
      * @param json JSON-LD object
      * @return Verifiable credential
      */
     suspend fun fromJsonLd(json: JsonObject): VerifiableCredential {
         return this.json.decodeFromJsonElement(VerifiableCredential.serializer(), json)
     }
-    
+
     /**
      * Convert credential to CBOR format.
-     * 
+     *
      * @param credential Credential to convert
      * @return CBOR bytes
      */
@@ -248,15 +248,15 @@ class CredentialTransformer {
         // Requires CBOR library (e.g., co.nstant.in:cbor)
         // 1. Convert credential to CBOR representation
         // 2. Return CBOR bytes
-        
+
         // Placeholder: return JSON bytes
         val jsonString = json.encodeToString(VerifiableCredential.serializer(), credential)
         return jsonString.toByteArray(Charsets.UTF_8)
     }
-    
+
     /**
      * Convert CBOR to credential.
-     * 
+     *
      * @param bytes CBOR bytes
      * @return Verifiable credential
      */
@@ -265,7 +265,7 @@ class CredentialTransformer {
         // 1. Parse CBOR bytes
         // 2. Convert to JSON
         // 3. Parse as VerifiableCredential
-        
+
         // Placeholder: parse as JSON
         val jsonString = String(bytes, Charsets.UTF_8)
         return json.decodeFromString(VerifiableCredential.serializer(), jsonString)

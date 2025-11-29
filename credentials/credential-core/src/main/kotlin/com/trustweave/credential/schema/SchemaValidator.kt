@@ -7,15 +7,15 @@ import kotlinx.serialization.json.JsonObject
 
 /**
  * Pluggable schema validator interface.
- * 
+ *
  * Supports both JSON Schema and SHACL validation.
  * Implementations can be registered via SchemaValidatorRegistry.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val validator = JsonSchemaValidator()
  * SchemaValidatorRegistry.register(validator)
- * 
+ *
  * val result = SchemaValidatorRegistry.validate(credential, schema)
  * ```
  */
@@ -24,10 +24,10 @@ interface SchemaValidator {
      * Schema format supported by this validator.
      */
     val schemaFormat: SchemaFormat
-    
+
     /**
      * Validate a credential against a schema.
-     * 
+     *
      * @param credential Credential to validate
      * @param schema Schema definition (JSON Schema or SHACL shape)
      * @return Validation result with errors if any
@@ -36,10 +36,10 @@ interface SchemaValidator {
         credential: VerifiableCredential,
         schema: JsonObject
     ): SchemaValidationResult
-    
+
     /**
      * Validate only the credentialSubject against a schema.
-     * 
+     *
      * @param subject Credential subject (as JsonElement)
      * @param schema Schema definition
      * @return Validation result
@@ -52,7 +52,7 @@ interface SchemaValidator {
 
 /**
  * Schema validation result.
- * 
+ *
  * @param valid Whether validation passed
  * @param errors List of validation errors
  * @param warnings List of validation warnings
@@ -65,7 +65,7 @@ data class SchemaValidationResult(
 
 /**
  * Schema validation error.
- * 
+ *
  * @param path JSON path to the error location
  * @param message Error message
  * @param code Optional error code

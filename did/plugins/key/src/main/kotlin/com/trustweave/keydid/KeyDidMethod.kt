@@ -2,6 +2,7 @@ package com.trustweave.keydid
 
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractDidMethod
 import com.trustweave.did.base.DidMethodUtils
 import com.trustweave.kms.KeyManagementService
@@ -12,24 +13,24 @@ import java.math.BigInteger
 
 /**
  * Native implementation of did:key method.
- * 
+ *
  * did:key is the simplest DID method - no external registry required:
  * - Format: `did:key:{multibase-encoded-public-key}`
  * - Public key is encoded using multibase (base58btc with 'z' prefix)
  * - Document is derived from the public key itself
  * - No external resolution needed
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val kms = InMemoryKeyManagementService()
  * val method = KeyDidMethod(kms)
- * 
+ *
  * // Create DID
  * val options = didCreationOptions {
  *     algorithm = KeyAlgorithm.ED25519
  * }
  * val document = method.createDid(options)
- * 
+ *
  * // Resolve DID (derived from public key)
  * val result = method.resolveDid(document.id)
  * ```
@@ -43,29 +44,29 @@ class KeyDidMethod(
             // Generate key using KMS
             val algorithm = options.algorithm.algorithmName
             val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
-            
+
             // Get public key bytes
             val publicKeyBytes = getPublicKeyBytes(keyHandle, algorithm)
-            
+
             // Create multicodec prefix based on algorithm
             val multicodecPrefix = getMulticodecPrefix(algorithm)
-            
+
             // Combine prefix + public key
             val prefixedKey = multicodecPrefix + publicKeyBytes
-            
+
             // Encode as multibase (base58btc with 'z' prefix)
             val multibaseEncoded = encodeMultibase(prefixedKey)
-            
+
             // Create did:key identifier
             val did = "did:key:$multibaseEncoded"
-            
+
             // Create verification method
             val verificationMethod = DidMethodUtils.createVerificationMethod(
                 did = did,
                 keyHandle = keyHandle,
                 algorithm = options.algorithm
             )
-            
+
             // Build DID document
             val document = DidMethodUtils.buildDidDocument(
                 did = did,
@@ -75,10 +76,10 @@ class KeyDidMethod(
                     listOf(verificationMethod.id)
                 } else null
             )
-            
+
             // Store locally (did:key documents are derived, not stored externally)
             storeDocument(document.id, document)
-            
+
             document
         } catch (e: TrustWeaveException) {
             throw e
@@ -96,10 +97,10 @@ class KeyDidMethod(
     override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            
+
             // Extract multibase-encoded public key from DID
             val multibaseEncoded = did.substringAfter("did:key:")
-            
+
             // Decode multibase to get prefixed key
             val prefixedKey = try {
                 decodeMultibase(multibaseEncoded)
@@ -107,18 +108,20 @@ class KeyDidMethod(
                 return@withContext DidMethodUtils.createErrorResolutionResult(
                     "invalidDid",
                     "Invalid multibase encoding: ${e.message}",
-                    method
+                    method,
+                    did
                 )
             }
-            
+
             // Extract multicodec prefix and algorithm
             val (algorithm, publicKeyBytes) = parseMulticodecPrefixedKey(prefixedKey)
                 ?: return@withContext DidMethodUtils.createErrorResolutionResult(
                     "invalidDid",
                     "Unsupported multicodec prefix",
-                    method
+                    method,
+                    did
                 )
-            
+
             // Check local storage first (for keys we generated)
             val stored = getStoredDocument(did)
             if (stored != null) {
@@ -129,26 +132,29 @@ class KeyDidMethod(
                     getDocumentMetadata(did)?.updated
                 )
             }
-            
+
             // For did:key, we derive the document from the public key
             // In a full implementation, we'd reconstruct the KeyHandle from the public key bytes
             // For now, return not found if not in storage (as we don't have the private key)
             DidMethodUtils.createErrorResolutionResult(
                 "notFound",
                 "DID document not found. did:key documents are typically derived from public keys.",
-                method
+                method,
+                did
             )
         } catch (e: TrustWeaveException) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
                 e.message,
-                method
+                method,
+                did
             )
         } catch (e: Exception) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
                 e.message,
-                method
+                method,
+                did
             )
         }
     }
@@ -162,7 +168,7 @@ class KeyDidMethod(
         if (multibase != null && multibase.startsWith("z")) {
             return decodeMultibase(multibase)
         }
-        
+
         // Try JWK format
         val jwk = keyHandle.publicKeyJwk
         if (jwk != null) {
@@ -172,7 +178,7 @@ class KeyDidMethod(
             val y = jwk["y"] as? String
             val n = jwk["n"] as? String
             val e = jwk["e"] as? String
-            
+
             return when (algorithm.uppercase()) {
                 "ED25519" -> {
                     // Ed25519 public key from JWK 'x' field (base64url)
@@ -206,7 +212,7 @@ class KeyDidMethod(
                 )
             }
         }
-        
+
         throw com.trustweave.core.exception.TrustWeaveException.ValidationFailed(
             field = "keyHandle",
             reason = "KeyHandle must have either publicKeyMultibase or publicKeyJwk",
@@ -216,7 +222,7 @@ class KeyDidMethod(
 
     /**
      * Gets multicodec prefix for an algorithm.
-     * 
+     *
      * See: https://github.com/multiformats/multicodec/blob/master/table.csv
      */
     private fun getMulticodecPrefix(algorithm: String): ByteArray {
@@ -235,10 +241,10 @@ class KeyDidMethod(
      */
     private fun parseMulticodecPrefixedKey(prefixedKey: ByteArray): Pair<String, ByteArray>? {
         if (prefixedKey.size < 2) return null
-        
+
         val prefixByte1 = prefixedKey[0].toInt() and 0xFF
         val prefixByte2 = prefixedKey[1].toInt() and 0xFF
-        
+
         val algorithm = when {
             prefixByte1 == 0xed && prefixByte2 == 0x01 -> "ED25519"
             prefixByte1 == 0xe7 && prefixByte2 == 0x01 -> "SECP256K1"
@@ -247,7 +253,7 @@ class KeyDidMethod(
             prefixByte1 == 0x82 && prefixByte2 == 0x24 -> "P-521"
             else -> return null
         }
-        
+
         val publicKeyBytes = prefixedKey.sliceArray(2 until prefixedKey.size)
         return algorithm to publicKeyBytes
     }
@@ -267,10 +273,10 @@ class KeyDidMethod(
         if (encoded.isEmpty()) {
             throw IllegalArgumentException("Empty multibase string")
         }
-        
+
         val prefix = encoded[0]
         val data = encoded.substring(1)
-        
+
         return when (prefix) {
             'z' -> decodeBase58(data) // base58btc
             else -> throw IllegalArgumentException("Unsupported multibase prefix: $prefix")
@@ -284,13 +290,13 @@ class KeyDidMethod(
         val alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
         var num = BigInteger(1, bytes)
         val sb = StringBuilder()
-        
+
         while (num > BigInteger.ZERO) {
             val remainder = num.mod(BigInteger.valueOf(58))
             sb.append(alphabet[remainder.toInt()])
             num = num.divide(BigInteger.valueOf(58))
         }
-        
+
         // Add leading zeros
         for (byte in bytes) {
             if (byte.toInt() == 0) {
@@ -299,7 +305,7 @@ class KeyDidMethod(
                 break
             }
         }
-        
+
         return sb.reverse().toString()
     }
 
@@ -310,7 +316,7 @@ class KeyDidMethod(
         val alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
         var num = BigInteger.ZERO
         var leadingZeros = 0
-        
+
         // Count leading zeros
         for (char in encoded) {
             if (char == '1') {
@@ -319,22 +325,22 @@ class KeyDidMethod(
                 break
             }
         }
-        
+
         // Decode base58
         for (char in encoded) {
             val digit = alphabet.indexOf(char)
             require(digit >= 0) { "Invalid base58 character: $char" }
             num = num.multiply(BigInteger.valueOf(58)).add(BigInteger.valueOf(digit.toLong()))
         }
-        
+
         // Convert to bytes
         var bytes = num.toByteArray()
-        
+
         // Remove leading zero byte if it exists (BigInteger adds one)
         if (bytes.isNotEmpty() && bytes[0].toInt() == 0) {
             bytes = bytes.sliceArray(1 until bytes.size)
         }
-        
+
         // Add leading zeros back
         return ByteArray(leadingZeros) { 0 } + bytes
     }

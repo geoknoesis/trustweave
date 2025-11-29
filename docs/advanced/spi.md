@@ -69,13 +69,13 @@ import com.trustweave.did.*
 class MyDidMethodProvider : DidMethodProvider {
     override val name: String = "my-did-method"
     override val supportedMethods: List<String> = listOf("mydid")
-    
+
     override fun create(
         method: String,
         options: DidCreationOptions
     ): DidMethod? {
         if (method != "mydid") return null
-        
+
         return MyDidMethod(options)
     }
 }
@@ -194,11 +194,11 @@ override fun create(
     if (!supportedMethods.contains(method)) {
         return null
     }
-    
+
     // Validate required options
     val requiredOption = options.additionalProperties["requiredOption"] as? String
         ?: return null
-    
+
     return MyDidMethod(options)
 }
 ```

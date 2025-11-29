@@ -11,10 +11,10 @@ import kotlinx.coroutines.withContext
 
 /**
  * Verification Builder DSL.
- * 
+ *
  * Provides a fluent API for verifying credentials.
  * Focused only on credential-specific verification operations.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val result = verifier.verify {
@@ -36,42 +36,42 @@ class VerificationBuilder(
     private var validateSchema: Boolean = false
     private var schemaId: String? = null
     private var validateProofPurpose: Boolean = false
-    
+
     /**
      * Set the credential to verify.
      */
     fun credential(credential: VerifiableCredential) {
         this.credential = credential
     }
-    
+
     /**
      * Enable revocation checking.
      */
     fun checkRevocation() {
         this.checkRevocation = true
     }
-    
+
     /**
      * Disable revocation checking.
      */
     fun skipRevocationCheck() {
         this.checkRevocation = false
     }
-    
+
     /**
      * Enable expiration checking.
      */
     fun checkExpiration() {
         this.checkExpiration = true
     }
-    
+
     /**
      * Disable expiration checking.
      */
     fun skipExpirationCheck() {
         this.checkExpiration = false
     }
-    
+
     /**
      * Enable schema validation.
      */
@@ -79,7 +79,7 @@ class VerificationBuilder(
         this.validateSchema = true
         this.schemaId = schemaId
     }
-    
+
     /**
      * Disable schema validation.
      */
@@ -87,14 +87,14 @@ class VerificationBuilder(
         this.validateSchema = false
         this.schemaId = null
     }
-    
+
     /**
      * Enable proof purpose validation.
      */
     fun validateProofPurpose() {
         this.validateProofPurpose = true
     }
-    
+
     /**
      * Build and perform verification.
      */
@@ -114,23 +114,23 @@ class VerificationBuilder(
             verifyDelegation = false, // Delegation should be handled by orchestration layer
             validateProofPurpose = validateProofPurpose
         )
-        
+
         verifier.verify(cred, options)
     }
 }
 
 /**
  * Extension function to verify credentials using CredentialDslProvider.
- * 
+ *
  * Returns a sealed VerificationResult for exhaustive error handling.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val result = trustWeave.verify {
  *     credential(credential)
  *     checkRevocation()
  * }
- * 
+ *
  * when (result) {
  *     is VerificationResult.Valid -> println("Valid!")
  *     is VerificationResult.Invalid.Expired -> println("Expired")

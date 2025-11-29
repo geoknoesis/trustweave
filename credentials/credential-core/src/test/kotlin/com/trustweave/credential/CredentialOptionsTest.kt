@@ -21,7 +21,7 @@ class CredentialOptionsTest {
             chainId = "algorand:testnet",
             additionalOptions = mapOf("custom" to "value")
         )
-        
+
         assertEquals("waltid", options.providerName)
         assertEquals("Ed25519Signature2020", options.proofType)
         assertEquals("key-1", options.keyId)
@@ -36,7 +36,7 @@ class CredentialOptionsTest {
     @Test
     fun `test CredentialIssuanceOptions with defaults`() {
         val options = CredentialIssuanceOptions()
-        
+
         assertNull(options.providerName)
         assertEquals("Ed25519Signature2020", options.proofType)
         assertNull(options.keyId)
@@ -60,7 +60,7 @@ class CredentialOptionsTest {
             chainId = "algorand:testnet",
             additionalOptions = mapOf("custom" to "value")
         )
-        
+
         assertEquals("waltid", options.providerName)
         assertTrue(options.checkRevocation)
         assertTrue(options.checkExpiration)
@@ -73,7 +73,7 @@ class CredentialOptionsTest {
     @Test
     fun `test CredentialVerificationOptions with defaults`() {
         val options = CredentialVerificationOptions()
-        
+
         assertNull(options.providerName)
         assertTrue(options.checkRevocation)
         assertTrue(options.checkExpiration)
@@ -95,7 +95,7 @@ class CredentialOptionsTest {
             disclosedFields = listOf("name", "email"),
             additionalOptions = mapOf("custom" to "value")
         )
-        
+
         assertEquals("did:key:holder", options.holderDid)
         assertEquals("Ed25519Signature2020", options.proofType)
         assertEquals("key-1", options.keyId)
@@ -108,7 +108,7 @@ class CredentialOptionsTest {
     @Test
     fun `test PresentationOptions with defaults`() {
         val options = PresentationOptions(holderDid = "did:key:holder")
-        
+
         assertEquals("did:key:holder", options.holderDid)
         assertEquals("Ed25519Signature2020", options.proofType)
         assertNull(options.keyId)
@@ -129,7 +129,7 @@ class CredentialOptionsTest {
             checkRevocation = true,
             additionalOptions = mapOf("custom" to "value")
         )
-        
+
         assertEquals("waltid", options.providerName)
         assertTrue(options.verifyChallenge)
         assertEquals("challenge-123", options.expectedChallenge)
@@ -141,7 +141,7 @@ class CredentialOptionsTest {
     @Test
     fun `test PresentationVerificationOptions with defaults`() {
         val options = PresentationVerificationOptions()
-        
+
         assertNull(options.providerName)
         assertTrue(options.verifyChallenge)
         assertNull(options.expectedChallenge)
@@ -152,31 +152,48 @@ class CredentialOptionsTest {
 
     @Test
     fun `test CredentialVerificationResult`() {
-        val result = CredentialVerificationResult(
-            valid = true,
-            errors = emptyList(),
-            warnings = listOf("Warning"),
-            proofValid = true,
-            issuerValid = true,
-            notExpired = true,
-            notRevoked = true,
-            schemaValid = true,
-            blockchainAnchorValid = true
+        val credential = com.trustweave.credential.models.VerifiableCredential(
+            id = "test-credential",
+            type = listOf("VerifiableCredential"),
+            issuer = "did:key:issuer",
+            credentialSubject = kotlinx.serialization.json.buildJsonObject {
+                put("id", kotlinx.serialization.json.JsonPrimitive("did:key:subject"))
+            },
+            issuanceDate = java.time.Instant.now().toString()
         )
+        val result = CredentialVerificationResult.Valid(
+            credential = credential,
+            warnings = listOf("Warning")
+        )
+
+        assertTrue(result.isValid)
+        assertTrue(result is CredentialVerificationResult.Valid)
+        assertEquals(1, result.allWarnings.size)
+        assertEquals(0, result.allErrors.size)
         
-        assertTrue(result.valid)
-        assertTrue(result.proofValid)
-        assertTrue(result.issuerValid)
-        assertTrue(result.notExpired)
-        assertTrue(result.notRevoked)
-        assertTrue(result.schemaValid)
-        assertTrue(result.blockchainAnchorValid)
-        assertEquals(1, result.warnings.size)
+        // Test invalid case
+        val invalidResult = CredentialVerificationResult.Invalid.Expired(
+            credential = credential,
+            expiredAt = java.time.Instant.now(),
+            errors = listOf("Expired")
+        )
+        assertFalse(invalidResult.isValid)
+        assertTrue(invalidResult is CredentialVerificationResult.Invalid)
+        assertEquals(1, invalidResult.allErrors.size)
     }
 
     @Test
     fun `test PresentationVerificationResult`() {
-        val credentialResult = CredentialVerificationResult(valid = true)
+        val credential = com.trustweave.credential.models.VerifiableCredential(
+            id = "test-credential",
+            type = listOf("VerifiableCredential"),
+            issuer = "did:key:issuer",
+            credentialSubject = kotlinx.serialization.json.buildJsonObject {
+                put("id", kotlinx.serialization.json.JsonPrimitive("did:key:subject"))
+            },
+            issuanceDate = java.time.Instant.now().toString()
+        )
+        val credentialResult = CredentialVerificationResult.Valid(credential)
         val result = PresentationVerificationResult(
             valid = true,
             errors = emptyList(),
@@ -186,7 +203,7 @@ class CredentialOptionsTest {
             domainValid = true,
             credentialResults = listOf(credentialResult)
         )
-        
+
         assertTrue(result.valid)
         assertTrue(result.presentationProofValid)
         assertTrue(result.challengeValid)

@@ -34,7 +34,7 @@ dependencies {
     implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    
+
     // Multibase encoding (included automatically)
     implementation("org.multiformats:multibase:1.1.2")
 }
@@ -139,7 +139,7 @@ val kms = InMemoryKeyManagementService()
 
 val TrustWeave = TrustWeave.create {
     this.kms = kms
-    
+
     didMethods {
         + KeyDidMethod(kms)
     }

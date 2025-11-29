@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Default in-memory implementation of [DidMethodRegistry].
- * 
+ *
  * This implementation is thread-safe using [ConcurrentHashMap] for concurrent access
  * without explicit synchronization.
  */

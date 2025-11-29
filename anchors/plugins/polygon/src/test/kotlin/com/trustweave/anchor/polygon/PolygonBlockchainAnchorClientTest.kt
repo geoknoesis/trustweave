@@ -1,7 +1,7 @@
 package com.trustweave.anchor.polygon
 
 import com.trustweave.anchor.AnchorRef
-import com.trustweave.core.exception.NotFoundException
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
@@ -50,8 +50,8 @@ class PolygonBlockchainAnchorClientTest {
 
         try {
             client.readPayload(ref)
-            assert(false) { "Should have thrown NotFoundException" }
-        } catch (e: NotFoundException) {
+            assert(false) { "Should have thrown NotFound" }
+        } catch (e: TrustWeaveException.NotFound) {
             assertNotNull(e.message)
         }
     }

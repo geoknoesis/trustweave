@@ -6,15 +6,15 @@ import java.util.ServiceLoader
 
 /**
  * Helper utility for blockchain integration classes.
- * 
+ *
  * Provides common functionality for discovering and registering blockchain adapters via SPI.
  * Reduces duplication across integration classes like `AlgorandIntegration`, `PolygonIntegration`, etc.
- * 
+ *
  * **Example Usage**:
  * ```
  * // Discover and register all supported chains
  * val chains = BlockchainIntegrationHelper.discoverAndRegister("algorand", options)
- * 
+ *
  * // Register specific chains
  * val chains = BlockchainIntegrationHelper.setup(
  *     providerName = "polygon",
@@ -23,7 +23,7 @@ import java.util.ServiceLoader
  *     options = options
  * )
  * ```
- * 
+ *
  * **Thread Safety**: This utility is thread-safe for concurrent access.
  */
 object BlockchainIntegrationHelper {
@@ -93,7 +93,7 @@ object BlockchainIntegrationHelper {
         for (chainId in chainsToRegister) {
             val isSupported = chainId in provider.supportedChains
             val shouldRegister = isSupported || (allowCustomChains && chainId.startsWith("$providerName:"))
-            
+
             if (shouldRegister) {
                 val client = provider.create(chainId, options)
                 if (client != null) {

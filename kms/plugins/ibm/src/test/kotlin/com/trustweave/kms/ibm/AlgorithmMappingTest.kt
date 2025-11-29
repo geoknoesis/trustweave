@@ -61,7 +61,7 @@ class AlgorithmMappingTest {
     @Test
     fun `test resolve key id`() {
         assertEquals("key-123", AlgorithmMapping.resolveKeyId("key-123"))
-        assertEquals("crn:v1:bluemix:public:kms:us-south:a/xxx:key:xxx", 
+        assertEquals("crn:v1:bluemix:public:kms:us-south:a/xxx:key:xxx",
             AlgorithmMapping.resolveKeyId("crn:v1:bluemix:public:kms:us-south:a/xxx:key:xxx"))
     }
 }

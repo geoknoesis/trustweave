@@ -80,14 +80,14 @@ interface CredentialOrganization {
     suspend fun addToCollection(credentialId: String, collectionId: String): Boolean
     suspend fun removeFromCollection(credentialId: String, collectionId: String): Boolean
     suspend fun getCredentialsInCollection(collectionId: String): List<VerifiableCredential>
-    
+
     // Tags
     suspend fun tagCredential(credentialId: String, tags: Set<String>): Boolean
     suspend fun untagCredential(credentialId: String, tags: Set<String>): Boolean
     suspend fun getTags(credentialId: String): Set<String>
     suspend fun getAllTags(): Set<String>
     suspend fun findByTag(tag: String): List<VerifiableCredential>
-    
+
     // Metadata
     suspend fun addMetadata(credentialId: String, metadata: Map<String, Any>): Boolean
     suspend fun getMetadata(credentialId: String): CredentialMetadata?
@@ -130,7 +130,7 @@ interface CredentialPresentation {
         holderDid: String,
         options: PresentationOptions
     ): VerifiablePresentation
-    
+
     suspend fun createSelectiveDisclosure(
         credentialIds: List<String>,
         disclosedFields: List<String>,

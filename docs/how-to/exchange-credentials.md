@@ -47,24 +47,24 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     // Step 1: Create registry
     val registry = CredentialExchangeProtocolRegistry()
-    
+
     // Step 2: Register protocols
     registry.register(DidCommExchangeProtocol(didCommService))
     registry.register(Oidc4VciExchangeProtocol(oidc4vciService))
     registry.register(ChapiExchangeProtocol(chapiService))
-    
+
     // Step 3: Create offer request (same for all protocols)
     val request = CredentialOfferRequest(
         issuerDid = "did:key:issuer",
         holderDid = "did:key:holder",
         credentialPreview = CredentialPreview(...)
     )
-    
+
     // Step 4: Use any protocol with identical API
     val didCommOffer = registry.offerCredential("didcomm", request)
     val oidcOffer = registry.offerCredential("oidc4vci", request)
     val chapiOffer = registry.offerCredential("chapi", request)
-    
+
     println("✅ Created offers with all protocols")
 }
 ```
@@ -212,29 +212,29 @@ sequenceDiagram
     App->>Registry: register(DIDComm)
     App->>Registry: register(OIDC4VCI)
     App->>Registry: register(CHAPI)
-    
+
     Note over App,Holder: Step 2: Create Offer Request
     App->>App: Create CredentialOfferRequest
-    
+
     Note over App,Holder: Step 3: Offer Credential (Protocol Selection)
     App->>Registry: offerCredential("didcomm", request)
     Registry->>DIDComm: offerCredential(request)
     DIDComm->>DIDComm: Encrypt message
     DIDComm-->>Registry: Encrypted offer
     Registry-->>App: DIDComm offer response
-    
+
     App->>Registry: offerCredential("oidc4vci", request)
     Registry->>OIDC4VCI: offerCredential(request)
     OIDC4VCI->>OIDC4VCI: Create OAuth flow
     OIDC4VCI-->>Registry: OAuth offer
     Registry-->>App: OIDC4VCI offer response
-    
+
     App->>Registry: offerCredential("chapi", request)
     Registry->>CHAPI: offerCredential(request)
     CHAPI->>CHAPI: Create browser message
     CHAPI-->>Registry: CHAPI offer
     Registry-->>App: CHAPI offer response
-    
+
     Note over App,Holder: Step 4: Holder Receives Offer
     App->>Holder: Send offer (protocol-specific format)
     Holder->>Holder: Process offer
@@ -348,18 +348,18 @@ fun main() = runBlocking {
     val registry = CredentialExchangeProtocolRegistry()
     registry.register(DidCommExchangeProtocol(didCommService))
     registry.register(Oidc4VciExchangeProtocol(oidc4vciService))
-    
+
     // 2. Create offer request
     val request = CredentialOfferRequest(
         issuerDid = "did:key:issuer",
         holderDid = "did:key:holder",
         credentialPreview = CredentialPreview(...)
     )
-    
+
     // 3. Offer credential (protocol selection)
     val protocol = "didcomm" // or select dynamically
     val offer = registry.offerCredential(protocol, request)
-    
+
     // 4. Holder requests credential
     val credentialRequest = registry.requestCredential(
         protocol,
@@ -368,7 +368,7 @@ fun main() = runBlocking {
             holderDid = "did:key:holder"
         )
     )
-    
+
     // 5. Issue credential
     val issuedCredential = registry.issueCredential(
         protocol,
@@ -378,7 +378,7 @@ fun main() = runBlocking {
             issuerDid = "did:key:issuer"
         )
     )
-    
+
     println("✅ Credential issued via $protocol")
 }
 ```

@@ -1,9 +1,9 @@
 package com.trustweave.cheqddid
 
 import com.trustweave.anchor.BlockchainAnchorClient
-import com.trustweave.core.exception.NotFoundException
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractBlockchainDidMethod
 import com.trustweave.did.base.DidMethodUtils
 import com.trustweave.kms.KeyManagementService
@@ -16,25 +16,25 @@ import okhttp3.RequestBody.Companion.toRequestBody
 
 /**
  * Implementation of did:cheqd method for Cheqd network.
- * 
+ *
  * did:cheqd uses Cheqd blockchain for DID resolution with payment features:
  * - Format: `did:cheqd:{network}:{identifier}`
  * - Stores DID documents on Cheqd blockchain
  * - Supports payment-enabled DID operations
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val kms = InMemoryKeyManagementService()
  * val config = CheqdDidConfig.mainnet("https://api.cheqd.net")
  * val anchorClient = createCheqdAnchorClient(config)
  * val method = CheqdDidMethod(kms, anchorClient, config)
- * 
+ *
  * // Create DID
  * val options = didCreationOptions {
  *     algorithm = KeyAlgorithm.ED25519
  * }
  * val document = method.createDid(options)
- * 
+ *
  * // Resolve DID
  * val result = method.resolveDid("did:cheqd:mainnet:...")
  * ```
@@ -78,17 +78,17 @@ class CheqdDidMethod(
             // Generate key using KMS
             val algorithm = options.algorithm.algorithmName
             val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
-            
+
             // Create DID identifier
             val did = generateCheqdDid(keyHandle)
-            
+
             // Create verification method
             val verificationMethod = DidMethodUtils.createVerificationMethod(
                 did = did,
                 keyHandle = keyHandle,
                 algorithm = options.algorithm
             )
-            
+
             // Build DID document
             val document = DidMethodUtils.buildDidDocument(
                 did = did,
@@ -98,7 +98,7 @@ class CheqdDidMethod(
                     listOf(verificationMethod.id)
                 } else null
             )
-            
+
             // Anchor document to Cheqd blockchain
             try {
                 val txHash = anchorDocument(document)
@@ -108,16 +108,17 @@ class CheqdDidMethod(
                 // If anchoring fails, still store locally for testing
                 storeDocument(document.id, document)
             }
-            
+
             document
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: IllegalArgumentException) {
             throw e
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to create did:cheqd: ${e.message}",
-                e
+            throw TrustWeaveException.Unknown(
+                code = "CREATE_FAILED",
+                message = "Failed to create did:cheqd: ${e.message}",
+                cause = e
             )
         }
     }
@@ -125,11 +126,11 @@ class CheqdDidMethod(
     override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            
+
             // Try to resolve from blockchain
             try {
                 return@withContext resolveFromBlockchain(did, findDocumentTxHash(did))
-            } catch (e: NotFoundException) {
+            } catch (e: TrustWeaveException.NotFound) {
                 // If not found on blockchain, try stored document
                 val stored = getStoredDocument(did)
                 if (stored != null) {
@@ -140,14 +141,14 @@ class CheqdDidMethod(
                         getDocumentMetadata(did)?.updated
                     )
                 }
-                
+
                 // Try resolving via Cheqd REST API
                 val resolved = resolveFromCheqdApi(did)
                 if (resolved != null) {
                     storeDocument(resolved.id, resolved)
                     return@withContext DidMethodUtils.createSuccessResolutionResult(resolved, method)
                 }
-                
+
                 // Return not found
                 return@withContext DidMethodUtils.createErrorResolutionResult(
                     "notFound",
@@ -176,28 +177,33 @@ class CheqdDidMethod(
     ): DidDocument = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            
+
             // Resolve current document
             val currentResult = resolveDid(did)
-            val currentDocument = currentResult.document
-                ?: throw NotFoundException("DID document not found: $did")
-            
+            val currentDocument = when (currentResult) {
+                is DidResolutionResult.Success -> currentResult.document
+                else -> throw TrustWeaveException.NotFound(
+                    message = "DID document not found: $did"
+                )
+            }
+
             // Apply updater (use explicit variable to avoid smart cast issue)
             val doc = currentDocument
             val updatedDocument = updater(doc)
-            
+
             // Update on Cheqd blockchain
             updateDocumentOnBlockchain(did, updatedDocument)
-            
+
             updatedDocument
-        } catch (e: NotFoundException) {
+        } catch (e: TrustWeaveException.NotFound) {
             throw e
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to update did:cheqd: ${e.message}",
-                e
+            throw TrustWeaveException.Unknown(
+                code = "UPDATE_FAILED",
+                message = "Failed to update did:cheqd: ${e.message}",
+                cause = e
             )
         }
     }
@@ -205,14 +211,14 @@ class CheqdDidMethod(
     override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            
+
             // Resolve current document
             val currentResult = resolveDid(did)
-            val currentDocument = currentResult.document
-            if (currentDocument == null) {
-                return@withContext false
+            val currentDocument = when (currentResult) {
+                is DidResolutionResult.Success -> currentResult.document
+                else -> return@withContext false
             }
-            
+
             // Create deactivated document
             val deactivatedDocument = currentDocument.copy(
                 verificationMethod = emptyList(),
@@ -222,17 +228,18 @@ class CheqdDidMethod(
                 capabilityInvocation = emptyList(),
                 capabilityDelegation = emptyList()
             )
-            
+
             // Deactivate on Cheqd blockchain
             deactivateDocumentOnBlockchain(did, deactivatedDocument)
-            
+
             true
-        } catch (e: NotFoundException) {
+        } catch (e: TrustWeaveException.NotFound) {
             false
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to deactivate did:cheqd: ${e.message}",
-                e
+            throw TrustWeaveException.Unknown(
+                code = "DEACTIVATE_FAILED",
+                message = "Failed to deactivate did:cheqd: ${e.message}",
+                cause = e
             )
         }
     }
@@ -243,7 +250,7 @@ class CheqdDidMethod(
     private fun generateCheqdDid(keyHandle: com.trustweave.kms.KeyHandle): String {
         // Cheqd DID format: did:cheqd:{network}:{identifier}
         val hash = java.security.MessageDigest.getInstance("SHA-256")
-            .digest(keyHandle.id.toByteArray())
+            .digest(keyHandle.id.value.toByteArray())
         val encoded = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(hash)
         val identifier = encoded.take(32).lowercase()
         return "did:cheqd:${config.network}:$identifier"
@@ -257,34 +264,34 @@ class CheqdDidMethod(
             if (config.cheqdApiUrl == null) {
                 return@withContext null
             }
-            
+
             val url = "${config.cheqdApiUrl}/dids/$did"
-            
+
             val request = Request.Builder()
                 .url(url)
                 .get()
                 .addHeader("Accept", "application/json")
                 .build()
-            
+
             val response = httpClient.newCall(request).execute()
-            
+
             if (!response.isSuccessful) {
                 return@withContext null
             }
-            
+
             val body = response.body ?: return@withContext null
             val jsonString = body.string()
-            
+
             // Parse JSON to DidDocument
             val json = Json.parseToJsonElement(jsonString)
             val document = jsonElementToDocument(json)
-            
+
             // Validate DID matches
             if (document.id != did) {
                 // Rebuild with correct DID
                 return@withContext document.copy(id = did)
             }
-            
+
             document
         } catch (e: Exception) {
             null

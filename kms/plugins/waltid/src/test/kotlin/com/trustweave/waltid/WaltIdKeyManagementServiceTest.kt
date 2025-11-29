@@ -1,6 +1,6 @@
 package com.trustweave.waltid
 
-import com.trustweave.kms.KeyNotFoundException
+import com.trustweave.kms.exception.KmsException
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -12,7 +12,7 @@ class WaltIdKeyManagementServiceTest {
     @Test
     fun `generateKey should create Ed25519 key`() = runBlocking {
         val kms = WaltIdKeyManagementService()
-        
+
         val handle = kms.generateKey("Ed25519")
 
         assertNotNull(handle.id)
@@ -36,10 +36,11 @@ class WaltIdKeyManagementServiceTest {
         val kms = WaltIdKeyManagementService()
 
         try {
-            kms.getPublicKey("nonexistent")
-            assert(false) { "Should have thrown KeyNotFoundException" }
-        } catch (e: KeyNotFoundException) {
+            kms.getPublicKey(com.trustweave.core.types.KeyId("nonexistent"))
+            assert(false) { "Should have thrown KmsException.KeyNotFound" }
+        } catch (e: KmsException.KeyNotFound) {
             assertNotNull(e.message)
+            assertEquals("nonexistent", e.keyId)
         }
     }
 
@@ -65,9 +66,10 @@ class WaltIdKeyManagementServiceTest {
         assertTrue(deleted)
         try {
             kms.getPublicKey(handle.id)
-            assert(false) { "Should have thrown KeyNotFoundException" }
-        } catch (e: KeyNotFoundException) {
+            assert(false) { "Should have thrown KmsException.KeyNotFound" }
+        } catch (e: KmsException.KeyNotFound) {
             // Expected
+            assertEquals(handle.id.value, e.keyId)
         }
     }
 }
@@ -78,7 +80,7 @@ class WaltIdKeyManagementServiceProviderTest {
     fun `provider should create service`() {
         val provider = WaltIdKeyManagementServiceProvider()
         assertEquals("waltid", provider.name)
-        
+
         val kms = provider.create()
         assertNotNull(kms)
     }

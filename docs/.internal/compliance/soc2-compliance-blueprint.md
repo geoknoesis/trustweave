@@ -172,7 +172,7 @@ class SOC2CompliantVeriCoreService(
     private val auditLogger: AuditLogger,
     private val monitoring: MonitoringService
 ) {
-    
+
     /**
      * Issue credential with access control and audit logging
      */
@@ -187,7 +187,7 @@ class SOC2CompliantVeriCoreService(
                 resource = "credential:issue",
                 context = mapOf("issuerDid" to request.issuerDid)
             ).getOrThrow()
-            
+
             // 2. Audit log - before operation (CC7.1)
             val auditId = auditLogger.log(
                 userId = userId,
@@ -198,7 +198,7 @@ class SOC2CompliantVeriCoreService(
                     "credentialTypes" to request.types
                 )
             )
-            
+
             // 3. Perform operation
             val credential = TrustWeave.issueCredential(
                 issuerDid = request.issuerDid,
@@ -206,7 +206,7 @@ class SOC2CompliantVeriCoreService(
                 credentialSubject = request.credentialSubject,
                 types = request.types
             ).getOrThrow()
-            
+
             // 4. Audit log - after operation
             auditLogger.log(
                 userId = userId,
@@ -218,16 +218,16 @@ class SOC2CompliantVeriCoreService(
                     "auditId" to auditId
                 )
             )
-            
+
             // 5. Monitor operation
             monitoring.recordMetric(
                 name = "credential.issued",
                 value = 1.0,
                 tags = mapOf("issuer" to request.issuerDid)
             )
-            
+
             Result.success(credential)
-            
+
         } catch (e: AccessDeniedException) {
             // Audit failed access attempt
             auditLogger.log(
@@ -237,7 +237,7 @@ class SOC2CompliantVeriCoreService(
                 details = mapOf("reason" to "access_denied", "error" to e.message)
             )
             Result.failure(e)
-            
+
         } catch (e: Exception) {
             // Audit error
             auditLogger.log(
@@ -250,7 +250,7 @@ class SOC2CompliantVeriCoreService(
             Result.failure(e)
         }
     }
-    
+
     /**
      * Verify credential with access control
      */
@@ -264,7 +264,7 @@ class SOC2CompliantVeriCoreService(
                 userId = userId,
                 resource = "credential:verify"
             ).getOrThrow()
-            
+
             // Audit log
             auditLogger.log(
                 userId = userId,
@@ -272,18 +272,18 @@ class SOC2CompliantVeriCoreService(
                 resourceType = "credential",
                 resourceId = credential.id
             )
-            
+
             // Verify
             val result = TrustWeave.verifyCredential(credential).getOrThrow()
-            
+
             // Monitor
             monitoring.recordMetric(
                 name = "credential.verified",
                 value = if (result.valid) 1.0 else 0.0
             )
-            
+
             Result.success(result)
-            
+
         } catch (e: Exception) {
             auditLogger.log(
                 userId = userId,
@@ -305,7 +305,7 @@ interface AccessControlService {
         resource: String,
         context: Map<String, Any> = emptyMap()
     ): Result<Unit>
-    
+
     suspend fun hasPermission(
         userId: String,
         resource: String,
@@ -341,10 +341,10 @@ import com.trustweave.kms.spi.KeyManagementServiceProvider
  */
 class EnterpriseKmsProvider : KeyManagementServiceProvider {
     override val name = "enterprise-kms"
-    
+
     override fun create(options: Map<String, Any?>): KeyManagementService {
         val kmsType = options["type"] as? String ?: "aws-kms"
-        
+
         return when (kmsType) {
             "aws-kms" -> AwsKmsKeyManagementService(
                 region = options["region"] as? String ?: "us-east-1",
@@ -373,7 +373,7 @@ fun createSOC2CompliantVeriCore(kmsConfig: Map<String, Any?>): TrustWeave {
             // KMS-specific configuration
             options(kmsConfig)
         }
-        
+
         // Enable blockchain anchoring for audit trails
         blockchainAnchor {
             provider("polygon") // or "algorand", etc.
@@ -420,7 +420,7 @@ class BlockchainAuditLogger(
     private val TrustWeave: TrustWeave,
     private val database: AuditLogDatabase
 ) : AuditLogger {
-    
+
     override suspend fun log(
         userId: String,
         action: String,
@@ -438,42 +438,42 @@ class BlockchainAuditLogger(
             details = details.mapValues { it.value.toString() },
             result = "success"
         )
-        
+
         // 1. Store in database (for querying)
         database.insert(entry)
-        
+
         // 2. Anchor to blockchain (for immutability)
         try {
             val anchorResult = TrustWeave.anchor(entry).getOrThrow()
-            
+
             // Update database with anchor reference
             database.updateAnchorReference(
                 entryId = entry.id,
                 anchorRef = anchorResult.ref
             )
-            
+
             // Monitor anchoring
             monitoring.recordMetric(
                 name = "audit.anchored",
                 value = 1.0
             )
-            
+
         } catch (e: Exception) {
             // Log anchoring failure but don't fail the operation
             monitoring.recordError("audit.anchor", e)
             // Consider alerting on anchoring failures
         }
-        
+
         return entry.id
     }
-    
+
     /**
      * Verify audit log integrity using blockchain anchor
      */
     suspend fun verifyAuditLogIntegrity(entryId: String): Boolean {
         val entry = database.getById(entryId) ?: return false
         val anchorRef = database.getAnchorReference(entryId) ?: return false
-        
+
         // Recompute hash and verify against blockchain
         return TrustWeave.verifyAnchor(entry, anchorRef).getOrElse { false }
     }
@@ -491,13 +491,13 @@ interface MonitoringService {
         value: Double,
         tags: Map<String, String> = emptyMap()
     )
-    
+
     suspend fun recordError(
         operation: String,
         error: Throwable,
         tags: Map<String, String> = emptyMap()
     )
-    
+
     suspend fun recordLatency(
         operation: String,
         durationMs: Long,
@@ -510,7 +510,7 @@ interface MonitoringService {
  */
 class PrometheusMonitoringService : MonitoringService {
     private val registry = CollectorRegistry.defaultRegistry
-    
+
     override suspend fun recordMetric(
         name: String,
         value: Double,
@@ -521,10 +521,10 @@ class PrometheusMonitoringService : MonitoringService {
             .help("SOC2 monitoring metric")
             .labelNames(*tags.keys.toTypedArray())
             .register(registry)
-        
+
         counter.labels(*tags.values.toTypedArray()).inc(value)
     }
-    
+
     override suspend fun recordError(
         operation: String,
         error: Throwable,
@@ -536,7 +536,7 @@ class PrometheusMonitoringService : MonitoringService {
             tags = tags + mapOf("operation" to operation, "error_type" to error::class.simpleName ?: "unknown")
         )
     }
-    
+
     override suspend fun recordLatency(
         operation: String,
         durationMs: Long,
@@ -547,7 +547,7 @@ class PrometheusMonitoringService : MonitoringService {
             .help("Operation duration in milliseconds")
             .labelNames(*tags.keys.toTypedArray())
             .register(registry)
-        
+
         histogram.labels(*tags.values.toTypedArray()).observe(durationMs.toDouble())
     }
 }
@@ -568,7 +568,7 @@ class SOC2KeyRotationService(
     private val TrustWeave: TrustWeave,
     private val auditLogger: AuditLogger
 ) {
-    
+
     /**
      * Rotate issuer key while maintaining credential history
      */
@@ -585,10 +585,10 @@ class SOC2KeyRotationService(
                     algorithm = DidCreationOptions.KeyAlgorithm.ED25519
                 )
             ).getOrThrow()
-            
+
             // 2. Update DID document with new key (keeping old key for verification)
             // This allows old credentials to still be verified
-            
+
             // 3. Audit log
             auditLogger.log(
                 userId = userId,
@@ -601,16 +601,16 @@ class SOC2KeyRotationService(
                     "newKeyId" to (newKey.verificationMethod.firstOrNull()?.id ?: "")
                 )
             )
-            
+
             // 4. Schedule old key deactivation (after grace period)
             scheduleKeyDeactivation(
                 issuerDid = issuerDid,
                 keyId = oldKeyId,
                 deactivateAfter = Instant.now().plusSeconds(90 * 24 * 60 * 60) // 90 days
             )
-            
+
             Result.success(newKey.verificationMethod.firstOrNull()?.id ?: "")
-            
+
         } catch (e: Exception) {
             auditLogger.log(
                 userId = userId,
@@ -621,7 +621,7 @@ class SOC2KeyRotationService(
             Result.failure(e)
         }
     }
-    
+
     private suspend fun scheduleKeyDeactivation(
         issuerDid: String,
         keyId: String,
@@ -653,34 +653,34 @@ data class AuditLogSchema(
     // Identifiers
     val id: String,
     val correlationId: String? = null,
-    
+
     // Timestamp
     val timestamp: String, // ISO 8601
     val timestampUnix: Long,
-    
+
     // User context
     val userId: String,
     val userEmail: String? = null,
     val userRole: String? = null,
-    
+
     // Operation
     val action: String, // e.g., "credential:issue", "credential:verify"
     val resourceType: String, // "credential", "did", "wallet"
     val resourceId: String? = null,
-    
+
     // Request context
     val ipAddress: String? = null,
     val userAgent: String? = null,
     val requestId: String? = null,
-    
+
     // Result
     val result: String, // "success", "failure", "denied"
     val errorMessage: String? = null,
     val statusCode: Int? = null,
-    
+
     // Details
     val details: Map<String, String> = emptyMap(),
-    
+
     // Blockchain anchor
     val anchorRef: AnchorRef? = null,
     val anchoredAt: String? = null
@@ -697,19 +697,19 @@ class AuditLogRetentionPolicy {
     companion object {
         // SOC2 Type II requires minimum 7 years
         const val RETENTION_YEARS = 7
-        
+
         // Archive after 1 year
         const val ARCHIVE_AFTER_DAYS = 365
-        
+
         // Delete archived logs after retention period
         const val DELETE_AFTER_DAYS = RETENTION_YEARS * 365
     }
-    
+
     suspend fun archiveOldLogs(database: AuditLogDatabase) {
         val cutoffDate = Instant.now().minusSeconds(ARCHIVE_AFTER_DAYS * 24 * 60 * 60)
         database.archiveBefore(cutoffDate)
     }
-    
+
     suspend fun deleteExpiredLogs(database: AuditLogDatabase) {
         val cutoffDate = Instant.now().minusSeconds(DELETE_AFTER_DAYS * 24 * 60 * 60)
         database.deleteBefore(cutoffDate)
@@ -731,7 +731,7 @@ class EncryptedAuditLogDatabase(
     private val database: AuditLogDatabase,
     private val encryption: EncryptionService
 ) : AuditLogDatabase {
-    
+
     override suspend fun insert(entry: AuditLogEntry) {
         // Encrypt sensitive fields before storage
         val encryptedEntry = entry.copy(
@@ -745,10 +745,10 @@ class EncryptedAuditLogDatabase(
         )
         database.insert(encryptedEntry)
     }
-    
+
     override suspend fun getById(id: String): AuditLogEntry? {
         val entry = database.getById(id) ?: return null
-        
+
         // Decrypt sensitive fields
         return entry.copy(
             details = entry.details.mapValues { (key, value) ->
@@ -760,7 +760,7 @@ class EncryptedAuditLogDatabase(
             }
         )
     }
-    
+
     private fun isSensitive(key: String): Boolean {
         return key in listOf("ssn", "email", "phone", "address")
     }
@@ -781,14 +781,14 @@ class EncryptedAuditLogDatabase(
  * Role-based access control implementation
  */
 class RBACAccessControlService : AccessControlService {
-    
+
     private val permissions = mapOf(
         "admin" to setOf("*"),
         "issuer" to setOf("credential:issue", "credential:revoke", "did:create"),
         "verifier" to setOf("credential:verify", "credential:query"),
         "auditor" to setOf("audit:read", "audit:export")
     )
-    
+
     override suspend fun requirePermission(
         userId: String,
         resource: String,
@@ -796,14 +796,14 @@ class RBACAccessControlService : AccessControlService {
     ): Result<Unit> {
         val userRole = getUserRole(userId)
         val userPermissions = permissions[userRole] ?: emptySet()
-        
+
         return if (userPermissions.contains("*") || userPermissions.contains(resource)) {
             Result.success(Unit)
         } else {
             Result.failure(AccessDeniedException("User $userId does not have permission for $resource"))
         }
     }
-    
+
     private suspend fun getUserRole(userId: String): String {
         // Implementation: Query user database or identity provider
         return "verifier" // Placeholder
@@ -846,7 +846,7 @@ class RBACAccessControlService : AccessControlService {
  * SOC2 compliance alerting
  */
 class SOC2AlertingService {
-    
+
     fun configureAlerts(monitoring: MonitoringService) {
         // Alert on failed access attempts
         monitoring.addAlert(
@@ -855,7 +855,7 @@ class SOC2AlertingService {
             severity = "high",
             message = "High rate of failed access attempts detected"
         )
-        
+
         // Alert on audit log anchoring failures
         monitoring.addAlert(
             name = "audit_anchoring_failure",
@@ -863,7 +863,7 @@ class SOC2AlertingService {
             severity = "critical",
             message = "Audit log anchoring failures detected - compliance risk"
         )
-        
+
         // Alert on key rotation
         monitoring.addAlert(
             name = "key_rotation",
@@ -871,7 +871,7 @@ class SOC2AlertingService {
             severity = "info",
             message = "Key rotation detected"
         )
-        
+
         // Alert on high error rate
         monitoring.addAlert(
             name = "high_error_rate",
@@ -898,7 +898,7 @@ class SOC2ComplianceVerificationService(
     private val accessControl: AccessControlService,
     private val monitoring: MonitoringService
 ) {
-    
+
     /**
      * Run compliance checks
      */
@@ -914,14 +914,14 @@ class SOC2ComplianceVerificationService(
             )
         )
     }
-    
+
     private suspend fun verifyAuditLogging(): ComplianceCheck {
         // Check that all operations are logged
         val recentOperations = getRecentOperations()
         val loggedOperations = getLoggedOperations()
-        
+
         val coverage = loggedOperations.size.toDouble() / recentOperations.size
-        
+
         return ComplianceCheck(
             name = "Audit Log Coverage",
             status = if (coverage >= 0.99) "PASS" else "FAIL",
@@ -932,18 +932,18 @@ class SOC2ComplianceVerificationService(
             )
         )
     }
-    
+
     private suspend fun verifyAccessControl(): ComplianceCheck {
         // Verify that access control is enforced
         val testResult = accessControl.hasPermission("test-user", "credential:issue")
-        
+
         return ComplianceCheck(
             name = "Access Control Enforcement",
             status = if (testResult) "PASS" else "FAIL",
             details = emptyMap()
         )
     }
-    
+
     // Additional verification methods...
 }
 
@@ -1013,7 +1013,7 @@ data class ComplianceCheck(
  * Complete SOC2-compliant TrustWeave service implementation
  */
 class SOC2VeriCoreApplication {
-    
+
     private val TrustWeave = createSOC2CompliantVeriCore(
         kmsConfig = mapOf(
             "type" to "aws-kms",
@@ -1021,7 +1021,7 @@ class SOC2VeriCoreApplication {
             "keyAlias" to "TrustWeave-production"
         )
     )
-    
+
     private val auditLogger = BlockchainAuditLogger(
         TrustWeave = TrustWeave,
         database = EncryptedAuditLogDatabase(
@@ -1029,18 +1029,18 @@ class SOC2VeriCoreApplication {
             encryption = AwsKmsEncryptionService()
         )
     )
-    
+
     private val accessControl = RBACAccessControlService()
-    
+
     private val monitoring = PrometheusMonitoringService()
-    
+
     private val service = SOC2CompliantVeriCoreService(
         TrustWeave = TrustWeave,
         accessControl = accessControl,
         auditLogger = auditLogger,
         monitoring = monitoring
     )
-    
+
     /**
      * Issue credential endpoint
      */
@@ -1049,17 +1049,17 @@ class SOC2VeriCoreApplication {
         request: CredentialIssueRequest
     ): Response {
         val startTime = System.currentTimeMillis()
-        
+
         return try {
             val credential = service.issueCredential(userId, request).getOrThrow()
-            
+
             monitoring.recordLatency(
                 operation = "credential.issue",
                 durationMs = System.currentTimeMillis() - startTime
             )
-            
+
             Response.success(credential)
-            
+
         } catch (e: Exception) {
             monitoring.recordError("credential.issue", e)
             Response.error(e)
@@ -1097,7 +1097,7 @@ For questions or support, refer to:
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2024  
+**Document Version**: 1.0
+**Last Updated**: 2024
 **Status**: Blueprint - Implementation Guide
 

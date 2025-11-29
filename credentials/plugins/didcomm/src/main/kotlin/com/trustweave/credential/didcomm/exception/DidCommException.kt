@@ -4,7 +4,7 @@ import com.trustweave.credential.exchange.exception.ExchangeException
 
 /**
  * DIDComm-specific exception types.
- * 
+ *
  * These exceptions extend ExchangeException and provide DIDComm-specific error information.
  * All DIDComm exceptions are part of the ExchangeException hierarchy for consistent handling.
  */
@@ -14,10 +14,10 @@ sealed class DidCommException(
     override val context: Map<String, Any?> = emptyMap(),
     override val cause: Throwable? = null
 ) : ExchangeException(code, message, context, cause) {
-    
+
     /**
      * Exception thrown when DIDComm message packing fails.
-     * 
+     *
      * @param reason The reason packing failed
      * @param messageId The ID of the message (if available)
      * @param cause The underlying exception
@@ -35,10 +35,10 @@ sealed class DidCommException(
         ).filterValues { it != null },
         cause = cause
     )
-    
+
     /**
      * Exception thrown when DIDComm message unpacking fails.
-     * 
+     *
      * @param reason The reason unpacking failed
      * @param messageId The ID of the message (if available)
      * @param cause The underlying exception
@@ -56,10 +56,10 @@ sealed class DidCommException(
         ).filterValues { it != null },
         cause = cause
     )
-    
+
     /**
      * Exception thrown when DIDComm message encryption fails.
-     * 
+     *
      * @param reason The reason encryption failed
      * @param fromDid The sender DID (if available)
      * @param toDid The recipient DID (if available)
@@ -80,10 +80,10 @@ sealed class DidCommException(
         ).filterValues { it != null },
         cause = cause
     )
-    
+
     /**
      * Exception thrown when DIDComm message decryption fails.
-     * 
+     *
      * @param reason The reason decryption failed
      * @param messageId The ID of the message (if available)
      * @param cause The underlying exception
@@ -101,10 +101,10 @@ sealed class DidCommException(
         ).filterValues { it != null },
         cause = cause
     )
-    
+
     /**
      * Exception thrown when a DIDComm protocol error occurs.
-     * 
+     *
      * @param reason The reason for the protocol error
      * @param field The field that caused the error (if applicable)
      * @param cause The underlying exception

@@ -16,18 +16,18 @@ import kotlinx.serialization.json.longOrNull
 
 /**
  * SHACL (Shapes Constraint Language) validator implementation.
- * 
+ *
  * Supports SHACL Core validation for RDF data structures.
  * Validates credential structure and credentialSubject against SHACL shapes.
- * 
+ *
  * **Note**: This is a basic implementation. A full implementation would
  * require a SHACL validation library (e.g., TopQuadrant/shacl-java, Apache Jena SHACL).
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val validator = ShaclValidator()
  * SchemaValidatorRegistry.register(validator)
- * 
+ *
  * val schema = buildJsonObject {
  *     put("@context", "https://www.w3.org/ns/shacl#")
  *     put("sh:targetClass", "EducationCredential")
@@ -39,19 +39,19 @@ import kotlinx.serialization.json.longOrNull
  *         })
  *     })
  * }
- * 
+ *
  * val result = validator.validate(credential, schema)
  * ```
  */
 class ShaclValidator : SchemaValidator {
     override val schemaFormat = SchemaFormat.SHACL
-    
+
     override suspend fun validate(
         credential: VerifiableCredential,
         schema: JsonObject
     ): SchemaValidationResult {
         val errors = mutableListOf<SchemaValidationError>()
-        
+
         // Validate credential structure
         if (!credential.type.contains("VerifiableCredential")) {
             errors.add(SchemaValidationError(
@@ -60,7 +60,7 @@ class ShaclValidator : SchemaValidator {
                 code = "missing_type"
             ))
         }
-        
+
         if (credential.issuer.isBlank()) {
             errors.add(SchemaValidationError(
                 path = "/issuer",
@@ -68,23 +68,23 @@ class ShaclValidator : SchemaValidator {
                 code = "missing_issuer"
             ))
         }
-        
+
         // Validate against SHACL shape
         val shapeErrors = validateShaclShape(credential, schema)
         errors.addAll(shapeErrors)
-        
+
         return SchemaValidationResult(
             valid = errors.isEmpty(),
             errors = errors
         )
     }
-    
+
     override suspend fun validateCredentialSubject(
         subject: kotlinx.serialization.json.JsonElement,
         schema: JsonObject
     ): SchemaValidationResult {
         val errors = mutableListOf<SchemaValidationError>()
-        
+
         // Extract SHACL properties
         val properties = schema["sh:property"]?.let {
             when (it) {
@@ -95,7 +95,7 @@ class ShaclValidator : SchemaValidator {
                 else -> emptyList()
             }
         } ?: emptyList()
-        
+
         if (subject is kotlinx.serialization.json.JsonObject) {
             // Validate each property constraint
             for (propertyShape in properties) {
@@ -105,12 +105,12 @@ class ShaclValidator : SchemaValidator {
                     errors.addAll(propertyErrors)
                 }
             }
-            
+
             // Check required properties (sh:minCount > 0)
             for (propertyShape in properties) {
                 val path = propertyShape["sh:path"]?.jsonPrimitive?.content
                 val minCount = propertyShape["sh:minCount"]?.jsonPrimitive?.intOrNull ?: 0
-                
+
                 if (path != null && minCount > 0) {
                     val fieldName = path.substringAfterLast("/").substringAfterLast(":")
                     if (!subject.containsKey(fieldName)) {
@@ -123,13 +123,13 @@ class ShaclValidator : SchemaValidator {
                 }
             }
         }
-        
+
         return SchemaValidationResult(
             valid = errors.isEmpty(),
             errors = errors
         )
     }
-    
+
     /**
      * Validate credential against SHACL shape.
      */
@@ -138,7 +138,7 @@ class ShaclValidator : SchemaValidator {
         schema: JsonObject
     ): List<SchemaValidationError> {
         val errors = mutableListOf<SchemaValidationError>()
-        
+
         // Check target class if specified
         val targetClass = schema["sh:targetClass"]?.jsonPrimitive?.content
         if (targetClass != null) {
@@ -151,7 +151,7 @@ class ShaclValidator : SchemaValidator {
                 ))
             }
         }
-        
+
         // Validate credentialSubject against property shapes
         // Note: validateCredentialSubject is suspend, but this function is not
         // For now, we'll do basic validation inline
@@ -168,7 +168,7 @@ class ShaclValidator : SchemaValidator {
                     val propertyObj = propertyShape.jsonObject
                     val path = propertyObj["sh:path"]?.jsonPrimitive?.contentOrNull
                     val minCount = propertyObj["sh:minCount"]?.jsonPrimitive?.intOrNull ?: 0
-                    
+
                     if (path != null && minCount > 0) {
                         val fieldName = path.substringAfterLast("/").substringAfterLast(":")
                         if (!subject.containsKey(fieldName)) {
@@ -182,10 +182,10 @@ class ShaclValidator : SchemaValidator {
                 }
             }
         }
-        
+
         return errors
     }
-    
+
     /**
      * Validate a property constraint.
      */
@@ -195,19 +195,19 @@ class ShaclValidator : SchemaValidator {
         propertyShape: JsonObject
     ): List<SchemaValidationError> {
         val errors = mutableListOf<SchemaValidationError>()
-        
+
         // Extract field name from path (e.g., "credentialSubject.degree" -> "degree")
         val fieldName = path.substringAfterLast("/").substringAfterLast(":").substringAfterLast(".")
-        
+
         val fieldValue = subject[fieldName]
-        
+
         // Check datatype constraint
         val datatype = propertyShape["sh:datatype"]?.jsonPrimitive?.content
         if (datatype != null && fieldValue != null) {
             val datatypeErrors = validateDatatype(fieldValue, datatype, fieldName)
             errors.addAll(datatypeErrors)
         }
-        
+
         // Check minCount constraint
         val minCount = propertyShape["sh:minCount"]?.jsonPrimitive?.intOrNull
         if (minCount != null && minCount > 0 && fieldValue == null) {
@@ -217,7 +217,7 @@ class ShaclValidator : SchemaValidator {
                 code = "min_count_violation"
             ))
         }
-        
+
         // Check maxCount constraint
         val maxCount = propertyShape["sh:maxCount"]?.jsonPrimitive?.intOrNull
         if (maxCount != null && maxCount == 1 && fieldValue is kotlinx.serialization.json.JsonArray && fieldValue.size > 1) {
@@ -227,7 +227,7 @@ class ShaclValidator : SchemaValidator {
                 code = "max_count_violation"
             ))
         }
-        
+
         // Check minLength constraint
         val minLength = propertyShape["sh:minLength"]?.jsonPrimitive?.intOrNull
         if (minLength != null && fieldValue is kotlinx.serialization.json.JsonPrimitive && fieldValue.isString) {
@@ -239,7 +239,7 @@ class ShaclValidator : SchemaValidator {
                 ))
             }
         }
-        
+
         // Check maxLength constraint
         val maxLength = propertyShape["sh:maxLength"]?.jsonPrimitive?.intOrNull
         if (maxLength != null && fieldValue is kotlinx.serialization.json.JsonPrimitive && fieldValue.isString) {
@@ -251,7 +251,7 @@ class ShaclValidator : SchemaValidator {
                 ))
             }
         }
-        
+
         // Check pattern constraint
         val pattern = propertyShape["sh:pattern"]?.jsonPrimitive?.content
         if (pattern != null && fieldValue is kotlinx.serialization.json.JsonPrimitive && fieldValue.isString) {
@@ -273,7 +273,7 @@ class ShaclValidator : SchemaValidator {
                 ))
             }
         }
-        
+
         // Check in constraint (enum-like)
         val `in` = propertyShape["sh:in"]?.let {
             when (it) {
@@ -291,10 +291,10 @@ class ShaclValidator : SchemaValidator {
                 ))
             }
         }
-        
+
         return errors
     }
-    
+
     /**
      * Validate datatype constraint.
      */
@@ -304,7 +304,7 @@ class ShaclValidator : SchemaValidator {
         fieldName: String
     ): List<SchemaValidationError> {
         val errors = mutableListOf<SchemaValidationError>()
-        
+
         when (datatype) {
             "http://www.w3.org/2001/XMLSchema#string",
             "xsd:string" -> {
@@ -388,7 +388,7 @@ class ShaclValidator : SchemaValidator {
                 }
             }
         }
-        
+
         return errors
     }
 }

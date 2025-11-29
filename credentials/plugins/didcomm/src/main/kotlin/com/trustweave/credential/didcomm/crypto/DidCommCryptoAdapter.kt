@@ -9,7 +9,7 @@ import kotlinx.serialization.json.*
 
 /**
  * Adapter that chooses between placeholder and production crypto implementations.
- * 
+ *
  * This allows the codebase to work with placeholder crypto during development,
  * and automatically use production crypto when didcomm-java is available.
  */
@@ -25,10 +25,10 @@ class DidCommCryptoAdapter(
     } catch (e: NoClassDefFoundError) {
         null // didcomm-java not available
     }
-    
+
     /**
      * Encrypts a message.
-     * 
+     *
      * Uses production crypto if available and enabled, otherwise uses placeholder.
      */
     override suspend fun encrypt(
@@ -51,7 +51,7 @@ class DidCommCryptoAdapter(
             placeholderCrypto.encrypt(message, fromDid, fromKeyId, toDid, toKeyId)
         }
     }
-    
+
     /**
      * Decrypts an encrypted envelope.
      */
@@ -74,7 +74,7 @@ class DidCommCryptoAdapter(
             placeholderCrypto.decrypt(envelope, recipientDid, recipientKeyId, senderDid)
         }
     }
-    
+
     /**
      * Decrypts from packed string format (used by didcomm-java).
      */
@@ -100,19 +100,19 @@ class DidCommCryptoAdapter(
             placeholderCrypto.decrypt(envelope, recipientDid, recipientKeyId, senderDid)
         }
     }
-    
+
     private fun parsePackedToEnvelope(packed: String): DidCommEnvelope {
         // Parse didcomm-java packed format to our envelope format
         val json = Json.parseToJsonElement(packed).jsonObject
-        
+
         val protected = json["protected"]?.jsonPrimitive?.content
             ?: throw IllegalArgumentException("Missing 'protected' in packed message")
-        
+
         val recipients = json["recipients"]?.jsonArray?.map { recipientJson ->
             val recipientObj = recipientJson.jsonObject
             val headerObj = recipientObj["header"]?.jsonObject
                 ?: throw IllegalArgumentException("Missing 'header' in recipient")
-            
+
             com.trustweave.credential.didcomm.models.DidCommRecipient(
                 header = com.trustweave.credential.didcomm.models.DidCommRecipientHeader(
                     kid = headerObj["kid"]?.jsonPrimitive?.content
@@ -124,14 +124,14 @@ class DidCommCryptoAdapter(
                     ?: throw IllegalArgumentException("Missing 'encrypted_key' in recipient")
             )
         } ?: throw IllegalArgumentException("Missing 'recipients' in packed message")
-        
+
         val iv = json["iv"]?.jsonPrimitive?.content
             ?: throw IllegalArgumentException("Missing 'iv' in packed message")
         val ciphertext = json["ciphertext"]?.jsonPrimitive?.content
             ?: throw IllegalArgumentException("Missing 'ciphertext' in packed message")
         val tag = json["tag"]?.jsonPrimitive?.content
             ?: throw IllegalArgumentException("Missing 'tag' in packed message")
-        
+
         return DidCommEnvelope(
             protected = protected,
             recipients = recipients,
@@ -140,7 +140,7 @@ class DidCommCryptoAdapter(
             tag = tag
         )
     }
-    
+
     private fun envelopeToPackedString(envelope: DidCommEnvelope): String {
         // Convert our envelope format to didcomm-java packed format
         val json = buildJsonObject {

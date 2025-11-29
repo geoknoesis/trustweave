@@ -6,13 +6,13 @@ import kotlinx.serialization.json.JsonElement
 
 /**
  * Core credential types - W3C VC 1.1 compliant.
- * 
+ *
  * These models are provider-agnostic and can be used with any credential service.
  */
 
 /**
  * Verifiable Credential as defined by W3C VC Data Model 1.1.
- * 
+ *
  * @param id Optional unique identifier for the credential
  * @param type List of credential types (must include "VerifiableCredential")
  * @param issuer DID or URI of the credential issuer
@@ -44,7 +44,7 @@ data class VerifiableCredential(
 
 /**
  * Credential schema reference.
- * 
+ *
  * @param id URI or DID of the schema
  * @param type Schema validator type (e.g., "JsonSchemaValidator2018", "ShaclValidator2020")
  * @param schemaFormat Format of the schema (JSON_SCHEMA or SHACL)
@@ -59,7 +59,7 @@ data class CredentialSchema(
 /**
  * Credential status information.
  * Used for revocation and suspension status.
- * 
+ *
  * @param id URI of the status list credential
  * @param type Status list type (e.g., "StatusList2021Entry", "RevocationList2020")
  * @param statusPurpose Purpose of the status (e.g., "revocation", "suspension")
@@ -77,7 +77,7 @@ data class CredentialStatus(
 
 /**
  * Cryptographic proof for a verifiable credential.
- * 
+ *
  * @param type Proof type (e.g., "Ed25519Signature2020", "JsonWebSignature2020", "BbsBlsSignature2020")
  * @param created ISO 8601 timestamp when proof was created
  * @param verificationMethod DID URL or key reference for verification
@@ -101,7 +101,7 @@ data class Proof(
 
 /**
  * Evidence supporting a credential claim.
- * 
+ *
  * @param id Optional identifier for the evidence
  * @param type Type of evidence (e.g., "DocumentVerification", "IdentityDocument")
  * @param evidenceDocument Optional document reference
@@ -118,7 +118,7 @@ data class Evidence(
 
 /**
  * Terms of use for a credential.
- * 
+ *
  * @param id Optional identifier for the terms
  * @param type Type of terms (e.g., "IssuerPolicy", "HolderPolicy")
  * @param instance Optional instance reference
@@ -132,7 +132,7 @@ data class TermsOfUse(
 
 /**
  * Refresh service for expiring credentials.
- * 
+ *
  * @param id URI of the refresh service
  * @param type Type of refresh service
  */

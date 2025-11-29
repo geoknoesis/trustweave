@@ -2,14 +2,14 @@ package com.trustweave.contract
 
 import com.trustweave.contract.models.*
 import com.trustweave.core.util.ValidationResult
-import com.trustweave.core.util.DidValidator
+import com.trustweave.did.validation.DidValidator
 import java.time.Instant
 
 /**
  * Validates contract-related data.
  */
 object ContractValidator {
-    
+
     /**
      * Validates a contract draft request.
      */
@@ -19,22 +19,22 @@ object ContractValidator {
         if (!partiesResult.isValid()) {
             return partiesResult
         }
-        
+
         // Validate dates
         val datesResult = validateDates(request.effectiveDate, request.expirationDate)
         if (!datesResult.isValid()) {
             return datesResult
         }
-        
+
         // Validate terms
         val termsResult = validateTerms(request.terms)
         if (!termsResult.isValid()) {
             return termsResult
         }
-        
+
         return ValidationResult.Valid
     }
-    
+
     /**
      * Validates contract parties.
      */
@@ -49,7 +49,7 @@ object ContractValidator {
                 value = parties.primaryPartyDid
             )
         }
-        
+
         // Validate counterparty DID
         val counterpartyResult = DidValidator.validateFormat(parties.counterpartyDid)
         if (!counterpartyResult.isValid()) {
@@ -60,7 +60,7 @@ object ContractValidator {
                 value = parties.counterpartyDid
             )
         }
-        
+
         // Ensure parties are different
         if (parties.primaryPartyDid == parties.counterpartyDid) {
             return ValidationResult.Invalid(
@@ -70,7 +70,7 @@ object ContractValidator {
                 value = parties.primaryPartyDid
             )
         }
-        
+
         // Validate additional parties
         parties.additionalParties.forEach { (role, did) ->
             val result = DidValidator.validateFormat(did)
@@ -83,10 +83,10 @@ object ContractValidator {
                 )
             }
         }
-        
+
         return ValidationResult.Valid
     }
-    
+
     /**
      * Validates date fields.
      */
@@ -99,7 +99,7 @@ object ContractValidator {
                 value = effectiveDate
             )
         }
-        
+
         // Validate effective date format
         val effective = try {
             Instant.parse(effectiveDate)
@@ -111,7 +111,7 @@ object ContractValidator {
                 value = effectiveDate
             )
         }
-        
+
         // Validate expiration date if provided
         if (expirationDate != null && expirationDate.isNotBlank()) {
             val expiration = try {
@@ -124,7 +124,7 @@ object ContractValidator {
                     value = expirationDate
                 )
             }
-            
+
             // Ensure expiration is after effective date
             if (!expiration.isAfter(effective)) {
                 return ValidationResult.Invalid(
@@ -135,10 +135,10 @@ object ContractValidator {
                 )
             }
         }
-        
+
         return ValidationResult.Valid
     }
-    
+
     /**
      * Validates contract terms.
      */
@@ -153,7 +153,7 @@ object ContractValidator {
                 value = obligationIds.toString()
             )
         }
-        
+
         // Validate conditions have unique IDs
         val conditionIds = terms.conditions.map { it.id }.toSet()
         if (conditionIds.size != terms.conditions.size) {
@@ -164,7 +164,7 @@ object ContractValidator {
                 value = conditionIds.toString()
             )
         }
-        
+
         // Validate obligation party DIDs
         terms.obligations.forEach { obligation ->
             val result = DidValidator.validateFormat(obligation.partyDid)
@@ -177,10 +177,10 @@ object ContractValidator {
                 )
             }
         }
-        
+
         return ValidationResult.Valid
     }
-    
+
     /**
      * Validates state transition.
      */
@@ -211,9 +211,9 @@ object ContractValidator {
             ContractStatus.CANCELLED to emptySet(), // Terminal state
             ContractStatus.TERMINATED to emptySet() // Terminal state
         )
-        
+
         val allowed = validTransitions[from] ?: emptySet()
-        
+
         if (to !in allowed) {
             return ValidationResult.Invalid(
                 code = "INVALID_STATE_TRANSITION",
@@ -222,10 +222,10 @@ object ContractValidator {
                 value = "$from -> $to"
             )
         }
-        
+
         return ValidationResult.Valid
     }
-    
+
     /**
      * Checks if contract is expired.
      */
@@ -233,7 +233,7 @@ object ContractValidator {
         if (contract.expirationDate == null) {
             return false
         }
-        
+
         return try {
             val expiration = Instant.parse(contract.expirationDate)
             Instant.now().isAfter(expiration)

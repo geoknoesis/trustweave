@@ -13,38 +13,38 @@ import java.net.URI
 
 /**
  * Factory for creating AWS KMS clients.
- * 
+ *
  * Handles authentication (IAM roles or access keys) and client configuration.
  */
 object AwsKmsClientFactory {
     /**
      * Creates an AWS KMS client from configuration.
-     * 
+     *
      * @param config AWS KMS configuration
      * @return Configured KMS client
      */
     fun createClient(config: AwsKmsConfig): KmsClient {
         val builder = KmsClient.builder()
             .region(Region.of(config.region))
-        
+
         // Configure credentials
         val credentialsProvider = createCredentialsProvider(config)
         builder.credentialsProvider(credentialsProvider)
-        
+
         // Configure endpoint override (for LocalStack testing)
         config.endpointOverride?.let { endpoint ->
             builder.endpointOverride(URI.create(endpoint))
         }
-        
+
         return builder.build()
     }
-    
+
     /**
      * Creates credentials provider based on configuration.
-     * 
+     *
      * If access key and secret are provided, uses static credentials.
      * Otherwise, uses default credential provider chain (IAM roles, environment, etc.).
-     * 
+     *
      * @param config AWS KMS configuration
      * @return Credentials provider
      */

@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,34 +591,34 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="parametric-insurance-for-travel-disruptions">
-  
-  
+
+
     <a href="#parametric-insurance-for-travel-disruptions" class="anchor-heading" aria-labelledby="parametric-insurance-for-travel-disruptions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Parametric Insurance for Travel Disruptions
-  
-  
+
+
 </h1>
-    
+
 
 <p>This guide demonstrates how to build a parametric travel insurance system using TrustWeave, similar to Chubb Travel Pro. You’ll learn how to create verifiable credentials for travel disruption data (flight delays, weather events, baggage tracking) that trigger automatic insurance payouts, solving the “Oracle Problem” by enabling standardized, multi-provider data ecosystems for travel insurance.</p>
 <h2 id="what-youll-build">
-  
-  
+
+
     <a href="#what-youll-build" class="anchor-heading" aria-labelledby="what-youll-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Build
-  
-  
+
+
 </h2>
-    
+
 
 <p>By the end of this tutorial, you’ll have:</p>
 
@@ -631,21 +631,21 @@
   <li>✅ Anchored travel data credentials to blockchain for tamper-proof triggers</li>
 </ul>
 <h2 id="big-picture--significance">
-  
-  
+
+
     <a href="#big-picture--significance" class="anchor-heading" aria-labelledby="big-picture--significance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Big Picture &amp; Significance
-  
-  
+
+
 </h2>
-    
+
 <h3 id="the-travel-insurance-oracle-problem">
-  
-  
+
+
     <a href="#the-travel-insurance-oracle-problem" class="anchor-heading" aria-labelledby="the-travel-insurance-oracle-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Travel Insurance Oracle Problem
-  
-  
+
+
 </h3>
-    
+
 
 <p>Parametric travel insurance pays out automatically when specific conditions are met (e.g., flight delay &gt; 3 hours, weather event at destination, lost baggage &gt; 24 hours). Currently, insurers rely on proprietary, siloed data sources to trigger payouts, creating vendor lock-in and limiting data source options.</p>
 
@@ -668,13 +668,13 @@
   <li><strong>Transparency</strong>: Verifiable data lineage for regulatory compliance</li>
 </ol>
 <h3 id="real-world-examples">
-  
-  
+
+
     <a href="#real-world-examples" class="anchor-heading" aria-labelledby="real-world-examples"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Examples
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Chubb Travel Pro</strong> - Digital travel protection:</p>
 <ul>
@@ -690,21 +690,21 @@
   <li><strong>Solution</strong>: Wrapping travel disruption data in VCs ensures data used for automatic payout is authentic and prevents fraud</li>
 </ul>
 <h2 id="value-proposition">
-  
-  
+
+
     <a href="#value-proposition" class="anchor-heading" aria-labelledby="value-proposition"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Value Proposition
-  
-  
+
+
 </h2>
-    
+
 <h3 id="problems-solved">
-  
-  
+
+
     <a href="#problems-solved" class="anchor-heading" aria-labelledby="problems-solved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Problems Solved
-  
-  
+
+
 </h3>
-    
+
 
 <ol>
   <li><strong>Oracle Standardization</strong>: Standard format for travel disruption data from any provider</li>
@@ -716,13 +716,13 @@
   <li><strong>Trust</strong>: Build trust in travel insurance through verifiable data</li>
 </ol>
 <h3 id="business-benefits">
-  
-  
+
+
     <a href="#business-benefits" class="anchor-heading" aria-labelledby="business-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Business Benefits
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>For Insurance Companies:</strong></p>
 <ul>
@@ -750,13 +750,13 @@
   <li><strong>Convenience</strong>: Automatic claims without paperwork</li>
 </ul>
 <h2 id="understanding-the-problem">
-  
-  
+
+
     <a href="#understanding-the-problem" class="anchor-heading" aria-labelledby="understanding-the-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Understanding the Problem
-  
-  
+
+
 </h2>
-    
+
 
 <p>Travel parametric insurance needs:</p>
 
@@ -769,13 +769,13 @@
   <li><strong>Trust</strong>: Cryptographic proof of data authenticity</li>
 </ol>
 <h2 id="prerequisites">
-  
-  
+
+
     <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li>Java 21+</li>
@@ -785,13 +785,13 @@
   <li>Understanding of parametric insurance concepts</li>
 </ul>
 <h2 id="step-1-add-dependencies">
-  
-  
+
+
     <a href="#step-1-add-dependencies" class="anchor-heading" aria-labelledby="step-1-add-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Add Dependencies
-  
-  
+
+
 </h2>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -812,28 +812,28 @@
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
     <span class="c1">// Core TrustWeave modules</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-all:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    
+
     <span class="c1">// Test kit for in-memory implementations</span>
     <span class="nf">testImplementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    
+
     <span class="c1">// Optional: Algorand adapter for real blockchain anchoring</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.chains:algorand:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    
+
     <span class="c1">// Kotlinx Serialization</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
-    
+
     <span class="c1">// Coroutines</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="step-2-complete-runnable-example">
-  
-  
+
+
     <a href="#step-2-complete-runnable-example" class="anchor-heading" aria-labelledby="step-2-complete-runnable-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Complete Runnable Example
-  
-  
+
+
 </h2>
-    
+
 
 <p>Here’s a complete travel parametric insurance workflow covering flight delays, weather guarantees, and baggage tracking:</p>
 
@@ -1239,32 +1239,32 @@
     <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Parametric Travel Insurance - Complete Example"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
-    
+
     <span class="c1">// Step 1: Create TrustWeave instance</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ TrustWeave initialized"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 2: Create DIDs for insurance company, airline, weather service, and baggage system</span>
     <span class="kd">val</span> <span class="py">insuranceDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">airlineDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">weatherServiceDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">baggageSystemDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Insurance Company DID: ${insuranceDid.id}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Airline DID: ${airlineDid.id}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Weather Service DID: ${weatherServiceDid.id}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Baggage System DID: ${baggageSystemDid.id}"</span><span class="p">)</span>
-    
+
     <span class="c1">// ============================================</span>
     <span class="c1">// Scenario 1: Flight Delay Automatic Payout</span>
     <span class="c1">// ============================================</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n"</span> <span class="p">+</span> <span class="s">"-"</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Scenario 1: Flight Delay Automatic Payout"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"-"</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
-    
+
     <span class="kd">val</span> <span class="py">airlineKeyId</span> <span class="p">=</span> <span class="n">airlineDid</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
         <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
-    
+
     <span class="c1">// Create flight delay data (issued by airline)</span>
     <span class="kd">val</span> <span class="py">flightDelayData</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
         <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="s">"flight-delay-AA1234-2024-10-08"</span><span class="p">)</span>
@@ -1288,9 +1288,9 @@
             <span class="nf">put</span><span class="p">(</span><span class="s">"timestamp"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
         <span class="p">})</span>
     <span class="p">}</span>
-    
+
     <span class="kd">val</span> <span class="py">delayDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">flightDelayData</span><span class="p">)</span>
-    
+
     <span class="c1">// Airline issues verifiable credential for flight delay</span>
     <span class="kd">val</span> <span class="py">flightDelayCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">airlineDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
@@ -1305,9 +1305,9 @@
         <span class="p">},</span>
         <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"FlightDelayCredential"</span><span class="p">,</span> <span class="s">"TravelOracleCredential"</span><span class="p">)</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Flight Delay Credential issued: ${flightDelayCredential.id}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Verify credential</span>
     <span class="kd">val</span> <span class="py">delayVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">flightDelayCredential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
     <span class="k">if</span> <span class="p">(!</span><span class="n">delayVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
@@ -1315,26 +1315,26 @@
         <span class="k">return</span><span class="nd">@runBlocking</span>
     <span class="p">}</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Flight Delay Credential verified"</span><span class="p">)</span>
-    
+
     <span class="c1">// Check parametric trigger (policy: payout if delay &gt; 3 hours)</span>
     <span class="kd">val</span> <span class="py">delayMinutes</span> <span class="p">=</span> <span class="n">flightDelayData</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"delay"</span><span class="p">]</span>
         <span class="o">?.</span><span class="n">jsonObject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"durationMinutes"</span><span class="p">)</span>
         <span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toInt</span><span class="p">()</span> <span class="o">?:</span> <span class="mi">0</span>
-    
+
     <span class="kd">val</span> <span class="py">delayThresholdMinutes</span> <span class="p">=</span> <span class="mi">180</span>  <span class="c1">// 3 hours</span>
     <span class="kd">val</span> <span class="py">shouldPayoutDelay</span> <span class="p">=</span> <span class="n">delayMinutes</span> <span class="p">&gt;</span> <span class="n">delayThresholdMinutes</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n📊 Flight Delay Trigger Check:"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Delay: $delayMinutes minutes (${delayMinutes / 60.0} hours)"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Threshold: $delayThresholdMinutes minutes"</span><span class="p">)</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">shouldPayoutDelay</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   ✅ TRIGGER MET: Delay exceeds threshold"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   💰 Automatic payout should be triggered"</span><span class="p">)</span>
-        
+
         <span class="kd">val</span> <span class="py">insuranceKeyId</span> <span class="p">=</span> <span class="n">insuranceDid</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
             <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
-        
+
         <span class="kd">val</span> <span class="py">delayPayoutCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
             <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">insuranceDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
             <span class="n">issuerKeyId</span> <span class="p">=</span> <span class="n">insuranceKeyId</span><span class="p">,</span>
@@ -1352,23 +1352,23 @@
             <span class="p">},</span>
             <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"TravelInsurancePayoutCredential"</span><span class="p">)</span>
         <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Delay Payout Credential issued: ${delayPayoutCredential.id}"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Payout amount: $250 USD via virtual card"</span><span class="p">)</span>
     <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   ❌ TRIGGER NOT MET: Delay below threshold"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// ============================================</span>
     <span class="c1">// Scenario 2: Weather Guarantee Automatic Payout</span>
     <span class="c1">// ============================================</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n"</span> <span class="p">+</span> <span class="s">"-"</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Scenario 2: Weather Guarantee Automatic Payout"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"-"</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
-    
+
     <span class="kd">val</span> <span class="py">weatherKeyId</span> <span class="p">=</span> <span class="n">weatherServiceDid</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
         <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
-    
+
     <span class="c1">// Create weather event data (issued by weather service)</span>
     <span class="kd">val</span> <span class="py">weatherData</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
         <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="s">"weather-event-LHR-2024-10-08"</span><span class="p">)</span>
@@ -1398,9 +1398,9 @@
             <span class="nf">put</span><span class="p">(</span><span class="s">"timestamp"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
         <span class="p">})</span>
     <span class="p">}</span>
-    
+
     <span class="kd">val</span> <span class="py">weatherDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">weatherData</span><span class="p">)</span>
-    
+
     <span class="c1">// Weather service issues verifiable credential</span>
     <span class="kd">val</span> <span class="py">weatherCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">weatherServiceDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
@@ -1415,9 +1415,9 @@
         <span class="p">},</span>
         <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"WeatherEventCredential"</span><span class="p">,</span> <span class="s">"TravelOracleCredential"</span><span class="p">)</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Weather Event Credential issued: ${weatherCredential.id}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Verify credential</span>
     <span class="kd">val</span> <span class="py">weatherVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">weatherCredential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
     <span class="k">if</span> <span class="p">(!</span><span class="n">weatherVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
@@ -1425,26 +1425,26 @@
         <span class="k">return</span><span class="nd">@runBlocking</span>
     <span class="p">}</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Weather Event Credential verified"</span><span class="p">)</span>
-    
+
     <span class="c1">// Check parametric trigger (policy: payout for severe weather at destination)</span>
     <span class="kd">val</span> <span class="py">isSevereWeather</span> <span class="p">=</span> <span class="n">weatherData</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"event"</span><span class="p">]</span>
         <span class="o">?.</span><span class="n">jsonObject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"severity"</span><span class="p">)</span>
         <span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span> <span class="p">==</span> <span class="s">"High"</span>
-    
+
     <span class="kd">val</span> <span class="py">causesTravelDisruption</span> <span class="p">=</span> <span class="n">weatherData</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"impact"</span><span class="p">]</span>
         <span class="o">?.</span><span class="n">jsonObject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"travelDisruption"</span><span class="p">)</span>
         <span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toBoolean</span><span class="p">()</span> <span class="p">==</span> <span class="k">true</span>
-    
+
     <span class="kd">val</span> <span class="py">shouldPayoutWeather</span> <span class="p">=</span> <span class="n">isSevereWeather</span> <span class="p">&amp;&amp;</span> <span class="n">causesTravelDisruption</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n📊 Weather Guarantee Trigger Check:"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Severity: High"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Travel Disruption: $causesTravelDisruption"</span><span class="p">)</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">shouldPayoutWeather</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   ✅ TRIGGER MET: Severe weather causes travel disruption"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   💰 Automatic payout should be triggered"</span><span class="p">)</span>
-        
+
         <span class="kd">val</span> <span class="py">weatherPayoutCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
             <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">insuranceDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
             <span class="n">issuerKeyId</span> <span class="p">=</span> <span class="n">insuranceKeyId</span><span class="p">,</span>
@@ -1462,23 +1462,23 @@
             <span class="p">},</span>
             <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"TravelInsurancePayoutCredential"</span><span class="p">)</span>
         <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Weather Payout Credential issued: ${weatherPayoutCredential.id}"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Payout amount: $500 USD in airline miles"</span><span class="p">)</span>
     <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   ❌ TRIGGER NOT MET: Weather conditions don't meet criteria"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// ============================================</span>
     <span class="c1">// Scenario 3: Baggage Delay Automatic Payout</span>
     <span class="c1">// ============================================</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n"</span> <span class="p">+</span> <span class="s">"-"</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Scenario 3: Baggage Delay Automatic Payout"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"-"</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
-    
+
     <span class="kd">val</span> <span class="py">baggageKeyId</span> <span class="p">=</span> <span class="n">baggageSystemDid</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
         <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
-    
+
     <span class="c1">// Create baggage delay data (issued by baggage tracking system)</span>
     <span class="kd">val</span> <span class="py">baggageData</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
         <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="s">"baggage-delay-ABC123-2024-10-08"</span><span class="p">)</span>
@@ -1499,9 +1499,9 @@
             <span class="nf">put</span><span class="p">(</span><span class="s">"estimatedArrival"</span><span class="p">,</span> <span class="s">"2024-10-09T20:00:00Z"</span><span class="p">)</span>
         <span class="p">})</span>
     <span class="p">}</span>
-    
+
     <span class="kd">val</span> <span class="py">baggageDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">baggageData</span><span class="p">)</span>
-    
+
     <span class="c1">// Baggage system issues verifiable credential</span>
     <span class="kd">val</span> <span class="py">baggageCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">baggageSystemDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
@@ -1516,9 +1516,9 @@
         <span class="p">},</span>
         <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"BaggageDelayCredential"</span><span class="p">,</span> <span class="s">"TravelOracleCredential"</span><span class="p">)</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Baggage Delay Credential issued: ${baggageCredential.id}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Verify credential</span>
     <span class="kd">val</span> <span class="py">baggageVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">baggageCredential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
     <span class="k">if</span> <span class="p">(!</span><span class="n">baggageVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
@@ -1526,23 +1526,23 @@
         <span class="k">return</span><span class="nd">@runBlocking</span>
     <span class="p">}</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Baggage Delay Credential verified"</span><span class="p">)</span>
-    
+
     <span class="c1">// Check parametric trigger (policy: payout if baggage delayed &gt; 24 hours)</span>
     <span class="kd">val</span> <span class="py">delayHours</span> <span class="p">=</span> <span class="n">baggageData</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"delay"</span><span class="p">]</span>
         <span class="o">?.</span><span class="n">jsonObject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"durationHours"</span><span class="p">)</span>
         <span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toInt</span><span class="p">()</span> <span class="o">?:</span> <span class="mi">0</span>
-    
+
     <span class="kd">val</span> <span class="py">baggageThresholdHours</span> <span class="p">=</span> <span class="mi">24</span>
     <span class="kd">val</span> <span class="py">shouldPayoutBaggage</span> <span class="p">=</span> <span class="n">delayHours</span> <span class="p">&gt;</span> <span class="n">baggageThresholdHours</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n📊 Baggage Delay Trigger Check:"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Delay: $delayHours hours"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Threshold: $baggageThresholdHours hours"</span><span class="p">)</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">shouldPayoutBaggage</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   ✅ TRIGGER MET: Baggage delay exceeds threshold"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   💰 Automatic payout should be triggered"</span><span class="p">)</span>
-        
+
         <span class="kd">val</span> <span class="py">baggagePayoutCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
             <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">insuranceDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
             <span class="n">issuerKeyId</span> <span class="p">=</span> <span class="n">insuranceKeyId</span><span class="p">,</span>
@@ -1560,53 +1560,53 @@
             <span class="p">},</span>
             <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"TravelInsurancePayoutCredential"</span><span class="p">)</span>
         <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Baggage Payout Credential issued: ${baggagePayoutCredential.id}"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Payout amount: $200 USD via e-voucher"</span><span class="p">)</span>
     <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   ❌ TRIGGER NOT MET: Baggage delay below threshold"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// ============================================</span>
     <span class="c1">// Data Integrity Verification</span>
     <span class="c1">// ============================================</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n"</span> <span class="p">+</span> <span class="s">"-"</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Data Integrity Verification"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"-"</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
-    
+
     <span class="c1">// Verify flight delay data integrity</span>
     <span class="kd">val</span> <span class="py">currentDelayDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">flightDelayData</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">credentialDelayDigest</span> <span class="p">=</span> <span class="n">flightDelayCredential</span><span class="p">.</span><span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"dataDigest"</span><span class="p">]</span>
         <span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span> <span class="o">?:</span> <span class="s">""</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">currentDelayDigest</span> <span class="p">==</span> <span class="n">credentialDelayDigest</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Flight Delay Data Integrity Verified"</span><span class="p">)</span>
     <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Flight Delay Data Integrity FAILED"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Verify weather data integrity</span>
     <span class="kd">val</span> <span class="py">currentWeatherDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">weatherData</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">credentialWeatherDigest</span> <span class="p">=</span> <span class="n">weatherCredential</span><span class="p">.</span><span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"dataDigest"</span><span class="p">]</span>
         <span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span> <span class="o">?:</span> <span class="s">""</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">currentWeatherDigest</span> <span class="p">==</span> <span class="n">credentialWeatherDigest</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Weather Data Integrity Verified"</span><span class="p">)</span>
     <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Weather Data Integrity FAILED"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Verify baggage data integrity</span>
     <span class="kd">val</span> <span class="py">currentBaggageDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">baggageData</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">credentialBaggageDigest</span> <span class="p">=</span> <span class="n">baggageCredential</span><span class="p">.</span><span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"dataDigest"</span><span class="p">]</span>
         <span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span> <span class="o">?:</span> <span class="s">""</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">currentBaggageDigest</span> <span class="p">==</span> <span class="n">credentialBaggageDigest</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Baggage Data Integrity Verified"</span><span class="p">)</span>
     <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Baggage Data Integrity FAILED"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n"</span> <span class="p">+</span> <span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Parametric Travel Insurance Scenario Complete!"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
@@ -1740,13 +1740,13 @@ Data Integrity Verification
 ======================================================================
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="step-3-multi-provider-support">
-  
-  
+
+
     <a href="#step-3-multi-provider-support" class="anchor-heading" aria-labelledby="step-3-multi-provider-support"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Multi-Provider Support
-  
-  
+
+
 </h2>
-    
+
 
 <p>The key advantage of using VCs is accepting data from multiple providers:</p>
 
@@ -1779,24 +1779,24 @@ Data Integrity Verification
     <span class="c1">// Verify credential</span>
     <span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">dataCredential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
     <span class="k">if</span> <span class="p">(!</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="k">return</span> <span class="k">false</span>
-    
+
     <span class="c1">// Check if provider is certified</span>
     <span class="kd">val</span> <span class="py">isCertified</span> <span class="p">=</span> <span class="nf">checkProviderCertification</span><span class="p">(</span><span class="n">providerDid</span><span class="p">)</span>
     <span class="k">if</span> <span class="p">(!</span><span class="n">isCertified</span><span class="p">)</span> <span class="k">return</span> <span class="k">false</span>
-    
+
     <span class="c1">// Extract and use data</span>
     <span class="kd">val</span> <span class="py">data</span> <span class="p">=</span> <span class="nf">extractDataFromCredential</span><span class="p">(</span><span class="n">dataCredential</span><span class="p">)</span>
     <span class="k">return</span> <span class="nf">processDataForInsurance</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="step-4-medical-emergency-example">
-  
-  
+
+
     <a href="#step-4-medical-emergency-example" class="anchor-heading" aria-labelledby="step-4-medical-emergency-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Medical Emergency Example
-  
-  
+
+
 </h2>
-    
+
 
 <p>For medical emergency coverage with quick payouts:</p>
 
@@ -1904,13 +1904,13 @@ Data Integrity Verification
 <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="step-5-embedding-in-travel-booking-process">
-  
-  
+
+
     <a href="#step-5-embedding-in-travel-booking-process" class="anchor-heading" aria-labelledby="step-5-embedding-in-travel-booking-process"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Embedding in Travel Booking Process
-  
-  
+
+
 </h2>
-    
+
 
 <p>Integrate TrustWeave Pro into travel booking platforms:</p>
 
@@ -1953,7 +1953,7 @@ Data Integrity Verification
 <span class="p">):</span> <span class="nc">BookingResult</span> <span class="p">{</span>
     <span class="c1">// Book flight</span>
     <span class="kd">val</span> <span class="py">booking</span> <span class="p">=</span> <span class="n">airline</span><span class="p">.</span><span class="nf">bookFlight</span><span class="p">(</span><span class="n">flightDetails</span><span class="p">)</span>
-    
+
     <span class="c1">// Create insurance policy credential</span>
     <span class="kd">val</span> <span class="py">policyCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">insuranceDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
@@ -1972,21 +1972,21 @@ Data Integrity Verification
         <span class="p">},</span>
         <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"TravelInsurancePolicyCredential"</span><span class="p">)</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="c1">// Store policy credential with booking</span>
     <span class="n">booking</span><span class="p">.</span><span class="nf">storeCredential</span><span class="p">(</span><span class="n">policyCredential</span><span class="p">)</span>
-    
+
     <span class="k">return</span> <span class="n">booking</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="step-6-blockchain-anchoring-for-audit-trail">
-  
-  
+
+
     <a href="#step-6-blockchain-anchoring-for-audit-trail" class="anchor-heading" aria-labelledby="step-6-blockchain-anchoring-for-audit-trail"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 6: Blockchain Anchoring for Audit Trail
-  
-  
+
+
 </h2>
-    
+
 
 <p>Anchor travel credentials to blockchain for immutable audit trail:</p>
 
@@ -2040,13 +2040,13 @@ Data Integrity Verification
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="key-benefits">
-  
-  
+
+
     <a href="#key-benefits" class="anchor-heading" aria-labelledby="key-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Benefits
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Standardization</strong>: One format works for all travel data providers</li>
@@ -2058,13 +2058,13 @@ Data Integrity Verification
   <li><strong>Speed</strong>: Quick payouts without manual claims processing</li>
 </ol>
 <h2 id="real-world-integration">
-  
-  
+
+
     <a href="#real-world-integration" class="anchor-heading" aria-labelledby="real-world-integration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Integration
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>Chubb Travel Pro Integration:</strong></p>
 <ul>
@@ -2082,13 +2082,13 @@ Data Integrity Verification
   <li>Provide transparency and trust to travelers</li>
 </ul>
 <h2 id="next-steps">
-  
-  
+
+
     <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li>Explore <a href="/trustweave/scenarios/parametric-insurance-eo-scenario/">Parametric Insurance with Earth Observation</a> for EO data use cases</li>
@@ -2096,13 +2096,13 @@ Data Integrity Verification
   <li>Review <a href="/trustweave/advanced/error-handling/">Error Handling</a> for production patterns</li>
 </ul>
 <h2 id="related-documentation">
-  
-  
+
+
     <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><a href="/trustweave/scenarios/parametric-insurance-eo-scenario/">Parametric Insurance with Earth Observation</a> - EO data insurance</li>
@@ -2110,17 +2110,17 @@ Data Integrity Verification
   <li><a href="/trustweave/api-reference/core-api/">API Reference</a> - Complete API documentation</li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -2152,7 +2152,7 @@ Data Integrity Verification
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -2162,12 +2162,12 @@ Data Integrity Verification
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -2189,12 +2189,12 @@ Data Integrity Verification
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -2203,12 +2203,12 @@ Data Integrity Verification
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -2216,7 +2216,7 @@ Data Integrity Verification
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -2224,31 +2224,31 @@ Data Integrity Verification
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -2260,7 +2260,7 @@ Data Integrity Verification
 
 
 
-  
+
 </body>
 </html>
 

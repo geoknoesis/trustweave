@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,42 +591,42 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="trustweave-sdk-decentralized-trust-infrastructure">
-  
-  
+
+
     <a href="#trustweave-sdk-decentralized-trust-infrastructure" class="anchor-heading" aria-labelledby="trustweave-sdk-decentralized-trust-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> TrustWeave SDK: Decentralized Trust Infrastructure
-  
-  
+
+
 </h1>
-    
+
 <h2 id="white-paper-v10">
-  
-  
+
+
     <a href="#white-paper-v10" class="anchor-heading" aria-labelledby="white-paper-v10"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> White Paper v1.0
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>Building the Foundation for the Web of Trust</strong></p><hr />
 <h2 id="executive-summary">
-  
-  
+
+
     <a href="#executive-summary" class="anchor-heading" aria-labelledby="executive-summary"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Executive Summary
-  
-  
+
+
 </h2>
-    
+
 
 <p>TrustWeave SDK represents a paradigm shift in decentralized identity and trust infrastructure. As the first truly agnostic, standards-compliant framework for building verifiable trust systems, TrustWeave addresses the critical fragmentation and interoperability challenges that have hindered mass adoption of decentralized identity technologies.</p>
 
@@ -664,13 +664,13 @@ The TrustWeave Token (VCT) serves multiple functions:</p>
 <p><strong>Market Position:</strong>
 TrustWeave SDK is positioned as the foundational infrastructure layer for the decentralized trust economy, enabling organizations to build domain-specific solutions on top of proven, standards-compliant infrastructure.</p><hr />
 <h2 id="table-of-contents">
-  
-  
+
+
     <a href="#table-of-contents" class="anchor-heading" aria-labelledby="table-of-contents"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Table of Contents
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><a href="#1-introduction">Introduction</a></li>
@@ -685,43 +685,43 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li><a href="#10-legal--regulatory-considerations">Legal &amp; Regulatory Considerations</a></li>
 </ol><hr />
 <h2 id="1-introduction">
-  
-  
+
+
     <a href="#1-introduction" class="anchor-heading" aria-labelledby="1-introduction"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Introduction
-  
-  
+
+
 </h2>
-    
+
 <h3 id="11-the-trust-crisis">
-  
-  
+
+
     <a href="#11-the-trust-crisis" class="anchor-heading" aria-labelledby="11-the-trust-crisis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1.1 The Trust Crisis
-  
-  
+
+
 </h3>
-    
+
 
 <p>In an increasingly digital world, establishing trust between parties who have never met is one of the greatest challenges of our time. Traditional identity systems rely on centralized authorities—governments, corporations, and institutions—creating single points of failure, privacy risks, and vendor lock-in.</p>
 
 <p>The emergence of blockchain technology promised to solve these problems through decentralization, but the identity ecosystem has remained fragmented. Different blockchains, different DID methods, different key management systems, and different standards have created silos that prevent interoperability and slow adoption.</p>
 <h3 id="12-the-trustweave-vision">
-  
-  
+
+
     <a href="#12-the-trustweave-vision" class="anchor-heading" aria-labelledby="12-the-trustweave-vision"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1.2 The TrustWeave Vision
-  
-  
+
+
 </h3>
-    
+
 
 <p>TrustWeave SDK envisions a world where trust signals flow seamlessly across the modern web, enabling organizations, developers, and municipalities to verify the authenticity, provenance, and integrity of digital interactions in real time—without vendor lock-in, without technology coupling, and without compromising on standards compliance.</p>
 <h3 id="13-what-is-trustweave-sdk">
-  
-  
+
+
     <a href="#13-what-is-trustweave-sdk" class="anchor-heading" aria-labelledby="13-what-is-trustweave-sdk"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1.3 What is TrustWeave SDK?
-  
-  
+
+
 </h3>
-    
+
 
 <p>TrustWeave SDK is a production-ready, open-source Kotlin library that provides the foundational building blocks for decentralized identity and trust systems. Built on W3C standards including Verifiable Credentials and Decentralized Identifiers, TrustWeave offers a type-safe, modular API that enables organizations to build verifiable, standards-compliant identity systems.</p>
 
@@ -734,21 +734,21 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li><strong>Modular Architecture</strong>: Use only what you need, reducing complexity and cost</li>
 </ul><hr />
 <h2 id="2-problem-statement">
-  
-  
+
+
     <a href="#2-problem-statement" class="anchor-heading" aria-labelledby="2-problem-statement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Problem Statement
-  
-  
+
+
 </h2>
-    
+
 <h3 id="21-fragmentation-and-vendor-lock-in">
-  
-  
+
+
     <a href="#21-fragmentation-and-vendor-lock-in" class="anchor-heading" aria-labelledby="21-fragmentation-and-vendor-lock-in"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2.1 Fragmentation and Vendor Lock-In
-  
-  
+
+
 </h3>
-    
+
 
 <p>The decentralized identity ecosystem suffers from severe fragmentation. Organizations must choose between different blockchains, DID methods, and key management systems, creating vendor lock-in that makes it difficult to switch technologies when requirements change.</p>
 
@@ -760,13 +760,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li><strong>High Integration Costs</strong>: Custom bridges and integrations for each technology stack</li>
 </ul>
 <h3 id="22-complexity-and-learning-curve">
-  
-  
+
+
     <a href="#22-complexity-and-learning-curve" class="anchor-heading" aria-labelledby="22-complexity-and-learning-curve"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2.2 Complexity and Learning Curve
-  
-  
+
+
 </h3>
-    
+
 
 <p>Developers face a steep learning curve when working with decentralized identity. The complexity of concepts, lack of unified APIs, and fragmented documentation slow adoption and increase development costs.</p>
 
@@ -778,13 +778,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li><strong>Testing Challenges</strong>: Lack of test utilities and in-memory implementations</li>
 </ul>
 <h3 id="23-scalability-and-cost">
-  
-  
+
+
     <a href="#23-scalability-and-cost" class="anchor-heading" aria-labelledby="23-scalability-and-cost"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2.3 Scalability and Cost
-  
-  
+
+
 </h3>
-    
+
 
 <p>Centralized systems struggle to scale effectively, while infrastructure costs remain prohibitively high. Privacy concerns arise from centralized databases that create single points of failure.</p>
 
@@ -796,13 +796,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li><strong>Compliance Complexity</strong>: Evolving regulatory requirements require constant updates</li>
 </ul>
 <h3 id="24-lack-of-cryptographic-proof">
-  
-  
+
+
     <a href="#24-lack-of-cryptographic-proof" class="anchor-heading" aria-labelledby="24-lack-of-cryptographic-proof"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2.4 Lack of Cryptographic Proof
-  
-  
+
+
 </h3>
-    
+
 
 <p>Many systems lack the cryptographic proof and verifiable trust relationships that enable true decentralization and user control. This creates a cycle where organizations delay adoption, waiting for better solutions, while the lack of adoption prevents the ecosystem from maturing.</p>
 
@@ -814,39 +814,39 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li><strong>Audit Trail Gaps</strong>: Lack of tamper-proof audit trails for compliance</li>
 </ul><hr />
 <h2 id="3-solution-overview">
-  
-  
+
+
     <a href="#3-solution-overview" class="anchor-heading" aria-labelledby="3-solution-overview"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Solution Overview
-  
-  
+
+
 </h2>
-    
+
 <h3 id="31-the-trustweave-approach">
-  
-  
+
+
     <a href="#31-the-trustweave-approach" class="anchor-heading" aria-labelledby="31-the-trustweave-approach"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3.1 The TrustWeave Approach
-  
-  
+
+
 </h3>
-    
+
 
 <p>TrustWeave SDK solves these fundamental challenges by providing abstractions that work across different blockchain networks, supporting multiple DID methods through unified interfaces, enabling flexible key management strategies, and maintaining domain neutrality so organizations can build their own domain logic on top of proven infrastructure.</p>
 <h3 id="32-core-capabilities">
-  
-  
+
+
     <a href="#32-core-capabilities" class="anchor-heading" aria-labelledby="32-core-capabilities"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3.2 Core Capabilities
-  
-  
+
+
 </h3>
-    
+
 <h4 id="321-decentralized-identifier-services">
-  
-  
+
+
     <a href="#321-decentralized-identifier-services" class="anchor-heading" aria-labelledby="321-decentralized-identifier-services"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3.2.1 Decentralized Identifier Services
-  
-  
+
+
 </h4>
-    
+
 
 <p>TrustWeave enables pluggable DID methods—including did:key, did:web, did:ion, did:ethr, and 20+ others—through a unified interface that abstracts away the differences between methods. This means developers can work with any DID method using the same API, switching between methods as requirements change.</p>
 
@@ -858,13 +858,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Pluggable DID method architecture</li>
 </ul>
 <h4 id="322-verifiable-credential-pipeline">
-  
-  
+
+
     <a href="#322-verifiable-credential-pipeline" class="anchor-heading" aria-labelledby="322-verifiable-credential-pipeline"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3.2.2 Verifiable Credential Pipeline
-  
-  
+
+
 </h4>
-    
+
 
 <p>TrustWeave provides JSON canonicalization and digest computation that ensures consistent hashing across different systems, enabling reliable verification. The framework supports credential issuance with cryptographic proofs, credential verification with policy enforcement, and standards-aligned credential lifecycle management.</p>
 
@@ -877,13 +877,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Standards-aligned lifecycle management</li>
 </ul>
 <h4 id="323-blockchain-anchoring">
-  
-  
+
+
     <a href="#323-blockchain-anchoring" class="anchor-heading" aria-labelledby="323-blockchain-anchoring"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3.2.3 Blockchain Anchoring
-  
-  
+
+
 </h4>
-    
+
 
 <p>TrustWeave provides a chain-agnostic interface that lets developers write once and anchor anywhere. Using CAIP-2 compatible chain identification, TrustWeave supports Algorand, Ethereum, Polygon, Base, Arbitrum, and other ledgers, enabling tamper-proof notarization of credential digests.</p>
 
@@ -896,13 +896,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Immutable audit trails</li>
 </ul>
 <h4 id="324-trust-registry--delegation">
-  
-  
+
+
     <a href="#324-trust-registry--delegation" class="anchor-heading" aria-labelledby="324-trust-registry--delegation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3.2.4 Trust Registry &amp; Delegation
-  
-  
+
+
 </h4>
-    
+
 
 <p>TrustWeave includes trust graph discovery and scoring, multi-hop delegation chains, integration with verification workflows, and credential type filtering. This connects verifiers to trusted issuers and policies through built-in trust mechanisms, enabling complex trust relationships without centralized authorities.</p>
 
@@ -915,13 +915,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Decentralized trust relationships</li>
 </ul>
 <h3 id="33-key-management-abstraction">
-  
-  
+
+
     <a href="#33-key-management-abstraction" class="anchor-heading" aria-labelledby="33-key-management-abstraction"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3.3 Key Management Abstraction
-  
-  
+
+
 </h3>
-    
+
 
 <p>TrustWeave abstracts key management to work with AWS, Azure, Google Cloud, HashiCorp Vault, and other providers. The Service Provider Interface enables automatic adapter discovery, reducing integration complexity.</p>
 
@@ -935,13 +935,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>In-memory (for testing)</li>
 </ul>
 <h3 id="34-developer-experience">
-  
-  
+
+
     <a href="#34-developer-experience" class="anchor-heading" aria-labelledby="34-developer-experience"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3.4 Developer Experience
-  
-  
+
+
 </h3>
-    
+
 
 <p>TrustWeave provides type-safe APIs using Kotlin’s type system, coroutine-based async operations for modern concurrency patterns, and comprehensive test utilities with in-memory implementations that make testing fast and deterministic.</p>
 
@@ -954,21 +954,21 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Extensive documentation</li>
 </ul><hr />
 <h2 id="4-technical-architecture">
-  
-  
+
+
     <a href="#4-technical-architecture" class="anchor-heading" aria-labelledby="4-technical-architecture"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Technical Architecture
-  
-  
+
+
 </h2>
-    
+
 <h3 id="41-modular-design">
-  
-  
+
+
     <a href="#41-modular-design" class="anchor-heading" aria-labelledby="41-modular-design"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 Modular Design
-  
-  
+
+
 </h3>
-    
+
 
 <p>TrustWeave is organized into a domain-centric structure with core modules and plugin implementations:</p>
 
@@ -990,13 +990,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li><strong>Chain Plugins</strong>: Blockchain adapters (algorand, polygon, ethereum, base, arbitrum, ganache, indy)</li>
 </ul>
 <h3 id="42-architecture-principles">
-  
-  
+
+
     <a href="#42-architecture-principles" class="anchor-heading" aria-labelledby="42-architecture-principles"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 Architecture Principles
-  
-  
+
+
 </h3>
-    
+
 
 <ol>
   <li><strong>Neutrality</strong>: Core modules contain no domain-specific or chain-specific logic</li>
@@ -1007,13 +1007,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li><strong>Performance</strong>: Optimized JSON operations and configurable digest caching</li>
 </ol>
 <h3 id="43-standards-compliance">
-  
-  
+
+
     <a href="#43-standards-compliance" class="anchor-heading" aria-labelledby="43-standards-compliance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 Standards Compliance
-  
-  
+
+
 </h3>
-    
+
 
 <p>TrustWeave is built on industry standards:</p>
 <ul>
@@ -1024,13 +1024,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li><strong>Multibase</strong>: Support for multibase encoding in digests</li>
 </ul>
 <h3 id="44-security-model">
-  
-  
+
+
     <a href="#44-security-model" class="anchor-heading" aria-labelledby="44-security-model"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.4 Security Model
-  
-  
+
+
 </h3>
-    
+
 
 <p>TrustWeave implements multiple layers of security:</p>
 <ul>
@@ -1041,21 +1041,21 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li><strong>Audit Trails</strong>: Immutable blockchain-anchored audit trails</li>
 </ul><hr />
 <h2 id="5-token-economics">
-  
-  
+
+
     <a href="#5-token-economics" class="anchor-heading" aria-labelledby="5-token-economics"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5. Token Economics
-  
-  
+
+
 </h2>
-    
+
 <h3 id="51-token-overview">
-  
-  
+
+
     <a href="#51-token-overview" class="anchor-heading" aria-labelledby="51-token-overview"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.1 Token Overview
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Token Name:</strong> TrustWeave Token<br />
 <strong>Token Symbol:</strong> VCT<br />
@@ -1063,23 +1063,23 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
 <strong>Token Type:</strong> ERC-20 (Ethereum) / Native tokens on other chains<br />
 <strong>Decimals:</strong> 18</p>
 <h3 id="52-token-utility">
-  
-  
+
+
     <a href="#52-token-utility" class="anchor-heading" aria-labelledby="52-token-utility"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 Token Utility
-  
-  
+
+
 </h3>
-    
+
 
 <p>The TrustWeave Token (VCT) serves multiple functions within the TrustWeave ecosystem:</p>
 <h4 id="521-network-governance">
-  
-  
+
+
     <a href="#521-network-governance" class="anchor-heading" aria-labelledby="521-network-governance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2.1 Network Governance
-  
-  
+
+
 </h4>
-    
+
 
 <p>Token holders can participate in governance decisions:</p>
 <ul>
@@ -1097,13 +1097,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Quadratic voting considered for future upgrades</li>
 </ul>
 <h4 id="522-service-payments">
-  
-  
+
+
     <a href="#522-service-payments" class="anchor-heading" aria-labelledby="522-service-payments"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2.2 Service Payments
-  
-  
+
+
 </h4>
-    
+
 
 <p>Tokens are used to pay for premium services:</p>
 <ul>
@@ -1121,13 +1121,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Enterprise: Custom pricing based on usage</li>
 </ul>
 <h4 id="523-staking-rewards">
-  
-  
+
+
     <a href="#523-staking-rewards" class="anchor-heading" aria-labelledby="523-staking-rewards"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2.3 Staking Rewards
-  
-  
+
+
 </h4>
-    
+
 
 <p>Token holders can stake tokens to earn rewards:</p>
 <ul>
@@ -1145,13 +1145,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Slashing conditions: Malicious behavior results in stake slashing</li>
 </ul>
 <h4 id="524-developer-incentives">
-  
-  
+
+
     <a href="#524-developer-incentives" class="anchor-heading" aria-labelledby="524-developer-incentives"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2.4 Developer Incentives
-  
-  
+
+
 </h4>
-    
+
 
 <p>Developers receive tokens for ecosystem contributions:</p>
 <ul>
@@ -1161,13 +1161,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li><strong>Bug Bounties</strong>: 100-5,000 VCT per security vulnerability found</li>
 </ul>
 <h4 id="525-trust-registry">
-  
-  
+
+
     <a href="#525-trust-registry" class="anchor-heading" aria-labelledby="525-trust-registry"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2.5 Trust Registry
-  
-  
+
+
 </h4>
-    
+
 
 <p>Tokens are staked to establish trust relationships:</p>
 <ul>
@@ -1177,23 +1177,23 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li><strong>Dispute Resolution</strong>: Staked tokens used for dispute resolution</li>
 </ul>
 <h3 id="53-token-distribution">
-  
-  
+
+
     <a href="#53-token-distribution" class="anchor-heading" aria-labelledby="53-token-distribution"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 Token Distribution
-  
-  
+
+
 </h3>
-    
+
 
 <p>See <a href="#9-token-distribution">Section 9: Token Distribution</a> for detailed allocation.</p>
 <h3 id="54-token-economics-model">
-  
-  
+
+
     <a href="#54-token-economics-model" class="anchor-heading" aria-labelledby="54-token-economics-model"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 Token Economics Model
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Value Drivers:</strong></p>
 <ol>
@@ -1218,21 +1218,21 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Buyback and burn programs from revenue</li>
 </ul><hr />
 <h2 id="6-use-cases--market-applications">
-  
-  
+
+
     <a href="#6-use-cases--market-applications" class="anchor-heading" aria-labelledby="6-use-cases--market-applications"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6. Use Cases &amp; Market Applications
-  
-  
+
+
 </h2>
-    
+
 <h3 id="61-parametric-insurance">
-  
-  
+
+
     <a href="#61-parametric-insurance" class="anchor-heading" aria-labelledby="61-parametric-insurance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.1 Parametric Insurance
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Market Size:</strong> $29.3 billion by 2030</p>
 
@@ -1262,13 +1262,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>FloodFlash (UK flood insurance)</li>
 </ul>
 <h3 id="62-supply-chain-verification">
-  
-  
+
+
     <a href="#62-supply-chain-verification" class="anchor-heading" aria-labelledby="62-supply-chain-verification"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.2 Supply Chain Verification
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Market Size:</strong> $15+ billion by 2025</p>
 
@@ -1290,13 +1290,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Reduce counterfeiting and fraud</li>
 </ul>
 <h3 id="63-academic-credentials">
-  
-  
+
+
     <a href="#63-academic-credentials" class="anchor-heading" aria-labelledby="63-academic-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.3 Academic Credentials
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Market Size:</strong> $49.5 billion digital identity market</p>
 
@@ -1318,13 +1318,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Interoperability across institutions</li>
 </ul>
 <h3 id="64-digital-identity-wallets">
-  
-  
+
+
     <a href="#64-digital-identity-wallets" class="anchor-heading" aria-labelledby="64-digital-identity-wallets"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.4 Digital Identity Wallets
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Market Size:</strong> $49.5 billion digital identity market</p>
 
@@ -1346,13 +1346,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Interoperability across platforms</li>
 </ul>
 <h3 id="65-iot-device-identity">
-  
-  
+
+
     <a href="#65-iot-device-identity" class="anchor-heading" aria-labelledby="65-iot-device-identity"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.5 IoT Device Identity
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Market Size:</strong> 75+ billion IoT devices by 2025</p>
 
@@ -1374,13 +1374,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Scalable device management</li>
 </ul>
 <h3 id="66-government-digital-identity">
-  
-  
+
+
     <a href="#66-government-digital-identity" class="anchor-heading" aria-labelledby="66-government-digital-identity"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.6 Government Digital Identity
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Market Size:</strong> $49.5 billion digital identity market</p>
 
@@ -1402,13 +1402,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Regulatory compliance</li>
 </ul>
 <h3 id="67-event-ticketing">
-  
-  
+
+
     <a href="#67-event-ticketing" class="anchor-heading" aria-labelledby="67-event-ticketing"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.7 Event Ticketing
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Market Size:</strong> $68 billion by 2027</p>
 
@@ -1430,13 +1430,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Privacy protection</li>
 </ul>
 <h3 id="68-smart-city-infrastructure">
-  
-  
+
+
     <a href="#68-smart-city-infrastructure" class="anchor-heading" aria-labelledby="68-smart-city-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.8 Smart City Infrastructure
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Market Size:</strong> $400+ billion smart city market</p>
 
@@ -1458,21 +1458,21 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Interoperability across services</li>
 </ul><hr />
 <h2 id="7-roadmap">
-  
-  
+
+
     <a href="#7-roadmap" class="anchor-heading" aria-labelledby="7-roadmap"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7. Roadmap
-  
-  
+
+
 </h2>
-    
+
 <h3 id="71-phase-1-foundation-q1-q2-2025--complete">
-  
-  
+
+
     <a href="#71-phase-1-foundation-q1-q2-2025--complete" class="anchor-heading" aria-labelledby="71-phase-1-foundation-q1-q2-2025--complete"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.1 Phase 1: Foundation (Q1-Q2 2025) ✅ COMPLETE
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Status:</strong> Completed</p>
 
@@ -1487,13 +1487,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>✅ Test utilities and in-memory implementations</li>
 </ul>
 <h3 id="72-phase-2-token-launch--governance-q3-2025">
-  
-  
+
+
     <a href="#72-phase-2-token-launch--governance-q3-2025" class="anchor-heading" aria-labelledby="72-phase-2-token-launch--governance-q3-2025"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.2 Phase 2: Token Launch &amp; Governance (Q3 2025)
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Timeline:</strong> 3 months</p>
 
@@ -1515,13 +1515,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Developer portal with incentives</li>
 </ul>
 <h3 id="73-phase-3-network-growth-q4-2025---q1-2026">
-  
-  
+
+
     <a href="#73-phase-3-network-growth-q4-2025---q1-2026" class="anchor-heading" aria-labelledby="73-phase-3-network-growth-q4-2025---q1-2026"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.3 Phase 3: Network Growth (Q4 2025 - Q1 2026)
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Timeline:</strong> 6 months</p>
 
@@ -1543,13 +1543,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Integration partnerships</li>
 </ul>
 <h3 id="74-phase-4-enterprise-adoption-q2-q3-2026">
-  
-  
+
+
     <a href="#74-phase-4-enterprise-adoption-q2-q3-2026" class="anchor-heading" aria-labelledby="74-phase-4-enterprise-adoption-q2-q3-2026"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.4 Phase 4: Enterprise Adoption (Q2-Q3 2026)
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Timeline:</strong> 6 months</p>
 
@@ -1571,13 +1571,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>International partnerships</li>
 </ul>
 <h3 id="75-phase-5-ecosystem-maturity-q4-2026">
-  
-  
+
+
     <a href="#75-phase-5-ecosystem-maturity-q4-2026" class="anchor-heading" aria-labelledby="75-phase-5-ecosystem-maturity-q4-2026"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.5 Phase 5: Ecosystem Maturity (Q4 2026+)
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Timeline:</strong> Ongoing</p>
 
@@ -1599,21 +1599,21 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Ecosystem maturity</li>
 </ul><hr />
 <h2 id="8-team--advisors">
-  
-  
+
+
     <a href="#8-team--advisors" class="anchor-heading" aria-labelledby="8-team--advisors"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8. Team &amp; Advisors
-  
-  
+
+
 </h2>
-    
+
 <h3 id="81-core-team">
-  
-  
+
+
     <a href="#81-core-team" class="anchor-heading" aria-labelledby="81-core-team"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8.1 Core Team
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Stephane Fellah - CEO &amp; Founder</strong></p>
 <ul>
@@ -1648,13 +1648,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   </li>
 </ul>
 <h3 id="82-advisors">
-  
-  
+
+
     <a href="#82-advisors" class="anchor-heading" aria-labelledby="82-advisors"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8.2 Advisors
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Blockchain &amp; Cryptography Advisors</strong></p>
 <ul>
@@ -1678,13 +1678,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Verifiable Credentials experts</li>
 </ul>
 <h3 id="83-partners">
-  
-  
+
+
     <a href="#83-partners" class="anchor-heading" aria-labelledby="83-partners"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8.3 Partners
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Technology Partners</strong></p>
 <ul>
@@ -1702,31 +1702,31 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Government agencies</li>
 </ul><hr />
 <h2 id="9-token-distribution">
-  
-  
+
+
     <a href="#9-token-distribution" class="anchor-heading" aria-labelledby="9-token-distribution"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9. Token Distribution
-  
-  
+
+
 </h2>
-    
+
 <h3 id="91-total-supply">
-  
-  
+
+
     <a href="#91-total-supply" class="anchor-heading" aria-labelledby="91-total-supply"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.1 Total Supply
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Total Token Supply:</strong> 1,000,000,000 VCT</p>
 <h3 id="92-allocation-breakdown">
-  
-  
+
+
     <a href="#92-allocation-breakdown" class="anchor-heading" aria-labelledby="92-allocation-breakdown"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.2 Allocation Breakdown
-  
-  
+
+
 </h3>
-    
+
 
 <div class="table-wrapper"><table>
   <thead>
@@ -1783,13 +1783,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   </tbody>
 </table></div>
 <h3 id="93-public-sale-details">
-  
-  
+
+
     <a href="#93-public-sale-details" class="anchor-heading" aria-labelledby="93-public-sale-details"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.3 Public Sale Details
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Sale Structure:</strong></p>
 <ul>
@@ -1814,13 +1814,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>10% - Reserve and operations</li>
 </ul>
 <h3 id="94-vesting-schedules">
-  
-  
+
+
     <a href="#94-vesting-schedules" class="anchor-heading" aria-labelledby="94-vesting-schedules"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.4 Vesting Schedules
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Team &amp; Founders:</strong></p>
 <ul>
@@ -1857,13 +1857,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Performance-based additional releases</li>
 </ul>
 <h3 id="95-token-release-schedule">
-  
-  
+
+
     <a href="#95-token-release-schedule" class="anchor-heading" aria-labelledby="95-token-release-schedule"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.5 Token Release Schedule
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Year 1:</strong></p>
 <ul>
@@ -1909,21 +1909,21 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Reserve: 20M VCT (2%) per year until exhausted</li>
 </ul><hr />
 <h2 id="10-legal--regulatory-considerations">
-  
-  
+
+
     <a href="#10-legal--regulatory-considerations" class="anchor-heading" aria-labelledby="10-legal--regulatory-considerations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10. Legal &amp; Regulatory Considerations
-  
-  
+
+
 </h2>
-    
+
 <h3 id="101-token-classification">
-  
-  
+
+
     <a href="#101-token-classification" class="anchor-heading" aria-labelledby="101-token-classification"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.1 Token Classification
-  
-  
+
+
 </h3>
-    
+
 
 <p>The TrustWeave Token (VCT) is designed as a <strong>utility token</strong> that provides access to the TrustWeave network and services. VCT is not intended to be:</p>
 <ul>
@@ -1940,13 +1940,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Service access: Required for premium services</li>
 </ul>
 <h3 id="102-regulatory-compliance">
-  
-  
+
+
     <a href="#102-regulatory-compliance" class="anchor-heading" aria-labelledby="102-regulatory-compliance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.2 Regulatory Compliance
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>United States:</strong></p>
 <ul>
@@ -1970,13 +1970,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Compliance with local tax regulations</li>
 </ul>
 <h3 id="103-risk-factors">
-  
-  
+
+
     <a href="#103-risk-factors" class="anchor-heading" aria-labelledby="103-risk-factors"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.3 Risk Factors
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Regulatory Risks:</strong></p>
 <ul>
@@ -2006,13 +2006,13 @@ TrustWeave SDK is positioned as the foundational infrastructure layer for the de
   <li>Partnership and integration risks</li>
 </ul>
 <h3 id="104-disclaimers">
-  
-  
+
+
     <a href="#104-disclaimers" class="anchor-heading" aria-labelledby="104-disclaimers"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.4 Disclaimers
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Investment Disclaimer:</strong>
 VCT tokens are utility tokens and are not intended as investments. Token purchasers should not expect profits from token appreciation. The value of tokens may decrease or become worthless.</p>
@@ -2028,13 +2028,13 @@ VCT tokens are utility tokens and are not intended as investments. Token purchas
 <p><strong>Forward-Looking Statements:</strong>
 This white paper contains forward-looking statements about future plans, features, and developments. Actual results may differ materially from these statements.</p>
 <h3 id="105-legal-structure">
-  
-  
+
+
     <a href="#105-legal-structure" class="anchor-heading" aria-labelledby="105-legal-structure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.5 Legal Structure
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Entity:</strong></p>
 <ul>
@@ -2055,13 +2055,13 @@ This white paper contains forward-looking statements about future plans, feature
   <li>Trademarks: TrustWeave, VCT, and related marks</li>
 </ul><hr />
 <h2 id="11-conclusion">
-  
-  
+
+
     <a href="#11-conclusion" class="anchor-heading" aria-labelledby="11-conclusion"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11. Conclusion
-  
-  
+
+
 </h2>
-    
+
 
 <p>TrustWeave SDK represents a fundamental shift in how we build trust and identity systems. By providing a truly agnostic, standards-compliant foundation, TrustWeave enables organizations to focus on business logic while leveraging proven, interoperable infrastructure.</p>
 
@@ -2079,21 +2079,21 @@ A world where trust signals flow seamlessly across the modern web, enabling veri
 <p><strong>Join Us:</strong>
 We invite developers, organizations, and investors to join us in building the foundation for the web of trust. Together, we can create a more secure, interoperable, and user-controlled digital identity ecosystem.</p><hr />
 <h2 id="12-appendices">
-  
-  
+
+
     <a href="#12-appendices" class="anchor-heading" aria-labelledby="12-appendices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12. Appendices
-  
-  
+
+
 </h2>
-    
+
 <h3 id="121-technical-specifications">
-  
-  
+
+
     <a href="#121-technical-specifications" class="anchor-heading" aria-labelledby="121-technical-specifications"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12.1 Technical Specifications
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Supported DID Methods:</strong></p>
 <ul>
@@ -2118,13 +2118,13 @@ We invite developers, organizations, and investors to join us in building the fo
   <li>JSON-LD, Multibase</li>
 </ul>
 <h3 id="122-resources">
-  
-  
+
+
     <a href="#122-resources" class="anchor-heading" aria-labelledby="122-resources"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12.2 Resources
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Documentation:</strong></p>
 <ul>
@@ -2148,13 +2148,13 @@ We invite developers, organizations, and investors to join us in building the fo
   <li>Licensing: licensing@geoknoesis.com</li>
 </ul>
 <h3 id="123-glossary">
-  
-  
+
+
     <a href="#123-glossary" class="anchor-heading" aria-labelledby="123-glossary"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12.3 Glossary
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>DID (Decentralized Identifier):</strong> A new type of identifier that enables verifiable, decentralized digital identity.</p>
 
@@ -2174,17 +2174,17 @@ We invite developers, organizations, and investors to join us in building the fo
 
 <p><em>This white paper is for informational purposes only and does not constitute an offer to sell or a solicitation of an offer to buy any tokens. Token sales are subject to applicable securities laws and regulations. Please consult with legal and financial advisors before participating in any token sale.</em></p>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -2216,7 +2216,7 @@ We invite developers, organizations, and investors to join us in building the fo
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -2226,12 +2226,12 @@ We invite developers, organizations, and investors to join us in building the fo
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -2253,12 +2253,12 @@ We invite developers, organizations, and investors to join us in building the fo
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -2267,12 +2267,12 @@ We invite developers, organizations, and investors to join us in building the fo
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -2280,7 +2280,7 @@ We invite developers, organizations, and investors to join us in building the fo
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -2288,31 +2288,31 @@ We invite developers, organizations, and investors to join us in building the fo
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -2324,7 +2324,7 @@ We invite developers, organizations, and investors to join us in building the fo
 
 
 
-  
+
 </body>
 </html>
 

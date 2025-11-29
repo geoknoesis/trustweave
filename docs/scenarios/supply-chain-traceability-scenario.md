@@ -125,7 +125,7 @@ flowchart TD
     A["Manufacturer<br/>Creates Product Credential<br/>Issues Origin Credential"] -->|transfers product| B["Distributor<br/>Receives Product<br/>Issues Transfer Credential<br/>Updates Chain of Custody"]
     B -->|transfers product| C["Retailer<br/>Receives Product<br/>Issues Sale Credential<br/>Provides Consumer Access"]
     C -->|anchors to blockchain| D["Blockchain Anchor<br/>Immutable Supply Chain Record<br/>Provenance Trail"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -176,13 +176,13 @@ dependencies {
     implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    
+
     // Test kit for in-memory implementations
     implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -231,44 +231,44 @@ data class SupplyChainEvent(
 
 fun main() = runBlocking {
     println("=== Supply Chain & Traceability Scenario ===\n")
-    
+
     // Step 1: Setup services
     println("Step 1: Setting up services...")
     val manufacturerKms = InMemoryKeyManagementService()
     val distributorKms = InMemoryKeyManagementService()
     val retailerKms = InMemoryKeyManagementService()
-    
+
     val didMethod = DidKeyMockMethod(manufacturerKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
-    
+
     // Setup blockchain for anchoring
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
     val blockchainRegistry = BlockchainAnchorRegistry().apply {
         register("eip155:1", anchorClient)
     }
-    
+
     // Step 2: Create supply chain participant DIDs
     println("\nStep 2: Creating supply chain participant DIDs...")
     val manufacturerDid = didMethod.createDid()
     println("Manufacturer DID: ${manufacturerDid.id}")
-    
+
     val distributorDid = didMethod.createDid()
     println("Distributor DID: ${distributorDid.id}")
-    
+
     val retailerDid = didMethod.createDid()
     println("Retailer DID: ${retailerDid.id}")
-    
+
     // Step 3: Create product
     println("\nStep 3: Creating product...")
     val productId = "PROD-${UUID.randomUUID()}"
     val productName = "Organic Coffee Beans"
     val batchNumber = "BATCH-2024-001"
-    
+
     println("Product created:")
     println("  - Product ID: $productId")
     println("  - Name: $productName")
     println("  - Batch: $batchNumber")
-    
+
     // Step 4: Manufacturer issues origin credential
     println("\nStep 4: Manufacturer issues origin credential...")
     val originCredential = createOriginCredential(
@@ -280,36 +280,36 @@ fun main() = runBlocking {
         productionDate = Instant.now().toString(),
         certifications = listOf("Organic", "Fair Trade")
     )
-    
+
     val manufacturerKey = manufacturerKms.generateKey("Ed25519")
     val manufacturerProofGenerator = Ed25519ProofGenerator(
         signer = { data, keyId -> manufacturerKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> manufacturerKey.id }
     )
     val manufacturerProofRegistry = ProofGeneratorRegistry().apply { register(manufacturerProofGenerator) }
-    
+
 val didResolver = CredentialDidResolver { did ->
     didRegistry.resolve(did).toCredentialDidResolution()
 }
-    
+
     val manufacturerIssuer = CredentialIssuer(
         proofGenerator = manufacturerProofGenerator,
         resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true },
         proofRegistry = manufacturerProofRegistry
     )
-    
+
     val issuedOriginCredential = manufacturerIssuer.issue(
         credential = originCredential,
         issuerDid = manufacturerDid.id,
         keyId = manufacturerKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Origin credential issued:")
     println("  - Product: $productName")
     println("  - Origin: Farm XYZ, Colombia")
     println("  - Certifications: Organic, Fair Trade")
-    
+
     // Step 5: Anchor origin event to blockchain
     println("\nStep 5: Anchoring origin event to blockchain...")
     val originDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
@@ -318,7 +318,7 @@ val didResolver = CredentialDidResolver { did ->
             issuedOriginCredential
         )
     )
-    
+
     val originEvent = SupplyChainEvent(
         productId = productId,
         eventType = "origin",
@@ -326,17 +326,17 @@ val didResolver = CredentialDidResolver { did ->
         timestamp = Instant.now().toString(),
         credentialDigest = originDigest
     )
-    
+
     val originAnchorResult = blockchainRegistry.anchorTyped(
         value = originEvent,
         serializer = SupplyChainEvent.serializer(),
         targetChainId = "eip155:1"
     )
-    
+
     println("Origin event anchored:")
     println("  - Transaction hash: ${originAnchorResult.ref.txHash}")
     println("  - Digest: $originDigest")
-    
+
     // Step 6: Distributor receives product and issues transfer credential
     println("\nStep 6: Distributor receives product...")
     val transferCredential = createTransferCredential(
@@ -347,32 +347,32 @@ val didResolver = CredentialDidResolver { did ->
         transferLocation = "Distribution Center A",
         previousCredentialDigest = originDigest
     )
-    
+
     val distributorKey = distributorKms.generateKey("Ed25519")
     val distributorProofGenerator = Ed25519ProofGenerator(
         signer = { data, keyId -> distributorKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> distributorKey.id }
     )
     val distributorProofRegistry = ProofGeneratorRegistry().apply { register(distributorProofGenerator) }
-    
+
     val distributorIssuer = CredentialIssuer(
         proofGenerator = distributorProofGenerator,
         resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true },
         proofRegistry = distributorProofRegistry
     )
-    
+
     val issuedTransferCredential = distributorIssuer.issue(
         credential = transferCredential,
         issuerDid = distributorDid.id,
         keyId = distributorKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Transfer credential issued:")
     println("  - From: Manufacturer")
     println("  - To: Distributor")
     println("  - Location: Distribution Center A")
-    
+
     // Step 7: Anchor transfer event
     println("\nStep 7: Anchoring transfer event...")
     val transferDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
@@ -381,7 +381,7 @@ val didResolver = CredentialDidResolver { did ->
             issuedTransferCredential
         )
     )
-    
+
     val transferEvent = SupplyChainEvent(
         productId = productId,
         eventType = "transfer",
@@ -390,15 +390,15 @@ val didResolver = CredentialDidResolver { did ->
         credentialDigest = transferDigest,
         previousEventDigest = originDigest
     )
-    
+
     val transferAnchorResult = blockchainRegistry.anchorTyped(
         value = transferEvent,
         serializer = SupplyChainEvent.serializer(),
         targetChainId = "eip155:1"
     )
-    
+
     println("Transfer event anchored")
-    
+
     // Step 8: Retailer receives product and issues sale credential
     println("\nStep 8: Retailer receives product...")
     val saleCredential = createSaleCredential(
@@ -409,29 +409,29 @@ val didResolver = CredentialDidResolver { did ->
         saleLocation = "Retail Store B",
         previousCredentialDigest = transferDigest
     )
-    
+
     val retailerKey = retailerKms.generateKey("Ed25519")
     val retailerProofGenerator = Ed25519ProofGenerator(
         signer = { data, keyId -> retailerKms.sign(keyId, data) },
         getPublicKeyId = { keyId -> retailerKey.id }
     )
     val retailerProofRegistry = ProofGeneratorRegistry().apply { register(retailerProofGenerator) }
-    
+
     val retailerIssuer = CredentialIssuer(
         proofGenerator = retailerProofGenerator,
         resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true },
         proofRegistry = retailerProofRegistry
     )
-    
+
     val issuedSaleCredential = retailerIssuer.issue(
         credential = saleCredential,
         issuerDid = retailerDid.id,
         keyId = retailerKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Sale credential issued")
-    
+
     // Step 9: Verify product provenance
     println("\nStep 9: Verifying product provenance...")
     val provenanceChain = listOf(
@@ -439,9 +439,9 @@ val didResolver = CredentialDidResolver { did ->
         issuedTransferCredential,
         issuedSaleCredential
     )
-    
+
     val provenanceValid = verifyProvenanceChain(provenanceChain)
-    
+
     if (provenanceValid) {
         println("✅ Product provenance verified!")
         println("  - Origin: Farm XYZ, Colombia")
@@ -450,7 +450,7 @@ val didResolver = CredentialDidResolver { did ->
     } else {
         println("❌ Provenance verification failed")
     }
-    
+
     // Step 10: Verify product authenticity
     println("\nStep 10: Verifying product authenticity...")
     val verifier = CredentialVerifier(
@@ -458,7 +458,7 @@ val didResolver = CredentialDidResolver { did ->
             didRegistry.resolve(did).toCredentialDidResolution()
         }
     )
-    
+
     val authenticityValid = verifier.verify(
         credential = issuedOriginCredential,
         options = CredentialVerificationOptions(
@@ -467,25 +467,25 @@ val didResolver = CredentialDidResolver { did ->
             validateSchema = true
         )
     )
-    
+
     if (authenticityValid.valid) {
         println("✅ Product is authentic!")
         println("  - Verified manufacturer: ${manufacturerDid.id}")
         println("  - Certifications: Organic, Fair Trade")
     }
-    
+
     // Step 11: Trace product history
     println("\nStep 11: Tracing product history...")
     val productHistory = traceProductHistory(
         productId = productId,
         events = listOf(originEvent, transferEvent)
     )
-    
+
     println("Product history:")
     productHistory.forEach { event ->
         println("  - ${event.eventType}: ${event.participantDid} at ${event.timestamp}")
     }
-    
+
     println("\n=== Scenario Complete ===")
 }
 
@@ -588,14 +588,14 @@ fun createSaleCredential(
 
 fun verifyProvenanceChain(credentials: List<VerifiableCredential>): Boolean {
     if (credentials.isEmpty()) return false
-    
+
     // Verify each credential
     val verifier = CredentialVerifier(
         didResolver = CredentialDidResolver { did ->
             didRegistry.resolve(did).toCredentialDidResolution()
         }
     )
-    
+
     credentials.forEach { credential ->
         val verification = verifier.verify(
             credential = credential,
@@ -606,29 +606,29 @@ fun verifyProvenanceChain(credentials: List<VerifiableCredential>): Boolean {
         )
         if (!verification.valid) return false
     }
-    
+
     // Verify chain continuity (each credential references previous)
     for (i in 1 until credentials.size) {
         val current = credentials[i]
         val previous = credentials[i - 1]
-        
+
         val previousDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
             Json.encodeToJsonElement(
                 com.trustweave.credential.models.VerifiableCredential.serializer(),
                 previous
             )
         )
-        
+
         val referencedDigest = current.credentialSubject.jsonObject
             .get("transfer")?.jsonObject
             ?.get("previousCredentialDigest")?.jsonPrimitive?.content
             ?: current.credentialSubject.jsonObject
                 .get("sale")?.jsonObject
                 ?.get("previousCredentialDigest")?.jsonPrimitive?.content
-        
+
         if (referencedDigest != previousDigest) return false
     }
-    
+
     return true
 }
 
@@ -921,7 +921,7 @@ fun createFarmToTableTraceability(
         productionDate = Instant.now().toString(),
         certifications = listOf("Organic", "Non-GMO")
     )
-    
+
     // Processing
     val processingCredential = createProcessingCredential(
         productId = productId,
@@ -930,7 +930,7 @@ fun createFarmToTableTraceability(
         processingDate = Instant.now().toString(),
         previousCredentialDigest = "farm-digest"
     )
-    
+
     // Distribution
     val distributionCredential = createTransferCredential(
         productId = productId,
@@ -940,7 +940,7 @@ fun createFarmToTableTraceability(
         transferLocation = "Cold Storage Facility",
         previousCredentialDigest = "processing-digest"
     )
-    
+
     // Retail sale
     val saleCredential = createSaleCredential(
         productId = productId,
@@ -950,7 +950,7 @@ fun createFarmToTableTraceability(
         saleLocation = "Grocery Store ABC",
         previousCredentialDigest = "distribution-digest"
     )
-    
+
     return listOf(farmCredential, processingCredential, distributionCredential, saleCredential)
 }
 ```
@@ -986,7 +986,7 @@ fun createPharmaceuticalTracking(
         },
         issuanceDate = Instant.now().toString()
     )
-    
+
     // Distribution
     val distributionCredential = createTransferCredential(
         productId = productId,
@@ -996,7 +996,7 @@ fun createPharmaceuticalTracking(
         transferLocation = "Pharmaceutical Distribution Center",
         previousCredentialDigest = "origin-digest"
     )
-    
+
     // Pharmacy receipt
     val pharmacyCredential = createSaleCredential(
         productId = productId,
@@ -1006,7 +1006,7 @@ fun createPharmaceuticalTracking(
         saleLocation = "Pharmacy ABC",
         previousCredentialDigest = "distribution-digest"
     )
-    
+
     return listOf(originCredential, distributionCredential, pharmacyCredential)
 }
 ```
@@ -1028,14 +1028,14 @@ fun verifyLuxuryGoodAuthenticity(
         credential.type.contains("OriginCredential") &&
         credential.issuer == brandDid
     } ?: return false
-    
+
     // Verify origin credential
     val verifier = CredentialVerifier(
         didResolver = CredentialDidResolver { did ->
             didRegistry.resolve(did).toCredentialDidResolution()
         }
     )
-    
+
     val verification = verifier.verify(
         credential = originCredential,
         options = CredentialVerificationOptions(
@@ -1043,9 +1043,9 @@ fun verifyLuxuryGoodAuthenticity(
             checkExpiration = false
         )
     )
-    
+
     if (!verification.valid) return false
-    
+
     // Verify provenance chain
     return verifyProvenanceChain(credentials)
 }

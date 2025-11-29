@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,34 +591,34 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="blockchain-anchored-revocation">
-  
-  
+
+
     <a href="#blockchain-anchored-revocation" class="anchor-heading" aria-labelledby="blockchain-anchored-revocation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Blockchain-Anchored Revocation
-  
-  
+
+
 </h1>
-    
+
 
 <p>TrustWeave provides a sophisticated revocation management system that combines fast off-chain status lists with tamper-proof blockchain anchoring. This hybrid approach gives you the performance of off-chain storage with the immutability guarantees of blockchain.</p>
 <h2 id="overview">
-  
-  
+
+
     <a href="#overview" class="anchor-heading" aria-labelledby="overview"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Overview
-  
-  
+
+
 </h2>
-    
+
 
 <p>The <code class="language-plaintext highlighter-rouge">BlockchainRevocationRegistry</code> extends <code class="language-plaintext highlighter-rouge">StatusListManager</code> to automatically anchor status list hashes to blockchain, providing:</p>
 
@@ -630,13 +630,13 @@
   <li><strong>Automatic Management</strong>: Anchoring happens automatically based on your strategy</li>
 </ul>
 <h2 id="architecture">
-  
-  
+
+
     <a href="#architecture" class="anchor-heading" aria-labelledby="architecture"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Architecture
-  
-  
+
+
 </h2>
-    
+
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -686,21 +686,21 @@
 └─────────────────────────────────────────────────────────┘
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="key-components">
-  
-  
+
+
     <a href="#key-components" class="anchor-heading" aria-labelledby="key-components"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Components
-  
-  
+
+
 </h2>
-    
+
 <h3 id="statuslistmanager">
-  
-  
+
+
     <a href="#statuslistmanager" class="anchor-heading" aria-labelledby="statuslistmanager"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> StatusListManager
-  
-  
+
+
 </h3>
-    
+
 
 <p>The base interface for managing credential revocation status lists. Stores the actual status list data (bitstrings) off-chain for fast access.</p>
 
@@ -713,13 +713,13 @@
   <li><code class="language-plaintext highlighter-rouge">getStatusList()</code> - Retrieve status list data</li>
 </ul>
 <h3 id="blockchainrevocationregistry">
-  
-  
+
+
     <a href="#blockchainrevocationregistry" class="anchor-heading" aria-labelledby="blockchainrevocationregistry"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> BlockchainRevocationRegistry
-  
-  
+
+
 </h3>
-    
+
 
 <p>Extends <code class="language-plaintext highlighter-rouge">StatusListManager</code> to add blockchain anchoring capabilities. Automatically anchors status list hashes based on your chosen strategy.</p>
 
@@ -731,13 +731,13 @@
   <li>Provides manual anchoring for immediate needs</li>
 </ul>
 <h3 id="anchorstrategy">
-  
-  
+
+
     <a href="#anchorstrategy" class="anchor-heading" aria-labelledby="anchorstrategy"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> AnchorStrategy
-  
-  
+
+
 </h3>
-    
+
 
 <p>Determines when status lists should be anchored to blockchain.</p>
 
@@ -749,21 +749,21 @@
   <li><strong>HybridAnchorStrategy</strong> - Combine periodic and lazy approaches</li>
 </ol>
 <h2 id="step-by-step-guide">
-  
-  
+
+
     <a href="#step-by-step-guide" class="anchor-heading" aria-labelledby="step-by-step-guide"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step-by-Step Guide
-  
-  
+
+
 </h2>
-    
+
 <h3 id="step-1-set-up-dependencies">
-  
-  
+
+
     <a href="#step-1-set-up-dependencies" class="anchor-heading" aria-labelledby="step-1-set-up-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Set Up Dependencies
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -779,13 +779,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-2-create-status-list-manager">
-  
-  
+
+
     <a href="#step-2-create-status-list-manager" class="anchor-heading" aria-labelledby="step-2-create-status-list-manager"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Create Status List Manager
-  
-  
+
+
 </h3>
-    
+
 
 <p>Choose an implementation based on your needs:</p>
 
@@ -805,13 +805,13 @@
 <span class="kd">val</span> <span class="py">statusListManager</span> <span class="p">=</span> <span class="nc">DatabaseStatusListManager</span><span class="p">(</span><span class="n">dataSource</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-3-configure-blockchain-anchor-client">
-  
-  
+
+
     <a href="#step-3-configure-blockchain-anchor-client" class="anchor-heading" aria-labelledby="step-3-configure-blockchain-anchor-client"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Configure Blockchain Anchor Client
-  
-  
+
+
 </h3>
-    
+
 
 <p>Set up your blockchain anchor client:</p>
 
@@ -831,23 +831,23 @@
 <span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-4-choose-anchoring-strategy">
-  
-  
+
+
     <a href="#step-4-choose-anchoring-strategy" class="anchor-heading" aria-labelledby="step-4-choose-anchoring-strategy"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Choose Anchoring Strategy
-  
-  
+
+
 </h3>
-    
+
 
 <p>Select the strategy that fits your use case:</p>
 <h4 id="option-a-periodic-anchoring-recommended-for-high-volume">
-  
-  
+
+
     <a href="#option-a-periodic-anchoring-recommended-for-high-volume" class="anchor-heading" aria-labelledby="option-a-periodic-anchoring-recommended-for-high-volume"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Option A: Periodic Anchoring (Recommended for High Volume)
-  
-  
+
+
 </h4>
-    
+
 
 <p>Anchor every hour or after 100 updates:</p>
 
@@ -869,13 +869,13 @@
 <strong>Cost:</strong> ~$0.50-$5 per hour (1 transaction)
 <strong>Latency:</strong> 0-1 hour for blockchain confirmation</p>
 <h4 id="option-b-lazy-anchoring-recommended-for-low-volume">
-  
-  
+
+
     <a href="#option-b-lazy-anchoring-recommended-for-low-volume" class="anchor-heading" aria-labelledby="option-b-lazy-anchoring-recommended-for-low-volume"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Option B: Lazy Anchoring (Recommended for Low Volume)
-  
-  
+
+
 </h4>
-    
+
 
 <p>Anchor only when verification is requested:</p>
 
@@ -891,13 +891,13 @@
 <strong>Cost:</strong> ~$0.50-$5 per verification (only when needed)
 <strong>Latency:</strong> On-demand (when verification happens)</p>
 <h4 id="option-c-hybrid-anchoring-recommended-for-most-cases">
-  
-  
+
+
     <a href="#option-c-hybrid-anchoring-recommended-for-most-cases" class="anchor-heading" aria-labelledby="option-c-hybrid-anchoring-recommended-for-most-cases"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Option C: Hybrid Anchoring (Recommended for Most Cases)
-  
-  
+
+
 </h4>
-    
+
 
 <p>Combine periodic and lazy approaches:</p>
 
@@ -917,13 +917,13 @@
 <strong>Cost:</strong> ~$0.50-$5 per hour + occasional on-demand anchors
 <strong>Latency:</strong> 0-1 hour for periodic, immediate for critical verifications</p>
 <h3 id="step-5-create-blockchain-revocation-registry">
-  
-  
+
+
     <a href="#step-5-create-blockchain-revocation-registry" class="anchor-heading" aria-labelledby="step-5-create-blockchain-revocation-registry"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Create Blockchain Revocation Registry
-  
-  
+
+
 </h3>
-    
+
 
 <p>Combine all components:</p>
 
@@ -941,13 +941,13 @@
 <span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-6-create-status-list">
-  
-  
+
+
     <a href="#step-6-create-status-list" class="anchor-heading" aria-labelledby="step-6-create-status-list"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 6: Create Status List
-  
-  
+
+
 </h3>
-    
+
 
 <p>Create a status list for your issuer:</p>
 
@@ -969,13 +969,13 @@
 <span class="nf">println</span><span class="p">(</span><span class="s">"Status List Purpose: ${statusList.credentialSubject.statusPurpose}"</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-7-issue-credential-with-status-list-reference">
-  
-  
+
+
     <a href="#step-7-issue-credential-with-status-list-reference" class="anchor-heading" aria-labelledby="step-7-issue-credential-with-status-list-reference"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 7: Issue Credential with Status List Reference
-  
-  
+
+
 </h3>
-    
+
 
 <p>When issuing a credential, include the status list reference:</p>
 
@@ -1017,13 +1017,13 @@
 <span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-8-revoke-credential">
-  
-  
+
+
     <a href="#step-8-revoke-credential" class="anchor-heading" aria-labelledby="step-8-revoke-credential"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 8: Revoke Credential
-  
-  
+
+
 </h3>
-    
+
 
 <p>Revoke a credential (anchoring happens automatically if threshold reached):</p>
 
@@ -1052,7 +1052,7 @@
 
 <span class="k">if</span> <span class="p">(</span><span class="n">revoked</span><span class="p">)</span> <span class="p">{</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Credential revoked successfully"</span><span class="p">)</span>
-    
+
     <span class="c1">// Check if anchoring was triggered</span>
     <span class="kd">val</span> <span class="py">pending</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">getPendingAnchor</span><span class="p">(</span><span class="n">statusList</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">pending</span> <span class="p">==</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
@@ -1063,13 +1063,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-9-batch-revocation">
-  
-  
+
+
     <a href="#step-9-batch-revocation" class="anchor-heading" aria-labelledby="step-9-batch-revocation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 9: Batch Revocation
-  
-  
+
+
 </h3>
-    
+
 
 <p>Revoke multiple credentials at once:</p>
 
@@ -1091,13 +1091,13 @@
 <span class="nf">println</span><span class="p">(</span><span class="s">"Revoked $successCount out of ${credentialIds.size} credentials"</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-10-check-revocation-status">
-  
-  
+
+
     <a href="#step-10-check-revocation-status" class="anchor-heading" aria-labelledby="step-10-check-revocation-status"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 10: Check Revocation Status
-  
-  
+
+
 </h3>
-    
+
 
 <p>Check if a credential is revoked:</p>
 
@@ -1125,13 +1125,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-11-verify-on-chain-optional">
-  
-  
+
+
     <a href="#step-11-verify-on-chain-optional" class="anchor-heading" aria-labelledby="step-11-verify-on-chain-optional"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 11: Verify On-Chain (Optional)
-  
-  
+
+
 </h3>
-    
+
 
 <p>For hybrid strategies, verify that the status list is anchored:</p>
 
@@ -1151,13 +1151,13 @@
 <span class="c1">// and the status list is stale</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-12-manual-anchoring-if-needed">
-  
-  
+
+
     <a href="#step-12-manual-anchoring-if-needed" class="anchor-heading" aria-labelledby="step-12-manual-anchoring-if-needed"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 12: Manual Anchoring (If Needed)
-  
-  
+
+
 </h3>
-    
+
 
 <p>Force immediate anchoring (bypasses strategy):</p>
 
@@ -1177,13 +1177,13 @@
 <span class="nf">println</span><span class="p">(</span><span class="s">"Status list anchored at: $anchorRef"</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="complete-example">
-  
-  
+
+
     <a href="#complete-example" class="anchor-heading" aria-labelledby="complete-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Complete Example
-  
-  
+
+
 </h2>
-    
+
 
 <p>Here’s a complete example showing the full workflow:</p>
 
@@ -1238,7 +1238,7 @@
     <span class="c1">// 1. Set up components</span>
     <span class="kd">val</span> <span class="py">statusListManager</span> <span class="p">=</span> <span class="nc">InMemoryStatusListManager</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">anchorClient</span> <span class="p">=</span> <span class="cm">/* your blockchain anchor client */</span>
-    
+
     <span class="c1">// 2. Create registry with periodic strategy</span>
     <span class="kd">val</span> <span class="py">registry</span> <span class="p">=</span> <span class="nc">BlockchainRevocationRegistry</span><span class="p">(</span>
         <span class="n">anchorClient</span> <span class="p">=</span> <span class="n">anchorClient</span><span class="p">,</span>
@@ -1249,24 +1249,24 @@
         <span class="p">),</span>
         <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// 3. Create status list</span>
     <span class="kd">val</span> <span class="py">statusList</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">createStatusList</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="s">"did:key:z6Mkr..."</span><span class="p">,</span>
         <span class="n">purpose</span> <span class="p">=</span> <span class="nc">StatusPurpose</span><span class="p">.</span><span class="nc">REVOCATION</span>
     <span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Created status list: ${statusList.id}"</span><span class="p">)</span>
-    
+
     <span class="c1">// 4. Issue credential with status list reference</span>
     <span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="cm">/* issue credential with statusList.id */</span>
-    
+
     <span class="c1">// 5. Revoke credential (automatic anchoring if threshold reached)</span>
     <span class="n">registry</span><span class="p">.</span><span class="nf">revokeCredential</span><span class="p">(</span><span class="s">"cred-123"</span><span class="p">,</span> <span class="n">statusList</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
-    
+
     <span class="c1">// 6. Check revocation status</span>
     <span class="kd">val</span> <span class="py">status</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">checkRevocationStatus</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Revoked: ${status.revoked}"</span><span class="p">)</span>
-    
+
     <span class="c1">// 7. Check anchor status</span>
     <span class="kd">val</span> <span class="py">lastAnchor</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">getLastAnchorTime</span><span class="p">(</span><span class="n">statusList</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">lastAnchor</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
@@ -1275,13 +1275,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="strategy-comparison">
-  
-  
+
+
     <a href="#strategy-comparison" class="anchor-heading" aria-labelledby="strategy-comparison"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Strategy Comparison
-  
-  
+
+
 </h2>
-    
+
 
 <div class="table-wrapper"><table>
   <thead>
@@ -1320,21 +1320,21 @@
   </tbody>
 </table></div>
 <h2 id="monitoring-and-management">
-  
-  
+
+
     <a href="#monitoring-and-management" class="anchor-heading" aria-labelledby="monitoring-and-management"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Monitoring and Management
-  
-  
+
+
 </h2>
-    
+
 <h3 id="check-pending-anchors">
-  
-  
+
+
     <a href="#check-pending-anchors" class="anchor-heading" aria-labelledby="check-pending-anchors"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Check Pending Anchors
-  
-  
+
+
 </h3>
-    
+
 
 <p>Monitor pending anchors to see when the next anchor will happen:</p>
 
@@ -1352,13 +1352,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="check-last-anchor-time">
-  
-  
+
+
     <a href="#check-last-anchor-time" class="anchor-heading" aria-labelledby="check-last-anchor-time"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Check Last Anchor Time
-  
-  
+
+
 </h3>
-    
+
 
 <p>See when a status list was last anchored:</p>
 
@@ -1376,13 +1376,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="get-status-list-statistics">
-  
-  
+
+
     <a href="#get-status-list-statistics" class="anchor-heading" aria-labelledby="get-status-list-statistics"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Get Status List Statistics
-  
-  
+
+
 </h3>
-    
+
 
 <p>Get detailed statistics about a status list:</p>
 
@@ -1402,13 +1402,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="best-practices">
-  
-  
+
+
     <a href="#best-practices" class="anchor-heading" aria-labelledby="best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Best Practices
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Choose the Right Strategy</strong>
@@ -1446,21 +1446,21 @@
   </li>
 </ol>
 <h2 id="troubleshooting">
-  
-  
+
+
     <a href="#troubleshooting" class="anchor-heading" aria-labelledby="troubleshooting"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Troubleshooting
-  
-  
+
+
 </h2>
-    
+
 <h3 id="anchoring-not-happening">
-  
-  
+
+
     <a href="#anchoring-not-happening" class="anchor-heading" aria-labelledby="anchoring-not-happening"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Anchoring Not Happening
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Problem:</strong> Status lists aren’t being anchored automatically.</p>
 
@@ -1472,13 +1472,13 @@
   <li>Use manual anchoring for immediate needs</li>
 </ul>
 <h3 id="high-costs">
-  
-  
+
+
     <a href="#high-costs" class="anchor-heading" aria-labelledby="high-costs"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> High Costs
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Problem:</strong> Too many blockchain transactions.</p>
 
@@ -1490,13 +1490,13 @@
   <li>Use cheaper blockchain (testnet, Layer 2)</li>
 </ul>
 <h3 id="slow-verification">
-  
-  
+
+
     <a href="#slow-verification" class="anchor-heading" aria-labelledby="slow-verification"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Slow Verification
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Problem:</strong> Verification takes too long.</p>
 
@@ -1507,13 +1507,13 @@
   <li>Use faster blockchain (Layer 2, optimized chains)</li>
 </ul>
 <h2 id="related-documentation">
-  
-  
+
+
     <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><a href="/trustweave/core-concepts/blockchain-anchoring/">Blockchain Anchoring</a> - General blockchain anchoring guide</li>
@@ -1521,17 +1521,17 @@
   <li><a href="/trustweave/api-reference/core-api/#status-list-manager">Status List Manager API</a> - API reference</li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -1563,7 +1563,7 @@
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -1573,12 +1573,12 @@
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -1600,12 +1600,12 @@
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -1614,12 +1614,12 @@
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -1627,7 +1627,7 @@
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -1635,31 +1635,31 @@
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -1671,7 +1671,7 @@
 
 
 
-  
+
 </body>
 </html>
 

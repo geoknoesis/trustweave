@@ -70,7 +70,7 @@ val credential = trustLayer.issue {
 @Test
 fun `test complete in-memory workflow template`() = runBlocking {
     val kms = InMemoryKeyManagementService()
-    
+
     val trustLayer = trustLayer {
         keys {
             custom(kms)
@@ -79,7 +79,7 @@ fun `test complete in-memory workflow template`() = runBlocking {
         did { method(DidMethods.KEY) {} }
         trust { provider("inMemory") }
     }
-    
+
     // Create DIDs, extract key IDs, issue credential, verify
     // ... (see template for full implementation)
 }
@@ -103,20 +103,20 @@ fun `test credential revocation workflow template`() = runBlocking {
         // ... setup with revocation provider
         revocation { provider("inMemory") }
     }
-    
+
     // Issue credential with revocation
     val credential = trustLayer.issue {
         credential { /* ... */ }
         by(issuerDid = issuerDid, keyId = keyId)
         withRevocation() // Enable revocation status list
     }
-    
+
     // Revoke credential
     trustLayer.revoke {
         credential(credential.id!!)
         statusList(statusListId)
     }
-    
+
     // Verify revocation
     val result = trustLayer.verify {
         credential(credential)
@@ -149,13 +149,13 @@ fun `test wallet storage workflow template`() = runBlocking {
         enableOrganization()
         enablePresentation()
     }
-    
+
     // Store credential
     credential.storeIn(wallet)
-    
+
     // Retrieve credential
     val retrieved = wallet.get(credential.id!!)
-    
+
     // Query credentials
     val credentials = wallet.query {
         byType("TestCredential")
@@ -181,7 +181,7 @@ fun `test verifiable presentation workflow template`() = runBlocking {
     // Store credentials
     credential1.storeIn(wallet)
     credential2.storeIn(wallet)
-    
+
     // Get proof generator from trust layer
     val issuer = trustLayer.dsl().getIssuer()
     val proofGenerator = /* extract from issuer */
@@ -189,7 +189,7 @@ fun `test verifiable presentation workflow template`() = runBlocking {
         proofGenerator = proofGenerator,
         proofRegistry = trustLayer.dsl().getConfig().registries.proofRegistry
     )
-    
+
     // Create presentation
     val presentation = presentation(presentationService) {
         credentials(credential1, credential2)
@@ -217,10 +217,10 @@ fun `test verifiable presentation workflow template`() = runBlocking {
 fun `test DID update workflow template`() = runBlocking {
     // Create DID
     val issuerDid = trustLayer.createDid { /* ... */ }
-    
+
     // Generate new key
     val newKey = kms.generateKey("Ed25519")
-    
+
     // Update DID
     trustLayer.updateDid {
         did(issuerDid)
@@ -231,7 +231,7 @@ fun `test DID update workflow template`() = runBlocking {
             publicKeyJwk(newKey.publicKeyJwk ?: emptyMap())
         }
     }
-    
+
     // Issue credential with updated DID
     // ... (see template for full implementation)
 }
@@ -262,14 +262,14 @@ fun `test blockchain anchoring workflow template`() = runBlocking {
             defaultChain("testnet:inMemory")
         }
     }
-    
+
     // Issue credential with anchoring
     val credential = trustLayer.issue {
         credential { /* ... */ }
         by(issuerDid = issuerDid, keyId = keyId)
         anchor("testnet:inMemory")
     }
-    
+
     // Verify anchor
     val result = trustLayer.verify {
         credential(credential)
@@ -301,7 +301,7 @@ fun `test smart contract workflow template`() = runBlocking {
         by(issuerDid = issuerDid, keyId = keyId)
         anchor("testnet:inMemory")
     }
-    
+
     // Verify contract
     val result = trustLayer.verify {
         credential(contractCredential)
@@ -325,15 +325,15 @@ fun `test smart contract workflow template`() = runBlocking {
 @Test
 @RequiresPlugin("aws-kms", "ethr-did") // List all required plugins
 fun `test with external services template`() = runBlocking {
-    // This test will be automatically skipped if AWS credentials 
+    // This test will be automatically skipped if AWS credentials
     // or Ethereum RPC URL are not available
-    
+
     val trustLayer = trustLayer {
         keys { provider("aws-kms") } // Requires AWS credentials
         did { method("ethr") {} } // Requires ETHEREUM_RPC_URL
         trust { provider("inMemory") }
     }
-    
+
     // Test implementation here...
     // If you reach here, all required env vars are available
 }
@@ -359,32 +359,32 @@ fun `test workflow with AWS KMS and Ethereum DID`() = runBlocking {
         did { method("ethr") {} } // Ethereum DID instead of key DID
         trust { provider("inMemory") }
     }
-    
+
     // Same pattern: create DID, extract key ID, issue credential
     val issuerDid = trustLayer.createDid {
         method("ethr")
         algorithm(KeyAlgorithms.ED25519)
     }
-    
+
     // Extract key ID (same pattern)
     val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid)?.document
         ?: throw IllegalStateException("Failed to resolve issuer DID")
-    
+
     val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method in issuer DID")
-    
+
     // Issue credential (same pattern)
     val credential = trustLayer.issue {
         credential { /* ... */ }
         by(issuerDid = issuerDid, keyId = keyId) // Same pattern!
     }
-    
+
     // Verify (same pattern)
     val result = trustLayer.verify {
         credential(credential)
         checkTrustRegistry()
     }
-    
+
     assertTrue(result.valid)
 }
 ```

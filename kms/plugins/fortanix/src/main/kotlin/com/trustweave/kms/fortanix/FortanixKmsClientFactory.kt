@@ -5,13 +5,13 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Factory for creating Fortanix DSM HTTP clients.
- * 
+ *
  * Handles authentication (API key) and client configuration.
  */
 object FortanixKmsClientFactory {
     /**
      * Creates an HTTP client for Fortanix DSM API.
-     * 
+     *
      * @param config Fortanix DSM configuration
      * @return Configured HTTP client with authentication
      */
@@ -20,7 +20,7 @@ object FortanixKmsClientFactory {
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)
-        
+
         // Add authentication interceptor
         clientBuilder.addInterceptor { chain ->
             val originalRequest = chain.request()
@@ -31,7 +31,7 @@ object FortanixKmsClientFactory {
                 .build()
             chain.proceed(authenticatedRequest)
         }
-        
+
         return clientBuilder.build()
     }
 }

@@ -11,13 +11,14 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import com.trustweave.trust.dsl.credential.JsonObjectBuilder
 
 /**
  * Schema Builder DSL.
- * 
+ *
  * Provides a fluent API for registering and validating credential schemas.
  * Supports both JSON Schema and SHACL formats.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * // Register JSON Schema
@@ -38,7 +39,7 @@ import kotlinx.serialization.json.put
  *         })
  *     }
  * }
- * 
+ *
  * // Register SHACL
  * trustLayer.registerSchema {
  *     id("https://example.edu/schemas/degree-shacl")
@@ -49,7 +50,7 @@ import kotlinx.serialization.json.put
  *         // ... SHACL shape definition
  *     }
  * }
- * 
+ *
  * // Validate credential
  * val result = trustLayer.schema("https://example.edu/schemas/degree")
  *     .validate(credential)
@@ -60,28 +61,28 @@ class SchemaBuilder {
     private var schemaType: String = "JsonSchemaValidator2018"
     private var format: SchemaFormat = SchemaFormat.JSON_SCHEMA
     private var definition: JsonObject? = null
-    
+
     /**
      * Set schema ID.
      */
     fun id(schemaId: String) {
         this.schemaId = schemaId
     }
-    
+
     /**
      * Set schema validator type.
      */
     fun type(type: String) {
         this.schemaType = type
     }
-    
+
     /**
      * Set schema format explicitly.
      */
     fun format(format: SchemaFormat) {
         this.format = format
     }
-    
+
     /**
      * Build JSON Schema definition.
      */
@@ -92,7 +93,7 @@ class SchemaBuilder {
         builder.block()
         this.definition = builder.build()
     }
-    
+
     /**
      * Build SHACL shape definition.
      */
@@ -103,17 +104,17 @@ class SchemaBuilder {
         builder.block()
         this.definition = builder.build()
     }
-    
+
     /**
      * Set schema definition directly.
      */
     fun definition(definition: JsonObject) {
         this.definition = definition
     }
-    
+
     /**
      * Register the schema.
-     * 
+     *
      * @return Registration result
      */
     suspend fun register(): SchemaRegistrationResult = withContext(Dispatchers.IO) {
@@ -123,19 +124,19 @@ class SchemaBuilder {
         val def = definition ?: throw IllegalStateException(
             "Schema definition is required. Use jsonSchema { } or shacl { }"
         )
-        
+
         val schema = CredentialSchema(
             id = id,
             type = schemaType,
             schemaFormat = format
         )
-        
+
         SchemaRegistry.registerSchema(schema, def)
     }
-    
+
     /**
      * Validate a credential against this schema.
-     * 
+     *
      * @param credential Credential to validate
      * @return Validation result
      */
@@ -143,7 +144,7 @@ class SchemaBuilder {
         val id = schemaId ?: throw IllegalStateException(
             "Schema ID is required. Use id(\"https://example.com/schemas/...\")"
         )
-        
+
         SchemaRegistry.validateCredential(credential, id)
     }
 }

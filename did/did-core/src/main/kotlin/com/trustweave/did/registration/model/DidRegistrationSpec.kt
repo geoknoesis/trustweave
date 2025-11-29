@@ -8,12 +8,12 @@ import kotlinx.serialization.json.jsonObject
 
 /**
  * Data model for DID Method Registration JSON specification.
- * 
+ *
  * Based on the DID Registration specification from https://identity.foundation/did-registration/
- * 
+ *
  * This allows DID methods to be registered via JSON files, making it easy to add
  * new method support without writing code.
- * 
+ *
  * **Example JSON:**
  * ```json
  * {
@@ -44,34 +44,34 @@ data class DidRegistrationSpec(
      * The DID method name (e.g., "web", "key", "ion").
      */
     val name: String,
-    
+
     /**
      * Implementation status of the method.
      * Common values: "proposed", "implemented", "deprecated"
      */
     val status: String? = null,
-    
+
     /**
      * URL to the full DID method specification document.
      */
     val specification: String? = null,
-    
+
     /**
      * Contact information for the method maintainers.
      */
     val contact: ContactInfo? = null,
-    
+
     /**
      * Driver configuration for how to interact with this DID method.
      * This determines how resolution, creation, etc. are handled.
      */
     val driver: DriverConfig? = null,
-    
+
     /**
      * Capabilities supported by this DID method implementation.
      */
     val capabilities: MethodCapabilities? = null,
-    
+
     /**
      * Additional properties not defined in the spec.
      */
@@ -80,7 +80,7 @@ data class DidRegistrationSpec(
 
 /**
  * Driver configuration for DID method operations.
- * 
+ *
  * Different driver types support different ways of interacting with DID methods:
  * - universal-resolver: Uses a Universal Resolver instance for resolution
  * - native: Native implementation (requires code)
@@ -92,27 +92,27 @@ data class DriverConfig(
      * Type of driver: "universal-resolver", "native", or "custom"
      */
     val type: String,
-    
+
     /**
      * Base URL for Universal Resolver (required for universal-resolver type)
      */
     val baseUrl: String? = null,
-    
+
     /**
      * Protocol adapter name for Universal Resolver (e.g., "standard", "godiddy")
      */
     val protocolAdapter: String? = null,
-    
+
     /**
      * API key for authentication (if required)
      */
     val apiKey: String? = null,
-    
+
     /**
      * Timeout in seconds for HTTP requests (default: 30)
      */
     val timeout: Int? = null,
-    
+
     /**
      * Additional driver-specific configuration
      */
@@ -128,17 +128,17 @@ data class MethodCapabilities(
      * Whether this implementation supports creating new DIDs
      */
     val create: Boolean = false,
-    
+
     /**
      * Whether this implementation supports resolving DIDs
      */
     val resolve: Boolean = true,
-    
+
     /**
      * Whether this implementation supports updating DID documents
      */
     val update: Boolean = false,
-    
+
     /**
      * Whether this implementation supports deactivating DIDs
      */
@@ -153,14 +153,14 @@ object DidRegistrationSpecParser {
         ignoreUnknownKeys = true
         isLenient = true
     }
-    
+
     /**
      * Parses a DID Registration JSON string into a DidRegistrationSpec.
      */
     fun parse(jsonString: String): DidRegistrationSpec {
         return json.decodeFromString(jsonString)
     }
-    
+
     /**
      * Parses a DID Registration JSON object into a DidRegistrationSpec.
      */

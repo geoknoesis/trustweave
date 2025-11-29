@@ -4,8 +4,8 @@ title: TrustWeave Funding Support Plan
 
 # TrustWeave Funding Support Plan
 
-> **Created:** 2025  
-> **Status:** Planning  
+> **Created:** 2025
+> **Status:** Planning
 > **Organization:** Geoknoesis LLC
 
 ## Executive Summary
@@ -282,8 +282,8 @@ custom: # Add custom URLs (e.g., commercial licensing page)
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** 2025  
-**Owner:** Geoknoesis LLC  
+**Document Version:** 1.0
+**Last Updated:** 2025
+**Owner:** Geoknoesis LLC
 **Status:** Planning
 

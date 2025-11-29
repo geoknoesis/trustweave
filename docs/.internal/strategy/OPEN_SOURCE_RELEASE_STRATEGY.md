@@ -6,8 +6,8 @@ title: TrustWeave Open Source Release Strategy
 
 > **Comprehensive plan for launching TrustWeave as an open source project**
 
-**Created:** 2025  
-**Status:** Planning Phase  
+**Created:** 2025
+**Status:** Planning Phase
 **Target Launch:** TBD (Recommended: 4-6 weeks from strategy approval)
 
 ---
@@ -529,8 +529,8 @@ This is similar to what companies like Auth0, Stripe, and MongoDB do: open core 
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** 2025  
-**Owner:** Geoknoesis LLC  
+**Document Version:** 1.0
+**Last Updated:** 2025
+**Owner:** Geoknoesis LLC
 **Status:** Active Planning
 

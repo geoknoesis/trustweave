@@ -117,7 +117,7 @@ flowchart TD
     A["Identity Provider<br/>Verifies Identity & Age<br/>Issues Age Credential"] -->|issues| B["Age Verification Credential<br/>Individual DID<br/>Age Information<br/>Cryptographic Proof"]
     B -->|stored in| C["Individual Wallet<br/>Stores age credential<br/>Maintains privacy<br/>Controls disclosure"]
     C -->|presents| D["Service Provider<br/>Alcohol, Gambling, Content<br/>Verifies age only<br/>No identity revealed"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -139,10 +139,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 dependencies {
     // Core TrustWeave modules
     implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -175,53 +175,53 @@ fun main() = runBlocking {
     println("=".repeat(70))
     println("Age Verification Scenario - Complete End-to-End Example with Photo")
     println("=".repeat(70))
-    
+
     // Step 1: Create TrustWeave instance
     val TrustWeave = TrustWeave.create()
     println("\n✅ TrustWeave initialized")
-    
+
     // Step 2: Create DIDs for identity provider, individual, and service providers
     val identityProviderDidDoc = TrustWeave.dids.create()
     val identityProviderDid = identityProviderDidDoc.id
     val identityProviderKeyId = identityProviderDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val individualDidDoc = TrustWeave.dids.create()
     val individualDid = individualDidDoc.id
-    
+
     val alcoholServiceDidDoc = TrustWeave.dids.create()
     val alcoholServiceDid = alcoholServiceDidDoc.id
-    
+
     val gamblingServiceDidDoc = TrustWeave.dids.create()
     val gamblingServiceDid = gamblingServiceDidDoc.id
-    
+
     val contentServiceDidDoc = TrustWeave.dids.create()
     val contentServiceDid = contentServiceDidDoc.id
-    
+
     println("✅ Identity Provider DID: $identityProviderDid")
     println("✅ Individual DID: $individualDid")
     println("✅ Alcohol Service DID: $alcoholServiceDid")
     println("✅ Gambling Service DID: $gamblingServiceDid")
     println("✅ Content Service DID: $contentServiceDid")
-    
+
     // Step 3: Calculate age (in real system, this would come from verified identity document)
     val dateOfBirth = LocalDate.of(1995, 5, 15)
     val currentDate = LocalDate.now()
     val age = Period.between(dateOfBirth, currentDate).years
-    
+
     println("\n📅 Age Calculation:")
     println("   Date of Birth: $dateOfBirth")
     println("   Current Date: $currentDate")
     println("   Age: $age years")
-    
+
     // Step 4: Process photo for credential
     // In production, this would come from user upload or identity document scan
     println("\n📸 Photo Processing:")
-    
+
     // Simulate photo processing (in real system, read from file or camera)
     val photoBytes = "simulated-photo-data".toByteArray() // Replace with actual photo
     val photoBase64 = Base64.getEncoder().encodeToString(photoBytes)
-    
+
     // Create photo metadata for digest computation
     val photoMetadata = buildJsonObject {
         put("type", "photo")
@@ -230,21 +230,21 @@ fun main() = runBlocking {
         put("subjectDid", individualDid)
         put("purpose", "ageVerification")
     }
-    
+
     // Compute cryptographic digest of photo for integrity verification
     val photoDigest = DigestUtils.sha256DigestMultibase(photoMetadata)
-    
+
     // Photo URL (in production, host photo securely)
     val photoUrl = "https://identity-provider.com/photos/${individualDid}.jpg"
-    
+
     // Generate thumbnail for quick display (in production, use image library)
     val thumbnailBase64 = Base64.getEncoder().encodeToString(photoBytes.take(500).toByteArray())
     val thumbnailDataUrl = "data:image/jpeg;base64,$thumbnailBase64"
-    
+
     println("   Photo digest computed: ${photoDigest.take(20)}...")
     println("   Photo URL: $photoUrl")
     println("   Thumbnail generated")
-    
+
     // Step 5: Issue age verification credential with photo (privacy-preserving - only age, not DOB)
     val ageCredential = TrustWeave.issueCredential(
         issuerDid = identityProviderDid,
@@ -273,13 +273,13 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "AgeVerificationCredential", "IdentityCredential"),
         expirationDate = Instant.now().plus(5, ChronoUnit.YEARS).toString()
     ).getOrThrow()
-    
+
     println("\n✅ Age verification credential with photo issued: ${ageCredential.id}")
     println("   Age: $age years")
     println("   Minimum Age: 18+")
     println("   Photo: Associated with digest verification")
     println("   Note: Date of birth NOT included for privacy")
-    
+
     // Step 5: Create individual wallet and store age credential
     val individualWallet = TrustWeave.createWallet(
         holderDid = individualDid,
@@ -288,10 +288,10 @@ fun main() = runBlocking {
             enablePresentation = true
         }.build()
     ).getOrThrow()
-    
+
     val ageCredentialId = individualWallet.store(ageCredential)
     println("✅ Age credential stored in wallet: $ageCredentialId")
-    
+
     // Step 6: Organize credential
     individualWallet.withOrganization { org ->
         val identityCollectionId = org.createCollection("Identity", "Identity and age verification credentials")
@@ -299,37 +299,37 @@ fun main() = runBlocking {
         org.tagCredential(ageCredentialId, setOf("age", "verification", "identity", "privacy-preserving", "photo"))
         println("✅ Age credential organized")
     }
-    
+
     // Step 7: Alcohol service age verification with photo (21+ required)
     println("\n🍺 Alcohol Service Age Verification (21+ required):")
-    
+
     val alcoholVerification = TrustWeave.verifyCredential(ageCredential).getOrThrow()
-    
+
     if (alcoholVerification.valid) {
         val credentialSubject = ageCredential.credentialSubject
         val ageVerification = credentialSubject.jsonObject["ageVerification"]?.jsonObject
         val verifiedAge = ageVerification?.get("age")?.jsonPrimitive?.content?.toInt() ?: 0
         val photo = ageVerification?.get("photo")?.jsonObject
-        
+
         println("✅ Age Credential: VALID")
         println("   Verified Age: $verifiedAge years")
         println("   Required Age: 21+")
-        
+
         // Extract photo information
         val photoUrlFromCredential = photo?.get("url")?.jsonPrimitive?.content
         val photoDigestFromCredential = photo?.get("digestMultibase")?.jsonPrimitive?.content
         val thumbnail = photo?.get("thumbnail")?.jsonPrimitive?.content
-        
+
         println("   Photo URL: $photoUrlFromCredential")
         println("   Photo Digest: ${photoDigestFromCredential?.take(20)}...")
-        
+
         // In production:
         // 1. Fetch photo from URL
         // 2. Compute digest of fetched photo
         // 3. Compare with credential digest (integrity check)
         // 4. Capture live photo from camera
         // 5. Use face recognition to verify person matches photo
-        
+
         if (verifiedAge >= 21) {
             println("✅ Age requirement MET")
             println("✅ Photo integrity verified (digest matches)")
@@ -343,22 +343,22 @@ fun main() = runBlocking {
         println("❌ Age Credential: INVALID")
         println("❌ Access DENIED")
     }
-    
+
     // Step 8: Gambling service age verification (18+ required)
     println("\n🎰 Gambling Service Age Verification (18+ required):")
-    
+
     val gamblingVerification = TrustWeave.verifyCredential(ageCredential).getOrThrow()
-    
+
     if (gamblingVerification.valid) {
         val credentialSubject = ageCredential.credentialSubject
         val ageVerification = credentialSubject.jsonObject["ageVerification"]?.jsonObject
         val verifiedAge = ageVerification?.get("age")?.jsonPrimitive?.content?.toInt() ?: 0
         val minimumAge = ageVerification?.get("minimumAge")?.jsonPrimitive?.content?.toInt() ?: 0
-        
+
         println("✅ Age Credential: VALID")
         println("   Verified Age: $verifiedAge years")
         println("   Required Age: 18+")
-        
+
         if (verifiedAge >= 18) {
             println("✅ Age requirement MET")
             println("✅ Access GRANTED to gambling service")
@@ -370,21 +370,21 @@ fun main() = runBlocking {
         println("❌ Age Credential: INVALID")
         println("❌ Access DENIED")
     }
-    
+
     // Step 9: Content service age verification (13+ required for some content)
     println("\n📺 Content Service Age Verification (13+ required):")
-    
+
     val contentVerification = TrustWeave.verifyCredential(ageCredential).getOrThrow()
-    
+
     if (contentVerification.valid) {
         val credentialSubject = ageCredential.credentialSubject
         val ageVerification = credentialSubject.jsonObject["ageVerification"]?.jsonObject
         val verifiedAge = ageVerification?.get("age")?.jsonPrimitive?.content?.toInt() ?: 0
-        
+
         println("✅ Age Credential: VALID")
         println("   Verified Age: $verifiedAge years")
         println("   Required Age: 13+")
-        
+
         if (verifiedAge >= 13) {
             println("✅ Age requirement MET")
             println("✅ Access GRANTED to content service")
@@ -396,7 +396,7 @@ fun main() = runBlocking {
         println("❌ Age Credential: INVALID")
         println("❌ Access DENIED")
     }
-    
+
     // Step 10: Create privacy-preserving presentation
     val agePresentation = individualWallet.withPresentation { pres ->
         pres.createPresentation(
@@ -408,12 +408,12 @@ fun main() = runBlocking {
             )
         )
     } ?: error("Presentation capability not available")
-    
+
     println("\n✅ Privacy-preserving age presentation created")
     println("   Holder: ${agePresentation.holder}")
     println("   Credentials: ${agePresentation.verifiableCredential.size}")
     println("   Note: Only age information shared, no personal details")
-    
+
     // Step 11: Demonstrate privacy - verify no personal information is exposed
     println("\n🔒 Privacy Verification:")
     val presentationCredential = agePresentation.verifiableCredential.firstOrNull()
@@ -422,7 +422,7 @@ fun main() = runBlocking {
         val hasDateOfBirth = subject.jsonObject.containsKey("dateOfBirth")
         val hasFullName = subject.jsonObject.containsKey("fullName")
         val hasAddress = subject.jsonObject.containsKey("address")
-        
+
         println("   Date of Birth exposed: $hasDateOfBirth ❌")
         println("   Full Name exposed: $hasFullName ❌")
         println("   Address exposed: $hasAddress ❌")
@@ -430,7 +430,7 @@ fun main() = runBlocking {
         println("   Photo reference (for verification): ✅")
         println("✅ Privacy preserved - only age information shared")
     }
-    
+
     // Step 12: Photo verification workflow demonstration
     println("\n📸 Photo Verification Workflow:")
     println("   1. Extract photo URL and digest from credential")
@@ -440,7 +440,7 @@ fun main() = runBlocking {
     println("   5. Capture live photo from camera")
     println("   6. Perform face recognition (person matches photo)")
     println("   7. Grant/deny access based on age + photo verification")
-    
+
     // Step 13: Display wallet statistics
     val stats = individualWallet.getStatistics()
     println("\n📊 Individual Wallet Statistics:")
@@ -448,7 +448,7 @@ fun main() = runBlocking {
     println("   Valid credentials: ${stats.validCredentials}")
     println("   Collections: ${stats.collectionsCount}")
     println("   Tags: ${stats.tagsCount}")
-    
+
     // Step 14: Summary
     println("\n" + "=".repeat(70))
     println("✅ AGE VERIFICATION SYSTEM WITH PHOTO COMPLETE")

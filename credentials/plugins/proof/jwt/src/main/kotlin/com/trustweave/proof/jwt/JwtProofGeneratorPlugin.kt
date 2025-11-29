@@ -14,18 +14,18 @@ import java.util.*
 
 /**
  * JWT proof generator plugin implementation.
- * 
+ *
  * Generates JsonWebSignature2020 proofs in JWT format using nimbus-jose-jwt.
- * 
+ *
  * Supports Ed25519, ECDSA (secp256k1, P-256, P-384, P-521), and RSA algorithms.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val generator = JwtProofGeneratorPlugin(
  *     signer = { data, keyId -> kms.sign(keyId, data) },
  *     getPublicKeyId = { keyId -> kms.getPublicKey(keyId).id }
  * )
- * 
+ *
  * val proof = generator.generateProof(credential, keyId, options)
  * ```
  */
@@ -35,15 +35,15 @@ class JwtProofGeneratorPlugin(
     private val getPublicKeyJwk: suspend (String) -> Map<String, Any?>? = { null }
 ) : ProofGenerator {
     override val proofType = "JsonWebSignature2020"
-    
+
     override suspend fun generateProof(
         credential: VerifiableCredential,
         keyId: String,
         options: ProofOptions
     ): Proof = withContext(Dispatchers.IO) {
-        val verificationMethod = options.verificationMethod 
+        val verificationMethod = options.verificationMethod
             ?: (getPublicKeyId(keyId)?.let { "did:key:$it#$keyId" } ?: "did:key:$keyId")
-        
+
         // Extract subject ID from credentialSubject
         val subjectId = try {
             val subjectJson = credential.credentialSubject.jsonObject
@@ -51,18 +51,18 @@ class JwtProofGeneratorPlugin(
         } catch (e: Exception) {
             null
         }
-        
+
         // Determine algorithm from public key JWK
         val publicKeyJwk = getPublicKeyJwk(keyId)
         val algorithm = determineAlgorithm(publicKeyJwk)
-        
+
         // Build JWT header
         val headerJson = buildJsonObject {
             put("alg", algorithm.name)
             put("typ", "JWT")
             put("kid", keyId)
         }
-        
+
         // Build JWT payload (claims)
         val expirationTimestamp = credential.expirationDate?.let {
             try {
@@ -71,22 +71,22 @@ class JwtProofGeneratorPlugin(
                 Instant.now().plusSeconds(365 * 24 * 60 * 60).epochSecond // Default: 1 year
             }
         } ?: Instant.now().plusSeconds(365 * 24 * 60 * 60).epochSecond // Default: 1 year
-        
+
         val nbfTimestamp = try {
             Instant.parse(credential.issuanceDate).epochSecond
         } catch (e: Exception) {
             Instant.now().epochSecond
         }
-        
+
         // Encode header and payload as Base64URL
         val json = Json { prettyPrint = false; encodeDefaults = false }
-        
+
         // Serialize credential to JSON for vc claim
         val vcJson = json.encodeToJsonElement(
             com.trustweave.credential.models.VerifiableCredential.serializer(),
             credential
         ).jsonObject
-        
+
         val payloadJson = buildJsonObject {
             put("vc", vcJson)
             put("iss", verificationMethod)
@@ -100,17 +100,17 @@ class JwtProofGeneratorPlugin(
         }
         val headerBase64 = Base64URL.encode(json.encodeToString(JsonObject.serializer(), headerJson).toByteArray(Charsets.UTF_8)).toString()
         val payloadBase64 = Base64URL.encode(json.encodeToString(JsonObject.serializer(), payloadJson).toByteArray(Charsets.UTF_8)).toString()
-        
+
         // Signing input is the base64-encoded header and payload separated by a dot
         val signingInput = "$headerBase64.$payloadBase64".toByteArray(Charsets.UTF_8)
-        
+
         // Sign the JWT using custom signer
         val signature = signer(signingInput, keyId)
         val signatureBase64 = Base64URL.encode(signature).toString()
-        
+
         // Create compact JWT string
         val jwtString = "$headerBase64.$payloadBase64.$signatureBase64"
-        
+
         Proof(
             type = proofType,
             created = Instant.now().toString(),
@@ -121,7 +121,7 @@ class JwtProofGeneratorPlugin(
             domain = options.domain
         )
     }
-    
+
     /**
      * Converts VerifiableCredential to JSON object for JWT claim.
      */
@@ -131,17 +131,17 @@ class JwtProofGeneratorPlugin(
             encodeDefaults = false
             ignoreUnknownKeys = true
         }
-        
+
         // Serialize credential to JSON and parse as JsonElement
         val credentialJson = json.encodeToJsonElement(
             com.trustweave.credential.models.VerifiableCredential.serializer(),
             credential
         )
-        
+
         // Convert JsonElement to Map for JWT claims
         return jsonElementToMap(credentialJson.jsonObject)
     }
-    
+
     /**
      * Converts JsonObject to Map<String, Any?> for JWT claims.
      */
@@ -171,7 +171,7 @@ class JwtProofGeneratorPlugin(
             }
         }
     }
-    
+
     /**
      * Determines JWS algorithm from public key JWK.
      */
@@ -179,10 +179,10 @@ class JwtProofGeneratorPlugin(
         if (publicKeyJwk == null) {
             return JWSAlgorithm.EdDSA // Default to Ed25519
         }
-        
+
         val kty = publicKeyJwk["kty"] as? String ?: return JWSAlgorithm.EdDSA
         val crv = publicKeyJwk["crv"] as? String
-        
+
         return when {
             kty == "OKP" && crv == "Ed25519" -> JWSAlgorithm.EdDSA
             kty == "EC" && crv == "secp256k1" -> JWSAlgorithm.ES256K

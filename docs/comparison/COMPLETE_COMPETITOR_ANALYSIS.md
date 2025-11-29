@@ -6,7 +6,7 @@ title: TrustWeave vs. Competitors - Complete Analysis
 
 > **Comprehensive comparison of TrustWeave with all relevant competitors and main players in the SSI/DID/VC ecosystem**
 
-**Last Updated:** 2025-01-15  
+**Last Updated:** 2025-01-15
 **TrustWeave Version:** 1.0.0-SNAPSHOT
 
 ---
@@ -456,7 +456,9 @@ TrustWeave offers the most comprehensive feature set in the SSI/DID/VC ecosystem
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** 2025-01-15  
+**Document Version:** 1.0
+**Last Updated:** 2025-01-15
 **Maintained By:** Geoknoesis LLC
+
+
 

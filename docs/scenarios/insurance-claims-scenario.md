@@ -118,7 +118,7 @@ flowchart TD
     D["Repair Shop<br/>Performs Repair<br/>Issues Repair Credential"] -->|verifies| B
     B -->|stored in| E["Policyholder Wallet<br/>Stores claim credentials<br/>Tracks claim status"]
     E -->|presents| F["Insurance Company<br/>Verifies all credentials<br/>Processes claim<br/>Issues payment"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
@@ -142,10 +142,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 dependencies {
     // Core TrustWeave modules
     implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -173,35 +173,35 @@ fun main() = runBlocking {
     println("=".repeat(70))
     println("Insurance Claims and Verification Scenario - Complete End-to-End Example")
     println("=".repeat(70))
-    
+
     // Step 1: Create TrustWeave instance
     val TrustWeave = TrustWeave.create()
     println("\n✅ TrustWeave initialized")
-    
+
     // Step 2: Create DIDs for all parties
     val insuranceCompanyDidDoc = TrustWeave.dids.create()
     val insuranceCompanyDid = insuranceCompanyDidDoc.id
     val insuranceCompanyKeyId = insuranceCompanyDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val policyholderDidDoc = TrustWeave.dids.create()
     val policyholderDid = policyholderDidDoc.id
-    
+
     val assessorDidDoc = TrustWeave.dids.create()
     val assessorDid = assessorDidDoc.id
     val assessorKeyId = assessorDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     val repairShopDidDoc = TrustWeave.dids.create()
     val repairShopDid = repairShopDidDoc.id
     val repairShopKeyId = repairShopDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     println("✅ Insurance Company DID: $insuranceCompanyDid")
     println("✅ Policyholder DID: $policyholderDid")
     println("✅ Damage Assessor DID: $assessorDid")
     println("✅ Repair Shop DID: $repairShopDid")
-    
+
     // Step 3: Policyholder files claim - Insurance company issues claim credential
     val claimCredential = TrustWeave.issueCredential(
         issuerDid = insuranceCompanyDid,
@@ -224,12 +224,12 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "InsuranceClaimCredential", "ClaimCredential"),
         expirationDate = Instant.now().plus(1, ChronoUnit.YEARS).toString()
     ).getOrThrow()
-    
+
     println("\n✅ Claim credential issued: ${claimCredential.id}")
     println("   Claim Number: CLM-2024-001234")
     println("   Claim Type: Auto Damage")
     println("   Status: Filed")
-    
+
     // Step 4: Damage assessor issues assessment credential
     val assessmentCredential = TrustWeave.issueCredential(
         issuerDid = assessorDid,
@@ -254,11 +254,11 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "DamageAssessmentCredential", "AssessmentCredential"),
         expirationDate = Instant.now().plus(6, ChronoUnit.MONTHS).toString()
     ).getOrThrow()
-    
+
     println("✅ Damage assessment credential issued: ${assessmentCredential.id}")
     println("   Estimated Repair Cost: $4,800.00")
     println("   Assessment Status: Completed")
-    
+
     // Step 5: Repair shop performs repair and issues repair credential
     val repairCredential = TrustWeave.issueCredential(
         issuerDid = repairShopDid,
@@ -291,11 +291,11 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "RepairCredential", "ServiceCredential"),
         expirationDate = Instant.now().plus(2, ChronoUnit.YEARS).toString()
     ).getOrThrow()
-    
+
     println("✅ Repair credential issued: ${repairCredential.id}")
     println("   Total Repair Cost: $4,262.50")
     println("   Repair Status: Completed")
-    
+
     // Step 6: Create policyholder wallet and store all credentials
     val policyholderWallet = TrustWeave.createWallet(
         holderDid = policyholderDid,
@@ -304,74 +304,74 @@ fun main() = runBlocking {
             enablePresentation = true
         }.build()
     ).getOrThrow()
-    
+
     val claimCredentialId = policyholderWallet.store(claimCredential)
     val assessmentCredentialId = policyholderWallet.store(assessmentCredential)
     val repairCredentialId = policyholderWallet.store(repairCredential)
-    
+
     println("\n✅ All claim credentials stored in policyholder wallet")
-    
+
     // Step 7: Organize credentials
     policyholderWallet.withOrganization { org ->
         val claimsCollectionId = org.createCollection("Insurance Claims", "Insurance claim credentials")
-        
+
         org.addToCollection(claimCredentialId, claimsCollectionId)
         org.addToCollection(assessmentCredentialId, claimsCollectionId)
         org.addToCollection(repairCredentialId, claimsCollectionId)
-        
+
         org.tagCredential(claimCredentialId, setOf("claim", "insurance", "auto", "filed"))
         org.tagCredential(assessmentCredentialId, setOf("assessment", "damage", "verified"))
         org.tagCredential(repairCredentialId, setOf("repair", "completed", "verified"))
-        
+
         println("✅ Claim credentials organized")
     }
-    
+
     // Step 8: Insurance company verifies all credentials
     println("\n📋 Insurance Company Verification Process:")
-    
+
     val claimVerification = TrustWeave.verifyCredential(claimCredential).getOrThrow()
     println("Claim Credential: ${if (claimVerification.valid) "✅ VALID" else "❌ INVALID"}")
-    
+
     val assessmentVerification = TrustWeave.verifyCredential(assessmentCredential).getOrThrow()
     println("Assessment Credential: ${if (assessmentVerification.valid) "✅ VALID" else "❌ INVALID"}")
-    
+
     val repairVerification = TrustWeave.verifyCredential(repairCredential).getOrThrow()
     println("Repair Credential: ${if (repairVerification.valid) "✅ VALID" else "❌ INVALID"}")
-    
+
     // Step 9: Verify claim consistency and fraud prevention
     println("\n🔍 Fraud Prevention Check:")
-    
+
     val claimSubject = claimCredential.credentialSubject.jsonObject["claim"]?.jsonObject
     val assessmentSubject = assessmentCredential.credentialSubject.jsonObject["assessment"]?.jsonObject
     val repairSubject = repairCredential.credentialSubject.jsonObject["repair"]?.jsonObject
-    
+
     val claimNumber = claimSubject?.get("claimNumber")?.jsonPrimitive?.content
     val assessmentClaimNumber = assessmentSubject?.get("claimNumber")?.jsonPrimitive?.content
     val repairClaimNumber = repairSubject?.get("claimNumber")?.jsonPrimitive?.content
-    
+
     val claimNumbersMatch = claimNumber == assessmentClaimNumber && claimNumber == repairClaimNumber
-    
+
     if (claimNumbersMatch) {
         println("✅ Claim numbers match across all credentials")
     } else {
         println("❌ Claim numbers do NOT match - Potential fraud detected")
     }
-    
+
     // Verify cost consistency
     val estimatedCost = assessmentSubject?.get("estimatedRepairCost")?.jsonPrimitive?.content?.toDouble() ?: 0.0
     val actualCost = repairSubject?.get("totalCost")?.jsonPrimitive?.content?.toDouble() ?: 0.0
     val costVariance = ((actualCost - estimatedCost) / estimatedCost) * 100
-    
+
     println("   Estimated Cost: $$estimatedCost")
     println("   Actual Cost: $$actualCost")
     println("   Cost Variance: ${String.format("%.2f", costVariance)}%")
-    
+
     if (costVariance <= 10.0) {
         println("✅ Cost variance within acceptable range")
     } else {
         println("⚠️ Cost variance exceeds threshold - Review required")
     }
-    
+
     // Step 10: Create comprehensive claim presentation
     val claimPresentation = policyholderWallet.withPresentation { pres ->
         pres.createPresentation(
@@ -383,14 +383,14 @@ fun main() = runBlocking {
             )
         )
     } ?: error("Presentation capability not available")
-    
+
     println("\n✅ Comprehensive claim presentation created")
     println("   Holder: ${claimPresentation.holder}")
     println("   Credentials: ${claimPresentation.verifiableCredential.size}")
-    
+
     // Step 11: Process claim payment (insurance company issues payment credential)
     val allCredentialsValid = listOf(claimVerification, assessmentVerification, repairVerification).all { it.valid }
-    
+
     if (allCredentialsValid && claimNumbersMatch && costVariance <= 10.0) {
         val paymentCredential = TrustWeave.issueCredential(
             issuerDid = insuranceCompanyDid,
@@ -411,13 +411,13 @@ fun main() = runBlocking {
             types = listOf("VerifiableCredential", "PaymentCredential", "InsurancePaymentCredential"),
             expirationDate = Instant.now().plus(7, ChronoUnit.YEARS).toString()
         ).getOrThrow()
-        
+
         val paymentCredentialId = policyholderWallet.store(paymentCredential)
         policyholderWallet.withOrganization { org ->
             org.addToCollection(paymentCredentialId, org.listCollections().firstOrNull()?.id ?: "")
             org.tagCredential(paymentCredentialId, setOf("payment", "processed", "claim"))
         }
-        
+
         println("\n✅ Payment credential issued: ${paymentCredential.id}")
         println("   Payment Amount: $4,262.50")
         println("   Payment Status: Processed")
@@ -425,7 +425,7 @@ fun main() = runBlocking {
     } else {
         println("\n❌ Claim processing failed - Verification issues detected")
     }
-    
+
     // Step 12: Display wallet statistics
     val stats = policyholderWallet.getStatistics()
     println("\n📊 Policyholder Wallet Statistics:")
@@ -433,7 +433,7 @@ fun main() = runBlocking {
     println("   Valid credentials: ${stats.validCredentials}")
     println("   Collections: ${stats.collectionsCount}")
     println("   Tags: ${stats.tagsCount}")
-    
+
     // Step 13: Summary
     println("\n" + "=".repeat(70))
     if (allCredentialsValid && claimNumbersMatch) {

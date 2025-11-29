@@ -29,10 +29,10 @@ fun main() = runBlocking {
     // Automatically discover and register walt.id adapters
     val registry = DidMethodRegistry()
     val result = WaltIdIntegration.discoverAndRegister(registry)
-    
+
     println("Registered DID methods: ${result.registeredDidMethods}")
     // Output: Registered DID methods: [key, web]
-    
+
     // Use TrustWeave APIs as normal - walt.id adapters are now registered
     val didDocument = registry.resolve("did:key:...")
 }
@@ -51,14 +51,14 @@ fun main() = runBlocking {
     // Create walt.id KMS
     val kms = WaltIdKeyManagementService()
     val registry = DidMethodRegistry()
-    
+
     // Setup integration with specific DID methods
     val result = WaltIdIntegration.setup(
         kms = kms,
         registry = registry,
         didMethods = listOf("key", "web")
     )
-    
+
     // Create a DID using walt.id
     val keyMethod = registry.get("key")
     val document = keyMethod!!.createDid()
@@ -71,7 +71,7 @@ fun main() = runBlocking {
 The walt.id adapter module provides:
 
 - **Key Management**: `WaltIdKeyManagementService` implementing `KeyManagementService`
-- **DID Methods**: 
+- **DID Methods**:
   - `did:key` via `WaltIdKeyMethod`
   - `did:web` via `WaltIdWebMethod`
 - **SPI Discovery**: Automatic discovery and registration via Java ServiceLoader
@@ -112,10 +112,10 @@ fun main() = runBlocking {
     // Automatically discover and register godiddy adapters
     val registry = DidMethodRegistry()
     val result = GodiddyIntegration.discoverAndRegister(registry)
-    
+
     println("Registered DID methods: ${result.registeredDidMethods}")
     // Output: Registered DID methods: [key, web, ion, ethr, ...]
-    
+
     // Use TrustWeave APIs as normal - godiddy adapters are now registered
     val didDocument = registry.resolve("did:key:...")
 }
@@ -137,13 +137,13 @@ fun main() = runBlocking {
         registry = registry,
         didMethods = listOf("key", "web", "ion") // Optional: specify methods
     )
-    
+
     // Access service clients directly
     val resolver = result.resolver
     val registrar = result.registrar
     val issuer = result.issuer
     val verifier = result.verifier
-    
+
     // Use services
     val resolutionResult = resolver?.resolveDid("did:key:...")
 }
@@ -185,7 +185,7 @@ import kotlinx.serialization.json.*
 fun main() = runBlocking {
     val registry = DidMethodRegistry()
     val result = GodiddyIntegration.discoverAndRegister(registry)
-    
+
     // Issue a credential
     val credential = buildJsonObject {
         put("id", "vc-12345")
@@ -195,18 +195,18 @@ fun main() = runBlocking {
             put("id", "subject-123")
         })
     }
-    
+
     val issuedCredential = result.issuer?.issueCredential(
         credential = credential,
         options = mapOf("format" to "json-ld")
     )
-    
+
     // Verify the credential
     val verificationResult = result.verifier?.verifyCredential(
         credential = issuedCredential ?: credential,
         options = emptyMap()
     )
-    
+
     println("Verified: ${verificationResult?.verified}")
 }
 ```
@@ -216,4 +216,6 @@ fun main() = runBlocking {
 - See [Available Plugins](PLUGINS.md) for native plugin support
 - Read [Architecture & Modules](ARCHITECTURE.md) for module details
 - Check [Getting Started](GETTING_STARTED.md) for usage examples
+
+
 

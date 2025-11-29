@@ -46,7 +46,7 @@ TrustWeave is committed to providing a welcoming and inclusive environment for a
    ```bash
    # Unix/Linux/macOS
    ./gradlew build
-   
+
    # Windows
    .\gradlew.bat build
    ```
@@ -441,4 +441,6 @@ For detailed information on specific topics, see:
 - [Creating Plugins](docs/contributing/creating-plugins.md)
 - [Testing Guidelines](docs/contributing/testing-guidelines.md)
 - [Contributing to Documentation](docs/contributing/README.md)
+
+
 

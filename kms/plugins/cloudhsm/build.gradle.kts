@@ -5,8 +5,10 @@ plugins {
 
 group = "com.trustweave.kms"
 dependencies {
+    implementation(project(":common"))
     implementation(project(":credentials:credential-core"))
     implementation(project(":kms:kms-core"))
+    implementation(libs.kotlinx.coroutines.core)
 
     // AWS CloudHSM SDK
     implementation(platform("software.amazon.awssdk:bom:2.20.0"))

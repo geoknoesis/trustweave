@@ -47,7 +47,7 @@ fun main() = runBlocking {
 
     // Step 2: Create DID (automatic defaults)
     val issuerDid = trustweave.dids.create()
-    
+
     // Step 3: Issue credential (3 lines)
     val credential = trustweave.credentials.issue(
         issuer = issuerDid.id,
@@ -57,7 +57,7 @@ fun main() = runBlocking {
         },
         types = listOf("VerifiableCredential", "EmployeeCredential")
     )
-    
+
     println("✅ Created DID: ${issuerDid.id}")
     println("✅ Issued credential: ${credential.id}")
 }
@@ -250,13 +250,13 @@ For production with some customization:
 val trustweave = TrustWeave.create {
     // Use production KMS
     kmsProvider("awsKms")
-    
+
     // Add multiple DID methods
     didMethods {
         + DidKeyMethod()
         + DidWebMethod(domain = "yourdomain.com")
     }
-    
+
     // Register blockchains
     blockchains {
         "algorand:mainnet" to algorandClient
@@ -272,13 +272,13 @@ End-to-end workflow using the facade:
 ```kotlin
 fun main() = runBlocking {
     val trustweave = TrustWeave.create()
-    
+
     // 1. Create issuer
     val issuerDid = trustweave.dids.create()
-    
+
     // 2. Create holder
     val holderDid = trustweave.dids.create()
-    
+
     // 3. Issue credential
     val credential = trustweave.credentials.issue(
         issuer = issuerDid.id,
@@ -289,7 +289,7 @@ fun main() = runBlocking {
         },
         types = listOf("VerifiableCredential", "EducationCredential")
     )
-    
+
     // 4. Verify credential
     val verification = trustweave.credentials.verify(credential)
     if (verification.valid) {

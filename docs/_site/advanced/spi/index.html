@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,34 +591,34 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="service-provider-interface-spi">
-  
-  
+
+
     <a href="#service-provider-interface-spi" class="anchor-heading" aria-labelledby="service-provider-interface-spi"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Service Provider Interface (SPI)
-  
-  
+
+
 </h1>
-    
+
 
 <p>This guide explains how TrustWeave uses the Java Service Provider Interface (SPI) for auto-discovery of plugins and adapters.</p>
 <h2 id="overview">
-  
-  
+
+
     <a href="#overview" class="anchor-heading" aria-labelledby="overview"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Overview
-  
-  
+
+
 </h2>
-    
+
 
 <p>TrustWeave uses SPI to automatically discover and load plugins at runtime without requiring explicit registration code. This enables:</p>
 
@@ -628,21 +628,21 @@
   <li><strong>Modularity</strong> – plugins are discovered independently of the main application</li>
 </ul>
 <h2 id="how-spi-works-in-trustweave">
-  
-  
+
+
     <a href="#how-spi-works-in-trustweave" class="anchor-heading" aria-labelledby="how-spi-works-in-trustweave"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How SPI Works in TrustWeave
-  
-  
+
+
 </h2>
-    
+
 <h3 id="provider-interfaces">
-  
-  
+
+
     <a href="#provider-interfaces" class="anchor-heading" aria-labelledby="provider-interfaces"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Provider Interfaces
-  
-  
+
+
 </h3>
-    
+
 
 <p>TrustWeave defines several provider interfaces:</p>
 
@@ -653,13 +653,13 @@
   <li><code class="language-plaintext highlighter-rouge">CredentialServiceProvider</code> – discovers credential service implementations</li>
 </ul>
 <h3 id="service-discovery">
-  
-  
+
+
     <a href="#service-discovery" class="anchor-heading" aria-labelledby="service-discovery"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Service Discovery
-  
-  
+
+
 </h3>
-    
+
 
 <p>SPI uses service files in <code class="language-plaintext highlighter-rouge">META-INF/services/</code> to discover providers:</p>
 
@@ -673,21 +673,21 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 
 <p>Each file contains the fully qualified class name of the provider implementation.</p>
 <h2 id="using-spi">
-  
-  
+
+
     <a href="#using-spi" class="anchor-heading" aria-labelledby="using-spi"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Using SPI
-  
-  
+
+
 </h2>
-    
+
 <h3 id="discovering-providers">
-  
-  
+
+
     <a href="#discovering-providers" class="anchor-heading" aria-labelledby="discovering-providers"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Discovering Providers
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -717,13 +717,13 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 
 <p><strong>Outcome:</strong> Automatically finds all DID method providers without explicit registration.</p>
 <h3 id="creating-providers">
-  
-  
+
+
     <a href="#creating-providers" class="anchor-heading" aria-labelledby="creating-providers"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Creating Providers
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -747,13 +747,13 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 <span class="kd">class</span> <span class="nc">MyDidMethodProvider</span> <span class="p">:</span> <span class="nc">DidMethodProvider</span> <span class="p">{</span>
     <span class="k">override</span> <span class="kd">val</span> <span class="py">name</span><span class="p">:</span> <span class="nc">String</span> <span class="p">=</span> <span class="s">"my-did-method"</span>
     <span class="k">override</span> <span class="kd">val</span> <span class="py">supportedMethods</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">&gt;</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"mydid"</span><span class="p">)</span>
-    
+
     <span class="k">override</span> <span class="k">fun</span> <span class="nf">create</span><span class="p">(</span>
         <span class="n">method</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
         <span class="n">options</span><span class="p">:</span> <span class="nc">DidCreationOptions</span>
     <span class="p">):</span> <span class="nc">DidMethod</span><span class="p">?</span> <span class="p">{</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">method</span> <span class="p">!=</span> <span class="s">"mydid"</span><span class="p">)</span> <span class="k">return</span> <span class="k">null</span>
-        
+
         <span class="k">return</span> <span class="nc">MyDidMethod</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
     <span class="p">}</span>
 <span class="p">}</span>
@@ -763,13 +763,13 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 
 <p><strong>Outcome:</strong> Enables auto-discovery of your custom DID method.</p>
 <h3 id="registering-service-files">
-  
-  
+
+
     <a href="#registering-service-files" class="anchor-heading" aria-labelledby="registering-service-files"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Registering Service Files
-  
-  
+
+
 </h3>
-    
+
 
 <p>Create a service file at:</p>
 
@@ -787,21 +787,21 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 
 <p><strong>Outcome:</strong> Your provider is automatically discovered when the module is on the classpath.</p>
 <h2 id="spi-in-trustweave-modules">
-  
-  
+
+
     <a href="#spi-in-trustweave-modules" class="anchor-heading" aria-labelledby="spi-in-trustweave-modules"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> SPI in TrustWeave Modules
-  
-  
+
+
 </h2>
-    
+
 <h3 id="did-method-providers">
-  
-  
+
+
     <a href="#did-method-providers" class="anchor-heading" aria-labelledby="did-method-providers"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> DID Method Providers
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -809,13 +809,13 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">did</span><span class="p">.</span><span class="n">key</span><span class="p">.</span><span class="nc">KeyDidMethodProvider</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="kms-providers">
-  
-  
+
+
     <a href="#kms-providers" class="anchor-heading" aria-labelledby="kms-providers"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> KMS Providers
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -823,13 +823,13 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">awskms</span><span class="p">.</span><span class="nc">AwsKeyManagementServiceProvider</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="blockchain-adapter-providers">
-  
-  
+
+
     <a href="#blockchain-adapter-providers" class="anchor-heading" aria-labelledby="blockchain-adapter-providers"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Blockchain Adapter Providers
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -837,21 +837,21 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 <span class="n">com</span><span class="p">.</span><span class="n">trustweave</span><span class="p">.</span><span class="n">algorand</span><span class="p">.</span><span class="nc">AlgorandBlockchainAnchorClientProvider</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="benefits-of-spi">
-  
-  
+
+
     <a href="#benefits-of-spi" class="anchor-heading" aria-labelledby="benefits-of-spi"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Benefits of SPI
-  
-  
+
+
 </h2>
-    
+
 <h3 id="modularity">
-  
-  
+
+
     <a href="#modularity" class="anchor-heading" aria-labelledby="modularity"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Modularity
-  
-  
+
+
 </h3>
-    
+
 
 <p>Plugins can be added or removed without modifying application code:</p>
 
@@ -865,13 +865,13 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="loose-coupling">
-  
-  
+
+
     <a href="#loose-coupling" class="anchor-heading" aria-labelledby="loose-coupling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Loose Coupling
-  
-  
+
+
 </h3>
-    
+
 
 <p>Applications don’t need to know about specific implementations:</p>
 
@@ -883,13 +883,13 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 <span class="kd">val</span> <span class="py">provider</span> <span class="p">=</span> <span class="n">providers</span><span class="p">.</span><span class="nf">find</span> <span class="p">{</span> <span class="n">it</span><span class="p">.</span><span class="n">supportedMethods</span><span class="p">.</span><span class="nf">contains</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="testability">
-  
-  
+
+
     <a href="#testability" class="anchor-heading" aria-labelledby="testability"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Testability
-  
-  
+
+
 </h3>
-    
+
 
 <p>SPI enables easy mocking and testing:</p>
 
@@ -901,21 +901,21 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 <span class="c1">// Test implementation</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="best-practices">
-  
-  
+
+
     <a href="#best-practices" class="anchor-heading" aria-labelledby="best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Best Practices
-  
-  
+
+
 </h2>
-    
+
 <h3 id="provider-naming">
-  
-  
+
+
     <a href="#provider-naming" class="anchor-heading" aria-labelledby="provider-naming"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Provider Naming
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>Use descriptive, unique names</li>
@@ -923,13 +923,13 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
   <li>Include module/plugin identifier</li>
 </ul>
 <h3 id="error-handling">
-  
-  
+
+
     <a href="#error-handling" class="anchor-heading" aria-labelledby="error-handling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Error Handling
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -955,13 +955,13 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="provider-validation">
-  
-  
+
+
     <a href="#provider-validation" class="anchor-heading" aria-labelledby="provider-validation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Provider Validation
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -986,30 +986,30 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
     <span class="k">if</span> <span class="p">(!</span><span class="n">supportedMethods</span><span class="p">.</span><span class="nf">contains</span><span class="p">(</span><span class="n">method</span><span class="p">))</span> <span class="p">{</span>
         <span class="k">return</span> <span class="k">null</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Validate required options</span>
     <span class="kd">val</span> <span class="py">requiredOption</span> <span class="p">=</span> <span class="n">options</span><span class="p">.</span><span class="n">additionalProperties</span><span class="p">[</span><span class="s">"requiredOption"</span><span class="p">]</span> <span class="k">as</span><span class="p">?</span> <span class="nc">String</span>
         <span class="o">?:</span> <span class="k">return</span> <span class="k">null</span>
-    
+
     <span class="k">return</span> <span class="nc">MyDidMethod</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="troubleshooting">
-  
-  
+
+
     <a href="#troubleshooting" class="anchor-heading" aria-labelledby="troubleshooting"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Troubleshooting
-  
-  
+
+
 </h2>
-    
+
 <h3 id="provider-not-found">
-  
-  
+
+
     <a href="#provider-not-found" class="anchor-heading" aria-labelledby="provider-not-found"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Provider Not Found
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Problem:</strong> Provider not discovered</p>
 
@@ -1021,13 +1021,13 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
   <li>Check for typos in service file</li>
 </ol>
 <h3 id="multiple-providers">
-  
-  
+
+
     <a href="#multiple-providers" class="anchor-heading" aria-labelledby="multiple-providers"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Multiple Providers
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Problem:</strong> Multiple providers for same method</p>
 
@@ -1038,13 +1038,13 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
   <li>Order providers via dependency order if critical</li>
 </ul>
 <h2 id="next-steps">
-  
-  
+
+
     <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li>Review <a href="/trustweave/contributing/creating-plugins/">Creating Plugins</a> for plugin implementation</li>
@@ -1052,13 +1052,13 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
   <li>SPI interfaces are included in <code class="language-plaintext highlighter-rouge">trustweave-common</code>. See <a href="/trustweave/modules/core-modules/">Core Modules</a> for details</li>
 </ul>
 <h2 id="references">
-  
-  
+
+
     <a href="#references" class="anchor-heading" aria-labelledby="references"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> References
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><a href="https://docs.oracle.com/javase/tutorial/ext/basics/spi.html">Java Service Provider Interface</a></li>
@@ -1066,17 +1066,17 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
   <li><a href="/trustweave/contributing/creating-plugins/">Creating Plugins</a></li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -1108,7 +1108,7 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -1118,12 +1118,12 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -1145,12 +1145,12 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -1159,12 +1159,12 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -1172,7 +1172,7 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -1180,31 +1180,31 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -1216,7 +1216,7 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 
 
 
-  
+
 </body>
 </html>
 

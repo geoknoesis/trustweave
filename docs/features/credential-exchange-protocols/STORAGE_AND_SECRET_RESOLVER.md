@@ -64,7 +64,7 @@ This document describes the implementation of persistent message storage and Sec
 #### Hybrid Secret Resolver
 - **Location**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/crypto/secret/HybridKmsSecretResolver.kt`
 - **Purpose**: Recommended approach for production
-- **Strategy**: 
+- **Strategy**:
   - DIDComm keys stored locally (for ECDH)
   - Other keys use cloud KMS (for signing)
 

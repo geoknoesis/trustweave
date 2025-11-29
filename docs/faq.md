@@ -16,7 +16,7 @@ TrustWeave is produced by **Geoknoesis LLC** ([www.geoknoesis.com](https://www.g
 
 ## How do I run the quick-start sample?
 
-**Purpose:** Verify your toolchain and observe the issuance → verification → anchoring loop end to end.  
+**Purpose:** Verify your toolchain and observe the issuance → verification → anchoring loop end to end.
 **Command:** Run the Gradle helper task; it bootstraps in-memory services so no external dependencies are required.
 
 ```bash
@@ -29,9 +29,9 @@ TrustWeave is produced by **Geoknoesis LLC** ([www.geoknoesis.com](https://www.g
 
 **Overview:** Implement the DID interface, register it, and point call sites at the new method name—no global singletons required.
 
-1. Implement `DidMethod` (and optionally `DidMethodProvider` if you want SPI auto-discovery).  
-2. Register it with `DidMethodRegistry` while building your `TrustWeaveConfig`.  
-3. Update wallets or services that create DIDs so they pass the new method identifier.  
+1. Implement `DidMethod` (and optionally `DidMethodProvider` if you want SPI auto-discovery).
+2. Register it with `DidMethodRegistry` while building your `TrustWeaveConfig`.
+3. Update wallets or services that create DIDs so they pass the new method identifier.
 
 See [DIDs](core-concepts/dids.md) and [Wallet API – DidManagement](api-reference/wallet-api.md#didmanagement) for code samples that show the typed option builders involved.
 
@@ -39,7 +39,7 @@ See [DIDs](core-concepts/dids.md) and [Wallet API – DidManagement](api-referen
 
 TrustWeave uses a **dual licence**:
 
-- **Non-commercial / education:** open-source licence.  
+- **Non-commercial / education:** open-source licence.
 - **Commercial deployments:** Geoknoesis commercial licence.
 
 Details and contact paths live in the [Licensing Overview](licensing/README.md).
@@ -50,8 +50,8 @@ Use `TrustWeave-testkit`. It ships in-memory DID methods, KMS, and blockchain an
 
 ## Where can I find API signatures and parameters?
 
-- [Wallet API Reference](api-reference/wallet-api.md) — wallet capabilities, typed option builders, and extension helpers.  
-- [Credential Service API Reference](api-reference/credential-service-api.md) — issuer/verifier SPI contracts and factory options.  
+- [Wallet API Reference](api-reference/wallet-api.md) — wallet capabilities, typed option builders, and extension helpers.
+- [Credential Service API Reference](api-reference/credential-service-api.md) — issuer/verifier SPI contracts and factory options.
 - Module guides under `docs/modules/` summarise additional utilities exposed by each artifact.
 
 ## How do I enforce stricter verification policies?

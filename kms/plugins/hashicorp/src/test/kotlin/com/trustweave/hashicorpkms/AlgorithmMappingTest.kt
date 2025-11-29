@@ -65,7 +65,7 @@ class AlgorithmMappingTest {
             .address("http://localhost:8200")
             .transitPath("transit")
             .build()
-        
+
         assertEquals("my-key", AlgorithmMapping.resolveKeyName("my-key", config))
         assertEquals("my-key", AlgorithmMapping.resolveKeyName("transit/keys/my-key", config))
         assertEquals("my-key", AlgorithmMapping.resolveKeyName("/transit/keys/my-key", config))
@@ -77,7 +77,7 @@ class AlgorithmMappingTest {
             .address("http://localhost:8200")
             .transitPath("custom-transit")
             .build()
-        
+
         assertEquals("my-key", AlgorithmMapping.resolveKeyName("custom-transit/keys/my-key", config))
     }
 }

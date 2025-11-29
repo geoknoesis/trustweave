@@ -12,7 +12,7 @@ import com.trustweave.anchor.spi.BlockchainIntegrationHelper
 class IndyBlockchainAnchorClientProvider : BlockchainAnchorClientProvider {
 
     override val name: String = "indy"
-    
+
     override val supportedChains: List<String> = listOf(
         IndyBlockchainAnchorClient.SOVRIN_MAINNET,
         IndyBlockchainAnchorClient.SOVRIN_STAGING,

@@ -11,7 +11,7 @@ import java.util.ServiceLoader
 
 /**
  * SPI provider for did:polygon method.
- * 
+ *
  * Automatically discovers did:polygon method when this module is on the classpath.
  */
 class PolygonDidMethodProvider : DidMethodProvider {
@@ -39,7 +39,7 @@ class PolygonDidMethodProvider : DidMethodProvider {
 
         // Create configuration from options
         val config = createConfig(options)
-        
+
         // Get or create blockchain anchor client
         val anchorClient = getOrCreateAnchorClient(options, config)
 
@@ -51,10 +51,10 @@ class PolygonDidMethodProvider : DidMethodProvider {
      */
     private fun createConfig(options: DidCreationOptions): PolygonDidConfig {
         val configMap = options.additionalProperties
-        
+
         require(configMap.containsKey("rpcUrl")) { "rpcUrl is required for did:polygon" }
         require(configMap.containsKey("chainId")) { "chainId is required for did:polygon" }
-        
+
         return PolygonDidConfig.fromMap(configMap)
     }
 
@@ -70,7 +70,7 @@ class PolygonDidMethodProvider : DidMethodProvider {
         if (providedClient != null) {
             return providedClient
         }
-        
+
         // Create anchor client options for Polygon
         val anchorOptions = buildMap<String, Any?> {
             put("rpcUrl", config.rpcUrl)
@@ -78,7 +78,7 @@ class PolygonDidMethodProvider : DidMethodProvider {
                 put("privateKey", config.privateKey)
             }
         }
-        
+
         // Use PolygonBlockchainAnchorClient
         return try {
             val polygonClientClass = Class.forName("com.trustweave.chain.polygon.PolygonBlockchainAnchorClient")

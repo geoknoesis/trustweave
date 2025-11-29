@@ -18,7 +18,7 @@ class GodiddyVerifierBranchCoverageTest {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val verifier = GodiddyVerifier(client)
-        
+
         val credential = buildJsonObject {
             put("id", "credential-1")
             put("type", buildJsonArray { add("VerifiableCredential") })
@@ -31,7 +31,7 @@ class GodiddyVerifierBranchCoverageTest {
                 put("proofValue", "test-proof")
             })
         }
-        
+
         // This will fail in real scenario, but we test the branch
         try {
             val result = verifier.verifyCredential(credential)
@@ -41,7 +41,7 @@ class GodiddyVerifierBranchCoverageTest {
             // Expected to fail without mock
             assertIs<TrustWeaveException>(e)
         }
-        
+
         client.close()
     }
 
@@ -50,7 +50,7 @@ class GodiddyVerifierBranchCoverageTest {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val verifier = GodiddyVerifier(client)
-        
+
         val credential = buildJsonObject {
             put("id", "credential-1")
             put("type", buildJsonArray { add("VerifiableCredential") })
@@ -63,12 +63,12 @@ class GodiddyVerifierBranchCoverageTest {
                 put("proofValue", "test-proof")
             })
         }
-        
+
         val options = mapOf<String, Any?>(
             "checkRevocation" to true,
             "checkExpiration" to true
         )
-        
+
         // This will fail in real scenario, but we test the branch
         try {
             val result = verifier.verifyCredential(credential, options)
@@ -77,7 +77,7 @@ class GodiddyVerifierBranchCoverageTest {
             // Expected to fail without mock
             assertIs<TrustWeaveException>(e)
         }
-        
+
         client.close()
     }
 
@@ -86,7 +86,7 @@ class GodiddyVerifierBranchCoverageTest {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val verifier = GodiddyVerifier(client)
-        
+
         val credential = buildJsonObject {
             put("id", "credential-1")
             put("type", buildJsonArray { add("VerifiableCredential") })
@@ -99,7 +99,7 @@ class GodiddyVerifierBranchCoverageTest {
                 put("proofValue", "test-proof")
             })
         }
-        
+
         // This will fail in real scenario, but we test the branch
         try {
             val result = verifier.verifyCredential(credential, emptyMap())
@@ -108,7 +108,7 @@ class GodiddyVerifierBranchCoverageTest {
             // Expected to fail without mock
             assertIs<TrustWeaveException>(e)
         }
-        
+
         client.close()
     }
 
@@ -117,7 +117,7 @@ class GodiddyVerifierBranchCoverageTest {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val verifier = GodiddyVerifier(client)
-        
+
         val credential = buildJsonObject {
             put("id", "credential-1")
             put("type", buildJsonArray { add("VerifiableCredential") })
@@ -130,7 +130,7 @@ class GodiddyVerifierBranchCoverageTest {
                 put("proofValue", "test-proof")
             })
         }
-        
+
         val options = mapOf<String, Any?>(
             "string" to "value",
             "number" to 123,
@@ -139,7 +139,7 @@ class GodiddyVerifierBranchCoverageTest {
             "list" to listOf("item1", "item2"),
             "null" to null
         )
-        
+
         // This will fail in real scenario, but we test the branch
         try {
             val result = verifier.verifyCredential(credential, options)
@@ -148,7 +148,7 @@ class GodiddyVerifierBranchCoverageTest {
             // Expected to fail without mock
             assertIs<TrustWeaveException>(e)
         }
-        
+
         client.close()
     }
 
@@ -159,16 +159,16 @@ class GodiddyVerifierBranchCoverageTest {
             error = null,
             checks = mapOf("proof" to true, "expiration" to true)
         )
-        
+
         assertEquals(true, result1.verified)
         assertNull(result1.error)
         assertNotNull(result1.checks)
-        
+
         val result2 = CredentialVerificationResult(
             verified = false,
             error = "Verification failed"
         )
-        
+
         assertEquals(false, result2.verified)
         assertEquals("Verification failed", result2.error)
         assertNull(result2.checks)

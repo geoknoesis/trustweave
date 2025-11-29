@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,34 +591,34 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="concepts">
-  
-  
+
+
     <a href="#concepts" class="anchor-heading" aria-labelledby="concepts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Concepts
-  
-  
+
+
 </h1>
-    
+
 
 <p>Welcome to TrustWeave’s Concepts section! This section explains <strong>what</strong> TrustWeave concepts are and <strong>why</strong> they exist, helping you understand the fundamental building blocks of decentralized identity and trust systems.</p>
 <h2 id="what-are-concepts">
-  
-  
+
+
     <a href="#what-are-concepts" class="anchor-heading" aria-labelledby="what-are-concepts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What are Concepts?
-  
-  
+
+
 </h2>
-    
+
 
 <p>Concepts explain the fundamental ideas, principles, and mental models behind TrustWeave. They help you understand:</p>
 
@@ -629,13 +629,13 @@
   <li><strong>When</strong> to use different approaches</li>
 </ul>
 <h2 id="how-concepts-relate-to-other-documentation">
-  
-  
+
+
     <a href="#how-concepts-relate-to-other-documentation" class="anchor-heading" aria-labelledby="how-concepts-relate-to-other-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How Concepts Relate to Other Documentation
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><strong>Concepts</strong> (this section) - Understanding the “why” and “what”</li>
@@ -644,21 +644,21 @@
   <li><strong>API Reference</strong> - Complete method and parameter documentation</li>
 </ul>
 <h2 id="learning-path-through-concepts">
-  
-  
+
+
     <a href="#learning-path-through-concepts" class="anchor-heading" aria-labelledby="learning-path-through-concepts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Learning Path Through Concepts
-  
-  
+
+
 </h2>
-    
+
 <h3 id="start-here-core-concepts">
-  
-  
+
+
     <a href="#start-here-core-concepts" class="anchor-heading" aria-labelledby="start-here-core-concepts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Start Here: Core Concepts
-  
-  
+
+
 </h3>
-    
+
 
 <p>Begin with these fundamental concepts that form the foundation of TrustWeave:</p>
 
@@ -670,13 +670,13 @@
   <li><strong><a href="/trustweave/core-concepts/trust-registry/">Trust Registry</a></strong> - Understanding trust relationships</li>
 </ol>
 <h3 id="next-advanced-concepts">
-  
-  
+
+
     <a href="#next-advanced-concepts" class="anchor-heading" aria-labelledby="next-advanced-concepts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next: Advanced Concepts
-  
-  
+
+
 </h3>
-    
+
 
 <p>Once you understand the basics, explore these advanced concepts:</p>
 
@@ -688,13 +688,13 @@
   <li><strong><a href="/trustweave/core-concepts/credential-exchange-protocols/">Credential Exchange Protocols</a></strong> - Understanding protocol abstractions</li>
 </ul>
 <h3 id="deep-dive-technical-details">
-  
-  
+
+
     <a href="#deep-dive-technical-details" class="anchor-heading" aria-labelledby="deep-dive-technical-details"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Deep Dive: Technical Details
-  
-  
+
+
 </h3>
-    
+
 
 <p>For implementation details and technical specifications:</p>
 
@@ -705,13 +705,13 @@
   <li><strong><a href="/trustweave/core-concepts/algorithm-compatibility-table/">Algorithm Compatibility</a></strong> - Understanding algorithm support</li>
 </ul>
 <h3 id="architecture-system-design">
-  
-  
+
+
     <a href="#architecture-system-design" class="anchor-heading" aria-labelledby="architecture-system-design"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Architecture: System Design
-  
-  
+
+
 </h3>
-    
+
 
 <p>Understand how TrustWeave is designed and organized:</p>
 
@@ -721,13 +721,13 @@
   <li><strong><a href="/trustweave/introduction/web-of-trust/">Web of Trust</a></strong> - Understanding trust relationships</li>
 </ul>
 <h2 id="concept-relationships">
-  
-  
+
+
     <a href="#concept-relationships" class="anchor-heading" aria-labelledby="concept-relationships"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Concept Relationships
-  
-  
+
+
 </h2>
-    
+
 
 <p>Understanding how concepts relate to each other helps you use TrustWeave effectively:</p>
 
@@ -747,21 +747,21 @@
       └─&gt; Smart Contracts (Credentials bind contracts)
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="quick-reference">
-  
-  
+
+
     <a href="#quick-reference" class="anchor-heading" aria-labelledby="quick-reference"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Quick Reference
-  
-  
+
+
 </h2>
-    
+
 <h3 id="core-building-blocks">
-  
-  
+
+
     <a href="#core-building-blocks" class="anchor-heading" aria-labelledby="core-building-blocks"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Core Building Blocks
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>DIDs</strong> - Decentralized identifiers for entities</li>
@@ -770,13 +770,13 @@
   <li><strong>Keys</strong> - Cryptographic keys for signing and verification</li>
 </ul>
 <h3 id="trust-mechanisms">
-  
-  
+
+
     <a href="#trust-mechanisms" class="anchor-heading" aria-labelledby="trust-mechanisms"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Trust Mechanisms
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>Trust Registry</strong> - Managing trust relationships</li>
@@ -784,13 +784,13 @@
   <li><strong>Web of Trust</strong> - Distributed trust networks</li>
 </ul>
 <h3 id="data-integrity">
-  
-  
+
+
     <a href="#data-integrity" class="anchor-heading" aria-labelledby="data-integrity"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Data Integrity
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>Blockchain Anchoring</strong> - Immutable data references</li>
@@ -798,13 +798,13 @@
   <li><strong>Proof Purpose Validation</strong> - Verifying proof intent</li>
 </ul>
 <h2 id="when-to-read-concepts">
-  
-  
+
+
     <a href="#when-to-read-concepts" class="anchor-heading" aria-labelledby="when-to-read-concepts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> When to Read Concepts
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>Read concepts when you want to:</strong></p>
 <ul>
@@ -821,13 +821,13 @@
   <li>Get step-by-step instructions</li>
 </ul>
 <h2 id="related-documentation">
-  
-  
+
+
     <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><strong><a href="/trustweave/how-to/README/">How-To Guides</a></strong> - Practical task-oriented guides</li>
@@ -836,13 +836,13 @@
   <li><strong><a href="/trustweave/scenarios/README/">Use Case Scenarios</a></strong> - Real-world examples</li>
 </ul>
 <h2 id="next-steps">
-  
-  
+
+
     <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>New to TrustWeave?</strong></p>
 <ul>
@@ -857,17 +857,17 @@
   <li><a href="/trustweave/tutorials/README/">Tutorials</a> - Hands-on learning</li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -899,7 +899,7 @@
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -909,12 +909,12 @@
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -936,12 +936,12 @@
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -950,12 +950,12 @@
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -963,7 +963,7 @@
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -971,31 +971,31 @@
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -1007,7 +1007,7 @@
 
 
 
-  
+
 </body>
 </html>
 

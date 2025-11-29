@@ -6,8 +6,8 @@ title: TrustWeave Partner Program
 
 > **Empowering Partners to Build the Future of Decentralized Trust**
 
-**Version:** 1.0  
-**Last Updated:** 2025  
+**Version:** 1.0
+**Last Updated:** 2025
 **Program Owner:** Geoknoesis LLC
 
 ---
@@ -344,10 +344,10 @@ Partners must:
 
 ### Example Partner Success
 
-**Partner Profile**: Technology consultant with enterprise network  
-**Deal**: $150,000 ARR commercial license + $50,000 professional services  
-**Timeline**: 4 months from introduction to close  
-**Commission**: $45,000 (first year) + $5,000 (renewal year 1) + $2,500 (deal size bonus)  
+**Partner Profile**: Technology consultant with enterprise network
+**Deal**: $150,000 ARR commercial license + $50,000 professional services
+**Timeline**: 4 months from introduction to close
+**Commission**: $45,000 (first year) + $5,000 (renewal year 1) + $2,500 (deal size bonus)
 **Total Partner Compensation**: $52,500
 
 ---
@@ -356,44 +356,44 @@ Partners must:
 
 ### General Questions
 
-**Q: How quickly can I start earning commissions?**  
+**Q: How quickly can I start earning commissions?**
 A: Once approved and onboarded, you can register deals immediately. Typical sales cycle is 3-6 months.
 
-**Q: Do I need to be technical to be a partner?**  
+**Q: Do I need to be technical to be a partner?**
 A: No. While technical knowledge helps, we provide all necessary training and sales support.
 
-**Q: Who can become a partner?**  
+**Q: Who can become a partner?**
 A: The program is open to all qualified organizations, consultants, and individuals. We welcome partners from all communities and industries.
 
-**Q: What if I'm already working with a competitor?**  
+**Q: What if I'm already working with a competitor?**
 A: We allow non-exclusive partnerships, but please disclose any potential conflicts.
 
 ### Commission Questions
 
-**Q: When do I get paid?**  
+**Q: When do I get paid?**
 A: Within 30 days of customer payment to Geoknoesis.
 
-**Q: What if the customer doesn't pay?**  
+**Q: What if the customer doesn't pay?**
 A: Commission is only paid when Geoknoesis receives payment from the customer.
 
-**Q: Do I get commission on renewals?**  
+**Q: Do I get commission on renewals?**
 A: Yes, based on your partner tier (5-10% for 2-3 years).
 
-**Q: What if the deal size changes after registration?**  
+**Q: What if the deal size changes after registration?**
 A: Commission is calculated on the final contract value.
 
 ### Deal Process Questions
 
-**Q: How do I register a deal?**  
+**Q: How do I register a deal?**
 A: Log into the partner portal and complete the deal registration form.
 
-**Q: What if the customer already knows about TrustWeave?**  
+**Q: What if the customer already knows about TrustWeave?**
 A: If they're already in our pipeline, the deal may not qualify. Contact your partner manager to discuss.
 
-**Q: Can I participate in customer meetings?**  
+**Q: Can I participate in customer meetings?**
 A: Yes, we encourage partner involvement in the sales process.
 
-**Q: What if the deal takes longer than 12 months?**  
+**Q: What if the deal takes longer than 12 months?**
 A: Contact your partner manager to discuss extensions on a case-by-case basis.
 
 ---
@@ -402,19 +402,19 @@ A: Contact your partner manager to discuss extensions on a case-by-case basis.
 
 ### Partner Program Inquiries
 
-**Email**: partners@geoknoesis.com  
-**Website**: https://www.geoknoesis.com/partners  
+**Email**: partners@geoknoesis.com
+**Website**: https://www.geoknoesis.com/partners
 **Partner Portal**: https://partners.trustweave.io (access provided upon approval)
 
 ### Sales & Support
 
-**Commercial Licensing**: licensing@geoknoesis.com  
-**Professional Services**: services@geoknoesis.com  
+**Commercial Licensing**: licensing@geoknoesis.com
+**Professional Services**: services@geoknoesis.com
 **General Inquiries**: info@geoknoesis.com
 
 ### Geoknoesis LLC
 
-**Address**: [To be updated]  
+**Address**: [To be updated]
 **Website**: https://www.geoknoesis.com
 
 ---
@@ -479,8 +479,8 @@ See [Partner Referral Agreement Template](PARTNER_REFERRAL_AGREEMENT_TEMPLATE.md
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** 2025  
+**Document Version:** 1.0
+**Last Updated:** 2025
 **Next Review:** Q2 2025
 
 ---

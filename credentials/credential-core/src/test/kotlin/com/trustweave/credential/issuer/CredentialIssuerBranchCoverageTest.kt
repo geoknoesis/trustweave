@@ -32,17 +32,17 @@ class CredentialIssuerBranchCoverageTest {
         SchemaRegistry.clear()
         SchemaValidatorRegistry.clear()
         SchemaValidatorRegistry.register(JsonSchemaValidator())
-        
+
         val signer: suspend (ByteArray, String) -> ByteArray = { data, _ ->
             "mock-signature-${UUID.randomUUID()}".toByteArray()
         }
-        
+
         val proofGenerator = Ed25519ProofGenerator(
             signer = signer,
             getPublicKeyId = { "did:key:issuer123#key-1" }
         )
         proofRegistry.register(proofGenerator)
-        
+
         issuer = CredentialIssuer(
             proofGenerator = proofGenerator,
             resolveDid = { did -> did == issuerDid },
@@ -62,16 +62,16 @@ class CredentialIssuerBranchCoverageTest {
     @Test
     fun `test branch issuer DID matches`() = runBlocking {
         val credential = createTestCredential(issuerDid = issuerDid)
-        
+
         val result = issuer.issue(credential, issuerDid, "key-1")
-        
+
         assertNotNull(result.proof)
     }
 
     @Test
     fun `test branch issuer DID does not match`() = runBlocking {
         val credential = createTestCredential(issuerDid = "did:key:different")
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuer.issue(credential, issuerDid, "key-1")
         }
@@ -82,9 +82,9 @@ class CredentialIssuerBranchCoverageTest {
     @Test
     fun `test branch credential schema is null`() = runBlocking {
         val credential = createTestCredential(schema = null)
-        
+
         val result = issuer.issue(credential, issuerDid, "key-1")
-        
+
         assertNotNull(result.proof)
     }
 
@@ -104,11 +104,11 @@ class CredentialIssuerBranchCoverageTest {
             })
         }
         SchemaRegistry.registerSchema(schema, schemaDefinition)
-        
+
         val credential = createTestCredential(schema = schema)
-        
+
         val result = issuer.issue(credential, issuerDid, "key-1")
-        
+
         assertNotNull(result.proof)
     }
 
@@ -117,9 +117,9 @@ class CredentialIssuerBranchCoverageTest {
     @Test
     fun `test branch proof generator provided in constructor`() = runBlocking {
         val credential = createTestCredential()
-        
+
         val result = issuer.issue(credential, issuerDid, "key-1")
-        
+
         assertNotNull(result.proof)
     }
 
@@ -130,21 +130,21 @@ class CredentialIssuerBranchCoverageTest {
             getPublicKeyId = { "did:key:issuer123#key-1" }
         )
         proofRegistry.register(proofGenerator)
-        
+
         val issuerWithoutGenerator = CredentialIssuer(
             proofGenerator = null,
             resolveDid = { did -> did == issuerDid },
             proofRegistry = proofRegistry
         )
         val credential = createTestCredential()
-        
+
         val result = issuerWithoutGenerator.issue(
             credential,
             issuerDid,
             "key-1",
             CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
         )
-        
+
         assertNotNull(result.proof)
     }
 
@@ -157,7 +157,7 @@ class CredentialIssuerBranchCoverageTest {
             proofRegistry = emptyRegistry
         )
         val credential = createTestCredential()
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuerWithoutGenerator.issue(
                 credential,
@@ -173,9 +173,9 @@ class CredentialIssuerBranchCoverageTest {
     @Test
     fun `test branch DID resolution succeeds`() = runBlocking {
         val credential = createTestCredential()
-        
+
         val result = issuer.issue(credential, issuerDid, "key-1")
-        
+
         assertNotNull(result.proof)
     }
 
@@ -185,14 +185,14 @@ class CredentialIssuerBranchCoverageTest {
             signer = { data, _ -> "mock-signature".toByteArray() },
             getPublicKeyId = { "did:key:issuer123#key-1" }
         )
-        
+
         val issuerWithFailedDid = CredentialIssuer(
             proofGenerator = proofGenerator,
             resolveDid = { false },
             proofRegistry = proofRegistry
         )
         val credential = createTestCredential()
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuerWithFailedDid.issue(credential, issuerDid, "key-1")
         }
@@ -204,14 +204,14 @@ class CredentialIssuerBranchCoverageTest {
             signer = { data, _ -> "mock-signature".toByteArray() },
             getPublicKeyId = { "did:key:issuer123#key-1" }
         )
-        
+
         val issuerWithThrowingDid = CredentialIssuer(
             proofGenerator = proofGenerator,
             resolveDid = { throw RuntimeException("DID resolution failed") },
             proofRegistry = proofRegistry
         )
         val credential = createTestCredential()
-        
+
         assertFailsWith<IllegalArgumentException> {
             issuerWithThrowingDid.issue(credential, issuerDid, "key-1")
         }
@@ -232,11 +232,11 @@ class CredentialIssuerBranchCoverageTest {
             put("type", "object")
         }
         SchemaRegistry.registerSchema(schema, schemaDefinition)
-        
+
         val credential = createTestCredential(schema = schema)
-        
+
         val result = issuer.issue(credential, issuerDid, "key-1")
-        
+
         assertNotNull(result.proof)
     }
 
@@ -254,9 +254,9 @@ class CredentialIssuerBranchCoverageTest {
             put("required", buildJsonArray { add("missingField") })
         }
         SchemaRegistry.registerSchema(schema, schemaDefinition)
-        
+
         val credential = createTestCredential(schema = schema)
-        
+
         // May or may not fail depending on JsonSchemaValidator implementation
         // This tests the branch where validation result is checked
         try {

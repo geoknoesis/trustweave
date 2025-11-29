@@ -28,7 +28,7 @@ class GodiddyIssuer(
         try {
             // Universal Issuer endpoint: POST /1.0/credentials/issue
             val path = "/1.0/credentials/issue"
-            
+
             // Convert options to JsonElement map
             val jsonOptions = options.mapValues { (_, value) ->
                 when (value) {
@@ -41,33 +41,32 @@ class GodiddyIssuer(
                     else -> JsonNull
                 }
             }
-            
+
             val request = GodiddyIssueCredentialRequest(
                 credential = credential,
                 options = jsonOptions
             )
-            
+
             val response: GodiddyIssueCredentialResponse = client.post(path, request)
-            
+
             if (response.credential == null) {
                 throw com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed(
                     reason = response.error ?: "unknown error",
                     issuerDid = null
                 )
             }
-            
+
             response.credential.jsonObject
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: Exception) {
             throw com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed(
                 reason = e.message ?: "Unknown error",
-                issuerDid = null,
-                cause = e
+                issuerDid = null
             )
         }
     }
-    
+
     /**
      * Converts Any to JsonElement.
      */

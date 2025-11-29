@@ -18,13 +18,13 @@ import kotlinx.serialization.json.put
 
 /**
  * Comprehensive test fixture builder for TrustWeave tests.
- * 
+ *
  * Provides a fluent API for setting up complete test environments with:
  * - Key Management Service (KMS)
  * - DID Method
  * - Blockchain Anchor Client
  * - Automatic registry registration
- * 
+ *
  * **Example Usage**:
  * ```
  * val fixture = TrustWeaveTestFixture.builder()
@@ -32,11 +32,11 @@ import kotlinx.serialization.json.put
  *     .withDidMethod("key")
  *     .withBlockchainClient("algorand:testnet", InMemoryBlockchainAnchorClient("algorand:testnet"))
  *     .build()
- * 
+ *
  * val issuerDoc = fixture.createIssuerDid()
  * val anchorClient = fixture.getBlockchainClient("algorand:testnet")
  * ```
- * 
+ *
  * **Automatic Cleanup**: Use `use {}` pattern for automatic cleanup:
  * ```
  * TrustWeaveTestFixture.builder().build().use { fixture ->
@@ -54,12 +54,12 @@ class TrustWeaveTestFixture private constructor(
     private val credentialRegistry: CredentialServiceRegistry,
     private val blockchainClients: Map<String, BlockchainAnchorClient>
 ) : AutoCloseable {
-    
+
     /**
      * Gets the Key Management Service.
      */
     fun getKms(): KeyManagementService = kms
-    
+
     /**
      * Gets the DID Method.
      */
@@ -69,10 +69,10 @@ class TrustWeaveTestFixture private constructor(
      * Exposes the DID registry used by the fixture.
      */
     fun getDidRegistry(): DidMethodRegistry = didRegistry
-    
+
     /**
      * Gets a blockchain anchor client by chain ID.
-     * 
+     *
      * @param chainId The chain ID
      * @return The blockchain anchor client, or null if not registered
      */
@@ -83,15 +83,15 @@ class TrustWeaveTestFixture private constructor(
     fun getBlockchainRegistry(): BlockchainAnchorRegistry = blockchainRegistry
 
     fun getCredentialRegistry(): CredentialServiceRegistry = credentialRegistry
-    
+
     /**
      * Gets all registered blockchain clients.
      */
     fun getAllBlockchainClients(): Map<String, BlockchainAnchorClient> = blockchainClients
-    
+
     /**
      * Creates a new issuer DID with default options.
-     * 
+     *
      * @param algorithm The key algorithm (default: "Ed25519")
      * @return The created DID document
      */
@@ -103,10 +103,10 @@ class TrustWeaveTestFixture private constructor(
             }
         )
     }
-    
+
     /**
      * Creates a test credential subject with default values.
-     * 
+     *
      * @param id Optional subject ID (defaults to a test DID)
      * @param additionalClaims Additional claims to add
      * @return JSON object representing the credential subject
@@ -129,7 +129,7 @@ class TrustWeaveTestFixture private constructor(
             }
         }
     }
-    
+
     /**
      * Cleans up all registries (for testing).
      */
@@ -138,7 +138,7 @@ class TrustWeaveTestFixture private constructor(
         blockchainRegistry.clear()
         credentialRegistry.clear()
     }
-    
+
     /**
      * Builder for creating test fixtures.
      */
@@ -149,7 +149,7 @@ class TrustWeaveTestFixture private constructor(
         private var didRegistry: DidMethodRegistry? = null
         private var blockchainRegistry: BlockchainAnchorRegistry? = null
         private var credentialRegistry: CredentialServiceRegistry? = null
-        
+
         /**
          * Sets the Key Management Service.
          * If not set, defaults to InMemoryKeyManagementService.
@@ -158,11 +158,11 @@ class TrustWeaveTestFixture private constructor(
             this.kms = kms
             return this
         }
-        
+
         /**
          * Sets the DID method by name.
          * If not set, defaults to "key" (DidKeyMockMethod).
-         * 
+         *
          * @param methodName The DID method name (e.g., "key", "web")
          */
         fun withDidMethod(methodName: String = "key"): Builder {
@@ -173,7 +173,7 @@ class TrustWeaveTestFixture private constructor(
             }
             return this
         }
-        
+
         /**
          * Sets a custom DID method.
          */
@@ -181,10 +181,10 @@ class TrustWeaveTestFixture private constructor(
             this.didMethod = method
             return this
         }
-        
+
         /**
          * Registers a blockchain anchor client.
-         * 
+         *
          * @param chainId The chain ID
          * @param client The blockchain anchor client
          */
@@ -192,10 +192,10 @@ class TrustWeaveTestFixture private constructor(
             blockchainClients[chainId] = client
             return this
         }
-        
+
         /**
          * Registers an in-memory blockchain anchor client.
-         * 
+         *
          * @param chainId The chain ID
          * @param contract Optional contract address/app ID
          */
@@ -203,18 +203,18 @@ class TrustWeaveTestFixture private constructor(
             blockchainClients[chainId] = InMemoryBlockchainAnchorClient(chainId, contract)
             return this
         }
-        
+
         /**
          * Sets a DID method plugin by name.
          * Attempts to load the plugin via SPI if available, otherwise uses mock.
-         * 
+         *
          * @param methodName The DID method name (e.g., "key", "web", "ion")
          * @param config Optional configuration map for the plugin
          * @return This builder
          */
         fun withDidMethodPlugin(methodName: String, config: Map<String, Any> = emptyMap()): Builder {
             val kmsInstance = kms ?: InMemoryKeyManagementService()
-            
+
             // Try to load via SPI first
             val didMethod = try {
                 loadDidMethodViaSpi(methodName, kmsInstance, config)
@@ -222,7 +222,7 @@ class TrustWeaveTestFixture private constructor(
                 // Fall back to mock if SPI fails
                 null
             }
-            
+
             this.didMethod = didMethod ?: when (methodName) {
                 "key" -> DidKeyMockMethod(kmsInstance)
                 else -> throw IllegalArgumentException(
@@ -232,11 +232,11 @@ class TrustWeaveTestFixture private constructor(
             }
             return this
         }
-        
+
         /**
          * Sets a KMS plugin by provider name.
          * Attempts to load the plugin via SPI if available, otherwise uses in-memory.
-         * 
+         *
          * @param providerName The KMS provider name (e.g., "aws", "azure", "google")
          * @param config Configuration map for the KMS plugin
          * @return This builder
@@ -248,15 +248,15 @@ class TrustWeaveTestFixture private constructor(
                 // Fall back to in-memory if SPI fails
                 InMemoryKeyManagementService()
             }
-            
+
             this.kms = kmsInstance
             return this
         }
-        
+
         /**
          * Sets a chain plugin by chain ID.
          * Attempts to load the plugin via SPI if available, otherwise uses in-memory.
-         * 
+         *
          * @param chainId The chain ID (e.g., "eip155:1", "algorand:testnet")
          * @param config Configuration map for the chain plugin
          * @return This builder
@@ -268,11 +268,11 @@ class TrustWeaveTestFixture private constructor(
                 // Fall back to in-memory if SPI fails
                 InMemoryBlockchainAnchorClient(chainId)
             }
-            
+
             blockchainClients[chainId] = client
             return this
         }
-        
+
         /**
          * Helper to load DID method via SPI.
          */
@@ -284,9 +284,9 @@ class TrustWeaveTestFixture private constructor(
             return try {
                 val providerClass = Class.forName("com.trustweave.did.spi.DidMethodProvider")
                 val serviceLoader = java.util.ServiceLoader.load(providerClass)
-                
+
                 for (provider in serviceLoader) {
-                    val createMethod = providerClass.getMethod("create", String::class.java, 
+                    val createMethod = providerClass.getMethod("create", String::class.java,
                         DidCreationOptions::class.java)
                     val options = DidCreationOptions()
                     val method = createMethod.invoke(provider, methodName, options) as? DidMethod
@@ -299,7 +299,7 @@ class TrustWeaveTestFixture private constructor(
                 null
             }
         }
-        
+
         /**
          * Helper to load KMS via SPI.
          */
@@ -310,7 +310,7 @@ class TrustWeaveTestFixture private constructor(
             return try {
                 val providerClass = Class.forName("com.trustweave.kms.spi.KeyManagementServiceProvider")
                 val serviceLoader = java.util.ServiceLoader.load(providerClass)
-                
+
                 for (provider in serviceLoader) {
                     val nameMethod = providerClass.getMethod("getName")
                     val providerNameValue = nameMethod.invoke(provider) as? String
@@ -324,7 +324,7 @@ class TrustWeaveTestFixture private constructor(
                 null
             }
         }
-        
+
         /**
          * Helper to load chain client via SPI.
          */
@@ -335,7 +335,7 @@ class TrustWeaveTestFixture private constructor(
             return try {
                 val providerClass = Class.forName("com.trustweave.anchor.spi.BlockchainAnchorClientProvider")
                 val serviceLoader = java.util.ServiceLoader.load(providerClass)
-                
+
                 for (provider in serviceLoader) {
                     val createMethod = providerClass.getMethod("create", String::class.java, Map::class.java)
                     val client = createMethod.invoke(provider, chainId, config) as? BlockchainAnchorClient
@@ -348,10 +348,10 @@ class TrustWeaveTestFixture private constructor(
                 null
             }
         }
-        
+
         /**
          * Builds the test fixture and registers all components.
-         * 
+         *
          * @return The configured test fixture
          */
         fun build(): TrustWeaveTestFixture {
@@ -366,7 +366,7 @@ class TrustWeaveTestFixture private constructor(
                 }
             }
             val credentialRegistryInstance = credentialRegistry ?: CredentialServiceRegistry.create()
-            
+
             return TrustWeaveTestFixture(
                 kms = kmsInstance,
                 didMethod = didMethodInstance,
@@ -377,17 +377,17 @@ class TrustWeaveTestFixture private constructor(
             )
         }
     }
-    
+
     companion object {
         /**
          * Creates a new builder for test fixtures.
          */
         @JvmStatic
         fun builder(): Builder = Builder()
-        
+
         /**
          * Creates a minimal test fixture with defaults.
-         * 
+         *
          * - InMemoryKeyManagementService
          * - DidKeyMockMethod
          * - InMemoryBlockchainAnchorClient for "algorand:testnet"

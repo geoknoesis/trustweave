@@ -167,7 +167,7 @@ This document provides a comprehensive guide to the user experience for creating
 
 **User Action:** Selects "Degree & Transcript Management"
 
-**System Response:** 
+**System Response:**
 - Loads Degree & Transcript Management template configuration
 - Pre-populates credential types (DegreeCredential, TranscriptCredential, DiplomaCredential)
 - Shows template preview
@@ -478,23 +478,23 @@ sequenceDiagram
     U->>UI: Click "Create Education Domain"
     UI->>API: POST /api/v1/education/domains
     API->>DS: createEducationDomain(domainData)
-    
+
     DS->>DB: Check domain name uniqueness
     DB-->>DS: Name available
-    
+
     DS->>KMS: Generate domain key pair
     KMS-->>DS: {publicKey, privateKeyId}
-    
+
     DS->>DS: Generate domain DID
     DS->>TR: Initialize trust registry
     TR-->>DS: Registry initialized
-    
+
     DS->>DB: Save domain entity
     DB-->>DS: Domain saved (domainId)
-    
+
     DS->>DB: Save domain configuration (FERPA settings)
     DB-->>DS: Configuration saved
-    
+
     DS-->>API: Domain created (domainId, domainDid)
     API-->>UI: Success response
     UI-->>U: Show education domain dashboard
@@ -514,31 +514,31 @@ sequenceDiagram
 
     U->>UI: Click "Add Trust Anchor"
     UI->>API: POST /api/v1/education/domains/{id}/trust-anchors
-    
+
     API->>DS: addTrustAnchor(domainId, institutionDid, config)
     DS->>DB: Get domain by ID
     DB-->>DS: Domain data
-    
+
     DS->>DR: Resolve institution DID
     DR-->>DS: DID Document
-    
+
     alt DID Resolution Failed
         DS-->>API: Error: DID not resolvable
         API-->>UI: Show error message
     else DID Resolved Successfully
         DS->>TR: Check if anchor exists
         TR-->>DS: Anchor not found
-        
+
         DS->>TR: Add trust anchor
         TR->>DB: Save trust anchor metadata
         DB-->>TR: Anchor saved
-        
+
         TR->>TR: Update trust graph
         TR-->>DS: Anchor added (trustScore: 1.0)
-        
+
         DS->>DB: Update domain trust anchors count
         DB-->>DS: Updated
-        
+
         DS-->>API: Success (anchorId, trustScore)
         API-->>UI: Show success message
         UI-->>U: Update trust anchors list
@@ -561,38 +561,38 @@ sequenceDiagram
 
     U->>UI: Fill degree form, click "Issue Degree"
     UI->>API: POST /api/v1/education/domains/{id}/credentials/issue
-    
+
     API->>CS: issueCredential(domainId, credentialData)
     CS->>DB: Get domain configuration
     DB-->>CS: Domain config
-    
+
     CS->>DR: Resolve issuer DID
     DR-->>CS: Issuer DID Document
-    
+
     CS->>DR: Resolve student DID (if provided)
     DR-->>CS: Student DID Document
-    
+
     CS->>CS: Build VerifiableCredential (without proof)
     CS->>CS: Validate academic requirements (GPA, credits)
     CS->>CI: Issue credential
-    
+
     CI->>KMS: Get issuer signing key
     KMS-->>CI: Key pair
-    
+
     CI->>PG: Generate proof
     PG->>PG: Canonicalize credential
     PG->>PG: Compute digest
     PG->>KMS: Sign digest
     KMS-->>PG: Signature
     PG-->>CI: Proof object
-    
+
     CI->>CS: Credential with proof
     CS->>DB: Save credential
     DB-->>CS: Credential saved (credentialId)
-    
+
     CS->>DB: Log issuance activity (FERPA audit)
     DB-->>CS: Activity logged
-    
+
     CS-->>API: Credential issued (credentialId, credential)
     API-->>UI: Success response
     UI-->>U: Show credential details and QR code
@@ -613,31 +613,31 @@ sequenceDiagram
 
     U->>UI: Upload credential, click "Verify"
     UI->>API: POST /api/v1/education/domains/{id}/credentials/verify
-    
+
     API->>VS: verifyCredential(domainId, credential)
     VS->>DB: Get domain policies
     DB-->>VS: Domain policies
-    
+
     VS->>CV: Verify credential
     CV->>CV: Validate credential structure
     CV->>DR: Resolve issuer DID
     DR-->>CV: Issuer DID Document
-    
+
     CV->>CV: Verify proof signature
     CV->>CV: Check expiration (if policy enabled)
     CV->>CV: Check revocation (if policy enabled)
-    
+
     CV->>TR: Check issuer trust
     TR->>TR: Find trust path
     TR-->>CV: Trust path found (trustScore: 1.0)
-    
+
     CV->>CV: Check trust score meets minimum
     CV->>CV: Validate academic standards
     CV-->>VS: Verification result
-    
+
     VS->>DB: Log verification activity (FERPA audit)
     DB-->>VS: Activity logged
-    
+
     VS-->>API: Verification result
     API-->>UI: Show verification results
     UI-->>U: Display success/failure with details
@@ -885,51 +885,51 @@ sequenceDiagram
 
     U->>UI: Click "Create Student DID"
     UI->>API: POST /api/v1/education/dids
-    
+
     API->>DS: createDid(method, algorithm, studentData)
     DS->>KMS: Generate key pair
     KMS-->>DS: {publicKey, privateKeyId}
-    
+
     DS->>DS: Generate DID
     DS->>DS: Create DID document
     DS->>DB: Save DID
     DB-->>DS: DID saved (didId)
-    
+
     DS-->>API: DID created (did, didDocument)
     API-->>UI: Success response
     UI-->>U: Show DID details
-    
+
     U->>UI: Click "Issue Degree to This Student"
     UI->>API: POST /api/v1/education/domains/{id}/credentials/issue
-    
+
     API->>CS: issueDegree(domainId, degreeData, studentDid)
     CS->>DB: Get domain configuration
     DB-->>CS: Domain config
-    
+
     CS->>DS: Verify student DID exists
     DS-->>CS: DID verified
-    
+
     CS->>CS: Validate degree requirements (credits, GPA)
     CS->>CS: Build DegreeCredential
     CS->>CI: Issue credential
-    
+
     CI->>KMS: Get issuer signing key
     KMS-->>CI: Key pair
-    
+
     CI->>PG: Generate proof
     PG->>PG: Canonicalize credential
     PG->>PG: Compute digest
     PG->>KMS: Sign digest
     KMS-->>PG: Signature
     PG-->>CI: Proof object
-    
+
     CI->>CS: Credential with proof
     CS->>DB: Save credential
     DB-->>CS: Credential saved
-    
+
     CS->>DB: Associate credential with student DID
     DB-->>CS: Association saved
-    
+
     CS-->>API: Credential issued
     API-->>UI: Success response
     UI-->>U: Show degree credential details
@@ -1959,38 +1959,38 @@ sequenceDiagram
     DB-->>Auth: User saved
     Auth-->>API: User created + token
     API-->>UI: Auth token
-    
+
     U->>UI: Select education template, create domain
     UI->>API: POST /api/v1/education/domains (with template)
     API->>Auth: Validate token
     Auth-->>API: User authenticated
-    
+
     API->>DS: createEducationDomain(userId, domainData, template)
     DS->>DB: Check domain name uniqueness
     DB-->>DS: Name available
-    
+
     DS->>KMS: Generate domain key pair
     KMS-->>DS: Domain key pair
-    
+
     DS->>DR: Create domain DID
     DR-->>DS: Domain DID + DID document
-    
+
     DS->>TR: Initialize trust registry for domain
     TR->>DB: Create trust registry entry
     DB-->>TR: Registry created
     TR-->>DS: Registry initialized
-    
+
     DS->>DS: Apply education template configuration
     DS->>DS: Configure FERPA compliance settings
     DS->>DB: Save domain entity
     DB-->>DS: Domain saved (domainId)
-    
+
     DS->>DB: Save domain configuration
     DB-->>DS: Configuration saved
-    
+
     DS->>Cache: Invalidate domain cache
     Cache-->>DS: Cache cleared
-    
+
     DS-->>API: Domain created (domainId, domainDid, config)
     API-->>UI: Success response
     UI-->>U: Show education domain dashboard

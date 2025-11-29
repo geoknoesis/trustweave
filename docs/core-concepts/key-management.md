@@ -32,8 +32,8 @@ dependencies {
 
 ## Why key management matters
 
-- **Proof integrity** – signing credentials and presentations requires private keys to stay secure.  
-- **Interoperability** – different environments (cloud Hardware Security Module (HSM), Vault, in-memory test Key Management Service (KMS)) provide the same interface.  
+- **Proof integrity** – signing credentials and presentations requires private keys to stay secure.
+- **Interoperability** – different environments (cloud Hardware Security Module (HSM), Vault, in-memory test Key Management Service (KMS)) provide the same interface.
 - **Lifecycle** – keys can be rotated or deactivated while preserving credential history via key identifiers (`keyId`).
 
 ## How TrustWeave models key management
@@ -56,12 +56,12 @@ suspend fun checkKmsCapabilities(kms: KeyManagementService) {
     // Get all supported algorithms
     val supported = kms.getSupportedAlgorithms()
     println("Supported algorithms: ${supported.joinToString { it.name }}")
-    
+
     // Check specific algorithm
     if (kms.supportsAlgorithm(Algorithm.Ed25519)) {
         println("Ed25519 is supported")
     }
-    
+
     // Check by name (case-insensitive)
     if (kms.supportsAlgorithm("secp256k1")) {
         println("secp256k1 is supported")
@@ -74,18 +74,18 @@ suspend fun checkKmsCapabilities(kms: KeyManagementService) {
 ```kotlin
 import com.trustweave.kms.*
 
-suspend fun issueSignerKey(kms: KeyManagementService): String {
+suspend fun issueSignerKey(kms: KeyManagementService): KeyId {
     // Type-safe algorithm usage (recommended)
     val handle = kms.generateKey(
         algorithm = Algorithm.Ed25519,
         options = mapOf("label" to "issuer-root", "exportable" to false)
     )
-    println("Generated key ${handle.id} (${handle.algorithm})")
+    println("Generated key ${handle.id.value} (${handle.algorithm})")
     return handle.id
 }
 
 // Or use string-based API (convenience)
-suspend fun issueSignerKeyString(kms: KeyManagementService): String {
+suspend fun issueSignerKeyString(kms: KeyManagementService): KeyId {
     val handle = kms.generateKey(
         algorithmName = "Ed25519",
         options = mapOf("label" to "issuer-root", "exportable" to false)
@@ -93,7 +93,7 @@ suspend fun issueSignerKeyString(kms: KeyManagementService): String {
     return handle.id
 }
 
-suspend fun signDigest(kms: KeyManagementService, keyId: String, digest: ByteArray): ByteArray =
+suspend fun signDigest(kms: KeyManagementService, keyId: KeyId, digest: ByteArray): ByteArray =
     kms.sign(keyId, digest)
 
 **Outcome:** Demonstrates algorithm discovery and creating keys via the KMS abstraction—no direct coupling to backing implementations.
@@ -108,25 +108,25 @@ val keyHandle = wallet.withKeyManagement { keys ->
         exportable = true
     }
 }
-println("Holder key created: ${keyHandle.id}")
+println("Holder key created: ${keyHandle.id.value}")
 
 **Outcome:** Uses the wallet DSL to mint a holder key with custom metadata, returning the generated handle for later signing operations.
 ```
 
 ## Practical usage tips
 
-- **Production** – back keys with Hardware Security Modules (HSMs) or cloud Key Management Service (KMS) ([AWS KMS](../integrations/aws-kms.md), [Azure Key Vault](../integrations/azure-kms.md), [Google Cloud KMS](../integrations/google-kms.md), [HashiCorp Vault](../integrations/hashicorp-vault-kms.md), etc.) via custom providers.  
-- **Rotation** – maintain previous keys so verifiers can validate historic credentials; rotate key IDs in VC proofs.  
-- **Access control** – enforce authorisation at the Key Management Service (KMS) boundary; TrustWeave assumes the provider handles policy.  
+- **Production** – back keys with Hardware Security Modules (HSMs) or cloud Key Management Service (KMS) ([AWS KMS](../integrations/aws-kms.md), [Azure Key Vault](../integrations/azure-kms.md), [Google Cloud KMS](../integrations/google-kms.md), [HashiCorp Vault](../integrations/hashicorp-vault-kms.md), etc.) via custom providers.
+- **Rotation** – maintain previous keys so verifiers can validate historic credentials; rotate key IDs in VC proofs.
+- **Access control** – enforce authorisation at the Key Management Service (KMS) boundary; TrustWeave assumes the provider handles policy.
 - **Testing** – rely on `InMemoryKeyManagementService` from `TrustWeave-testkit` for determinism.
 
 ## See also
 
-- [Wallet API Reference – KeyManagement](../api-reference/wallet-api.md#keymanagement)  
+- [Wallet API Reference – KeyManagement](../api-reference/wallet-api.md#keymanagement)
 - [KMS Integration Guides](../integrations/README.md#other-did--kms-integrations) – Implementation guides for AWS KMS, Azure Key Vault, Google Cloud KMS, HashiCorp Vault, and walt.id
-- [DIDs](dids.md) for how keys feed DID documents.  
-- [Credential Service API](../api-reference/credential-service-api.md) to see where keys sign credentials.  
-- [Advanced – Key Rotation](../advanced/key-rotation.md) *(to be added in a later step of this plan).*  
+- [DIDs](dids.md) for how keys feed DID documents.
+- [Credential Service API](../api-reference/credential-service-api.md) to see where keys sign credentials.
+- [Advanced – Key Rotation](../advanced/key-rotation.md) *(to be added in a later step of this plan).*
 - [Architecture Overview](../introduction/architecture-overview.md)
 
 ---
@@ -152,14 +152,14 @@ interface KeyManagementService {
     suspend fun getSupportedAlgorithms(): Set<Algorithm>
     suspend fun supportsAlgorithm(algorithm: Algorithm): Boolean
     suspend fun supportsAlgorithm(algorithmName: String): Boolean
-    
+
     // Key operations
     suspend fun generateKey(algorithm: Algorithm, options: Map<String, Any?> = emptyMap()): KeyHandle
     suspend fun generateKey(algorithmName: String, options: Map<String, Any?> = emptyMap()): KeyHandle
-    suspend fun getPublicKey(keyId: String): KeyHandle
-    suspend fun sign(keyId: String, data: ByteArray, algorithm: Algorithm? = null): ByteArray
-    suspend fun sign(keyId: String, data: ByteArray, algorithmName: String?): ByteArray
-    suspend fun deleteKey(keyId: String): Boolean
+    suspend fun getPublicKey(keyId: KeyId): KeyHandle
+    suspend fun sign(keyId: KeyId, data: ByteArray, algorithm: Algorithm? = null): ByteArray
+    suspend fun sign(keyId: KeyId, data: ByteArray, algorithmName: String?): ByteArray
+    suspend fun deleteKey(keyId: KeyId): Boolean
 }
 ```
 
@@ -241,7 +241,7 @@ import com.trustweave.kms.*
 
 class VaultKmsProvider : KeyManagementServiceProvider {
     override val name = "vault"
-    
+
     // MUST advertise supported algorithms
     override val supportedAlgorithms: Set<Algorithm> = setOf(
         Algorithm.Ed25519,
@@ -250,7 +250,7 @@ class VaultKmsProvider : KeyManagementServiceProvider {
         Algorithm.P384,
         Algorithm.P521
     )
-    
+
     override fun create(options: Map<String, Any?>): KeyManagementService = VaultKms(options)
 }
 
@@ -264,10 +264,10 @@ class VaultKms(private val options: Map<String, Any?>) : KeyManagementService {
             Algorithm.P521
         )
     }
-    
+
     // MUST implement algorithm advertisement
     override suspend fun getSupportedAlgorithms(): Set<Algorithm> = SUPPORTED_ALGORITHMS
-    
+
     override suspend fun generateKey(
         algorithm: Algorithm,
         options: Map<String, Any?>
@@ -275,7 +275,7 @@ class VaultKms(private val options: Map<String, Any?>) : KeyManagementService {
         // Implementation using Vault API
         // ...
     }
-    
+
     // ... implement other methods
 }
 ```

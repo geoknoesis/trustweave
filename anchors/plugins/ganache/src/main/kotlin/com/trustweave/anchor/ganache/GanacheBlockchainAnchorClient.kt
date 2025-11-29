@@ -15,22 +15,22 @@ import java.nio.charset.StandardCharsets
 
 /**
  * Ganache (local Ethereum) blockchain anchor client implementation.
- * 
+ *
  * Supports local Ethereum networks via Ganache.
  * Uses Ethereum transaction data fields to store payload data.
- * 
+ *
  * For testing, use a fixed mnemonic to get deterministic accounts:
  * ganache --port 8545 --mnemonic "test test test test test test test test test test test junk"
- * 
+ *
  * **Resource Management**: This client implements `Closeable` to properly clean up
  * Web3j resources. Always use `use {}` or call `close()` when done:
- * 
+ *
  * ```
  * GanacheBlockchainAnchorClient(chainId, options).use { client ->
  *     // Use client
  * }
  * ```
- * 
+ *
  * **Type-Safe Options**: Use [GanacheOptions] for type-safe configuration:
  * ```
  * val options = GanacheOptions(
@@ -44,7 +44,7 @@ class GanacheBlockchainAnchorClient(
     chainId: String,
     options: Map<String, Any?> = emptyMap()
 ) : AbstractBlockchainAnchorClient(chainId, options), java.io.Closeable {
-    
+
     /**
      * Convenience constructor using type-safe [GanacheOptions].
      */
@@ -52,7 +52,7 @@ class GanacheBlockchainAnchorClient(
 
     companion object {
         const val LOCAL = "eip155:1337"  // Ganache default chain ID
-        
+
         // Default Ganache RPC endpoint
         private const val DEFAULT_RPC_URL = "http://localhost:8545"
     }
@@ -65,7 +65,7 @@ class GanacheBlockchainAnchorClient(
         require(chainId.startsWith("eip155:")) {
             "Invalid chain ID for Ethereum/Ganache: $chainId"
         }
-        
+
         // Initialize Web3j client
         val rpcUrl = options["rpcUrl"] as? String ?: DEFAULT_RPC_URL
         web3j = Web3j.build(HttpService(rpcUrl))
@@ -77,7 +77,7 @@ class GanacheBlockchainAnchorClient(
                 configKey = "privateKey",
                 reason = "privateKey is required for GanacheBlockchainAnchorClient"
             )
-        
+
         credentials = try {
             org.web3j.crypto.Credentials.create(privateKeyHex.removePrefix("0x"))
         } catch (e: Exception) {
@@ -87,7 +87,7 @@ class GanacheBlockchainAnchorClient(
                 reason = "Invalid private key format: ${e.message ?: "Unknown error"}"
             ).apply { initCause(e) }
         }
-        
+
         val chainIdNum = chainId.substringAfter(":").toLongOrNull() ?: 1337L
         transactionManager = RawTransactionManager(web3j, credentials, chainIdNum)
     }
@@ -142,11 +142,11 @@ class GanacheBlockchainAnchorClient(
             // Fallback to 10M if we can't get block gas limit
             java.math.BigInteger.valueOf(10_000_000)
         }
-        
+
         // Use block gas limit, but ensure it's at least 8M
         val minGasLimit = java.math.BigInteger.valueOf(8_000_000)
         val gasLimit = if (blockGasLimit.compareTo(minGasLimit) > 0) blockGasLimit else minGasLimit
-        
+
         val rawTransaction = org.web3j.crypto.RawTransaction.createTransaction(
             nonce,
             gasPrice,
@@ -158,7 +158,7 @@ class GanacheBlockchainAnchorClient(
 
         val signedTransaction = org.web3j.crypto.TransactionEncoder.signMessage(rawTransaction, credentials)
         val hexValue = org.web3j.utils.Numeric.toHexString(signedTransaction)
-        
+
         val ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send()
         if (ethSendTransaction.hasError()) {
             val error = ethSendTransaction.error
@@ -191,13 +191,13 @@ class GanacheBlockchainAnchorClient(
         val dataBytes = org.web3j.utils.Numeric.hexStringToByteArray(input)
         val payloadJson = String(dataBytes, StandardCharsets.UTF_8)
         val payload = Json.parseToJsonElement(payloadJson)
-        
+
         val blockNumber = try {
             receipt.blockNumber?.toLong()
         } catch (e: Exception) {
             null
         }
-        
+
         return AnchorResult(
             ref = buildAnchorRef(
                 txHash = txHash,

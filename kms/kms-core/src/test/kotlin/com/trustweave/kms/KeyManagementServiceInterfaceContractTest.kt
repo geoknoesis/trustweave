@@ -1,5 +1,6 @@
 package com.trustweave.kms
 
+import com.trustweave.core.types.KeyId
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -13,9 +14,9 @@ class KeyManagementServiceInterfaceContractTest {
     @Test
     fun `test KeyManagementService generateKey returns key handle`() = runBlocking {
         val kms = createMockKms()
-        
+
         val handle = kms.generateKey("Ed25519")
-        
+
         assertNotNull(handle)
         assertEquals("Ed25519", handle.algorithm)
         assertNotNull(handle.id)
@@ -27,20 +28,20 @@ class KeyManagementServiceInterfaceContractTest {
         val options = mapOf<String, Any?>(
             "keyId" to "custom-key-123"
         )
-        
+
         val handle = kms.generateKey("Ed25519", options)
-        
+
         assertNotNull(handle)
-        assertEquals("custom-key-123", handle.id)
+        assertEquals("custom-key-123", handle.id.value)
     }
 
     @Test
     fun `test KeyManagementService generateKey with different algorithms`() = runBlocking {
         val kms = createMockKms()
-        
+
         val ed25519 = kms.generateKey("Ed25519")
         val secp256k1 = kms.generateKey("secp256k1")
-        
+
         assertEquals("Ed25519", ed25519.algorithm)
         assertEquals("secp256k1", secp256k1.algorithm)
     }
@@ -49,9 +50,9 @@ class KeyManagementServiceInterfaceContractTest {
     fun `test KeyManagementService getPublicKey returns key handle`() = runBlocking {
         val kms = createMockKms()
         val handle = kms.generateKey("Ed25519")
-        
+
         val publicKey = kms.getPublicKey(handle.id)
-        
+
         assertNotNull(publicKey)
         assertEquals(handle.id, publicKey.id)
         assertEquals(handle.algorithm, publicKey.algorithm)
@@ -60,9 +61,9 @@ class KeyManagementServiceInterfaceContractTest {
     @Test
     fun `test KeyManagementService getPublicKey throws KeyNotFoundException`() = runBlocking {
         val kms = createMockKms()
-        
+
         assertFailsWith<KeyNotFoundException> {
-            kms.getPublicKey("non-existent")
+            kms.getPublicKey(KeyId("non-existent"))
         }
     }
 
@@ -71,9 +72,9 @@ class KeyManagementServiceInterfaceContractTest {
         val kms = createMockKms()
         val handle = kms.generateKey("Ed25519")
         val data = "test data".toByteArray()
-        
+
         val signature = kms.sign(handle.id, data)
-        
+
         assertNotNull(signature)
         assertTrue(signature.isNotEmpty())
     }
@@ -83,9 +84,9 @@ class KeyManagementServiceInterfaceContractTest {
         val kms = createMockKms()
         val handle = kms.generateKey("Ed25519")
         val data = "test data".toByteArray()
-        
+
         val signature = kms.sign(handle.id, data, "Ed25519")
-        
+
         assertNotNull(signature)
     }
 
@@ -93,9 +94,9 @@ class KeyManagementServiceInterfaceContractTest {
     fun `test KeyManagementService sign throws KeyNotFoundException`() = runBlocking {
         val kms = createMockKms()
         val data = "test data".toByteArray()
-        
+
         assertFailsWith<KeyNotFoundException> {
-            kms.sign("non-existent", data)
+            kms.sign(KeyId("non-existent"), data)
         }
     }
 
@@ -103,9 +104,9 @@ class KeyManagementServiceInterfaceContractTest {
     fun `test KeyManagementService deleteKey returns true`() = runBlocking {
         val kms = createMockKms()
         val handle = kms.generateKey("Ed25519")
-        
+
         val deleted = kms.deleteKey(handle.id)
-        
+
         assertTrue(deleted)
         assertFailsWith<KeyNotFoundException> {
             kms.getPublicKey(handle.id)
@@ -115,9 +116,9 @@ class KeyManagementServiceInterfaceContractTest {
     @Test
     fun `test KeyManagementService deleteKey returns false for non-existent key`() = runBlocking {
         val kms = createMockKms()
-        
-        val deleted = kms.deleteKey("non-existent")
-        
+
+        val deleted = kms.deleteKey(KeyId("non-existent"))
+
         assertFalse(deleted)
     }
 
@@ -126,16 +127,16 @@ class KeyManagementServiceInterfaceContractTest {
         val kms = createMockKms()
         val handle = kms.generateKey("Ed25519")
         val data = "test data".toByteArray()
-        
+
         val signature1 = kms.sign(handle.id, data)
         assertNotNull(signature1)
-        
+
         val publicKey = kms.getPublicKey(handle.id)
         assertNotNull(publicKey)
-        
+
         val deleted = kms.deleteKey(handle.id)
         assertTrue(deleted)
-        
+
         assertFailsWith<KeyNotFoundException> {
             kms.sign(handle.id, data)
         }
@@ -145,7 +146,7 @@ class KeyManagementServiceInterfaceContractTest {
     fun `test KeyManagementService generateKey with publicKeyJwk`() = runBlocking {
         val kms = createMockKms()
         val handle = kms.generateKey("Ed25519")
-        
+
         assertNotNull(handle.publicKeyJwk)
         assertTrue(handle.publicKeyJwk.containsKey("kty"))
     }
@@ -154,7 +155,7 @@ class KeyManagementServiceInterfaceContractTest {
     fun `test KeyManagementService generateKey with publicKeyMultibase`() = runBlocking {
         val kms = createMockKms()
         val handle = kms.generateKey("Ed25519")
-        
+
         // May or may not have multibase depending on implementation
         // Just verify handle is valid
         assertNotNull(handle)
@@ -162,17 +163,18 @@ class KeyManagementServiceInterfaceContractTest {
 
     private fun createMockKms(): KeyManagementService {
         return object : KeyManagementService {
-            private val keys = mutableMapOf<String, KeyHandle>()
-            
+            private val keys = mutableMapOf<KeyId, KeyHandle>()
+
             override suspend fun getSupportedAlgorithms(): Set<Algorithm> {
                 return setOf(Algorithm.Ed25519, Algorithm.Secp256k1, Algorithm.P256)
             }
-            
+
             override suspend fun generateKey(
                 algorithm: Algorithm,
                 options: Map<String, Any?>
             ): KeyHandle {
-                val keyId = options["keyId"] as? String ?: "key-${java.util.UUID.randomUUID()}"
+                val keyIdStr = options["keyId"] as? String ?: "key-${java.util.UUID.randomUUID()}"
+                val keyId = KeyId(keyIdStr)
                 val handle = KeyHandle(
                     id = keyId,
                     algorithm = algorithm.name,
@@ -186,22 +188,22 @@ class KeyManagementServiceInterfaceContractTest {
                 keys[keyId] = handle
                 return handle
             }
-            
-            override suspend fun getPublicKey(keyId: String): KeyHandle {
-                return keys[keyId] ?: throw KeyNotFoundException(keyId = keyId)
+
+            override suspend fun getPublicKey(keyId: KeyId): KeyHandle {
+                return keys[keyId] ?: throw KeyNotFoundException(keyId = keyId.value)
             }
-            
+
             override suspend fun sign(
-                keyId: String,
+                keyId: KeyId,
                 data: ByteArray,
                 algorithm: Algorithm?
             ): ByteArray {
-                val handle = keys[keyId] ?: throw KeyNotFoundException("Key not found: $keyId")
+                val handle = keys[keyId] ?: throw KeyNotFoundException(keyId = keyId.value)
                 val algo = algorithm?.name ?: handle.algorithm
                 return "signature-$algo-${data.size}".toByteArray()
             }
-            
-            override suspend fun deleteKey(keyId: String): Boolean {
+
+            override suspend fun deleteKey(keyId: KeyId): Boolean {
                 return keys.remove(keyId) != null
             }
         }

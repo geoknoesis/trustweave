@@ -12,10 +12,10 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
 
     .site-nav > ul.nav-list:first-child > li > a,
-    
+
     .site-nav > ul.nav-list:first-child > li > ul > li:not(:nth-child(7)) > a,
     .site-nav > ul.nav-list:first-child > li > ul > li > ul > li a {
       background-image: none;
@@ -38,17 +38,17 @@
     }
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -97,7 +97,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -106,7 +106,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -136,13 +136,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -153,7 +153,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -358,7 +358,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -406,14 +406,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -421,7 +421,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -434,21 +434,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -516,7 +516,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -531,8 +531,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -549,10 +549,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -565,8 +565,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -582,25 +582,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -610,9 +610,9 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
@@ -626,25 +626,25 @@
 
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="anchor-to-blockchain">
-  
-  
+
+
     <a href="#anchor-to-blockchain" class="anchor-heading" aria-labelledby="anchor-to-blockchain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Anchor to Blockchain
-  
-  
+
+
 </h1>
-    
+
 
 <p>This guide shows you how to anchor data to blockchains for tamper evidence and timestamping. You’ll learn how to choose a blockchain, anchor data, read anchored data, and implement multi-chain anchoring.</p>
 <h2 id="quick-example">
-  
-  
+
+
     <a href="#quick-example" class="anchor-heading" aria-labelledby="quick-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Quick Example
-  
-  
+
+
 </h2>
-    
+
 
 <p>Here’s a complete example that anchors a credential digest to a blockchain:</p>
 
@@ -765,21 +765,21 @@
    Timestamp: 2024-01-01T00:00:00Z
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="step-by-step-guide">
-  
-  
+
+
     <a href="#step-by-step-guide" class="anchor-heading" aria-labelledby="step-by-step-guide"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step-by-Step Guide
-  
-  
+
+
 </h2>
-    
+
 <h3 id="step-1-configure-blockchain-support">
-  
-  
+
+
     <a href="#step-1-configure-blockchain-support" class="anchor-heading" aria-labelledby="step-1-configure-blockchain-support"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Configure Blockchain Support
-  
-  
+
+
 </h3>
-    
+
 
 <p>Register blockchain clients in TrustLayer:</p>
 
@@ -805,13 +805,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-2-prepare-data-for-anchoring">
-  
-  
+
+
     <a href="#step-2-prepare-data-for-anchoring" class="anchor-heading" aria-labelledby="step-2-prepare-data-for-anchoring"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Prepare Data for Anchoring
-  
-  
+
+
 </h3>
-    
+
 
 <p>Create the data structure to anchor:</p>
 
@@ -841,13 +841,13 @@
 <span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-3-anchor-the-data">
-  
-  
+
+
     <a href="#step-3-anchor-the-data" class="anchor-heading" aria-labelledby="step-3-anchor-the-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Anchor the Data
-  
-  
+
+
 </h3>
-    
+
 
 <p>Anchor data to the blockchain:</p>
 
@@ -861,13 +861,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-4-store-anchor-reference">
-  
-  
+
+
     <a href="#step-4-store-anchor-reference" class="anchor-heading" aria-labelledby="step-4-store-anchor-reference"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Store Anchor Reference
-  
-  
+
+
 </h3>
-    
+
 
 <p>Save the anchor reference for later verification:</p>
 
@@ -877,13 +877,13 @@
 <span class="c1">// Store in database: anchorRef.chainId, anchorRef.txHash, anchorRef.blockNumber</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="choosing-a-blockchain">
-  
-  
+
+
     <a href="#choosing-a-blockchain" class="anchor-heading" aria-labelledby="choosing-a-blockchain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Choosing a Blockchain
-  
-  
+
+
 </h2>
-    
+
 
 <p>Select a blockchain based on your requirements:</p>
 
@@ -936,34 +936,34 @@
   </tbody>
 </table></div>
 <h3 id="testnet-vs-mainnet">
-  
-  
+
+
     <a href="#testnet-vs-mainnet" class="anchor-heading" aria-labelledby="testnet-vs-mainnet"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Testnet vs Mainnet
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>Testnet</strong>: Use for development and testing (free, no real value)</li>
   <li><strong>Mainnet</strong>: Use for production (costs real tokens)</li>
 </ul>
 <h2 id="anchoring-data">
-  
-  
+
+
     <a href="#anchoring-data" class="anchor-heading" aria-labelledby="anchoring-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Anchoring Data
-  
-  
+
+
 </h2>
-    
+
 <h3 id="basic-anchoring">
-  
-  
+
+
     <a href="#basic-anchoring" class="anchor-heading" aria-labelledby="basic-anchoring"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Basic Anchoring
-  
-  
+
+
 </h3>
-    
+
 
 <p>Anchor any serializable data:</p>
 
@@ -987,13 +987,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="anchoring-credentials">
-  
-  
+
+
     <a href="#anchoring-credentials" class="anchor-heading" aria-labelledby="anchoring-credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Anchoring Credentials
-  
-  
+
+
 </h3>
-    
+
 
 <p>Anchor credential digests:</p>
 
@@ -1029,13 +1029,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="what-gets-stored-on-chain">
-  
-  
+
+
     <a href="#what-gets-stored-on-chain" class="anchor-heading" aria-labelledby="what-gets-stored-on-chain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What Gets Stored On-Chain?
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Important:</strong> Only the <strong>digest</strong> (hash) is stored on-chain, not the full data. The data is:</p>
 <ol>
@@ -1047,21 +1047,21 @@
 
 <p>The original data must be stored separately (database, IPFS, etc.) if you need to retrieve it later.</p>
 <h2 id="reading-anchored-data">
-  
-  
+
+
     <a href="#reading-anchored-data" class="anchor-heading" aria-labelledby="reading-anchored-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Reading Anchored Data
-  
-  
+
+
 </h2>
-    
+
 <h3 id="read-by-anchor-reference">
-  
-  
+
+
     <a href="#read-by-anchor-reference" class="anchor-heading" aria-labelledby="read-by-anchor-reference"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Read by Anchor Reference
-  
-  
+
+
 </h3>
-    
+
 
 <p>Read anchored data using the anchor reference:</p>
 
@@ -1083,13 +1083,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="verify-integrity">
-  
-  
+
+
     <a href="#verify-integrity" class="anchor-heading" aria-labelledby="verify-integrity"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Verify Integrity
-  
-  
+
+
 </h3>
-    
+
 
 <p>The read operation automatically verifies that the data matches the on-chain digest:</p>
 
@@ -1115,23 +1115,23 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="multi-chain-anchoring">
-  
-  
+
+
     <a href="#multi-chain-anchoring" class="anchor-heading" aria-labelledby="multi-chain-anchoring"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Multi-Chain Anchoring
-  
-  
+
+
 </h2>
-    
+
 
 <p>Anchor the same data to multiple blockchains for redundancy:</p>
 <h3 id="sequential-anchoring">
-  
-  
+
+
     <a href="#sequential-anchoring" class="anchor-heading" aria-labelledby="sequential-anchoring"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Sequential Anchoring
-  
-  
+
+
 </h3>
-    
+
 
 <p>Anchor to multiple chains one at a time:</p>
 
@@ -1165,13 +1165,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="parallel-anchoring">
-  
-  
+
+
     <a href="#parallel-anchoring" class="anchor-heading" aria-labelledby="parallel-anchoring"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Parallel Anchoring
-  
-  
+
+
 </h3>
-    
+
 
 <p>Anchor to multiple chains concurrently:</p>
 
@@ -1211,13 +1211,13 @@
 <span class="p">}.</span><span class="nf">awaitAll</span><span class="p">().</span><span class="nf">filterNotNull</span><span class="p">()</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="store-all-references">
-  
-  
+
+
     <a href="#store-all-references" class="anchor-heading" aria-labelledby="store-all-references"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Store All References
-  
-  
+
+
 </h3>
-    
+
 
 <p>Store all anchor references for verification:</p>
 
@@ -1229,21 +1229,21 @@
 <span class="n">database</span><span class="p">.</span><span class="nf">saveAnchorRefs</span><span class="p">(</span><span class="n">credentialId</span><span class="p">,</span> <span class="n">anchorRefs</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="common-patterns">
-  
-  
+
+
     <a href="#common-patterns" class="anchor-heading" aria-labelledby="common-patterns"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Common Patterns
-  
-  
+
+
 </h2>
-    
+
 <h3 id="pattern-1-anchor-with-retry">
-  
-  
+
+
     <a href="#pattern-1-anchor-with-retry" class="anchor-heading" aria-labelledby="pattern-1-anchor-with-retry"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Pattern 1: Anchor with Retry
-  
-  
+
+
 </h3>
-    
+
 
 <p>Retry anchoring on failure:</p>
 
@@ -1291,13 +1291,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="pattern-2-anchor-with-timeout">
-  
-  
+
+
     <a href="#pattern-2-anchor-with-timeout" class="anchor-heading" aria-labelledby="pattern-2-anchor-with-timeout"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Pattern 2: Anchor with Timeout
-  
-  
+
+
 </h3>
-    
+
 
 <p>Add timeout to anchoring operations:</p>
 
@@ -1319,13 +1319,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="pattern-3-verify-anchor-exists">
-  
-  
+
+
     <a href="#pattern-3-verify-anchor-exists" class="anchor-heading" aria-labelledby="pattern-3-verify-anchor-exists"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Pattern 3: Verify Anchor Exists
-  
-  
+
+
 </h3>
-    
+
 
 <p>Check if an anchor exists before reading:</p>
 
@@ -1351,13 +1351,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="error-handling">
-  
-  
+
+
     <a href="#error-handling" class="anchor-heading" aria-labelledby="error-handling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Error Handling
-  
-  
+
+
 </h2>
-    
+
 
 <p>Handle anchoring errors gracefully:</p>
 
@@ -1411,13 +1411,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="integration-guides">
-  
-  
+
+
     <a href="#integration-guides" class="anchor-heading" aria-labelledby="integration-guides"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Integration Guides
-  
-  
+
+
 </h2>
-    
+
 
 <p>For production use, see integration guides for specific blockchains:</p>
 
@@ -1428,13 +1428,13 @@
   <li><strong><a href="/trustweave/integrations/base-anchor/">Base Integration</a></strong> - Base anchoring setup</li>
 </ul>
 <h2 id="api-reference">
-  
-  
+
+
     <a href="#api-reference" class="anchor-heading" aria-labelledby="api-reference"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> API Reference
-  
-  
+
+
 </h2>
-    
+
 
 <p>For complete API documentation, see:</p>
 <ul>
@@ -1442,39 +1442,39 @@
   <li><strong><a href="/trustweave/api-reference/core-api/#readanchor">Core API - readAnchor()</a></strong> - Reading anchored data</li>
 </ul>
 <h2 id="related-concepts">
-  
-  
+
+
     <a href="#related-concepts" class="anchor-heading" aria-labelledby="related-concepts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Concepts
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><strong><a href="/trustweave/core-concepts/blockchain-anchoring/">Blockchain Anchoring</a></strong> - Understanding anchoring concepts</li>
   <li><strong><a href="/trustweave/core-concepts/json-canonicalization/">JSON Canonicalization</a></strong> - How data is canonicalized</li>
 </ul>
 <h2 id="related-how-to-guides">
-  
-  
+
+
     <a href="#related-how-to-guides" class="anchor-heading" aria-labelledby="related-how-to-guides"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related How-To Guides
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><strong><a href="/trustweave/how-to/issue-credentials/">Issue Credentials</a></strong> - Issue credentials to anchor</li>
   <li><strong><a href="/trustweave/how-to/create-dids/">Create DIDs</a></strong> - Create issuer DIDs</li>
 </ul>
 <h2 id="next-steps">
-  
-  
+
+
     <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>Ready to integrate?</strong></p>
 <ul>
@@ -1488,17 +1488,17 @@
   <li><a href="/trustweave/getting-started/your-first-application/">Your First Application</a> - Complete anchoring example</li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -1530,7 +1530,7 @@
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -1540,12 +1540,12 @@
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -1567,12 +1567,12 @@
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -1581,12 +1581,12 @@
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -1594,7 +1594,7 @@
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -1602,31 +1602,31 @@
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -1638,7 +1638,7 @@
 
 
 
-  
+
 </body>
 </html>
 

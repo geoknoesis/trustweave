@@ -6,13 +6,13 @@ import java.time.temporal.ChronoUnit
 
 /**
  * Defines when messages should be archived.
- * 
+ *
  * Archive policies determine which messages should be moved to cold storage.
  */
 interface ArchivePolicy {
     /**
      * Determines if a message should be archived.
-     * 
+     *
      * @param message Message to evaluate
      * @return true if message should be archived
      */
@@ -21,13 +21,13 @@ interface ArchivePolicy {
 
 /**
  * Age-based archive policy.
- * 
+ *
  * Archives messages older than a specified number of days.
  */
 class AgeBasedArchivePolicy(
     private val maxAgeDays: Int = 90
 ) : ArchivePolicy {
-    
+
     override suspend fun shouldArchive(message: DidCommMessage): Boolean {
         val created = message.created?.let {
             try {
@@ -36,7 +36,7 @@ class AgeBasedArchivePolicy(
                 null
             }
         } ?: return false
-        
+
         val age = ChronoUnit.DAYS.between(created, Instant.now())
         return age > maxAgeDays
     }
@@ -44,21 +44,21 @@ class AgeBasedArchivePolicy(
 
 /**
  * Size-based archive policy.
- * 
+ *
  * Archives messages when total storage exceeds a threshold.
  * Note: This requires tracking total storage size.
  */
 class SizeBasedArchivePolicy(
     private val maxSizeBytes: Long = 1_000_000_000L // 1GB
 ) : ArchivePolicy {
-    
+
     private var currentSize: Long = 0
-    
+
     override suspend fun shouldArchive(message: DidCommMessage): Boolean {
         // This is a simplified check - in production, track actual storage size
         return currentSize > maxSizeBytes
     }
-    
+
     fun updateSize(size: Long) {
         currentSize = size
     }
@@ -66,13 +66,13 @@ class SizeBasedArchivePolicy(
 
 /**
  * Composite archive policy.
- * 
+ *
  * Archives messages if any of the component policies say so.
  */
 class CompositeArchivePolicy(
     private val policies: List<ArchivePolicy>
 ) : ArchivePolicy {
-    
+
     override suspend fun shouldArchive(message: DidCommMessage): Boolean {
         return policies.any { it.shouldArchive(message) }
     }
@@ -84,7 +84,7 @@ class CompositeArchivePolicy(
 class CustomArchivePolicy(
     private val predicate: suspend (DidCommMessage) -> Boolean
 ) : ArchivePolicy {
-    
+
     override suspend fun shouldArchive(message: DidCommMessage): Boolean {
         return predicate(message)
     }

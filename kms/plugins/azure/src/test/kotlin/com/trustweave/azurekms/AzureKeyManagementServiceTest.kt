@@ -22,7 +22,7 @@ class AzureKeyManagementServiceTest {
     @Test
     fun `test get supported algorithms`() = runBlocking {
         val supported = AzureKeyManagementService.SUPPORTED_ALGORITHMS
-        
+
         assertFalse(supported.contains(Algorithm.Ed25519)) // Not supported by Azure
         assertTrue(supported.contains(Algorithm.Secp256k1))
         assertTrue(supported.contains(Algorithm.P256))

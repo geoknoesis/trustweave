@@ -18,9 +18,9 @@ class CredentialAnchorServiceBranchCoverageTest {
         val service = CredentialAnchorService(anchorClient = Any())
         val credential = createTestCredential()
         val options = AnchorOptions(includeProof = true)
-        
+
         val result = service.anchorCredential(credential, "algorand:testnet", options)
-        
+
         assertNotNull(result)
         assertNotNull(result.anchorRef)
         assertNotNull(result.digest)
@@ -39,9 +39,9 @@ class CredentialAnchorServiceBranchCoverageTest {
             )
         )
         val options = AnchorOptions(includeProof = false)
-        
+
         val result = service.anchorCredential(credential, "algorand:testnet", options)
-        
+
         assertNotNull(result)
     }
 
@@ -49,9 +49,9 @@ class CredentialAnchorServiceBranchCoverageTest {
     fun `test CredentialAnchorService anchorCredential with default options`() = runBlocking {
         val service = CredentialAnchorService(anchorClient = Any())
         val credential = createTestCredential()
-        
+
         val result = service.anchorCredential(credential, "algorand:testnet")
-        
+
         assertNotNull(result)
     }
 
@@ -70,9 +70,9 @@ class CredentialAnchorServiceBranchCoverageTest {
                 )
             )
         )
-        
+
         val verified = service.verifyAnchoredCredential(credential, "algorand:testnet")
-        
+
         assertTrue(verified)
     }
 
@@ -80,9 +80,9 @@ class CredentialAnchorServiceBranchCoverageTest {
     fun `test CredentialAnchorService verifyAnchoredCredential returns false when no evidence`() = runBlocking {
         val service = CredentialAnchorService(anchorClient = Any())
         val credential = createTestCredential()
-        
+
         val verified = service.verifyAnchoredCredential(credential, "algorand:testnet")
-        
+
         assertFalse(verified)
     }
 
@@ -101,9 +101,9 @@ class CredentialAnchorServiceBranchCoverageTest {
                 )
             )
         )
-        
+
         val verified = service.verifyAnchoredCredential(credential, "algorand:testnet")
-        
+
         assertFalse(verified)
     }
 
@@ -122,9 +122,9 @@ class CredentialAnchorServiceBranchCoverageTest {
                 )
             )
         )
-        
+
         val ref = service.getAnchorReference(credential, "algorand:testnet")
-        
+
         // Current implementation returns null (placeholder)
         assertNull(ref)
     }
@@ -133,9 +133,9 @@ class CredentialAnchorServiceBranchCoverageTest {
     fun `test CredentialAnchorService getAnchorReference returns null when no evidence`() = runBlocking {
         val service = CredentialAnchorService(anchorClient = Any())
         val credential = createTestCredential()
-        
+
         val ref = service.getAnchorReference(credential, "algorand:testnet")
-        
+
         assertNull(ref)
     }
 
@@ -154,9 +154,9 @@ class CredentialAnchorServiceBranchCoverageTest {
                 )
             )
         )
-        
+
         val ref = service.getAnchorReference(credential, "algorand:testnet")
-        
+
         assertNull(ref)
     }
 

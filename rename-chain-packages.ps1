@@ -60,10 +60,10 @@ Get-ChildItem -Path "chains\plugins" -Recurse -Include "*.kt" | ForEach-Object {
     $file = $_
     $content = Get-Content $file.FullName -Raw -ErrorAction SilentlyContinue
     if ($null -eq $content) { return }
-    
+
     $originalContent = $content
     $modified = $false
-    
+
     # Update package declarations
     foreach ($oldPkg in $packageMappings.Keys) {
         $newPkg = $packageMappings[$oldPkg]
@@ -72,7 +72,7 @@ Get-ChildItem -Path "chains\plugins" -Recurse -Include "*.kt" | ForEach-Object {
             $modified = $true
         }
     }
-    
+
     # Update imports
     foreach ($oldPkg in $packageMappings.Keys) {
         $newPkg = $packageMappings[$oldPkg]
@@ -88,7 +88,7 @@ Get-ChildItem -Path "chains\plugins" -Recurse -Include "*.kt" | ForEach-Object {
             $modified = $true
         }
     }
-    
+
     if ($modified) {
         $fileCount++
         if ($DryRun) {
@@ -116,7 +116,7 @@ foreach ($oldDir in $directoryMappings.Keys) {
                 if (-not (Test-Path $parentDir)) {
                     New-Item -ItemType Directory -Path $parentDir -Force | Out-Null
                 }
-                
+
                 # Check if target already exists
                 if (Test-Path $newDir) {
                     Write-Host "  Warning: $newDir already exists, skipping $oldDir" -ForegroundColor Yellow
@@ -144,10 +144,10 @@ Get-ChildItem -Recurse -Include "*.kt" | Where-Object {
     $file = $_
     $content = Get-Content $file.FullName -Raw -ErrorAction SilentlyContinue
     if ($null -eq $content) { return }
-    
+
     $originalContent = $content
     $modified = $false
-    
+
     foreach ($oldPkg in $packageMappings.Keys) {
         $newPkg = $packageMappings[$oldPkg]
         $escapedOld = [regex]::Escape($oldPkg)
@@ -160,7 +160,7 @@ Get-ChildItem -Recurse -Include "*.kt" | Where-Object {
             $modified = $true
         }
     }
-    
+
     if ($modified) {
         $otherFileCount++
         if ($DryRun) {

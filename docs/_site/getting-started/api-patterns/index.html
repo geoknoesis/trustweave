@@ -12,10 +12,10 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
 
     .site-nav > ul.nav-list:first-child > li > a,
-    
+
     .site-nav > ul.nav-list:first-child > li > ul > li:not(:nth-child(7)) > a,
     .site-nav > ul.nav-list:first-child > li > ul > li > ul > li a {
       background-image: none;
@@ -38,17 +38,17 @@
     }
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -97,7 +97,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -106,7 +106,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -136,13 +136,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -153,7 +153,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -358,7 +358,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -406,14 +406,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -421,7 +421,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -434,21 +434,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -516,7 +516,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -531,8 +531,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -549,10 +549,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -565,8 +565,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -582,25 +582,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -610,9 +610,9 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
@@ -626,35 +626,35 @@
 
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="api-patterns-and-best-practices">
-  
-  
+
+
     <a href="#api-patterns-and-best-practices" class="anchor-heading" aria-labelledby="api-patterns-and-best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> API Patterns and Best Practices
-  
-  
+
+
 </h1>
-    
+
 
 <p>This guide explains the correct API patterns to use with TrustWeave and clarifies common misconceptions.</p>
 <h2 id="primary-api-trustlayer">
-  
-  
+
+
     <a href="#primary-api-trustlayer" class="anchor-heading" aria-labelledby="primary-api-trustlayer"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Primary API: TrustLayer
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>TrustLayer is the main entry point</strong> for all TrustWeave operations. Always use <code class="language-plaintext highlighter-rouge">TrustLayer</code> for your application code.</p>
 <h3 id="creating-a-trustlayer-instance">
-  
-  
+
+
     <a href="#creating-a-trustlayer-instance" class="anchor-heading" aria-labelledby="creating-a-trustlayer-instance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Creating a TrustLayer Instance
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -690,27 +690,27 @@
             <span class="p">}</span>
         <span class="p">}</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Use trustLayer for all operations</span>
     <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">}</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="correct-api-patterns">
-  
-  
+
+
     <a href="#correct-api-patterns" class="anchor-heading" aria-labelledby="correct-api-patterns"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Correct API Patterns
-  
-  
+
+
 </h2>
-    
+
 <h3 id="did-operations">
-  
-  
+
+
     <a href="#did-operations" class="anchor-heading" aria-labelledby="did-operations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> DID Operations
-  
-  
+
+
 </h3>
-    
+
 
 <p>✅ <strong>Correct:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -776,13 +776,13 @@
 <span class="kd">val</span> <span class="py">resolution</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">did</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="credential-operations">
-  
-  
+
+
     <a href="#credential-operations" class="anchor-heading" aria-labelledby="credential-operations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Credential Operations
-  
-  
+
+
 </h3>
-    
+
 
 <p>✅ <strong>Correct:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -840,13 +840,13 @@
 <span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">credentials</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span><span class="o">..</span><span class="p">.)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="wallet-operations">
-  
-  
+
+
     <a href="#wallet-operations" class="anchor-heading" aria-labelledby="wallet-operations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Wallet Operations
-  
-  
+
+
 </h3>
-    
+
 
 <p>✅ <strong>Correct:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -877,13 +877,13 @@
 <span class="kd">val</span> <span class="py">allCredentials</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">list</span><span class="p">()</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="trust-operations">
-  
-  
+
+
     <a href="#trust-operations" class="anchor-heading" aria-labelledby="trust-operations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Trust Operations
-  
-  
+
+
 </h3>
-    
+
 
 <p>✅ <strong>Correct:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -915,7 +915,7 @@
         <span class="nf">credentialTypes</span><span class="p">(</span><span class="s">"EducationCredential"</span><span class="p">)</span>
         <span class="nf">description</span><span class="p">(</span><span class="s">"Trusted university"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="kd">val</span> <span class="py">isTrusted</span> <span class="p">=</span> <span class="nf">isTrusted</span><span class="p">(</span><span class="s">"did:key:university"</span><span class="p">,</span> <span class="s">"EducationCredential"</span><span class="p">)</span>
 <span class="p">}</span>
 
@@ -926,21 +926,21 @@
 <span class="kd">val</span> <span class="py">isTrusted</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">isTrustedIssuer</span><span class="p">(</span><span class="s">"did:key:university"</span><span class="p">,</span> <span class="s">"EducationCredential"</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="error-handling-patterns">
-  
-  
+
+
     <a href="#error-handling-patterns" class="anchor-heading" aria-labelledby="error-handling-patterns"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Error Handling Patterns
-  
-  
+
+
 </h2>
-    
+
 <h3 id="exception-based-trustlayer-methods">
-  
-  
+
+
     <a href="#exception-based-trustlayer-methods" class="anchor-heading" aria-labelledby="exception-based-trustlayer-methods"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Exception-Based (TrustLayer Methods)
-  
-  
+
+
 </h3>
-    
+
 
 <p>All <code class="language-plaintext highlighter-rouge">TrustLayer</code> methods throw <code class="language-plaintext highlighter-rouge">TrustWeaveError</code> exceptions. Always use try-catch:</p>
 
@@ -984,13 +984,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="result-based-lower-level-apis">
-  
-  
+
+
     <a href="#result-based-lower-level-apis" class="anchor-heading" aria-labelledby="result-based-lower-level-apis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Result-Based (Lower-Level APIs)
-  
-  
+
+
 </h3>
-    
+
 
 <p>Some lower-level service APIs return <code class="language-plaintext highlighter-rouge">Result&lt;T&gt;</code>. Use <code class="language-plaintext highlighter-rouge">fold()</code>:</p>
 
@@ -1032,21 +1032,21 @@
 <span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="common-mistakes-to-avoid">
-  
-  
+
+
     <a href="#common-mistakes-to-avoid" class="anchor-heading" aria-labelledby="common-mistakes-to-avoid"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Common Mistakes to Avoid
-  
-  
+
+
 </h2>
-    
+
 <h3 id="-mistake-1-using-old-api-patterns">
-  
-  
+
+
     <a href="#-mistake-1-using-old-api-patterns" class="anchor-heading" aria-labelledby="-mistake-1-using-old-api-patterns"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ❌ Mistake 1: Using Old API Patterns
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Wrong:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1060,13 +1060,13 @@
 <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="-mistake-2-ignoring-errors">
-  
-  
+
+
     <a href="#-mistake-2-ignoring-errors" class="anchor-heading" aria-labelledby="-mistake-2-ignoring-errors"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ❌ Mistake 2: Ignoring Errors
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Wrong:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1092,13 +1092,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="-mistake-3-not-configuring-required-components">
-  
-  
+
+
     <a href="#-mistake-3-not-configuring-required-components" class="anchor-heading" aria-labelledby="-mistake-3-not-configuring-required-components"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ❌ Mistake 3: Not Configuring Required Components
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Wrong:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1134,13 +1134,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="-mistake-4-using-wrong-key-id-format">
-  
-  
+
+
     <a href="#-mistake-4-using-wrong-key-id-format" class="anchor-heading" aria-labelledby="-mistake-4-using-wrong-key-id-format"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ❌ Mistake 4: Using Wrong Key ID Format
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Wrong:</strong></p>
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
@@ -1166,23 +1166,23 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="migration-from-old-api">
-  
-  
+
+
     <a href="#migration-from-old-api" class="anchor-heading" aria-labelledby="migration-from-old-api"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Migration from Old API
-  
-  
+
+
 </h2>
-    
+
 
 <p>If you’re using older documentation or examples that reference <code class="language-plaintext highlighter-rouge">TrustWeave.dids.create()</code>, here’s how to migrate:</p>
 <h3 id="old-pattern">
-  
-  
+
+
     <a href="#old-pattern" class="anchor-heading" aria-labelledby="old-pattern"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Old Pattern
-  
-  
+
+
 </h3>
-    
+
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
 3
@@ -1191,13 +1191,13 @@
 <span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="n">trustweave</span><span class="p">.</span><span class="n">credentials</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span><span class="o">..</span><span class="p">.)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="new-pattern">
-  
-  
+
+
     <a href="#new-pattern" class="anchor-heading" aria-labelledby="new-pattern"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> New Pattern
-  
-  
+
+
 </h3>
-    
+
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
 3
@@ -1220,21 +1220,21 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="best-practices">
-  
-  
+
+
     <a href="#best-practices" class="anchor-heading" aria-labelledby="best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Best Practices
-  
-  
+
+
 </h2>
-    
+
 <h3 id="1-always-configure-explicitly">
-  
-  
+
+
     <a href="#1-always-configure-explicitly" class="anchor-heading" aria-labelledby="1-always-configure-explicitly"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Always Configure Explicitly
-  
-  
+
+
 </h3>
-    
+
 
 <p>Don’t rely on defaults in production. Explicitly configure all components:</p>
 
@@ -1272,13 +1272,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="2-handle-errors-explicitly">
-  
-  
+
+
     <a href="#2-handle-errors-explicitly" class="anchor-heading" aria-labelledby="2-handle-errors-explicitly"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Handle Errors Explicitly
-  
-  
+
+
 </h3>
-    
+
 
 <p>Always wrap <code class="language-plaintext highlighter-rouge">TrustLayer</code> operations in try-catch:</p>
 
@@ -1300,13 +1300,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="3-use-type-safe-builders">
-  
-  
+
+
     <a href="#3-use-type-safe-builders" class="anchor-heading" aria-labelledby="3-use-type-safe-builders"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Use Type-Safe Builders
-  
-  
+
+
 </h3>
-    
+
 
 <p>Leverage the DSL for type safety:</p>
 
@@ -1336,13 +1336,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="4-reuse-trustlayer-instance">
-  
-  
+
+
     <a href="#4-reuse-trustlayer-instance" class="anchor-heading" aria-labelledby="4-reuse-trustlayer-instance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Reuse TrustLayer Instance
-  
-  
+
+
 </h3>
-    
+
 
 <p>Create one <code class="language-plaintext highlighter-rouge">TrustLayer</code> instance and reuse it:</p>
 
@@ -1360,13 +1360,13 @@
 <span class="k">fun</span> <span class="nf">verifyCredential</span><span class="p">(</span><span class="o">..</span><span class="p">.)</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="related-documentation">
-  
-  
+
+
     <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><a href="/trustweave/introduction/mental-model/">Mental Model</a> - Understanding TrustWeave architecture</li>
@@ -1375,17 +1375,17 @@
   <li><a href="/trustweave/advanced/error-handling/">Error Handling</a> - Detailed error handling guide</li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -1417,7 +1417,7 @@
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -1427,12 +1427,12 @@
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -1454,12 +1454,12 @@
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -1468,12 +1468,12 @@
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -1481,7 +1481,7 @@
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -1489,31 +1489,31 @@
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -1525,7 +1525,7 @@
 
 
 
-  
+
 </body>
 </html>
 

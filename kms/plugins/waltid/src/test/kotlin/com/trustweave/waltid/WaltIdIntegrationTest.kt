@@ -1,6 +1,7 @@
 package com.trustweave.waltid
 
 import com.trustweave.did.registry.DidMethodRegistry
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -19,7 +20,7 @@ class WaltIdIntegrationTest {
         assertEquals(kms, result.kms)
         assertTrue(result.registeredDidMethods.contains("key"))
         assertTrue(result.registeredDidMethods.contains("web"))
-        
+
         // Verify methods are registered
         assertNotNull(registry.get("key"))
         assertNotNull(registry.get("web"))
@@ -50,8 +51,9 @@ class WaltIdIntegrationTest {
         assertTrue(document.id.startsWith("did:key:"))
 
         val resolutionResult = registry.resolve(document.id)
-        assertNotNull(resolutionResult.document)
-        assertEquals(document.id, resolutionResult.document?.id)
+        assertTrue(resolutionResult is DidResolutionResult.Success)
+        val successResult = resolutionResult as DidResolutionResult.Success
+        assertEquals(document.id, successResult.document.id)
     }
 }
 

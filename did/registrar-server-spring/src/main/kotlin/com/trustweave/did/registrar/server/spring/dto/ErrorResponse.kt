@@ -5,9 +5,9 @@ import kotlinx.serialization.Serializable
 
 /**
  * Structured error response for API errors.
- * 
+ *
  * Provides consistent error format across all endpoints.
- * 
+ *
  * **Example:**
  * ```json
  * {
@@ -26,12 +26,12 @@ data class ErrorResponse(
      * Human-readable error message.
      */
     val error: String,
-    
+
     /**
      * Machine-readable error code for programmatic handling.
      */
     val errorCode: String? = null,
-    
+
     /**
      * DID state indicating the operation failure details.
      */
@@ -51,7 +51,7 @@ data class ErrorResponse(
                 )
             )
         }
-        
+
         /**
          * Creates an error response from an exception.
          */

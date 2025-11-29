@@ -19,7 +19,7 @@ Get-ChildItem -Recurse -Include "build.gradle.kts" | Where-Object {
 } | ForEach-Object {
     $content = Get-Content $_.FullName -Raw -ErrorAction SilentlyContinue
     if ($null -eq $content) { return }
-    
+
     if ($content -match 'vericore\.shared') {
         $count++
         if ($DryRun) {

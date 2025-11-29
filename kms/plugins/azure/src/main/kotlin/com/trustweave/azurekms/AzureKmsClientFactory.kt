@@ -9,40 +9,40 @@ import java.net.URI
 
 /**
  * Factory for creating Azure Key Vault KeyClient instances.
- * 
+ *
  * Handles authentication (Managed Identity or Service Principal) and client configuration.
  */
 object AzureKmsClientFactory {
     /**
      * Creates an Azure Key Vault KeyClient from configuration.
-     * 
+     *
      * @param config Azure Key Vault configuration
      * @return Configured KeyClient
      */
     fun createClient(config: AzureKmsConfig): KeyClient {
         val builder = KeyClientBuilder()
             .vaultUrl(config.vaultUrl)
-        
+
         // Configure credentials
         val credential = createCredential(config)
         builder.credential(credential)
-        
+
         // Configure endpoint override (for testing with local emulators)
         config.endpointOverride?.let { endpoint ->
             // Note: Azure SDK doesn't directly support endpoint override in KeyClientBuilder
             // This would need to be handled via custom HttpClient if needed
             // For now, we'll skip this as it requires more complex setup
         }
-        
+
         return builder.buildClient()
     }
-    
+
     /**
      * Creates credentials provider based on configuration.
-     * 
+     *
      * If client ID, secret, and tenant are provided, uses Service Principal credentials.
      * Otherwise, uses DefaultAzureCredential (Managed Identity, environment variables, etc.).
-     * 
+     *
      * @param config Azure Key Vault configuration
      * @return TokenCredential for authentication
      */

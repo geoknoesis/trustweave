@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,36 +591,36 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="azure-key-vault-integration">
-  
-  
+
+
     <a href="#azure-key-vault-integration" class="anchor-heading" aria-labelledby="azure-key-vault-integration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Azure Key Vault Integration
-  
-  
+
+
 </h1>
-    
+
 
 <blockquote>
   <p>This guide covers the Azure Key Vault integration for TrustWeave. The Azure Key Vault plugin provides production-ready key management with support for Azure Key Vault-compatible algorithms.</p>
 </blockquote>
 <h2 id="overview">
-  
-  
+
+
     <a href="#overview" class="anchor-heading" aria-labelledby="overview"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Overview
-  
-  
+
+
 </h2>
-    
+
 
 <p>The <code class="language-plaintext highlighter-rouge">kms/plugins/azure</code> module provides a complete implementation of TrustWeave’s <code class="language-plaintext highlighter-rouge">KeyManagementService</code> interface using Azure Key Vault. This integration enables you to:</p>
 
@@ -632,13 +632,13 @@
   <li>Meet regulatory compliance requirements with Azure’s security features</li>
 </ul>
 <h2 id="installation">
-  
-  
+
+
     <a href="#installation" class="anchor-heading" aria-labelledby="installation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Installation
-  
-  
+
+
 </h2>
-    
+
 
 <p>Add the Azure Key Vault module to your dependencies:</p>
 
@@ -654,21 +654,21 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="configuration">
-  
-  
+
+
     <a href="#configuration" class="anchor-heading" aria-labelledby="configuration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Configuration
-  
-  
+
+
 </h2>
-    
+
 <h3 id="basic-configuration">
-  
-  
+
+
     <a href="#basic-configuration" class="anchor-heading" aria-labelledby="basic-configuration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Basic Configuration
-  
-  
+
+
 </h3>
-    
+
 
 <p>The Azure Key Vault provider can be configured via options map or environment variables:</p>
 
@@ -696,23 +696,23 @@
 <span class="p">))</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="authentication">
-  
-  
+
+
     <a href="#authentication" class="anchor-heading" aria-labelledby="authentication"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Authentication
-  
-  
+
+
 </h3>
-    
+
 
 <p>The plugin supports multiple authentication methods:</p>
 <h4 id="1-managed-identity-recommended-for-production">
-  
-  
+
+
     <a href="#1-managed-identity-recommended-for-production" class="anchor-heading" aria-labelledby="1-managed-identity-recommended-for-production"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Managed Identity (Recommended for Production)
-  
-  
+
+
 </h4>
-    
+
 
 <p>When running on Azure infrastructure (Azure VMs, App Service, Azure Functions, AKS), use Managed Identity:</p>
 
@@ -744,13 +744,13 @@ az keyvault set-policy <span class="nt">--name</span> myvault <span class="se">\
     <span class="nt">--key-permissions</span> get list create sign verify
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h4 id="2-service-principal">
-  
-  
+
+
     <a href="#2-service-principal" class="anchor-heading" aria-labelledby="2-service-principal"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Service Principal
-  
-  
+
+
 </h4>
-    
+
 
 <p>For local development or non-Azure environments:</p>
 
@@ -778,13 +778,13 @@ az keyvault set-policy <span class="nt">--name</span> myvault <span class="se">\
     <span class="nt">--scopes</span> /subscriptions/<span class="o">{</span>subscription-id<span class="o">}</span>/resourceGroups/<span class="o">{</span>resource-group<span class="o">}</span>/providers/Microsoft.KeyVault/vaults/<span class="o">{</span>vault-name<span class="o">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h4 id="3-environment-variables">
-  
-  
+
+
     <a href="#3-environment-variables" class="anchor-heading" aria-labelledby="3-environment-variables"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Environment Variables
-  
-  
+
+
 </h4>
-    
+
 
 <p>The plugin automatically reads from environment variables:</p>
 
@@ -806,13 +806,13 @@ az keyvault set-policy <span class="nt">--name</span> myvault <span class="se">\
 <span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">AzureKeyManagementService</span><span class="p">(</span><span class="n">config</span> <span class="o">?:</span> <span class="k">throw</span> <span class="nc">IllegalStateException</span><span class="p">(</span><span class="s">"Azure config not found"</span><span class="p">))</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="direct-configuration">
-  
-  
+
+
     <a href="#direct-configuration" class="anchor-heading" aria-labelledby="direct-configuration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Direct Configuration
-  
-  
+
+
 </h3>
-    
+
 
 <p>You can also configure directly using the builder:</p>
 
@@ -838,13 +838,13 @@ az keyvault set-policy <span class="nt">--name</span> myvault <span class="se">\
 <span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">AzureKeyManagementService</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="algorithm-support">
-  
-  
+
+
     <a href="#algorithm-support" class="anchor-heading" aria-labelledby="algorithm-support"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Algorithm Support
-  
-  
+
+
 </h2>
-    
+
 
 <p>The Azure Key Vault plugin supports the following algorithms:</p>
 
@@ -905,13 +905,13 @@ az keyvault set-policy <span class="nt">--name</span> myvault <span class="se">\
 
 <p><strong>Note:</strong> Ed25519 is not directly supported by Azure Key Vault. Use P-256, P-384, or P-521 as alternatives.</p>
 <h3 id="checking-algorithm-support">
-  
-  
+
+
     <a href="#checking-algorithm-support" class="anchor-heading" aria-labelledby="checking-algorithm-support"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Checking Algorithm Support
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -939,21 +939,21 @@ az keyvault set-policy <span class="nt">--name</span> myvault <span class="se">\
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="usage-examples">
-  
-  
+
+
     <a href="#usage-examples" class="anchor-heading" aria-labelledby="usage-examples"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Usage Examples
-  
-  
+
+
 </h2>
-    
+
 <h3 id="generating-keys">
-  
-  
+
+
     <a href="#generating-keys" class="anchor-heading" aria-labelledby="generating-keys"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Generating Keys
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1007,13 +1007,13 @@ az keyvault set-policy <span class="nt">--name</span> myvault <span class="se">\
 <span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="signing-data">
-  
-  
+
+
     <a href="#signing-data" class="anchor-heading" aria-labelledby="signing-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Signing Data
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1059,13 +1059,13 @@ az keyvault set-policy <span class="nt">--name</span> myvault <span class="se">\
 <span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="retrieving-public-keys">
-  
-  
+
+
     <a href="#retrieving-public-keys" class="anchor-heading" aria-labelledby="retrieving-public-keys"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Retrieving Public Keys
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1097,13 +1097,13 @@ az keyvault set-policy <span class="nt">--name</span> myvault <span class="se">\
 <span class="nf">println</span><span class="p">(</span><span class="s">"Public key JWK: $jwk"</span><span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="key-deletion">
-  
-  
+
+
     <a href="#key-deletion" class="anchor-heading" aria-labelledby="key-deletion"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Deletion
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1119,13 +1119,13 @@ az keyvault set-policy <span class="nt">--name</span> myvault <span class="se">\
 <span class="c1">// To permanently delete, use Azure CLI or portal</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="key-identifiers">
-  
-  
+
+
     <a href="#key-identifiers" class="anchor-heading" aria-labelledby="key-identifiers"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Identifiers
-  
-  
+
+
 </h2>
-    
+
 
 <p>Azure Key Vault supports multiple key identifier formats:</p>
 
@@ -1138,13 +1138,13 @@ az keyvault set-policy <span class="nt">--name</span> myvault <span class="se">\
 
 <p>The plugin automatically resolves all these formats.</p>
 <h2 id="key-versioning">
-  
-  
+
+
     <a href="#key-versioning" class="anchor-heading" aria-labelledby="key-versioning"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Versioning
-  
-  
+
+
 </h2>
-    
+
 
 <p>Azure Key Vault uses key versions. When you create a key, a version is automatically created. The plugin:</p>
 
@@ -1154,13 +1154,13 @@ az keyvault set-policy <span class="nt">--name</span> myvault <span class="se">\
   <li>Returns the full key URL (including version) as the key ID</li>
 </ul>
 <h2 id="error-handling">
-  
-  
+
+
     <a href="#error-handling" class="anchor-heading" aria-labelledby="error-handling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Error Handling
-  
-  
+
+
 </h2>
-    
+
 
 <p>The plugin maps Azure Key Vault exceptions to TrustWeave exceptions:</p>
 
@@ -1204,13 +1204,13 @@ az keyvault set-policy <span class="nt">--name</span> myvault <span class="se">\
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="common-errors">
-  
-  
+
+
     <a href="#common-errors" class="anchor-heading" aria-labelledby="common-errors"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Common Errors
-  
-  
+
+
 </h3>
-    
+
 
 <div class="table-wrapper"><table>
   <thead>
@@ -1244,23 +1244,23 @@ az keyvault set-policy <span class="nt">--name</span> myvault <span class="se">\
   </tbody>
 </table></div>
 <h2 id="azure-rbac-permissions">
-  
-  
+
+
     <a href="#azure-rbac-permissions" class="anchor-heading" aria-labelledby="azure-rbac-permissions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Azure RBAC Permissions
-  
-  
+
+
 </h2>
-    
+
 
 <p>Your Azure identity (Managed Identity or Service Principal) needs the following permissions:</p>
 <h3 id="minimum-required-permissions">
-  
-  
+
+
     <a href="#minimum-required-permissions" class="anchor-heading" aria-labelledby="minimum-required-permissions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Minimum Required Permissions
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1274,13 +1274,13 @@ az role assignment create <span class="se">\</span>
     <span class="nt">--scope</span> /subscriptions/<span class="o">{</span>subscription-id<span class="o">}</span>/resourceGroups/<span class="o">{</span>resource-group<span class="o">}</span>/providers/Microsoft.KeyVault/vaults/<span class="o">{</span>vault-name<span class="o">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="recommended-roles">
-  
-  
+
+
     <a href="#recommended-roles" class="anchor-heading" aria-labelledby="recommended-roles"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Recommended Roles
-  
-  
+
+
 </h3>
-    
+
 
 <p>For full key management capabilities:</p>
 
@@ -1290,13 +1290,13 @@ az role assignment create <span class="se">\</span>
   <li><strong>Key Vault Secrets User</strong> - If using secrets (not applicable for keys)</li>
 </ul>
 <h3 id="access-policy-classic">
-  
-  
+
+
     <a href="#access-policy-classic" class="anchor-heading" aria-labelledby="access-policy-classic"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Access Policy (Classic)
-  
-  
+
+
 </h3>
-    
+
 
 <p>If using access policies instead of RBAC:</p>
 
@@ -1308,13 +1308,13 @@ az role assignment create <span class="se">\</span>
     <span class="nt">--key-permissions</span> get list create sign verify delete recover backup restore
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="algorithm-compatibility">
-  
-  
+
+
     <a href="#algorithm-compatibility" class="anchor-heading" aria-labelledby="algorithm-compatibility"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Algorithm Compatibility
-  
-  
+
+
 </h2>
-    
+
 
 <p>See the <a href="/trustweave/core-concepts/algorithm-compatibility-table/">Algorithm Compatibility Table</a> for detailed comparison of algorithm support across DIDs, VCs, AWS KMS, Azure Key Vault, and Google Cloud KMS.</p>
 
@@ -1327,13 +1327,13 @@ az role assignment create <span class="se">\</span>
   <li>❌ BLS12-381 not supported (requires specialized KMS)</li>
 </ul>
 <h2 id="best-practices">
-  
-  
+
+
     <a href="#best-practices" class="anchor-heading" aria-labelledby="best-practices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Best Practices
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Use Managed Identity</strong>: Prefer Managed Identity over Service Principal for production</li>
@@ -1348,21 +1348,21 @@ az role assignment create <span class="se">\</span>
   <li><strong>Monitoring</strong>: Enable Azure Monitor and Key Vault logging</li>
 </ol>
 <h2 id="testing">
-  
-  
+
+
     <a href="#testing" class="anchor-heading" aria-labelledby="testing"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Testing
-  
-  
+
+
 </h2>
-    
+
 <h3 id="unit-tests">
-  
-  
+
+
     <a href="#unit-tests" class="anchor-heading" aria-labelledby="unit-tests"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Unit Tests
-  
-  
+
+
 </h3>
-    
+
 
 <p>The module includes unit tests that can be run without Azure credentials:</p>
 
@@ -1370,13 +1370,13 @@ az role assignment create <span class="se">\</span>
 </pre></td><td class="rouge-code"><pre>./gradlew :kms/plugins/azure:test
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="integration-tests">
-  
-  
+
+
     <a href="#integration-tests" class="anchor-heading" aria-labelledby="integration-tests"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Integration Tests
-  
-  
+
+
 </h3>
-    
+
 
 <p>For integration testing, use a test Azure Key Vault:</p>
 
@@ -1396,13 +1396,13 @@ az role assignment create <span class="se">\</span>
 <span class="p">))</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="local-testing-with-azure-key-vault-emulator">
-  
-  
+
+
     <a href="#local-testing-with-azure-key-vault-emulator" class="anchor-heading" aria-labelledby="local-testing-with-azure-key-vault-emulator"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Local Testing with Azure Key Vault Emulator
-  
-  
+
+
 </h3>
-    
+
 
 <p>For local development, you can use the Azure Key Vault emulator (if available):</p>
 
@@ -1416,21 +1416,21 @@ az role assignment create <span class="se">\</span>
 <span class="p">))</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="using-with-trustweave">
-  
-  
+
+
     <a href="#using-with-trustweave" class="anchor-heading" aria-labelledby="using-with-trustweave"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Using with TrustWeave
-  
-  
+
+
 </h2>
-    
+
 <h3 id="basic-setup">
-  
-  
+
+
     <a href="#basic-setup" class="anchor-heading" aria-labelledby="basic-setup"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Basic Setup
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1454,13 +1454,13 @@ az role assignment create <span class="se">\</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="with-spi-auto-discovery">
-  
-  
+
+
     <a href="#with-spi-auto-discovery" class="anchor-heading" aria-labelledby="with-spi-auto-discovery"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> With SPI Auto-Discovery
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1472,13 +1472,13 @@ az role assignment create <span class="se">\</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="with-managed-identity">
-  
-  
+
+
     <a href="#with-managed-identity" class="anchor-heading" aria-labelledby="with-managed-identity"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> With Managed Identity
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1500,23 +1500,23 @@ az role assignment create <span class="se">\</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="key-rotation-strategies">
-  
-  
+
+
     <a href="#key-rotation-strategies" class="anchor-heading" aria-labelledby="key-rotation-strategies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Rotation Strategies
-  
-  
+
+
 </h2>
-    
+
 
 <p>Azure Key Vault supports key versioning, which can be used for rotation:</p>
 <h3 id="1-manual-rotation-with-new-versions">
-  
-  
+
+
     <a href="#1-manual-rotation-with-new-versions" class="anchor-heading" aria-labelledby="1-manual-rotation-with-new-versions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Manual Rotation with New Versions
-  
-  
+
+
 </h3>
-    
+
 
 <p>Create a new key version when rotating:</p>
 
@@ -1556,13 +1556,13 @@ az role assignment create <span class="se">\</span>
 <span class="c1">// Step 5: Eventually delete old key after credentials expire</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="2-using-key-names-for-rotation">
-  
-  
+
+
     <a href="#2-using-key-names-for-rotation" class="anchor-heading" aria-labelledby="2-using-key-names-for-rotation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Using Key Names for Rotation
-  
-  
+
+
 </h3>
-    
+
 
 <p>Use different key names for each rotation:</p>
 
@@ -1596,13 +1596,13 @@ az role assignment create <span class="se">\</span>
 <span class="c1">// Keep key1 for historical verification</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="security-considerations">
-  
-  
+
+
     <a href="#security-considerations" class="anchor-heading" aria-labelledby="security-considerations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Security Considerations
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Network Security</strong>: Use private endpoints for Key Vault access in production</li>
@@ -1614,13 +1614,13 @@ az role assignment create <span class="se">\</span>
   <li><strong>Compliance</strong>: Azure Key Vault meets various compliance standards (SOC 2, ISO 27001, etc.)</li>
 </ol>
 <h2 id="related-documentation">
-  
-  
+
+
     <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><a href="/trustweave/core-concepts/key-management/">Key Management Guide</a> - Core KMS concepts</li>
@@ -1629,13 +1629,13 @@ az role assignment create <span class="se">\</span>
   <li><a href="/trustweave/contributing/creating-plugins/">Creating Plugins Guide</a> - Custom KMS implementations</li>
 </ul>
 <h2 id="see-also">
-  
-  
+
+
     <a href="#see-also" class="anchor-heading" aria-labelledby="see-also"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> See Also
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><a href="https://learn.microsoft.com/azure/key-vault/">Azure Key Vault Documentation</a></li>
@@ -1644,17 +1644,17 @@ az role assignment create <span class="se">\</span>
   <li><a href="https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/">Azure Managed Identity Documentation</a></li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -1686,7 +1686,7 @@ az role assignment create <span class="se">\</span>
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -1696,12 +1696,12 @@ az role assignment create <span class="se">\</span>
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -1723,12 +1723,12 @@ az role assignment create <span class="se">\</span>
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -1737,12 +1737,12 @@ az role assignment create <span class="se">\</span>
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -1750,7 +1750,7 @@ az role assignment create <span class="se">\</span>
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -1758,31 +1758,31 @@ az role assignment create <span class="se">\</span>
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -1794,7 +1794,7 @@ az role assignment create <span class="se">\</span>
 
 
 
-  
+
 </body>
 </html>
 

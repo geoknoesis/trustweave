@@ -20,26 +20,26 @@ import java.util.UUID
 
 /**
  * KMS-based DID Registrar implementation for Internal Secret Mode.
- * 
+ *
  * This registrar uses a Key Management Service (KMS) to generate and manage keys
  * internally, following the DID Registration specification's Internal Secret Mode.
- * 
+ *
  * **Key Management Modes:**
  * - **Internal Secret Mode**: This registrar generates keys using KMS and can optionally
  *   return them to the client if `returnSecrets=true` is specified.
  * - **External Secret Mode**: Not supported by this registrar. Use a registrar that
  *   supports external wallet/KMS integration.
- * 
+ *
  * **Job Storage:**
  * If a [JobStorage] is provided, operations will be tracked with a `jobId` and can be
  * queried later. This enables support for long-running operations and status polling.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val kms = InMemoryKeyManagementService()
  * val jobStorage = InMemoryJobStorage() // or DatabaseJobStorage
  * val registrar = KmsBasedRegistrar(kms, jobStorage = jobStorage)
- * 
+ *
  * val response = registrar.createDid(
  *     method = "key",
  *     options = CreateDidOptions(
@@ -47,13 +47,13 @@ import java.util.UUID
  *         returnSecrets = true
  *     )
  * )
- * 
+ *
  * // If jobId is present, can query status later
  * response.jobId?.let { jobId ->
  *     val status = jobStorage.get(jobId)
  * }
  * ```
- * 
+ *
  * @param kms Key Management Service for key generation and management
  * @param jobStorage Optional storage for tracking long-running operations (default: InMemoryJobStorage)
  * @param didMethodFactory Factory function to create DID method-specific implementations
@@ -64,7 +64,7 @@ class KmsBasedRegistrar(
     private val jobStorage: JobStorage = InMemoryJobStorage(),
     private val didMethodFactory: ((String, KeyManagementService) -> com.trustweave.did.DidMethod)? = null
 ) : DidRegistrar {
-    
+
     override suspend fun createDid(
         method: String,
         options: CreateDidOptions
@@ -83,24 +83,24 @@ class KmsBasedRegistrar(
                     )
                 )
             }
-            
+
             // For Internal Secret Mode, generate keys using KMS
             val algorithm = extractAlgorithm(options)
             val keyHandle = kms.generateKey(algorithm, extractKmsOptions(options))
-            
+
             // Create DID Document (method-specific logic)
             val didDocument = createDidDocument(method, keyHandle, options)
-            
+
             // Build secret if returnSecrets is true
             val secret = if (options.returnSecrets) {
                 buildSecret(keyHandle, options)
             } else {
                 null
             }
-            
+
             // Generate jobId for tracking
             val jobId = UUID.randomUUID().toString()
-            
+
             val response = DidRegistrationResponse(
                 jobId = jobId,
                 didState = DidState(
@@ -110,10 +110,10 @@ class KmsBasedRegistrar(
                     didDocument = didDocument
                 )
             )
-            
+
             // Store in job storage for later retrieval
             jobStorage.store(jobId, response)
-            
+
             response
         } catch (e: TrustWeaveException) {
             val jobId = UUID.randomUUID().toString()
@@ -130,10 +130,10 @@ class KmsBasedRegistrar(
                     )
                 )
             )
-            
+
             // Store error response in job storage
             jobStorage.store(jobId, errorResponse)
-            
+
             errorResponse
         } catch (e: Exception) {
             val jobId = UUID.randomUUID().toString()
@@ -146,14 +146,14 @@ class KmsBasedRegistrar(
                     reason = "Failed to create DID: ${e.message ?: "Unknown error"}"
                 )
             )
-            
+
             // Store error response in job storage
             jobStorage.store(jobId, errorResponse)
-            
+
             errorResponse
         }
     }
-    
+
     override suspend fun updateDid(
         did: String,
         document: DidDocument,
@@ -165,9 +165,9 @@ class KmsBasedRegistrar(
         // 2. Verify authorization using keys from KMS or provided secrets
         // 3. Sign the update operation
         // 4. Submit to the method's registry/ledger
-        
+
         val jobId = UUID.randomUUID().toString()
-        
+
         val response = DidRegistrationResponse(
             jobId = jobId,
             didState = DidState(
@@ -176,22 +176,22 @@ class KmsBasedRegistrar(
                 didDocument = document
             )
         )
-        
+
         // Store in job storage
         jobStorage.store(jobId, response)
-        
+
         response
     }
-    
+
     override suspend fun deactivateDid(
         did: String,
         options: DeactivateDidOptions
     ): DidRegistrationResponse = withContext(Dispatchers.IO) {
         // Similar to update, deactivation requires authorization
         // This is a simplified implementation
-        
+
         val jobId = UUID.randomUUID().toString()
-        
+
         val response = DidRegistrationResponse(
             jobId = jobId,
             didState = DidState(
@@ -200,13 +200,13 @@ class KmsBasedRegistrar(
                 didDocument = null
             )
         )
-        
+
         // Store in job storage
         jobStorage.store(jobId, response)
-        
+
         response
     }
-    
+
     /**
      * Extracts algorithm from options.
      */
@@ -217,20 +217,20 @@ class KmsBasedRegistrar(
             is JsonPrimitive -> algorithmElement.content
             else -> algorithmElement?.toString()
         } ?: "Ed25519" // Default algorithm
-        
+
         return algorithmStr
     }
-    
+
     /**
      * Extracts KMS options from CreateDidOptions.
      */
     private fun extractKmsOptions(options: CreateDidOptions): Map<String, Any?> {
         return options.methodSpecificOptions.mapValues { it.value.toString() }
     }
-    
+
     /**
      * Creates a DID Document for the given method and key.
-     * 
+     *
      * This is a simplified implementation. Real implementations would delegate
      * to method-specific logic or use the didMethodFactory.
      */
@@ -241,7 +241,7 @@ class KmsBasedRegistrar(
     ): DidDocument {
         // Use factory if provided
         val didMethod = didMethodFactory?.invoke(method, kms)
-        
+
         if (didMethod != null) {
             // Use the DID method's createDid if available
             val legacyOptions = DidCreationOptions(
@@ -251,7 +251,7 @@ class KmsBasedRegistrar(
             )
             return didMethod.createDid(legacyOptions)
         }
-        
+
         // Fallback: Create a simple DID Document
         // For did:key, we can derive the DID from the key
         val did = when (method) {
@@ -265,7 +265,7 @@ class KmsBasedRegistrar(
                 "did:$method:${keyHandle.id}"
             }
         }
-        
+
         val verificationMethod = VerificationMethod(
             id = "$did#${keyHandle.id}",
             type = keyHandle.algorithm,
@@ -273,14 +273,14 @@ class KmsBasedRegistrar(
             publicKeyJwk = keyHandle.publicKeyJwk,
             publicKeyMultibase = keyHandle.publicKeyMultibase
         )
-        
+
         return DidDocument(
             id = did,
             verificationMethod = listOf(verificationMethod),
             authentication = listOf(verificationMethod.id)
         )
     }
-    
+
     /**
      * Builds a Secret object from a KeyHandle.
      */
@@ -291,11 +291,11 @@ class KmsBasedRegistrar(
         // In Internal Secret Mode with returnSecrets=true, we need to extract
         // the private key from KMS. However, KMS typically doesn't expose private keys
         // directly for security reasons.
-        
+
         // For now, we return the key handle information
         // Real implementations would need KMS support for exporting keys
         // or would work with KMS that supports key export in secure ways
-        
+
         // Note: KMS KeyHandle contains publicKeyJwk, but Secret.KeyMaterial expects privateKeyJwk
         // In Internal Secret Mode with returnSecrets=true, we would need to export the private key
         // from KMS, which is typically not supported for security reasons.
@@ -304,7 +304,7 @@ class KmsBasedRegistrar(
         return Secret(
             keys = listOf(
                 KeyMaterial(
-                    id = keyHandle.id,
+                    id = keyHandle.id.value,
                     type = keyHandle.algorithm,
                     privateKeyJwk = keyHandle.publicKeyJwk?.let { jwk ->
                         // Convert Map<String, Any?> to JsonObject
@@ -322,7 +322,7 @@ class KmsBasedRegistrar(
                         }
                     },
                     privateKeyMultibase = keyHandle.publicKeyMultibase,
-                    additionalProperties = mapOf("keyHandleId" to keyHandle.id)
+                    additionalProperties = mapOf("keyHandleId" to keyHandle.id.value)
                 )
             )
         )

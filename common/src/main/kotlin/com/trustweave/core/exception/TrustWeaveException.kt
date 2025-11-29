@@ -2,11 +2,11 @@ package com.trustweave.core.exception
 
 /**
  * Base sealed exception hierarchy for all TrustWeave operations.
- * 
+ *
  * All TrustWeave exceptions provide structured error codes and context
  * for better error handling and debugging. Exceptions are organized by
  * naming convention (Plugin*, Provider*, Config*, etc.) for clarity.
- * 
+ *
  * This sealed class ensures exhaustive handling in when expressions.
  */
 open class TrustWeaveException(
@@ -15,11 +15,11 @@ open class TrustWeaveException(
     open val context: Map<String, Any?> = emptyMap(),
     override val cause: Throwable? = null
 ) : Exception(message, cause) {
-    
+
     // ============================================================================
     // Plugin-related exceptions
     // ============================================================================
-    
+
     data class PluginNotFound(
         val pluginId: String,
         val pluginType: String? = null
@@ -32,7 +32,7 @@ open class TrustWeaveException(
             "pluginType" to pluginType
         ).filterValues { it != null }
     )
-    
+
     data class PluginInitializationFailed(
         val pluginId: String,
         val reason: String
@@ -44,13 +44,13 @@ open class TrustWeaveException(
             "reason" to reason
         )
     )
-    
+
     class BlankPluginId : TrustWeaveException(
         code = "BLANK_PLUGIN_ID",
         message = "Plugin ID cannot be blank",
         context = emptyMap()
     )
-    
+
     data class PluginAlreadyRegistered(
         val pluginId: String,
         val existingPlugin: String? = null
@@ -62,11 +62,11 @@ open class TrustWeaveException(
             "existingPlugin" to existingPlugin
         ).filterValues { it != null }
     )
-    
+
     // ============================================================================
     // Provider-related exceptions
     // ============================================================================
-    
+
     data class NoProvidersFound(
         val pluginIds: List<String>,
         val availablePlugins: List<String> = emptyList()
@@ -78,7 +78,7 @@ open class TrustWeaveException(
             "availablePlugins" to availablePlugins
         )
     )
-    
+
     data class PartialProvidersFound(
         val requestedIds: List<String>,
         val foundIds: List<String>,
@@ -92,7 +92,7 @@ open class TrustWeaveException(
             "missingIds" to missingIds
         )
     )
-    
+
     data class AllProvidersFailed(
         val attemptedProviders: List<String>,
         val providerErrors: Map<String, String> = emptyMap(),
@@ -106,11 +106,11 @@ open class TrustWeaveException(
         ),
         cause = lastException
     )
-    
+
     // ============================================================================
     // Configuration exceptions
     // ============================================================================
-    
+
     data class ConfigNotFound(
         val path: String
     ) : TrustWeaveException(
@@ -118,7 +118,7 @@ open class TrustWeaveException(
         message = "Configuration file not found: $path",
         context = mapOf("path" to path)
     )
-    
+
     data class ConfigReadFailed(
         val path: String,
         val reason: String
@@ -130,7 +130,7 @@ open class TrustWeaveException(
             "reason" to reason
         )
     )
-    
+
     data class InvalidConfigFormat(
         val jsonString: String? = null,
         val parseError: String,
@@ -144,11 +144,11 @@ open class TrustWeaveException(
             "field" to field
         ).filterValues { it != null } + (jsonString?.let { mapOf("jsonString" to it) } ?: emptyMap())
     )
-    
+
     // ============================================================================
     // JSON-related exceptions
     // ============================================================================
-    
+
     data class InvalidJson(
         val jsonString: String? = null,
         val parseError: String,
@@ -161,7 +161,7 @@ open class TrustWeaveException(
             "position" to position
         ).filterValues { it != null } + (jsonString?.let { mapOf("jsonString" to it.take(500)) } ?: emptyMap())
     )
-    
+
     data class JsonEncodeFailed(
         val element: String? = null,
         val reason: String
@@ -173,11 +173,11 @@ open class TrustWeaveException(
             "element" to element
         ).filterValues { it != null }
     )
-    
+
     // ============================================================================
     // Digest-related exceptions
     // ============================================================================
-    
+
     data class DigestFailed(
         val algorithm: String,
         val reason: String
@@ -189,11 +189,11 @@ open class TrustWeaveException(
             "reason" to reason
         )
     )
-    
+
     // ============================================================================
     // Encoding-related exceptions
     // ============================================================================
-    
+
     data class EncodeFailed(
         val operation: String,
         val reason: String
@@ -205,11 +205,11 @@ open class TrustWeaveException(
             "reason" to reason
         )
     )
-    
+
     // ============================================================================
     // Validation exceptions
     // ============================================================================
-    
+
     data class ValidationFailed(
         val field: String,
         val reason: String,
@@ -223,25 +223,25 @@ open class TrustWeaveException(
             "value" to value
         )
     )
-    
+
     // ============================================================================
     // Generic exceptions
     // ============================================================================
-    
+
     data class InvalidOperation(
         override val code: String = "INVALID_OPERATION",
         override val message: String,
         override val context: Map<String, Any?> = emptyMap(),
         override val cause: Throwable? = null
     ) : TrustWeaveException(code, message, context, cause)
-    
+
     data class InvalidState(
         override val code: String = "INVALID_STATE",
         override val message: String,
         override val context: Map<String, Any?> = emptyMap(),
         override val cause: Throwable? = null
     ) : TrustWeaveException(code, message, context, cause)
-    
+
     data class NotFound(
         val resource: String? = null,
         override val message: String = resource?.let { "Resource not found: $it" } ?: "Resource not found",
@@ -253,7 +253,7 @@ open class TrustWeaveException(
         context = context + (resource?.let { mapOf("resource" to it) } ?: emptyMap()),
         cause = cause
     )
-    
+
     data class UnsupportedAlgorithm(
         val algorithm: String,
         val supportedAlgorithms: List<String>
@@ -265,7 +265,7 @@ open class TrustWeaveException(
             "supportedAlgorithms" to supportedAlgorithms
         )
     )
-    
+
     data class Unknown(
         override val code: String = "UNKNOWN_ERROR",
         override val message: String,
@@ -276,7 +276,7 @@ open class TrustWeaveException(
 
 /**
  * Extension function to convert any Throwable to a TrustWeaveException.
- * 
+ *
  * This function provides automatic conversion of standard exceptions
  * to structured TrustWeaveException types for consistent error handling.
  */
@@ -304,10 +304,10 @@ fun Throwable.toTrustWeaveException(): TrustWeaveException = when (this) {
 
 /**
  * Helper function to create a TrustWeaveException from a simple message.
- * 
+ *
  * This is a convenience function for cases where you need a generic exception
  * but don't have specific context. Prefer using specific exception types when possible.
- * 
+ *
  * @param message The error message
  * @param cause Optional underlying exception
  * @return TrustWeaveException.Unknown with the provided message
@@ -334,7 +334,7 @@ object TrustWeaveExceptionHelpers {
         is TrustWeaveException.PluginAlreadyRegistered -> true
         else -> false
     }
-    
+
     /**
      * Checks if the exception is provider-related.
      */
@@ -344,7 +344,7 @@ object TrustWeaveExceptionHelpers {
         is TrustWeaveException.AllProvidersFailed -> true
         else -> false
     }
-    
+
     /**
      * Checks if the exception is configuration-related.
      */
@@ -354,7 +354,7 @@ object TrustWeaveExceptionHelpers {
         is TrustWeaveException.InvalidConfigFormat -> true
         else -> false
     }
-    
+
     /**
      * Checks if the exception is JSON-related.
      */
@@ -363,7 +363,7 @@ object TrustWeaveExceptionHelpers {
         is TrustWeaveException.JsonEncodeFailed -> true
         else -> false
     }
-    
+
     /**
      * Checks if the exception is validation-related.
      */

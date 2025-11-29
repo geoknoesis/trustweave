@@ -13,6 +13,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import kotlin.test.*
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
 
@@ -31,22 +32,29 @@ class GanacheEoIntegrationTest {
 
     companion object {
         @JvmStatic
-        lateinit var ganacheContainer: GanacheContainer
-        
+        var ganacheContainer: GanacheContainer? = null
+
         @JvmStatic
         @BeforeAll
         fun startGanache() {
-            ganacheContainer = GanacheContainer().apply {
-                start()
+            try {
+                ganacheContainer = GanacheContainer().apply {
+                    start()
+                }
+            } catch (e: IllegalStateException) {
+                // Docker not available - test will be skipped
+                if (e.message?.contains("Docker") == true) {
+                    println("Skipping Ganache test: Docker environment not available")
+                    return
+                }
+                throw e
             }
         }
-        
+
         @JvmStatic
         @AfterAll
         fun stopGanache() {
-            if (::ganacheContainer.isInitialized) {
-                ganacheContainer.stop()
-            }
+            ganacheContainer?.stop()
         }
     }
 
@@ -56,15 +64,19 @@ class GanacheEoIntegrationTest {
 
     @Test
     fun `end-to-end EO integrity chain verification with Ganache`() = runBlocking {
+        // Skip test if Docker/Ganache is not available
+        assumeTrue(ganacheContainer != null, "Docker/Ganache container not available - skipping test")
+        val container = ganacheContainer!!
+
         // Setup: Create DID for issuer and register Ganache blockchain anchor client
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val chainId = GanacheBlockchainAnchorClient.LOCAL
-        
+
         // Get RPC URL and private key from Testcontainers Ganache container
-        val rpcUrl = ganacheContainer.getRpcUrl()
-        val privateKey = ganacheContainer.getFirstAccountPrivateKey()
-        
+        val rpcUrl = container.getRpcUrl()
+        val privateKey = container.getFirstAccountPrivateKey()
+
         // Create Ganache blockchain anchor client using Testcontainers
         val anchorClient = GanacheBlockchainAnchorClient(
             chainId = chainId,
@@ -295,12 +307,16 @@ class GanacheEoIntegrationTest {
 
     @Test
     fun `test Ganache blockchain anchoring for EO dataset`() = runBlocking {
+        // Skip test if Docker/Ganache is not available
+        assumeTrue(ganacheContainer != null, "Docker/Ganache container not available - skipping test")
+        val container = ganacheContainer!!
+
         val chainId = GanacheBlockchainAnchorClient.LOCAL
-        
+
         // Get RPC URL and private key from Testcontainers Ganache container
-        val rpcUrl = ganacheContainer.getRpcUrl()
-        val privateKey = ganacheContainer.getFirstAccountPrivateKey()
-        
+        val rpcUrl = container.getRpcUrl()
+        val privateKey = container.getFirstAccountPrivateKey()
+
         val anchorClient = GanacheBlockchainAnchorClient(
             chainId = chainId,
             options = mapOf(

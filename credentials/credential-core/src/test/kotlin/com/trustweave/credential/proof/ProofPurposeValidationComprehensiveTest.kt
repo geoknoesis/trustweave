@@ -12,15 +12,15 @@ import kotlin.test.assertTrue
  * Comprehensive tests for Proof Purpose Validation.
  */
 class ProofPurposeValidationComprehensiveTest {
-    
+
     @Test
     fun `test validate all proof purposes`() = runBlocking {
         val issuerDid = "did:key:issuer"
         val verificationMethod = "$issuerDid#key-1"
-        
+
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
             if (did == issuerDid) {
-                DidResolutionResult(
+                DidResolutionResult.Success(
                     document = DidDocument(
                         id = issuerDid,
                         assertionMethod = listOf(verificationMethod),
@@ -32,9 +32,9 @@ class ProofPurposeValidationComprehensiveTest {
                 )
             } else null
         }
-        
+
         val validator = ProofValidator(resolveDid)
-        
+
         // Test all proof purposes
         val purposes = listOf(
             "assertionMethod",
@@ -43,7 +43,7 @@ class ProofPurposeValidationComprehensiveTest {
             "capabilityInvocation",
             "capabilityDelegation"
         )
-        
+
         purposes.forEach { purpose ->
             val result = validator.validateProofPurpose(
                 proofPurpose = purpose,
@@ -53,14 +53,14 @@ class ProofPurposeValidationComprehensiveTest {
             assertTrue(result.valid, "Proof purpose $purpose should be valid")
         }
     }
-    
+
     @Test
     fun `test validate proof purpose with multiple verification methods`() = runBlocking {
         val issuerDid = "did:key:issuer"
-        
+
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
             if (did == issuerDid) {
-                DidResolutionResult(
+                DidResolutionResult.Success(
                     document = DidDocument(
                         id = issuerDid,
                         assertionMethod = listOf(
@@ -72,9 +72,9 @@ class ProofPurposeValidationComprehensiveTest {
                 )
             } else null
         }
-        
+
         val validator = ProofValidator(resolveDid)
-        
+
         // Test with different verification methods
         listOf("$issuerDid#key-1", "$issuerDid#key-2", "$issuerDid#key-3").forEach { vm ->
             val result = validator.validateProofPurpose(
@@ -85,14 +85,14 @@ class ProofPurposeValidationComprehensiveTest {
             assertTrue(result.valid, "Verification method $vm should be valid")
         }
     }
-    
+
     @Test
     fun `test validate proof purpose with relative references`() = runBlocking {
         val issuerDid = "did:key:issuer"
-        
+
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
             if (did == issuerDid) {
-                DidResolutionResult(
+                DidResolutionResult.Success(
                     document = DidDocument(
                         id = issuerDid,
                         assertionMethod = listOf("#key-1", "$issuerDid#key-1")
@@ -100,9 +100,9 @@ class ProofPurposeValidationComprehensiveTest {
                 )
             } else null
         }
-        
+
         val validator = ProofValidator(resolveDid)
-        
+
         // Test with relative reference
         val result1 = validator.validateProofPurpose(
             proofPurpose = "assertionMethod",
@@ -110,7 +110,7 @@ class ProofPurposeValidationComprehensiveTest {
             issuerDid = issuerDid
         )
         assertTrue(result1.valid)
-        
+
         // Test with full reference
         val result2 = validator.validateProofPurpose(
             proofPurpose = "assertionMethod",
@@ -119,14 +119,14 @@ class ProofPurposeValidationComprehensiveTest {
         )
         assertTrue(result2.valid)
     }
-    
+
     @Test
     fun `test validate proof purpose with verification method not in relationship`() = runBlocking {
         val issuerDid = "did:key:issuer"
-        
+
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
             if (did == issuerDid) {
-                DidResolutionResult(
+                DidResolutionResult.Success(
                     document = DidDocument(
                         id = issuerDid,
                         assertionMethod = listOf("$issuerDid#key-1"),
@@ -136,9 +136,9 @@ class ProofPurposeValidationComprehensiveTest {
                 )
             } else null
         }
-        
+
         val validator = ProofValidator(resolveDid)
-        
+
         // Test with key-2 for assertionMethod (should fail)
         val result1 = validator.validateProofPurpose(
             proofPurpose = "assertionMethod",
@@ -146,7 +146,7 @@ class ProofPurposeValidationComprehensiveTest {
             issuerDid = issuerDid
         )
         assertFalse(result1.valid)
-        
+
         // Test with key-2 for authentication (should succeed)
         val result2 = validator.validateProofPurpose(
             proofPurpose = "authentication",
@@ -155,21 +155,21 @@ class ProofPurposeValidationComprehensiveTest {
         )
         assertTrue(result2.valid)
     }
-    
+
     @Test
     fun `test validate proof purpose error messages`() = runBlocking {
         val issuerDid = "did:key:issuer"
-        
+
         val resolveDid: suspend (String) -> DidResolutionResult? = { null }
-        
+
         val validator = ProofValidator(resolveDid)
-        
+
         val result = validator.validateProofPurpose(
             proofPurpose = "assertionMethod",
             verificationMethod = "$issuerDid#key-1",
             issuerDid = issuerDid
         )
-        
+
         assertFalse(result.valid)
         assertTrue(result.errors.isNotEmpty())
         assertTrue(result.errors.any { it.contains("Failed to resolve") })

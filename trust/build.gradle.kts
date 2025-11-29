@@ -15,7 +15,7 @@ dependencies {
 
     // Kotlin Coroutines
     implementation(libs.kotlinx.coroutines.core)
-    
+
     // Kotlinx Serialization
     implementation(libs.kotlinx.serialization.json)
 

@@ -120,7 +120,7 @@ flowchart TD
     A["Source Entity<br/>Original Data<br/>Entity DID"] -->|used by| B["Activity Processing Step<br/>Activity DID<br/>Transformation Applied<br/>Agent DID who performed"]
     B -->|generated| C["Derived Entity<br/>Processed Data<br/>Entity DID<br/>Provenance Credential"]
     C -->|anchors to blockchain| D["Blockchain Anchor<br/>Immutable Provenance Record<br/>Complete Lineage"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -165,13 +165,13 @@ dependencies {
     implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    
+
     // Test kit for in-memory implementations
     implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -185,7 +185,7 @@ dependencies {
 
 **Why This Matters**: In PROV-O, everything is an entity, activity, or agent. Each needs a unique DID for verifiable identity. This enables tracking relationships between entities through activities.
 
-**Rationale**: 
+**Rationale**:
 - **Entity DIDs**: Represent digital objects (images, datasets, documents)
 - **Activity DIDs**: Represent processing steps (transformations, analyses)
 - **Agent DIDs**: Represent who/what performed activities
@@ -199,18 +199,18 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     println("=== Digital Workflow & Provenance Scenario ===\n")
-    
+
     // Step 1: Setup services
     println("Step 1: Setting up services...")
-    
+
     // Separate KMS for different workflow participants
     // This ensures proper key isolation and security
     val processorKms = InMemoryKeyManagementService() // For processing agents
     val sourceKms = InMemoryKeyManagementService()   // For source entities
-    
+
     val didMethod = DidKeyMockMethod(processorKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
-    
+
     println("Services initialized")
 }
 ```
@@ -230,13 +230,13 @@ fun main() = runBlocking {
 ```kotlin
     // Step 2: Create source entity DID
     println("\nStep 2: Creating source entity DID...")
-    
+
     // Source entity represents original data before any processing
     // In image processing example, this would be the original photograph
     // The DID provides persistent identity that survives transformations
     val sourceEntityDid = didMethod.createDid()
     println("Source Entity DID: ${sourceEntityDid.id}")
-    
+
     // Create entity credential for source
     // This credential describes the original entity
     val sourceEntityCredential = createEntityCredential(
@@ -249,7 +249,7 @@ fun main() = runBlocking {
             "created" to Instant.now().toString()
         )
     )
-    
+
     println("Source entity credential created:")
     println("  - Type: Image")
     println("  - Format: JPEG")
@@ -271,13 +271,13 @@ fun main() = runBlocking {
 ```kotlin
     // Step 3: Create activity and agent DIDs
     println("\nStep 3: Creating activity and agent DIDs...")
-    
+
     // Activity DID represents a processing step
     // In PROV-O, activities are things that happen and transform entities
     // Example: "resize-image", "apply-filter", "crop-image"
     val resizeActivityDid = didMethod.createDid()
     println("Activity (Resize) DID: ${resizeActivityDid.id}")
-    
+
     // Agent DID represents who or what performed the activity
     // This could be a person, software service, or automated system
     // Example: "image-processing-service", "user-alice"
@@ -305,7 +305,7 @@ import java.time.Instant
 
     // Step 4: Create activity credential
     println("\nStep 4: Creating activity credential...")
-    
+
     // Activity credential describes the processing step
     // This follows PROV-O "Activity" concept
     // Records what transformation was applied and how
@@ -332,7 +332,7 @@ import java.time.Instant
         issuanceDate = Instant.now().toString(),
         expirationDate = null
     )
-    
+
     println("Activity credential created:")
     println("  - Type: resize-image")
     println("  - Parameters: 800x600, lanczos algorithm")
@@ -354,16 +354,16 @@ import java.time.Instant
 ```kotlin
     // Step 5: Create derived entity DID
     println("\nStep 5: Creating derived entity DID...")
-    
+
     // Derived entity is the result of processing
     // In PROV-O, activities generate new entities from used entities
     // This entity is the resized image
     val derivedEntityDid = didMethod.createDid()
     println("Derived Entity DID: ${derivedEntityDid.id}")
-    
+
     // Step 6: Create provenance chain credential
     println("\nStep 6: Creating provenance chain credential...")
-    
+
     // Provenance chain credential links entities through activities
     // This follows PROV-O relationships:
     // - sourceEntity was "used" by activity
@@ -381,26 +381,26 @@ import java.time.Instant
                     put("entityHash", "sha256:original-image-hash")
                     put("role", "input")
                 })
-                
+
                 // PROV-O: Activity that used the entity
                 put("activity", buildJsonObject {
                     put("activityDid", resizeActivityDid.id)
                     put("activityType", "resize-image")
                 })
-                
+
                 // PROV-O: Entity that was generated
                 put("generatedEntity", buildJsonObject {
                     put("entityDid", derivedEntityDid.id)
                     put("entityHash", "sha256:resized-image-hash")
                     put("role", "output")
                 })
-                
+
                 // PROV-O: Agent that performed activity
                 put("agent", buildJsonObject {
                     put("agentDid", processingAgentDid.id)
                     put("agentType", "image-processing-service")
                 })
-                
+
                 // Timestamp of transformation
                 put("timestamp", Instant.now().toString())
             })
@@ -408,7 +408,7 @@ import java.time.Instant
         issuanceDate = Instant.now().toString(),
         expirationDate = null
     )
-    
+
     println("Provenance chain credential created:")
     println("  - Used: ${sourceEntityDid.id}")
     println("  - Activity: resize-image")
@@ -435,12 +435,12 @@ import com.trustweave.credential.CredentialIssuanceOptions
 
     // Step 7: Issue credentials with proof
     println("\nStep 7: Issuing provenance credentials...")
-    
+
     // Generate agent's signing key
     // This key will be used to sign all provenance credentials
     // In production, use hardware security module (HSM)
     val agentKey = processorKms.generateKey("Ed25519")
-    
+
     // Create proof generator for agent
     // Ed25519 provides strong security with good performance
     val agentProofGenerator = Ed25519ProofGenerator(
@@ -450,14 +450,14 @@ import com.trustweave.credential.CredentialIssuanceOptions
     val agentProofRegistry = ProofGeneratorRegistry().apply {
         register(agentProofGenerator)
     }
-    
+
     // Create credential issuer
     val agentIssuer = CredentialIssuer(
         proofGenerator = agentProofGenerator,
         resolveDid = { did -> didRegistry.resolve(did) != null },
         proofRegistry = agentProofRegistry
     )
-    
+
     // Issue activity credential
     // This proves the activity was performed by the agent
     val issuedActivityCredential = agentIssuer.issue(
@@ -466,7 +466,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
         keyId = agentKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     // Issue provenance chain credential
     // This proves the provenance relationships are authentic
     val issuedProvenanceChain = agentIssuer.issue(
@@ -475,7 +475,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
         keyId = agentKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Provenance credentials issued:")
     println("  - Activity credential: ${issuedActivityCredential.proof != null}")
     println("  - Provenance chain: ${issuedProvenanceChain.proof != null}")
@@ -496,15 +496,15 @@ import com.trustweave.credential.CredentialIssuanceOptions
 ```kotlin
     // Step 8: Build multi-step provenance chain
     println("\nStep 8: Building multi-step provenance chain...")
-    
+
     // Real workflows have multiple processing steps
     // Each step creates a new entity and extends the provenance chain
     // Example: Original Image → Resize → Apply Filter → Crop → Final Image
-    
+
     // Step 2: Apply filter to resized image
     val filterActivityDid = didMethod.createDid()
     val filteredEntityDid = didMethod.createDid()
-    
+
     // Create filter activity credential
     val filterActivityCredential = VerifiableCredential(
         type = listOf("VerifiableCredential", "ActivityCredential", "ProvenanceCredential"),
@@ -522,7 +522,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
         },
         issuanceDate = Instant.now().toString()
     )
-    
+
     // Create provenance chain credential linking resized to filtered
     // This extends the provenance chain: original → resized → filtered
     val filterProvenanceChain = VerifiableCredential(
@@ -535,29 +535,29 @@ import com.trustweave.credential.CredentialIssuanceOptions
                     put("entityDid", derivedEntityDid.id)
                     put("entityHash", "sha256:resized-image-hash")
                 })
-                
+
                 // Current activity (apply filter)
                 put("activity", buildJsonObject {
                     put("activityDid", filterActivityDid.id)
                     put("activityType", "apply-filter")
                 })
-                
+
                 // Generated entity (filtered image)
                 put("generatedEntity", buildJsonObject {
                     put("entityDid", filteredEntityDid.id)
                     put("entityHash", "sha256:filtered-image-hash")
                 })
-                
+
                 put("agent", buildJsonObject {
                     put("agentDid", processingAgentDid.id)
                 })
-                
+
                 put("timestamp", Instant.now().toString())
             })
         },
         issuanceDate = Instant.now().toString()
     )
-    
+
     // Issue credentials
     val issuedFilterActivity = agentIssuer.issue(
         credential = filterActivityCredential,
@@ -565,14 +565,14 @@ import com.trustweave.credential.CredentialIssuanceOptions
         keyId = agentKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     val issuedFilterChain = agentIssuer.issue(
         credential = filterProvenanceChain,
         issuerDid = processingAgentDid.id,
         keyId = agentKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Multi-step provenance chain created:")
     println("  - Step 1: Original → Resized")
     println("  - Step 2: Resized → Filtered")
@@ -596,20 +596,20 @@ import com.trustweave.credential.CredentialVerificationOptions
 
     // Step 9: Verify provenance chain
     println("\nStep 9: Verifying provenance chain...")
-    
+
     // Create verifier to check provenance credentials
     val verifier = CredentialVerifier(
         didResolver = CredentialDidResolver { did ->
             didRegistry.resolve(did).toCredentialDidResolution()
         }
     )
-    
+
     // Verify all credentials in chain
     val provenanceChain = listOf(
         issuedProvenanceChain,
         issuedFilterChain
     )
-    
+
     var chainValid = true
     provenanceChain.forEachIndexed { index, credential ->
         val verification = verifier.verify(
@@ -619,7 +619,7 @@ import com.trustweave.credential.CredentialVerificationOptions
                 checkExpiration = false
             )
         )
-        
+
         if (verification.valid) {
             println("✅ Step ${index + 1} verified")
         } else {
@@ -628,7 +628,7 @@ import com.trustweave.credential.CredentialVerificationOptions
             chainValid = false
         }
     }
-    
+
     if (chainValid) {
         println("✅ Complete provenance chain verified!")
         println("  - Can trace from source to final entity")
@@ -651,7 +651,7 @@ import com.trustweave.credential.CredentialVerificationOptions
 ```kotlin
     // Step 10: Trace data lineage
     println("\nStep 10: Tracing data lineage...")
-    
+
     // Function to trace lineage from final entity back to source
     fun traceLineage(
         finalEntityDid: String,
@@ -659,7 +659,7 @@ import com.trustweave.credential.CredentialVerificationOptions
     ): List<LineageStep> {
         val lineage = mutableListOf<LineageStep>()
         var currentEntityDid = finalEntityDid
-        
+
         // Trace backwards through provenance chain
         while (true) {
             val chainCredential = provenanceChains.find { credential ->
@@ -668,38 +668,38 @@ import com.trustweave.credential.CredentialVerificationOptions
                     ?.get("entityDid")?.jsonPrimitive?.content
                 generatedEntity == currentEntityDid
             } ?: break
-            
+
             val provenance = chainCredential.credentialSubject.jsonObject["provenance"]?.jsonObject
                 ?: break
-            
+
             val usedEntity = provenance["usedEntity"]?.jsonObject
                 ?.get("entityDid")?.jsonPrimitive?.content ?: break
-            
+
             val activity = provenance["activity"]?.jsonObject
                 ?.get("activityType")?.jsonPrimitive?.content ?: break
-            
+
             val agent = provenance["agent"]?.jsonObject
                 ?.get("agentDid")?.jsonPrimitive?.content ?: break
-            
+
             lineage.add(LineageStep(
                 entityDid = currentEntityDid,
                 activityType = activity,
                 agentDid = agent,
                 previousEntityDid = usedEntity
             ))
-            
+
             currentEntityDid = usedEntity
         }
-        
+
         return lineage.reversed() // Reverse to show source to final
     }
-    
+
     // Trace lineage from filtered image back to original
     val lineage = traceLineage(
         finalEntityDid = filteredEntityDid.id,
         provenanceChains = provenanceChain
     )
-    
+
     println("Data lineage traced:")
     lineage.forEachIndexed { index, step ->
         println("  ${index + 1}. ${step.activityType} by ${step.agentDid}")
@@ -769,13 +769,13 @@ data class ProvenanceRecord(
 
     // Step 11: Anchor provenance to blockchain
     println("\nStep 11: Anchoring provenance to blockchain...")
-    
+
     // Setup blockchain client
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
     val blockchainRegistry = BlockchainAnchorRegistry().apply {
         register("eip155:1", anchorClient)
     }
-    
+
     // Compute digest of complete provenance chain
     // This digest uniquely identifies the entire workflow
     val provenanceDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
@@ -784,7 +784,7 @@ data class ProvenanceRecord(
             issuedProvenanceChain
         )
     )
-    
+
     // Create provenance record
     val provenanceRecord = ProvenanceRecord(
         sourceEntityDid = sourceEntityDid.id,
@@ -793,14 +793,14 @@ data class ProvenanceRecord(
         provenanceDigest = provenanceDigest,
         timestamp = Instant.now().toString()
     )
-    
+
     // Anchor to blockchain
     val anchorResult = blockchainRegistry.anchorTyped(
         value = provenanceRecord,
         serializer = ProvenanceRecord.serializer(),
         targetChainId = "eip155:137"
     )
-    
+
     println("Provenance anchored to blockchain:")
     println("  - Transaction hash: ${anchorResult.ref.txHash}")
     println("  - Provides immutable provenance record")
@@ -816,7 +816,7 @@ data class ProvenanceRecord(
 **Detailed Explanation**:
 1. **Multiple KMS Instances**: Separate key management for processors and sources ensures proper isolation
 2. **DID Method Registration**: Register DID method for creating identities
-3. **Why Separation Matters**: 
+3. **Why Separation Matters**:
    - **Security**: If one system compromised, others remain secure
    - **Accountability**: Clear separation of responsibilities
    - **Scalability**: Each system scales independently
@@ -932,7 +932,7 @@ fun createMultiAgentProvenance(
         generatedEntityDid = intermediateEntityDid,
         agentDid = agent1Did
     )
-    
+
     // Agent 2 performs second step
     val step2Credential = createProvenanceChainCredential(
         usedEntityDid = intermediateEntityDid,
@@ -940,7 +940,7 @@ fun createMultiAgentProvenance(
         generatedEntityDid = finalEntityDid,
         agentDid = agent2Did
     )
-    
+
     return listOf(step1Credential, step2Credential)
 }
 ```
@@ -990,22 +990,22 @@ fun createImageProcessingProvenance(
 ): List<VerifiableCredential> {
     var currentEntityDid = originalImageDid
     val provenanceChains = mutableListOf<VerifiableCredential>()
-    
+
     processingSteps.forEach { step ->
         val activityDid = step.activityDid
         val outputEntityDid = step.outputEntityDid
-        
+
         val chainCredential = createProvenanceChainCredential(
             usedEntityDid = currentEntityDid,
             activityDid = activityDid,
             generatedEntityDid = outputEntityDid,
             agentDid = step.agentDid
         )
-        
+
         provenanceChains.add(chainCredential)
         currentEntityDid = outputEntityDid
     }
-    
+
     return provenanceChains
 }
 
@@ -1029,10 +1029,10 @@ fun createDataScienceProvenance(
 ): List<VerifiableCredential> {
     var currentDataDid = rawDataDid
     val provenanceChains = mutableListOf<VerifiableCredential>()
-    
+
     transformations.forEach { transformation ->
         val outputDataDid = transformation.outputDataDid
-        
+
         val chainCredential = VerifiableCredential(
             type = listOf("VerifiableCredential", "ProvenanceChainCredential"),
             issuer = transformation.analystDid,
@@ -1056,11 +1056,11 @@ fun createDataScienceProvenance(
             },
             issuanceDate = Instant.now().toString()
         )
-        
+
         provenanceChains.add(chainCredential)
         currentDataDid = outputDataDid
     }
-    
+
     return provenanceChains
 }
 

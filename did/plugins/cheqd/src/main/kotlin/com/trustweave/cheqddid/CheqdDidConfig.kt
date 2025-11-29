@@ -2,9 +2,9 @@ package com.trustweave.cheqddid
 
 /**
  * Configuration for did:cheqd method implementation.
- * 
+ *
  * Supports Cheqd network DID method with payment features.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val config = CheqdDidConfig.builder()
@@ -20,46 +20,46 @@ data class CheqdDidConfig(
      * Cheqd API URL (optional, uses default if not provided).
      */
     val cheqdApiUrl: String? = null,
-    
+
     /**
      * Cheqd network (mainnet, testnet, etc.).
      */
     val network: String = "mainnet",
-    
+
     /**
      * Account address for transactions (optional).
      */
     val accountAddress: String? = null,
-    
+
     /**
      * Private key for signing transactions (optional).
      */
     val privateKey: String? = null,
-    
+
     /**
      * HTTP timeout in seconds (default: 30).
      */
     val timeoutSeconds: Int = 30,
-    
+
     /**
      * Additional configuration properties.
      */
     val additionalProperties: Map<String, Any?> = emptyMap()
 ) {
-    
+
     companion object {
         /**
          * Cheqd network constants.
          */
         const val MAINNET = "mainnet"
         const val TESTNET = "testnet"
-        
+
         /**
          * Default Cheqd API URLs.
          */
         const val MAINNET_API_URL = "https://api.cheqd.net"
         const val TESTNET_API_URL = "https://testnet-api.cheqd.net"
-        
+
         /**
          * Creates configuration for Cheqd mainnet.
          */
@@ -69,7 +69,7 @@ data class CheqdDidConfig(
                 network = MAINNET
             )
         }
-        
+
         /**
          * Creates configuration for Cheqd testnet.
          */
@@ -79,7 +79,7 @@ data class CheqdDidConfig(
                 network = TESTNET
             )
         }
-        
+
         /**
          * Creates configuration from a map (for backward compatibility).
          */
@@ -95,7 +95,7 @@ data class CheqdDidConfig(
                 }
             )
         }
-        
+
         /**
          * Builder for CheqdDidConfig.
          */
@@ -103,7 +103,7 @@ data class CheqdDidConfig(
             return Builder()
         }
     }
-    
+
     /**
      * Builder for CheqdDidConfig.
      */
@@ -114,37 +114,37 @@ data class CheqdDidConfig(
         private var privateKey: String? = null
         private var timeoutSeconds: Int = 30
         private val additionalProperties = mutableMapOf<String, Any?>()
-        
+
         fun cheqdApiUrl(value: String?): Builder {
             this.cheqdApiUrl = value
             return this
         }
-        
+
         fun network(value: String): Builder {
             this.network = value
             return this
         }
-        
+
         fun accountAddress(value: String?): Builder {
             this.accountAddress = value
             return this
         }
-        
+
         fun privateKey(value: String?): Builder {
             this.privateKey = value
             return this
         }
-        
+
         fun timeoutSeconds(value: Int): Builder {
             this.timeoutSeconds = value
             return this
         }
-        
+
         fun property(key: String, value: Any?): Builder {
             this.additionalProperties[key] = value
             return this
         }
-        
+
         fun build(): CheqdDidConfig {
             return CheqdDidConfig(
                 cheqdApiUrl = cheqdApiUrl,
@@ -156,7 +156,7 @@ data class CheqdDidConfig(
             )
         }
     }
-    
+
     /**
      * Converts to map format.
      */

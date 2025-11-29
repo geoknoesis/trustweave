@@ -1,7 +1,7 @@
 package com.trustweave.testkit.credential
 
 import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.wallet.CredentialFilter
+import com.trustweave.wallet.CredentialFilter
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlin.test.*

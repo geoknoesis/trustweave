@@ -11,6 +11,7 @@ import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.did.DidCreationOptions
 import com.trustweave.did.DidMethod
 import com.trustweave.did.registry.DidMethodRegistry
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.anchor.services.BlockchainAnchorClientFactory
 import com.trustweave.trust.services.TrustRegistryFactory
 import com.trustweave.revocation.services.StatusListManagerFactory
@@ -36,11 +37,11 @@ data class TrustWeaveRegistries(
 
 /**
  * Unified TrustWeave Configuration.
- * 
- * Centralizes configuration for anchor layer (blockchain), credential keys (KMS), 
- * and DID methods into a single configuration point. This makes it easier to 
+ *
+ * Centralizes configuration for anchor layer (blockchain), credential keys (KMS),
+ * and DID methods into a single configuration point. This makes it easier to
  * configure TrustWeave and provides context for DSL operations.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val trustWeave = trustWeave {
@@ -48,19 +49,19 @@ data class TrustWeaveRegistries(
  *         provider("inMemory")
  *         algorithm("Ed25519")
  *     }
- *     
+ *
  *     did {
  *         method("key") {
  *             algorithm("Ed25519")
  *         }
  *     }
- *     
+ *
  *     anchor {
  *         chain("algorand:testnet") {
  *             provider("algorand")
  *         }
  *     }
- *     
+ *
  *     credentials {
  *         defaultProofType("Ed25519Signature2020")
  *         autoAnchor(true)
@@ -100,7 +101,7 @@ class TrustWeaveConfig private constructor(
         val defaultProofTypeString: String
             get() = defaultProofType.value
     }
-    
+
     /**
      * Builder for TrustWeave configuration.
      */
@@ -119,7 +120,7 @@ class TrustWeaveConfig private constructor(
         private var defaultChain: String? = null
         private var revocationProvider: String? = null
         private var trustProvider: String? = null
-        
+
         // Factory instances (optional - will attempt reflection-based adapters if not provided)
         private var kmsFactory: KmsFactory? = null
         private var didMethodFactory: DidMethodFactory? = null
@@ -127,7 +128,7 @@ class TrustWeaveConfig private constructor(
         private var statusListManagerFactory: StatusListManagerFactory? = null
         private var trustRegistryFactory: TrustRegistryFactory? = null
         private var walletFactory: WalletFactory? = null
-        
+
         /**
          * Set factory instances for dependency resolution.
          * If not provided, will attempt to load default adapters reflectively.
@@ -147,7 +148,7 @@ class TrustWeaveConfig private constructor(
             this.trustRegistryFactory = trustRegistryFactory
             this.walletFactory = walletFactory
         }
-        
+
         /**
          * Configure key management service.
          */
@@ -158,19 +159,22 @@ class TrustWeaveConfig private constructor(
             kmsAlgorithm = builder.algorithm ?: "Ed25519"
             kms = builder.kms
             // Store signer function if provided
+            // CRITICAL: When custom() is used, signer MUST be provided
             if (builder.signer != null) {
-                // Store signer in a way that can be accessed later
                 kmsSigner = builder.signer
+            } else if (builder.kms != null) {
+                // Custom KMS provided but no signer - this will cause issues
+                // We'll check this in build() and throw a clear error
             }
         }
-        
+
         /**
          * Set custom KMS directly.
          */
         fun customKms(kms: Any) {
             this.kms = kms
         }
-        
+
         /**
          * Configure DID methods.
          */
@@ -179,7 +183,7 @@ class TrustWeaveConfig private constructor(
             builder.block()
             didMethodConfigs.putAll(builder.methods)
         }
-        
+
         /**
          * Configure anchor layer (blockchain).
          */
@@ -188,7 +192,7 @@ class TrustWeaveConfig private constructor(
             builder.block()
             anchorConfigs.putAll(builder.chains)
         }
-        
+
         /**
          * Configure credential services.
          */
@@ -199,7 +203,7 @@ class TrustWeaveConfig private constructor(
             autoAnchor = builder.autoAnchor ?: autoAnchor
             defaultChain = builder.defaultChain
         }
-        
+
         /**
          * Configure revocation services.
          */
@@ -208,7 +212,7 @@ class TrustWeaveConfig private constructor(
             builder.block()
             revocationProvider = builder.provider
         }
-        
+
         /**
          * Configure schema services.
          */
@@ -217,7 +221,7 @@ class TrustWeaveConfig private constructor(
             builder.block()
             // Store schema config for later use
         }
-        
+
         /**
          * Configure trust registry.
          */
@@ -226,66 +230,79 @@ class TrustWeaveConfig private constructor(
             builder.block()
             trustProvider = builder.provider
         }
-        
+
         /**
          * Build the TrustWeave configuration.
          */
         suspend fun build(): TrustWeaveConfig {
             // Resolve KMS
-            val (resolvedKms, resolvedSigner) = kms?.let { 
-                Pair(it, kmsSigner) 
-            } ?: resolveKms(kmsProvider ?: "inMemory", kmsAlgorithm)
+            // CRITICAL: When custom() is used, kms should be set and kmsSigner should be provided
+            val (resolvedKms, resolvedSigner) = if (kms != null) {
+                // Custom KMS provided - MUST have signer
+                if (kmsSigner == null) {
+                    throw IllegalStateException(
+                        "Signer function is required when using custom KMS. " +
+                        "Provide it via: keys { custom(kms) signer { data, keyId -> kms.sign(keyId, data) } }"
+                    )
+                }
+                Pair(kms, kmsSigner)
+            } else {
+                // Use factory to create KMS
+                resolveKms(kmsProvider ?: "inMemory", kmsAlgorithm)
+            }
             requireNotNull(resolvedKms) {
                 "KMS cannot be null. Provide a custom KMS or ensure a provider is configured."
             }
-            
-            // Use resolved signer if available, otherwise use the one provided via DSL
-            val finalSigner = kmsSigner ?: resolvedSigner
-            
+
+            // Use the resolved signer (which is kmsSigner when custom() is used)
+            val finalSigner = resolvedSigner ?: throw IllegalStateException(
+                "Signer function is required. Provide it via: keys { signer { data, keyId -> kms.sign(keyId, data) } }"
+            )
+
             // Resolve DID methods
             for ((methodName, config) in didMethodConfigs) {
                 val resolvedMethod = resolveDidMethod(methodName, config, resolvedKms) as? DidMethod
                     ?: throw IllegalStateException("Invalid DID method returned for '$methodName'")
                 registries.didRegistry.register(resolvedMethod)
             }
-            
+
             for ((chainId, config) in anchorConfigs) {
                 val client = resolveAnchorClient(chainId, config) as? BlockchainAnchorClient
                     ?: throw IllegalStateException("Invalid blockchain anchor client returned for '$chainId'")
                 registries.blockchainRegistry.register(chainId, client)
             }
-            
+
             // Create proof generator
             val proofGenerator = createProofGenerator(defaultProofType.value, resolvedKms, finalSigner)
             registries.proofRegistry.register(proofGenerator)
-            
+
             // Resolve status list manager if revocation is configured
-            val resolvedStatusListManager = revocationProvider?.let { 
-                resolveStatusListManager(it) 
+            val resolvedStatusListManager = revocationProvider?.let {
+                resolveStatusListManager(it)
             }
-            
+
             // Resolve trust registry if configured
-            val resolvedTrustRegistry = trustProvider?.let { 
-                resolveTrustRegistry(it) 
+            val resolvedTrustRegistry = trustProvider?.let {
+                resolveTrustRegistry(it)
             }
-            
+
             val didResolver = DidResolver { did ->
-                runCatching { registries.didRegistry.resolve(did) }
+                runCatching { registries.didRegistry.resolve(did.value) }
                     .getOrNull()
             }
 
             val issuer = CredentialIssuer(
                 proofGenerator = proofGenerator,
                 resolveDid = { did ->
-                    val resolution = didResolver.resolve(did)
-                    resolution?.document != null
+                    val resolution = didResolver.resolve(com.trustweave.core.types.Did(did))
+                    resolution is DidResolutionResult.Success
                 },
                 proofRegistry = registries.proofRegistry
             )
-            
+
             // Resolve wallet factory
             val resolvedWalletFactory = walletFactory ?: getDefaultWalletFactory()
-            
+
             // Create service adapters (no reflection, direct instantiation)
             // Note: TestkitKmsService is only available when testkit is on classpath
             val resolvedKmsService = try {
@@ -294,13 +311,13 @@ class TrustWeaveConfig private constructor(
             } catch (e: Exception) {
                 null // Testkit not available
             }
-            
+
             val registriesSnapshot = TrustWeaveRegistries(
                 didRegistry = registries.didRegistry.snapshot(),
                 blockchainRegistry = registries.blockchainRegistry.snapshot(),
                 credentialRegistry = registries.credentialRegistry.snapshot()
             )
-            
+
             return TrustWeaveConfig(
                 name = name,
                 kms = resolvedKms,
@@ -318,12 +335,12 @@ class TrustWeaveConfig private constructor(
                 kmsService = resolvedKmsService
             )
         }
-        
+
         private suspend fun resolveKms(providerName: String, algorithm: String): Pair<Any, (suspend (ByteArray, String) -> ByteArray)?> {
             val factory = kmsFactory ?: getDefaultKmsFactory()
             return factory.createFromProvider(providerName, algorithm)
         }
-        
+
         private fun getDefaultKmsFactory(): KmsFactory {
             // Try to get factory from testkit
             try {
@@ -333,14 +350,14 @@ class TrustWeaveConfig private constructor(
             } catch (e: Exception) {
                 // Testkit not available, fall through
             }
-            
+
             // Fallback: throw error asking user to provide factory
             throw IllegalStateException(
                 "KMS factory not available. " +
                 "Provide a factory via Builder.factories() or ensure TrustWeave-testkit is on classpath."
             )
         }
-        
+
         private suspend fun resolveDidMethod(
             methodName: String,
             config: DidMethodConfig,
@@ -354,7 +371,7 @@ class TrustWeaveConfig private constructor(
                 "Ensure appropriate DID method provider is on classpath."
             )
         }
-        
+
         private fun getDefaultDidMethodFactory(): DidMethodFactory {
             // Try to get factory from testkit
             try {
@@ -364,13 +381,13 @@ class TrustWeaveConfig private constructor(
             } catch (e: Exception) {
                 // Testkit not available, fall through
             }
-            
+
             throw IllegalStateException(
                 "DID method factory not available. " +
                 "Provide a factory via Builder.factories() or ensure TrustWeave-testkit is on classpath."
             )
         }
-        
+
         private suspend fun resolveAnchorClient(
             chainId: String,
             config: AnchorConfig
@@ -381,7 +398,7 @@ class TrustWeaveConfig private constructor(
                 "Invalid blockchain anchor client implementation returned for $chainId"
             )
         }
-        
+
         private fun getDefaultAnchorClientFactory(): BlockchainAnchorClientFactory {
             // Try to get factory from testkit
             try {
@@ -391,18 +408,18 @@ class TrustWeaveConfig private constructor(
             } catch (e: Exception) {
                 // Testkit not available, fall through
             }
-            
+
             throw IllegalStateException(
                 "BlockchainAnchorClient factory not available. " +
                 "Provide a factory via Builder.factories() or ensure TrustWeave-testkit is on classpath."
             )
         }
-        
+
         private suspend fun resolveStatusListManager(providerName: String): Any {
             val factory = statusListManagerFactory ?: getDefaultStatusListManagerFactory()
             return factory.create(providerName)
         }
-        
+
         private fun getDefaultStatusListManagerFactory(): StatusListManagerFactory {
             // Try to get factory from testkit
             try {
@@ -412,7 +429,7 @@ class TrustWeaveConfig private constructor(
             } catch (e: Exception) {
                 // Testkit not available, fall through
             }
-            
+
             // Fallback: try to instantiate InMemoryStatusListManager directly (it's in TrustWeave-core)
             try {
                 val managerClass = Class.forName("com.trustweave.credential.revocation.InMemoryStatusListManager")
@@ -428,18 +445,18 @@ class TrustWeaveConfig private constructor(
             } catch (e: Exception) {
                 // Fall through
             }
-            
+
             throw IllegalStateException(
                 "StatusListManager factory not available. " +
                 "Provide a factory via Builder.factories() or ensure TrustWeave-testkit is on classpath."
             )
         }
-        
+
         private suspend fun resolveTrustRegistry(providerName: String): Any {
             val factory = trustRegistryFactory ?: getDefaultTrustRegistryFactory()
             return factory.create(providerName)
         }
-        
+
         private fun getDefaultTrustRegistryFactory(): TrustRegistryFactory {
             // Try to get factory from testkit
             try {
@@ -449,13 +466,29 @@ class TrustWeaveConfig private constructor(
             } catch (e: Exception) {
                 // Testkit not available, fall through
             }
-            
+
+            // Fallback: try to instantiate InMemoryTrustRegistry directly (it's in testkit)
+            try {
+                val registryClass = Class.forName("com.trustweave.testkit.trust.InMemoryTrustRegistry")
+                // Return a factory that creates instances
+                return object : TrustRegistryFactory {
+                    override suspend fun create(providerName: String): Any {
+                        if (providerName == "inMemory") {
+                            return registryClass.getDeclaredConstructor().newInstance()
+                        }
+                        throw IllegalStateException("Only 'inMemory' provider supported")
+                    }
+                }
+            } catch (e: Exception) {
+                // Fall through
+            }
+
             throw IllegalStateException(
                 "TrustRegistry factory not available. " +
                 "Provide a factory via Builder.factories() or ensure TrustWeave-testkit is on classpath."
             )
         }
-        
+
         private fun getDefaultWalletFactory(): WalletFactory? {
             // Try to get factory from testkit
             try {
@@ -465,11 +498,11 @@ class TrustWeaveConfig private constructor(
             } catch (e: Exception) {
                 // Testkit not available, that's OK - wallet is optional
             }
-            
+
             // Wallet factory is optional, return null if not available
             return null
         }
-        
+
         private fun createProofGenerator(
             proofType: String,
             kms: Any,
@@ -487,7 +520,7 @@ class TrustWeaveConfig private constructor(
                             "Use keys { signer { data, keyId -> kms.sign(keyId, data) } }"
                         )
                     }
-                    
+
                     Ed25519ProofGenerator(
                         signer = signHelper,
                         getPublicKeyId = { keyId -> keyId }
@@ -497,7 +530,7 @@ class TrustWeaveConfig private constructor(
             }
         }
     }
-    
+
     /**
      * Keys configuration builder.
      */
@@ -506,19 +539,19 @@ class TrustWeaveConfig private constructor(
         var algorithm: String? = null
         var kms: Any? = null // KeyManagementService - using Any to avoid dependency
         var signer: (suspend (ByteArray, String) -> ByteArray)? = null // Direct signer function
-        
+
         fun provider(name: String) {
             provider = name
         }
-        
+
         fun algorithm(name: String) {
             algorithm = name
         }
-        
+
         fun custom(kms: Any) {
             this.kms = kms
         }
-        
+
         /**
          * Set a direct signer function to avoid reflection.
          * This is the preferred way when you have access to the KMS instance.
@@ -527,20 +560,20 @@ class TrustWeaveConfig private constructor(
             this.signer = signerFn
         }
     }
-    
+
     /**
      * DID methods configuration builder.
      */
     class DidBuilder {
         val methods = mutableMapOf<String, DidMethodConfig>()
-        
+
         fun method(name: String, block: DidMethodConfigBuilder.() -> Unit) {
             val builder = DidMethodConfigBuilder()
             builder.block()
             methods[name] = builder.build()
         }
     }
-    
+
     /**
      * DID method configuration.
      */
@@ -563,7 +596,7 @@ class TrustWeaveConfig private constructor(
             )
         }
     }
-    
+
     /**
      * DID method configuration builder.
      */
@@ -571,41 +604,41 @@ class TrustWeaveConfig private constructor(
         private var algorithm: DidCreationOptions.KeyAlgorithm? = null
         private var domain: String? = null
         private val options = mutableMapOf<String, Any?>()
-        
+
         fun algorithm(name: String) {
             algorithm = DidCreationOptions.KeyAlgorithm.fromName(name)
         }
-        
+
         fun algorithm(value: DidCreationOptions.KeyAlgorithm) {
             algorithm = value
         }
-        
+
         fun domain(name: String) {
             domain = name
         }
-        
+
         fun option(key: String, value: Any?) {
             options[key] = value
         }
-        
+
         fun build(): DidMethodConfig {
             return DidMethodConfig(algorithm, domain, options)
         }
     }
-    
+
     /**
      * Anchor layer configuration builder.
      */
     class AnchorBuilder {
         val chains = mutableMapOf<String, AnchorConfig>()
-        
+
         fun chain(chainId: String, block: AnchorConfigBuilder.() -> Unit) {
             val builder = AnchorConfigBuilder()
             builder.block()
             chains[chainId] = builder.build()
         }
     }
-    
+
     /**
      * Anchor configuration.
      */
@@ -613,18 +646,18 @@ class TrustWeaveConfig private constructor(
         val provider: String,
         val options: Map<String, Any?> = emptyMap()
     )
-    
+
     /**
      * Anchor configuration builder.
      */
     class AnchorConfigBuilder {
         private var provider: String? = null
         private val options = mutableMapOf<String, Any?>()
-        
+
         fun provider(name: String) {
             provider = name
         }
-        
+
         /**
          * Use in-memory anchor client (for testing).
          */
@@ -634,13 +667,13 @@ class TrustWeaveConfig private constructor(
                 options["contract"] = contract
             }
         }
-        
+
         fun options(block: OptionsBuilder.() -> Unit) {
             val builder = OptionsBuilder()
             builder.block()
             options.putAll(builder.options)
         }
-        
+
         fun build(): AnchorConfig {
             return AnchorConfig(
                 provider = provider ?: throw IllegalStateException("Anchor provider is required"),
@@ -648,18 +681,18 @@ class TrustWeaveConfig private constructor(
             )
         }
     }
-    
+
     /**
      * Options builder for anchor configuration.
      */
     class OptionsBuilder {
         val options = mutableMapOf<String, Any?>()
-        
+
         infix fun String.to(value: Any?) {
             options[this] = value
         }
     }
-    
+
     /**
      * Credentials configuration builder.
      */
@@ -667,56 +700,56 @@ class TrustWeaveConfig private constructor(
         var defaultProofType: ProofType? = null
         var autoAnchor: Boolean? = null
         var defaultChain: String? = null
-        
+
         /**
          * Set default proof type.
          */
         fun defaultProofType(type: ProofType) {
             defaultProofType = type
         }
-        
+
         fun autoAnchor(enabled: Boolean) {
             autoAnchor = enabled
         }
-        
+
         fun defaultChain(chainId: String) {
             defaultChain = chainId
         }
     }
-    
+
     /**
      * Revocation configuration builder.
      */
     class RevocationConfigBuilder {
         var provider: String = "inMemory"
-        
+
         fun provider(name: String) {
             provider = name
         }
     }
-    
+
     /**
      * Trust registry configuration builder.
      */
     class TrustConfigBuilder {
         var provider: String = "inMemory"
-        
+
         fun provider(name: String) {
             provider = name
         }
     }
-    
+
     /**
      * Schema configuration builder.
      */
     class SchemaConfigBuilder {
         var autoValidate: Boolean = false
         var defaultFormat: SchemaFormat = SchemaFormat.JSON_SCHEMA
-        
+
         fun autoValidate(enabled: Boolean) {
             autoValidate = enabled
         }
-        
+
         fun defaultFormat(format: SchemaFormat) {
             defaultFormat = format
         }

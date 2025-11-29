@@ -37,10 +37,10 @@ class GodiddyDidMethodProvider : DidMethodProvider {
         // Create configuration from options
         val config = GodiddyConfig.fromOptions(options)
         val client = GodiddyClient(config)
-        
+
         // Create resolver (always available)
         val resolver = GodiddyResolver(client)
-        
+
         // Create registrar (may not be available for all methods)
         // For now, we'll create it - in practice, you might want to check if the method supports registration
         val registrar = try {
@@ -48,7 +48,7 @@ class GodiddyDidMethodProvider : DidMethodProvider {
         } catch (e: Exception) {
             null // Registrar not available
         }
-        
+
         // Create DID method instance
         return GodiddyDidMethod(
             method = methodName,

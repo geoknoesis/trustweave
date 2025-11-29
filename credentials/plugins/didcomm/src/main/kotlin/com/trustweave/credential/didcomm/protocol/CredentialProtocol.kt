@@ -11,7 +11,7 @@ import java.util.*
 
 /**
  * Helper functions for creating DIDComm protocol messages.
- * 
+ *
  * Implements common DIDComm protocols:
  * - Issue Credential Protocol
  * - Present Proof Protocol
@@ -20,7 +20,7 @@ import java.util.*
 object CredentialProtocol {
     /**
      * Creates a credential offer message.
-     * 
+     *
      * @param fromDid Issuer DID
      * @param toDid Holder DID
      * @param credentialPreview Preview of the credential to be issued
@@ -49,7 +49,7 @@ object CredentialProtocol {
                 ))
             })
         }
-        
+
         return DidCommMessage(
             id = UUID.randomUUID().toString(),
             type = DidCommMessageTypes.CREDENTIAL_OFFER,
@@ -63,7 +63,7 @@ object CredentialProtocol {
 
     /**
      * Creates a credential request message.
-     * 
+     *
      * @param fromDid Holder DID
      * @param toDid Issuer DID
      * @param thid Thread ID (from the offer)
@@ -77,7 +77,7 @@ object CredentialProtocol {
         val body = buildJsonObject {
             put("goal_code", "request-credential")
         }
-        
+
         return DidCommMessage(
             id = UUID.randomUUID().toString(),
             type = DidCommMessageTypes.CREDENTIAL_REQUEST,
@@ -91,7 +91,7 @@ object CredentialProtocol {
 
     /**
      * Creates a credential issue message.
-     * 
+     *
      * @param fromDid Issuer DID
      * @param toDid Holder DID
      * @param credential The verifiable credential to issue
@@ -110,7 +110,7 @@ object CredentialProtocol {
             VerifiableCredential.serializer(),
             credential
         )
-        
+
         val attachment = DidCommAttachment(
             id = UUID.randomUUID().toString(),
             mediaType = "application/json",
@@ -118,11 +118,11 @@ object CredentialProtocol {
                 json = credentialJson
             )
         )
-        
+
         val body = buildJsonObject {
             put("goal_code", "issue-credential")
         }
-        
+
         return DidCommMessage(
             id = UUID.randomUUID().toString(),
             type = DidCommMessageTypes.CREDENTIAL_ISSUE,
@@ -137,7 +137,7 @@ object CredentialProtocol {
 
     /**
      * Creates a credential acknowledgment message.
-     * 
+     *
      * @param fromDid Sender DID
      * @param toDid Recipient DID
      * @param thid Thread ID
@@ -151,7 +151,7 @@ object CredentialProtocol {
         val body = buildJsonObject {
             put("goal_code", "ack-credential")
         }
-        
+
         return DidCommMessage(
             id = UUID.randomUUID().toString(),
             type = DidCommMessageTypes.CREDENTIAL_ACK,
@@ -165,17 +165,17 @@ object CredentialProtocol {
 
     /**
      * Extracts credential from a credential issue message.
-     * 
+     *
      * @param message The credential issue message
      * @return The verifiable credential, or null if not found
      */
     fun extractCredential(message: DidCommMessage): VerifiableCredential? {
         val attachment = message.attachments.firstOrNull()
             ?: return null
-        
+
         val credentialJson = attachment.data.json
             ?: return null
-        
+
         val json = Json { prettyPrint = false; ignoreUnknownKeys = true }
         return try {
             json.decodeFromJsonElement(

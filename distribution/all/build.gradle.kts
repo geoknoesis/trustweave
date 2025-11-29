@@ -13,10 +13,16 @@ dependencies {
     api(project(":anchors:anchor-core"))
     api(project(":trust"))
     api(project(":contract"))
-    
+    api(project(":wallet:wallet-core"))
+    api(project(":common"))
+
     // Include testkit for development/testing convenience
     api(project(":testkit"))
-    
+
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.coroutines.core)
+
     // Note: Blockchain adapters (algorand, polygon, etc.) and
     // integration modules (waltid, godiddy) are NOT included by default
     // to keep dependencies minimal. Add them explicitly if needed.

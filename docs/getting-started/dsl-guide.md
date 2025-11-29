@@ -42,24 +42,24 @@ val trustLayer = trustLayer {
         provider("inMemory")  // or "waltid", "hardware", etc.
         algorithm("Ed25519")
     }
-    
+
     did {
         method("key") {
             algorithm("Ed25519")
         }
     }
-    
+
     anchor {
         chain("algorand:testnet") {
             inMemory()  // For testing
         }
     }
-    
+
     credentials {
         defaultProofType(ProofType.Ed25519Signature2020)
         autoAnchor(false)
     }
-    
+
     trust {
         provider("inMemory")  // Trust registry provider
     }
@@ -274,7 +274,7 @@ trustWeave.trust {
         credentialTypes("EducationCredential")
         description("Trusted university")
     }
-    
+
     val isTrusted = isTrusted("did:key:university", "EducationCredential")
     val path = getTrustPath("did:key:verifier", "did:key:issuer")
 }

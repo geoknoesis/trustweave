@@ -61,14 +61,14 @@ fun main() = runBlocking {
             }
         }
     }
-    
+
     // Create a Decentralized Identifier (DID)
     val issuerDid = trustLayer.createDid {
         method("key")
         algorithm("Ed25519")
     }
     println("Created DID: $issuerDid")
-    
+
     // Issue a verifiable credential
     val credential = trustLayer.issue {
         credential {
@@ -82,13 +82,13 @@ fun main() = runBlocking {
         }
         by(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
     }
-    
+
     // Verify the credential
     val verification = trustLayer.verify {
         credential(credential)
     }
     println("Credential valid: ${verification.valid}")
-    
+
     // Create a wallet and store the credential
     val wallet = trustLayer.wallet {
         holder("did:example:alice")
@@ -326,7 +326,7 @@ try {
     println("Created: $did")
 } catch (error: Exception) {
     when (error) {
-        is IllegalStateException -> 
+        is IllegalStateException ->
             println("Error: ${error.message}")
         else -> println("Error: ${error.message}")
     }

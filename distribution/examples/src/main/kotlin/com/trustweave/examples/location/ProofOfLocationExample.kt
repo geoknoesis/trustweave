@@ -4,7 +4,7 @@ import kotlinx.coroutines.runBlocking
 
 /**
  * Proof of Location Scenario Example
- * 
+ *
  * This example demonstrates location-based verifiable credentials.
  * Full implementation coming soon - see docs/getting-started/proof-of-location-scenario.md
  */

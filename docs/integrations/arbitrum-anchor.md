@@ -25,7 +25,7 @@ dependencies {
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-core:1.0.0-SNAPSHOT")
-    
+
     // Web3j for Arbitrum blockchain (EVM-compatible)
     implementation("org.web3j:core:5.0.1")
 }

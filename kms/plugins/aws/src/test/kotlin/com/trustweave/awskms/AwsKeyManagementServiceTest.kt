@@ -1,17 +1,17 @@
 package com.trustweave.awskms
 
 import com.trustweave.kms.Algorithm
-import com.trustweave.kms.KeyNotFoundException
-import com.trustweave.kms.UnsupportedAlgorithmException
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import software.amazon.awssdk.awscore.exception.AwsServiceException
-import software.amazon.awssdk.core.SdkBytes
 import software.amazon.awssdk.services.kms.KmsClient
-import software.amazon.awssdk.services.kms.model.*
-import kotlin.test.*
+import software.amazon.awssdk.services.kms.model.KeySpec
+import software.amazon.awssdk.services.kms.model.SigningAlgorithmSpec
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class AwsKeyManagementServiceTest {
 
@@ -25,7 +25,7 @@ class AwsKeyManagementServiceTest {
             .region("us-east-1")
             .endpointOverride("http://localhost:4566") // LocalStack endpoint
             .build()
-        
+
         // Note: In a real test, we'd use a mocking library like MockK
         // For now, we'll test the configuration and algorithm mapping
     }
@@ -34,7 +34,7 @@ class AwsKeyManagementServiceTest {
     fun `test get supported algorithms`() = runBlocking {
         // Create service with mock (would need actual mock setup)
         val supported = AwsKeyManagementService.SUPPORTED_ALGORITHMS
-        
+
         assertTrue(supported.contains(Algorithm.Ed25519))
         assertTrue(supported.contains(Algorithm.Secp256k1))
         assertTrue(supported.contains(Algorithm.P256))
@@ -51,10 +51,10 @@ class AwsKeyManagementServiceTest {
         // Test that mapping returns valid KeySpec values
         val ed25519Spec = AlgorithmMapping.toAwsKeySpec(Algorithm.Ed25519)
         assertNotNull(ed25519Spec)
-        
+
         val secp256k1Spec = AlgorithmMapping.toAwsKeySpec(Algorithm.Secp256k1)
         assertNotNull(secp256k1Spec)
-        
+
         assertEquals(KeySpec.ECC_NIST_P256, AlgorithmMapping.toAwsKeySpec(Algorithm.P256))
         assertEquals(KeySpec.ECC_NIST_P384, AlgorithmMapping.toAwsKeySpec(Algorithm.P384))
         assertEquals(KeySpec.ECC_NIST_P521, AlgorithmMapping.toAwsKeySpec(Algorithm.P521))
@@ -83,7 +83,7 @@ class AwsKeyManagementServiceTest {
     @Test
     fun `test resolve key ID`() {
         assertEquals("key-123", AlgorithmMapping.resolveKeyId("key-123"))
-        assertEquals("arn:aws:kms:us-east-1:123456789012:key/123", 
+        assertEquals("arn:aws:kms:us-east-1:123456789012:key/123",
             AlgorithmMapping.resolveKeyId("arn:aws:kms:us-east-1:123456789012:key/123"))
         assertEquals("alias/my-key", AlgorithmMapping.resolveKeyId("alias/my-key"))
     }
@@ -96,7 +96,7 @@ class AwsKeyManagementServiceTest {
             "secretAccessKey" to "secret",
             "endpointOverride" to "http://localhost:4566"
         ))
-        
+
         assertEquals("us-west-2", config.region)
         assertEquals("AKIA...", config.accessKeyId)
         assertEquals("secret", config.secretAccessKey)
@@ -116,7 +116,7 @@ class AwsKeyManagementServiceTest {
             .region("eu-west-1")
             .accessKeyId("AKIA123")
             .build()
-        
+
         assertEquals("eu-west-1", config.region)
         assertEquals("AKIA123", config.accessKeyId)
     }
@@ -124,7 +124,7 @@ class AwsKeyManagementServiceTest {
     @Test
     fun `test AwsKeyManagementServiceProvider`() {
         val provider = AwsKeyManagementServiceProvider()
-        
+
         assertEquals("aws", provider.name)
         assertEquals(AwsKeyManagementService.SUPPORTED_ALGORITHMS, provider.supportedAlgorithms)
         assertTrue(provider.supportsAlgorithm(Algorithm.Ed25519))
@@ -134,12 +134,12 @@ class AwsKeyManagementServiceTest {
     @Test
     fun `test AwsKeyManagementServiceProvider create with options`() {
         val provider = AwsKeyManagementServiceProvider()
-        
+
         val kms = provider.create(mapOf(
             "region" to "us-east-1",
             "endpointOverride" to "http://localhost:4566"
         ))
-        
+
         assertNotNull(kms)
         assertTrue(kms is AwsKeyManagementService)
     }
@@ -147,7 +147,7 @@ class AwsKeyManagementServiceTest {
     @Test
     fun `test AwsKeyManagementServiceProvider create without region throws exception`() {
         val provider = AwsKeyManagementServiceProvider()
-        
+
         assertThrows<IllegalArgumentException> {
             provider.create(emptyMap())
         }

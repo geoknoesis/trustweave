@@ -1,8 +1,11 @@
 package com.trustweave.did.base
 
-import com.trustweave.core.exception.NotFoundException
+// NotFoundException replaced with TrustWeaveException.NotFound
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.VerificationMethod
+import com.trustweave.did.DidService
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -16,21 +19,21 @@ import java.time.Instant
 
 /**
  * Abstract base class for HTTP-based DID method implementations (e.g., did:web).
- * 
+ *
  * Provides common functionality for DID methods that host documents over HTTP/HTTPS:
  * - HTTP client for document retrieval and publishing
  * - Document hosting abstraction
  * - HTTPS validation
  * - Common HTTP error handling
- * 
+ *
  * Subclasses should implement:
  * - [createDid]: Create a new DID and publish its document
  * - [resolveDid]: Resolve DID from HTTP endpoint
  * - [getDocumentUrl]: Get the HTTP URL for a DID document
  * - [publishDocument]: Publish a document to the HTTP endpoint
- * 
+ *
  * Pattern: HTTP client abstraction for web-based DID methods.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * class WebDidMethod(
@@ -38,7 +41,7 @@ import java.time.Instant
  *     private val httpClient: OkHttpClient,
  *     private val documentHost: DocumentHost
  * ) : AbstractWebDidMethod("web", kms, httpClient) {
- *     
+ *
  *     override fun getDocumentUrl(did: String): String {
  *         val (_, domain, path) = parseWebDid(did)
  *         return if (path != null) {
@@ -47,7 +50,7 @@ import java.time.Instant
  *             "https://$domain/.well-known/did.json"
  *         }
  *     }
- *     
+ *
  *     override suspend fun publishDocument(url: String, document: DidDocument): Boolean {
  *         return documentHost.publish(url, document)
  *     }
@@ -62,7 +65,7 @@ abstract class AbstractWebDidMethod(
 
     /**
      * Gets the HTTP URL for a DID document.
-     * 
+     *
      * @param did The DID to get the URL for
      * @return HTTP/HTTPS URL string
      */
@@ -70,9 +73,9 @@ abstract class AbstractWebDidMethod(
 
     /**
      * Publishes a DID document to an HTTP endpoint.
-     * 
+     *
      * Subclasses should implement this to publish documents to their hosting infrastructure.
-     * 
+     *
      * @param url The URL to publish to
      * @param document The DID document to publish
      * @return true if successful
@@ -82,7 +85,7 @@ abstract class AbstractWebDidMethod(
 
     /**
      * Validates that a URL uses HTTPS (required for did:web).
-     * 
+     *
      * @param url The URL to validate
      * @throws IllegalArgumentException if URL doesn't use HTTPS
      */
@@ -100,7 +103,7 @@ abstract class AbstractWebDidMethod(
 
     /**
      * Resolves a DID document from an HTTP endpoint.
-     * 
+     *
      * @param did The DID to resolve
      * @return DidResolutionResult
      * @throws NotFoundException if document not found
@@ -120,10 +123,12 @@ abstract class AbstractWebDidMethod(
                 .build()
 
             val response = httpClient.newCall(request).execute()
-            
+
             if (!response.isSuccessful) {
                 if (response.code == 404) {
-                    throw NotFoundException("DID document not found at: $url")
+                    throw TrustWeaveException.NotFound(
+                        message = "DID document not found at: $url"
+                    )
                 }
                 throw com.trustweave.core.exception.TrustWeaveException.Unknown(
                     message = "Failed to resolve DID document: HTTP ${response.code} ${response.message}",
@@ -136,7 +141,7 @@ abstract class AbstractWebDidMethod(
                 jsonString = null
             )
             val jsonString = body.string()
-            
+
             // Parse JSON to DidDocument
             val json = Json.parseToJsonElement(jsonString)
             val document = jsonElementToDocument(json)
@@ -153,7 +158,7 @@ abstract class AbstractWebDidMethod(
             storeDocument(document.id, document)
 
             com.trustweave.did.base.DidMethodUtils.createSuccessResolutionResult(document, method)
-        } catch (e: NotFoundException) {
+        } catch (e: TrustWeaveException.NotFound) {
             throw e
         } catch (e: TrustWeaveException) {
             throw e
@@ -169,6 +174,7 @@ abstract class AbstractWebDidMethod(
                 )
             }
 
+            val url = getDocumentUrl(did)
             throw com.trustweave.core.exception.TrustWeaveException.Unknown(
                 message = "Failed to resolve DID from HTTP endpoint: ${e.message ?: "Unknown error"}",
                 context = mapOf("did" to did, "method" to method, "url" to url),
@@ -185,7 +191,7 @@ abstract class AbstractWebDidMethod(
 
     /**
      * Updates a DID document on an HTTP endpoint.
-     * 
+     *
      * @param did The DID to update
      * @param document The updated document
      * @return true if successful
@@ -220,7 +226,7 @@ abstract class AbstractWebDidMethod(
 
     /**
      * Deactivates a DID document on an HTTP endpoint.
-     * 
+     *
      * @param did The DID to deactivate
      * @param deactivatedDocument The deactivated document
      * @return true if successful
@@ -256,7 +262,7 @@ abstract class AbstractWebDidMethod(
 
     /**
      * Converts a DID document to JsonElement.
-     * 
+     *
      * @param document The DID document
      * @return JsonElement representation
      */
@@ -264,7 +270,7 @@ abstract class AbstractWebDidMethod(
         return buildJsonObject {
             put("@context", JsonArray(document.context.map { JsonPrimitive(it) }))
             put("id", document.id)
-            
+
             if (document.alsoKnownAs.isNotEmpty()) {
                 put("alsoKnownAs", JsonArray(document.alsoKnownAs.map { JsonPrimitive(it) }))
             }
@@ -294,10 +300,10 @@ abstract class AbstractWebDidMethod(
             }
         }
     }
-    
+
     /**
      * Converts JsonElement to DidDocument.
-     * 
+     *
      * @param json The JsonElement
      * @return DidDocument
      */
@@ -305,7 +311,7 @@ abstract class AbstractWebDidMethod(
         val obj = json.jsonObject
         return DidDocument(
             id = obj["id"]?.jsonPrimitive?.content ?: throw IllegalArgumentException("Missing id"),
-            context = obj["@context"]?.let { 
+            context = obj["@context"]?.let {
                 when (it) {
                     is JsonPrimitive -> listOf(it.content)
                     is JsonArray -> it.mapNotNull { (it as? JsonPrimitive)?.content }
@@ -329,8 +335,8 @@ abstract class AbstractWebDidMethod(
             service = obj["service"]?.jsonArray?.mapNotNull { jsonToService(it) } ?: emptyList()
         )
     }
-    
-    private fun vmToJsonObject(vm: VerificationMethodRef): JsonObject {
+
+    private fun vmToJsonObject(vm: VerificationMethod): JsonObject {
         return buildJsonObject {
             put("id", vm.id)
             put("type", vm.type)
@@ -343,8 +349,8 @@ abstract class AbstractWebDidMethod(
             }
         }
     }
-    
-    private fun serviceToJsonObject(service: Service): JsonObject {
+
+    private fun serviceToJsonObject(service: DidService): JsonObject {
         return buildJsonObject {
             put("id", service.id)
             put("type", service.type)
@@ -354,10 +360,10 @@ abstract class AbstractWebDidMethod(
             })
         }
     }
-    
-    private fun jsonToVerificationMethod(json: JsonElement): VerificationMethodRef? {
+
+    private fun jsonToVerificationMethod(json: JsonElement): VerificationMethod? {
         val obj = json.jsonObject
-        return VerificationMethodRef(
+        return VerificationMethod(
             id = obj["id"]?.jsonPrimitive?.content ?: return null,
             type = obj["type"]?.jsonPrimitive?.content ?: return null,
             controller = obj["controller"]?.jsonPrimitive?.content ?: return null,
@@ -365,10 +371,10 @@ abstract class AbstractWebDidMethod(
             publicKeyMultibase = obj["publicKeyMultibase"]?.jsonPrimitive?.content
         )
     }
-    
-    private fun jsonToService(json: JsonElement): Service? {
+
+    private fun jsonToService(json: JsonElement): DidService? {
         val obj = json.jsonObject
-        return Service(
+        return DidService(
             id = obj["id"]?.jsonPrimitive?.content ?: return null,
             type = obj["type"]?.jsonPrimitive?.content ?: return null,
             serviceEndpoint = obj["serviceEndpoint"]?.let {
@@ -379,7 +385,7 @@ abstract class AbstractWebDidMethod(
             } ?: return null
         )
     }
-    
+
     private fun mapToJsonObject(map: Map<String, Any?>): JsonObject {
         return buildJsonObject {
             map.forEach { (key, value) ->
@@ -389,7 +395,7 @@ abstract class AbstractWebDidMethod(
                     is Number -> put(key, value)
                     is Boolean -> put(key, value)
                     is Map<*, *> -> put(key, mapToJsonObject(value as Map<String, Any?>))
-                    is List<*> -> put(key, JsonArray(value.map { 
+                    is List<*> -> put(key, JsonArray(value.map {
                         when (it) {
                             is String -> JsonPrimitive(it)
                             is Number -> JsonPrimitive(it)
@@ -402,7 +408,7 @@ abstract class AbstractWebDidMethod(
             }
         }
     }
-    
+
     private fun jsonObjectToMap(obj: JsonObject): Map<String, Any?> {
         return obj.entries.associate { (key, value) ->
             key to when (value) {
@@ -416,7 +422,7 @@ abstract class AbstractWebDidMethod(
 
     /**
      * Helper function to create an HTTP request for publishing a document.
-     * 
+     *
      * @param url The URL to publish to
      * @param document The DID document
      * @return Request for PUT/PATCH
@@ -424,10 +430,10 @@ abstract class AbstractWebDidMethod(
     protected fun createPublishRequest(url: String, document: DidDocument): Request {
         val jsonElement = documentToJsonElement(document)
         val json = Json.encodeToString(JsonElement.serializer(), jsonElement)
-        
+
         val mediaType = "application/json".toMediaType()
         val body = json.toRequestBody(mediaType)
-        
+
         return Request.Builder()
             .url(url)
             .put(body) // Use PUT for full replacement, subclasses can override to use PATCH
@@ -437,7 +443,7 @@ abstract class AbstractWebDidMethod(
 
     /**
      * Helper function to execute an HTTP request.
-     * 
+     *
      * @param request The HTTP request
      * @return Response
      * @throws IOException if request fails

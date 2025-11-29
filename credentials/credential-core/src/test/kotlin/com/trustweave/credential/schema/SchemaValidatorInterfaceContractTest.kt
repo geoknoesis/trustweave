@@ -16,7 +16,7 @@ class SchemaValidatorInterfaceContractTest {
     @Test
     fun `test SchemaValidator schemaFormat returns format`() = runBlocking {
         val validator = createMockValidator(SchemaFormat.JSON_SCHEMA)
-        
+
         assertEquals(SchemaFormat.JSON_SCHEMA, validator.schemaFormat)
     }
 
@@ -32,9 +32,9 @@ class SchemaValidatorInterfaceContractTest {
                 put("name", buildJsonObject { put("type", "string") })
             })
         }
-        
+
         val result = validator.validate(credential, schema)
-        
+
         assertNotNull(result)
         assertNotNull(result.valid)
     }
@@ -48,9 +48,9 @@ class SchemaValidatorInterfaceContractTest {
             put("type", "object")
             put("required", buildJsonArray { add("missingField") })
         }
-        
+
         val result = validator.validate(credential, schema)
-        
+
         assertNotNull(result)
         // Current implementation may not fully validate, but should return a result
     }
@@ -70,9 +70,9 @@ class SchemaValidatorInterfaceContractTest {
                 put("name", buildJsonObject { put("type", "string") })
             })
         }
-        
+
         val result = validator.validateCredentialSubject(subject, schema)
-        
+
         assertNotNull(result)
         assertNotNull(result.valid)
     }
@@ -90,9 +90,9 @@ class SchemaValidatorInterfaceContractTest {
                 put("id", buildJsonObject { put("type", "string") })
             })
         }
-        
+
         val result = validator.validateCredentialSubject(subject, schema)
-        
+
         assertNotNull(result)
     }
 
@@ -101,9 +101,9 @@ class SchemaValidatorInterfaceContractTest {
         val validator = createMockValidator(SchemaFormat.JSON_SCHEMA)
         val credential = createTestCredential()
         val schema = buildJsonObject {}
-        
+
         val result = validator.validate(credential, schema)
-        
+
         assertNotNull(result)
     }
 
@@ -128,45 +128,45 @@ class SchemaValidatorInterfaceContractTest {
                 put("age", buildJsonObject { put("type", "number") })
             })
         }
-        
+
         val result = validator.validate(credential, schema)
-        
+
         assertNotNull(result)
     }
 
     private fun createMockValidator(format: SchemaFormat): SchemaValidator {
         return object : SchemaValidator {
             override val schemaFormat: SchemaFormat = format
-            
+
             override suspend fun validate(
                 credential: VerifiableCredential,
                 schema: JsonObject
             ): SchemaValidationResult {
                 // Simplified validation - check basic structure
                 val errors = mutableListOf<SchemaValidationError>()
-                
+
                 if (schema.containsKey("\$schema")) {
                     // Basic validation passed
                 } else {
                     errors.add(SchemaValidationError("$", "Schema missing \$schema field"))
                 }
-                
+
                 return SchemaValidationResult(
                     valid = errors.isEmpty(),
                     errors = errors
                 )
             }
-            
+
             override suspend fun validateCredentialSubject(
                 subject: JsonElement,
                 schema: JsonObject
             ): SchemaValidationResult {
                 val errors = mutableListOf<SchemaValidationError>()
-                
+
                 if (subject !is JsonObject) {
                     errors.add(SchemaValidationError("credentialSubject", "Subject must be an object"))
                 }
-                
+
                 return SchemaValidationResult(
                     valid = errors.isEmpty(),
                     errors = errors

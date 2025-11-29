@@ -126,7 +126,7 @@ flowchart TD
     C -->|registered in| D["Data Catalog<br/>DCAT Catalog<br/>Dataset Registry<br/>Discovery Service"]
     D -->|anchors to blockchain| E["Blockchain Anchor<br/>Immutable Catalog Record<br/>Dataset Digest<br/>Metadata Hash"]
     E -->|discovered by| F["Data Consumer<br/>Searches Catalog<br/>Verifies Credentials<br/>Accesses Dataset"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -173,13 +173,13 @@ dependencies {
     implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    
+
     // Test kit for in-memory implementations
     implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -207,18 +207,18 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     println("=== Data Catalog & DCAT Scenario ===\n")
-    
+
     // Step 1: Setup services
     println("Step 1: Setting up services...")
-    
+
     // Separate KMS for different participants
     // Publishers, catalog managers, and consumers each have their own keys
     val publisherKms = InMemoryKeyManagementService() // For data publishers
     val catalogKms = InMemoryKeyManagementService()   // For catalog managers
-    
+
     val didMethod = DidKeyMockMethod(publisherKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
-    
+
     println("Services initialized")
 }
 ```
@@ -243,17 +243,17 @@ import java.time.Instant
 
     // Step 2: Create publisher and dataset DIDs
     println("\nStep 2: Creating publisher and dataset DIDs...")
-    
+
     // Publisher DID represents data publisher
     // Example: Government agency, enterprise department
     val publisherDid = didMethod.createDid()
     println("Publisher DID: ${publisherDid.id}")
-    
+
     // Dataset DID represents the dataset
     // This provides persistent identifier for the dataset
     val datasetDid = didMethod.createDid()
     println("Dataset DID: ${datasetDid.id}")
-    
+
     // Dataset information following DCAT vocabulary
     val datasetTitle = "National Population Census 2024"
     val datasetDescription = "Complete population census data for all regions"
@@ -276,7 +276,7 @@ import java.time.Instant
 ```kotlin
     // Step 3: Create DCAT dataset description
     println("\nStep 3: Creating DCAT dataset description...")
-    
+
     // DCAT dataset description following W3C DCAT vocabulary
     // This provides standard format for dataset metadata
     val dcatDataset = buildJsonObject {
@@ -324,7 +324,7 @@ import java.time.Instant
         put("dct:license", "https://creativecommons.org/licenses/by/4.0/")
         put("dct:language", "en")
     }
-    
+
     println("DCAT dataset description created:")
     println("  - Title: $datasetTitle")
     println("  - Themes: ${datasetTheme.joinToString()}")
@@ -346,13 +346,13 @@ import java.time.Instant
 ```kotlin
     // Step 4: Create dataset credential
     println("\nStep 4: Creating dataset credential...")
-    
+
     // Compute digest of DCAT dataset description
     // This provides integrity check for the dataset metadata
     val datasetDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
         com.trustweave.json.Json.encodeToJsonElement(dcatDataset)
     )
-    
+
     // Dataset credential wraps DCAT description with verifiable proof
     val datasetCredential = VerifiableCredential(
         id = "https://catalog.example.com/datasets/${datasetDid.id.substringAfterLast(":")}",
@@ -370,7 +370,7 @@ import java.time.Instant
         issuanceDate = Instant.now().toString(),
         expirationDate = null
     )
-    
+
     println("Dataset credential created:")
     println("  - Dataset: $datasetTitle")
     println("  - Publisher: ${publisherDid.id}")
@@ -397,10 +397,10 @@ import com.trustweave.credential.CredentialIssuanceOptions
 
     // Step 5: Issue dataset credential with proof
     println("\nStep 5: Issuing dataset credential...")
-    
+
     // Generate publisher's signing key
     val publisherKey = publisherKms.generateKey("Ed25519")
-    
+
     // Create proof generator for publisher
     val publisherProofGenerator = Ed25519ProofGenerator(
         signer = { data, keyId -> publisherKms.sign(keyId, data) },
@@ -409,14 +409,14 @@ import com.trustweave.credential.CredentialIssuanceOptions
     val proofRegistry = ProofGeneratorRegistry().apply {
         register(publisherProofGenerator)
     }
-    
+
     // Create credential issuer
     val publisherIssuer = CredentialIssuer(
         proofGenerator = publisherProofGenerator,
         resolveDid = { did -> didRegistry.resolve(did) != null },
         proofRegistry = proofRegistry
     )
-    
+
     // Issue dataset credential
     val issuedDatasetCredential = publisherIssuer.issue(
         credential = datasetCredential,
@@ -424,7 +424,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
         keyId = publisherKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Dataset credential issued:")
     println("  - Proof: ${issuedDatasetCredential.proof != null}")
     println("  - Issuer: ${publisherDid.id}")
@@ -445,10 +445,10 @@ import com.trustweave.credential.CredentialIssuanceOptions
 ```kotlin
     // Step 6: Create data catalog
     println("\nStep 6: Creating data catalog...")
-    
+
     // Catalog manager DID
     val catalogManagerDid = didMethod.createDid()
-    
+
     // DCAT catalog description
     val dcatCatalog = buildJsonObject {
         put("@context", "https://www.w3.org/ns/dcat#")
@@ -473,7 +473,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
             put("dct:title", "Dataset Themes")
         })
     }
-    
+
     println("DCAT catalog created:")
     println("  - Title: National Data Catalog")
     println("  - Datasets: 1")
@@ -495,7 +495,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
 ```kotlin
     // Step 7: Create catalog record credential
     println("\nStep 7: Creating catalog record credential...")
-    
+
     // Catalog record credential proves dataset is registered
     val catalogRecordCredential = VerifiableCredential(
         type = listOf("VerifiableCredential", "CatalogRecordCredential", "DCATCredential"),
@@ -515,7 +515,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
         issuanceDate = Instant.now().toString(),
         expirationDate = null
     )
-    
+
     // Issue catalog record credential
     val catalogKey = catalogKms.generateKey("Ed25519")
     val catalogProofGenerator = Ed25519ProofGenerator(
@@ -525,20 +525,20 @@ import com.trustweave.credential.CredentialIssuanceOptions
     val catalogProofRegistry = ProofGeneratorRegistry().apply {
         register(catalogProofGenerator)
     }
-    
+
     val catalogIssuer = CredentialIssuer(
         proofGenerator = catalogProofGenerator,
         resolveDid = { did -> didRegistry.resolve(did) != null },
         proofRegistry = catalogProofRegistry
     )
-    
+
     val issuedCatalogRecord = catalogIssuer.issue(
         credential = catalogRecordCredential,
         issuerDid = catalogManagerDid.id,
         keyId = catalogKey.id,
         options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
-    
+
     println("Catalog record credential created:")
     println("  - Dataset: $datasetTitle")
     println("  - Status: published")
@@ -563,13 +563,13 @@ import com.trustweave.credential.CredentialVerificationOptions
 
     // Step 8: Verify dataset credentials
     println("\nStep 8: Verifying dataset credentials...")
-    
+
     val verifier = CredentialVerifier(
         didResolver = CredentialDidResolver { did ->
             didRegistry.resolve(did).toCredentialDidResolution()
         }
     )
-    
+
     // Verify dataset credential
     val datasetVerification = verifier.verify(
         credential = issuedDatasetCredential,
@@ -578,7 +578,7 @@ import com.trustweave.credential.CredentialVerificationOptions
             checkExpiration = false
         )
     )
-    
+
     if (datasetVerification.valid) {
         println("✅ Dataset credential verified")
         println("  - Publisher: ${publisherDid.id}")
@@ -587,7 +587,7 @@ import com.trustweave.credential.CredentialVerificationOptions
         println("❌ Dataset credential verification failed:")
         datasetVerification.errors.forEach { println("  - $it") }
     }
-    
+
     // Verify catalog record credential
     val catalogVerification = verifier.verify(
         credential = issuedCatalogRecord,
@@ -596,7 +596,7 @@ import com.trustweave.credential.CredentialVerificationOptions
             checkExpiration = false
         )
     )
-    
+
     if (catalogVerification.valid) {
         println("✅ Catalog record credential verified")
         println("  - Catalog: https://catalog.example.com")
@@ -638,12 +638,12 @@ data class CatalogRecord(
 
     // Step 9: Anchor catalog to blockchain
     println("\nStep 9: Anchoring catalog to blockchain...")
-    
+
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
     val blockchainRegistry = BlockchainAnchorRegistry().apply {
         register("eip155:1", anchorClient)
     }
-    
+
     // Create catalog record
     val catalogDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
@@ -651,7 +651,7 @@ data class CatalogRecord(
             issuedCatalogRecord
         )
     )
-    
+
     val catalogRecord = CatalogRecord(
         catalogId = "https://catalog.example.com",
         datasetDid = datasetDid.id,
@@ -660,14 +660,14 @@ data class CatalogRecord(
         catalogDigest = catalogDigest,
         timestamp = Instant.now().toString()
     )
-    
+
     // Anchor to blockchain
     val anchorResult = blockchainRegistry.anchorTyped(
         value = catalogRecord,
         serializer = CatalogRecord.serializer(),
         targetChainId = "eip155:1"
     )
-    
+
     println("Catalog anchored to blockchain:")
     println("  - Transaction hash: ${anchorResult.ref.txHash}")
     println("  - Provides immutable catalog record")
@@ -689,7 +689,7 @@ data class CatalogRecord(
 ```kotlin
     // Step 10: Dataset discovery
     println("\nStep 10: Dataset discovery...")
-    
+
     // Function to search catalog by theme
     fun searchCatalogByTheme(
         theme: String,
@@ -698,18 +698,18 @@ data class CatalogRecord(
         val dataset = datasetCredential.credentialSubject.jsonObject["dataset"]?.jsonObject
             ?.get("dcat")?.jsonObject
             ?: return false
-        
+
         val themes = dataset["dcat:theme"]?.jsonArray
             ?.map { it.jsonPrimitive.content }
             ?: return false
-        
+
         return themes.contains(theme)
     }
-    
+
     // Search for datasets by theme
     val searchTheme = "demographics"
     val found = searchCatalogByTheme(searchTheme, issuedDatasetCredential)
-    
+
     if (found) {
         println("✅ Dataset found for theme: $searchTheme")
         println("  - Title: $datasetTitle")
@@ -717,7 +717,7 @@ data class CatalogRecord(
     } else {
         println("❌ No dataset found for theme: $searchTheme")
     }
-    
+
     // Function to get dataset distribution information
     fun getDatasetDistributions(
         datasetCredential: VerifiableCredential
@@ -725,10 +725,10 @@ data class CatalogRecord(
         val dataset = datasetCredential.credentialSubject.jsonObject["dataset"]?.jsonObject
             ?.get("dcat")?.jsonObject
             ?: return emptyList()
-        
+
         val distributions = dataset["dcat:distribution"]?.jsonArray
             ?: return emptyList()
-        
+
         return distributions.map { dist ->
             val distObj = dist.jsonObject
             mapOf(
@@ -738,7 +738,7 @@ data class CatalogRecord(
             )
         }
     }
-    
+
     // Get distribution information
     val distributions = getDatasetDistributions(issuedDatasetCredential)
     println("\nDataset distributions:")

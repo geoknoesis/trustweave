@@ -19,7 +19,7 @@ class IntegrityModelsTest {
             type = "Dataset",
             rel = "item"
         )
-        
+
         assertEquals("https://example.com/artifact", link.href)
         assertEquals("digest-123", link.digestMultibase)
         assertEquals("Dataset", link.type)
@@ -32,7 +32,7 @@ class IntegrityModelsTest {
             href = "https://example.com/artifact",
             digestMultibase = "digest-123"
         )
-        
+
         assertNull(link.type)
         assertNull(link.rel)
     }
@@ -43,14 +43,14 @@ class IntegrityModelsTest {
             Link("https://example.com/artifact1", "digest-1"),
             Link("https://example.com/artifact2", "digest-2")
         )
-        
+
         val linkset = Linkset(
             id = "https://example.com/linkset/1",
             digestMultibase = "linkset-digest",
             links = links,
             context = "https://www.w3.org/ns/json-ld#"
         )
-        
+
         assertEquals("https://example.com/linkset/1", linkset.id)
         assertEquals("linkset-digest", linkset.digestMultibase)
         assertEquals(2, linkset.links.size)
@@ -63,7 +63,7 @@ class IntegrityModelsTest {
             digestMultibase = "digest-123",
             links = emptyList()
         )
-        
+
         assertNull(linkset.id)
         assertEquals("https://www.w3.org/ns/json-ld#", linkset.context)
     }
@@ -78,7 +78,7 @@ class IntegrityModelsTest {
             digestMultibase = "digest-123",
             contract = "app-456"
         )
-        
+
         assertEquals("BlockchainAnchorEvidence", evidence.type)
         assertEquals("algorand:testnet", evidence.chainId)
         assertEquals("testnet", evidence.network)
@@ -94,7 +94,7 @@ class IntegrityModelsTest {
             txHash = "tx-123",
             digestMultibase = "digest-123"
         )
-        
+
         assertEquals("BlockchainAnchorEvidence", evidence.type)
         assertNull(evidence.network)
         assertNull(evidence.contract)
@@ -108,7 +108,7 @@ class IntegrityModelsTest {
             statusPurpose = "revocation",
             statusListIndex = "0"
         )
-        
+
         assertEquals("https://example.com/status/1", status.id)
         assertEquals("StatusList2021Entry", status.type)
         assertEquals("revocation", status.statusPurpose)
@@ -118,7 +118,7 @@ class IntegrityModelsTest {
     @Test
     fun `test CredentialStatus with defaults`() {
         val status = CredentialStatus(id = "https://example.com/status/1")
-        
+
         assertEquals("StatusList2021Entry", status.type)
         assertEquals("revocation", status.statusPurpose)
         assertNull(status.statusListIndex)
@@ -131,7 +131,7 @@ class IntegrityModelsTest {
             anchorLookup = "https://algoexplorer.io/tx/{txHash}",
             baseUrl = "https://anchor.example.com"
         )
-        
+
         assertEquals("algorand:testnet", endpoint.chainId)
         assertEquals("https://algoexplorer.io/tx/{txHash}", endpoint.anchorLookup)
         assertEquals("https://anchor.example.com", endpoint.baseUrl)
@@ -148,7 +148,7 @@ class IntegrityModelsTest {
             type = "AnchorService",
             serviceEndpoint = endpoint
         )
-        
+
         assertEquals("#custom-anchor-service", service.id)
         assertEquals("AnchorService", service.type)
         assertEquals("algorand:testnet", service.serviceEndpoint.chainId)
@@ -158,7 +158,7 @@ class IntegrityModelsTest {
     fun `test AnchorService with defaults`() {
         val endpoint = AnchorServiceEndpoint(chainId = "algorand:testnet")
         val service = AnchorService(serviceEndpoint = endpoint)
-        
+
         assertEquals("#anchor-service", service.id)
         assertEquals("AnchorService", service.type)
     }
@@ -174,7 +174,7 @@ class IntegrityModelsTest {
             revocationStatus = "active",
             anchor = anchorInfo
         )
-        
+
         assertEquals("active", response.revocationStatus)
         assertNotNull(response.anchor)
     }
@@ -182,7 +182,7 @@ class IntegrityModelsTest {
     @Test
     fun `test StatusResponse with defaults`() {
         val response = StatusResponse(revocationStatus = "active")
-        
+
         assertNull(response.anchor)
     }
 
@@ -195,7 +195,7 @@ class IntegrityModelsTest {
             timestamp = 1234567890L,
             contract = "app-456"
         )
-        
+
         assertEquals("algorand:testnet", anchorInfo.chainId)
         assertEquals("tx-123", anchorInfo.txHash)
         assertEquals("digest-123", anchorInfo.digestMultibase)
@@ -210,7 +210,7 @@ class IntegrityModelsTest {
             txHash = "tx-123",
             digestMultibase = "digest-123"
         )
-        
+
         assertNull(anchorInfo.timestamp)
         assertNull(anchorInfo.contract)
     }
@@ -225,7 +225,7 @@ class IntegrityModelsTest {
             contract = "app-456",
             issuer = "did:key:issuer"
         )
-        
+
         assertEquals("digest-123", entry.digestMultibase)
         assertEquals("algorand:testnet", entry.chainId)
         assertEquals("tx-123", entry.txHash)
@@ -248,7 +248,7 @@ class IntegrityModelsTest {
             issuer = "did:key:issuer",
             timestamp = 1234567890L
         )
-        
+
         assertEquals("manifest-1", manifest.id)
         assertEquals("algorand:testnet", manifest.anchorContext.chainId)
         assertEquals(2, manifest.anchoredDigests.size)
@@ -263,7 +263,7 @@ class IntegrityModelsTest {
             contract = "app-456",
             network = "testnet"
         )
-        
+
         assertEquals("algorand:testnet", context.chainId)
         assertEquals("app-456", context.contract)
         assertEquals("testnet", context.network)
@@ -277,7 +277,7 @@ class IntegrityModelsTest {
             digest = "digest-123",
             error = null
         )
-        
+
         assertEquals("VC Digest", step.name)
         assertTrue(step.valid)
         assertEquals("digest-123", step.digest)
@@ -292,7 +292,7 @@ class IntegrityModelsTest {
             digest = null,
             error = "Artifact not found"
         )
-        
+
         assertFalse(step.valid)
         assertNull(step.digest)
         assertEquals("Artifact not found", step.error)
@@ -304,9 +304,9 @@ class IntegrityModelsTest {
             VerificationStep("Step 1", true, "digest-1"),
             VerificationStep("Step 2", true, "digest-2")
         )
-        
+
         val result = IntegrityVerificationResult(valid = true, steps = steps)
-        
+
         assertTrue(result.valid)
         assertEquals(2, result.steps.size)
     }

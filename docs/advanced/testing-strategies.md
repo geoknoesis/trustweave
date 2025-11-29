@@ -48,11 +48,11 @@ class DidMethodTest {
     fun testCreateDid() = runBlocking {
         val kms = InMemoryKeyManagementService()
         val method = DidKeyMockMethod(kms)
-        
+
         val options = didCreationOptions {
             algorithm = KeyAlgorithm.Ed25519
         }
-        
+
         val did = method.createDid(options)
         assertNotNull(did)
         assert(did.id.startsWith("did:key:"))
@@ -76,13 +76,13 @@ class KmsTest {
     @Test
     fun testGenerateAndSign() = runBlocking {
         val kms = InMemoryKeyManagementService()
-        
+
         val key = kms.generateKey(Algorithm.Ed25519)
         assertNotNull(key)
-        
+
         val data = "Hello, TrustWeave!".toByteArray()
         val signature = kms.sign(key.id, data)
-        
+
         assertNotNull(signature)
         assertEquals(64, signature.size) // Ed25519 signature size
     }
@@ -109,10 +109,10 @@ class CredentialWorkflowTest {
             .build()
             .use { fixture ->
                 val TrustWeave = TrustWeave.create()
-                
+
                 // Create issuer DID
                 val issuerDid = TrustWeave.dids.create()
-                
+
                 // Issue credential
                 val credential = TrustWeave.issueCredential(
                     issuerDid = issuerDid.id,
@@ -122,7 +122,7 @@ class CredentialWorkflowTest {
                         put("name", "Alice")
                     }
                 ).getOrThrow()
-                
+
                 // Verify credential
                 val verificationResult = TrustWeave.verifyCredential(credential).getOrThrow()
                 assert(verificationResult.valid)
@@ -145,10 +145,10 @@ class AnchoringTest {
     @Test
     fun testAnchorAndRead() = runBlocking {
         val client = InMemoryBlockchainAnchorClient("algorand:testnet")
-        
+
         val payload = "Hello, TrustWeave!".toByteArray()
         val result = client.writePayload(payload).getOrThrow()
-        
+
         val readData = client.readPayload(result.anchorRef).getOrThrow()
         assertEquals(payload.toList(), readData.toList())
     }
@@ -174,7 +174,7 @@ class MyEoIntegrationTest : BaseEoIntegrationTest() {
     ): BlockchainAnchorClient {
         return InMemoryBlockchainAnchorClient(chainId)
     }
-    
+
     @Test
     fun testEoScenario() = runBlocking {
         val result = runEoTestScenario()
@@ -206,7 +206,7 @@ class FixtureTest {
             .use { fixture ->
                 val issuerDoc = fixture.createIssuerDid()
                 assertNotNull(issuerDoc)
-                
+
                 val client = fixture.getBlockchainClient("algorand:testnet")
                 assertNotNull(client)
             }
@@ -251,7 +251,7 @@ Test error cases:
 @Test
 fun testErrorHandling() = runBlocking {
     val kms = InMemoryKeyManagementService()
-    
+
     val result = kms.sign("nonexistent-key", "data".toByteArray())
     result.fold(
         onSuccess = { fail("Expected error") },
@@ -270,13 +270,13 @@ Test performance-critical paths:
 @Test
 fun testPerformance() = runBlocking {
     val kms = InMemoryKeyManagementService()
-    
+
     val start = System.currentTimeMillis()
-    
+
     repeat(1000) {
         kms.generateKey(Algorithm.Ed25519)
     }
-    
+
     val duration = System.currentTimeMillis() - start
     assert(duration < 1000) // Should complete in under 1 second
 }
@@ -297,12 +297,12 @@ class MyCustomDidMethodTest {
         val kms = InMemoryKeyManagementService()
         val config = MyDidConfig.default()
         val method = MyCustomDidMethod(kms, config)
-        
+
         // Create DID
         val did = method.createDid(didCreationOptions {
             algorithm = KeyAlgorithm.Ed25519
         })
-        
+
         // Resolve DID
         val resolutionResult = method.resolveDid(did.id)
         assertNotNull(resolutionResult.didDocument)
@@ -323,10 +323,10 @@ class MyBlockchainAdapterTest {
     fun testAnchor() = runBlocking {
         val config = MyBlockchainConfig.testnet()
         val client = MyBlockchainAnchorClient("myblockchain:testnet", config)
-        
+
         val payload = "test".toByteArray()
         val result = client.writePayload(payload).getOrThrow()
-        
+
         assertNotNull(result.anchorRef.transactionHash)
     }
 }

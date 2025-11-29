@@ -2,10 +2,10 @@ package com.trustweave.kms.thales
 
 /**
  * Configuration for Thales CipherTrust Manager client.
- * 
+ *
  * Supports API key and OAuth2 authentication.
  * Can load configuration from environment variables or explicit parameters.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val config = ThalesKmsConfig.builder()
@@ -27,22 +27,22 @@ data class ThalesKmsConfig(
     init {
         require(baseUrl.isNotBlank()) { "Thales CipherTrust base URL must be specified" }
         require(
-            apiKey != null || 
-            (username != null && password != null) || 
+            apiKey != null ||
+            (username != null && password != null) ||
             (clientId != null && clientSecret != null) ||
             accessToken != null
         ) { "Thales CipherTrust authentication credentials must be provided" }
     }
-    
+
     companion object {
         fun builder(): Builder = Builder()
-        
+
         fun fromEnvironment(): ThalesKmsConfig? {
             val baseUrl = System.getenv("THALES_BASE_URL") ?: return null
             val apiKey = System.getenv("THALES_API_KEY")
             val username = System.getenv("THALES_USERNAME")
             val password = System.getenv("THALES_PASSWORD")
-            
+
             return Builder()
                 .baseUrl(baseUrl)
                 .apiKey(apiKey)
@@ -50,11 +50,11 @@ data class ThalesKmsConfig(
                 .password(password)
                 .build()
         }
-        
+
         fun fromMap(options: Map<String, Any?>): ThalesKmsConfig {
             val baseUrl = options["baseUrl"] as? String
                 ?: throw IllegalArgumentException("Thales CipherTrust baseUrl must be specified")
-            
+
             return Builder()
                 .baseUrl(baseUrl)
                 .apiKey(options["apiKey"] as? String)
@@ -66,7 +66,7 @@ data class ThalesKmsConfig(
                 .build()
         }
     }
-    
+
     class Builder {
         private var baseUrl: String? = null
         private var apiKey: String? = null
@@ -76,47 +76,47 @@ data class ThalesKmsConfig(
         private var clientSecret: String? = null
         private var accessToken: String? = null
         private var scope: String? = null
-        
+
         fun baseUrl(baseUrl: String): Builder {
             this.baseUrl = baseUrl
             return this
         }
-        
+
         fun apiKey(apiKey: String?): Builder {
             this.apiKey = apiKey
             return this
         }
-        
+
         fun username(username: String?): Builder {
             this.username = username
             return this
         }
-        
+
         fun password(password: String?): Builder {
             this.password = password
             return this
         }
-        
+
         fun clientId(clientId: String?): Builder {
             this.clientId = clientId
             return this
         }
-        
+
         fun clientSecret(clientSecret: String?): Builder {
             this.clientSecret = clientSecret
             return this
         }
-        
+
         fun accessToken(accessToken: String?): Builder {
             this.accessToken = accessToken
             return this
         }
-        
+
         fun scope(scope: String?): Builder {
             this.scope = scope
             return this
         }
-        
+
         fun build(): ThalesKmsConfig {
             val baseUrl = this.baseUrl ?: throw IllegalArgumentException("Base URL is required")
             return ThalesKmsConfig(

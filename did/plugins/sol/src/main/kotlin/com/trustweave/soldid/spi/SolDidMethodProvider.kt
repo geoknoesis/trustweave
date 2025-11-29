@@ -11,7 +11,7 @@ import java.util.ServiceLoader
 
 /**
  * SPI provider for did:sol method.
- * 
+ *
  * Automatically discovers did:sol method when this module is on the classpath.
  */
 class SolDidMethodProvider : DidMethodProvider {
@@ -39,7 +39,7 @@ class SolDidMethodProvider : DidMethodProvider {
 
         // Create configuration from options
         val config = createConfig(options)
-        
+
         // Get or create blockchain anchor client
         val anchorClient = getOrCreateAnchorClient(options, config)
 
@@ -51,9 +51,9 @@ class SolDidMethodProvider : DidMethodProvider {
      */
     private fun createConfig(options: DidCreationOptions): SolDidConfig {
         val configMap = options.additionalProperties
-        
+
         require(configMap.containsKey("rpcUrl")) { "rpcUrl is required for did:sol" }
-        
+
         return SolDidConfig.fromMap(configMap)
     }
 
@@ -69,7 +69,7 @@ class SolDidMethodProvider : DidMethodProvider {
         if (providedClient != null) {
             return providedClient
         }
-        
+
         // In a full implementation, we'd create a SolanaBlockchainAnchorClient
         // For now, throw an error - anchor client must be provided
         throw IllegalStateException(

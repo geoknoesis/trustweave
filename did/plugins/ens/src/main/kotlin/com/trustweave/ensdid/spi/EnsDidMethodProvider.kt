@@ -40,13 +40,13 @@ class EnsDidMethodProvider : DidMethodProvider {
 
     private fun createConfig(options: DidCreationOptions): EnsDidConfig {
         val configMap = options.additionalProperties
-        
-        require(configMap.containsKey("ensRegistryAddress")) { 
-            "ensRegistryAddress is required for did:ens" 
+
+        require(configMap.containsKey("ensRegistryAddress")) {
+            "ensRegistryAddress is required for did:ens"
         }
         require(configMap.containsKey("rpcUrl")) { "rpcUrl is required for did:ens" }
         require(configMap.containsKey("chainId")) { "chainId is required for did:ens" }
-        
+
         return EnsDidConfig.fromMap(configMap)
     }
 
@@ -58,14 +58,14 @@ class EnsDidMethodProvider : DidMethodProvider {
         if (providedClient != null) {
             return providedClient
         }
-        
+
         val anchorOptions = buildMap<String, Any?> {
             put("rpcUrl", config.rpcUrl)
             if (config.privateKey != null) {
                 put("privateKey", config.privateKey)
             }
         }
-        
+
         return try {
             val polygonClientClass = Class.forName("com.trustweave.polygon.PolygonBlockchainAnchorClient")
             val constructor = polygonClientClass.getConstructor(String::class.java, Map::class.java)

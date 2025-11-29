@@ -14,7 +14,7 @@ class TrustWeaveTestFixtureTest {
     @Test
     fun `test builder creates fixture with defaults`() = runBlocking {
         val fixture = TrustWeaveTestFixture.builder().build()
-        
+
         assertNotNull(fixture.getKms())
         assertNotNull(fixture.getDidMethod())
         assertEquals("key", fixture.getDidMethod().method)
@@ -26,7 +26,7 @@ class TrustWeaveTestFixtureTest {
         val fixture = TrustWeaveTestFixture.builder()
             .withKms(kms)
             .build()
-        
+
         assertEquals(kms, fixture.getKms())
     }
 
@@ -35,7 +35,7 @@ class TrustWeaveTestFixtureTest {
         val fixture = TrustWeaveTestFixture.builder()
             .withDidMethod("key")
             .build()
-        
+
         assertEquals("key", fixture.getDidMethod().method)
     }
 
@@ -45,7 +45,7 @@ class TrustWeaveTestFixtureTest {
         val fixture = TrustWeaveTestFixture.builder()
             .withBlockchainClient("algorand:testnet", client)
             .build()
-        
+
         assertEquals(client, fixture.getBlockchainClient("algorand:testnet"))
     }
 
@@ -54,7 +54,7 @@ class TrustWeaveTestFixtureTest {
         val fixture = TrustWeaveTestFixture.builder()
             .withInMemoryBlockchainClient("algorand:testnet", "app-123")
             .build()
-        
+
         assertNotNull(fixture.getBlockchainClient("algorand:testnet"))
     }
 
@@ -64,9 +64,9 @@ class TrustWeaveTestFixtureTest {
             .withInMemoryBlockchainClient("algorand:testnet")
             .withInMemoryBlockchainClient("eip155:137")
             .build()
-        
+
         val clients = fixture.getAllBlockchainClients()
-        
+
         assertEquals(2, clients.size)
         assertTrue(clients.containsKey("algorand:testnet"))
         assertTrue(clients.containsKey("eip155:137"))
@@ -75,9 +75,9 @@ class TrustWeaveTestFixtureTest {
     @Test
     fun `test createIssuerDid`() = runBlocking {
         val fixture = TrustWeaveTestFixture.builder().build()
-        
+
         val didDoc = fixture.createIssuerDid()
-        
+
         assertNotNull(didDoc)
         assertTrue(didDoc.id.startsWith("did:key:"))
     }
@@ -85,9 +85,9 @@ class TrustWeaveTestFixtureTest {
     @Test
     fun `test createIssuerDid with custom algorithm`() = runBlocking {
         val fixture = TrustWeaveTestFixture.builder().build()
-        
+
         val didDoc = fixture.createIssuerDid("secp256k1")
-        
+
         assertNotNull(didDoc)
     }
 
@@ -96,12 +96,12 @@ class TrustWeaveTestFixtureTest {
         val fixture = TrustWeaveTestFixture.builder()
             .withInMemoryBlockchainClient("algorand:testnet")
             .build()
-        
+
         assertNotNull(fixture.getBlockchainRegistry().get("algorand:testnet"))
         assertNotNull(fixture.getDidRegistry().get("key"))
-        
+
         fixture.close()
-        
+
         assertNull(fixture.getBlockchainRegistry().get("algorand:testnet"))
         assertNull(fixture.getDidRegistry().get("key"))
     }
@@ -109,7 +109,7 @@ class TrustWeaveTestFixtureTest {
     @Test
     fun `test minimal fixture`() = runBlocking {
         val fixture = TrustWeaveTestFixture.minimal()
-        
+
         assertNotNull(fixture.getKms())
         assertNotNull(fixture.getDidMethod())
         assertNotNull(fixture.getBlockchainClient("algorand:testnet"))
@@ -127,7 +127,7 @@ class TrustWeaveTestFixtureTest {
     @Test
     fun `test getBlockchainClient returns null for unregistered chain`() = runBlocking {
         val fixture = TrustWeaveTestFixture.builder().build()
-        
+
         assertNull(fixture.getBlockchainClient("nonexistent:chain"))
     }
 }

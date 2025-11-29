@@ -18,15 +18,15 @@ class Ed25519ProofGeneratorBranchCoverageTest {
             signer = { _, _ -> byteArrayOf(1, 2, 3) },
             getPublicKeyId = { null }
         )
-        
+
         val credential = createTestCredential()
         val options = ProofOptions(
             proofPurpose = "assertionMethod",
             verificationMethod = "did:key:custom#key-1"
         )
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertEquals("did:key:custom#key-1", proof.verificationMethod)
     }
 
@@ -36,12 +36,12 @@ class Ed25519ProofGeneratorBranchCoverageTest {
             signer = { _, _ -> byteArrayOf(1, 2, 3) },
             getPublicKeyId = { "public-key-id" }
         )
-        
+
         val credential = createTestCredential()
         val options = ProofOptions(proofPurpose = "assertionMethod")
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertEquals("did:key:public-key-id#key-1", proof.verificationMethod)
     }
 
@@ -51,12 +51,12 @@ class Ed25519ProofGeneratorBranchCoverageTest {
             signer = { _, _ -> byteArrayOf(1, 2, 3) },
             getPublicKeyId = { null }
         )
-        
+
         val credential = createTestCredential()
         val options = ProofOptions(proofPurpose = "assertionMethod")
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertEquals("did:key:key-1", proof.verificationMethod)
     }
 
@@ -65,15 +65,15 @@ class Ed25519ProofGeneratorBranchCoverageTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        
+
         val credential = createTestCredential()
         val options = ProofOptions(
             proofPurpose = "assertionMethod",
             challenge = "challenge-123"
         )
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertEquals("challenge-123", proof.challenge)
     }
 
@@ -82,15 +82,15 @@ class Ed25519ProofGeneratorBranchCoverageTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        
+
         val credential = createTestCredential()
         val options = ProofOptions(
             proofPurpose = "assertionMethod",
             domain = "example.com"
         )
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertEquals("example.com", proof.domain)
     }
 
@@ -99,7 +99,7 @@ class Ed25519ProofGeneratorBranchCoverageTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        
+
         val credential = createTestCredential(
             id = "https://example.com/credentials/1",
             expirationDate = java.time.Instant.now().plusSeconds(86400).toString(),
@@ -115,9 +115,9 @@ class Ed25519ProofGeneratorBranchCoverageTest {
             )
         )
         val options = ProofOptions(proofPurpose = "assertionMethod")
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertNotNull(proof)
         assertEquals("Ed25519Signature2020", proof.type)
     }
@@ -127,7 +127,7 @@ class Ed25519ProofGeneratorBranchCoverageTest {
         val generator = Ed25519ProofGenerator(
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
-        
+
         val credential = VerifiableCredential(
             type = listOf("VerifiableCredential"),
             issuer = "did:key:issuer",
@@ -135,9 +135,9 @@ class Ed25519ProofGeneratorBranchCoverageTest {
             issuanceDate = java.time.Instant.now().toString()
         )
         val options = ProofOptions(proofPurpose = "assertionMethod")
-        
+
         val proof = generator.generateProof(credential, "key-1", options)
-        
+
         assertNotNull(proof)
     }
 

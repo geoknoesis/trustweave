@@ -16,7 +16,7 @@ class DidModelsEdgeCasesTest {
             type = "Ed25519VerificationKey2020",
             controller = "did:key:issuer"
         )
-        
+
         assertEquals("#key-1", vm.id)
         assertEquals("did:key:issuer", vm.controller)
     }
@@ -28,7 +28,7 @@ class DidModelsEdgeCasesTest {
             type = "Ed25519VerificationKey2020",
             controller = "did:key:issuer"
         )
-        
+
         assertEquals("did:key:issuer#key-1", vm.id)
     }
 
@@ -40,7 +40,7 @@ class DidModelsEdgeCasesTest {
             controller = "did:key:issuer",
             publicKeyJwk = emptyMap()
         )
-        
+
         assertNotNull(vm.publicKeyJwk)
         assertTrue(vm.publicKeyJwk!!.isEmpty())
     }
@@ -59,7 +59,7 @@ class DidModelsEdgeCasesTest {
             controller = "did:key:issuer",
             publicKeyJwk = jwk
         )
-        
+
         assertEquals(4, vm.publicKeyJwk?.size)
     }
 
@@ -71,7 +71,7 @@ class DidModelsEdgeCasesTest {
             type = "LinkedDomains",
             serviceEndpoint = endpoints
         )
-        
+
         assertTrue(service.serviceEndpoint is List<*>)
     }
 
@@ -87,7 +87,7 @@ class DidModelsEdgeCasesTest {
             type = "DIDCommMessaging",
             serviceEndpoint = endpoint
         )
-        
+
         assertTrue(service.serviceEndpoint is Map<*, *>)
     }
 
@@ -103,12 +103,12 @@ class DidModelsEdgeCasesTest {
             type = "JsonWebKey2020",
             controller = "did:key:issuer"
         )
-        
+
         val doc = DidDocument(
             id = "did:key:issuer",
             verificationMethod = listOf(vm1, vm2)
         )
-        
+
         assertEquals(2, doc.verificationMethod.size)
     }
 
@@ -124,12 +124,12 @@ class DidModelsEdgeCasesTest {
             type = "DIDCommMessaging",
             serviceEndpoint = mapOf("uri" to "https://messaging.example.com")
         )
-        
+
         val doc = DidDocument(
             id = "did:key:issuer",
             service = listOf(service1, service2)
         )
-        
+
         assertEquals(2, doc.service.size)
     }
 
@@ -139,7 +139,7 @@ class DidModelsEdgeCasesTest {
             id = "did:key:issuer",
             controller = listOf("did:key:controller1", "did:key:controller2")
         )
-        
+
         assertEquals(2, doc.controller.size)
     }
 
@@ -153,7 +153,7 @@ class DidModelsEdgeCasesTest {
                 "https://example.com/identity"
             )
         )
-        
+
         assertEquals(3, doc.alsoKnownAs.size)
     }
 
@@ -166,7 +166,7 @@ class DidModelsEdgeCasesTest {
                 "did:key:issuer#key-2"
             )
         )
-        
+
         assertEquals(2, doc.authentication.size)
     }
 
@@ -180,7 +180,7 @@ class DidModelsEdgeCasesTest {
                 "did:key:issuer#key-3"
             )
         )
-        
+
         assertEquals(3, doc.assertionMethod.size)
     }
 
@@ -192,19 +192,19 @@ class DidModelsEdgeCasesTest {
                 "did:key:issuer#key-agreement-1"
             )
         )
-        
+
         assertEquals(1, doc.keyAgreement.size)
     }
 
     @Test
     fun `test DidResolutionResult with empty metadata`() {
         val doc = DidDocument(id = "did:key:issuer")
-        val result = DidResolutionResult(
+        val result = DidResolutionResult.Success(
             document = doc,
             documentMetadata = DidDocumentMetadata(),
             resolutionMetadata = emptyMap()
         )
-        
+
         assertNotNull(result.document)
         assertNull(result.documentMetadata.created)
         assertTrue(result.resolutionMetadata.isEmpty())
@@ -213,7 +213,7 @@ class DidModelsEdgeCasesTest {
     @Test
     fun `test DidResolutionResult with complex metadata`() {
         val doc = DidDocument(id = "did:key:issuer")
-        val result = DidResolutionResult(
+        val result = DidResolutionResult.Success(
             document = doc,
             documentMetadata = DidDocumentMetadata(
                 created = Instant.parse("2024-01-01T00:00:00Z"),
@@ -228,7 +228,7 @@ class DidModelsEdgeCasesTest {
                 "resolver" to "did-resolver-v1"
             )
         )
-        
+
         assertNotNull(result.documentMetadata.created)
         assertNotNull(result.documentMetadata.updated)
         assertEquals("1", result.documentMetadata.versionId)
@@ -237,15 +237,15 @@ class DidModelsEdgeCasesTest {
 
     @Test
     fun `test DidResolutionResult with null document and error metadata`() {
-        val result = DidResolutionResult(
-            document = null,
+        val result = DidResolutionResult.Failure.NotFound(
+            did = com.trustweave.core.types.Did("did:key:test"),
             resolutionMetadata = mapOf(
                 "error" to "notFound",
                 "errorMessage" to "DID not found in registry"
             )
         )
-        
-        assertNull(result.document)
+
+        assertTrue(result is DidResolutionResult.Failure.NotFound)
         assertEquals("notFound", result.resolutionMetadata["error"])
     }
 
@@ -253,7 +253,7 @@ class DidModelsEdgeCasesTest {
     fun `test DidDocument equality`() {
         val doc1 = DidDocument(id = "did:key:issuer")
         val doc2 = DidDocument(id = "did:key:issuer")
-        
+
         assertEquals(doc1, doc2)
     }
 
@@ -269,7 +269,7 @@ class DidModelsEdgeCasesTest {
             type = "Ed25519VerificationKey2020",
             controller = "did:key:issuer"
         )
-        
+
         assertEquals(vm1, vm2)
     }
 
@@ -285,7 +285,7 @@ class DidModelsEdgeCasesTest {
             type = "LinkedDomains",
             serviceEndpoint = "https://example.com"
         )
-        
+
         assertEquals(service1, service2)
     }
 }

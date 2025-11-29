@@ -23,7 +23,7 @@ title: TrustWeave Cloud - Implementation Guide
 
 ### **Recommended Stack**
 
-**Goal:** Summarise the opinionated stack Geoknoesis uses internally so you can mirror the SaaS reference implementation without second-guessing tooling choices.  
+**Goal:** Summarise the opinionated stack Geoknoesis uses internally so you can mirror the SaaS reference implementation without second-guessing tooling choices.
 **Result:** A Kotlin-first backend, modern TypeScript frontend, and pay-as-you-go infrastructure that stays light for early-stage deployments but scales with usage.
 
 ```kotlin
@@ -54,10 +54,10 @@ object TechStack {
 
 ### **Why This Stack?**
 
-- ✅ **Ktor**: Kotlin-native, easy to share domain models with the SDK.  
-- ✅ **PostgreSQL**: Strong transactional semantics for subscription and audit data.  
-- ✅ **Stripe**: SaaS-focused billing primitives, webhooks, dunning, and invoicing out of the box.  
-- ✅ **Fly.io**: Global edge deployment in minutes; costs stay predictable during experimentation.  
+- ✅ **Ktor**: Kotlin-native, easy to share domain models with the SDK.
+- ✅ **PostgreSQL**: Strong transactional semantics for subscription and audit data.
+- ✅ **Stripe**: SaaS-focused billing primitives, webhooks, dunning, and invoicing out of the box.
+- ✅ **Fly.io**: Global edge deployment in minutes; costs stay predictable during experimentation.
 - ✅ **React + Tailwind**: Rapid UI iteration with a rich ecosystem of components.
 
 ---
@@ -66,7 +66,7 @@ object TechStack {
 
 ### **1. Create Stripe Account**
 
-**Goal:** Install the Stripe CLI and wire webhooks into your local Ktor server.  
+**Goal:** Install the Stripe CLI and wire webhooks into your local Ktor server.
 **Result:** Webhook events appear in your development environment so you can exercise subscription state transitions without deploying infrastructure.
 
 ```bash
@@ -79,7 +79,7 @@ stripe listen --forward-to localhost:8080/webhooks/stripe
 
 ### **2. Create Products & Prices**
 
-**Goal:** Seed Stripe with opinionated Starter/Pro plans so the rest of the guide can reference real price IDs.  
+**Goal:** Seed Stripe with opinionated Starter/Pro plans so the rest of the guide can reference real price IDs.
 **Prerequisites:** Export `STRIPE_SECRET_KEY` in your environment and add the Stripe Java SDK to your build script.
 
 ```kotlin
@@ -91,7 +91,7 @@ import com.stripe.param.PriceCreateParams
 
 fun main() {
     Stripe.apiKey = System.getenv("STRIPE_SECRET_KEY")
-    
+
     // Starter Plan
     val starterProduct = Product.create(
         ProductCreateParams.builder()
@@ -99,7 +99,7 @@ fun main() {
             .setDescription("Production-ready SSI for growing startups")
             .build()
     )
-    
+
     val starterMonthly = Price.create(
         PriceCreateParams.builder()
             .setProduct(starterProduct.id)
@@ -112,7 +112,7 @@ fun main() {
             )
             .build()
     )
-    
+
     val starterYearly = Price.create(
         PriceCreateParams.builder()
             .setProduct(starterProduct.id)
@@ -125,10 +125,10 @@ fun main() {
             )
             .build()
     )
-    
+
     println("Starter Monthly Price ID: ${starterMonthly.id}")
     println("Starter Yearly Price ID: ${starterYearly.id}")
-    
+
     // Pro Plan
     val proProduct = Product.create(
         ProductCreateParams.builder()
@@ -136,7 +136,7 @@ fun main() {
             .setDescription("Scale your SSI infrastructure with confidence")
             .build()
     )
-    
+
     val proMonthly = Price.create(
         PriceCreateParams.builder()
             .setProduct(proProduct.id)
@@ -149,7 +149,7 @@ fun main() {
             )
             .build()
     )
-    
+
     val proYearly = Price.create(
         PriceCreateParams.builder()
             .setProduct(proProduct.id)
@@ -162,25 +162,25 @@ fun main() {
             )
             .build()
     )
-    
+
     println("Pro Monthly Price ID: ${proMonthly.id}")
     println("Pro Yearly Price ID: ${proYearly.id}")
 }
 ```
 
-**Result:** Stripe returns product and price identifiers you can persist in configuration (see the next section).  
+**Result:** Stripe returns product and price identifiers you can persist in configuration (see the next section).
 **Design significance:** Driving provisioning through Kotlin scripts keeps the flow consistent with the rest of your stack and avoids brittle manual dashboard work.
 
 ### **3. Store Price IDs in Config**
 
-**Goal:** Centralise Stripe credentials and price IDs so your application code can inject them via typed configuration.  
+**Goal:** Centralise Stripe credentials and price IDs so your application code can inject them via typed configuration.
 **Result:** The Ktor service reads a single configuration object and avoids scattering magic strings across handlers.
 
 ```kotlin
 data class StripeConfig(
     val secretKey: String = System.getenv("STRIPE_SECRET_KEY"),
     val webhookSecret: String = System.getenv("STRIPE_WEBHOOK_SECRET"),
-    
+
     val prices: StripePrices = StripePrices()
 )
 
@@ -200,7 +200,7 @@ data class StripePrices(
 
 ### **Project Structure:**
 
-**Goal:** Establish a baseline folder layout so your team knows where to place configuration, services, and TrustWeave-facing routes.  
+**Goal:** Establish a baseline folder layout so your team knows where to place configuration, services, and TrustWeave-facing routes.
 **Result:** A conventional Ktor project with clear separation between plugins, domain models, and usage/billing services—mirroring Geoknoesis’ production layout.
 
 ```
@@ -239,7 +239,7 @@ TrustWeave-cloud/
 
 ### **build.gradle.kts:**
 
-**Goal:** Declare all backend dependencies—Ktor, TrustWeave, persistence, billing—and enable Kotlin serialization plugins.  
+**Goal:** Declare all backend dependencies—Ktor, TrustWeave, persistence, billing—and enable Kotlin serialization plugins.
 **Result:** A single Gradle module that compiles the SaaS backend and aligns dependency versions with the main TrustWeave distribution.
 
 ```kotlin
@@ -263,10 +263,10 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
     implementation("io.ktor:ktor-server-cors-jvm")
     implementation("io.ktor:ktor-server-rate-limit-jvm")
-    
+
     // TrustWeave
     implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
-    
+
     // Database
     implementation("org.jetbrains.exposed:exposed-core:0.45.0")
     implementation("org.jetbrains.exposed:exposed-dao:0.45.0")
@@ -274,16 +274,16 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-java-time:0.45.0")
     implementation("org.postgresql:postgresql:42.7.0")
     implementation("com.zaxxer:HikariCP:5.1.0")
-    
+
     // Redis
     implementation("io.lettuce:lettuce-core:6.3.0.RELEASE")
-    
+
     // Stripe
     implementation("com.stripe:stripe-java:24.0.0")
-    
+
     // Logging
     implementation("ch.qos.logback:logback-classic:1.4.14")
-    
+
     // Testing
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
@@ -294,7 +294,7 @@ dependencies {
 
 ### **Application.kt:**
 
-**Goal:** Wire Ktor’s entry point so every plugin (security, serialization, routing, rate limiting) is configured before requests arrive.  
+**Goal:** Wire Ktor’s entry point so every plugin (security, serialization, routing, rate limiting) is configured before requests arrive.
 **Result:** A minimal `module` function that defers to dedicated plugin files—easier to test and override between environments.
 
 ```kotlin
@@ -321,7 +321,7 @@ fun Application.module() {
 
 ### **Database Models:**
 
-**Goal:** Persist organisations, subscriptions, API keys, and metered usage with Exposed table definitions.  
+**Goal:** Persist organisations, subscriptions, API keys, and metered usage with Exposed table definitions.
 **Result:** Relational tables that map directly onto billing and quota decisions while keeping audit timestamps for compliance.
 
 ```kotlin
@@ -371,7 +371,7 @@ object UsageRecords : UUIDTable("usage_records") {
     val organizationId = reference("organization_id", Organizations)
     val periodStart = datetime("period_start")
     val periodEnd = datetime("period_end")
-    
+
     // Counters
     val didsCreated = integer("dids_created").default(0)
     val didResolutions = integer("did_resolutions").default(0)
@@ -380,7 +380,7 @@ object UsageRecords : UUIDTable("usage_records") {
     val blockchainAnchorings = integer("blockchain_anchorings").default(0)
     val apiCalls = integer("api_calls").default(0)
     val storageBytes = long("storage_bytes").default(0)
-    
+
     val createdAt = datetime("created_at")
     val updatedAt = datetime("updated_at")
 }
@@ -394,7 +394,7 @@ object UsageRecords : UUIDTable("usage_records") {
 
 ### **Usage Service:**
 
-**Goal:** Aggregate near-real-time usage metrics in Redis before flushing them to PostgreSQL for billing and dashboards.  
+**Goal:** Aggregate near-real-time usage metrics in Redis before flushing them to PostgreSQL for billing and dashboards.
 **Result:** Lightweight counters that reset monthly and keep hot data in memory, reducing pressure on transactional storage.
 
 ```kotlin
@@ -412,7 +412,7 @@ class UsageService(
     private val redisClient: RedisClient
 ) {
     private val redis: RedisCommands<String, String> = redisClient.connect().sync()
-    
+
     suspend fun incrementDidCreated(organizationId: String) {
         withContext(Dispatchers.IO) {
             val key = usageKey(organizationId, "dids_created")
@@ -420,7 +420,7 @@ class UsageService(
             redis.expire(key, 2592000) // 30 days TTL
         }
     }
-    
+
     suspend fun incrementCredentialIssued(organizationId: String) {
         withContext(Dispatchers.IO) {
             val key = usageKey(organizationId, "credentials_issued")
@@ -428,7 +428,7 @@ class UsageService(
             redis.expire(key, 2592000)
         }
     }
-    
+
     suspend fun incrementApiCall(organizationId: String) {
         withContext(Dispatchers.IO) {
             val key = usageKey(organizationId, "api_calls")
@@ -436,7 +436,7 @@ class UsageService(
             redis.expire(key, 2592000)
         }
     }
-    
+
     suspend fun getCurrentUsage(organizationId: String): UsageSnapshot {
         return withContext(Dispatchers.IO) {
             UsageSnapshot(
@@ -449,11 +449,11 @@ class UsageService(
             )
         }
     }
-    
+
     suspend fun checkLimit(organizationId: String, tier: String, metric: String): Boolean {
         val usage = getCurrentUsage(organizationId)
         val limit = getLimit(tier, metric)
-        
+
         return when (metric) {
             "dids_created" -> usage.didsCreated < limit
             "credentials_issued" -> usage.credentialsIssued < limit
@@ -461,12 +461,12 @@ class UsageService(
             else -> true
         }
     }
-    
+
     private fun usageKey(organizationId: String, metric: String): String {
         val yearMonth = YearMonth.now()
         return "usage:$organizationId:$yearMonth:$metric"
     }
-    
+
     private fun getLimit(tier: String, metric: String): Int {
         return when (tier) {
             "FREE" -> when (metric) {
@@ -517,11 +517,11 @@ fun Application.configureRateLimiting() {
         register(RateLimitName("api-free")) {
             rateLimiter(limit = 5, refillPeriod = 1.seconds)
         }
-        
+
         register(RateLimitName("api-starter")) {
             rateLimiter(limit = 25, refillPeriod = 1.seconds)
         }
-        
+
         register(RateLimitName("api-pro")) {
             rateLimiter(limit = 100, refillPeriod = 1.seconds)
         }
@@ -557,12 +557,12 @@ fun Route.didRoutes(
     usageService: UsageService
 ) {
     route("/v1/dids") {
-        
+
         // Create DID
         post {
             val org = call.attributes[OrganizationKey]
             val request = call.receive<CreateDidRequest>()
-            
+
             // Check limits
             if (!usageService.checkLimit(org.id, org.tier, "dids_created")) {
                 call.respond(HttpStatusCode.TooManyRequests, ErrorResponse(
@@ -571,7 +571,7 @@ fun Route.didRoutes(
                 ))
                 return@post
             }
-            
+
             // Convert incoming request options to typed DidCreationOptions
             val didOptions = request.options?.let { opts ->
                 didCreationOptions {
@@ -588,28 +588,28 @@ fun Route.didRoutes(
                 method = request.method ?: "key",
                 options = didOptions
             ).getOrThrow()
-            
+
             // Track usage
             usageService.incrementDidCreated(org.id)
-            
+
             call.respond(HttpStatusCode.Created, DidResponse(
                 id = didDocument.id,
                 document = didDocument,
                 createdAt = System.currentTimeMillis()
             ))
         }
-        
+
         // Resolve DID
         get("/{did}") {
             val org = call.attributes[OrganizationKey]
             val did = call.parameters["did"] ?: throw IllegalArgumentException("DID required")
-            
+
             // Resolve
             val result = TrustWeave.resolveDid(did).getOrThrow()
-            
+
             // Track usage
             usageService.incrementApiCall(org.id)
-            
+
             if (result.document != null) {
                 call.respond(HttpStatusCode.OK, DidResolutionResponse(
                     document = result.document,
@@ -672,12 +672,12 @@ fun Route.credentialRoutes(
     usageService: UsageService
 ) {
     route("/v1/credentials") {
-        
+
         // Issue Credential
         post {
             val org = call.attributes[OrganizationKey]
             val request = call.receive<IssueCredentialRequest>()
-            
+
             // Check limits
             if (!usageService.checkLimit(org.id, org.tier, "credentials_issued")) {
                 call.respond(HttpStatusCode.TooManyRequests, ErrorResponse(
@@ -686,7 +686,7 @@ fun Route.credentialRoutes(
                 ))
                 return@post
             }
-            
+
             // Issue credential
             val credential = TrustWeave.issueCredential(
                 issuerDid = request.issuerDid,
@@ -695,30 +695,30 @@ fun Route.credentialRoutes(
                 types = request.types ?: listOf("VerifiableCredential"),
                 expirationDate = request.expirationDate
             ).getOrThrow()
-            
+
             // Track usage
             usageService.incrementCredentialIssued(org.id)
-            
+
             call.respond(HttpStatusCode.Created, CredentialResponse(
                 credential = credential,
                 issuedAt = System.currentTimeMillis()
             ))
         }
-        
+
         // Verify Credential
         post("/verify") {
             val org = call.attributes[OrganizationKey]
             val request = call.receive<VerifyCredentialRequest>()
-            
+
             // Verify
             val result = TrustWeave.verifyCredential(
                 credential = request.credential,
                 options = request.options ?: com.trustweave.credential.CredentialVerificationOptions()
             ).getOrThrow()
-            
+
             // Track usage
             usageService.incrementApiCall(org.id)
-            
+
             call.respond(HttpStatusCode.OK, VerificationResponse(
                 valid = result.valid,
                 errors = result.errors,
@@ -779,14 +779,14 @@ import kotlinx.serialization.Serializable
 
 fun Route.billingRoutes(stripeSecretKey: String) {
     Stripe.apiKey = stripeSecretKey
-    
+
     route("/v1/billing") {
-        
+
         // Create checkout session
         post("/checkout") {
             val org = call.attributes[OrganizationKey]
             val request = call.receive<CreateCheckoutRequest>()
-            
+
             val params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
                 .setCustomerEmail(org.ownerEmail)
@@ -800,22 +800,22 @@ fun Route.billingRoutes(stripeSecretKey: String) {
                 .setSuccessUrl("${request.returnUrl}?session_id={CHECKOUT_SESSION_ID}")
                 .setCancelUrl(request.returnUrl)
                 .build()
-            
+
             val session = Session.create(params)
-            
+
             call.respond(HttpStatusCode.OK, CheckoutResponse(
                 sessionId = session.id,
                 url = session.url
             ))
         }
-        
+
         // Get current subscription
         get("/subscription") {
             val org = call.attributes[OrganizationKey]
-            
+
             // Query database for subscription
             val subscription = getSubscription(org.id)
-            
+
             call.respond(HttpStatusCode.OK, SubscriptionResponse(
                 tier = org.tier,
                 status = subscription?.status,
@@ -823,21 +823,21 @@ fun Route.billingRoutes(stripeSecretKey: String) {
                 cancelAtPeriodEnd = subscription?.cancelAtPeriodEnd ?: false
             ))
         }
-        
+
         // Cancel subscription
         post("/subscription/cancel") {
             val org = call.attributes[OrganizationKey]
-            
+
             // Cancel in Stripe
             val subscription = getSubscription(org.id)
             if (subscription != null) {
                 val stripeSubscription = com.stripe.model.Subscription.retrieve(subscription.stripeSubscriptionId)
                 stripeSubscription.cancel()
-                
+
                 // Update database
                 updateSubscriptionCancellation(subscription.id, true)
             }
-            
+
             call.respond(HttpStatusCode.OK, MessageResponse(
                 message = "Subscription will be canceled at period end"
             ))
@@ -892,41 +892,41 @@ fun Route.webhookRoutes(
     webhookSecret: String
 ) {
     Stripe.apiKey = stripeSecretKey
-    
+
     post("/webhooks/stripe") {
         val payload = call.receiveText()
         val sigHeader = call.request.header("Stripe-Signature") ?: ""
-        
+
         try {
             val event = Webhook.constructEvent(payload, sigHeader, webhookSecret)
-            
+
             when (event.type) {
                 "checkout.session.completed" -> {
                     val session = event.dataObjectDeserializer.`object`.get() as Session
                     handleCheckoutComplete(session)
                 }
-                
+
                 "customer.subscription.updated" -> {
                     val subscription = event.dataObjectDeserializer.`object`.get() as com.stripe.model.Subscription
                     handleSubscriptionUpdate(subscription)
                 }
-                
+
                 "customer.subscription.deleted" -> {
                     val subscription = event.dataObjectDeserializer.`object`.get() as com.stripe.model.Subscription
                     handleSubscriptionDeleted(subscription)
                 }
-                
+
                 "invoice.payment_succeeded" -> {
                     // Handle successful payment
                 }
-                
+
                 "invoice.payment_failed" -> {
                     // Handle failed payment
                 }
             }
-            
+
             call.respond(HttpStatusCode.OK)
-            
+
         } catch (e: Exception) {
             call.respond(HttpStatusCode.BadRequest, "Webhook error: ${e.message}")
         }
@@ -936,7 +936,7 @@ fun Route.webhookRoutes(
 private suspend fun handleCheckoutComplete(session: Session) {
     val orgId = session.clientReferenceId
     val subscriptionId = session.subscription
-    
+
     // Update organization with Stripe customer and subscription
     updateOrganizationSubscription(orgId, session.customer, subscriptionId)
 }
@@ -1053,7 +1053,7 @@ export function PricingPage() {
           All plans include W3C-compliant DIDs, Verifiable Credentials, and Wallet APIs.
           No credit card required for Free tier.
         </p>
-        
+
         <div className="isolate mx-auto mt-16 grid max-w-md grid-cols-1 gap-y-8 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-4 gap-x-8">
           {tiers.map((tier) => (
             <div
@@ -1140,12 +1140,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-  
+
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-  
+
   backend:
     build: .
     ports:

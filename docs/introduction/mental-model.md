@@ -171,7 +171,7 @@ TrustWeave.build {
         provider("inMemory")  // Select KMS plugin
         algorithm("Ed25519")  // Select algorithm
     }
-    
+
     // Configure DID methods
     did {
         method("key") {        // Register did:key method
@@ -181,14 +181,14 @@ TrustWeave.build {
             domain("example.com")
         }
     }
-    
+
     // Configure blockchain anchors
     anchor {
         chain("algorand:testnet") {
             provider("algorand")
         }
     }
-    
+
     // Configure trust registry
     trust {
         provider("inMemory")

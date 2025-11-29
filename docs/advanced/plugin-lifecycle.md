@@ -37,28 +37,28 @@ Plugins that implement `PluginLifecycle` can be initialized, started, stopped, a
 // Database-backed wallet factory needs initialization
 class DatabaseWalletFactory : WalletFactory, PluginLifecycle {
     private var connection: Connection? = null
-    
+
     override suspend fun initialize(config: Map<String, Any?>): Boolean {
         val url = config["databaseUrl"] as? String ?: return false
         connection = DriverManager.getConnection(url)
         return true
     }
-    
+
     override suspend fun start(): Boolean {
         // Start connection pool, background threads, etc.
         return connection != null
     }
-    
+
     override suspend fun stop(): Boolean {
         // Stop background processes
         return true
     }
-    
+
     override suspend fun cleanup() {
         connection?.close()
         connection = null
     }
-    
+
     // ... implement WalletFactory methods ...
 }
 ```
@@ -104,7 +104,7 @@ val config = mapOf(
 )
 
 TrustWeave.initialize(config).fold(
-    onSuccess = { 
+    onSuccess = {
         println("All plugins initialized successfully")
     },
     onFailure = { error ->
@@ -126,7 +126,7 @@ Start plugins after initialization:
 
 ```kotlin
 TrustWeave.start().fold(
-    onSuccess = { 
+    onSuccess = {
         println("All plugins started successfully")
     },
     onFailure = { error ->
@@ -141,7 +141,7 @@ Stop plugins before shutdown:
 
 ```kotlin
 TrustWeave.stop().fold(
-    onSuccess = { 
+    onSuccess = {
         println("All plugins stopped successfully")
     },
     onFailure = { error ->
@@ -156,7 +156,7 @@ Clean up plugin resources:
 
 ```kotlin
 TrustWeave.cleanup().fold(
-    onSuccess = { 
+    onSuccess = {
         println("All plugins cleaned up successfully")
     },
     onFailure = { error ->
@@ -178,27 +178,27 @@ suspend fun main() {
         registerDidMethod(MyDidMethod())
         registerBlockchainClient("algorand:testnet", myClient)
     }
-    
+
     try {
         // Initialize plugins
         TrustWeave.initialize().getOrThrow()
         println("Plugins initialized")
-        
+
         // Start plugins
         TrustWeave.start().getOrThrow()
         println("Plugins started")
-        
+
         // Use TrustWeave
         val did = TrustWeave.dids.create()
         println("Created DID: ${did.id}")
-        
+
         // ... use TrustWeave ...
-        
+
     } finally {
         // Stop plugins
         TrustWeave.stop().getOrThrow()
         println("Plugins stopped")
-        
+
         // Cleanup plugins
         TrustWeave.cleanup().getOrThrow()
         println("Plugins cleaned up")
@@ -217,7 +217,7 @@ class MyBlockchainClient : BlockchainAnchorClient, PluginLifecycle {
     private var initialized = false
     private var started = false
     private var connection: Connection? = null
-    
+
     override suspend fun initialize(config: Map<String, Any?>): Boolean {
         return try {
             val url = config["url"] as? String ?: return false
@@ -228,7 +228,7 @@ class MyBlockchainClient : BlockchainAnchorClient, PluginLifecycle {
             false
         }
     }
-    
+
     override suspend fun start(): Boolean {
         return if (initialized && connection != null) {
             connection?.connect()
@@ -238,7 +238,7 @@ class MyBlockchainClient : BlockchainAnchorClient, PluginLifecycle {
             false
         }
     }
-    
+
     override suspend fun stop(): Boolean {
         return try {
             connection?.disconnect()
@@ -248,13 +248,13 @@ class MyBlockchainClient : BlockchainAnchorClient, PluginLifecycle {
             false
         }
     }
-    
+
     override suspend fun cleanup() {
         connection?.close()
         connection = null
         initialized = false
     }
-    
+
     // ... implement BlockchainAnchorClient methods ...
 }
 ```
@@ -279,7 +279,7 @@ Lifecycle methods return `Result<Unit>` for error handling:
 ```kotlin
 val result = TrustWeave.initialize()
 result.fold(
-    onSuccess = { 
+    onSuccess = {
         println("Initialization successful")
     },
     onFailure = { error ->
@@ -318,7 +318,7 @@ val TrustWeave = TrustWeave.create()
 try {
     TrustWeave.initialize().getOrThrow()
     TrustWeave.start().getOrThrow()
-    
+
     // Use TrustWeave
     // ...
 } finally {

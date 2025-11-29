@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
  */
 abstract class StubScenarioTest {
     abstract fun runScenario()
-    
+
     @Test
     fun `test scenario executes without errors`() {
         runBlocking {

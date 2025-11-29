@@ -1,6 +1,7 @@
 package com.trustweave.waltid
 
 import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.core.types.KeyId
 import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyHandle
 import com.trustweave.kms.KeyManagementService
@@ -16,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Uses walt.id's crypto library for key generation, storage, and signing.
  */
 class WaltIdKeyManagementService(
-    private val keyStore: MutableMap<String, KeyHandle> = ConcurrentHashMap()
+    private val keyStore: MutableMap<KeyId, KeyHandle> = ConcurrentHashMap()
 ) : KeyManagementService {
 
     companion object {
@@ -47,8 +48,9 @@ class WaltIdKeyManagementService(
         try {
             // Use walt.id's key generation API
             // Note: This is a placeholder - actual implementation will use walt.id APIs
-            val keyId = options["keyId"] as? String ?: "key_${System.currentTimeMillis()}"
-            
+            val keyIdString = options["keyId"] as? String ?: "key_${System.currentTimeMillis()}"
+            val keyId = KeyId(keyIdString)
+
             // Map algorithm to walt.id format
             val waltIdAlgorithm = when (algorithm) {
                 is Algorithm.Ed25519 -> "Ed25519"
@@ -61,7 +63,7 @@ class WaltIdKeyManagementService(
 
             // Generate key using walt.id (placeholder - replace with actual API call)
             // val keyPair = WaltIdCrypto.generateKey(waltIdAlgorithm)
-            
+
             // For now, create a placeholder key handle
             // In real implementation, extract JWK from walt.id key
             val publicKeyJwk = mapOf(
@@ -82,28 +84,29 @@ class WaltIdKeyManagementService(
             keyStore[keyId] = handle
             handle
         } catch (e: Exception) {
+            val keyIdValue = options["keyId"] as? String ?: "unknown"
             throw com.trustweave.core.exception.TrustWeaveException.Unknown(
                 message = "Failed to generate key: ${e.message ?: "Unknown error"}",
-                context = mapOf("keyId" to keyId, "algorithm" to (algorithm?.name ?: "unknown")),
+                context = mapOf("keyId" to keyIdValue, "algorithm" to (algorithm?.name ?: "unknown")),
                 cause = e
             )
         }
     }
 
-    override suspend fun getPublicKey(keyId: String): KeyHandle = withContext(Dispatchers.IO) {
+    override suspend fun getPublicKey(keyId: KeyId): KeyHandle = withContext(Dispatchers.IO) {
         keyStore[keyId] ?: throw KmsException.KeyNotFound(
-            keyId = keyId,
+            keyId = keyId.value,
             keyType = null
         )
     }
 
     override suspend fun sign(
-        keyId: String,
+        keyId: KeyId,
         data: ByteArray,
         algorithm: Algorithm?
     ): ByteArray = withContext(Dispatchers.IO) {
-        val handle = keyStore[keyId] ?: throw KeyNotFoundException("Key not found: $keyId")
-        
+        val handle = keyStore[keyId] ?: throw KmsException.KeyNotFound(keyId = keyId.value)
+
         try {
             // Use walt.id's signing API
             // val signature = WaltIdCrypto.sign(keyId, data, algorithm?.name ?: handle.algorithm)
@@ -113,13 +116,13 @@ class WaltIdKeyManagementService(
         } catch (e: Exception) {
             throw com.trustweave.core.exception.TrustWeaveException.Unknown(
                 message = "Failed to sign data: ${e.message ?: "Unknown error"}",
-                context = mapOf("keyId" to keyId, "algorithm" to (algorithm?.name ?: "unknown")),
+                context = mapOf("keyId" to keyId.value, "algorithm" to (algorithm?.name ?: "unknown")),
                 cause = e
             )
         }
     }
 
-    override suspend fun deleteKey(keyId: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deleteKey(keyId: KeyId): Boolean = withContext(Dispatchers.IO) {
         keyStore.remove(keyId) != null
     }
 }
@@ -129,7 +132,7 @@ class WaltIdKeyManagementService(
  */
 class WaltIdKeyManagementServiceProvider : KeyManagementServiceProvider {
     override val name: String = "waltid"
-    
+
     override val supportedAlgorithms: Set<Algorithm> = WaltIdKeyManagementService.SUPPORTED_ALGORITHMS
 
     override fun create(options: Map<String, Any?>): KeyManagementService {

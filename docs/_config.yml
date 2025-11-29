@@ -302,7 +302,7 @@ just_the_docs:
 
   # Footer content
   footer_content: "Made with ❤️ by Geoknoesis LLC"
-  
+
   # Ensure navigation is always visible
   nav_fold: false
   nav_sticky: true

@@ -105,7 +105,7 @@ flowchart TD
     A["Blockchain Anchor<br/>VC Digest<br/>Immutable proof on blockchain"] -->|references| B["Verifiable Credential VC<br/>Linkset Digest Reference<br/>Dataset Metadata<br/>Credential about the dataset"]
     B -->|references| C["Linkset<br/>Metadata Link<br/>Provenance Link<br/>Quality Report Link<br/>Collection of links to artifacts"]
     C -->|references| D["Artifacts<br/>Metadata Document<br/>Provenance Document<br/>Quality Report Document<br/>Actual data documents"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
@@ -135,16 +135,16 @@ dependencies {
     implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    
+
     // Test kit for in-memory implementations
     implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
-    
+
     // Optional: Algorand adapter for real blockchain anchoring
     implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -176,7 +176,7 @@ fun main() = runBlocking {
     println("=".repeat(70))
     println("Earth Observation Data Integrity Scenario - Complete End-to-End Example")
     println("=".repeat(70))
-    
+
     // Step 1: Create TrustWeave instance with blockchain anchoring
     val TrustWeave = TrustWeave.create {
         blockchains {
@@ -184,15 +184,15 @@ fun main() = runBlocking {
         }
     }
     println("\n✅ TrustWeave initialized with blockchain anchoring")
-    
+
     // Step 2: Create DID for data provider
     val providerDidDoc = TrustWeave.dids.create()
     val providerDid = providerDidDoc.id
     val providerKeyId = providerDidDoc.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     println("✅ Data Provider DID: $providerDid")
-    
+
     // Step 3: Create EO dataset artifacts with digests
     // Metadata artifact
     val metadata = buildJsonObject {
@@ -202,7 +202,7 @@ fun main() = runBlocking {
         put("spatialCoverage", buildJsonObject {
             put("type", "Polygon")
             put("coordinates", listOf(
-                listOf(listOf(-122.5, 37.8), listOf(-122.3, 37.8), 
+                listOf(listOf(-122.5, 37.8), listOf(-122.3, 37.8),
                        listOf(-122.3, 37.9), listOf(-122.5, 37.9), listOf(-122.5, 37.8))
             ))
         })
@@ -213,7 +213,7 @@ fun main() = runBlocking {
     }
     val metadataDigest = DigestUtils.sha256DigestMultibase(metadata)
     println("✅ Metadata artifact created: $metadataDigest")
-    
+
     // Provenance artifact
     val provenance = buildJsonObject {
         put("id", "provenance-1")
@@ -224,7 +224,7 @@ fun main() = runBlocking {
     }
     val provenanceDigest = DigestUtils.sha256DigestMultibase(provenance)
     println("✅ Provenance artifact created: $provenanceDigest")
-    
+
     // Quality report artifact
     val qualityReport = buildJsonObject {
         put("id", "quality-1")
@@ -237,7 +237,7 @@ fun main() = runBlocking {
     }
     val qualityDigest = DigestUtils.sha256DigestMultibase(qualityReport)
     println("✅ Quality report artifact created: $qualityDigest")
-    
+
     // Step 4: Create Linkset connecting all artifacts
     val linkset = buildJsonObject {
         put("id", "linkset-1")
@@ -261,7 +261,7 @@ fun main() = runBlocking {
     }
     val linksetDigest = DigestUtils.sha256DigestMultibase(linkset)
     println("✅ Linkset created: $linksetDigest")
-    
+
     // Step 5: Issue Verifiable Credential referencing the Linkset
     val credential = TrustWeave.credentials.issue(
         issuerDid = providerDid,
@@ -278,10 +278,10 @@ fun main() = runBlocking {
         },
         types = listOf("VerifiableCredential", "EarthObservationCredential", "DataIntegrityCredential")
     ).getOrThrow()
-    
+
     println("✅ Verifiable Credential issued: ${credential.id}")
     println("   Linkset digest: $linksetDigest")
-    
+
     // Step 6: Anchor credential to blockchain
     val anchorRegistry = BlockchainAnchorRegistry().apply {
         register("inmemory:anchor", InMemoryBlockchainAnchorClient("inmemory:anchor"))
@@ -289,21 +289,21 @@ fun main() = runBlocking {
     val anchorClient = requireNotNull(anchorRegistry.get("inmemory:anchor")) {
         "inmemory anchor client not registered"
     }
-    
+
     val anchorResult = runCatching {
         val payload = Json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
         anchorClient.writePayload(payload)
     }.getOrElse { error ->
         error("Anchoring failed: ${error.message}")
     }
-    
+
     println("✅ Credential anchored to blockchain")
     println("   Chain ID: ${anchorResult.ref.chainId}")
     println("   Transaction Hash: ${anchorResult.ref.txHash}")
-    
+
     // Step 7: Verify the credential
     val verification = TrustWeave.credentials.verify(credential)
-    
+
     if (verification.valid) {
         println("\n✅ Credential Verification SUCCESS")
         println("   Proof valid: ${verification.proofValid}")
@@ -313,7 +313,7 @@ fun main() = runBlocking {
         println("\n❌ Credential Verification FAILED")
         println("   Errors: ${verification.errors}")
     }
-    
+
     // Step 8: Verify integrity chain
     println("\n🔗 Integrity Chain Verification:")
     println("   Metadata digest: $metadataDigest")
@@ -322,7 +322,7 @@ fun main() = runBlocking {
     println("   Linkset digest: $linksetDigest")
     println("   Credential anchored: ${anchorResult.ref.txHash}")
     println("   ✅ Complete integrity chain verified!")
-    
+
     println("\n" + "=".repeat(70))
     println("✅ Earth Observation Scenario Complete!")
     println("=".repeat(70))

@@ -18,7 +18,7 @@ Should DIDComm be under `credentials/plugins/` or `did/plugins/`?
 - It's a messaging protocol for DID-to-DID communication
 - Not credential-specific - used for many protocols:
   - Basic messages
-  - Proof presentations  
+  - Proof presentations
   - Trust pings
   - Out-of-band invitations
   - Feature discovery

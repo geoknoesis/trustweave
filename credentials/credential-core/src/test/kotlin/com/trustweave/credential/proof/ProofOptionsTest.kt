@@ -16,7 +16,7 @@ class ProofOptionsTest {
             domain = "example.com",
             verificationMethod = "did:key:issuer#key-1"
         )
-        
+
         assertEquals("assertionMethod", options.proofPurpose)
         assertEquals("challenge-123", options.challenge)
         assertEquals("example.com", options.domain)
@@ -26,7 +26,7 @@ class ProofOptionsTest {
     @Test
     fun `test ProofOptions with defaults`() {
         val options = ProofOptions()
-        
+
         assertEquals("assertionMethod", options.proofPurpose)
         assertNull(options.challenge)
         assertNull(options.domain)
@@ -40,7 +40,7 @@ class ProofOptionsTest {
             challenge = "challenge-123",
             domain = "example.com"
         )
-        
+
         assertEquals("authentication", options.proofPurpose)
         assertEquals("challenge-123", options.challenge)
         assertEquals("example.com", options.domain)

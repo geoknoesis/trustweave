@@ -161,7 +161,7 @@ Create a run configuration for debugging:
 
 **Problem**: IDE shows Kotlin version different from project
 
-**Solution**: 
+**Solution**:
 - File → Project Structure → Project → Kotlin version
 - Set to match `build.gradle.kts`
 

@@ -32,7 +32,7 @@ suspend fun processMultiple() = coroutineScope {
         async { TrustWeave.dids.create() },
         async { TrustWeave.dids.create() }
     )
-    
+
     results.awaitAll()
 }
 ```
@@ -294,14 +294,14 @@ Create benchmarks for critical paths:
 fun benchmarkDidCreation() = runBlocking {
     val iterations = 1000
     val start = System.currentTimeMillis()
-    
+
     repeat(iterations) {
         TrustWeave.dids.create()
     }
-    
+
     val duration = System.currentTimeMillis() - start
     val avgTime = duration.toDouble() / iterations
-    
+
     println("Average DID creation: ${avgTime}ms")
     assert(avgTime < 100) // Should be under 100ms
 }

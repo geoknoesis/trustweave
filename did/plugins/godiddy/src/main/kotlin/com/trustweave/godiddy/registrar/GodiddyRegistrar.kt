@@ -12,7 +12,7 @@ import kotlinx.serialization.json.*
 
 /**
  * Client for godiddy Universal Registrar service.
- * 
+ *
  * Implements the [DidRegistrar] interface to provide DID lifecycle operations
  * via the Universal Registrar protocol according to the DID Registration specification.
  */
@@ -30,7 +30,7 @@ class GodiddyRegistrar(
         try {
             // Universal Registrar endpoint: POST /1.0/operations
             val path = "/1.0/operations"
-            
+
             // Convert CreateDidOptions to JsonElement map for Godiddy API
             val jsonOptions = buildMap<String, JsonElement> {
                 put("keyManagementMode", JsonPrimitive(options.keyManagementMode.name.lowercase()))
@@ -48,14 +48,14 @@ class GodiddyRegistrar(
                     put(key, value)
                 }
             }
-            
+
             val request = GodiddyCreateDidRequest(
                 method = method,
                 options = jsonOptions
             )
-            
+
             val response: GodiddyCreateDidResponse = client.post(path, request)
-            
+
             // Convert Godiddy response to spec-compliant DidRegistrationResponse
             val didState = if (response.did != null && response.didDocument != null) {
                 val docJson = response.didDocument.jsonObject
@@ -77,10 +77,10 @@ class GodiddyRegistrar(
                     state = OperationState.FAILED,
                     did = null,
                     didDocument = null,
-                    reason = response.error ?: "DID creation failed"
+                    reason = "DID creation failed"
                 )
             }
-            
+
             DidRegistrationResponse(
                 jobId = response.jobId,
                 didState = didState
@@ -95,7 +95,7 @@ class GodiddyRegistrar(
             )
         }
     }
-    
+
     /**
      * Updates a DID Document using Universal Registrar according to DID Registration spec.
      *
@@ -112,10 +112,10 @@ class GodiddyRegistrar(
         try {
             // Universal Registrar endpoint: POST /1.0/operations (with update operation)
             val path = "/1.0/operations"
-            
+
             // Convert DidDocument to JsonObject
             val docJson = convertDidDocumentToJson(document)
-            
+
             // Convert UpdateDidOptions to JsonElement map
             val jsonOptions = buildMap<String, JsonElement> {
                 options.secret?.let { secret ->
@@ -125,15 +125,15 @@ class GodiddyRegistrar(
                     put(key, value)
                 }
             }
-            
+
             val request = GodiddyUpdateDidRequest(
                 did = did,
                 didDocument = docJson,
                 options = jsonOptions
             )
-            
+
             val response: GodiddyOperationResponse = client.post(path, request)
-            
+
             // Convert Godiddy response to spec-compliant DidRegistrationResponse
             val didState = if (response.success && response.didDocument != null) {
                 val updatedDocJson = response.didDocument.jsonObject
@@ -156,7 +156,7 @@ class GodiddyRegistrar(
                     didDocument = null
                 )
             }
-            
+
             DidRegistrationResponse(
                 jobId = response.jobId,
                 didState = didState
@@ -171,7 +171,7 @@ class GodiddyRegistrar(
             )
         }
     }
-    
+
     /**
      * Deactivates a DID using Universal Registrar according to DID Registration spec.
      *
@@ -186,7 +186,7 @@ class GodiddyRegistrar(
         try {
             // Universal Registrar endpoint: POST /1.0/operations (with deactivate operation)
             val path = "/1.0/operations"
-            
+
             // Convert DeactivateDidOptions to JsonElement map
             val jsonOptions = buildMap<String, JsonElement> {
                 options.secret?.let { secret ->
@@ -196,14 +196,14 @@ class GodiddyRegistrar(
                     put(key, value)
                 }
             }
-            
+
             val request = GodiddyDeactivateDidRequest(
                 did = did,
                 options = jsonOptions
             )
-            
+
             val response: GodiddyOperationResponse = client.post(path, request)
-            
+
             // Convert Godiddy response to spec-compliant DidRegistrationResponse
             val didState = if (response.success) {
                 DidState(
@@ -224,7 +224,7 @@ class GodiddyRegistrar(
                     didDocument = null
                 )
             }
-            
+
             DidRegistrationResponse(
                 jobId = response.jobId,
                 didState = didState
@@ -237,7 +237,7 @@ class GodiddyRegistrar(
             )
         }
     }
-    
+
     /**
      * Converts Secret to JsonObject for API requests.
      */
@@ -271,7 +271,7 @@ class GodiddyRegistrar(
             }
         }
     }
-    
+
     /**
      * Converts Any to JsonElement.
      */
@@ -287,7 +287,7 @@ class GodiddyRegistrar(
             else -> JsonPrimitive(value.toString())
         }
     }
-    
+
     /**
      * Converts DidDocument to JsonObject.
      */
@@ -303,9 +303,9 @@ class GodiddyRegistrar(
                     })
                 }
             }
-            
+
             put("id", document.id)
-            
+
             if (document.verificationMethod.isNotEmpty()) {
                 put("verificationMethod", buildJsonArray {
                     document.verificationMethod.forEach { vm ->
@@ -357,13 +357,13 @@ class GodiddyRegistrar(
             }
         }
     }
-    
+
     /**
      * Converts JsonObject to DidDocument.
      */
     private fun convertToDidDocument(json: JsonObject, did: String): DidDocument {
         val id = json["id"]?.jsonPrimitive?.content ?: did
-        
+
         // Extract @context (can be string or array in JSON-LD)
         val context = when {
             json["@context"] != null -> {
@@ -375,7 +375,7 @@ class GodiddyRegistrar(
             }
             else -> listOf("https://www.w3.org/ns/did/v1")
         }
-        
+
         val verificationMethod = json["verificationMethod"]?.jsonArray?.mapNotNull { vmJson ->
             val vmObj = vmJson.jsonObject
             val vmId = vmObj["id"]?.jsonPrimitive?.content
@@ -385,7 +385,7 @@ class GodiddyRegistrar(
                 jwk.entries.associate { it.key to convertJsonElement(it.value) }
             }
             val publicKeyMultibase = vmObj["publicKeyMultibase"]?.jsonPrimitive?.content
-            
+
             if (vmId != null && vmType != null) {
                 com.trustweave.did.VerificationMethod(
                     id = vmId,
@@ -396,33 +396,33 @@ class GodiddyRegistrar(
                 )
             } else null
         } ?: emptyList()
-        
+
         val authentication = json["authentication"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
             ?: json["authentication"]?.jsonPrimitive?.content?.let { listOf(it) }
             ?: emptyList()
-        
+
         val assertionMethod = json["assertionMethod"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
             ?: json["assertionMethod"]?.jsonPrimitive?.content?.let { listOf(it) }
             ?: emptyList()
-        
+
         val keyAgreement = json["keyAgreement"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
             ?: json["keyAgreement"]?.jsonPrimitive?.content?.let { listOf(it) }
             ?: emptyList()
-        
+
         val capabilityInvocation = json["capabilityInvocation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
             ?: json["capabilityInvocation"]?.jsonPrimitive?.content?.let { listOf(it) }
             ?: emptyList()
-        
+
         val capabilityDelegation = json["capabilityDelegation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
             ?: json["capabilityDelegation"]?.jsonPrimitive?.content?.let { listOf(it) }
             ?: emptyList()
-        
+
         val service = json["service"]?.jsonArray?.mapNotNull { sJson ->
             val sObj = sJson.jsonObject
             val sId = sObj["id"]?.jsonPrimitive?.content
             val sType = sObj["type"]?.jsonPrimitive?.content
             val sEndpoint = sObj["serviceEndpoint"]
-            
+
             if (sId != null && sType != null && sEndpoint != null) {
                 val endpoint = convertJsonElement(sEndpoint) ?: return@mapNotNull null
                 com.trustweave.did.DidService(
@@ -432,7 +432,7 @@ class GodiddyRegistrar(
                 )
             } else null
         } ?: emptyList()
-        
+
         return DidDocument(
             id = id,
             context = context,
@@ -445,7 +445,7 @@ class GodiddyRegistrar(
             service = service
         )
     }
-    
+
     /**
      * Converts JsonElement to Any.
      */

@@ -12,7 +12,7 @@ import com.trustweave.anchor.spi.BlockchainIntegrationHelper
 class PolygonBlockchainAnchorClientProvider : BlockchainAnchorClientProvider {
 
     override val name: String = "polygon"
-    
+
     override val supportedChains: List<String> = listOf(
         PolygonBlockchainAnchorClient.MAINNET,
         PolygonBlockchainAnchorClient.MUMBAI

@@ -5,10 +5,10 @@ import kotlin.random.Random
 
 /**
  * Error recovery utilities for credential exchange operations.
- * 
+ *
  * Provides retry logic, error classification, and recovery strategies
  * for handling exchange-related errors.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val result = retryExchangeOperation(maxRetries = 3) {
@@ -17,13 +17,13 @@ import kotlin.random.Random
  * ```
  */
 object ExchangeExceptionRecovery {
-    
+
     /**
      * Retries an exchange operation with exponential backoff.
-     * 
+     *
      * Automatically retries on transient errors (network issues, timeouts)
      * but immediately fails on validation errors or protocol errors.
-     * 
+     *
      * @param maxRetries Maximum number of retry attempts (default: 3)
      * @param initialDelay Initial delay in milliseconds (default: 1000)
      * @param maxDelay Maximum delay in milliseconds (default: 10000)
@@ -41,18 +41,18 @@ object ExchangeExceptionRecovery {
     ): T {
         var delay = initialDelay.toDouble()
         var lastError: ExchangeException? = null
-        
+
         repeat(maxRetries) { attempt ->
             try {
                 return operation()
             } catch (e: ExchangeException) {
                 lastError = e
-                
+
                 // Don't retry on validation or protocol errors
                 if (!isRetryable(e)) {
                     throw e
                 }
-                
+
                 // Retry with exponential backoff
                 if (attempt < maxRetries - 1) {
                     val jitter = Random.nextLong(0, (delay * 0.1).toLong())
@@ -64,11 +64,11 @@ object ExchangeExceptionRecovery {
                 // Convert to ExchangeException and retry if retryable
                 val exchangeException = e.toExchangeException()
                 lastError = exchangeException
-                
+
                 if (!isRetryable(exchangeException)) {
                     throw exchangeException
                 }
-                
+
                 if (attempt < maxRetries - 1) {
                     val jitter = Random.nextLong(0, (delay * 0.1).toLong())
                     val actualDelay = minOf((delay + jitter).toLong(), maxDelay)
@@ -77,25 +77,75 @@ object ExchangeExceptionRecovery {
                 }
             }
         }
-        
+
         throw lastError ?: ExchangeException.Unknown(
             reason = "Operation failed after $maxRetries retries",
             errorType = "RETRY_EXHAUSTED"
         )
     }
-    
+
     /**
      * Determines if an exception is retryable.
-     * 
+     *
      * Transient errors (network issues, timeouts) are retryable,
      * while validation errors and protocol errors are not.
-     * 
+     *
      * @param exception The exception to check
      * @return true if the exception is retryable, false otherwise
      */
     fun isRetryable(exception: ExchangeException): Boolean {
         val code = exception.code
-        
+        val errorType = if (exception is ExchangeException.Unknown) {
+            exception.errorType
+        } else {
+            null
+        }
+
+        // For Unknown exceptions, check errorType instead of code
+        if (code == "EXCHANGE_UNKNOWN_ERROR" && errorType != null) {
+            return when (errorType) {
+                // OIDC4VCI HTTP errors - retry on 5xx, not on 4xx
+                "OIDC4VCI_HTTP_REQUEST_FAILED" -> {
+                    val statusCode = exception.context["statusCode"] as? Int
+                    // Check reason for status code hints
+                    val reason = (exception.context["reason"] as? String ?: exception.message).lowercase()
+                    val is5xx = reason.contains("internal server error") ||
+                                reason.contains("server error") ||
+                                (statusCode != null && statusCode >= 500)
+                    val is4xx = reason.contains("bad request") ||
+                                reason.contains("not found") ||
+                                (statusCode != null && statusCode >= 400 && statusCode < 500)
+                    // Network errors (no status code) are retryable, 5xx are retryable, 4xx are not
+                    (statusCode == null && (reason.contains("connection") || reason.contains("timeout"))) ||
+                    is5xx ||
+                    (!is4xx && statusCode == null)
+                }
+                // DIDComm errors might be retryable depending on the reason
+                "DIDCOMM_ENCRYPTION_FAILED",
+                "DIDCOMM_DECRYPTION_FAILED",
+                "DIDCOMM_PACKING_FAILED",
+                "DIDCOMM_UNPACKING_FAILED" -> {
+                    val reason = (exception.context["reason"] as? String ?: exception.message).lowercase()
+                    reason.contains("timeout") ||
+                    reason.contains("network") ||
+                    reason.contains("connection") ||
+                    reason.contains("unavailable")
+                }
+                // OIDC4VCI errors might be retryable
+                "OIDC4VCI_TOKEN_EXCHANGE_FAILED",
+                "OIDC4VCI_METADATA_FETCH_FAILED",
+                "OIDC4VCI_CREDENTIAL_REQUEST_FAILED" -> {
+                    val reason = (exception.context["reason"] as? String ?: exception.message).lowercase()
+                    reason.contains("timeout") ||
+                    reason.contains("network") ||
+                    reason.contains("connection") ||
+                    reason.contains("unavailable")
+                }
+                // Unknown errors are not retryable by default
+                else -> false
+            }
+        }
+
         // Validation errors are not retryable
         return when (code) {
             "MISSING_REQUIRED_OPTION",
@@ -107,58 +157,107 @@ object ExchangeExceptionRecovery {
             "PROOF_REQUEST_NOT_FOUND",
             "MESSAGE_NOT_FOUND",
             "EXCHANGE_UNKNOWN_ERROR" -> false
-            
+
             // DIDComm protocol errors are not retryable
             "DIDCOMM_PROTOCOL_ERROR" -> false
-            
+
             // CHAPI errors are not retryable
             "CHAPI_BROWSER_NOT_AVAILABLE" -> false
-            
+
             // OIDC4VCI HTTP errors - retry on 5xx, not on 4xx
             "OIDC4VCI_HTTP_REQUEST_FAILED" -> {
                 val statusCode = exception.context["statusCode"] as? Int
                 statusCode == null || statusCode >= 500
             }
-            
+
             // DIDComm errors might be retryable depending on the reason
             "DIDCOMM_ENCRYPTION_FAILED",
             "DIDCOMM_DECRYPTION_FAILED",
             "DIDCOMM_PACKING_FAILED",
             "DIDCOMM_UNPACKING_FAILED" -> {
                 val reason = (exception.context["reason"] as? String ?: exception.message).lowercase()
-                reason.contains("timeout") || 
-                reason.contains("network") || 
+                reason.contains("timeout") ||
+                reason.contains("network") ||
                 reason.contains("connection") ||
                 reason.contains("unavailable")
             }
-            
+
             // OIDC4VCI errors might be retryable
             "OIDC4VCI_TOKEN_EXCHANGE_FAILED",
             "OIDC4VCI_METADATA_FETCH_FAILED",
             "OIDC4VCI_CREDENTIAL_REQUEST_FAILED" -> {
                 val reason = (exception.context["reason"] as? String ?: exception.message).lowercase()
-                reason.contains("timeout") || 
-                reason.contains("network") || 
+                reason.contains("timeout") ||
+                reason.contains("network") ||
                 reason.contains("connection") ||
                 reason.contains("unavailable")
             }
-            
+
             // Unknown errors are not retryable by default
             else -> false
         }
     }
-    
+
     /**
      * Determines if an exception is transient (temporary).
-     * 
+     *
      * Transient errors are typically network issues or temporary service unavailability
      * that might resolve on retry.
-     * 
+     *
      * @param exception The exception to check
      * @return true if the exception is transient, false otherwise
      */
     fun isTransient(exception: ExchangeException): Boolean {
         val code = exception.code
+        val errorType = if (exception is ExchangeException.Unknown) {
+            exception.errorType
+        } else {
+            null
+        }
+
+        // For Unknown exceptions, check errorType instead of code
+        if (code == "EXCHANGE_UNKNOWN_ERROR" && errorType != null) {
+            return when (errorType) {
+                // OIDC4VCI HTTP errors
+                "OIDC4VCI_HTTP_REQUEST_FAILED" -> {
+                    val statusCode = exception.context["statusCode"] as? Int
+                    val reason = (exception.context["reason"] as? String ?: exception.message).lowercase()
+                    val is5xx = reason.contains("internal server error") ||
+                                reason.contains("server error") ||
+                                (statusCode != null && statusCode >= 500)
+                    val is429 = reason.contains("too many requests") || statusCode == 429
+                    val isNetworkError = reason.contains("connection") || reason.contains("timeout") || reason.contains("failed") && (reason.contains("connection") || reason.contains("timeout"))
+                    val isGeneric4xx = reason.contains("http request failed") && !isNetworkError && statusCode == null
+                    // 5xx and 429 are transient, network errors (no status code with connection/timeout) are transient, generic 4xx are not
+                    is5xx || is429 || (statusCode == null && isNetworkError && !isGeneric4xx)
+                }
+                // DIDComm errors
+                "DIDCOMM_ENCRYPTION_FAILED",
+                "DIDCOMM_DECRYPTION_FAILED",
+                "DIDCOMM_PACKING_FAILED",
+                "DIDCOMM_UNPACKING_FAILED" -> {
+                    val reason = exception.context["reason"] as? String ?: exception.message
+                    val reasonLower = reason.lowercase()
+                    reasonLower.contains("timeout") ||
+                    reasonLower.contains("network") ||
+                    reasonLower.contains("connection") ||
+                    reasonLower.contains("unavailable")
+                }
+                // OIDC4VCI other errors
+                "OIDC4VCI_TOKEN_EXCHANGE_FAILED",
+                "OIDC4VCI_METADATA_FETCH_FAILED",
+                "OIDC4VCI_CREDENTIAL_REQUEST_FAILED" -> {
+                    val reason = exception.context["reason"] as? String ?: exception.message
+                    val reasonLower = reason.lowercase()
+                    reasonLower.contains("timeout") ||
+                    reasonLower.contains("network") ||
+                    reasonLower.contains("connection") ||
+                    reasonLower.contains("unavailable")
+                }
+                else -> false
+            }
+        }
+
         return when {
             // OIDC4VCI HTTP errors
             code == "OIDC4VCI_HTTP_REQUEST_FAILED" -> {
@@ -169,8 +268,8 @@ object ExchangeExceptionRecovery {
             code.startsWith("DIDCOMM_") -> {
                 val reason = exception.context["reason"] as? String ?: exception.message
                 val reasonLower = reason.lowercase()
-                reasonLower.contains("timeout") || 
-                reasonLower.contains("network") || 
+                reasonLower.contains("timeout") ||
+                reasonLower.contains("network") ||
                 reasonLower.contains("connection") ||
                 reasonLower.contains("unavailable")
             }
@@ -178,18 +277,18 @@ object ExchangeExceptionRecovery {
             code.startsWith("OIDC4VCI_") -> {
                 val reason = exception.context["reason"] as? String ?: exception.message
                 val reasonLower = reason.lowercase()
-                reasonLower.contains("timeout") || 
-                reasonLower.contains("network") || 
+                reasonLower.contains("timeout") ||
+                reasonLower.contains("network") ||
                 reasonLower.contains("connection") ||
                 reasonLower.contains("unavailable")
             }
             else -> false
         }
     }
-    
+
     /**
      * Gets a user-friendly error message for display.
-     * 
+     *
      * @param exception The exception
      * @return A user-friendly error message
      */
@@ -272,10 +371,10 @@ object ExchangeExceptionRecovery {
             }
         }
     }
-    
+
     /**
      * Attempts to recover from an error by trying an alternative protocol.
-     * 
+     *
      * @param exception The exception that occurred
      * @param availableProtocols List of available protocol names
      * @param operation Function to execute with the alternative protocol
@@ -290,13 +389,13 @@ object ExchangeExceptionRecovery {
             exception !is ExchangeException.OperationNotSupported) {
             return null
         }
-        
+
         val failedProtocol = when (exception) {
             is ExchangeException.ProtocolNotRegistered -> exception.protocolName
             is ExchangeException.OperationNotSupported -> exception.protocolName
             else -> return null
         }
-        
+
         // Try alternative protocols
         for (protocol in availableProtocols) {
             if (protocol != failedProtocol) {
@@ -308,14 +407,14 @@ object ExchangeExceptionRecovery {
                 }
             }
         }
-        
+
         return null
     }
 }
 
 /**
  * Extension function for retrying exchange operations.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val offer = retryExchangeOperation {

@@ -4,7 +4,7 @@ import com.trustweave.contract.models.ExecutionModel
 
 /**
  * Reference to an evaluation engine from an execution model.
- * 
+ *
  * Encapsulates engine identification and integrity verification requirements.
  */
 sealed class EngineReference {
@@ -12,17 +12,17 @@ sealed class EngineReference {
      * Engine identifier (null for Manual execution).
      */
     abstract val engineId: String?
-    
+
     /**
      * Expected implementation hash for integrity verification (null if not required).
      */
     abstract val expectedHash: String?
-    
+
     /**
      * Expected engine version for compatibility checks (null if not required).
      */
     abstract val expectedVersion: String?
-    
+
     /**
      * Reference to an engine with integrity requirements.
      */
@@ -31,7 +31,7 @@ sealed class EngineReference {
         override val expectedHash: String?,
         override val expectedVersion: String?
     ) : EngineReference()
-    
+
     /**
      * Manual execution - no engine required.
      */

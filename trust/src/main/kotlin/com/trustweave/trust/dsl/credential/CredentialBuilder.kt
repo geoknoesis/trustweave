@@ -13,9 +13,9 @@ import java.time.temporal.ChronoUnit
 
 /**
  * Credential Builder DSL.
- * 
+ *
  * Provides a fluent API for creating verifiable credentials with minimal boilerplate.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val credential = credential {
@@ -48,28 +48,28 @@ class CredentialBuilder {
     private val evidenceList = mutableListOf<Evidence>()
     private var termsOfUse: TermsOfUse? = null
     private var refreshService: RefreshService? = null
-    
+
     /**
      * Set credential ID.
      */
     fun id(id: String) {
         this.id = id
     }
-    
+
     /**
      * Add credential type(s). "VerifiableCredential" is automatically added.
      */
     fun type(vararg types: String) {
         this.types.addAll(types)
     }
-    
+
     /**
      * Set issuer DID.
      */
     fun issuer(did: String) {
         this.issuer = did
     }
-    
+
     /**
      * Configure credential subject.
      */
@@ -78,21 +78,21 @@ class CredentialBuilder {
         builder.block()
         subjectBuilder = builder
     }
-    
+
     /**
      * Set issuance date.
      */
     fun issued(date: Instant) {
         this.issuanceDate = date
     }
-    
+
     /**
      * Set expiration date.
      */
     fun expires(date: Instant) {
         this.expirationDate = date
     }
-    
+
     /**
      * Set expiration date as duration from now.
      */
@@ -100,7 +100,7 @@ class CredentialBuilder {
         val now = Instant.now()
         this.expirationDate = now.plus(duration, unit)
     }
-    
+
     /**
      * Set credential status (for revocation).
      */
@@ -109,14 +109,14 @@ class CredentialBuilder {
         builder.block()
         credentialStatus = builder.build()
     }
-    
+
     /**
      * Set credential schema.
      */
     fun schema(schemaId: String, type: String = "JsonSchemaValidator2018", format: SchemaFormat = SchemaFormat.JSON_SCHEMA) {
         credentialSchema = CredentialSchema(schemaId, type, format)
     }
-    
+
     /**
      * Add evidence.
      */
@@ -125,7 +125,7 @@ class CredentialBuilder {
         builder.block()
         evidenceList.add(builder.build())
     }
-    
+
     /**
      * Set terms of use.
      */
@@ -134,14 +134,14 @@ class CredentialBuilder {
         builder.block()
         termsOfUse = builder.build()
     }
-    
+
     /**
      * Set refresh service.
      */
     fun refreshService(id: String, type: String, endpoint: String) {
         refreshService = RefreshService(id, type, endpoint)
     }
-    
+
     /**
      * Build the verifiable credential.
      */
@@ -152,13 +152,13 @@ class CredentialBuilder {
         } else {
             types
         }
-        
-        val subject = subjectBuilder?.build() 
+
+        val subject = subjectBuilder?.build()
             ?: throw IllegalStateException("Credential subject is required")
-        
-        val issuanceDateStr = issuanceDate?.toString() 
+
+        val issuanceDateStr = issuanceDate?.toString()
             ?: throw IllegalStateException("Issuance date is required")
-        
+
         return VerifiableCredential(
             id = id,
             type = allTypes,
@@ -178,19 +178,19 @@ class CredentialBuilder {
 
 /**
  * Subject Builder DSL.
- * 
+ *
  * Provides a fluent API for building credential subject JSON.
  */
 class SubjectBuilder {
     private val properties = mutableMapOf<String, JsonElement>()
-    
+
     /**
      * Set subject ID.
      */
     fun id(did: String) {
         properties["id"] = JsonPrimitive(did)
     }
-    
+
     /**
      * Set a property value.
      */
@@ -199,7 +199,7 @@ class SubjectBuilder {
         builder.block()
         properties[this] = builder.build()
     }
-    
+
     /**
      * Set a simple property value.
      */
@@ -213,7 +213,7 @@ class SubjectBuilder {
             else -> JsonPrimitive(value.toString())
         }
     }
-    
+
     /**
      * Build the credential subject JSON.
      */
@@ -231,7 +231,7 @@ class SubjectBuilder {
  */
 class JsonObjectBuilder {
     private val properties = mutableMapOf<String, JsonElement>()
-    
+
     /**
      * Set a nested property with a nested object builder.
      */
@@ -240,7 +240,7 @@ class JsonObjectBuilder {
         builder.block()
         properties[this] = builder.build()
     }
-    
+
     /**
      * Set a nested property.
      */
@@ -250,7 +250,7 @@ class JsonObjectBuilder {
             is Number -> JsonPrimitive(value)
             is Boolean -> JsonPrimitive(value)
             is JsonElement -> value
-            is List<*> -> JsonArray(value.map { 
+            is List<*> -> JsonArray(value.map {
                 when (it) {
                     is String -> JsonPrimitive(it)
                     is Number -> JsonPrimitive(it)
@@ -262,28 +262,28 @@ class JsonObjectBuilder {
             else -> JsonPrimitive(value.toString())
         }
     }
-    
+
     /**
      * Put a property value (for compatibility with SchemaDsl).
      */
     fun put(key: String, value: String) {
         properties[key] = JsonPrimitive(value)
     }
-    
+
     /**
      * Put a property value (number).
      */
     fun put(key: String, value: Number) {
         properties[key] = JsonPrimitive(value)
     }
-    
+
     /**
      * Put a property value (boolean).
      */
     fun put(key: String, value: Boolean) {
         properties[key] = JsonPrimitive(value)
     }
-    
+
     /**
      * Put a nested JSON object.
      */
@@ -292,21 +292,21 @@ class JsonObjectBuilder {
         builder.block()
         properties[key] = builder.build()
     }
-    
+
     /**
      * Put a JSON array.
      */
     fun put(key: String, values: List<JsonElement>) {
         properties[key] = JsonArray(values)
     }
-    
+
     /**
      * Put a JsonObject directly.
      */
     fun put(key: String, value: JsonObject) {
         properties[key] = value
     }
-    
+
     /**
      * Build nested JSON object.
      */
@@ -328,27 +328,27 @@ class CredentialStatusBuilder {
     private var statusPurpose: String = "revocation"
     private var statusListIndex: String? = null
     private var statusListCredential: String? = null
-    
+
     fun id(id: String) {
         this.id = id
     }
-    
+
     fun type(type: String) {
         this.type = type
     }
-    
+
     fun statusPurpose(purpose: String) {
         this.statusPurpose = purpose
     }
-    
+
     fun statusListIndex(index: String) {
         this.statusListIndex = index
     }
-    
+
     fun statusListCredential(credential: String) {
         this.statusListCredential = credential
     }
-    
+
     fun build(): CredentialStatus {
         return CredentialStatus(
             id = id ?: throw IllegalStateException("Status ID is required"),
@@ -369,29 +369,29 @@ class EvidenceBuilder {
     private var evidenceDocument: JsonObject? = null
     private var verifier: String? = null
     private var evidenceDate: String? = null
-    
+
     fun id(id: String) {
         this.id = id
     }
-    
+
     fun type(vararg types: String) {
         this.types.addAll(types)
     }
-    
+
     fun document(block: JsonObjectBuilder.() -> Unit) {
         val builder = JsonObjectBuilder()
         builder.block()
         evidenceDocument = builder.build()
     }
-    
+
     fun verifier(did: String) {
         this.verifier = did
     }
-    
+
     fun date(date: String) {
         this.evidenceDate = date
     }
-    
+
     fun build(): Evidence {
         return Evidence(
             id = id,
@@ -410,21 +410,21 @@ class TermsOfUseBuilder {
     private var id: String? = null
     private var type: String? = null
     private var terms: JsonElement? = null
-    
+
     fun id(id: String) {
         this.id = id
     }
-    
+
     fun type(type: String) {
         this.type = type
     }
-    
+
     fun terms(block: JsonObjectBuilder.() -> Unit) {
         val builder = JsonObjectBuilder()
         builder.block()
         terms = builder.build()
     }
-    
+
     fun build(): TermsOfUse {
         return TermsOfUse(
             id = id,

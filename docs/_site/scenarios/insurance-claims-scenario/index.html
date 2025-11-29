@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,34 +591,34 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="insurance-claims-and-verification-scenario">
-  
-  
+
+
     <a href="#insurance-claims-and-verification-scenario" class="anchor-heading" aria-labelledby="insurance-claims-and-verification-scenario"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Insurance Claims and Verification Scenario
-  
-  
+
+
 </h1>
-    
+
 
 <p>This guide demonstrates how to build a complete insurance claims verification system using TrustWeave. You’ll learn how insurance companies can issue claim credentials, how service providers (repair shops, medical facilities) can issue verification credentials, and how the entire claims process can be streamlined with verifiable credentials while preventing fraud.</p>
 <h2 id="what-youll-build">
-  
-  
+
+
     <a href="#what-youll-build" class="anchor-heading" aria-labelledby="what-youll-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Build
-  
-  
+
+
 </h2>
-    
+
 
 <p>By the end of this tutorial, you’ll have:</p>
 
@@ -632,21 +632,21 @@
   <li>✅ Verified all claim-related credentials</li>
 </ul>
 <h2 id="big-picture--significance">
-  
-  
+
+
     <a href="#big-picture--significance" class="anchor-heading" aria-labelledby="big-picture--significance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Big Picture &amp; Significance
-  
-  
+
+
 </h2>
-    
+
 <h3 id="the-insurance-claims-challenge">
-  
-  
+
+
     <a href="#the-insurance-claims-challenge" class="anchor-heading" aria-labelledby="the-insurance-claims-challenge"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Insurance Claims Challenge
-  
-  
+
+
 </h3>
-    
+
 
 <p>Insurance claims processing is complex, slow, and vulnerable to fraud. Traditional claims systems require manual verification, are prone to errors, and don’t provide transparency for policyholders.</p>
 
@@ -669,13 +669,13 @@
   <li><strong>Trust</strong>: Cryptographic proof builds trust between parties</li>
 </ol>
 <h3 id="the-claims-verification-problem">
-  
-  
+
+
     <a href="#the-claims-verification-problem" class="anchor-heading" aria-labelledby="the-claims-verification-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Claims Verification Problem
-  
-  
+
+
 </h3>
-    
+
 
 <p>Traditional insurance claims face critical issues:</p>
 <ul>
@@ -687,21 +687,21 @@
   <li><strong>Complex Workflows</strong>: Multiple parties and documents</li>
 </ul>
 <h2 id="value-proposition">
-  
-  
+
+
     <a href="#value-proposition" class="anchor-heading" aria-labelledby="value-proposition"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Value Proposition
-  
-  
+
+
 </h2>
-    
+
 <h3 id="problems-solved">
-  
-  
+
+
     <a href="#problems-solved" class="anchor-heading" aria-labelledby="problems-solved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Problems Solved
-  
-  
+
+
 </h3>
-    
+
 
 <ol>
   <li><strong>Fraud Prevention</strong>: Cryptographic proof prevents claim fraud</li>
@@ -713,13 +713,13 @@
   <li><strong>Compliance</strong>: Automated compliance with insurance regulations</li>
 </ol>
 <h3 id="business-benefits">
-  
-  
+
+
     <a href="#business-benefits" class="anchor-heading" aria-labelledby="business-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Business Benefits
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>For Insurance Companies:</strong></p>
 <ul>
@@ -747,13 +747,13 @@
   <li><strong>Reputation</strong>: Enhanced reputation through verifiable credentials</li>
 </ul>
 <h3 id="roi-considerations">
-  
-  
+
+
     <a href="#roi-considerations" class="anchor-heading" aria-labelledby="roi-considerations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ROI Considerations
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>Fraud Prevention</strong>: Eliminates billions in fraud losses</li>
@@ -763,13 +763,13 @@
   <li><strong>Compliance</strong>: Automated regulatory compliance</li>
 </ul>
 <h2 id="understanding-the-problem">
-  
-  
+
+
     <a href="#understanding-the-problem" class="anchor-heading" aria-labelledby="understanding-the-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Understanding the Problem
-  
-  
+
+
 </h2>
-    
+
 
 <p>Traditional insurance claims have several problems:</p>
 
@@ -791,13 +791,13 @@
   <li><strong>Efficiency</strong>: Streamlined claims processing</li>
 </ul>
 <h2 id="how-it-works-the-claims-flow">
-  
-  
+
+
     <a href="#how-it-works-the-claims-flow" class="anchor-heading" aria-labelledby="how-it-works-the-claims-flow"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How It Works: The Claims Flow
-  
-  
+
+
 </h2>
-    
+
 
 <pre><code class="language-mermaid">flowchart TD
     A["Policyholder&lt;br/&gt;Files Insurance Claim"] --&gt;|submits| B["Insurance Company&lt;br/&gt;Issues Claim Credential"]
@@ -805,7 +805,7 @@
     D["Repair Shop&lt;br/&gt;Performs Repair&lt;br/&gt;Issues Repair Credential"] --&gt;|verifies| B
     B --&gt;|stored in| E["Policyholder Wallet&lt;br/&gt;Stores claim credentials&lt;br/&gt;Tracks claim status"]
     E --&gt;|presents| F["Insurance Company&lt;br/&gt;Verifies all credentials&lt;br/&gt;Processes claim&lt;br/&gt;Issues payment"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
@@ -814,13 +814,13 @@
     style F fill:#c2185b,stroke:#880e4f,stroke-width:2px,color:#fff
 </code></pre>
 <h2 id="prerequisites">
-  
-  
+
+
     <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li>Java 21+</li>
@@ -829,13 +829,13 @@
   <li>Basic understanding of Kotlin and coroutines</li>
 </ul>
 <h2 id="step-1-add-dependencies">
-  
-  
+
+
     <a href="#step-1-add-dependencies" class="anchor-heading" aria-labelledby="step-1-add-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Add Dependencies
-  
-  
+
+
 </h2>
-    
+
 
 <p>Add TrustWeave dependencies to your <code class="language-plaintext highlighter-rouge">build.gradle.kts</code>:</p>
 
@@ -852,22 +852,22 @@
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
     <span class="c1">// Core TrustWeave modules</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-all:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    
+
     <span class="c1">// Kotlinx Serialization</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
-    
+
     <span class="c1">// Coroutines</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="step-2-complete-runnable-example">
-  
-  
+
+
     <a href="#step-2-complete-runnable-example" class="anchor-heading" aria-labelledby="step-2-complete-runnable-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Complete Runnable Example
-  
-  
+
+
 </h2>
-    
+
 
 <p>Here’s the full insurance claims verification flow using the TrustWeave facade API:</p>
 
@@ -1180,35 +1180,35 @@
     <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Insurance Claims and Verification Scenario - Complete End-to-End Example"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
-    
+
     <span class="c1">// Step 1: Create TrustWeave instance</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ TrustWeave initialized"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 2: Create DIDs for all parties</span>
     <span class="kd">val</span> <span class="py">insuranceCompanyDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">insuranceCompanyDid</span> <span class="p">=</span> <span class="n">insuranceCompanyDidDoc</span><span class="p">.</span><span class="n">id</span>
     <span class="kd">val</span> <span class="py">insuranceCompanyKeyId</span> <span class="p">=</span> <span class="n">insuranceCompanyDidDoc</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
         <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">policyholderDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">policyholderDid</span> <span class="p">=</span> <span class="n">policyholderDidDoc</span><span class="p">.</span><span class="n">id</span>
-    
+
     <span class="kd">val</span> <span class="py">assessorDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">assessorDid</span> <span class="p">=</span> <span class="n">assessorDidDoc</span><span class="p">.</span><span class="n">id</span>
     <span class="kd">val</span> <span class="py">assessorKeyId</span> <span class="p">=</span> <span class="n">assessorDidDoc</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
         <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">repairShopDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">repairShopDid</span> <span class="p">=</span> <span class="n">repairShopDidDoc</span><span class="p">.</span><span class="n">id</span>
     <span class="kd">val</span> <span class="py">repairShopKeyId</span> <span class="p">=</span> <span class="n">repairShopDidDoc</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
         <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Insurance Company DID: $insuranceCompanyDid"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Policyholder DID: $policyholderDid"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Damage Assessor DID: $assessorDid"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Repair Shop DID: $repairShopDid"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 3: Policyholder files claim - Insurance company issues claim credential</span>
     <span class="kd">val</span> <span class="py">claimCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">insuranceCompanyDid</span><span class="p">,</span>
@@ -1231,12 +1231,12 @@
         <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"InsuranceClaimCredential"</span><span class="p">,</span> <span class="s">"ClaimCredential"</span><span class="p">),</span>
         <span class="n">expirationDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">plus</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">YEARS</span><span class="p">).</span><span class="nf">toString</span><span class="p">()</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ Claim credential issued: ${claimCredential.id}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Claim Number: CLM-2024-001234"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Claim Type: Auto Damage"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Status: Filed"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 4: Damage assessor issues assessment credential</span>
     <span class="kd">val</span> <span class="py">assessmentCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">assessorDid</span><span class="p">,</span>
@@ -1261,11 +1261,11 @@
         <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"DamageAssessmentCredential"</span><span class="p">,</span> <span class="s">"AssessmentCredential"</span><span class="p">),</span>
         <span class="n">expirationDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">plus</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">MONTHS</span><span class="p">).</span><span class="nf">toString</span><span class="p">()</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Damage assessment credential issued: ${assessmentCredential.id}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Estimated Repair Cost: $4,800.00"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Assessment Status: Completed"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 5: Repair shop performs repair and issues repair credential</span>
     <span class="kd">val</span> <span class="py">repairCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">repairShopDid</span><span class="p">,</span>
@@ -1298,11 +1298,11 @@
         <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"RepairCredential"</span><span class="p">,</span> <span class="s">"ServiceCredential"</span><span class="p">),</span>
         <span class="n">expirationDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">plus</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">YEARS</span><span class="p">).</span><span class="nf">toString</span><span class="p">()</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Repair credential issued: ${repairCredential.id}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Total Repair Cost: $4,262.50"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Repair Status: Completed"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 6: Create policyholder wallet and store all credentials</span>
     <span class="kd">val</span> <span class="py">policyholderWallet</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">createWallet</span><span class="p">(</span>
         <span class="n">holderDid</span> <span class="p">=</span> <span class="n">policyholderDid</span><span class="p">,</span>
@@ -1311,74 +1311,74 @@
             <span class="n">enablePresentation</span> <span class="p">=</span> <span class="k">true</span>
         <span class="p">}.</span><span class="nf">build</span><span class="p">()</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="kd">val</span> <span class="py">claimCredentialId</span> <span class="p">=</span> <span class="n">policyholderWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">claimCredential</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">assessmentCredentialId</span> <span class="p">=</span> <span class="n">policyholderWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">assessmentCredential</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">repairCredentialId</span> <span class="p">=</span> <span class="n">policyholderWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">repairCredential</span><span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ All claim credentials stored in policyholder wallet"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 7: Organize credentials</span>
     <span class="n">policyholderWallet</span><span class="p">.</span><span class="nf">withOrganization</span> <span class="p">{</span> <span class="n">org</span> <span class="p">-&gt;</span>
         <span class="kd">val</span> <span class="py">claimsCollectionId</span> <span class="p">=</span> <span class="n">org</span><span class="p">.</span><span class="nf">createCollection</span><span class="p">(</span><span class="s">"Insurance Claims"</span><span class="p">,</span> <span class="s">"Insurance claim credentials"</span><span class="p">)</span>
-        
+
         <span class="n">org</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">claimCredentialId</span><span class="p">,</span> <span class="n">claimsCollectionId</span><span class="p">)</span>
         <span class="n">org</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">assessmentCredentialId</span><span class="p">,</span> <span class="n">claimsCollectionId</span><span class="p">)</span>
         <span class="n">org</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">repairCredentialId</span><span class="p">,</span> <span class="n">claimsCollectionId</span><span class="p">)</span>
-        
+
         <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">claimCredentialId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"claim"</span><span class="p">,</span> <span class="s">"insurance"</span><span class="p">,</span> <span class="s">"auto"</span><span class="p">,</span> <span class="s">"filed"</span><span class="p">))</span>
         <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">assessmentCredentialId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"assessment"</span><span class="p">,</span> <span class="s">"damage"</span><span class="p">,</span> <span class="s">"verified"</span><span class="p">))</span>
         <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">repairCredentialId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"repair"</span><span class="p">,</span> <span class="s">"completed"</span><span class="p">,</span> <span class="s">"verified"</span><span class="p">))</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Claim credentials organized"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 8: Insurance company verifies all credentials</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n📋 Insurance Company Verification Process:"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">claimVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">claimCredential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Claim Credential: ${if (claimVerification.valid) "</span><span class="err">✅</span> <span class="nc">VALID</span><span class="s">" else "</span><span class="err">❌</span> <span class="nc">INVALID</span><span class="s">"}"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">assessmentVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">assessmentCredential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Assessment Credential: ${if (assessmentVerification.valid) "</span><span class="err">✅</span> <span class="nc">VALID</span><span class="s">" else "</span><span class="err">❌</span> <span class="nc">INVALID</span><span class="s">"}"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">repairVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">repairCredential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Repair Credential: ${if (repairVerification.valid) "</span><span class="err">✅</span> <span class="nc">VALID</span><span class="s">" else "</span><span class="err">❌</span> <span class="nc">INVALID</span><span class="s">"}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 9: Verify claim consistency and fraud prevention</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔍 Fraud Prevention Check:"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">claimSubject</span> <span class="p">=</span> <span class="n">claimCredential</span><span class="p">.</span><span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"claim"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
     <span class="kd">val</span> <span class="py">assessmentSubject</span> <span class="p">=</span> <span class="n">assessmentCredential</span><span class="p">.</span><span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"assessment"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
     <span class="kd">val</span> <span class="py">repairSubject</span> <span class="p">=</span> <span class="n">repairCredential</span><span class="p">.</span><span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"repair"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
-    
+
     <span class="kd">val</span> <span class="py">claimNumber</span> <span class="p">=</span> <span class="n">claimSubject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"claimNumber"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
     <span class="kd">val</span> <span class="py">assessmentClaimNumber</span> <span class="p">=</span> <span class="n">assessmentSubject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"claimNumber"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
     <span class="kd">val</span> <span class="py">repairClaimNumber</span> <span class="p">=</span> <span class="n">repairSubject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"claimNumber"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
-    
+
     <span class="kd">val</span> <span class="py">claimNumbersMatch</span> <span class="p">=</span> <span class="n">claimNumber</span> <span class="p">==</span> <span class="n">assessmentClaimNumber</span> <span class="p">&amp;&amp;</span> <span class="n">claimNumber</span> <span class="p">==</span> <span class="n">repairClaimNumber</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">claimNumbersMatch</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Claim numbers match across all credentials"</span><span class="p">)</span>
     <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Claim numbers do NOT match - Potential fraud detected"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Verify cost consistency</span>
     <span class="kd">val</span> <span class="py">estimatedCost</span> <span class="p">=</span> <span class="n">assessmentSubject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"estimatedRepairCost"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toDouble</span><span class="p">()</span> <span class="o">?:</span> <span class="mf">0.0</span>
     <span class="kd">val</span> <span class="py">actualCost</span> <span class="p">=</span> <span class="n">repairSubject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"totalCost"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toDouble</span><span class="p">()</span> <span class="o">?:</span> <span class="mf">0.0</span>
     <span class="kd">val</span> <span class="py">costVariance</span> <span class="p">=</span> <span class="p">((</span><span class="n">actualCost</span> <span class="p">-</span> <span class="n">estimatedCost</span><span class="p">)</span> <span class="p">/</span> <span class="n">estimatedCost</span><span class="p">)</span> <span class="p">*</span> <span class="mi">100</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Estimated Cost: $$estimatedCost"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Actual Cost: $$actualCost"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Cost Variance: ${String.format("</span><span class="p">%</span><span class="mf">.2f</span><span class="s">", costVariance)}%"</span><span class="p">)</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">costVariance</span> <span class="p">&lt;=</span> <span class="mf">10.0</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Cost variance within acceptable range"</span><span class="p">)</span>
     <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"⚠️ Cost variance exceeds threshold - Review required"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 10: Create comprehensive claim presentation</span>
     <span class="kd">val</span> <span class="py">claimPresentation</span> <span class="p">=</span> <span class="n">policyholderWallet</span><span class="p">.</span><span class="nf">withPresentation</span> <span class="p">{</span> <span class="n">pres</span> <span class="p">-&gt;</span>
         <span class="n">pres</span><span class="p">.</span><span class="nf">createPresentation</span><span class="p">(</span>
@@ -1390,14 +1390,14 @@
             <span class="p">)</span>
         <span class="p">)</span>
     <span class="p">}</span> <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"Presentation capability not available"</span><span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ Comprehensive claim presentation created"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Holder: ${claimPresentation.holder}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Credentials: ${claimPresentation.verifiableCredential.size}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 11: Process claim payment (insurance company issues payment credential)</span>
     <span class="kd">val</span> <span class="py">allCredentialsValid</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="n">claimVerification</span><span class="p">,</span> <span class="n">assessmentVerification</span><span class="p">,</span> <span class="n">repairVerification</span><span class="p">).</span><span class="nf">all</span> <span class="p">{</span> <span class="n">it</span><span class="p">.</span><span class="n">valid</span> <span class="p">}</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">allCredentialsValid</span> <span class="p">&amp;&amp;</span> <span class="n">claimNumbersMatch</span> <span class="p">&amp;&amp;</span> <span class="n">costVariance</span> <span class="p">&lt;=</span> <span class="mf">10.0</span><span class="p">)</span> <span class="p">{</span>
         <span class="kd">val</span> <span class="py">paymentCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
             <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">insuranceCompanyDid</span><span class="p">,</span>
@@ -1418,13 +1418,13 @@
             <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"PaymentCredential"</span><span class="p">,</span> <span class="s">"InsurancePaymentCredential"</span><span class="p">),</span>
             <span class="n">expirationDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">plus</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">YEARS</span><span class="p">).</span><span class="nf">toString</span><span class="p">()</span>
         <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-        
+
         <span class="kd">val</span> <span class="py">paymentCredentialId</span> <span class="p">=</span> <span class="n">policyholderWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">paymentCredential</span><span class="p">)</span>
         <span class="n">policyholderWallet</span><span class="p">.</span><span class="nf">withOrganization</span> <span class="p">{</span> <span class="n">org</span> <span class="p">-&gt;</span>
             <span class="n">org</span><span class="p">.</span><span class="nf">addToCollection</span><span class="p">(</span><span class="n">paymentCredentialId</span><span class="p">,</span> <span class="n">org</span><span class="p">.</span><span class="nf">listCollections</span><span class="p">().</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span> <span class="o">?:</span> <span class="s">""</span><span class="p">)</span>
             <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">paymentCredentialId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"payment"</span><span class="p">,</span> <span class="s">"processed"</span><span class="p">,</span> <span class="s">"claim"</span><span class="p">))</span>
         <span class="p">}</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ Payment credential issued: ${paymentCredential.id}"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Payment Amount: $4,262.50"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Payment Status: Processed"</span><span class="p">)</span>
@@ -1432,7 +1432,7 @@
     <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"\n❌ Claim processing failed - Verification issues detected"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 12: Display wallet statistics</span>
     <span class="kd">val</span> <span class="py">stats</span> <span class="p">=</span> <span class="n">policyholderWallet</span><span class="p">.</span><span class="nf">getStatistics</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n📊 Policyholder Wallet Statistics:"</span><span class="p">)</span>
@@ -1440,7 +1440,7 @@
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Valid credentials: ${stats.validCredentials}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Collections: ${stats.collectionsCount}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Tags: ${stats.tagsCount}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 13: Summary</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n"</span> <span class="p">+</span> <span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">allCredentialsValid</span> <span class="p">&amp;&amp;</span> <span class="n">claimNumbersMatch</span><span class="p">)</span> <span class="p">{</span>
@@ -1574,13 +1574,13 @@ Repair Credential: ✅ VALID
 ======================================================================
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="key-features-demonstrated">
-  
-  
+
+
     <a href="#key-features-demonstrated" class="anchor-heading" aria-labelledby="key-features-demonstrated"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Features Demonstrated
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Multi-Party Credentials</strong>: Multiple parties issue credentials for the same claim</li>
@@ -1591,13 +1591,13 @@ Repair Credential: ✅ VALID
   <li><strong>Payment Processing</strong>: Issue payment credentials after verification</li>
 </ol>
 <h2 id="real-world-extensions">
-  
-  
+
+
     <a href="#real-world-extensions" class="anchor-heading" aria-labelledby="real-world-extensions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Extensions
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><strong>Medical Claims</strong>: Support health insurance claims with medical provider credentials</li>
@@ -1608,13 +1608,13 @@ Repair Credential: ✅ VALID
   <li><strong>Audit Trails</strong>: Track all claim-related events and verifications</li>
 </ul>
 <h2 id="related-documentation">
-  
-  
+
+
     <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><a href="/trustweave/getting-started/quick-start/">Quick Start</a> - Get started with TrustWeave</li>
@@ -1624,17 +1624,17 @@ Repair Credential: ✅ VALID
   <li><a href="/trustweave/getting-started/troubleshooting/">Troubleshooting</a> - Common issues and solutions</li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -1666,7 +1666,7 @@ Repair Credential: ✅ VALID
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -1676,12 +1676,12 @@ Repair Credential: ✅ VALID
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -1703,12 +1703,12 @@ Repair Credential: ✅ VALID
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -1717,12 +1717,12 @@ Repair Credential: ✅ VALID
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -1730,7 +1730,7 @@ Repair Credential: ✅ VALID
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -1738,31 +1738,31 @@ Repair Credential: ✅ VALID
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -1774,7 +1774,7 @@ Repair Credential: ✅ VALID
 
 
 
-  
+
 </body>
 </html>
 

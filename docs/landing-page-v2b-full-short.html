@@ -500,12 +500,12 @@ layout: null
                 <a href="#waitlist-form" class="btn btn-secondary">Join SaaS Waitlist</a>
             </div>
             <p class="cta-note">Get started in 5 minutes with our quick start guide</p>
-            
+
             <form class="waitlist-form" id="waitlistForm">
-                <input 
-                    type="email" 
-                    id="emailInput" 
-                    placeholder="Enter your email address" 
+                <input
+                    type="email"
+                    id="emailInput"
+                    placeholder="Enter your email address"
                     required
                     aria-label="Email address"
                 >
@@ -527,9 +527,9 @@ layout: null
 
         waitlistForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const email = emailInput.value.trim();
-            
+
             if (!email) {
                 return;
             }
@@ -546,7 +546,7 @@ layout: null
                     },
                     body: JSON.stringify({ email: email })
                 });
-                
+
                 if (response.ok) {
                     successMessage.classList.add('show');
                     emailInput.value = '';
@@ -561,7 +561,7 @@ layout: null
             // Demo: Show success message
             successMessage.classList.add('show');
             emailInput.value = '';
-            
+
             // Scroll to success message
             successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         });

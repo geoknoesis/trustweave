@@ -1,5 +1,6 @@
 package com.trustweave.credential.didcomm
 
+import com.trustweave.core.types.KeyId
 import com.trustweave.credential.didcomm.crypto.DidCommCrypto
 import com.trustweave.credential.didcomm.crypto.DidCommCryptoAdapter
 import com.trustweave.credential.didcomm.crypto.DidCommCryptoProduction
@@ -13,13 +14,13 @@ import org.didcommx.didcomm.secret.SecretResolver
 
 /**
  * Factory for creating DIDComm V2 services and components.
- * 
+ *
  * Supports both placeholder (development) and production crypto implementations.
  */
 object DidCommFactory {
     /**
      * Creates a DIDComm service with in-memory storage.
-     * 
+     *
      * @param kms Key management service
      * @param resolveDid Function to resolve DID documents
      * @param useProductionCrypto Whether to use production crypto (requires didcomm-java library)
@@ -36,7 +37,7 @@ object DidCommFactory {
             DidCommCryptoAdapter(kms, resolveDid, useProduction = false, secretResolver = null)
         }
         val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
-            kms.sign(keyId, data)
+            kms.sign(KeyId(keyId), data)
         }
         val packer = DidCommPacker(crypto, resolveDid, signer)
         return InMemoryDidCommService(packer, resolveDid)
@@ -44,7 +45,7 @@ object DidCommFactory {
 
     /**
      * Creates a DIDComm packer for custom service implementations.
-     * 
+     *
      * @param kms Key management service
      * @param resolveDid Function to resolve DID documents
      * @param useProductionCrypto Whether to use production crypto (requires didcomm-java library)
@@ -61,17 +62,17 @@ object DidCommFactory {
             DidCommCryptoAdapter(kms, resolveDid, useProduction = false, secretResolver = null)
         }
         val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
-            kms.sign(keyId, data)
+            kms.sign(KeyId(keyId), data)
         }
         return DidCommPacker(crypto, resolveDid, signer)
     }
-    
+
     /**
      * Creates a DIDComm service with placeholder crypto (for development/testing).
-     * 
+     *
      * ⚠️ **WARNING**: Uses placeholder crypto that returns dummy data.
      * Messages will NOT be actually encrypted.
-     * 
+     *
      * @param kms Key management service
      * @param resolveDid Function to resolve DID documents
      * @return In-memory DIDComm service with placeholder crypto
@@ -82,13 +83,13 @@ object DidCommFactory {
     ): DidCommService {
         return createInMemoryService(kms, resolveDid, useProductionCrypto = false)
     }
-    
+
     /**
      * Creates a database-backed DIDComm service.
-     * 
+     *
      * Uses persistent storage for message persistence across restarts.
      * Suitable for production deployments.
-     * 
+     *
      * @param packer DIDComm packer
      * @param resolveDid DID resolution function
      * @param storage Message storage implementation
@@ -101,13 +102,13 @@ object DidCommFactory {
     ): DidCommService {
         return DatabaseDidCommService(packer, resolveDid, storage)
     }
-    
+
     /**
      * Creates a DIDComm service with custom SecretResolver.
-     * 
+     *
      * Useful when you need to use a custom SecretResolver (e.g., HybridKmsSecretResolver)
      * for KMS that doesn't expose private keys.
-     * 
+     *
      * @param kms Key management service
      * @param resolveDid DID resolution function
      * @param secretResolver Custom SecretResolver (e.g., HybridKmsSecretResolver)
@@ -136,9 +137,9 @@ object DidCommFactory {
                 secretResolver = null
             )
         }
-        
+
         val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
-            kms.sign(keyId, data)
+            kms.sign(KeyId(keyId), data)
         }
         val packer = DidCommPacker(crypto, resolveDid, signer)
         return InMemoryDidCommService(packer, resolveDid, InMemoryDidCommMessageStorage())

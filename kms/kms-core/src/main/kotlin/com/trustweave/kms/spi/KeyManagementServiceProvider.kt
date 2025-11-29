@@ -6,7 +6,7 @@ import com.trustweave.kms.KeyManagementService
 /**
  * Service Provider Interface for KeyManagementService implementations.
  * Implementations of this interface will be discovered via Java ServiceLoader.
- * 
+ *
  * **All providers MUST advertise their supported algorithms.**
  */
 interface KeyManagementServiceProvider {
@@ -14,14 +14,14 @@ interface KeyManagementServiceProvider {
      * The name/identifier of this provider (e.g., "waltid", "inmemory").
      */
     val name: String
-    
+
     /**
      * Returns the set of algorithms supported by this provider.
-     * 
+     *
      * This property MUST be implemented by all providers to advertise
      * their capabilities before creating a KMS instance. This allows
      * discovery and selection of appropriate providers.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * override val supportedAlgorithms: Set<Algorithm> = setOf(
@@ -32,24 +32,24 @@ interface KeyManagementServiceProvider {
      *     Algorithm.P521
      * )
      * ```
-     * 
+     *
      * @return Immutable set of supported algorithms
      */
     val supportedAlgorithms: Set<Algorithm>
-    
+
     /**
      * Checks if a specific algorithm is supported by this provider.
-     * 
+     *
      * @param algorithm The algorithm to check
      * @return true if supported, false otherwise
      */
     fun supportsAlgorithm(algorithm: Algorithm): Boolean {
         return supportedAlgorithms.contains(algorithm)
     }
-    
+
     /**
      * Checks if an algorithm by name is supported.
-     * 
+     *
      * @param algorithmName The algorithm name (case-insensitive)
      * @return true if supported, false otherwise
      */
@@ -57,13 +57,13 @@ interface KeyManagementServiceProvider {
         val algorithm = Algorithm.parse(algorithmName) ?: return false
         return supportsAlgorithm(algorithm)
     }
-    
+
     /**
      * Returns the list of environment variables required for this provider to function.
-     * 
+     *
      * This method allows tests to automatically skip when required credentials are not available.
      * Each provider implementation should declare what environment variables it needs.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * override val requiredEnvironmentVariables: List<String> = listOf(
@@ -72,20 +72,20 @@ interface KeyManagementServiceProvider {
      *     "AWS_SECRET_ACCESS_KEY"
      * )
      * ```
-     * 
+     *
      * **Note:** Optional env vars should be prefixed with "?" (e.g., "?AWS_SESSION_TOKEN")
-     * 
+     *
      * @return List of required environment variable names (empty by default for providers that don't need credentials)
      */
     val requiredEnvironmentVariables: List<String>
         get() = emptyList()
-    
+
     /**
      * Checks if all required environment variables are available for this provider.
-     * 
+     *
      * Default implementation checks if all non-optional env vars are set.
      * Providers can override this to implement custom logic (e.g., checking for IAM roles).
-     * 
+     *
      * @return true if all required env vars are set or provider-specific checks pass, false otherwise
      */
     fun hasRequiredEnvironmentVariables(): Boolean {
@@ -95,7 +95,7 @@ interface KeyManagementServiceProvider {
             if (isOptional) true else System.getenv(actualVar) != null
         }
     }
-    
+
     /**
      * Creates a KeyManagementService instance.
      *

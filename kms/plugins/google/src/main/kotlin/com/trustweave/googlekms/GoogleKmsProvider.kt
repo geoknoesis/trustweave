@@ -6,9 +6,9 @@ import com.trustweave.kms.spi.KeyManagementServiceProvider
 
 /**
  * Service Provider Interface implementation for Google Cloud KMS.
- * 
+ *
  * Enables auto-discovery of Google Cloud KMS provider via Java ServiceLoader.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val kms = KeyManagementServiceProvider.create("google-cloud-kms", mapOf(
@@ -20,9 +20,9 @@ import com.trustweave.kms.spi.KeyManagementServiceProvider
  */
 class GoogleKmsProvider : KeyManagementServiceProvider {
     override val name: String = "google-cloud-kms"
-    
+
     override val supportedAlgorithms: Set<Algorithm> = GoogleCloudKeyManagementService.SUPPORTED_ALGORITHMS
-    
+
     /**
      * Google Cloud KMS required environment variables.
      * GOOGLE_CLOUD_PROJECT or GCLOUD_PROJECT is required.
@@ -32,7 +32,7 @@ class GoogleKmsProvider : KeyManagementServiceProvider {
         "GOOGLE_CLOUD_PROJECT",  // or GCLOUD_PROJECT
         "?GOOGLE_APPLICATION_CREDENTIALS"  // Optional if using ADC
     )
-    
+
     override fun hasRequiredEnvironmentVariables(): Boolean {
         // Check if project ID is set OR if we're running on GCP (ADC available)
         return (System.getenv("GOOGLE_CLOUD_PROJECT") != null ||
@@ -41,7 +41,7 @@ class GoogleKmsProvider : KeyManagementServiceProvider {
                // Running on GCP (Application Default Credentials available)
                System.getenv("GCE_METADATA_HOST") != null
     }
-    
+
     override fun create(options: Map<String, Any?>): KeyManagementService {
         val config = GoogleKmsConfig.fromMap(options)
         return GoogleCloudKeyManagementService(config)

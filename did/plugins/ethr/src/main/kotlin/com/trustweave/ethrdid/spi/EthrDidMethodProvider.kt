@@ -13,7 +13,7 @@ import org.web3j.protocol.http.HttpService
 
 /**
  * SPI provider for did:ethr method.
- * 
+ *
  * Automatically discovers did:ethr method when this module is on the classpath.
  */
 class EthrDidMethodProvider : DidMethodProvider {
@@ -41,7 +41,7 @@ class EthrDidMethodProvider : DidMethodProvider {
 
         // Create configuration from options
         val config = createConfig(options)
-        
+
         // Get or create blockchain anchor client
         val anchorClient = getOrCreateAnchorClient(options, config)
 
@@ -53,10 +53,10 @@ class EthrDidMethodProvider : DidMethodProvider {
      */
     private fun createConfig(options: DidCreationOptions): EthrDidConfig {
         val configMap = options.additionalProperties
-        
+
         require(configMap.containsKey("rpcUrl")) { "rpcUrl is required for did:ethr" }
         require(configMap.containsKey("chainId")) { "chainId is required for did:ethr" }
-        
+
         return EthrDidConfig.fromMap(configMap)
     }
 
@@ -72,7 +72,7 @@ class EthrDidMethodProvider : DidMethodProvider {
         if (providedClient != null) {
             return providedClient
         }
-        
+
         // Create anchor client options for Polygon/Ethereum-compatible client
         val anchorOptions = buildMap<String, Any?> {
             put("rpcUrl", config.rpcUrl)
@@ -80,7 +80,7 @@ class EthrDidMethodProvider : DidMethodProvider {
                 put("privateKey", config.privateKey)
             }
         }
-        
+
         // Use PolygonBlockchainAnchorClient for Ethereum-compatible chains
         // Since Polygon client uses the same EVM infrastructure
         return try {

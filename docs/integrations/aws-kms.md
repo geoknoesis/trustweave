@@ -177,31 +177,31 @@ val fipsKey = kms.generateKey(
 ### Signing Data
 
 ```kotlin
-// Sign with key ID
-val signature = kms.sign(keyId, data.toByteArray())
+// Sign with key ID (KeyId value class)
+val signature = kms.sign(KeyId(keyId), data.toByteArray())
 
 // Sign with algorithm override
 val signature = kms.sign(
-    keyId = keyId,
+    keyId = KeyId(keyId),
     data = data.toByteArray(),
     algorithm = Algorithm.Ed25519
 )
 
 // Sign using alias
-val signature = kms.sign("alias/issuer-key", data.toByteArray())
+val signature = kms.sign(KeyId("alias/issuer-key"), data.toByteArray())
 ```
 
 ### Retrieving Public Keys
 
 ```kotlin
-// Get public key by key ID
-val publicKey = kms.getPublicKey(keyId)
+// Get public key by key ID (KeyId value class)
+val publicKey = kms.getPublicKey(KeyId(keyId))
 
 // Get public key by ARN
-val publicKey = kms.getPublicKey("arn:aws:kms:us-east-1:123456789012:key/123")
+val publicKey = kms.getPublicKey(KeyId("arn:aws:kms:us-east-1:123456789012:key/123"))
 
 // Get public key by alias
-val publicKey = kms.getPublicKey("alias/issuer-key")
+val publicKey = kms.getPublicKey(KeyId("alias/issuer-key"))
 
 // Access JWK format
 val jwk = publicKey.publicKeyJwk
@@ -212,7 +212,7 @@ println("Public key JWK: $jwk")
 
 ```kotlin
 // Schedule key deletion (30-day pending window by default)
-val deleted = kms.deleteKey(keyId)
+val deleted = kms.deleteKey(KeyId(keyId))
 ```
 
 ## Key Rotation Strategies

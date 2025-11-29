@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,37 +591,37 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="trustweave-use-case-scenarios">
-  
-  
+
+
     <a href="#trustweave-use-case-scenarios" class="anchor-heading" aria-labelledby="trustweave-use-case-scenarios"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> TrustWeave Use Case Scenarios
-  
-  
+
+
 </h1>
-    
+
 
 <blockquote>
   <p><strong>Version:</strong> 1.0.0-SNAPSHOT<br />
 Complete end-to-end workflows demonstrating TrustWeave in real-world applications.</p>
 </blockquote>
 <h2 id="overview">
-  
-  
+
+
     <a href="#overview" class="anchor-heading" aria-labelledby="overview"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Overview
-  
-  
+
+
 </h2>
-    
+
 
 <p>Each scenario provides a complete, runnable example showing how to use TrustWeave for specific use cases. All scenarios follow the same pattern:</p>
 
@@ -633,13 +633,13 @@ Complete end-to-end workflows demonstrating TrustWeave in real-world application
   <li><strong>Verification</strong> – Complete verification workflows</li>
 </ol>
 <h2 id="popular-scenarios">
-  
-  
+
+
     <a href="#popular-scenarios" class="anchor-heading" aria-labelledby="popular-scenarios"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Popular Scenarios
-  
-  
+
+
 </h2>
-    
+
 
 <p>Get started quickly with these commonly used scenarios:</p>
 
@@ -651,23 +651,23 @@ Complete end-to-end workflows demonstrating TrustWeave in real-world application
   <li><strong><a href="/trustweave/scenarios/government-digital-identity-scenario/">Government Digital ID</a></strong> ⭐ - Government-issued digital identity</li>
 </ul>
 <h2 id="available-scenarios">
-  
-  
+
+
     <a href="#available-scenarios" class="anchor-heading" aria-labelledby="available-scenarios"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Available Scenarios
-  
-  
+
+
 </h2>
-    
+
 
 <p>Scenarios are organized by domain and use case. Each scenario includes a complete, runnable example with industry context and best practices.</p>
 <h3 id="-cybersecurity--access-control">
-  
-  
+
+
     <a href="#-cybersecurity--access-control" class="anchor-heading" aria-labelledby="-cybersecurity--access-control"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 🔐 Cybersecurity &amp; Access Control
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Authentication &amp; Authorization:</strong></p>
 <ul>
@@ -703,13 +703,13 @@ SOC2 Type II compliance with immutable audit trails, access control, key managem
 Software provenance, build attestation, and SBOM verification. Prevent supply chain attacks with cryptographic proof of software authenticity and dependency verification.</li>
 </ul>
 <h3 id="-identity--verification">
-  
-  
+
+
     <a href="#-identity--verification" class="anchor-heading" aria-labelledby="-identity--verification"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 🆔 Identity &amp; Verification
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Digital Identity:</strong></p>
 <ul>
@@ -735,13 +735,13 @@ Privacy-preserving age verification for age-restricted services. Verify age with
 Streamline onboarding and reuse credentials across institutions. KYC/AML compliance workflows.</li>
 </ul>
 <h3 id="-education--credentials">
-  
-  
+
+
     <a href="#-education--credentials" class="anchor-heading" aria-labelledby="-education--credentials"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 🎓 Education &amp; Credentials
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>
@@ -754,26 +754,26 @@ AlgeroPass national-level education credential system. Shows how to build a nati
   </li>
 </ul>
 <h3 id="-employment--professional">
-  
-  
+
+
     <a href="#-employment--professional" class="anchor-heading" aria-labelledby="-employment--professional"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 💼 Employment &amp; Professional
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong><a href="/trustweave/scenarios/employee-onboarding-scenario/">Employee Onboarding and Background Verification</a></strong> ⭐<br />
 Complete employee onboarding system with credential verification. Demonstrates education, work history, certification, and background check credentials.</li>
 </ul>
 <h3 id="-healthcare">
-  
-  
+
+
     <a href="#-healthcare" class="anchor-heading" aria-labelledby="-healthcare"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 🏥 Healthcare
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>
@@ -786,13 +786,13 @@ Vaccination credential issuance and health passport verification. Privacy-preser
   </li>
 </ul>
 <h3 id="-supply-chain--provenance">
-  
-  
+
+
     <a href="#-supply-chain--provenance" class="anchor-heading" aria-labelledby="-supply-chain--provenance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 📦 Supply Chain &amp; Provenance
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Physical Supply Chain:</strong></p>
 <ul>
@@ -812,13 +812,13 @@ EU Deforestation Regulation (EUDR) compliance with EO data. Digital Product Pass
 PROV-O workflow provenance tracking for digital information. Track information flow through complex workflows.</li>
 </ul>
 <h3 id="-geospatial--location">
-  
-  
+
+
     <a href="#-geospatial--location" class="anchor-heading" aria-labelledby="-geospatial--location"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 📍 Geospatial &amp; Location
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>
@@ -835,13 +835,13 @@ Grant AR/VR permissions using verifiable policies. DID-based authorization for s
   </li>
 </ul>
 <h3 id="-earth-observation--climate-applications">
-  
-  
+
+
     <a href="#-earth-observation--climate-applications" class="anchor-heading" aria-labelledby="-earth-observation--climate-applications"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 🌍 Earth Observation &amp; Climate Applications
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Parametric Insurance:</strong></p>
 <ul>
@@ -861,13 +861,13 @@ Digital Measurement, Reporting, and Verification for carbon markets using EO dat
 EU Deforestation Regulation (EUDR) compliance using EO data for geospatial non-deforestation proof. Build Digital Product Passports (DPP) with verifiable credentials. Automated compliance verification with Climate TRACE integration. Meet 2025 EUDR requirements with cryptographic proof.</li>
 </ul>
 <h3 id="-media--content">
-  
-  
+
+
     <a href="#-media--content" class="anchor-heading" aria-labelledby="-media--content"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 📰 Media &amp; Content
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>
@@ -880,26 +880,26 @@ Verifiable event tickets with transfer control and access verification. Prevent 
   </li>
 </ul>
 <h3 id="-data-management">
-  
-  
+
+
     <a href="#-data-management" class="anchor-heading" aria-labelledby="-data-management"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 💾 Data Management
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong><a href="/trustweave/scenarios/data-catalog-dcat-scenario/">Data Catalog &amp; DCAT</a></strong> ⭐<br />
 Verifiable data catalog system using DCAT for government and enterprise. Metadata provenance and catalog management.</li>
 </ul>
 <h3 id="-iot--devices">
-  
-  
+
+
     <a href="#-iot--devices" class="anchor-heading" aria-labelledby="-iot--devices"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 🔌 IoT &amp; Devices
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Device Identity &amp; Management:</strong></p>
 <ul>
@@ -925,26 +925,26 @@ Verify firmware authenticity and update authorization. Firmware attestation, upd
 Secure device ownership transfer with complete audit trail. Transfer authorization, previous owner revocation, and ownership history tracking.</li>
 </ul>
 <h3 id="-trust--reputation">
-  
-  
+
+
     <a href="#-trust--reputation" class="anchor-heading" aria-labelledby="-trust--reputation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 🤝 Trust &amp; Reputation
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong><a href="/trustweave/scenarios/web-of-trust-scenario/">Web of Trust</a></strong> ⭐<br />
 Build trust networks and reputation systems. Demonstrate how entities establish and verify trust relationships.</li>
 </ul>
 <h3 id="️-insurance--claims">
-  
-  
+
+
     <a href="#️-insurance--claims" class="anchor-heading" aria-labelledby="️-insurance--claims"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 🛡️ Insurance &amp; Claims
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li>
@@ -965,26 +965,26 @@ Parametric insurance using TrustWeave Smart Contracts abstraction. Demonstrates 
   </li>
 </ul>
 <h3 id="-compliance--security">
-  
-  
+
+
     <a href="#-compliance--security" class="anchor-heading" aria-labelledby="-compliance--security"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 🔒 Compliance &amp; Security
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong><a href="/trustweave/scenarios/soc2-compliance-scenario/">SOC2 Compliance</a></strong> ⭐<br />
 Build SOC2 Type II compliant systems using TrustWeave. Immutable audit trails with blockchain anchoring, access control with verifiable credentials, key rotation with history preservation, change management, and automated compliance reporting. Demonstrates how to achieve SOC2 certification with verifiable proof.</li>
 </ul>
 <h2 id="how-to-use-these-scenarios">
-  
-  
+
+
     <a href="#how-to-use-these-scenarios" class="anchor-heading" aria-labelledby="how-to-use-these-scenarios"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How to Use These Scenarios
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li>
@@ -1004,13 +1004,13 @@ Build SOC2 Type II compliant systems using TrustWeave. Immutable audit trails wi
   </li>
 </ol>
 <h2 id="scenario-structure">
-  
-  
+
+
     <a href="#scenario-structure" class="anchor-heading" aria-labelledby="scenario-structure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Scenario Structure
-  
-  
+
+
 </h2>
-    
+
 
 <p>Each scenario follows this structure:</p>
 
@@ -1038,33 +1038,33 @@ Build SOC2 Type II compliant systems using TrustWeave. Immutable audit trails wi
 </pre></td><td class="rouge-code"><pre><span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="c1">// 1. Setup</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// 2. Create DIDs</span>
     <span class="kd">val</span> <span class="py">issuerDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">holderDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
-    
+
     <span class="c1">// 3. Issue Credential</span>
     <span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span><span class="o">..</span><span class="p">.).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="c1">// 4. Store in Wallet</span>
     <span class="kd">val</span> <span class="py">wallet</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">createWallet</span><span class="p">(</span><span class="n">holderDid</span><span class="p">.</span><span class="n">id</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">credentialId</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
-    
+
     <span class="c1">// 5. Verify</span>
     <span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">credential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="c1">// 6. Advanced features (scenario-specific)</span>
     <span class="c1">// ...</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="prerequisites">
-  
-  
+
+
     <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li>Java 21+</li>
@@ -1072,13 +1072,13 @@ Build SOC2 Type II compliant systems using TrustWeave. Immutable audit trails wi
   <li>TrustWeave dependency (see <a href="/trustweave/getting-started/installation/">Installation</a>)</li>
 </ul>
 <h2 id="related-documentation">
-  
-  
+
+
     <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><a href="/trustweave/getting-started/quick-start/">Quick Start</a> – Get started with TrustWeave</li>
@@ -1088,27 +1088,27 @@ Build SOC2 Type II compliant systems using TrustWeave. Immutable audit trails wi
   <li><a href="/trustweave/getting-started/troubleshooting/">Troubleshooting</a> – Common issues and solutions</li>
 </ul>
 <h2 id="contributing-scenarios">
-  
-  
+
+
     <a href="#contributing-scenarios" class="anchor-heading" aria-labelledby="contributing-scenarios"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Contributing Scenarios
-  
-  
+
+
 </h2>
-    
+
 
 <p>Have a use case that’s not covered? See <a href="/trustweave/contributing/README/">Contributing</a> for guidelines on creating new scenarios.</p>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -1140,7 +1140,7 @@ Build SOC2 Type II compliant systems using TrustWeave. Immutable audit trails wi
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -1150,12 +1150,12 @@ Build SOC2 Type II compliant systems using TrustWeave. Immutable audit trails wi
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -1177,12 +1177,12 @@ Build SOC2 Type II compliant systems using TrustWeave. Immutable audit trails wi
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -1191,12 +1191,12 @@ Build SOC2 Type II compliant systems using TrustWeave. Immutable audit trails wi
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -1204,7 +1204,7 @@ Build SOC2 Type II compliant systems using TrustWeave. Immutable audit trails wi
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -1212,31 +1212,31 @@ Build SOC2 Type II compliant systems using TrustWeave. Immutable audit trails wi
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -1248,7 +1248,7 @@ Build SOC2 Type II compliant systems using TrustWeave. Immutable audit trails wi
 
 
 
-  
+
 </body>
 </html>
 

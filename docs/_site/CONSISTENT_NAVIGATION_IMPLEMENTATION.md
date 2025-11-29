@@ -102,9 +102,9 @@ layout: null
 </head>
 <body>
     {% include site-header.html %}
-    
+
     <!-- Your page content -->
-    
+
     {% include site-footer.html %}
 </body>
 </html>

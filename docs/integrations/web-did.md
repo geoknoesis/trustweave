@@ -218,7 +218,7 @@ import com.trustweave.webdid.WebDidConfig
 
 val TrustWeave = TrustWeave.create {
     kms = InMemoryKeyManagementService()
-    
+
     didMethods {
         + WebDidMethod.create(kms!!, OkHttpClient(), WebDidConfig.default())
     }

@@ -1,6 +1,6 @@
 package com.trustweave.anchor
 
-import com.trustweave.core.exception.NotFoundException
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.AfterEach
@@ -29,7 +29,7 @@ class BlockchainAnchorClientTest {
     fun cleanup() {
         client.clear()
     }
-    
+
     /**
      * Simple test implementation of BlockchainAnchorClient.
      */
@@ -39,7 +39,7 @@ class BlockchainAnchorClientTest {
     ) : BlockchainAnchorClient {
         private val storage = ConcurrentHashMap<String, AnchorResult>()
         private val txCounter = AtomicLong(0)
-        
+
         override suspend fun writePayload(
             payload: JsonElement,
             mediaType: String
@@ -59,20 +59,20 @@ class BlockchainAnchorClientTest {
             storage[txHash] = result
             return result
         }
-        
+
         override suspend fun readPayload(ref: AnchorRef): AnchorResult {
             if (ref.chainId != testChainId) {
                 throw IllegalArgumentException("Chain ID mismatch: expected $testChainId, got ${ref.chainId}")
             }
             return storage[ref.txHash]
-                ?: throw NotFoundException("Anchor not found: ${ref.txHash}")
+                ?: throw TrustWeaveException.NotFound("Anchor not found: ${ref.txHash}")
         }
-        
+
         fun clear() {
             storage.clear()
             txCounter.set(0)
         }
-        
+
         fun size(): Int = storage.size
     }
 
@@ -82,9 +82,9 @@ class BlockchainAnchorClientTest {
             put("vcDigest", "uABC123")
             put("issuer", "did:key:issuer")
         }
-        
+
         val result = client.writePayload(payload, "application/json")
-        
+
         assertNotNull(result)
         assertEquals(chainId, result.ref.chainId)
         assertNotNull(result.ref.txHash)
@@ -101,11 +101,11 @@ class BlockchainAnchorClientTest {
             put("vcDigest", "uABC123")
             put("issuer", "did:key:issuer")
         }
-        
+
         val writeResult = client.writePayload(payload, "application/json")
-        
+
         val readResult = client.readPayload(writeResult.ref)
-        
+
         assertEquals(writeResult.ref.txHash, readResult.ref.txHash)
         assertEquals(payload, readResult.payload)
         assertEquals("application/json", readResult.mediaType)
@@ -118,8 +118,8 @@ class BlockchainAnchorClientTest {
             txHash = "nonexistent-tx-hash",
             contract = contract
         )
-        
-        assertFailsWith<NotFoundException> {
+
+        assertFailsWith<TrustWeaveException.NotFound> {
             client.readPayload(ref)
         }
     }
@@ -130,9 +130,9 @@ class BlockchainAnchorClientTest {
             put("vcDigest", "uABC123")
         }
         val writeResult = client.writePayload(payload, "application/json")
-        
+
         val wrongChainRef = writeResult.ref.copy(chainId = "different:chain")
-        
+
         assertFailsWith<IllegalArgumentException> {
             client.readPayload(wrongChainRef)
         }
@@ -143,11 +143,11 @@ class BlockchainAnchorClientTest {
         val payload1 = buildJsonObject { put("id", "1") }
         val payload2 = buildJsonObject { put("id", "2") }
         val payload3 = buildJsonObject { put("id", "3") }
-        
+
         val result1 = client.writePayload(payload1, "application/json")
         val result2 = client.writePayload(payload2, "application/json")
         val result3 = client.writePayload(payload3, "application/json")
-        
+
         assertNotEquals(result1.ref.txHash, result2.ref.txHash)
         assertNotEquals(result2.ref.txHash, result3.ref.txHash)
         assertEquals(3, client.size())
@@ -156,10 +156,10 @@ class BlockchainAnchorClientTest {
     @Test
     fun `test write payload with different media types`() = runBlocking {
         val payload = buildJsonObject { put("data", "test") }
-        
+
         val jsonResult = client.writePayload(payload, "application/json")
         val cborResult = client.writePayload(payload, "application/cbor")
-        
+
         assertEquals("application/json", jsonResult.mediaType)
         assertEquals("application/cbor", cborResult.mediaType)
     }
@@ -177,9 +177,9 @@ class BlockchainAnchorClientTest {
                 })
             })
         }
-        
+
         val result = client.writePayload(payload, "application/json")
-        
+
         val readResult = client.readPayload(result.ref)
         assertEquals(payload, readResult.payload)
     }
@@ -190,9 +190,9 @@ class BlockchainAnchorClientTest {
             add(buildJsonObject { put("id", "1") })
             add(buildJsonObject { put("id", "2") })
         }
-        
+
         val result = client.writePayload(payload, "application/json")
-        
+
         val readResult = client.readPayload(result.ref)
         assertEquals(payload, readResult.payload)
     }
@@ -200,11 +200,11 @@ class BlockchainAnchorClientTest {
     @Test
     fun `test write payload generates unique transaction hashes`() = runBlocking {
         val payload = buildJsonObject { put("data", "test") }
-        
+
         val result1 = client.writePayload(payload, "application/json")
         Thread.sleep(10) // Small delay to ensure different timestamps
         val result2 = client.writePayload(payload, "application/json")
-        
+
         assertNotEquals(result1.ref.txHash, result2.ref.txHash)
     }
 
@@ -212,9 +212,9 @@ class BlockchainAnchorClientTest {
     fun `test write payload includes timestamp`() = runBlocking {
         val beforeWrite = System.currentTimeMillis() / 1000
         val payload = buildJsonObject { put("data", "test") }
-        
+
         val result = client.writePayload(payload, "application/json")
-        
+
         val afterWrite = System.currentTimeMillis() / 1000
         assertNotNull(result.timestamp)
         assertTrue(result.timestamp >= beforeWrite)
@@ -224,22 +224,22 @@ class BlockchainAnchorClientTest {
     @Test
     fun `test clear removes all anchors`() = runBlocking {
         val payload = buildJsonObject { put("data", "test") }
-        
+
         client.writePayload(payload, "application/json")
         client.writePayload(payload, "application/json")
         assertEquals(2, client.size())
-        
+
         client.clear()
-        
+
         assertEquals(0, client.size())
     }
 
     @Test
     fun `test anchor ref contains correct metadata`() = runBlocking {
         val payload = buildJsonObject { put("vcDigest", "uABC123") }
-        
+
         val result = client.writePayload(payload, "application/json")
-        
+
         assertEquals(chainId, result.ref.chainId)
         assertNotNull(result.ref.txHash)
         assertTrue(result.ref.txHash.startsWith("tx_"))
@@ -250,9 +250,9 @@ class BlockchainAnchorClientTest {
     fun `test write payload without contract`() = runBlocking {
         val clientWithoutContract = TestBlockchainAnchorClient(chainId, null)
         val payload = buildJsonObject { put("data", "test") }
-        
+
         val result = clientWithoutContract.writePayload(payload, "application/json")
-        
+
         assertNull(result.ref.contract)
     }
 
@@ -262,11 +262,11 @@ class BlockchainAnchorClientTest {
             put("vcDigest", "uABC123")
             put("issuer", "did:key:issuer")
         }
-        
+
         val writeResult = client.writePayload(payload, "application/json")
-        
+
         val readResult = client.readPayload(writeResult.ref)
-        
+
         assertEquals(writeResult.ref.chainId, readResult.ref.chainId)
         assertEquals(writeResult.ref.txHash, readResult.ref.txHash)
         assertEquals(writeResult.ref.contract, readResult.ref.contract)

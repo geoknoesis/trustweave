@@ -4,7 +4,7 @@ title: trustweave-contract Module
 
 # trustweave-contract Module
 
-> **Version:** 1.0.0-SNAPSHOT  
+> **Version:** 1.0.0-SNAPSHOT
 > Domain-agnostic Smart Contract abstraction with verifiable credentials and blockchain anchoring
 
 ## Overview

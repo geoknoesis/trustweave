@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,34 +591,34 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="age-verification-scenario">
-  
-  
+
+
     <a href="#age-verification-scenario" class="anchor-heading" aria-labelledby="age-verification-scenario"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Age Verification Scenario
-  
-  
+
+
 </h1>
-    
+
 
 <p>This guide demonstrates how to build a privacy-preserving age verification system using TrustWeave. You’ll learn how identity providers can issue age credentials, how individuals can store them in wallets, and how service providers can verify age without seeing personal information or full identity details.</p>
 <h2 id="what-youll-build">
-  
-  
+
+
     <a href="#what-youll-build" class="anchor-heading" aria-labelledby="what-youll-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Build
-  
-  
+
+
 </h2>
-    
+
 
 <p>By the end of this tutorial, you’ll have:</p>
 
@@ -633,21 +633,21 @@
   <li>✅ Demonstrated selective disclosure for privacy</li>
 </ul>
 <h2 id="big-picture--significance">
-  
-  
+
+
     <a href="#big-picture--significance" class="anchor-heading" aria-labelledby="big-picture--significance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Big Picture &amp; Significance
-  
-  
+
+
 </h2>
-    
+
 <h3 id="the-age-verification-challenge">
-  
-  
+
+
     <a href="#the-age-verification-challenge" class="anchor-heading" aria-labelledby="the-age-verification-challenge"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Age Verification Challenge
-  
-  
+
+
 </h3>
-    
+
 
 <p>Age verification is required for many services (alcohol, gambling, content, etc.), but traditional methods compromise privacy by requiring full identity disclosure. Verifiable credentials enable age verification without revealing unnecessary personal information.</p>
 
@@ -670,13 +670,13 @@
   <li><strong>Portability</strong>: Age credentials work across services</li>
 </ol>
 <h3 id="the-age-verification-problem">
-  
-  
+
+
     <a href="#the-age-verification-problem" class="anchor-heading" aria-labelledby="the-age-verification-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Age Verification Problem
-  
-  
+
+
 </h3>
-    
+
 
 <p>Traditional age verification faces critical issues:</p>
 <ul>
@@ -688,21 +688,21 @@
   <li><strong>Data Collection</strong>: Services collect unnecessary personal data</li>
 </ul>
 <h2 id="value-proposition">
-  
-  
+
+
     <a href="#value-proposition" class="anchor-heading" aria-labelledby="value-proposition"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Value Proposition
-  
-  
+
+
 </h2>
-    
+
 <h3 id="problems-solved">
-  
-  
+
+
     <a href="#problems-solved" class="anchor-heading" aria-labelledby="problems-solved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Problems Solved
-  
-  
+
+
 </h3>
-    
+
 
 <ol>
   <li><strong>Privacy-Preserving</strong>: Verify age without revealing identity</li>
@@ -714,13 +714,13 @@
   <li><strong>Efficiency</strong>: Instant verification process</li>
 </ol>
 <h3 id="business-benefits">
-  
-  
+
+
     <a href="#business-benefits" class="anchor-heading" aria-labelledby="business-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Business Benefits
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>For Service Providers:</strong></p>
 <ul>
@@ -748,13 +748,13 @@
   <li><strong>Scalability</strong>: Handle more verifications</li>
 </ul>
 <h3 id="roi-considerations">
-  
-  
+
+
     <a href="#roi-considerations" class="anchor-heading" aria-labelledby="roi-considerations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ROI Considerations
-  
-  
+
+
 </h3>
-    
+
 
 <ul>
   <li><strong>Privacy Compliance</strong>: Automated GDPR/COPPA compliance</li>
@@ -764,13 +764,13 @@
   <li><strong>User Experience</strong>: Improved user satisfaction</li>
 </ul>
 <h2 id="understanding-the-problem">
-  
-  
+
+
     <a href="#understanding-the-problem" class="anchor-heading" aria-labelledby="understanding-the-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Understanding the Problem
-  
-  
+
+
 </h2>
-    
+
 
 <p>Traditional age verification has several problems:</p>
 
@@ -792,32 +792,32 @@
   <li><strong>Compliant</strong>: Automated compliance with regulations</li>
 </ul>
 <h2 id="how-it-works-the-age-verification-flow">
-  
-  
+
+
     <a href="#how-it-works-the-age-verification-flow" class="anchor-heading" aria-labelledby="how-it-works-the-age-verification-flow"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> How It Works: The Age Verification Flow
-  
-  
+
+
 </h2>
-    
+
 
 <pre><code class="language-mermaid">flowchart TD
     A["Identity Provider&lt;br/&gt;Verifies Identity &amp; Age&lt;br/&gt;Issues Age Credential"] --&gt;|issues| B["Age Verification Credential&lt;br/&gt;Individual DID&lt;br/&gt;Age Information&lt;br/&gt;Cryptographic Proof"]
     B --&gt;|stored in| C["Individual Wallet&lt;br/&gt;Stores age credential&lt;br/&gt;Maintains privacy&lt;br/&gt;Controls disclosure"]
     C --&gt;|presents| D["Service Provider&lt;br/&gt;Alcohol, Gambling, Content&lt;br/&gt;Verifies age only&lt;br/&gt;No identity revealed"]
-    
+
     style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
     style B fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
     style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
     style D fill:#c2185b,stroke:#880e4f,stroke-width:2px,color:#fff
 </code></pre>
 <h2 id="prerequisites">
-  
-  
+
+
     <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li>Java 21+</li>
@@ -826,13 +826,13 @@
   <li>Basic understanding of Kotlin and coroutines</li>
 </ul>
 <h2 id="step-1-add-dependencies">
-  
-  
+
+
     <a href="#step-1-add-dependencies" class="anchor-heading" aria-labelledby="step-1-add-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Add Dependencies
-  
-  
+
+
 </h2>
-    
+
 
 <p>Add TrustWeave dependencies to your <code class="language-plaintext highlighter-rouge">build.gradle.kts</code>:</p>
 
@@ -849,22 +849,22 @@
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
     <span class="c1">// Core TrustWeave modules</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-all:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    
+
     <span class="c1">// Kotlinx Serialization</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
-    
+
     <span class="c1">// Coroutines</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="step-2-complete-runnable-example">
-  
-  
+
+
     <a href="#step-2-complete-runnable-example" class="anchor-heading" aria-labelledby="step-2-complete-runnable-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Complete Runnable Example
-  
-  
+
+
 </h2>
-    
+
 
 <p>Here’s the full age verification flow with photo association using the TrustWeave facade API:</p>
 
@@ -1196,53 +1196,53 @@
     <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"Age Verification Scenario - Complete End-to-End Example with Photo"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
-    
+
     <span class="c1">// Step 1: Create TrustWeave instance</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ TrustWeave initialized"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 2: Create DIDs for identity provider, individual, and service providers</span>
     <span class="kd">val</span> <span class="py">identityProviderDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">identityProviderDid</span> <span class="p">=</span> <span class="n">identityProviderDidDoc</span><span class="p">.</span><span class="n">id</span>
     <span class="kd">val</span> <span class="py">identityProviderKeyId</span> <span class="p">=</span> <span class="n">identityProviderDidDoc</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
         <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">individualDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">individualDid</span> <span class="p">=</span> <span class="n">individualDidDoc</span><span class="p">.</span><span class="n">id</span>
-    
+
     <span class="kd">val</span> <span class="py">alcoholServiceDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">alcoholServiceDid</span> <span class="p">=</span> <span class="n">alcoholServiceDidDoc</span><span class="p">.</span><span class="n">id</span>
-    
+
     <span class="kd">val</span> <span class="py">gamblingServiceDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">gamblingServiceDid</span> <span class="p">=</span> <span class="n">gamblingServiceDidDoc</span><span class="p">.</span><span class="n">id</span>
-    
+
     <span class="kd">val</span> <span class="py">contentServiceDidDoc</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">contentServiceDid</span> <span class="p">=</span> <span class="n">contentServiceDidDoc</span><span class="p">.</span><span class="n">id</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Identity Provider DID: $identityProviderDid"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Individual DID: $individualDid"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Alcohol Service DID: $alcoholServiceDid"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Gambling Service DID: $gamblingServiceDid"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Content Service DID: $contentServiceDid"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 3: Calculate age (in real system, this would come from verified identity document)</span>
     <span class="kd">val</span> <span class="py">dateOfBirth</span> <span class="p">=</span> <span class="nc">LocalDate</span><span class="p">.</span><span class="nf">of</span><span class="p">(</span><span class="mi">1995</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">currentDate</span> <span class="p">=</span> <span class="nc">LocalDate</span><span class="p">.</span><span class="nf">now</span><span class="p">()</span>
     <span class="kd">val</span> <span class="py">age</span> <span class="p">=</span> <span class="nc">Period</span><span class="p">.</span><span class="nf">between</span><span class="p">(</span><span class="n">dateOfBirth</span><span class="p">,</span> <span class="n">currentDate</span><span class="p">).</span><span class="n">years</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n📅 Age Calculation:"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Date of Birth: $dateOfBirth"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Current Date: $currentDate"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Age: $age years"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 4: Process photo for credential</span>
     <span class="c1">// In production, this would come from user upload or identity document scan</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n📸 Photo Processing:"</span><span class="p">)</span>
-    
+
     <span class="c1">// Simulate photo processing (in real system, read from file or camera)</span>
     <span class="kd">val</span> <span class="py">photoBytes</span> <span class="p">=</span> <span class="s">"simulated-photo-data"</span><span class="p">.</span><span class="nf">toByteArray</span><span class="p">()</span> <span class="c1">// Replace with actual photo</span>
     <span class="kd">val</span> <span class="py">photoBase64</span> <span class="p">=</span> <span class="nc">Base64</span><span class="p">.</span><span class="nf">getEncoder</span><span class="p">().</span><span class="nf">encodeToString</span><span class="p">(</span><span class="n">photoBytes</span><span class="p">)</span>
-    
+
     <span class="c1">// Create photo metadata for digest computation</span>
     <span class="kd">val</span> <span class="py">photoMetadata</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
         <span class="nf">put</span><span class="p">(</span><span class="s">"type"</span><span class="p">,</span> <span class="s">"photo"</span><span class="p">)</span>
@@ -1251,21 +1251,21 @@
         <span class="nf">put</span><span class="p">(</span><span class="s">"subjectDid"</span><span class="p">,</span> <span class="n">individualDid</span><span class="p">)</span>
         <span class="nf">put</span><span class="p">(</span><span class="s">"purpose"</span><span class="p">,</span> <span class="s">"ageVerification"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Compute cryptographic digest of photo for integrity verification</span>
     <span class="kd">val</span> <span class="py">photoDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">photoMetadata</span><span class="p">)</span>
-    
+
     <span class="c1">// Photo URL (in production, host photo securely)</span>
     <span class="kd">val</span> <span class="py">photoUrl</span> <span class="p">=</span> <span class="s">"https://identity-provider.com/photos/${individualDid}.jpg"</span>
-    
+
     <span class="c1">// Generate thumbnail for quick display (in production, use image library)</span>
     <span class="kd">val</span> <span class="py">thumbnailBase64</span> <span class="p">=</span> <span class="nc">Base64</span><span class="p">.</span><span class="nf">getEncoder</span><span class="p">().</span><span class="nf">encodeToString</span><span class="p">(</span><span class="n">photoBytes</span><span class="p">.</span><span class="nf">take</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nf">toByteArray</span><span class="p">())</span>
     <span class="kd">val</span> <span class="py">thumbnailDataUrl</span> <span class="p">=</span> <span class="s">"data:image/jpeg;base64,$thumbnailBase64"</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Photo digest computed: ${photoDigest.take(20)}..."</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Photo URL: $photoUrl"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Thumbnail generated"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 5: Issue age verification credential with photo (privacy-preserving - only age, not DOB)</span>
     <span class="kd">val</span> <span class="py">ageCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">issueCredential</span><span class="p">(</span>
         <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">identityProviderDid</span><span class="p">,</span>
@@ -1294,13 +1294,13 @@
         <span class="n">types</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiableCredential"</span><span class="p">,</span> <span class="s">"AgeVerificationCredential"</span><span class="p">,</span> <span class="s">"IdentityCredential"</span><span class="p">),</span>
         <span class="n">expirationDate</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">plus</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="nc">ChronoUnit</span><span class="p">.</span><span class="nc">YEARS</span><span class="p">).</span><span class="nf">toString</span><span class="p">()</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ Age verification credential with photo issued: ${ageCredential.id}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Age: $age years"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Minimum Age: 18+"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Photo: Associated with digest verification"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Note: Date of birth NOT included for privacy"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 5: Create individual wallet and store age credential</span>
     <span class="kd">val</span> <span class="py">individualWallet</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">createWallet</span><span class="p">(</span>
         <span class="n">holderDid</span> <span class="p">=</span> <span class="n">individualDid</span><span class="p">,</span>
@@ -1309,10 +1309,10 @@
             <span class="n">enablePresentation</span> <span class="p">=</span> <span class="k">true</span>
         <span class="p">}.</span><span class="nf">build</span><span class="p">()</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="kd">val</span> <span class="py">ageCredentialId</span> <span class="p">=</span> <span class="n">individualWallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">ageCredential</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Age credential stored in wallet: $ageCredentialId"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 6: Organize credential</span>
     <span class="n">individualWallet</span><span class="p">.</span><span class="nf">withOrganization</span> <span class="p">{</span> <span class="n">org</span> <span class="p">-&gt;</span>
         <span class="kd">val</span> <span class="py">identityCollectionId</span> <span class="p">=</span> <span class="n">org</span><span class="p">.</span><span class="nf">createCollection</span><span class="p">(</span><span class="s">"Identity"</span><span class="p">,</span> <span class="s">"Identity and age verification credentials"</span><span class="p">)</span>
@@ -1320,37 +1320,37 @@
         <span class="n">org</span><span class="p">.</span><span class="nf">tagCredential</span><span class="p">(</span><span class="n">ageCredentialId</span><span class="p">,</span> <span class="nf">setOf</span><span class="p">(</span><span class="s">"age"</span><span class="p">,</span> <span class="s">"verification"</span><span class="p">,</span> <span class="s">"identity"</span><span class="p">,</span> <span class="s">"privacy-preserving"</span><span class="p">,</span> <span class="s">"photo"</span><span class="p">))</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Age credential organized"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 7: Alcohol service age verification with photo (21+ required)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n🍺 Alcohol Service Age Verification (21+ required):"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">alcoholVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">ageCredential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">alcoholVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
         <span class="kd">val</span> <span class="py">credentialSubject</span> <span class="p">=</span> <span class="n">ageCredential</span><span class="p">.</span><span class="n">credentialSubject</span>
         <span class="kd">val</span> <span class="py">ageVerification</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"ageVerification"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
         <span class="kd">val</span> <span class="py">verifiedAge</span> <span class="p">=</span> <span class="n">ageVerification</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"age"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toInt</span><span class="p">()</span> <span class="o">?:</span> <span class="mi">0</span>
         <span class="kd">val</span> <span class="py">photo</span> <span class="p">=</span> <span class="n">ageVerification</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"photo"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonObject</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Age Credential: VALID"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Verified Age: $verifiedAge years"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Required Age: 21+"</span><span class="p">)</span>
-        
+
         <span class="c1">// Extract photo information</span>
         <span class="kd">val</span> <span class="py">photoUrlFromCredential</span> <span class="p">=</span> <span class="n">photo</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"url"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
         <span class="kd">val</span> <span class="py">photoDigestFromCredential</span> <span class="p">=</span> <span class="n">photo</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"digestMultibase"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
         <span class="kd">val</span> <span class="py">thumbnail</span> <span class="p">=</span> <span class="n">photo</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"thumbnail"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Photo URL: $photoUrlFromCredential"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Photo Digest: ${photoDigestFromCredential?.take(20)}..."</span><span class="p">)</span>
-        
+
         <span class="c1">// In production:</span>
         <span class="c1">// 1. Fetch photo from URL</span>
         <span class="c1">// 2. Compute digest of fetched photo</span>
         <span class="c1">// 3. Compare with credential digest (integrity check)</span>
         <span class="c1">// 4. Capture live photo from camera</span>
         <span class="c1">// 5. Use face recognition to verify person matches photo</span>
-        
+
         <span class="k">if</span> <span class="p">(</span><span class="n">verifiedAge</span> <span class="p">&gt;=</span> <span class="mi">21</span><span class="p">)</span> <span class="p">{</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Age requirement MET"</span><span class="p">)</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Photo integrity verified (digest matches)"</span><span class="p">)</span>
@@ -1364,22 +1364,22 @@
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Age Credential: INVALID"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Access DENIED"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 8: Gambling service age verification (18+ required)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n🎰 Gambling Service Age Verification (18+ required):"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">gamblingVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">ageCredential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">gamblingVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
         <span class="kd">val</span> <span class="py">credentialSubject</span> <span class="p">=</span> <span class="n">ageCredential</span><span class="p">.</span><span class="n">credentialSubject</span>
         <span class="kd">val</span> <span class="py">ageVerification</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"ageVerification"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
         <span class="kd">val</span> <span class="py">verifiedAge</span> <span class="p">=</span> <span class="n">ageVerification</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"age"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toInt</span><span class="p">()</span> <span class="o">?:</span> <span class="mi">0</span>
         <span class="kd">val</span> <span class="py">minimumAge</span> <span class="p">=</span> <span class="n">ageVerification</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"minimumAge"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toInt</span><span class="p">()</span> <span class="o">?:</span> <span class="mi">0</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Age Credential: VALID"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Verified Age: $verifiedAge years"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Required Age: 18+"</span><span class="p">)</span>
-        
+
         <span class="k">if</span> <span class="p">(</span><span class="n">verifiedAge</span> <span class="p">&gt;=</span> <span class="mi">18</span><span class="p">)</span> <span class="p">{</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Age requirement MET"</span><span class="p">)</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Access GRANTED to gambling service"</span><span class="p">)</span>
@@ -1391,21 +1391,21 @@
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Age Credential: INVALID"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Access DENIED"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 9: Content service age verification (13+ required for some content)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n📺 Content Service Age Verification (13+ required):"</span><span class="p">)</span>
-    
+
     <span class="kd">val</span> <span class="py">contentVerification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">ageCredential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="k">if</span> <span class="p">(</span><span class="n">contentVerification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
         <span class="kd">val</span> <span class="py">credentialSubject</span> <span class="p">=</span> <span class="n">ageCredential</span><span class="p">.</span><span class="n">credentialSubject</span>
         <span class="kd">val</span> <span class="py">ageVerification</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"ageVerification"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
         <span class="kd">val</span> <span class="py">verifiedAge</span> <span class="p">=</span> <span class="n">ageVerification</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"age"</span><span class="p">)</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toInt</span><span class="p">()</span> <span class="o">?:</span> <span class="mi">0</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Age Credential: VALID"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Verified Age: $verifiedAge years"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Required Age: 13+"</span><span class="p">)</span>
-        
+
         <span class="k">if</span> <span class="p">(</span><span class="n">verifiedAge</span> <span class="p">&gt;=</span> <span class="mi">13</span><span class="p">)</span> <span class="p">{</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Age requirement MET"</span><span class="p">)</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Access GRANTED to content service"</span><span class="p">)</span>
@@ -1417,7 +1417,7 @@
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Age Credential: INVALID"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Access DENIED"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 10: Create privacy-preserving presentation</span>
     <span class="kd">val</span> <span class="py">agePresentation</span> <span class="p">=</span> <span class="n">individualWallet</span><span class="p">.</span><span class="nf">withPresentation</span> <span class="p">{</span> <span class="n">pres</span> <span class="p">-&gt;</span>
         <span class="n">pres</span><span class="p">.</span><span class="nf">createPresentation</span><span class="p">(</span>
@@ -1429,12 +1429,12 @@
             <span class="p">)</span>
         <span class="p">)</span>
     <span class="p">}</span> <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"Presentation capability not available"</span><span class="p">)</span>
-    
+
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ Privacy-preserving age presentation created"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Holder: ${agePresentation.holder}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Credentials: ${agePresentation.verifiableCredential.size}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Note: Only age information shared, no personal details"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 11: Demonstrate privacy - verify no personal information is exposed</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n🔒 Privacy Verification:"</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">presentationCredential</span> <span class="p">=</span> <span class="n">agePresentation</span><span class="p">.</span><span class="n">verifiableCredential</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span>
@@ -1443,7 +1443,7 @@
         <span class="kd">val</span> <span class="py">hasDateOfBirth</span> <span class="p">=</span> <span class="n">subject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">.</span><span class="nf">containsKey</span><span class="p">(</span><span class="s">"dateOfBirth"</span><span class="p">)</span>
         <span class="kd">val</span> <span class="py">hasFullName</span> <span class="p">=</span> <span class="n">subject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">.</span><span class="nf">containsKey</span><span class="p">(</span><span class="s">"fullName"</span><span class="p">)</span>
         <span class="kd">val</span> <span class="py">hasAddress</span> <span class="p">=</span> <span class="n">subject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">.</span><span class="nf">containsKey</span><span class="p">(</span><span class="s">"address"</span><span class="p">)</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Date of Birth exposed: $hasDateOfBirth ❌"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Full Name exposed: $hasFullName ❌"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Address exposed: $hasAddress ❌"</span><span class="p">)</span>
@@ -1451,7 +1451,7 @@
         <span class="nf">println</span><span class="p">(</span><span class="s">"   Photo reference (for verification): ✅"</span><span class="p">)</span>
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Privacy preserved - only age information shared"</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 12: Photo verification workflow demonstration</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n📸 Photo Verification Workflow:"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   1. Extract photo URL and digest from credential"</span><span class="p">)</span>
@@ -1461,7 +1461,7 @@
     <span class="nf">println</span><span class="p">(</span><span class="s">"   5. Capture live photo from camera"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   6. Perform face recognition (person matches photo)"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   7. Grant/deny access based on age + photo verification"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 13: Display wallet statistics</span>
     <span class="kd">val</span> <span class="py">stats</span> <span class="p">=</span> <span class="n">individualWallet</span><span class="p">.</span><span class="nf">getStatistics</span><span class="p">()</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n📊 Individual Wallet Statistics:"</span><span class="p">)</span>
@@ -1469,7 +1469,7 @@
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Valid credentials: ${stats.validCredentials}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Collections: ${stats.collectionsCount}"</span><span class="p">)</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"   Tags: ${stats.tagsCount}"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 14: Summary</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n"</span> <span class="p">+</span> <span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ AGE VERIFICATION SYSTEM WITH PHOTO COMPLETE"</span><span class="p">)</span>
@@ -1663,13 +1663,13 @@ Age Verification Scenario - Complete End-to-End Example with Photo
 ======================================================================
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="key-features-demonstrated">
-  
-  
+
+
     <a href="#key-features-demonstrated" class="anchor-heading" aria-labelledby="key-features-demonstrated"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Features Demonstrated
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Photo Association</strong>: Photo linked to credential with cryptographic digest</li>
@@ -1680,13 +1680,13 @@ Age Verification Scenario - Complete End-to-End Example with Photo
   <li><strong>Face Verification</strong>: Workflow for live photo verification</li>
 </ol>
 <h2 id="real-world-extensions">
-  
-  
+
+
     <a href="#real-world-extensions" class="anchor-heading" aria-labelledby="real-world-extensions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Extensions
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><strong>Face Recognition Integration</strong>: Integrate with face recognition APIs</li>
@@ -1697,13 +1697,13 @@ Age Verification Scenario - Complete End-to-End Example with Photo
   <li><strong>Photo Expiration</strong>: Track photo age and require updates</li>
 </ul>
 <h2 id="related-documentation">
-  
-  
+
+
     <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><a href="/trustweave/getting-started/quick-start/">Quick Start</a> - Get started with TrustWeave</li>
@@ -1713,17 +1713,17 @@ Age Verification Scenario - Complete End-to-End Example with Photo
   <li><a href="/trustweave/getting-started/troubleshooting/">Troubleshooting</a> - Common issues and solutions</li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -1755,7 +1755,7 @@ Age Verification Scenario - Complete End-to-End Example with Photo
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -1765,12 +1765,12 @@ Age Verification Scenario - Complete End-to-End Example with Photo
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -1792,12 +1792,12 @@ Age Verification Scenario - Complete End-to-End Example with Photo
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -1806,12 +1806,12 @@ Age Verification Scenario - Complete End-to-End Example with Photo
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -1819,7 +1819,7 @@ Age Verification Scenario - Complete End-to-End Example with Photo
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -1827,31 +1827,31 @@ Age Verification Scenario - Complete End-to-End Example with Photo
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -1863,7 +1863,7 @@ Age Verification Scenario - Complete End-to-End Example with Photo
 
 
 
-  
+
 </body>
 </html>
 

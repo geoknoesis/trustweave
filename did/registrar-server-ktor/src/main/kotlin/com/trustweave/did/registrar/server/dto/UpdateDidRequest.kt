@@ -7,9 +7,9 @@ import kotlinx.serialization.Serializable
 
 /**
  * Request DTO for DID update operations.
- * 
+ *
  * Used by RESTful endpoint: PUT /1.0/dids/{did}
- * 
+ *
  * **Example:**
  * ```json
  * {
@@ -30,7 +30,7 @@ data class UpdateDidRequest(
      */
     @Contextual
     val didDocument: DidDocument,
-    
+
     /**
      * Update options.
      */

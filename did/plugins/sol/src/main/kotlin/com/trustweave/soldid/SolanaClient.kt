@@ -10,7 +10,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 
 /**
  * Client for interacting with Solana blockchain via RPC.
- * 
+ *
  * Implements Solana JSON-RPC methods:
  * - getAccountInfo: Get account data
  * - sendTransaction: Send transaction
@@ -23,7 +23,7 @@ class SolanaClient(
 
     /**
      * Gets account data from Solana.
-     * 
+     *
      * @param address Solana address (base58 encoded)
      * @return Account data as bytes, or null if not found
      */
@@ -40,7 +40,7 @@ class SolanaClient(
                     })
                 })
             }
-            
+
             val request = Request.Builder()
                 .url(config.rpcUrl)
                 .post(
@@ -50,41 +50,42 @@ class SolanaClient(
                 )
                 .addHeader("Content-Type", "application/json")
                 .build()
-            
+
             val response = httpClient.newCall(request).execute()
-            
+
             if (!response.isSuccessful) {
                 return@withContext null
             }
-            
+
             val responseBody = response.body?.string() ?: return@withContext null
             val responseJson = Json.parseToJsonElement(responseBody).jsonObject
-            
+
             val result = responseJson["result"]?.jsonObject
             val value = result?.get("value")?.jsonObject
-            
+
             if (value == null) {
                 // Account not found
                 return@withContext null
             }
-            
+
             // Decode base64 account data
             val data = value["data"]?.jsonArray?.get(0)?.jsonPrimitive?.content
                 ?: return@withContext null
-            
+
             // Decode base64 (simplified - real implementation needs proper base64 decoding)
             java.util.Base64.getDecoder().decode(data)
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to get Solana account data: ${e.message}",
-                e
+            throw TrustWeaveException.Unknown(
+                code = "ACCOUNT_DATA_FAILED",
+                message = "Failed to get Solana account data: ${e.message}",
+                cause = e
             )
         }
     }
 
     /**
      * Sends a transaction to Solana.
-     * 
+     *
      * @param transaction Serialized transaction (base64)
      * @return Transaction signature
      */
@@ -102,7 +103,7 @@ class SolanaClient(
                     })
                 })
             }
-            
+
             val request = Request.Builder()
                 .url(config.rpcUrl)
                 .post(
@@ -112,34 +113,44 @@ class SolanaClient(
                 )
                 .addHeader("Content-Type", "application/json")
                 .build()
-            
+
             val response = httpClient.newCall(request).execute()
-            
+
             if (!response.isSuccessful) {
                 val errorBody = response.body?.string() ?: "Unknown error"
-                throw TrustWeaveException("Solana RPC error: HTTP ${response.code}: $errorBody")
+                throw TrustWeaveException.Unknown(
+                    code = "RPC_ERROR",
+                    message = "Solana RPC error: HTTP ${response.code}: $errorBody"
+                )
             }
-            
-            val responseBody = response.body?.string() ?: throw TrustWeaveException("Empty response")
+
+            val responseBody = response.body?.string() ?: throw TrustWeaveException.Unknown(
+                code = "EMPTY_RESPONSE",
+                message = "Empty response"
+            )
             val responseJson = Json.parseToJsonElement(responseBody).jsonObject
-            
+
             val result = responseJson["result"]?.jsonPrimitive?.content
-                ?: throw TrustWeaveException("No result in response: $responseBody")
-            
+                ?: throw TrustWeaveException.Unknown(
+                    code = "NO_RESULT",
+                    message = "No result in response: $responseBody"
+                )
+
             result
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: Exception) {
-            throw TrustWeaveException(
-                "Failed to send Solana transaction: ${e.message}",
-                e
+            throw TrustWeaveException.Unknown(
+                code = "TRANSACTION_FAILED",
+                message = "Failed to send Solana transaction: ${e.message}",
+                cause = e
             )
         }
     }
 
     /**
      * Gets transaction details.
-     * 
+     *
      * @param signature Transaction signature
      * @return Transaction details JSON
      */
@@ -156,7 +167,7 @@ class SolanaClient(
                     })
                 })
             }
-            
+
             val request = Request.Builder()
                 .url(config.rpcUrl)
                 .post(
@@ -166,16 +177,16 @@ class SolanaClient(
                 )
                 .addHeader("Content-Type", "application/json")
                 .build()
-            
+
             val response = httpClient.newCall(request).execute()
-            
+
             if (!response.isSuccessful) {
                 return@withContext null
             }
-            
+
             val responseBody = response.body?.string() ?: return@withContext null
             val responseJson = Json.parseToJsonElement(responseBody).jsonObject
-            
+
             responseJson["result"]?.jsonObject
         } catch (e: Exception) {
             null

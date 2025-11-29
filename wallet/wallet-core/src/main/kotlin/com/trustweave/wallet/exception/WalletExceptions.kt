@@ -4,7 +4,7 @@ import com.trustweave.core.exception.TrustWeaveException
 
 /**
  * Wallet-related exception types.
- * 
+ *
  * These exceptions provide structured error codes and context for wallet operations.
  */
 sealed class WalletException(
@@ -13,7 +13,7 @@ sealed class WalletException(
     override val context: Map<String, Any?> = emptyMap(),
     override val cause: Throwable? = null
 ) : TrustWeaveException(code, message, context, cause) {
-    
+
     data class WalletCreationFailed(
         val reason: String,
         val provider: String? = null,

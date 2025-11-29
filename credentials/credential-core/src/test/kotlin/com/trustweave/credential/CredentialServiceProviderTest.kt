@@ -131,10 +131,15 @@ class CredentialServiceProviderTest {
                 credential: VerifiableCredential,
                 options: CredentialVerificationOptions
             ): CredentialVerificationResult {
-                return CredentialVerificationResult(
-                    valid = credential.proof != null,
-                    proofValid = credential.proof != null
-                )
+                return if (credential.proof != null) {
+                    CredentialVerificationResult.Valid(credential)
+                } else {
+                    CredentialVerificationResult.Invalid.InvalidProof(
+                        credential,
+                        "Credential has no proof",
+                        listOf("Credential has no proof")
+                    )
+                }
             }
 
             override suspend fun createPresentation(

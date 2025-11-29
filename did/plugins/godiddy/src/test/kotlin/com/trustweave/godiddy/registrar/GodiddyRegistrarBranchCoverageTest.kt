@@ -3,8 +3,13 @@ package com.trustweave.godiddy.registrar
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.DidCreationOptions
 import com.trustweave.did.DidDocument
+import com.trustweave.did.DidService
+import com.trustweave.did.VerificationMethod
 import com.trustweave.did.didCreationOptions
+import com.trustweave.did.registrar.model.CreateDidOptions
+import com.trustweave.did.registrar.model.KeyManagementMode
 import com.trustweave.godiddy.GodiddyClient
+import kotlinx.serialization.json.*
 import com.trustweave.godiddy.GodiddyConfig
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -20,19 +25,23 @@ class GodiddyRegistrarBranchCoverageTest {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val registrar = GodiddyRegistrar(client)
-        
+
         // This will fail in real scenario, but we test the branch
         try {
-            val options = didCreationOptions {
-                property("keyType", "Ed25519")
-            }
-            val result = registrar.createDid("key", options)
+            val createOptions = CreateDidOptions(
+                keyManagementMode = KeyManagementMode.INTERNAL_SECRET,
+                storeSecrets = false,
+                returnSecrets = false,
+                didDocument = null,
+                methodSpecificOptions = mapOf("keyType" to JsonPrimitive("Ed25519"))
+            )
+            val result = registrar.createDid("key", createOptions)
             assertNotNull(result)
         } catch (e: Exception) {
             // Expected to fail without mock
             assertIs<TrustWeaveException>(e)
         }
-        
+
         client.close()
     }
 
@@ -41,16 +50,21 @@ class GodiddyRegistrarBranchCoverageTest {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val registrar = GodiddyRegistrar(client)
-        
+
         // This will fail in real scenario, but we test the branch
         try {
-            val result = registrar.createDid("key", DidCreationOptions())
+            val createOptions = CreateDidOptions(
+                keyManagementMode = KeyManagementMode.INTERNAL_SECRET,
+                storeSecrets = false,
+                returnSecrets = false
+            )
+            val result = registrar.createDid("key", createOptions)
             assertNotNull(result)
         } catch (e: Exception) {
             // Expected to fail without mock
             assertIs<TrustWeaveException>(e)
         }
-        
+
         client.close()
     }
 
@@ -59,16 +73,21 @@ class GodiddyRegistrarBranchCoverageTest {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val registrar = GodiddyRegistrar(client)
-        
+
         // This will fail in real scenario, but we test the branch
         try {
-            val result = registrar.createDid("key", DidCreationOptions())
+            val createOptions = CreateDidOptions(
+                keyManagementMode = KeyManagementMode.INTERNAL_SECRET,
+                storeSecrets = false,
+                returnSecrets = false
+            )
+            val result = registrar.createDid("key", createOptions)
             assertNotNull(result)
         } catch (e: Exception) {
             // Expected to fail without mock
             assertIs<TrustWeaveException>(e)
         }
-        
+
         client.close()
     }
 
@@ -77,9 +96,9 @@ class GodiddyRegistrarBranchCoverageTest {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val registrar = GodiddyRegistrar(client)
-        
+
         val document = DidDocument(id = "did:key:123")
-        
+
         // This will fail in real scenario, but we test the branch
         try {
             val result = registrar.updateDid("did:key:123", document)
@@ -88,7 +107,7 @@ class GodiddyRegistrarBranchCoverageTest {
             // Expected to fail without mock
             assertIs<TrustWeaveException>(e)
         }
-        
+
         client.close()
     }
 
@@ -97,9 +116,9 @@ class GodiddyRegistrarBranchCoverageTest {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val registrar = GodiddyRegistrar(client)
-        
+
         val document = DidDocument(id = "did:key:123")
-        
+
         // This will fail in real scenario, but we test the branch
         try {
             val result = registrar.updateDid("did:key:123", document)
@@ -108,7 +127,7 @@ class GodiddyRegistrarBranchCoverageTest {
             // Expected to fail without mock
             assertIs<TrustWeaveException>(e)
         }
-        
+
         client.close()
     }
 
@@ -117,7 +136,7 @@ class GodiddyRegistrarBranchCoverageTest {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val registrar = GodiddyRegistrar(client)
-        
+
         // This will fail in real scenario, but we test the branch
         try {
             val result = registrar.deactivateDid("did:key:123")
@@ -126,7 +145,7 @@ class GodiddyRegistrarBranchCoverageTest {
             // Expected to fail without mock
             assertIs<TrustWeaveException>(e)
         }
-        
+
         client.close()
     }
 
@@ -135,26 +154,29 @@ class GodiddyRegistrarBranchCoverageTest {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val registrar = GodiddyRegistrar(client)
-        
+
         // Test conversion logic indirectly through createDid
         try {
-            val options = DidCreationOptions(
-                additionalProperties = mapOf(
-                    "string" to "value",
-                    "number" to 123,
-                    "boolean" to true,
-                    "map" to mapOf("key" to "value"),
-                    "list" to listOf("item1", "item2"),
-                    "null" to null
+            val createOptions = CreateDidOptions(
+                keyManagementMode = KeyManagementMode.INTERNAL_SECRET,
+                storeSecrets = false,
+                returnSecrets = false,
+                methodSpecificOptions = mapOf(
+                    "string" to JsonPrimitive("value"),
+                    "number" to JsonPrimitive(123),
+                    "boolean" to JsonPrimitive(true),
+                    "map" to buildJsonObject { put("key", "value") },
+                    "list" to buildJsonArray { add("item1"); add("item2") },
+                    "null" to JsonNull
                 )
             )
-            val result = registrar.createDid("key", options)
+            val result = registrar.createDid("key", createOptions)
             assertNotNull(result)
         } catch (e: Exception) {
             // Expected to fail without mock
             assertIs<TrustWeaveException>(e)
         }
-        
+
         client.close()
     }
 
@@ -163,11 +185,11 @@ class GodiddyRegistrarBranchCoverageTest {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val registrar = GodiddyRegistrar(client)
-        
+
         val document = DidDocument(
             id = "did:key:123",
             verificationMethod = listOf(
-                com.trustweave.did.VerificationMethodRef(
+                VerificationMethod(
                     id = "did:key:123#key-1",
                     type = "Ed25519VerificationKey2020",
                     controller = "did:key:123"
@@ -176,14 +198,14 @@ class GodiddyRegistrarBranchCoverageTest {
             authentication = listOf("did:key:123#key-1"),
             assertionMethod = listOf("did:key:123#key-1"),
             service = listOf(
-                com.trustweave.did.Service(
+                DidService(
                     id = "did:key:123#service-1",
                     type = "LinkedDomains",
                     serviceEndpoint = "https://example.com"
                 )
             )
         )
-        
+
         // This will fail in real scenario, but we test the branch
         try {
             val result = registrar.updateDid("did:key:123", document)
@@ -192,7 +214,7 @@ class GodiddyRegistrarBranchCoverageTest {
             // Expected to fail without mock
             assertIs<TrustWeaveException>(e)
         }
-        
+
         client.close()
     }
 }

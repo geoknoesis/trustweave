@@ -74,19 +74,19 @@ dependencies {
     implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    
+
     // Test kit (for testing)
     testImplementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
-    
+
     // Optional: Integration modules (using hierarchical group IDs)
     implementation("com.trustweave.kms:waltid:1.0.0-SNAPSHOT")
     implementation("com.trustweave.did:godiddy:1.0.0-SNAPSHOT")
     implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
     implementation("com.trustweave.chains:polygon:1.0.0-SNAPSHOT")
-    
+
     // Kotlinx Serialization (required)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Coroutines (required)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -106,10 +106,10 @@ dependencies {
     implementation 'com.trustweave:trustweave-kms:1.0.0-SNAPSHOT'
     implementation 'com.trustweave:trustweave-did:1.0.0-SNAPSHOT'
     implementation 'com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT'
-    
+
     // Test kit (for testing)
     testImplementation 'com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT'
-    
+
     // Optional: Integration modules (using hierarchical group IDs)
     implementation 'com.trustweave.kms:waltid:1.0.0-SNAPSHOT'
     implementation 'com.trustweave.did:godiddy:1.0.0-SNAPSHOT'
@@ -152,7 +152,7 @@ Add TrustWeave dependencies to your `pom.xml`. The snippet lists the minimum set
         <artifactId>trustweave-anchor</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </dependency>
-    
+
     <!-- Test kit (for testing) -->
     <dependency>
         <groupId>com.trustweave</groupId>

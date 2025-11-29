@@ -12,7 +12,7 @@ class GodiddyClientTest {
     fun `test GodiddyClient constructor with default config`() {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
-        
+
         assertNotNull(client)
         assertEquals(config, client.config)
         client.close()
@@ -26,7 +26,7 @@ class GodiddyClientTest {
             apiKey = "test-key"
         )
         val client = GodiddyClient(config)
-        
+
         assertNotNull(client)
         assertEquals("https://custom.example.com", client.config.baseUrl)
         assertEquals(30000, client.config.timeout)
@@ -42,7 +42,7 @@ class GodiddyClientTest {
             apiKey = null
         )
         val client = GodiddyClient(config)
-        
+
         assertNotNull(client)
         assertNull(client.config.apiKey)
         client.close()
@@ -52,7 +52,7 @@ class GodiddyClientTest {
     fun `test GodiddyClient close`() {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
-        
+
         // Should not throw
         client.close()
     }
@@ -61,7 +61,7 @@ class GodiddyClientTest {
     fun `test GodiddyClient close multiple times`() {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
-        
+
         client.close()
         // Should not throw on second close
         client.close()

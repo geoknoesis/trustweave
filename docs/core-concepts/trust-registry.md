@@ -16,33 +16,33 @@ The Trust Registry implements a **Web of Trust** model where trust is establishe
 The trust registry sits on top of the rest of the issuance/verification stack. Before you plug it in, confirm the supporting primitives below are configured—without them the registry cannot evaluate trust paths.
 
 ### DID resolution
-**Why it matters:** Trust checks must confirm that issuers resolve to valid DID documents.  
-**What to wire:** Instantiate a `CredentialDidResolver` that routes lookups to your registered `DidMethod` implementations. When constructing `CredentialIssuer` or `CredentialVerifier`, pass `resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }` to satisfy the new constructor signature.  
+**Why it matters:** Trust checks must confirm that issuers resolve to valid DID documents.
+**What to wire:** Instantiate a `CredentialDidResolver` that routes lookups to your registered `DidMethod` implementations. When constructing `CredentialIssuer` or `CredentialVerifier`, pass `resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }` to satisfy the new constructor signature.
 **Related docs:** [DIDs](dids.md), [Verification Policies](../advanced/verification-policies.md).
 
 ### Key management
-**Why it matters:** Issuers, holders, and verifiers need signing keys to produce and check proofs along the trust path.  
-**What to wire:** Supply a `KeyManagementService` for every participant. For production, back the service with a Hardware Security Module (HSM) or remote Key Management Service (KMS) instead of `InMemoryKeyManagementService`.  
+**Why it matters:** Issuers, holders, and verifiers need signing keys to produce and check proofs along the trust path.
+**What to wire:** Supply a `KeyManagementService` for every participant. For production, back the service with a Hardware Security Module (HSM) or remote Key Management Service (KMS) instead of `InMemoryKeyManagementService`.
 **Related docs:** [Key Management](key-management.md), [Quick Start – Step 4](../getting-started/quick-start.md#step-4-issue-a-credential-and-store-it).
 
 ### Proof generators
-**Why it matters:** The registry does not create proofs itself, but it relies on credentials and presentations having cryptographic evidence attached.  
-**What to wire:** Register an `Ed25519ProofGenerator` (or your preferred suite) in the `ProofGeneratorRegistry`, or inject one into `CredentialIssuer`. TrustWeave's built-in verifier currently performs structural checks; add dedicated signature validation if your policies require it.  
+**Why it matters:** The registry does not create proofs itself, but it relies on credentials and presentations having cryptographic evidence attached.
+**What to wire:** Register an `Ed25519ProofGenerator` (or your preferred suite) in the `ProofGeneratorRegistry`, or inject one into `CredentialIssuer`. TrustWeave's built-in verifier currently performs structural checks; add dedicated signature validation if your policies require it.
 **Related docs:** [Wallet API Reference – CredentialPresentation](../api-reference/wallet-api.md#credentialpresentation).
 
 ### Schema and status services
-**Why it matters:** Trust decisions often depend on schema validity or revocation state.  
-**What to wire:** Register schemas with `SchemaRegistry` and expose status list endpoints before enabling `validateSchema` or `checkRevocation` during verification.  
+**Why it matters:** Trust decisions often depend on schema validity or revocation state.
+**What to wire:** Register schemas with `SchemaRegistry` and expose status list endpoints before enabling `validateSchema` or `checkRevocation` during verification.
 **Related docs:** [Verification Policies](../advanced/verification-policies.md), scenario guides under `getting-started/`.
 
 ### Trust anchors
-**Why it matters:** The registry only knows who to trust if you seed it with anchor definitions.  
-**What to wire:** Load anchors via `addAnchor` before running verification. Anchors can come from configuration files, REST APIs, or on-chain sources.  
+**Why it matters:** The registry only knows who to trust if you seed it with anchor definitions.
+**What to wire:** Load anchors via `addAnchor` before running verification. Anchors can come from configuration files, REST APIs, or on-chain sources.
 **Related docs:** [Adding Trust Anchors](#adding-trust-anchors), [Trust Paths](#trust-paths).
 
 ### Observability
-**Why it matters:** Auditors and relying parties will ask *why* a credential was accepted or rejected.  
-**What to wire:** Decide how to persist trust evaluations (structured logs, metrics, traces) so you can replay decisions. Consider exporting trust scores and path details to your observability stack.  
+**Why it matters:** Auditors and relying parties will ask *why* a credential was accepted or rejected.
+**What to wire:** Decide how to persist trust evaluations (structured logs, metrics, traces) so you can replay decisions. Consider exporting trust scores and path details to your observability stack.
 **Related docs:** Internal operations guide or your organisation’s logging standards.
 
 ## Key Concepts
@@ -78,17 +78,17 @@ val trustLayer = trustLayer {
         provider("inMemory")
         algorithm(KeyAlgorithms.ED25519)
     }
-    
+
     did {
         method(DidMethods.KEY) {
             algorithm(KeyAlgorithms.ED25519)
         }
     }
-    
+
     credentials {
         defaultProofType(ProofTypes.ED25519)
     }
-    
+
     trust {
         provider("inMemory") // or other provider
     }
@@ -106,13 +106,13 @@ trustLayer.trust {
         credentialTypes("EducationCredential", "DegreeCredential")
         description("Trusted university for academic credentials")
     }
-    
+
     // Add company as trusted anchor for employment credentials
     addAnchor("did:key:company") {
         credentialTypes("EmploymentCredential")
         description("Trusted company for employment credentials")
     }
-    
+
     // Add anchor that trusts all credential types (null credentialTypes)
     addAnchor("did:key:universal-trust") {
         description("Universal trust anchor")
@@ -132,10 +132,10 @@ trustLayer.trust {
     if (isTrusted) {
         println("Issuer is trusted for EducationCredential")
     }
-    
+
     // Check if issuer is trusted for any credential type
     val isTrustedAny = isTrusted("did:key:university", null)
-    
+
     // Check trust for different credential type (should fail)
     val notTrusted = isTrusted("did:key:university", "EmploymentCredential")
     // Returns false if university only trusts EducationCredential
@@ -169,7 +169,7 @@ trustLayer.trust {
     // Get all trusted issuers for a specific credential type
     val educationIssuers = getTrustedIssuers("EducationCredential")
     educationIssuers.forEach { println("Trusted education issuer: $it") }
-    
+
     // Get all trusted issuers (any credential type)
     val allIssuers = getTrustedIssuers(null)
     allIssuers.forEach { println("Trusted issuer: $it") }
@@ -262,11 +262,11 @@ trustLayer.trust {
     addAnchor("did:key:company1") {
         credentialTypes("EmploymentCredential")
     }
-    
+
     // Get registry to add trust relationships
     val registry = trustLayer.dsl().getTrustRegistry() as? InMemoryTrustRegistry
     registry?.addTrustRelationship("did:key:university1", "did:key:university2")
-    
+
     // Now find trust path between universities
     val path = getTrustPath("did:key:university1", "did:key:university2")
 }

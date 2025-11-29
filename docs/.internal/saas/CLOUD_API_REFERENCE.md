@@ -998,7 +998,9 @@ All data models are defined in the OpenAPI specification with:
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** 2025-01-15  
+**Document Version:** 1.0
+**Last Updated:** 2025-01-15
 **API Version:** 1.0
+
+
 

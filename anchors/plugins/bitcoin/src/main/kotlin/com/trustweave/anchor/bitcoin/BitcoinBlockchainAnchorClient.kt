@@ -19,18 +19,18 @@ import java.util.Base64
 
 /**
  * Bitcoin blockchain anchor client implementation.
- * 
+ *
  * Supports Bitcoin mainnet and testnet chains.
  * Uses OP_RETURN outputs to store payload data (up to 80 bytes).
- * 
+ *
  * Chain ID format: "bip122:<blockhash>"
  * Examples:
  * - "bip122:000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f" (Bitcoin mainnet)
  * - "bip122:000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943" (Bitcoin testnet)
- * 
+ *
  * **Note:** Bitcoin OP_RETURN has a 80-byte limit. For larger payloads, consider using
  * a hash-based approach or external storage with hash anchoring.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val client = BitcoinBlockchainAnchorClient(
@@ -48,11 +48,11 @@ class BitcoinBlockchainAnchorClient(
     chainId: String,
     options: Map<String, Any?> = emptyMap()
 ) : AbstractBlockchainAnchorClient(chainId, options), java.io.Closeable {
-    
+
     companion object {
         const val MAINNET = "bip122:000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"
         const val TESTNET = "bip122:000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943"
-        
+
         // OP_RETURN data limit (80 bytes)
         private const val OP_RETURN_MAX_SIZE = 80
     }
@@ -72,11 +72,11 @@ class BitcoinBlockchainAnchorClient(
             else -> throw IllegalArgumentException("Unsupported Bitcoin network: $network. Use 'mainnet' or 'testnet'")
         }
         networkName = network
-        
+
         rpcUrl = options["rpcUrl"] as? String
         rpcUser = options["rpcUser"] as? String
         rpcPassword = options["rpcPassword"] as? String
-        
+
         // Create HTTP client with basic auth for RPC
         val clientBuilder = OkHttpClient.Builder()
         if (rpcUser != null && rpcPassword != null) {
@@ -94,8 +94,8 @@ class BitcoinBlockchainAnchorClient(
 
     override protected fun canSubmitTransaction(): Boolean {
         // Check if RPC credentials are provided
-        return options["rpcUrl"] != null && 
-               options["rpcUser"] != null && 
+        return options["rpcUrl"] != null &&
+               options["rpcUser"] != null &&
                options["rpcPassword"] != null
     }
 
@@ -112,18 +112,18 @@ class BitcoinBlockchainAnchorClient(
                 payloadSize = payloadBytes.size.toLong()
             )
         }
-        
+
         if (rpcUrl == null || rpcUser == null || rpcPassword == null) {
             throw IllegalStateException("Bitcoin RPC credentials not configured. Provide 'rpcUrl', 'rpcUser', and 'rpcPassword' in options.")
         }
-        
+
         // Use Bitcoin RPC to create and send transaction with OP_RETURN
         // This is a simplified approach - full implementation would use BitcoinJ for transaction building
         // For now, we'll use RPC's createrawtransaction and signrawtransaction
-        
+
         val address = options["address"] as? String
             ?: throw IllegalStateException("Bitcoin address required for transaction creation")
-        
+
         // Get unspent outputs
         val utxos = getUnspentOutputs()
         if (utxos.isEmpty()) {
@@ -135,7 +135,7 @@ class BitcoinBlockchainAnchorClient(
                 payloadSize = payloadBytes.size.toLong()
             )
         }
-        
+
         // Build transaction inputs
         val inputs = utxos.map { utxo ->
             buildJsonObject {
@@ -143,7 +143,7 @@ class BitcoinBlockchainAnchorClient(
                 put("vout", utxo.vout)
             }
         }
-        
+
         // Build transaction outputs
         // OP_RETURN output: data in hex
         val opReturnHex = Utils.HEX.encode(payloadBytes)
@@ -157,29 +157,29 @@ class BitcoinBlockchainAnchorClient(
                 put(address, changeAmount)
             }
         }
-        
+
         // Create raw transaction via RPC
         val rawTx = rpcCall("createrawtransaction", listOf(inputs, outputs))
-        
+
         // Sign transaction
         val privateKey = options["privateKey"] as? String
             ?: throw IllegalStateException("Private key required for signing Bitcoin transactions")
         val signedTx = rpcCall("signrawtransactionwithkey", listOf(rawTx, listOf(privateKey)))
-        
+
         // Extract signed transaction hex
         val signedTxJson = Json.parseToJsonElement(signedTx).jsonObject
         val signedTxHex = signedTxJson["hex"]?.jsonPrimitive?.content
             ?: throw TrustWeaveException.Unknown(message = "Failed to sign transaction")
-        
+
         // Check if transaction is complete
         val complete = signedTxJson["complete"]?.jsonPrimitive?.boolean ?: false
         if (!complete) {
             throw TrustWeaveException.Unknown(message = "Transaction signing incomplete")
         }
-        
+
         // Broadcast transaction
         val txHash = sendRawTransaction(signedTxHex)
-        
+
         txHash
     }
 
@@ -187,11 +187,11 @@ class BitcoinBlockchainAnchorClient(
         if (rpcUrl == null || rpcUser == null || rpcPassword == null) {
             throw IllegalStateException("Bitcoin RPC credentials not configured")
         }
-        
+
         // Get transaction via RPC
         val txHex = getRawTransaction(txHash)
         val tx = Transaction(networkParams, Utils.HEX.decode(txHex))
-        
+
         // Find OP_RETURN output
         var opReturnData: ByteArray? = null
         for (output in tx.outputs) {
@@ -204,19 +204,19 @@ class BitcoinBlockchainAnchorClient(
                 break
             }
         }
-        
+
         if (opReturnData == null) {
             throw TrustWeaveException.NotFound(resource = "OP_RETURN data not found in transaction: $txHash")
         }
-        
+
         // Parse payload JSON
         val payloadJson = String(opReturnData, StandardCharsets.UTF_8)
         val payload = Json.parseToJsonElement(payloadJson)
-        
+
         // Get block information
         val blockHash = getTransactionBlockHash(txHash)
         val blockNumber = blockHash?.let { getBlockHeight(it) }
-        
+
         AnchorResult(
             ref = buildAnchorRef(
                 txHash = txHash,
@@ -266,7 +266,7 @@ class BitcoinBlockchainAnchorClient(
                         is Boolean -> add(param)
                         is List<*> -> {
                             // Handle list of addresses or other lists
-                            add(buildJsonArray { 
+                            add(buildJsonArray {
                                 param.forEach { item ->
                                     when (item) {
                                         is String -> add(item)
@@ -308,39 +308,39 @@ class BitcoinBlockchainAnchorClient(
                 }
             })
         }
-        
+
         val request = Request.Builder()
             .url(rpcUrl!!)
             .post(requestBody.toString().toRequestBody("application/json".toMediaType()))
             .build()
-        
+
         val response = httpClient.newCall(request).execute()
         val responseBody = response.body?.string()
-        
+
         if (!response.isSuccessful) {
             throw TrustWeaveException.Unknown(message = "Bitcoin RPC call failed: ${response.code} - ${response.message}")
         }
-        
+
         val jsonResponse = Json.parseToJsonElement(responseBody ?: "{}").jsonObject
         val error = jsonResponse["error"]
         if (error != null && error !is JsonNull) {
             throw TrustWeaveException.Unknown(message = "Bitcoin RPC error: ${error.jsonObject["message"]?.jsonPrimitive?.content ?: "Unknown error"}")
         }
-        
+
         jsonResponse["result"]?.jsonPrimitive?.content
             ?: throw TrustWeaveException.Unknown(message = "No result in Bitcoin RPC response")
     }
-    
+
     /**
      * Get unspent transaction outputs.
      */
     private suspend fun getUnspentOutputs(): List<UtxoInfo> {
         val address = options["address"] as? String
             ?: throw IllegalStateException("Bitcoin address required for transaction creation")
-        
+
         val result = rpcCall("listunspent", listOf(0, 9999999, listOf(address)))
         val utxosJson = Json.parseToJsonElement(result).jsonArray
-        
+
         return utxosJson.map { utxoJson ->
             val utxo = utxoJson.jsonObject
             UtxoInfo(
@@ -353,21 +353,21 @@ class BitcoinBlockchainAnchorClient(
             )
         }
     }
-    
+
     /**
      * Send raw transaction via RPC.
      */
     private suspend fun sendRawTransaction(txHex: String): String {
         return rpcCall("sendrawtransaction", listOf(txHex))
     }
-    
+
     /**
      * Get raw transaction hex via RPC.
      */
     private suspend fun getRawTransaction(txHash: String): String {
         return rpcCall("getrawtransaction", listOf(txHash))
     }
-    
+
     /**
      * Get transaction block hash.
      */
@@ -380,7 +380,7 @@ class BitcoinBlockchainAnchorClient(
             null
         }
     }
-    
+
     /**
      * Get block height from block hash.
      */
@@ -393,7 +393,7 @@ class BitcoinBlockchainAnchorClient(
             null
         }
     }
-    
+
     /**
      * UTXO information.
      */
@@ -403,11 +403,11 @@ class BitcoinBlockchainAnchorClient(
         val scriptPubKey: ScriptPubKey,
         val amount: Long
     )
-    
+
     private data class ScriptPubKey(
         val hex: String
     )
-    
+
     override fun close() {
         httpClient.dispatcher.executorService.shutdown()
     }

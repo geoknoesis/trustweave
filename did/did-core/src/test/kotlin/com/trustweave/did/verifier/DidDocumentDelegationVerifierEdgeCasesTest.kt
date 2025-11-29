@@ -17,42 +17,42 @@ import kotlin.test.assertTrue
  * Edge case tests for DID Document Delegation Verifier.
  */
 class DidDocumentDelegationVerifierEdgeCasesTest {
-    
+
     @Test
     fun `test verify delegation with empty capabilityDelegation list`() = runBlocking {
         val delegatorDid = "did:key:delegator"
         val delegateDid = "did:key:delegate"
-        
+
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
             when (did) {
-                delegatorDid -> DidResolutionResult(
+                delegatorDid -> DidResolutionResult.Success(
                     document = DidDocument(
                         id = delegatorDid,
                         capabilityDelegation = emptyList()
                     )
                 )
-                delegateDid -> DidResolutionResult(
+                delegateDid -> DidResolutionResult.Success(
                     document = DidDocument(id = delegateDid)
                 )
                 else -> null
             }
         }
-        
+
         val verifier = DidDocumentDelegationVerifier(resolveDid)
         val result = verifier.verify(delegatorDid, delegateDid)
-        
+
         assertFalse(result.valid)
         assertTrue(result.errors.any { it.contains("capabilityDelegation") })
     }
-    
+
     @Test
     fun `test verify delegation with verification method reference`() = runBlocking {
         val delegatorDid = "did:key:delegator"
         val delegateDid = "did:key:delegate"
-        
+
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
             when (did) {
-                delegatorDid -> DidResolutionResult(
+                delegatorDid -> DidResolutionResult.Success(
                     document = DidDocument(
                         id = delegatorDid,
                         capabilityDelegation = listOf("$delegateDid#key-1"),
@@ -65,7 +65,7 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
                         )
                     )
                 )
-                delegateDid -> DidResolutionResult(
+                delegateDid -> DidResolutionResult.Success(
                     document = DidDocument(
                         id = delegateDid,
                         verificationMethod = listOf(
@@ -80,69 +80,69 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
                 else -> null
             }
         }
-        
+
         val verifier = DidDocumentDelegationVerifier(resolveDid)
         val result = verifier.verify(delegatorDid, delegateDid)
-        
+
         assertTrue(result.valid)
     }
-    
+
     @Test
     fun `test verify delegation with relative verification method reference`() = runBlocking {
         val delegatorDid = "did:key:delegator"
         val delegateDid = "did:key:delegate"
-        
+
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
             when (did) {
-                delegatorDid -> DidResolutionResult(
+                delegatorDid -> DidResolutionResult.Success(
                     document = DidDocument(
                         id = delegatorDid,
                         capabilityDelegation = listOf("#key-1")
                     )
                 )
-                delegateDid -> DidResolutionResult(
+                delegateDid -> DidResolutionResult.Success(
                     document = DidDocument(id = delegateDid)
                 )
                 else -> null
             }
         }
-        
+
         val verifier = DidDocumentDelegationVerifier(resolveDid)
         val result = verifier.verify(delegatorDid, delegateDid)
-        
+
         // Relative reference may not match delegate DID
         assertNotNull(result)
     }
-    
+
     @Test
     fun `test verify multi-hop delegation with single DID`() = runBlocking {
         val resolveDid: suspend (String) -> DidResolutionResult? = { null }
-        
+
         val verifier = DidDocumentDelegationVerifier(resolveDid)
         val result = verifier.verifyChain(listOf("did:key:single"))
-        
+
         assertFalse(result.valid)
         assertTrue(result.errors.any { it.contains("at least 2") })
     }
-    
+
     @Test
     fun `test verify multi-hop delegation with empty chain`() = runBlocking {
         val resolveDid: suspend (String) -> DidResolutionResult? = { null }
-        
+
         val verifier = DidDocumentDelegationVerifier(resolveDid)
         val result = verifier.verifyChain(emptyList())
-        
+
         assertFalse(result.valid)
         assertTrue(result.errors.any { it.contains("at least 2") })
     }
-    
+
     @Test
     fun `test verify delegation with same delegator and delegate`() = runBlocking {
         val did = "did:key:same"
-        
+
         val resolveDid: suspend (String) -> DidResolutionResult? = { d ->
             if (d == did) {
-                DidResolutionResult(
+                DidResolutionResult.Success(
                     document = DidDocument(
                         id = did,
                         capabilityDelegation = listOf("$did#key-1")
@@ -150,14 +150,14 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
                 )
             } else null
         }
-        
+
         val verifier = DidDocumentDelegationVerifier(resolveDid)
         val result = verifier.verify(did, did)
-        
+
         // Self-delegation should be valid if in capabilityDelegation
         assertTrue(result.valid)
     }
-    
+
     @Test
     fun `test verify delegation chain result with errors`() {
         val result = DelegationChainResult(
@@ -165,12 +165,12 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
             path = listOf("did:key:a", "did:key:b"),
             errors = listOf("Delegation failed", "Missing capability")
         )
-        
+
         assertFalse(result.valid)
         assertEquals(2, result.errors.size)
         assertEquals(2, result.path.size)
     }
-    
+
     @Test
     fun `test verify delegation chain result with empty path`() {
         val result = DelegationChainResult(
@@ -178,7 +178,7 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
             path = emptyList(),
             errors = listOf("No path found")
         )
-        
+
         assertFalse(result.valid)
         assertTrue(result.path.isEmpty())
         assertTrue(result.errors.isNotEmpty())

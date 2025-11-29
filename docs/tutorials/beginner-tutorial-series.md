@@ -26,7 +26,7 @@ Before starting:
 
 ## Tutorial 1: Your First DID
 
-**Duration:** 15-20 minutes  
+**Duration:** 15-20 minutes
 **Goal:** Create and resolve your first DID
 
 ### What You'll Learn
@@ -57,7 +57,7 @@ fun main() = runBlocking {
     // Create TrustWeave with default configuration
     // This includes did:key method by default
     val TrustWeave = TrustWeave.create()
-    
+
     println("✅ TrustWeave initialized")
 }
 ```
@@ -71,11 +71,11 @@ import com.trustweave.core.*
 
 fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
-    
+
     // Create a DID using the default method (did:key)
     val did = TrustWeave.dids.create()
     val result = Result.success(did)
-    
+
     result.fold(
         onSuccess = { didDocument ->
             println("✅ Created DID: ${didDocument.id}")
@@ -97,20 +97,20 @@ fun main() = runBlocking {
 ```kotlin
 fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
-    
+
     // Create a DID
     val did = TrustWeave.dids.create()
     val createResult = Result.success(did)
-    
+
     createResult.fold(
         onSuccess = { didDocument ->
             val did = didDocument.id
             println("Created DID: $did")
-            
+
             // Resolve the DID we just created
             val resolution = TrustWeave.dids.resolve(did)
             val resolveResult = Result.success(resolution)
-            
+
             resolveResult.fold(
                 onSuccess = { resolution ->
                     println("✅ Resolved DID: ${resolution.document?.id}")
@@ -135,11 +135,11 @@ fun main() = runBlocking {
 ```kotlin
 fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
-    
+
     // Try to resolve a non-existent DID
     val resolution = TrustWeave.dids.resolve("did:key:invalid")
     val result = Result.success(resolution)
-    
+
     result.fold(
         onSuccess = { resolution ->
             println("Resolved: ${resolution.document?.id}")
@@ -181,7 +181,7 @@ fun main() = runBlocking {
 
 ## Tutorial 2: Issuing Your First Credential
 
-**Duration:** 20-25 minutes  
+**Duration:** 20-25 minutes
 **Goal:** Issue and verify a verifiable credential
 
 ### What You'll Learn
@@ -196,11 +196,11 @@ fun main() = runBlocking {
 ```kotlin
 fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
-    
+
     // Create issuer DID (the organization issuing credentials)
     val issuerDid = TrustWeave.dids.create()
     println("Issuer DID: ${issuerDid.id}")
-    
+
     // Create holder DID (the person receiving the credential)
     val holderDid = TrustWeave.dids.create()
     println("Holder DID: ${holderDid.id}")
@@ -216,15 +216,15 @@ import com.trustweave.credential.*
 
 fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
-    
+
     // Create DIDs
     val issuerDid = TrustWeave.dids.create()
     val holderDid = TrustWeave.dids.create()
-    
+
     // Get the first verification method from issuer's DID document
     val issuerKeyId = issuerDid.verificationMethod.firstOrNull()?.id
         ?: error("No verification method found")
-    
+
     // Issue a credential
     val credentialResult = TrustWeave.issueCredential(
         issuerDid = issuerDid.id,
@@ -237,7 +237,7 @@ fun main() = runBlocking {
         ),
         types = listOf("VerifiableCredential", "EducationalCredential")
     )
-    
+
     credentialResult.fold(
         onSuccess = { credential ->
             println("✅ Credential issued")
@@ -262,14 +262,14 @@ fun main() = runBlocking {
 ```kotlin
 fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
-    
+
     // ... (create DIDs and issue credential from Step 2) ...
-    
+
     val credential = credentialResult.getOrThrow()
-    
+
     // Verify the credential
     val verificationResult = TrustWeave.verifyCredential(credential)
-    
+
     verificationResult.fold(
         onSuccess = { verification ->
             if (verification.valid) {
@@ -277,7 +277,7 @@ fun main() = runBlocking {
                 println("   Proof valid: ${verification.proofValid}")
                 println("   Not expired: ${verification.notExpired}")
                 println("   Not revoked: ${verification.notRevoked}")
-                
+
                 if (verification.warnings.isNotEmpty()) {
                     println("   Warnings: ${verification.warnings}")
                 }
@@ -303,12 +303,12 @@ import java.time.temporal.ChronoUnit
 
 fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
-    
+
     // ... (create DIDs) ...
-    
+
     // Issue credential with expiration date (1 year from now)
     val expirationDate = Instant.now().plus(365, ChronoUnit.DAYS)
-    
+
     val credentialResult = TrustWeave.issueCredential(
         issuerDid = issuerDid.id,
         issuerKeyId = issuerKeyId,
@@ -320,7 +320,7 @@ fun main() = runBlocking {
         types = listOf("VerifiableCredential", "EducationalCredential"),
         expirationDate = expirationDate
     )
-    
+
     // ... (verify credential) ...
 }
 ```
@@ -344,7 +344,7 @@ fun main() = runBlocking {
 
 ## Tutorial 3: Managing Credentials with Wallets
 
-**Duration:** 25-30 minutes  
+**Duration:** 25-30 minutes
 **Goal:** Store, organize, and query credentials using wallets
 
 ### What You'll Learn
@@ -362,16 +362,16 @@ import com.trustweave.wallet.*
 
 fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
-    
+
     // Create holder DID
     val holderDid = TrustWeave.dids.create()
-    
+
     // Create wallet for the holder
     val walletResult = TrustWeave.createWallet(
         holderDid = holderDid.id,
         provider = WalletProvider.InMemory  // For testing
     )
-    
+
     walletResult.fold(
         onSuccess = { wallet ->
             println("✅ Wallet created: ${wallet.walletId}")
@@ -391,18 +391,18 @@ fun main() = runBlocking {
 ```kotlin
 fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
-    
+
     // Create DIDs and issue credential (from Tutorial 2)
     val issuerDid = TrustWeave.dids.create()
     val holderDid = TrustWeave.dids.create()
     val credential = /* ... issue credential ... */
-    
+
     // Create wallet
     val wallet = TrustWeave.createWallet(holderDid.id).getOrThrow()
-    
+
     // Store credential in wallet
     val storeResult = wallet.storeCredential(credential)
-    
+
     storeResult.fold(
         onSuccess = { storedId ->
             println("✅ Credential stored: $storedId")
@@ -421,19 +421,19 @@ fun main() = runBlocking {
 ```kotlin
 fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
-    
+
     // ... (create wallet and store credentials) ...
-    
+
     // Query all credentials
     val allCredentials = wallet.queryCredentials()
     println("Total credentials: ${allCredentials.size}")
-    
+
     // Query by type
     val educationalCreds = wallet.queryCredentials(
         type = "EducationalCredential"
     )
     println("Educational credentials: ${educationalCreds.size}")
-    
+
     // Query by issuer
     val issuerCreds = wallet.queryCredentials(
         issuer = issuerDid.id
@@ -449,32 +449,32 @@ fun main() = runBlocking {
 ```kotlin
 fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
-    
+
     // Create wallet with organization features enabled
     val wallet = TrustWeave.createWallet(holderDid.id) {
         enableOrganization = true
     }.getOrThrow()
-    
+
     // Store credentials
     val credential = /* ... */
     wallet.storeCredential(credential).getOrThrow()
-    
+
     // Use organization features
     wallet.withOrganization { org ->
         // Create a collection
         val collection = org.createCollection("Education")
-        
+
         // Add credential to collection
         org.addToCollection(collection.id, credential.id)
-        
+
         // Tag credential
         org.tagCredential(credential.id, "diploma")
         org.tagCredential(credential.id, "bachelor")
-        
+
         // Query by collection
         val educationCreds = org.queryByCollection(collection.id)
         println("Education collection: ${educationCreds.size} credentials")
-        
+
         // Query by tag
         val diplomaCreds = org.queryByTag("diploma")
         println("Diploma credentials: ${diplomaCreds.size}")
@@ -502,7 +502,7 @@ fun main() = runBlocking {
 
 ## Tutorial 4: Building a Complete Workflow
 
-**Duration:** 30-35 minutes  
+**Duration:** 30-35 minutes
 **Goal:** Build an end-to-end issuer-holder-verifier workflow
 
 ### What You'll Learn
@@ -517,18 +517,18 @@ fun main() = runBlocking {
 ```kotlin
 fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
-    
+
     // Issuer: University issuing degrees
     val issuerDid = TrustWeave.dids.create()
     val issuerKeyId = issuerDid.verificationMethod.first().id
-    
+
     // Holder: Student receiving degree
     val holderDid = TrustWeave.dids.create()
     val holderWallet = TrustWeave.createWallet(holderDid.id).getOrThrow()
-    
+
     // Verifier: Employer verifying degree
     val verifierDid = TrustWeave.dids.create()
-    
+
     println("✅ All parties set up")
     println("   Issuer: ${issuerDid.id}")
     println("   Holder: ${holderDid.id}")
@@ -543,9 +543,9 @@ fun main() = runBlocking {
 ```kotlin
 fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
-    
+
     // ... (setup parties) ...
-    
+
     // ISSUER: Issue credential
     val credential = TrustWeave.issueCredential(
         issuerDid = issuerDid.id,
@@ -559,7 +559,7 @@ fun main() = runBlocking {
         ),
         types = listOf("VerifiableCredential", "EducationalCredential")
     ).getOrThrow()
-    
+
     println("✅ Credential issued by issuer")
 }
 ```
@@ -569,9 +569,9 @@ fun main() = runBlocking {
 ```kotlin
 fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
-    
+
     // ... (setup and issue) ...
-    
+
     // HOLDER: Store credential in wallet
     val storedId = holderWallet.storeCredential(credential).getOrThrow()
     println("✅ Credential stored by holder: $storedId")
@@ -585,9 +585,9 @@ import com.trustweave.presentation.*
 
 fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
-    
+
     // ... (setup, issue, store) ...
-    
+
     // HOLDER: Create presentation for verifier
     val presentationResult = holderWallet.withPresentation { pres ->
         pres.createPresentation(
@@ -597,7 +597,7 @@ fun main() = runBlocking {
             domain = "example-employer.com"
         )
     }
-    
+
     presentationResult.fold(
         onSuccess = { presentation ->
             println("✅ Presentation created by holder")
@@ -618,18 +618,18 @@ fun main() = runBlocking {
 ```kotlin
 fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
-    
+
     // ... (complete workflow above) ...
-    
+
     val presentation = presentationResult.getOrThrow()
-    
+
     // VERIFIER: Verify presentation
     val verificationResult = TrustWeave.verifyPresentation(
         presentation = presentation,
         challenge = "verifier-challenge-123",  // Must match
         domain = "example-employer.com"  // Must match
     )
-    
+
     verificationResult.fold(
         onSuccess = { verification ->
             if (verification.valid) {
@@ -655,9 +655,9 @@ fun main() = runBlocking {
 ```kotlin
 fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
-    
+
     // ... (setup and issue) ...
-    
+
     // HOLDER: Create presentation with selective disclosure
     // Only reveal degree and university, hide name and graduation date
     val presentation = holderWallet.withPresentation { pres ->
@@ -671,7 +671,7 @@ fun main() = runBlocking {
             )
         )
     }.getOrThrow()
-    
+
     println("✅ Presentation with selective disclosure created")
     // Verifier only sees degree and university, not name or graduation date
 }
@@ -697,7 +697,7 @@ fun main() = runBlocking {
 
 ## Tutorial 5: Adding Blockchain Anchoring
 
-**Duration:** 25-30 minutes  
+**Duration:** 25-30 minutes
 **Goal:** Anchor data to blockchain for tamper evidence
 
 ### What You'll Learn
@@ -726,7 +726,7 @@ fun main() = runBlocking {
             )
         }
     }
-    
+
     println("✅ Blockchain client registered")
 }
 ```
@@ -751,21 +751,21 @@ fun main() = runBlocking {
     val TrustWeave = TrustWeave.create {
         // ... (register blockchain client) ...
     }
-    
+
     // Create data to anchor
     val data = ImportantData(
         id = "data-123",
         timestamp = Instant.now().toString(),
         value = "Important information"
     )
-    
+
     // Anchor to blockchain
     val anchorResult = TrustWeave.blockchains.anchor(
         data = data,
         serializer = ImportantData.serializer(),
         chainId = "algorand:testnet"
     )
-    
+
     anchorResult.fold(
         onSuccess = { anchor ->
             println("✅ Data anchored")
@@ -789,16 +789,16 @@ fun main() = runBlocking {
     val TrustWeave = TrustWeave.create {
         // ... (register blockchain client) ...
     }
-    
+
     // ... (anchor data) ...
     val anchorRef = anchorResult.getOrThrow().ref
-    
+
     // Read anchored data
     val readResult = TrustWeave.readAnchor<ImportantData>(
         ref = anchorRef,
         serializer = ImportantData.serializer()
     )
-    
+
     readResult.fold(
         onSuccess = { data ->
             println("✅ Read anchored data: $data")
@@ -819,13 +819,13 @@ fun main() = runBlocking {
     val TrustWeave = TrustWeave.create {
         // ... (register blockchain client) ...
     }
-    
+
     // Create status list for revocation
     val statusList = TrustWeave.createStatusList(
         issuerDid = issuerDid.id,
         purpose = StatusPurpose.REVOCATION
     ).getOrThrow()
-    
+
     // Anchor status list to blockchain
     // This makes revocation status tamper-evident
     val anchorResult = TrustWeave.blockchains.anchor(
@@ -833,7 +833,7 @@ fun main() = runBlocking {
         serializer = StatusListCredential.serializer(),
         chainId = "algorand:testnet"
     )
-    
+
     anchorResult.fold(
         onSuccess = { anchor ->
             println("✅ Status list anchored")

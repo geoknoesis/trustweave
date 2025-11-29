@@ -9,10 +9,10 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Credential template for reusable credential structures.
- * 
+ *
  * Templates define the structure, schema, and default values for credentials,
  * making it easier to issue multiple credentials of the same type.
- * 
+ *
  * @param id Unique template identifier
  * @param name Human-readable template name
  * @param schemaId Schema ID for validation
@@ -36,9 +36,9 @@ data class CredentialTemplate(
 
 /**
  * Service for managing credential templates.
- * 
+ *
  * Provides template creation, retrieval, and credential issuance from templates.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val template = CredentialTemplate(
@@ -49,25 +49,25 @@ data class CredentialTemplate(
  *     defaultValidityDays = 365,
  *     requiredFields = listOf("name", "email")
  * )
- * 
+ *
  * val service = CredentialTemplateService()
  * service.createTemplate(template)
- * 
+ *
  * // Issue credential from template
  * val subject = buildJsonObject {
  *     put("name", "John Doe")
  *     put("email", "john@example.com")
  * }
- * 
+ *
  * val credential = service.issueFromTemplate("person-credential", subject)
  * ```
  */
 class CredentialTemplateService {
     private val templates = ConcurrentHashMap<String, CredentialTemplate>()
-    
+
     /**
      * Create or update a credential template.
-     * 
+     *
      * @param template Template to create
      * @return Created template
      */
@@ -75,20 +75,20 @@ class CredentialTemplateService {
         templates[template.id] = template
         return template
     }
-    
+
     /**
      * Get a template by ID.
-     * 
+     *
      * @param templateId Template ID
      * @return Template, or null if not found
      */
     fun getTemplate(templateId: String): CredentialTemplate? {
         return templates[templateId]
     }
-    
+
     /**
      * Issue a credential from a template.
-     * 
+     *
      * @param templateId Template ID
      * @param subject Credential subject data
      * @param options Additional options (issuer, validity, etc.)
@@ -102,14 +102,14 @@ class CredentialTemplateService {
     ): VerifiableCredential {
         val template = templates[templateId]
             ?: throw IllegalArgumentException("Template not found: $templateId")
-        
+
         // Validate required fields
         for (field in template.requiredFields) {
             if (!subject.containsKey(field)) {
                 throw IllegalArgumentException("Required field '$field' is missing in subject")
             }
         }
-        
+
         // Calculate expiration date if default validity is set
         val expirationDate = if (template.defaultValidityDays != null) {
             val now = java.time.Instant.now()
@@ -118,12 +118,12 @@ class CredentialTemplateService {
         } else {
             null
         }
-        
+
         // Get issuer from options or template default
-        val issuer = options["issuer"] as? String 
+        val issuer = options["issuer"] as? String
             ?: template.defaultIssuer
             ?: throw IllegalArgumentException("Issuer must be provided in options or template")
-        
+
         // Build credential
         return VerifiableCredential(
             id = options["id"] as? String,
@@ -139,26 +139,26 @@ class CredentialTemplateService {
             )
         )
     }
-    
+
     /**
      * List all templates.
-     * 
+     *
      * @return List of all templates
      */
     fun listTemplates(): List<CredentialTemplate> {
         return templates.values.toList()
     }
-    
+
     /**
      * Delete a template.
-     * 
+     *
      * @param templateId Template ID
      * @return true if template was deleted, false if not found
      */
     fun deleteTemplate(templateId: String): Boolean {
         return templates.remove(templateId) != null
     }
-    
+
     /**
      * Clear all templates.
      * Useful for testing.

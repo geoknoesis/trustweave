@@ -4,7 +4,7 @@ import kotlinx.coroutines.runBlocking
 
 /**
  * Supply Chain Traceability Scenario Example
- * 
+ *
  * This example demonstrates supply chain credential tracking.
  * Full implementation coming soon - see docs/getting-started/supply-chain-traceability-scenario.md
  */

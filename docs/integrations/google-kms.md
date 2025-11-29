@@ -201,18 +201,18 @@ val fipsKey = kms.generateKey(
 ### Signing Data
 
 ```kotlin
-// Sign with key resource name
-val signature = kms.sign(keyId, data.toByteArray())
+// Sign with key resource name (KeyId value class)
+val signature = kms.sign(KeyId(keyId), data.toByteArray())
 
 // Sign with full resource name
 val signature = kms.sign(
-    "projects/my-project/locations/us-east1/keyRings/my-key-ring/cryptoKeys/my-key",
+    KeyId("projects/my-project/locations/us-east1/keyRings/my-key-ring/cryptoKeys/my-key"),
     data.toByteArray()
 )
 
 // Sign with algorithm override
 val signature = kms.sign(
-    keyId = keyId,
+    keyId = KeyId(keyId),
     data = data.toByteArray(),
     algorithm = Algorithm.Secp256k1
 )
@@ -221,12 +221,12 @@ val signature = kms.sign(
 ### Retrieving Public Keys
 
 ```kotlin
-// Get public key by key ID (uses config defaults)
-val publicKey = kms.getPublicKey("my-key")
+// Get public key by key ID (uses config defaults, KeyId value class)
+val publicKey = kms.getPublicKey(KeyId("my-key"))
 
 // Get public key by full resource name
 val publicKey = kms.getPublicKey(
-    "projects/my-project/locations/us-east1/keyRings/my-key-ring/cryptoKeys/my-key"
+    KeyId("projects/my-project/locations/us-east1/keyRings/my-key-ring/cryptoKeys/my-key")
 )
 
 // Access JWK format
@@ -238,7 +238,7 @@ println("Public key JWK: $jwk")
 
 ```kotlin
 // Destroy key version (makes key unusable)
-val deleted = kms.deleteKey(keyId)
+val deleted = kms.deleteKey(KeyId(keyId))
 
 // Note: Google Cloud KMS schedules key version destruction
 // The key version enters a "DESTROYED" state and cannot be used

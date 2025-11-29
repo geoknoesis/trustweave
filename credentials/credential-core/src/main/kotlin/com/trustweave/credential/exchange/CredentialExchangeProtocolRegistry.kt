@@ -6,18 +6,18 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Registry for credential exchange protocols.
- * 
+ *
  * Allows registration and discovery of different exchange protocols
  * (DIDComm, OIDC4VCI, CHAPI, etc.) for use in credential workflows.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * val registry = CredentialExchangeProtocolRegistry()
- * 
+ *
  * // Register protocols
  * registry.register(DidCommExchangeProtocol(didCommService))
  * registry.register(Oidc4VciExchangeProtocol(oidc4vciService))
- * 
+ *
  * // Use protocol
  * val offer = registry.offerCredential(
  *     protocolName = "didcomm",
@@ -29,43 +29,43 @@ class CredentialExchangeProtocolRegistry(
     initialProtocols: Map<String, CredentialExchangeProtocol> = emptyMap()
 ) {
     private val protocols = ConcurrentHashMap<String, CredentialExchangeProtocol>(initialProtocols)
-    
+
     /**
      * Registers a credential exchange protocol.
      */
     fun register(protocol: CredentialExchangeProtocol) {
         protocols[protocol.protocolName] = protocol
     }
-    
+
     /**
      * Unregisters a protocol.
      */
     fun unregister(protocolName: String) {
         protocols.remove(protocolName)
     }
-    
+
     /**
      * Gets a protocol by name.
      */
     fun get(protocolName: String): CredentialExchangeProtocol? {
         return protocols[protocolName]
     }
-    
+
     /**
      * Gets all registered protocols.
      */
     fun getAll(): Map<String, CredentialExchangeProtocol> = protocols.toMap()
-    
+
     /**
      * Gets all registered protocol names.
      */
     fun getAllProtocolNames(): List<String> = protocols.keys.toList()
-    
+
     /**
      * Checks if a protocol is registered.
      */
     fun isRegistered(protocolName: String): Boolean = protocols.containsKey(protocolName)
-    
+
     /**
      * Creates a credential offer using the specified protocol.
      */
@@ -78,7 +78,7 @@ class CredentialExchangeProtocolRegistry(
                 protocolName = protocolName,
                 availableProtocols = protocols.keys.toList()
             )
-        
+
         if (!protocol.supportedOperations.contains(ExchangeOperation.OFFER_CREDENTIAL)) {
             throw ExchangeException.OperationNotSupported(
                 protocolName = protocolName,
@@ -86,7 +86,7 @@ class CredentialExchangeProtocolRegistry(
                 supportedOperations = protocol.supportedOperations.map { it.name }
             )
         }
-        
+
         return try {
             protocol.offerCredential(request)
         } catch (e: ExchangeException) {
@@ -96,7 +96,7 @@ class CredentialExchangeProtocolRegistry(
             throw e.toExchangeException()
         }
     }
-    
+
     /**
      * Requests a credential using the specified protocol.
      */
@@ -109,7 +109,7 @@ class CredentialExchangeProtocolRegistry(
                 protocolName = protocolName,
                 availableProtocols = protocols.keys.toList()
             )
-        
+
         if (!protocol.supportedOperations.contains(ExchangeOperation.REQUEST_CREDENTIAL)) {
             throw ExchangeException.OperationNotSupported(
                 protocolName = protocolName,
@@ -117,7 +117,7 @@ class CredentialExchangeProtocolRegistry(
                 supportedOperations = protocol.supportedOperations.map { it.name }
             )
         }
-        
+
         return try {
             protocol.requestCredential(request)
         } catch (e: ExchangeException) {
@@ -127,7 +127,7 @@ class CredentialExchangeProtocolRegistry(
             throw e.toExchangeException()
         }
     }
-    
+
     /**
      * Issues a credential using the specified protocol.
      */
@@ -140,7 +140,7 @@ class CredentialExchangeProtocolRegistry(
                 protocolName = protocolName,
                 availableProtocols = protocols.keys.toList()
             )
-        
+
         if (!protocol.supportedOperations.contains(ExchangeOperation.ISSUE_CREDENTIAL)) {
             throw ExchangeException.OperationNotSupported(
                 protocolName = protocolName,
@@ -148,7 +148,7 @@ class CredentialExchangeProtocolRegistry(
                 supportedOperations = protocol.supportedOperations.map { it.name }
             )
         }
-        
+
         return try {
             protocol.issueCredential(request)
         } catch (e: ExchangeException) {
@@ -158,7 +158,7 @@ class CredentialExchangeProtocolRegistry(
             throw e.toExchangeException()
         }
     }
-    
+
     /**
      * Requests a proof using the specified protocol.
      */
@@ -171,7 +171,7 @@ class CredentialExchangeProtocolRegistry(
                 protocolName = protocolName,
                 availableProtocols = protocols.keys.toList()
             )
-        
+
         if (!protocol.supportedOperations.contains(ExchangeOperation.REQUEST_PROOF)) {
             throw ExchangeException.OperationNotSupported(
                 protocolName = protocolName,
@@ -179,7 +179,7 @@ class CredentialExchangeProtocolRegistry(
                 supportedOperations = protocol.supportedOperations.map { it.name }
             )
         }
-        
+
         return try {
             protocol.requestProof(request)
         } catch (e: ExchangeException) {
@@ -189,7 +189,7 @@ class CredentialExchangeProtocolRegistry(
             throw e.toExchangeException()
         }
     }
-    
+
     /**
      * Presents a proof using the specified protocol.
      */
@@ -202,7 +202,7 @@ class CredentialExchangeProtocolRegistry(
                 protocolName = protocolName,
                 availableProtocols = protocols.keys.toList()
             )
-        
+
         if (!protocol.supportedOperations.contains(ExchangeOperation.PRESENT_PROOF)) {
             throw ExchangeException.OperationNotSupported(
                 protocolName = protocolName,
@@ -210,7 +210,7 @@ class CredentialExchangeProtocolRegistry(
                 supportedOperations = protocol.supportedOperations.map { it.name }
             )
         }
-        
+
         return try {
             protocol.presentProof(request)
         } catch (e: ExchangeException) {
@@ -220,21 +220,21 @@ class CredentialExchangeProtocolRegistry(
             throw e.toExchangeException()
         }
     }
-    
+
     /**
      * Clears all registered protocols.
      */
     fun clear() {
         protocols.clear()
     }
-    
+
     /**
      * Creates a snapshot of the registry.
      */
     fun snapshot(): CredentialExchangeProtocolRegistry {
         return CredentialExchangeProtocolRegistry(protocols.toMap())
     }
-    
+
     companion object {
         /**
          * Creates an empty registry.

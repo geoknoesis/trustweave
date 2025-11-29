@@ -66,7 +66,7 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustweave = TrustWeave.create()
-    
+
     // Create DID using did:key method
     try {
         val did = trustweave.dids.create()
@@ -89,18 +89,18 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustweave = TrustWeave.create()
-    
+
     // Create DID with did:key method
     val keyDid = trustweave.dids.create("key") {
         algorithm = KeyAlgorithm.Ed25519
     }
-    
+
     // Create DID with did:web method (requires did:web method registration)
     val webDid = trustweave.dids.create("web") {
         algorithm = KeyAlgorithm.Ed25519
         // Note: did:web specific options would be in additionalProperties
     }
-    
+
     println("Key DID: ${keyDid.id}")
     println("Web DID: ${webDid.id}")
 }
@@ -119,22 +119,22 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     // Create KMS
     val kms = InMemoryKeyManagementService()
-    
+
     // Create DID method registry
     val registry = DidMethodRegistry()
-    
+
     // Register did:key method
     val keyMethod = /* create or discover did:key method */
     registry.register("key", keyMethod)
-    
+
     // Create DID using registry
     val options = didCreationOptions {
         algorithm = KeyAlgorithm.Secp256k1
     }
-    
+
     val method = registry.get("key")
     val didDoc = method?.createDid(options)
-    
+
     println("Created DID: ${didDoc?.id}")
 }
 ```
@@ -151,7 +151,7 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustweave = TrustWeave.create()
-    
+
     val did = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
     try {
         val resolution = trustweave.dids.resolve(did)
@@ -179,10 +179,10 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     val registry = DidMethodRegistry()
     // ... register methods ...
-    
+
     val did = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
     val resolutionResult = registry.resolve(did)
-    
+
     resolutionResult.fold(
         onSuccess = { result ->
             println("Resolved: ${result.didDocument?.id}")
@@ -207,9 +207,9 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustweave = TrustWeave.create()
-    
+
     val did = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
-    
+
     // Update DID document
     try {
         val updatedDoc = trustweave.dids.update(did) { document ->
@@ -222,7 +222,7 @@ fun main() = runBlocking {
                 )
             )
         }
-        
+
         println("Updated DID: ${updatedDoc.id}")
         println("Services: ${updatedDoc.service.size}")
     } catch (error: TrustWeaveError) {
@@ -243,9 +243,9 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustweave = TrustWeave.create()
-    
+
     val did = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
-    
+
     // Deactivate DID
     try {
         val success = trustweave.dids.deactivate(did)
@@ -274,26 +274,26 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     val kms = InMemoryKeyManagementService()
     val registry = DidMethodRegistry()
-    
+
     // Register multiple DID methods
     registry.register("key", /* did:key method */)
     registry.register("web", /* did:web method */)
     registry.register("ion", /* did:ion method */)
-    
+
     // Create DIDs using different methods
     val keyDid = registry.get("key")?.createDid(didCreationOptions {
         algorithm = KeyAlgorithm.Ed25519
     })
-    
+
     val webDid = registry.get("web")?.createDid(didCreationOptions {
         domain = "example.com"
         path = "/did/user/alice"
     })
-    
+
     val ionDid = registry.get("ion")?.createDid(didCreationOptions {
         // ION-specific options
     })
-    
+
     println("Key DID: ${keyDid?.id}")
     println("Web DID: ${webDid?.id}")
     println("ION DID: ${ionDid?.id}")
@@ -312,19 +312,19 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustweave = TrustWeave.create()
-    
+
     try {
         val did = trustweave.dids.create()
         val document = did
-        
+
         // Access verification methods
         val verificationMethods = document.verificationMethod
         println("Verification methods: ${verificationMethods.size}")
-        
+
         // Access services
         val services = document.service
         println("Services: ${services.size}")
-        
+
         // Access authentication methods
         val authentication = document.authentication
         println("Authentication methods: ${authentication.size}")
@@ -345,7 +345,7 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustweave = TrustWeave.create()
-    
+
     try {
         val did = trustweave.dids.create()
         println("Created: ${did.id}")

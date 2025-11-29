@@ -31,16 +31,16 @@ Based on the TrustWeave codebase:
     enum class KeyAlgorithm(val algorithmName: String) {
         /** Ed25519 signature algorithm (recommended) */
         ED25519("Ed25519"),
-        
+
         /** secp256k1 (Bitcoin/Ethereum curve) */
         SECP256K1("secp256k1"),
-        
+
         /** P-256 (NIST curve) */
         P256("P-256"),
-        
+
         /** P-384 (NIST curve) */
         P384("P-384"),
-        
+
         /** P-521 (NIST curve) */
         P521("P-521");
 ```

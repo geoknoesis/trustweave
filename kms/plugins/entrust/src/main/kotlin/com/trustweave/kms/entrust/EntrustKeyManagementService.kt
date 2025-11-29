@@ -1,6 +1,7 @@
 package com.trustweave.kms.entrust
 
 import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.core.types.KeyId
 import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyHandle
 import com.trustweave.kms.KeyManagementService
@@ -11,9 +12,9 @@ import kotlinx.coroutines.withContext
 
 /**
  * Entrust nShield HSM implementation of KeyManagementService.
- * 
+ *
  * Supports all Entrust nShield HSM-compatible algorithms.
- * 
+ *
  * **Note:** This is a placeholder implementation. Entrust nShield HSM integration
  * requires access to Entrust SDK and HSM access.
  */
@@ -47,24 +48,30 @@ class EntrustKeyManagementService(
             )
         }
         // TODO: Implement Entrust nShield HSM API integration
-        throw TrustWeaveException("Entrust nShield HSM integration not yet implemented")
+        throw TrustWeaveException.Unknown(
+            message = "Entrust nShield HSM integration not yet implemented"
+        )
     }
 
-    override suspend fun getPublicKey(keyId: String): KeyHandle = withContext(Dispatchers.IO) {
+    override suspend fun getPublicKey(keyId: KeyId): KeyHandle = withContext(Dispatchers.IO) {
         // TODO: Implement Entrust nShield HSM API integration
-        throw TrustWeaveException("Entrust nShield HSM integration not yet implemented")
+        throw TrustWeaveException.Unknown(
+            message = "Entrust nShield HSM integration not yet implemented"
+        )
     }
 
     override suspend fun sign(
-        keyId: String,
+        keyId: KeyId,
         data: ByteArray,
         algorithm: Algorithm?
     ): ByteArray = withContext(Dispatchers.IO) {
         // TODO: Implement Entrust nShield HSM API integration
-        throw TrustWeaveException("Entrust nShield HSM integration not yet implemented")
+        throw TrustWeaveException.Unknown(
+            message = "Entrust nShield HSM integration not yet implemented"
+        )
     }
 
-    override suspend fun deleteKey(keyId: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deleteKey(keyId: KeyId): Boolean = withContext(Dispatchers.IO) {
         // TODO: Implement Entrust nShield HSM API integration
         false
     }

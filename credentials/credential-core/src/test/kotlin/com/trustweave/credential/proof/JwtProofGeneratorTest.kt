@@ -28,13 +28,13 @@ class JwtProofGeneratorTest {
     @Test
     fun `test generate proof`() = runBlocking {
         val credential = createTestCredential()
-        
+
         val proof = generator.generateProof(
             credential = credential,
             keyId = "key-1",
             options = ProofOptions(proofPurpose = "assertionMethod")
         )
-        
+
         assertNotNull(proof)
         assertEquals("JsonWebSignature2020", proof.type)
         assertNotNull(proof.jws)
@@ -44,7 +44,7 @@ class JwtProofGeneratorTest {
     @Test
     fun `test generate proof with options`() = runBlocking {
         val credential = createTestCredential()
-        
+
         val proof = generator.generateProof(
             credential = credential,
             keyId = "key-1",
@@ -55,7 +55,7 @@ class JwtProofGeneratorTest {
                 verificationMethod = "did:key:custom#key-1"
             )
         )
-        
+
         assertEquals("authentication", proof.proofPurpose)
         assertEquals("challenge-123", proof.challenge)
         assertEquals("example.com", proof.domain)
@@ -65,13 +65,13 @@ class JwtProofGeneratorTest {
     @Test
     fun `test generate JWT string`() = runBlocking {
         val credential = createTestCredential()
-        
+
         val jwt = generator.generateJwt(
             credential = credential,
             keyId = "key-1",
             options = ProofOptions(proofPurpose = "assertionMethod")
         )
-        
+
         assertNotNull(jwt)
         assertEquals("PLACEHOLDER_JWT_STRING", jwt)
     }
@@ -84,7 +84,7 @@ class JwtProofGeneratorTest {
     @Test
     fun `test generate JWT uses verification method from options`() = runBlocking {
         val credential = createTestCredential()
-        
+
         val jwt = generator.generateJwt(
             credential = credential,
             keyId = "key-1",
@@ -93,7 +93,7 @@ class JwtProofGeneratorTest {
                 verificationMethod = "did:key:custom#key-1"
             )
         )
-        
+
         assertNotNull(jwt)
     }
 

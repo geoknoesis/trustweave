@@ -12,7 +12,7 @@ import com.trustweave.anchor.spi.BlockchainIntegrationHelper
 class AlgorandBlockchainAnchorClientProvider : BlockchainAnchorClientProvider {
 
     override val name: String = "algorand"
-    
+
     override val supportedChains: List<String> = listOf(
         AlgorandBlockchainAnchorClient.MAINNET,
         AlgorandBlockchainAnchorClient.TESTNET,

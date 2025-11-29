@@ -36,7 +36,7 @@ class TrustWeaveIntegrationTest {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val anchorClient = InMemoryBlockchainAnchorClient("algorand:mainnet", "app-123")
-        
+
         // Step 1: Create a DID
         val didDocument = didMethod.createDid()
         assertNotNull(didDocument.id)
@@ -82,7 +82,7 @@ class TrustWeaveIntegrationTest {
         val client = InMemoryBlockchainAnchorClient("test:chain")
 
         val original = VerifiableCredentialDigest("vc-999", "uXYZ789")
-        
+
         val anchored = client.writePayload(
             Json.encodeToJsonElement(VerifiableCredentialDigest.serializer(), original)
         )

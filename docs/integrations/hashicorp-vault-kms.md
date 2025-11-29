@@ -208,15 +208,15 @@ val fipsKey = kms.generateKey(
 ### Signing Data
 
 ```kotlin
-// Sign with key name
-val signature = kms.sign("did-issuer-key", data.toByteArray())
+// Sign with key name (KeyId value class)
+val signature = kms.sign(KeyId("did-issuer-key"), data.toByteArray())
 
 // Sign with full key path
-val signature = kms.sign("transit/keys/did-issuer-key", data.toByteArray())
+val signature = kms.sign(KeyId("transit/keys/did-issuer-key"), data.toByteArray())
 
 // Sign with algorithm override
 val signature = kms.sign(
-    keyId = "did-issuer-key",
+    keyId = KeyId("did-issuer-key"),
     data = data.toByteArray(),
     algorithm = Algorithm.Ed25519
 )
@@ -225,11 +225,11 @@ val signature = kms.sign(
 ### Retrieving Public Keys
 
 ```kotlin
-// Get public key by key name
-val publicKey = kms.getPublicKey("did-issuer-key")
+// Get public key by key name (KeyId value class)
+val publicKey = kms.getPublicKey(KeyId("did-issuer-key"))
 
 // Get public key by full path
-val publicKey = kms.getPublicKey("transit/keys/did-issuer-key")
+val publicKey = kms.getPublicKey(KeyId("transit/keys/did-issuer-key"))
 
 // Access JWK format
 val jwk = publicKey.publicKeyJwk
@@ -240,7 +240,7 @@ println("Public key JWK: $jwk")
 
 ```kotlin
 // Delete key (requires deletion policy in Vault)
-val deleted = kms.deleteKey("did-issuer-key")
+val deleted = kms.deleteKey(KeyId("did-issuer-key"))
 ```
 
 **Note**: Key deletion in Vault Transit requires special policy configuration. By default, keys cannot be deleted for security reasons.

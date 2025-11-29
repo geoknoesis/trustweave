@@ -1,10 +1,10 @@
 package com.trustweave.credential.presentation
 
 import com.trustweave.credential.CredentialVerificationOptions
-import com.trustweave.credential.did.CredentialDidResolution
-import com.trustweave.credential.did.CredentialDidResolver
+import com.trustweave.did.resolver.DidResolver
 import com.trustweave.credential.PresentationOptions
 import com.trustweave.credential.PresentationVerificationOptions
+import com.trustweave.util.booleanDidResolver
 import com.trustweave.credential.models.Proof
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.models.VerifiablePresentation
@@ -34,23 +34,23 @@ class PresentationServiceTest {
     @BeforeEach
     fun setup() {
         proofRegistry = ProofGeneratorRegistry()
-        
+
         // Create a simple mock signer for testing
         val signer: suspend (ByteArray, String) -> ByteArray = { _, _ ->
             // Simple mock signature
             "mock-signature-${UUID.randomUUID()}".toByteArray()
         }
-        
+
         val proofGenerator = Ed25519ProofGenerator(
             signer = signer,
             getPublicKeyId = { "did:key:holder123#key-1" }
         )
         proofRegistry.register(proofGenerator)
-        
+
         credentialVerifier = CredentialVerifier(
-            CredentialDidResolver { CredentialDidResolution(isResolvable = true) }
+            defaultDidResolver = booleanDidResolver { true }
         )
-        
+
         service = newService(proofGenerator = proofGenerator)
     }
 
@@ -76,9 +76,9 @@ class PresentationServiceTest {
             proofType = "Ed25519Signature2020",
             keyId = keyId
         )
-        
+
         val presentation = service.createPresentation(credentials, holderDid, options)
-        
+
         assertNotNull(presentation)
         assertEquals(holderDid, presentation.holder)
         assertEquals(1, presentation.verifiableCredential.size)
@@ -96,9 +96,9 @@ class PresentationServiceTest {
             proofType = "Ed25519Signature2020",
             keyId = keyId
         )
-        
+
         val presentation = service.createPresentation(credentials, holderDid, options)
-        
+
         assertEquals(2, presentation.verifiableCredential.size)
     }
 
@@ -109,7 +109,7 @@ class PresentationServiceTest {
             proofType = "Ed25519Signature2020",
             keyId = keyId
         )
-        
+
         assertFailsWith<IllegalArgumentException> {
             service.createPresentation(emptyList(), holderDid, options)
         }
@@ -123,7 +123,7 @@ class PresentationServiceTest {
             proofType = "Ed25519Signature2020",
             keyId = keyId
         )
-        
+
         assertFailsWith<IllegalArgumentException> {
             service.createPresentation(credentials, "", options)
         }
@@ -139,9 +139,9 @@ class PresentationServiceTest {
             challenge = "challenge-123",
             domain = "example.com"
         )
-        
+
         val presentation = service.createPresentation(credentials, holderDid, options)
-        
+
         assertEquals("challenge-123", presentation.challenge)
         assertEquals("example.com", presentation.domain)
         assertEquals("challenge-123", presentation.proof?.challenge)
@@ -156,9 +156,9 @@ class PresentationServiceTest {
             proofType = "",
             keyId = null
         )
-        
+
         val presentation = service.createPresentation(credentials, holderDid, options)
-        
+
         assertNull(presentation.proof)
     }
 
@@ -172,14 +172,14 @@ class PresentationServiceTest {
             challenge = "challenge-123"
         )
         val presentation = service.createPresentation(credentials, holderDid, options)
-        
+
         val verificationOptions = PresentationVerificationOptions(
             verifyChallenge = true,
             expectedChallenge = "challenge-123"
         )
-        
+
         val result = service.verifyPresentation(presentation, verificationOptions)
-        
+
         // Note: Current implementation checks proof structure, not actual signature
         // So proofValid should be true if structure is correct
         assertTrue(result.presentationProofValid || presentation.proof != null)
@@ -196,9 +196,9 @@ class PresentationServiceTest {
             holder = holderDid,
             proof = null
         )
-        
+
         val result = service.verifyPresentation(presentation)
-        
+
         assertFalse(result.valid)
         assertFalse(result.presentationProofValid)
         assertTrue(result.errors.any { it.contains("no proof") })
@@ -214,14 +214,14 @@ class PresentationServiceTest {
             challenge = "challenge-123"
         )
         val presentation = service.createPresentation(credentials, holderDid, options)
-        
+
         val verificationOptions = PresentationVerificationOptions(
             verifyChallenge = true,
             expectedChallenge = "different-challenge"
         )
-        
+
         val result = service.verifyPresentation(presentation, verificationOptions)
-        
+
         assertFalse(result.valid)
         assertFalse(result.challengeValid)
         assertTrue(result.errors.any { it.contains("Challenge mismatch") })
@@ -237,14 +237,14 @@ class PresentationServiceTest {
             domain = "example.com"
         )
         val presentation = service.createPresentation(credentials, holderDid, options)
-        
+
         val verificationOptions = PresentationVerificationOptions(
             verifyDomain = true,
             expectedDomain = "different.com"
         )
-        
+
         val result = service.verifyPresentation(presentation, verificationOptions)
-        
+
         assertFalse(result.valid)
         assertFalse(result.domainValid)
         assertTrue(result.errors.any { it.contains("Domain mismatch") })
@@ -259,13 +259,13 @@ class PresentationServiceTest {
             keyId = keyId
         )
         val presentation = service.createPresentation(credentials, holderDid, options)
-        
+
         val verificationOptions = PresentationVerificationOptions(
             checkRevocation = true
         )
-        
+
         val result = service.verifyPresentation(presentation, verificationOptions)
-        
+
         // Credential verification should be attempted when checkRevocation is true
         // Note: Current implementation may not fully verify credentials
         assertTrue(result.credentialResults.isNotEmpty() || !result.valid)
@@ -279,14 +279,14 @@ class PresentationServiceTest {
             proofType = "Ed25519Signature2020",
             keyId = keyId
         )
-        
+
         val presentation = service.createSelectiveDisclosure(
             credentials = credentials,
             disclosedFields = listOf("credentialSubject.name"),
             holderDid = holderDid,
             options = options
         )
-        
+
         assertNotNull(presentation)
         // Note: Full selective disclosure implementation would require BBS+ proofs
         // For now, this returns a regular presentation
@@ -304,9 +304,9 @@ class PresentationServiceTest {
             proofType = "Ed25519Signature2020",
             keyId = keyId
         )
-        
+
         val presentation = serviceWithoutGenerator.createPresentation(credentials, holderDid, options)
-        
+
         assertNotNull(presentation.proof)
         assertEquals("Ed25519Signature2020", presentation.proof.type)
     }
@@ -324,7 +324,7 @@ class PresentationServiceTest {
             proofType = "UnknownProofType",
             keyId = keyId
         )
-        
+
         assertFailsWith<IllegalArgumentException> {
             serviceWithoutGenerator.createPresentation(credentials, holderDid, options)
         }

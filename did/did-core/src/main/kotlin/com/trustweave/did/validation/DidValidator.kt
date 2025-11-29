@@ -15,16 +15,16 @@ object DidValidator {
         const val DID_METHOD_EXTRACTION_FAILED = "DID_METHOD_EXTRACTION_FAILED"
         const val UNSUPPORTED_DID_METHOD = "UNSUPPORTED_DID_METHOD"
     }
-    
+
     /**
      * DID pattern matching the DID specification.
      * Format: did:<method>:<method-specific-id>
      */
     private val DID_PATTERN = Regex("^did:[a-z0-9]+:[a-zA-Z0-9._:%-]+$")
-    
+
     /**
      * Validates DID format.
-     * 
+     *
      * @param did The DID string to validate
      * @return ValidationResult indicating if the DID format is valid
      */
@@ -37,7 +37,7 @@ object DidValidator {
                 value = did
             )
         }
-        
+
         if (!DID_PATTERN.matches(did)) {
             return ValidationResult.Invalid(
                 code = ErrorCodes.INVALID_DID_FORMAT,
@@ -46,13 +46,13 @@ object DidValidator {
                 value = did
             )
         }
-        
+
         return ValidationResult.Valid
     }
-    
+
     /**
      * Validates that the DID method is supported.
-     * 
+     *
      * @param did The DID string to validate
      * @param availableMethods List of available DID method names
      * @return ValidationResult indicating if the DID method is supported
@@ -62,7 +62,7 @@ object DidValidator {
         if (!formatResult.isValid()) {
             return formatResult
         }
-        
+
         val method = extractMethod(did)
         if (method == null) {
             return ValidationResult.Invalid(
@@ -72,7 +72,7 @@ object DidValidator {
                 value = did
             )
         }
-        
+
         if (method !in availableMethods) {
             return ValidationResult.Invalid(
                 code = ErrorCodes.UNSUPPORTED_DID_METHOD,
@@ -81,13 +81,13 @@ object DidValidator {
                 value = method
             )
         }
-        
+
         return ValidationResult.Valid
     }
-    
+
     /**
      * Extracts the method name from a DID string.
-     * 
+     *
      * @param did The DID string
      * @return The method name, or null if extraction fails
      */
@@ -95,10 +95,10 @@ object DidValidator {
         if (did.isBlank()) return null
         return did.split(":").getOrNull(1)
     }
-    
+
     /**
      * Extracts the method-specific identifier from a DID string.
-     * 
+     *
      * @param did The DID string
      * @return The method-specific identifier, or null if extraction fails
      */

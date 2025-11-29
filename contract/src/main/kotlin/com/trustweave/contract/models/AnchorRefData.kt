@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 /**
  * Serializable representation of AnchorRef for contract models.
- * 
+ *
  * AnchorRef itself is not serializable, so this wrapper provides
  * serialization support while maintaining compatibility.
  */
@@ -25,7 +25,7 @@ data class AnchorRefData(
         contract = contract,
         extra = extra
     )
-    
+
     companion object {
         /**
          * Creates AnchorRefData from AnchorRef.

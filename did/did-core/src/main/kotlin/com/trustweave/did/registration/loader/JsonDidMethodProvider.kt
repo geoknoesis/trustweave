@@ -9,10 +9,10 @@ import java.nio.file.Path
 
 /**
  * DID Method Provider that loads methods from JSON registration files.
- * 
+ *
  * This provider can be registered via ServiceLoader to automatically
  * discover and load DID methods from JSON files.
- * 
+ *
  * **ServiceLoader Registration:**
  * Create a file `META-INF/services/com.trustweave.did.spi.DidMethodProvider`
  * with the content:
@@ -23,24 +23,24 @@ import java.nio.file.Path
 class JsonDidMethodProvider(
     private val registryEntries: List<DidMethodRegistryEntry>
 ) : DidMethodProvider {
-    
+
     private val methods = registryEntries.mapNotNull { entry ->
         RegistryEntryMapper.mapToDidMethod(entry)?.let { method ->
             entry.name to method
         }
     }.toMap()
-    
+
     override val name: String = "json-registration"
-    
+
     override val supportedMethods: List<String> = methods.keys.toList()
-    
+
     override fun create(
         methodName: String,
         options: DidCreationOptions
     ): DidMethod? {
         return methods[methodName]
     }
-    
+
     companion object {
         /**
          * Creates a provider from a directory of JSON registration files.
@@ -50,7 +50,7 @@ class JsonDidMethodProvider(
             val entries = loader.loadRegistryEntriesFromDirectory(directory)
             return JsonDidMethodProvider(entries)
         }
-        
+
         /**
          * Creates a provider from a classpath resource directory.
          */

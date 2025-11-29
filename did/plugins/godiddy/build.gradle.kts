@@ -5,6 +5,7 @@ plugins {
 
 group = "com.trustweave.did"
 dependencies {
+    implementation(project(":common"))
     implementation(project(":credentials:credential-core"))
     implementation(project(":did:did-core"))
     implementation(project(":did:registrar"))

@@ -7,9 +7,9 @@ import kotlinx.coroutines.runBlocking
 
 /**
  * Reusable test scenario for error handling and recovery.
- * 
+ *
  * Tests how the system handles errors and recovers from failures.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * @Test
@@ -23,7 +23,7 @@ import kotlinx.coroutines.runBlocking
 class ErrorRecoveryScenario(
     private val test: BaseIntegrationTest
 ) {
-    
+
     /**
      * Tests recovery from network errors.
      */
@@ -31,7 +31,7 @@ class ErrorRecoveryScenario(
         // Simulate network error and verify retry logic
         var attemptCount = 0
         val maxAttempts = 3
-        
+
         val result = kotlinx.coroutines.runBlocking {
             test.retry(maxAttempts = maxAttempts) {
                 attemptCount++
@@ -41,11 +41,11 @@ class ErrorRecoveryScenario(
                 "success"
             }
         }
-        
+
         kotlin.test.assertTrue(attemptCount == maxAttempts)
         kotlin.test.assertNotNull(result)
     }
-    
+
     /**
      * Tests handling of invalid inputs.
      */
@@ -58,7 +58,7 @@ class ErrorRecoveryScenario(
             "did:",
             "did:method:"
         )
-        
+
         invalidInputs.forEach { input ->
             try {
                 // Attempt to process invalid input
@@ -76,13 +76,13 @@ class ErrorRecoveryScenario(
             }
         }
     }
-    
+
     /**
      * Tests timeout handling.
      */
     suspend fun testTimeoutHandling() {
         val timeoutSeconds = 2L
-        
+
         val result = kotlinx.coroutines.runBlocking {
             test.waitFor(timeoutSeconds = timeoutSeconds) {
                 // Simulate a condition that takes time
@@ -90,11 +90,11 @@ class ErrorRecoveryScenario(
                 false // Never becomes true
             }
         }
-        
+
         // Should return false due to timeout
         kotlin.test.assertTrue(!result)
     }
-    
+
     /**
      * Tests recovery from partial failures.
      */
@@ -102,7 +102,7 @@ class ErrorRecoveryScenario(
         // Test scenario where some operations succeed and others fail
         val operations = listOf("op1", "op2", "op3")
         val results = mutableListOf<Result<String>>()
-        
+
         operations.forEach { op ->
             val result = kotlin.runCatching {
                 if (op == "op2") {
@@ -112,11 +112,11 @@ class ErrorRecoveryScenario(
             }
             results.add(result)
         }
-        
+
         // Verify some succeeded and some failed
         val successes = results.count { it.isSuccess }
         val failures = results.count { it.isFailure }
-        
+
         kotlin.test.assertTrue(successes > 0)
         kotlin.test.assertTrue(failures > 0)
     }

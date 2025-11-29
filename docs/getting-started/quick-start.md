@@ -17,8 +17,8 @@ keywords:
 
 Get started with TrustWeave in 5 minutes! This guide will walk you through creating your first TrustWeave application.
 
-> **Version:** 1.0.0-SNAPSHOT  
-> **Kotlin:** 2.2.0+ | **Java:** 21+  
+> **Version:** 1.0.0-SNAPSHOT
+> **Kotlin:** 2.2.0+ | **Java:** 21+
 > See [Installation](installation.md) for setup details.
 
 ## Complete Runnable Example
@@ -101,7 +101,7 @@ fun main() = runBlocking {
             checkRevocation()
             checkExpiration()
         }
-        
+
         when (verification) {
             is VerificationResult.Valid -> {
                 println("✅ Verification succeeded")
@@ -190,7 +190,7 @@ fun main() = runBlocking {
         keys { provider("inMemory"); algorithm("Ed25519") }
         did { method("key") { algorithm("Ed25519") } }
     }
-    
+
     // Operations will throw exceptions on failure
     val did = trustWeave.createDid { method("key") }
     val credential = trustWeave.issue { ... }
@@ -252,9 +252,9 @@ fun main() = runBlocking {
         println("❌ Unexpected error: ${error.message}")
         return@runBlocking
     }
-    
+
     val issuerKeyId = "$issuerDid#key-1"
-    
+
     val credential = try {
         trustWeave.issue {
             credential {
@@ -285,7 +285,7 @@ fun main() = runBlocking {
         println("❌ Failed to issue credential: ${error.message}")
         return@runBlocking
     }
-    
+
     println("✅ Credential issued: ${credential.id}")
 }
 ```
@@ -312,8 +312,8 @@ The sections below explain each step in detail.
 
 ## Step 1: Add a single dependency
 
-**Why:** `trustweave-all` bundles every public module (core APIs, DID support, KMS, anchoring, DSLs) so you can get going with one line.  
-**How it works:** It's a convenience metapackage that re-exports the same artifacts you would otherwise add one-by-one.  
+**Why:** `trustweave-all` bundles every public module (core APIs, DID support, KMS, anchoring, DSLs) so you can get going with one line.
+**How it works:** It's a convenience metapackage that re-exports the same artifacts you would otherwise add one-by-one.
 **How simple:** Drop one dependency and you're done.
 
 > **Note:** For production deployments, consider using individual modules instead of `trustweave-all` to minimize bundle size. See [Installation Guide](installation.md) for details.
@@ -325,17 +325,17 @@ dependencies {
 }
 ```
 
-**What this does**  
-- Pulls in every public TrustWeave module (core APIs, DID support, KMS, anchoring, DSLs) with a single coordinate so you never chase transitive dependencies.  
+**What this does**
+- Pulls in every public TrustWeave module (core APIs, DID support, KMS, anchoring, DSLs) with a single coordinate so you never chase transitive dependencies.
 - Adds `trustweave-testkit` for the in-memory DID/KMS/wallet implementations used in the tutorials and automated tests.
 
-**Design significance**  
+**Design significance**
 TrustWeave promotes a “batteries included” experience for newcomers. The monolithic artifact keeps onboarding simple; when you graduate to production you can swap in individual modules without changing API usage.
 
 ## Step 2: Bootstrap TrustWeave and compute a digest
 
-**Why:** Most flows start by hashing JSON so signatures and anchors are stable.  
-**How it works:** `DigestUtils.sha256DigestMultibase` canonicalises JSON and returns a multibase string.  
+**Why:** Most flows start by hashing JSON so signatures and anchors are stable.
+**How it works:** `DigestUtils.sha256DigestMultibase` canonicalises JSON and returns a multibase string.
 **How simple:** One helper call, no manual canonicalisation.
 
 ```kotlin
@@ -373,23 +373,23 @@ fun main() = runBlocking {
 }
 ```
 
-**What this does**  
-- Instantiates TrustWeave with sensible defaults (in-memory registries) suitable for playground and unit tests.  
-- Builds a credential payload using Kotlinx Serialization builders so the structure is type-safe.  
+**What this does**
+- Instantiates TrustWeave with sensible defaults (in-memory registries) suitable for playground and unit tests.
+- Builds a credential payload using Kotlinx Serialization builders so the structure is type-safe.
 - Canonicalises and hashes the payload, returning a multibase-encoded digest you can anchor or sign.
 
 > **Important:** The defaults use in-memory components (KMS, wallets, DID methods) suitable for testing only. For production, configure your own KMS, DID methods, and storage backends. See [Default Configuration](../configuration/defaults.md) and [Production Deployment](../deployment/production-checklist.md) for details.
 
-**Result**  
+**Result**
 `DigestUtils.sha256DigestMultibase` prints a deterministic digest (for example `u5v...`) that becomes the integrity reference for later steps.
 
-**Design significance**  
+**Design significance**
 Everything in TrustWeave assumes deterministic canonicalization, so the very first code sample reinforces the pattern: serialize → canonicalize → hash → sign/anchor. This is the backbone of interoperability.
 
 ## Step 3: Create a DID with typed options
 
-**Why:** You need an issuer DID before issuing credentials.  
-**How it works:** `TrustWeave.dids.create()` uses the bundled DID method registry and typed `DidCreationOptions`.  
+**Why:** You need an issuer DID before issuing credentials.
+**How it works:** `TrustWeave.dids.create()` uses the bundled DID method registry and typed `DidCreationOptions`.
 **How simple:** Configure only what you need using a fluent builder—defaults cover the rest.
 
 ```kotlin
@@ -408,21 +408,21 @@ val customDid = trustWeave.createDid {
 }
 ```
 
-**What this does**  
-- Calls the facade to provision a DID using the default registry (in this case `did:key`).  
-- Returns the fully materialised DID document with verification methods.  
+**What this does**
+- Calls the facade to provision a DID using the default registry (in this case `did:key`).
+- Returns the fully materialised DID document with verification methods.
 - Extracts the DID identifier and key ID for use in credential issuance.
 
-**Result**  
+**Result**
 `issuerDid` now holds a resolvable DID such as `did:key:z6M...` that acts as the issuer for credentials. The `issuerKeyId` is needed for signing credentials.
 
-**Design significance**  
+**Design significance**
 Typed builders (`DidCreationOptions`) are a core design choice: they prevent misconfigured DID creation at compile time and make IDE autocompletion an onboarding tool rather than documentation guesswork.
 
 ## Step 4: Issue a credential and store it
 
-**Why:** Credential issuance is the heart of most TrustWeave solutions.  
-**How it works:** The facade orchestrates KMS, proofs, and registries, returning a `Result<VerifiableCredential>`.  
+**Why:** Credential issuance is the heart of most TrustWeave solutions.
+**How it works:** The facade orchestrates KMS, proofs, and registries, returning a `Result<VerifiableCredential>`.
 **How simple:** Provide the issuer DID/key and credential subject JSON; the API handles proof generation and validation.
 
 ```kotlin
@@ -443,25 +443,25 @@ val credential = trustWeave.issue {
 println("Issued credential id: ${credential.id}")
 ```
 
-**What this does**  
-- Invokes the credential issuance facade which orchestrates key lookup/generation, proof creation, and credential assembly.  
-- Configures the credential subject payload and credential types.  
+**What this does**
+- Invokes the credential issuance facade which orchestrates key lookup/generation, proof creation, and credential assembly.
+- Configures the credential subject payload and credential types.
 - Returns a signed `VerifiableCredential` with cryptographic proof attached.
 
-**Result**  
+**Result**
 The printed ID corresponds to a tamper-evident credential JSON object that you can store, present, or anchor.
 
-**Design significance**  
+**Design significance**
 The type-safe `IssuerIdentity` ensures that issuer DID and key ID are properly validated at compile time, reducing runtime errors and improving developer experience.
 
-> ✅ **Run the sample**  
-> The full quick-start flow lives in `distribution/examples/src/main/kotlin/com/trustweave/examples/quickstart/QuickStartSample.kt`.  
+> ✅ **Run the sample**
+> The full quick-start flow lives in `distribution/examples/src/main/kotlin/com/trustweave/examples/quickstart/QuickStartSample.kt`.
 > Execute it locally with `./gradlew :distribution:examples:runQuickStartSample`.
 
 ## Step 5: Verify the credential
 
-**Why:** Consumers must trust the credential; verification validates proofs and checks revocation.  
-**How it works:** `verifyCredential` rebuilds proofs, resolves issuer DIDs, and performs validity checks.  
+**Why:** Consumers must trust the credential; verification validates proofs and checks revocation.
+**How it works:** `verifyCredential` rebuilds proofs, resolves issuer DIDs, and performs validity checks.
 **How simple:** One call returns a structured result with validation details.
 
 ```kotlin
@@ -485,18 +485,18 @@ when (verification) {
 }
 ```
 
-**What this does**  
-- Verifies the credential by rebuilding proofs and performing validity checks.  
-- Checks issuer DID resolution, proof validity, and revocation status.  
+**What this does**
+- Verifies the credential by rebuilding proofs and performing validity checks.
+- Checks issuer DID resolution, proof validity, and revocation status.
 - Returns a sealed `VerificationResult` type for exhaustive error handling.
 
-**Result**  
+**Result**
 You get a `VerificationResult` sealed class that can be `Valid` or one of several `Invalid` subtypes, each providing specific error information. This enables exhaustive when-expressions for type-safe error handling.
 
 ## Step 6: Anchor to blockchain (optional)
 
-**Why:** Anchoring provides tamper evidence and timestamping on a blockchain.  
-**How it works:** Register a blockchain client and use it to anchor credential data.  
+**Why:** Anchoring provides tamper evidence and timestamping on a blockchain.
+**How it works:** Register a blockchain client and use it to anchor credential data.
 **How simple:** Register client, serialize credential, write to chain.
 
 ```kotlin
@@ -509,15 +509,15 @@ val credentialId = wallet.store(credential)
 println("✅ Stored credential: $credentialId")
 ```
 
-**What this does**  
-- Registers an in-memory blockchain client (for testing; use real clients in production).  
-- Serializes the credential to JSON and writes it to the anchor client.  
+**What this does**
+- Registers an in-memory blockchain client (for testing; use real clients in production).
+- Serializes the credential to JSON and writes it to the anchor client.
 - Returns an `AnchorRef` with chain ID and transaction hash.
 
-**Result**  
+**Result**
 You get an `AnchorRef` representing the write operation. In production you'd persist this for audits and use a real chain adapter (Algorand, Polygon, etc.).
 
-**Design significance**  
+**Design significance**
 Anchoring is abstracted behind the same interface regardless of provider. The sample sticks to the in-memory implementation, but the code path is identical for Algorand, Polygon, Indy, or future adapters—making environment swaps low risk.
 
 ## Error Handling Patterns
@@ -597,7 +597,7 @@ try {
         checkRevocation()
         checkExpiration()
     }
-    
+
     when (verification) {
         is VerificationResult.Valid -> {
             println("✅ Credential is valid: ${verification.credential.id}")

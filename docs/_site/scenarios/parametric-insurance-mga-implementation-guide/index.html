@@ -12,24 +12,24 @@
   <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
 
   <style id="jtd-nav-activation">
-  
+
     .site-nav ul li a {
       background-image: none;
     }
 
   </style>
 
-  
 
-  
+
+
     <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
-  
+
 
   <script src="/trustweave/assets/js/just-the-docs.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  
+
 
 
 
@@ -78,7 +78,7 @@
     padding: 0.5rem 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
-  
+
   .main-nav .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .main-nav .logo {
     display: flex;
     align-items: center;
@@ -117,13 +117,13 @@
   .main-nav .logo:hover .logo-img {
     opacity: 0.8;
   }
-  
+
   .main-nav .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
   }
-  
+
   .main-nav .nav-links .nav-link {
     text-decoration: none;
     color: var(--text);
@@ -134,7 +134,7 @@
     position: relative;
     white-space: nowrap;
   }
-  
+
   .main-nav .nav-links .nav-link:hover {
     color: var(--primary);
   }
@@ -339,7 +339,7 @@
   body { padding-top: 160px !important; }
   .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
   #header-template { display: none; }
-  
+
   /* Ensure footer spans full width and breaks out of containers */
   .site-footer {
     position: relative !important;
@@ -387,14 +387,14 @@
     (function() {
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        
+
         // Mobile menu toggle
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('active');
                 menuToggle.classList.toggle('active');
             });
-            
+
             // Close menu when clicking on a link
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
@@ -402,7 +402,7 @@
                     menuToggle.classList.remove('active');
                 });
             });
-            
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
@@ -415,21 +415,21 @@
         // Highlight active page
         const currentPath = window.location.pathname;
         const navLinksList = document.querySelectorAll('.nav-links .nav-link');
-        
+
         navLinksList.forEach(link => {
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
                 const baseUrl = '/trustweave' || '';
-                
+
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
                 let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
-                
+
                 // Handle index pages
                 if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
                 if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
-                
+
                 // Check if current path matches link path
                 if (cleanCurrentPath === cleanLinkPath) {
                     link.classList.add('active');
@@ -497,7 +497,7 @@
   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
 </symbol>
 
-  
+
     <symbol id="svg-doc" viewBox="0 0 24 24">
   <title>Document</title>
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
@@ -512,8 +512,8 @@
   </svg>
 </symbol>
 
-  
-  
+
+
     <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
 <symbol id="svg-copy" viewBox="0 0 16 16">
   <title>Copy</title>
@@ -530,10 +530,10 @@
   </svg>
 </symbol>
 
-  
+
 </svg>
 
-  
+
     <div class="side-bar">
   <div class="site-header" role="banner">
     <a href="/trustweave/" class="site-title lh-tight">
@@ -546,8 +546,8 @@
   </div>
 
   <nav aria-label="Main" id="site-nav" class="site-nav">
-  
-  
+
+
     <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
@@ -563,25 +563,25 @@
       </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
       </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
-  
+
 </nav>
 
 
 
 
-  
-  
+
+
     <footer class="site-footer">
       This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
     </footer>
-  
+
 </div>
 
-  
+
   <div class="main" id="top">
     <div id="main-header" class="main-header">
-  
-    
+
+
 
 <div class="search" role="search">
   <div class="search-input-wrap">
@@ -591,24 +591,24 @@
   <div id="search-results" class="search-results"></div>
 </div>
 
-  
-  
-  
+
+
+
 </div>
 
     <div class="main-content-wrap">
-      
+
       <div id="main-content" class="main-content">
         <main>
-          
+
             <h1 id="parametric-insurance-mga-implementation-guide-with-trustweave">
-  
-  
+
+
     <a href="#parametric-insurance-mga-implementation-guide-with-trustweave" class="anchor-heading" aria-labelledby="parametric-insurance-mga-implementation-guide-with-trustweave"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Parametric Insurance MGA Implementation Guide with TrustWeave
-  
-  
+
+
 </h1>
-    
+
 
 <blockquote>
   <p><strong>Building “Atlas Parametric” - An EO-Driven Parametric Insurance MGA</strong></p>
@@ -616,13 +616,13 @@
 
 <p>This comprehensive guide shows you how to build your parametric insurance MGA solution using TrustWeave as the trust and integrity foundation. This implementation covers SAR flood, heatwave, solar attenuation, hurricane, and drought parametric products with instant payouts and objective EO triggers.</p>
 <h2 id="executive-summary">
-  
-  
+
+
     <a href="#executive-summary" class="anchor-heading" aria-labelledby="executive-summary"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Executive Summary
-  
-  
+
+
 </h2>
-    
+
 
 <p><strong>What You’re Building:</strong></p>
 <ul>
@@ -643,13 +643,13 @@
   <li><strong>Automation</strong>: Enable instant payouts with verifiable triggers</li>
 </ul>
 <h2 id="architecture-overview">
-  
-  
+
+
     <a href="#architecture-overview" class="anchor-heading" aria-labelledby="architecture-overview"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Architecture Overview
-  
-  
+
+
 </h2>
-    
+
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -713,21 +713,21 @@
 └─────────────────────────────────────────────────────────────────┘
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="core-components">
-  
-  
+
+
     <a href="#core-components" class="anchor-heading" aria-labelledby="core-components"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Core Components
-  
-  
+
+
 </h2>
-    
+
 <h3 id="1-trustweave-trust-layer">
-  
-  
+
+
     <a href="#1-trustweave-trust-layer" class="anchor-heading" aria-labelledby="1-trustweave-trust-layer"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. TrustWeave Trust Layer
-  
-  
+
+
 </h3>
-    
+
 
 <p>TrustWeave provides:</p>
 <ul>
@@ -737,13 +737,13 @@
   <li><strong>Multi-Provider Support</strong>: Accept EO data from any certified provider</li>
 </ul>
 <h3 id="2-eo-data-ingestion-pipeline">
-  
-  
+
+
     <a href="#2-eo-data-ingestion-pipeline" class="anchor-heading" aria-labelledby="2-eo-data-ingestion-pipeline"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. EO Data Ingestion Pipeline
-  
-  
+
+
 </h3>
-    
+
 
 <p>Processes:</p>
 <ul>
@@ -755,13 +755,13 @@
   <li>InSAR (deformation)</li>
 </ul>
 <h3 id="3-trigger-engine">
-  
-  
+
+
     <a href="#3-trigger-engine" class="anchor-heading" aria-labelledby="3-trigger-engine"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Trigger Engine
-  
-  
+
+
 </h3>
-    
+
 
 <p>Evaluates parametric triggers:</p>
 <ul>
@@ -771,13 +771,13 @@
   <li>Automatic trigger verification</li>
 </ul>
 <h3 id="4-pricing-engine">
-  
-  
+
+
     <a href="#4-pricing-engine" class="anchor-heading" aria-labelledby="4-pricing-engine"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Pricing Engine
-  
-  
+
+
 </h3>
-    
+
 
 <p>Actuarial pricing:</p>
 <ul>
@@ -787,13 +787,13 @@
   <li>Reinsurer-approved rates</li>
 </ul>
 <h3 id="5-payout-automation">
-  
-  
+
+
     <a href="#5-payout-automation" class="anchor-heading" aria-labelledby="5-payout-automation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5. Payout Automation
-  
-  
+
+
 </h3>
-    
+
 
 <p>Automated payouts:</p>
 <ul>
@@ -803,34 +803,34 @@
   <li>Audit trail generation</li>
 </ul>
 <h2 id="implementation-product-suite">
-  
-  
+
+
     <a href="#implementation-product-suite" class="anchor-heading" aria-labelledby="implementation-product-suite"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Implementation: Product Suite
-  
-  
+
+
 </h2>
-    
+
 <h3 id="product-1-sar-based-flood-parametric">
-  
-  
+
+
     <a href="#product-1-sar-based-flood-parametric" class="anchor-heading" aria-labelledby="product-1-sar-based-flood-parametric"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Product 1: SAR-Based Flood Parametric
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Data Sources:</strong> Sentinel-1 SAR + DEM
 <strong>Markets:</strong> US (NC, SC, FL, GA)
 <strong>Payout Range:</strong> $25k - $5M
 <strong>Triggers:</strong> Depth thresholds (20cm, 50cm, 1m)</p>
 <h4 id="implementation">
-  
-  
+
+
     <a href="#implementation" class="anchor-heading" aria-labelledby="implementation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Implementation
-  
-  
+
+
 </h4>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1107,14 +1107,14 @@
 
 <span class="cm">/**
  * SAR Flood Parametric Product using Smart Contracts
- * 
+ *
  * Uses Sentinel-1 SAR data to detect flood depth and trigger automatic payouts
  */</span>
 <span class="kd">class</span> <span class="nc">SarFloodProduct</span><span class="p">(</span>
     <span class="k">private</span> <span class="kd">val</span> <span class="py">TrustWeave</span><span class="p">:</span> <span class="nc">TrustWeave</span><span class="p">,</span>
     <span class="k">private</span> <span class="kd">val</span> <span class="py">eoProviderDid</span><span class="p">:</span> <span class="nc">String</span>
 <span class="p">)</span> <span class="p">{</span>
-    
+
     <span class="cm">/**
      * Create a flood insurance contract
      */</span>
@@ -1124,7 +1124,7 @@
         <span class="n">coverageAmount</span><span class="p">:</span> <span class="nc">Double</span><span class="p">,</span>
         <span class="n">location</span><span class="p">:</span> <span class="nc">Location</span>
     <span class="p">):</span> <span class="nc">SmartContract</span> <span class="p">{</span>
-        
+
         <span class="kd">val</span> <span class="py">contract</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">contracts</span><span class="p">.</span><span class="nf">draft</span><span class="p">(</span>
             <span class="n">request</span> <span class="p">=</span> <span class="nc">ContractDraftRequest</span><span class="p">(</span>
                 <span class="n">contractType</span> <span class="p">=</span> <span class="nc">ContractType</span><span class="p">.</span><span class="nc">Insurance</span><span class="p">,</span>
@@ -1192,11 +1192,11 @@
                 <span class="p">}</span>
             <span class="p">)</span>
         <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Flood contract draft created: ${contract.id}"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">contract</span>
     <span class="p">}</span>
-    
+
     <span class="cm">/**
      * Bind contract (issue VC and anchor to blockchain)
      */</span>
@@ -1205,18 +1205,18 @@
         <span class="n">insurerDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
         <span class="n">insurerKeyId</span><span class="p">:</span> <span class="nc">String</span>
     <span class="p">):</span> <span class="nc">BoundContract</span> <span class="p">{</span>
-        
+
         <span class="kd">val</span> <span class="py">bound</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">contracts</span><span class="p">.</span><span class="nf">bindContract</span><span class="p">(</span>
             <span class="n">contractId</span> <span class="p">=</span> <span class="n">contract</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
             <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">insurerDid</span><span class="p">,</span>
             <span class="n">issuerKeyId</span> <span class="p">=</span> <span class="n">insurerKeyId</span><span class="p">,</span>
             <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:mainnet"</span>
         <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Contract bound: ${bound.credentialId}, anchored: ${bound.anchorRef.txHash}"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">bound</span>
     <span class="p">}</span>
-    
+
     <span class="cm">/**
      * Process SAR flood data and issue verifiable credential
      */</span>
@@ -1225,7 +1225,7 @@
         <span class="n">sarData</span><span class="p">:</span> <span class="nc">SarFloodMeasurement</span><span class="p">,</span>
         <span class="n">timestamp</span><span class="p">:</span> <span class="nc">Instant</span>
     <span class="p">):</span> <span class="nc">Result</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span> <span class="p">=</span> <span class="nf">trustweaveCatching</span> <span class="p">{</span>
-        
+
         <span class="c1">// Step 1: Create EO data payload</span>
         <span class="kd">val</span> <span class="py">floodData</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
             <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="s">"sar-flood-${location.id}-${timestamp.toEpochMilli()}"</span><span class="p">)</span>
@@ -1250,17 +1250,17 @@
                 <span class="nf">put</span><span class="p">(</span><span class="s">"dataQuality"</span><span class="p">,</span> <span class="n">sarData</span><span class="p">.</span><span class="n">quality</span><span class="p">)</span>
             <span class="p">})</span>
         <span class="p">}</span>
-        
+
         <span class="c1">// Step 2: Compute data digest for integrity</span>
         <span class="kd">val</span> <span class="py">dataDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">floodData</span><span class="p">)</span>
-        
+
         <span class="c1">// Step 3: Issue verifiable credential for EO data</span>
         <span class="kd">val</span> <span class="py">eoProviderKeyId</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">eoProviderDid</span><span class="p">)</span>
             <span class="p">.</span><span class="nf">getOrThrow</span><span class="p">()</span>
             <span class="p">.</span><span class="n">verificationMethod</span>
             <span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
             <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
-        
+
         <span class="kd">val</span> <span class="py">floodCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">credentials</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
             <span class="n">issuer</span> <span class="p">=</span> <span class="n">eoProviderDid</span><span class="p">,</span>
             <span class="n">subject</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
@@ -1282,19 +1282,19 @@
                 <span class="s">"SarFloodCredential"</span>
             <span class="p">)</span>
         <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-        
+
         <span class="c1">// Step 4: Anchor to blockchain for tamper-proof record</span>
         <span class="kd">val</span> <span class="py">anchorResult</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">blockchains</span><span class="p">.</span><span class="nf">anchor</span><span class="p">(</span>
             <span class="n">data</span> <span class="p">=</span> <span class="n">floodCredential</span><span class="p">,</span>
             <span class="n">serializer</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
             <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:mainnet"</span>
         <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-        
+
         <span class="nf">println</span><span class="p">(</span><span class="s">"✅ SAR Flood Credential issued and anchored: ${anchorResult.ref.txHash}"</span><span class="p">)</span>
-        
+
         <span class="n">floodCredential</span>
     <span class="p">}</span>
-    
+
     <span class="cm">/**
      * Execute contract with flood data
      */</span>
@@ -1302,7 +1302,7 @@
         <span class="n">contract</span><span class="p">:</span> <span class="nc">SmartContract</span><span class="p">,</span>
         <span class="n">floodCredential</span><span class="p">:</span> <span class="nc">VerifiableCredential</span>
     <span class="p">):</span> <span class="nc">ExecutionResult</span> <span class="p">{</span>
-        
+
         <span class="c1">// Extract flood depth from credential</span>
         <span class="kd">val</span> <span class="py">credentialSubject</span> <span class="p">=</span> <span class="n">floodCredential</span><span class="p">.</span><span class="n">credentialSubject</span>
         <span class="kd">val</span> <span class="py">floodDepthCm</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"data"</span><span class="p">]</span>
@@ -1310,7 +1310,7 @@
             <span class="o">?.</span><span class="n">jsonObject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"floodDepthCm"</span><span class="p">)</span>
             <span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toDouble</span><span class="p">()</span>
             <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"Flood depth not found in credential"</span><span class="p">)</span>
-        
+
         <span class="c1">// Create execution context with trigger data</span>
         <span class="kd">val</span> <span class="py">executionContext</span> <span class="p">=</span> <span class="nc">ExecutionContext</span><span class="p">(</span>
             <span class="n">triggerData</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
@@ -1319,13 +1319,13 @@
                 <span class="nf">put</span><span class="p">(</span><span class="s">"timestamp"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
             <span class="p">}</span>
         <span class="p">)</span>
-        
+
         <span class="c1">// Execute contract</span>
         <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">contracts</span><span class="p">.</span><span class="nf">executeContract</span><span class="p">(</span>
             <span class="n">contract</span> <span class="p">=</span> <span class="n">contract</span><span class="p">,</span>
             <span class="n">executionContext</span> <span class="p">=</span> <span class="n">executionContext</span>
         <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-        
+
         <span class="k">if</span> <span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">executed</span><span class="p">)</span> <span class="p">{</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Contract executed! Payout triggered for flood depth: ${floodDepthCm}cm"</span><span class="p">)</span>
             <span class="n">result</span><span class="p">.</span><span class="n">outcomes</span><span class="p">.</span><span class="nf">forEach</span> <span class="p">{</span> <span class="n">outcome</span> <span class="p">-&gt;</span>
@@ -1337,7 +1337,7 @@
         <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
             <span class="nf">println</span><span class="p">(</span><span class="s">"⚠️  Contract conditions not met (flood depth: ${floodDepthCm}cm)"</span><span class="p">)</span>
         <span class="p">}</span>
-        
+
         <span class="k">return</span> <span class="n">result</span>
     <span class="p">}</span>
 <span class="p">}</span>
@@ -1360,26 +1360,26 @@
 <span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="product-2-heatwave-parametric">
-  
-  
+
+
     <a href="#product-2-heatwave-parametric" class="anchor-heading" aria-labelledby="product-2-heatwave-parametric"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Product 2: Heatwave Parametric
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Data Sources:</strong> MODIS LST + ERA5
 <strong>Markets:</strong> GCC (Saudi Arabia, UAE)
 <strong>Triggers:</strong> &gt; X°C for Y days
 <strong>Clients:</strong> Construction, energy, government</p>
 <h4 id="implementation-1">
-  
-  
+
+
     <a href="#implementation-1" class="anchor-heading" aria-labelledby="implementation-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Implementation
-  
-  
+
+
 </h4>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1611,7 +1611,7 @@
     <span class="k">private</span> <span class="kd">val</span> <span class="py">TrustWeave</span><span class="p">:</span> <span class="nc">TrustWeave</span><span class="p">,</span>
     <span class="k">private</span> <span class="kd">val</span> <span class="py">eoProviderDid</span><span class="p">:</span> <span class="nc">String</span>
 <span class="p">)</span> <span class="p">{</span>
-    
+
     <span class="cm">/**
      * Process heatwave data from MODIS LST
      */</span>
@@ -1620,10 +1620,10 @@
         <span class="n">lstData</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">LstMeasurement</span><span class="p">&gt;,</span>
         <span class="n">threshold</span><span class="p">:</span> <span class="nc">HeatwaveThreshold</span>
     <span class="p">):</span> <span class="nc">Result</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span> <span class="p">=</span> <span class="nf">trustweaveCatching</span> <span class="p">{</span>
-        
+
         <span class="c1">// Calculate consecutive days above threshold</span>
         <span class="kd">val</span> <span class="py">consecutiveDays</span> <span class="p">=</span> <span class="nf">calculateConsecutiveDays</span><span class="p">(</span><span class="n">lstData</span><span class="p">,</span> <span class="n">threshold</span><span class="p">.</span><span class="n">temperatureC</span><span class="p">)</span>
-        
+
         <span class="kd">val</span> <span class="py">heatwaveData</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
             <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="s">"heatwave-${location.id}-${Instant.now().toEpochMilli()}"</span><span class="p">)</span>
             <span class="nf">put</span><span class="p">(</span><span class="s">"type"</span><span class="p">,</span> <span class="s">"HeatwaveMeasurement"</span><span class="p">)</span>
@@ -1642,15 +1642,15 @@
                 <span class="nf">put</span><span class="p">(</span><span class="s">"timestamp"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
             <span class="p">})</span>
         <span class="p">}</span>
-        
+
         <span class="kd">val</span> <span class="py">dataDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">heatwaveData</span><span class="p">)</span>
-        
+
         <span class="kd">val</span> <span class="py">eoProviderKeyId</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">eoProviderDid</span><span class="p">)</span>
             <span class="p">.</span><span class="nf">getOrThrow</span><span class="p">()</span>
             <span class="p">.</span><span class="n">verificationMethod</span>
             <span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
             <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
-        
+
         <span class="kd">val</span> <span class="py">heatwaveCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">credentials</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
             <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">eoProviderDid</span><span class="p">,</span>
             <span class="n">issuerKeyId</span> <span class="p">=</span> <span class="n">eoProviderKeyId</span><span class="p">,</span>
@@ -1669,17 +1669,17 @@
                 <span class="s">"HeatwaveCredential"</span>
             <span class="p">)</span>
         <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-        
+
         <span class="c1">// Anchor to blockchain</span>
         <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">blockchains</span><span class="p">.</span><span class="nf">anchor</span><span class="p">(</span>
             <span class="n">data</span> <span class="p">=</span> <span class="n">heatwaveCredential</span><span class="p">,</span>
             <span class="n">serializer</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
             <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:mainnet"</span>
         <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-        
+
         <span class="n">heatwaveCredential</span>
     <span class="p">}</span>
-    
+
     <span class="cm">/**
      * Create heatwave insurance contract
      */</span>
@@ -1690,7 +1690,7 @@
         <span class="n">threshold</span><span class="p">:</span> <span class="nc">HeatwaveThreshold</span><span class="p">,</span>
         <span class="n">location</span><span class="p">:</span> <span class="nc">Location</span>
     <span class="p">):</span> <span class="nc">SmartContract</span> <span class="p">{</span>
-        
+
         <span class="kd">val</span> <span class="py">contract</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">contracts</span><span class="p">.</span><span class="nf">draft</span><span class="p">(</span>
             <span class="n">request</span> <span class="p">=</span> <span class="nc">ContractDraftRequest</span><span class="p">(</span>
                 <span class="n">contractType</span> <span class="p">=</span> <span class="nc">ContractType</span><span class="p">.</span><span class="nc">Insurance</span><span class="p">,</span>
@@ -1737,10 +1737,10 @@
                 <span class="p">}</span>
             <span class="p">)</span>
         <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-        
+
         <span class="k">return</span> <span class="n">contract</span>
     <span class="p">}</span>
-    
+
     <span class="cm">/**
      * Execute heatwave contract
      */</span>
@@ -1748,20 +1748,20 @@
         <span class="n">contract</span><span class="p">:</span> <span class="nc">SmartContract</span><span class="p">,</span>
         <span class="n">heatwaveCredential</span><span class="p">:</span> <span class="nc">VerifiableCredential</span>
     <span class="p">):</span> <span class="nc">ExecutionResult</span> <span class="p">{</span>
-        
+
         <span class="kd">val</span> <span class="py">credentialSubject</span> <span class="p">=</span> <span class="n">heatwaveCredential</span><span class="p">.</span><span class="n">credentialSubject</span>
         <span class="kd">val</span> <span class="py">consecutiveDays</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"data"</span><span class="p">]</span>
             <span class="o">?.</span><span class="n">jsonObject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"measurement"</span><span class="p">)</span>
             <span class="o">?.</span><span class="n">jsonObject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"consecutiveDays"</span><span class="p">)</span>
             <span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toInt</span><span class="p">()</span>
             <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"Consecutive days not found"</span><span class="p">)</span>
-        
+
         <span class="kd">val</span> <span class="py">maxTemp</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"data"</span><span class="p">]</span>
             <span class="o">?.</span><span class="n">jsonObject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"measurement"</span><span class="p">)</span>
             <span class="o">?.</span><span class="n">jsonObject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"maxTemperatureC"</span><span class="p">)</span>
             <span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toDouble</span><span class="p">()</span>
             <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"Max temperature not found"</span><span class="p">)</span>
-        
+
         <span class="kd">val</span> <span class="py">executionContext</span> <span class="p">=</span> <span class="nc">ExecutionContext</span><span class="p">(</span>
             <span class="n">triggerData</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
                 <span class="nf">put</span><span class="p">(</span><span class="s">"consecutiveDays"</span><span class="p">,</span> <span class="n">consecutiveDays</span><span class="p">)</span>
@@ -1769,20 +1769,20 @@
                 <span class="nf">put</span><span class="p">(</span><span class="s">"credentialId"</span><span class="p">,</span> <span class="n">heatwaveCredential</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
             <span class="p">}</span>
         <span class="p">)</span>
-        
+
         <span class="k">return</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">contracts</span><span class="p">.</span><span class="nf">executeContract</span><span class="p">(</span>
             <span class="n">contract</span> <span class="p">=</span> <span class="n">contract</span><span class="p">,</span>
             <span class="n">executionContext</span> <span class="p">=</span> <span class="n">executionContext</span>
         <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
     <span class="p">}</span>
-    
+
     <span class="k">private</span> <span class="k">fun</span> <span class="nf">calculateConsecutiveDays</span><span class="p">(</span>
         <span class="n">lstData</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">LstMeasurement</span><span class="p">&gt;,</span>
         <span class="n">thresholdC</span><span class="p">:</span> <span class="nc">Double</span>
     <span class="p">):</span> <span class="nc">Int</span> <span class="p">{</span>
         <span class="kd">var</span> <span class="py">maxConsecutive</span> <span class="p">=</span> <span class="mi">0</span>
         <span class="kd">var</span> <span class="py">currentConsecutive</span> <span class="p">=</span> <span class="mi">0</span>
-        
+
         <span class="k">for</span> <span class="p">(</span><span class="n">measurement</span> <span class="k">in</span> <span class="n">lstData</span><span class="p">.</span><span class="nf">sortedBy</span> <span class="p">{</span> <span class="n">it</span><span class="p">.</span><span class="n">timestamp</span> <span class="p">})</span> <span class="p">{</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">measurement</span><span class="p">.</span><span class="n">temperatureC</span> <span class="p">&gt;</span> <span class="n">thresholdC</span><span class="p">)</span> <span class="p">{</span>
                 <span class="n">currentConsecutive</span><span class="p">++</span>
@@ -1791,7 +1791,7 @@
                 <span class="n">currentConsecutive</span> <span class="p">=</span> <span class="mi">0</span>
             <span class="p">}</span>
         <span class="p">}</span>
-        
+
         <span class="k">return</span> <span class="n">maxConsecutive</span>
     <span class="p">}</span>
 <span class="p">}</span>
@@ -1815,26 +1815,26 @@
 <span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="product-3-solar-attenuation-parametric">
-  
-  
+
+
     <a href="#product-3-solar-attenuation-parametric" class="anchor-heading" aria-labelledby="product-3-solar-attenuation-parametric"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Product 3: Solar Attenuation Parametric
-  
-  
+
+
 </h3>
-    
+
 
 <p><strong>Data Sources:</strong> AOD (MODIS, VIIRS) + Irradiance (CERES)
 <strong>Markets:</strong> GCC (Solar farms)
 <strong>Triggers:</strong> &gt;30% irradiance drop
 <strong>Clients:</strong> ACWA Power, NEOM, UAE utilities</p>
 <h4 id="implementation-2">
-  
-  
+
+
     <a href="#implementation-2" class="anchor-heading" aria-labelledby="implementation-2"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Implementation
-  
-  
+
+
 </h4>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1995,7 +1995,7 @@
     <span class="k">private</span> <span class="kd">val</span> <span class="py">TrustWeave</span><span class="p">:</span> <span class="nc">TrustWeave</span><span class="p">,</span>
     <span class="k">private</span> <span class="kd">val</span> <span class="py">eoProviderDid</span><span class="p">:</span> <span class="nc">String</span>
 <span class="p">)</span> <span class="p">{</span>
-    
+
     <span class="cm">/**
      * Process solar attenuation data
      */</span>
@@ -2004,12 +2004,12 @@
         <span class="n">aodData</span><span class="p">:</span> <span class="nc">AodMeasurement</span><span class="p">,</span>
         <span class="n">irradianceData</span><span class="p">:</span> <span class="nc">IrradianceMeasurement</span>
     <span class="p">):</span> <span class="nc">Result</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;</span> <span class="p">=</span> <span class="nf">trustweaveCatching</span> <span class="p">{</span>
-        
+
         <span class="c1">// Calculate attenuation percentage</span>
         <span class="kd">val</span> <span class="py">baselineIrradiance</span> <span class="p">=</span> <span class="n">irradianceData</span><span class="p">.</span><span class="n">baselineWattPerSqM</span>
         <span class="kd">val</span> <span class="py">currentIrradiance</span> <span class="p">=</span> <span class="n">irradianceData</span><span class="p">.</span><span class="n">currentWattPerSqM</span>
         <span class="kd">val</span> <span class="py">attenuationPercent</span> <span class="p">=</span> <span class="p">((</span><span class="n">baselineIrradiance</span> <span class="p">-</span> <span class="n">currentIrradiance</span><span class="p">)</span> <span class="p">/</span> <span class="n">baselineIrradiance</span><span class="p">)</span> <span class="p">*</span> <span class="mf">100.0</span>
-        
+
         <span class="kd">val</span> <span class="py">solarData</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
             <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="s">"solar-attenuation-${location.id}-${Instant.now().toEpochMilli()}"</span><span class="p">)</span>
             <span class="nf">put</span><span class="p">(</span><span class="s">"type"</span><span class="p">,</span> <span class="s">"SolarAttenuationMeasurement"</span><span class="p">)</span>
@@ -2027,15 +2027,15 @@
                 <span class="nf">put</span><span class="p">(</span><span class="s">"timestamp"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
             <span class="p">})</span>
         <span class="p">}</span>
-        
+
         <span class="kd">val</span> <span class="py">dataDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">solarData</span><span class="p">)</span>
-        
+
         <span class="kd">val</span> <span class="py">eoProviderKeyId</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">eoProviderDid</span><span class="p">)</span>
             <span class="p">.</span><span class="nf">getOrThrow</span><span class="p">()</span>
             <span class="p">.</span><span class="n">verificationMethod</span>
             <span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
             <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
-        
+
         <span class="kd">val</span> <span class="py">solarCredential</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">credentials</span><span class="p">.</span><span class="nf">issue</span><span class="p">(</span>
             <span class="n">issuerDid</span> <span class="p">=</span> <span class="n">eoProviderDid</span><span class="p">,</span>
             <span class="n">issuerKeyId</span> <span class="p">=</span> <span class="n">eoProviderKeyId</span><span class="p">,</span>
@@ -2054,17 +2054,17 @@
                 <span class="s">"SolarAttenuationCredential"</span>
             <span class="p">)</span>
         <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-        
+
         <span class="c1">// Anchor to blockchain</span>
         <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">blockchains</span><span class="p">.</span><span class="nf">anchor</span><span class="p">(</span>
             <span class="n">data</span> <span class="p">=</span> <span class="n">solarCredential</span><span class="p">,</span>
             <span class="n">serializer</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
             <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:mainnet"</span>
         <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-        
+
         <span class="n">solarCredential</span>
     <span class="p">}</span>
-    
+
     <span class="cm">/**
      * Evaluate solar attenuation trigger
      */</span>
@@ -2072,28 +2072,28 @@
         <span class="n">policy</span><span class="p">:</span> <span class="nc">SolarPolicy</span><span class="p">,</span>
         <span class="n">solarCredential</span><span class="p">:</span> <span class="nc">VerifiableCredential</span>
     <span class="p">):</span> <span class="nc">TriggerResult</span> <span class="p">{</span>
-        
+
         <span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">credentials</span><span class="p">.</span><span class="nf">verify</span><span class="p">(</span><span class="n">solarCredential</span><span class="p">)</span>
         <span class="k">if</span> <span class="p">(!</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
             <span class="k">return</span> <span class="nc">TriggerResult</span><span class="p">(</span><span class="n">triggered</span> <span class="p">=</span> <span class="k">false</span><span class="p">,</span> <span class="n">reason</span> <span class="p">=</span> <span class="s">"Credential invalid"</span><span class="p">)</span>
         <span class="p">}</span>
-        
+
         <span class="kd">val</span> <span class="py">credentialSubject</span> <span class="p">=</span> <span class="n">solarCredential</span><span class="p">.</span><span class="n">credentialSubject</span>
         <span class="kd">val</span> <span class="py">attenuationPercent</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"data"</span><span class="p">]</span>
             <span class="o">?.</span><span class="n">jsonObject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"measurement"</span><span class="p">)</span>
             <span class="o">?.</span><span class="n">jsonObject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"attenuationPercent"</span><span class="p">)</span>
             <span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toDouble</span><span class="p">()</span>
             <span class="o">?:</span> <span class="k">return</span> <span class="nc">TriggerResult</span><span class="p">(</span><span class="n">triggered</span> <span class="p">=</span> <span class="k">false</span><span class="p">,</span> <span class="n">reason</span> <span class="p">=</span> <span class="s">"Attenuation not found"</span><span class="p">)</span>
-        
+
         <span class="kd">val</span> <span class="py">thresholdPercent</span> <span class="p">=</span> <span class="n">policy</span><span class="p">.</span><span class="n">thresholdPercent</span>
-        
+
         <span class="k">if</span> <span class="p">(</span><span class="n">attenuationPercent</span> <span class="p">&lt;</span> <span class="n">thresholdPercent</span><span class="p">)</span> <span class="p">{</span>
             <span class="k">return</span> <span class="nc">TriggerResult</span><span class="p">(</span>
                 <span class="n">triggered</span> <span class="p">=</span> <span class="k">false</span><span class="p">,</span>
                 <span class="n">reason</span> <span class="p">=</span> <span class="s">"Attenuation ($attenuationPercent%) below threshold ($thresholdPercent%)"</span>
             <span class="p">)</span>
         <span class="p">}</span>
-        
+
         <span class="c1">// Calculate payout based on attenuation severity</span>
         <span class="kd">val</span> <span class="py">excessAttenuation</span> <span class="p">=</span> <span class="n">attenuationPercent</span> <span class="p">-</span> <span class="n">thresholdPercent</span>
         <span class="kd">val</span> <span class="py">payoutAmount</span> <span class="p">=</span> <span class="k">when</span> <span class="p">{</span>
@@ -2101,7 +2101,7 @@
             <span class="n">excessAttenuation</span> <span class="p">&gt;=</span> <span class="mi">10</span> <span class="p">-&gt;</span> <span class="n">policy</span><span class="p">.</span><span class="n">coverageAmount</span> <span class="p">*</span> <span class="mf">0.75</span>
             <span class="k">else</span> <span class="p">-&gt;</span> <span class="n">policy</span><span class="p">.</span><span class="n">coverageAmount</span> <span class="p">*</span> <span class="mf">0.50</span>
         <span class="p">}</span>
-        
+
         <span class="k">return</span> <span class="nc">TriggerResult</span><span class="p">(</span>
             <span class="n">triggered</span> <span class="p">=</span> <span class="k">true</span><span class="p">,</span>
             <span class="n">attenuationPercent</span> <span class="p">=</span> <span class="n">attenuationPercent</span><span class="p">,</span>
@@ -2130,21 +2130,21 @@
 <span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="complete-workflow-example">
-  
-  
+
+
     <a href="#complete-workflow-example" class="anchor-heading" aria-labelledby="complete-workflow-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Complete Workflow Example
-  
-  
+
+
 </h2>
-    
+
 <h3 id="complete-flood-insurance-workflow-with-smart-contracts">
-  
-  
+
+
     <a href="#complete-flood-insurance-workflow-with-smart-contracts" class="anchor-heading" aria-labelledby="complete-flood-insurance-workflow-with-smart-contracts"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Complete Flood Insurance Workflow with Smart Contracts
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -2225,17 +2225,17 @@
             <span class="s">"algorand:mainnet"</span> <span class="n">to</span> <span class="n">algorandClient</span>
         <span class="p">}</span>
     <span class="p">}</span>
-    
+
     <span class="c1">// Step 2: Create DIDs for parties</span>
     <span class="kd">val</span> <span class="py">insurerDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">(</span><span class="n">method</span> <span class="p">=</span> <span class="s">"key"</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">insuredDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">(</span><span class="n">method</span> <span class="p">=</span> <span class="s">"key"</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">eoProviderDid</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">(</span><span class="n">method</span> <span class="p">=</span> <span class="s">"key"</span><span class="p">)</span>
     <span class="kd">val</span> <span class="py">insurerKeyId</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="n">insurerDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
         <span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span> <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No key found"</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 3: Initialize product</span>
     <span class="kd">val</span> <span class="py">floodProduct</span> <span class="p">=</span> <span class="nc">SarFloodProduct</span><span class="p">(</span><span class="nc">TrustWeave</span><span class="p">,</span> <span class="n">eoProviderDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
-    
+
     <span class="c1">// Step 4: Create contract</span>
     <span class="kd">val</span> <span class="py">contract</span> <span class="p">=</span> <span class="n">floodProduct</span><span class="p">.</span><span class="nf">createFloodContract</span><span class="p">(</span>
         <span class="n">insurerDid</span> <span class="p">=</span> <span class="n">insurerDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
@@ -2249,17 +2249,17 @@
             <span class="n">region</span> <span class="p">=</span> <span class="s">"North Carolina"</span>
         <span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// Step 5: Bind contract (issue VC and anchor)</span>
     <span class="kd">val</span> <span class="py">bound</span> <span class="p">=</span> <span class="n">floodProduct</span><span class="p">.</span><span class="nf">bindFloodContract</span><span class="p">(</span>
         <span class="n">contract</span> <span class="p">=</span> <span class="n">contract</span><span class="p">,</span>
         <span class="n">insurerDid</span> <span class="p">=</span> <span class="n">insurerDid</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">insurerKeyId</span> <span class="p">=</span> <span class="n">insurerKeyId</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// Step 6: Activate contract</span>
     <span class="kd">val</span> <span class="py">active</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">contracts</span><span class="p">.</span><span class="nf">activateContract</span><span class="p">(</span><span class="n">bound</span><span class="p">.</span><span class="n">contract</span><span class="p">.</span><span class="n">id</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="c1">// Step 7: Process EO data (in production, this comes from EO provider)</span>
     <span class="kd">val</span> <span class="py">floodCredential</span> <span class="p">=</span> <span class="n">floodProduct</span><span class="p">.</span><span class="nf">processSarFloodData</span><span class="p">(</span>
         <span class="n">location</span> <span class="p">=</span> <span class="nc">Location</span><span class="p">(</span>
@@ -2278,13 +2278,13 @@
         <span class="p">),</span>
         <span class="n">timestamp</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">()</span>
     <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-    
+
     <span class="c1">// Step 8: Execute contract</span>
     <span class="kd">val</span> <span class="py">executionResult</span> <span class="p">=</span> <span class="n">floodProduct</span><span class="p">.</span><span class="nf">executeFloodContract</span><span class="p">(</span>
         <span class="n">contract</span> <span class="p">=</span> <span class="n">active</span><span class="p">,</span>
         <span class="n">floodCredential</span> <span class="p">=</span> <span class="n">floodCredential</span>
     <span class="p">)</span>
-    
+
     <span class="c1">// Step 9: Process payout (application-specific)</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">executionResult</span><span class="p">.</span><span class="n">executed</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">processPayout</span><span class="p">(</span><span class="n">executionResult</span><span class="p">)</span>
@@ -2292,21 +2292,21 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="complete-system-integration">
-  
-  
+
+
     <a href="#complete-system-integration" class="anchor-heading" aria-labelledby="complete-system-integration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Complete System Integration
-  
-  
+
+
 </h2>
-    
+
 <h3 id="main-application">
-  
-  
+
+
     <a href="#main-application" class="anchor-heading" aria-labelledby="main-application"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Main Application
-  
-  
+
+
 </h3>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -2462,16 +2462,16 @@
 
 <span class="cm">/**
  * Atlas Parametric MGA Platform
- * 
+ *
  * Main application entry point
  */</span>
 <span class="kd">class</span> <span class="nc">AtlasParametricPlatform</span> <span class="p">{</span>
-    
+
     <span class="k">private</span> <span class="kd">val</span> <span class="py">TrustWeave</span><span class="p">:</span> <span class="nc">TrustWeave</span>
     <span class="k">private</span> <span class="kd">val</span> <span class="py">sarFloodProduct</span><span class="p">:</span> <span class="nc">SarFloodProduct</span>
     <span class="k">private</span> <span class="kd">val</span> <span class="py">heatwaveProduct</span><span class="p">:</span> <span class="nc">HeatwaveProduct</span>
     <span class="k">private</span> <span class="kd">val</span> <span class="py">solarProduct</span><span class="p">:</span> <span class="nc">SolarAttenuationProduct</span>
-    
+
     <span class="nf">init</span> <span class="p">{</span>
         <span class="c1">// Initialize TrustWeave with blockchain anchoring</span>
         <span class="nc">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
@@ -2482,18 +2482,18 @@
                 <span class="p">)</span>
             <span class="p">}</span>
         <span class="p">}</span>
-        
+
         <span class="c1">// Create DIDs for EO providers</span>
         <span class="kd">val</span> <span class="py">eoProviderDid</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
             <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">dids</span><span class="p">.</span><span class="nf">create</span><span class="p">(</span><span class="n">method</span> <span class="p">=</span> <span class="s">"key"</span><span class="p">)</span>
         <span class="p">}</span>
-        
+
         <span class="c1">// Initialize products</span>
         <span class="n">sarFloodProduct</span> <span class="p">=</span> <span class="nc">SarFloodProduct</span><span class="p">(</span><span class="nc">TrustWeave</span><span class="p">,</span> <span class="n">eoProviderDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
         <span class="n">heatwaveProduct</span> <span class="p">=</span> <span class="nc">HeatwaveProduct</span><span class="p">(</span><span class="nc">TrustWeave</span><span class="p">,</span> <span class="n">eoProviderDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
         <span class="n">solarProduct</span> <span class="p">=</span> <span class="nc">SolarAttenuationProduct</span><span class="p">(</span><span class="nc">TrustWeave</span><span class="p">,</span> <span class="n">eoProviderDid</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="cm">/**
      * Process EO data and execute contracts
      */</span>
@@ -2502,7 +2502,7 @@
         <span class="n">eoData</span><span class="p">:</span> <span class="nc">Any</span><span class="p">,</span>
         <span class="n">contracts</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">SmartContract</span><span class="p">&gt;</span>
     <span class="p">):</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">ExecutionResult</span><span class="p">&gt;</span> <span class="p">{</span>
-        
+
         <span class="k">return</span> <span class="k">when</span> <span class="p">(</span><span class="n">productType</span><span class="p">)</span> <span class="p">{</span>
             <span class="nc">ProductType</span><span class="p">.</span><span class="nc">SAR_FLOOD</span> <span class="p">-&gt;</span> <span class="p">{</span>
                 <span class="kd">val</span> <span class="py">floodData</span> <span class="p">=</span> <span class="n">eoData</span> <span class="k">as</span> <span class="nc">SarFloodMeasurement</span>
@@ -2518,16 +2518,16 @@
             <span class="p">}</span>
         <span class="p">}</span>
     <span class="p">}</span>
-    
+
     <span class="k">private</span> <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">processFloodExecutions</span><span class="p">(</span>
         <span class="n">floodData</span><span class="p">:</span> <span class="nc">SarFloodMeasurement</span><span class="p">,</span>
         <span class="n">contracts</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">SmartContract</span><span class="p">&gt;</span>
     <span class="p">):</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">ExecutionResult</span><span class="p">&gt;</span> <span class="p">{</span>
-        
+
         <span class="kd">val</span> <span class="py">results</span> <span class="p">=</span> <span class="n">mutableListOf</span><span class="p">&lt;</span><span class="nc">ExecutionResult</span><span class="p">&gt;()</span>
-        
-        <span class="k">for</span> <span class="p">(</span><span class="n">contract</span> <span class="k">in</span> <span class="n">contracts</span><span class="p">.</span><span class="nf">filter</span> <span class="p">{</span> 
-            <span class="n">it</span><span class="p">.</span><span class="n">contractData</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"productType"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span> <span class="p">==</span> <span class="s">"SarFlood"</span> 
+
+        <span class="k">for</span> <span class="p">(</span><span class="n">contract</span> <span class="k">in</span> <span class="n">contracts</span><span class="p">.</span><span class="nf">filter</span> <span class="p">{</span>
+            <span class="n">it</span><span class="p">.</span><span class="n">contractData</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"productType"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span> <span class="p">==</span> <span class="s">"SarFlood"</span>
         <span class="p">})</span> <span class="p">{</span>
             <span class="c1">// Process SAR data and issue credential</span>
             <span class="kd">val</span> <span class="py">location</span> <span class="p">=</span> <span class="nf">extractLocation</span><span class="p">(</span><span class="n">contract</span><span class="p">)</span>
@@ -2536,28 +2536,28 @@
                 <span class="n">sarData</span> <span class="p">=</span> <span class="n">floodData</span><span class="p">,</span>
                 <span class="n">timestamp</span> <span class="p">=</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">()</span>
             <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-            
+
             <span class="c1">// Execute contract</span>
             <span class="kd">val</span> <span class="py">executionResult</span> <span class="p">=</span> <span class="n">sarFloodProduct</span><span class="p">.</span><span class="nf">executeFloodContract</span><span class="p">(</span>
                 <span class="n">contract</span> <span class="p">=</span> <span class="n">contract</span><span class="p">,</span>
                 <span class="n">floodCredential</span> <span class="p">=</span> <span class="n">floodCredential</span>
             <span class="p">)</span>
-            
+
             <span class="k">if</span> <span class="p">(</span><span class="n">executionResult</span><span class="p">.</span><span class="n">executed</span><span class="p">)</span> <span class="p">{</span>
                 <span class="c1">// Process payout</span>
                 <span class="nf">processPayout</span><span class="p">(</span><span class="n">executionResult</span><span class="p">)</span>
             <span class="p">}</span>
-            
+
             <span class="n">results</span><span class="p">.</span><span class="nf">add</span><span class="p">(</span><span class="n">executionResult</span><span class="p">)</span>
         <span class="p">}</span>
-        
+
         <span class="k">return</span> <span class="n">results</span>
     <span class="p">}</span>
-    
+
     <span class="k">private</span> <span class="k">fun</span> <span class="nf">extractLocation</span><span class="p">(</span><span class="n">contract</span><span class="p">:</span> <span class="nc">SmartContract</span><span class="p">):</span> <span class="nc">Location</span> <span class="p">{</span>
         <span class="kd">val</span> <span class="py">locationData</span> <span class="p">=</span> <span class="n">contract</span><span class="p">.</span><span class="n">contractData</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"location"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
             <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"Location not found in contract"</span><span class="p">)</span>
-        
+
         <span class="k">return</span> <span class="nc">Location</span><span class="p">(</span>
             <span class="n">id</span> <span class="p">=</span> <span class="n">locationData</span><span class="p">[</span><span class="s">"address"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span> <span class="o">?:</span> <span class="s">"unknown"</span><span class="p">,</span>
             <span class="n">latitude</span> <span class="p">=</span> <span class="n">locationData</span><span class="p">[</span><span class="s">"latitude"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toDouble</span><span class="p">()</span> <span class="o">?:</span> <span class="mf">0.0</span><span class="p">,</span>
@@ -2566,7 +2566,7 @@
             <span class="n">region</span> <span class="p">=</span> <span class="n">locationData</span><span class="p">[</span><span class="s">"region"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span> <span class="o">?:</span> <span class="s">""</span>
         <span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="k">private</span> <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">processPayout</span><span class="p">(</span><span class="n">executionResult</span><span class="p">:</span> <span class="nc">ExecutionResult</span><span class="p">)</span> <span class="p">{</span>
         <span class="c1">// Integrate with banking API (Stripe, Plaid, etc.)</span>
         <span class="c1">// Extract payout amount from executionResult.outcomes</span>
@@ -2596,13 +2596,13 @@
 <span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="multi-provider-eo-data-acceptance">
-  
-  
+
+
     <a href="#multi-provider-eo-data-acceptance" class="anchor-heading" aria-labelledby="multi-provider-eo-data-acceptance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Multi-Provider EO Data Acceptance
-  
-  
+
+
 </h2>
-    
+
 
 <p>One of TrustWeave’s key advantages is accepting EO data from multiple providers:</p>
 
@@ -2667,40 +2667,40 @@
 <span class="kd">class</span> <span class="nc">MultiProviderEoDataService</span><span class="p">(</span>
     <span class="k">private</span> <span class="kd">val</span> <span class="py">TrustWeave</span><span class="p">:</span> <span class="nc">TrustWeave</span>
 <span class="p">)</span> <span class="p">{</span>
-    
+
     <span class="k">private</span> <span class="kd">val</span> <span class="py">certifiedProviders</span> <span class="p">=</span> <span class="nf">setOf</span><span class="p">(</span>
         <span class="s">"did:key:esa-provider"</span><span class="p">,</span>
         <span class="s">"did:key:planet-provider"</span><span class="p">,</span>
         <span class="s">"did:key:nasa-provider"</span><span class="p">,</span>
         <span class="s">"did:key:noaa-provider"</span>
     <span class="p">)</span>
-    
+
     <span class="cm">/**
      * Accept EO data credential from any certified provider
      */</span>
     <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">acceptEoDataCredential</span><span class="p">(</span>
         <span class="n">dataCredential</span><span class="p">:</span> <span class="nc">VerifiableCredential</span>
     <span class="p">):</span> <span class="nc">Result</span><span class="p">&lt;</span><span class="nc">EoData</span><span class="p">&gt;</span> <span class="p">=</span> <span class="nf">trustweaveCatching</span> <span class="p">{</span>
-        
+
         <span class="c1">// Step 1: Verify credential</span>
         <span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">verifyCredential</span><span class="p">(</span><span class="n">dataCredential</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
         <span class="k">if</span> <span class="p">(!</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
             <span class="nf">error</span><span class="p">(</span><span class="s">"Credential verification failed: ${verification.errors}"</span><span class="p">)</span>
         <span class="p">}</span>
-        
+
         <span class="c1">// Step 2: Check if provider is certified</span>
         <span class="kd">val</span> <span class="py">issuerDid</span> <span class="p">=</span> <span class="n">dataCredential</span><span class="p">.</span><span class="n">issuer</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span>
             <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"No issuer found in credential"</span><span class="p">)</span>
-        
+
         <span class="k">if</span> <span class="p">(!</span><span class="n">certifiedProviders</span><span class="p">.</span><span class="nf">contains</span><span class="p">(</span><span class="n">issuerDid</span><span class="p">))</span> <span class="p">{</span>
             <span class="nf">error</span><span class="p">(</span><span class="s">"Provider $issuerDid is not certified"</span><span class="p">)</span>
         <span class="p">}</span>
-        
+
         <span class="c1">// Step 3: Extract and return data</span>
         <span class="kd">val</span> <span class="py">credentialSubject</span> <span class="p">=</span> <span class="n">dataCredential</span><span class="p">.</span><span class="n">credentialSubject</span>
         <span class="kd">val</span> <span class="py">dataType</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"dataType"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span>
         <span class="kd">val</span> <span class="py">data</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"data"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonObject</span>
-        
+
         <span class="nc">EoData</span><span class="p">(</span>
             <span class="n">type</span> <span class="p">=</span> <span class="n">dataType</span> <span class="o">?:</span> <span class="s">"Unknown"</span><span class="p">,</span>
             <span class="n">data</span> <span class="p">=</span> <span class="n">data</span> <span class="o">?:</span> <span class="nf">buildJsonObject</span> <span class="p">{},</span>
@@ -2718,13 +2718,13 @@
 <span class="p">)</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="broker-portal-integration">
-  
-  
+
+
     <a href="#broker-portal-integration" class="anchor-heading" aria-labelledby="broker-portal-integration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Broker Portal Integration
-  
-  
+
+
 </h2>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -2787,7 +2787,7 @@
     <span class="k">private</span> <span class="kd">val</span> <span class="py">platform</span><span class="p">:</span> <span class="nc">AtlasParametricPlatform</span><span class="p">,</span>
     <span class="k">private</span> <span class="kd">val</span> <span class="py">pricingEngine</span><span class="p">:</span> <span class="nc">PricingEngine</span>
 <span class="p">)</span> <span class="p">{</span>
-    
+
     <span class="cm">/**
      * Get quote for parametric insurance
      */</span>
@@ -2795,20 +2795,20 @@
     <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">getQuote</span><span class="p">(</span>
         <span class="nd">@RequestBody</span> <span class="n">request</span><span class="p">:</span> <span class="nc">QuoteRequest</span>
     <span class="p">):</span> <span class="nc">QuoteResponse</span> <span class="p">{</span>
-        
+
         <span class="kd">val</span> <span class="py">premium</span> <span class="p">=</span> <span class="n">pricingEngine</span><span class="p">.</span><span class="nf">calculatePremium</span><span class="p">(</span>
             <span class="n">productType</span> <span class="p">=</span> <span class="n">request</span><span class="p">.</span><span class="n">productType</span><span class="p">,</span>
             <span class="n">location</span> <span class="p">=</span> <span class="n">request</span><span class="p">.</span><span class="n">location</span><span class="p">,</span>
             <span class="n">coverageAmount</span> <span class="p">=</span> <span class="n">request</span><span class="p">.</span><span class="n">coverageAmount</span>
         <span class="p">)</span>
-        
+
         <span class="k">return</span> <span class="nc">QuoteResponse</span><span class="p">(</span>
             <span class="n">premium</span> <span class="p">=</span> <span class="n">premium</span><span class="p">,</span>
             <span class="n">coverageAmount</span> <span class="p">=</span> <span class="n">request</span><span class="p">.</span><span class="n">coverageAmount</span><span class="p">,</span>
             <span class="n">productType</span> <span class="p">=</span> <span class="n">request</span><span class="p">.</span><span class="n">productType</span>
         <span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="cm">/**
      * Bind policy
      */</span>
@@ -2816,13 +2816,13 @@
     <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">bindPolicy</span><span class="p">(</span>
         <span class="nd">@RequestBody</span> <span class="n">request</span><span class="p">:</span> <span class="nc">BindRequest</span>
     <span class="p">):</span> <span class="nc">PolicyResponse</span> <span class="p">{</span>
-        
+
         <span class="c1">// Create policy</span>
         <span class="kd">val</span> <span class="py">policy</span> <span class="p">=</span> <span class="nf">createPolicy</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
-        
+
         <span class="c1">// Issue policy credential</span>
         <span class="kd">val</span> <span class="py">policyCredential</span> <span class="p">=</span> <span class="nf">issuePolicyCredential</span><span class="p">(</span><span class="n">policy</span><span class="p">)</span>
-        
+
         <span class="k">return</span> <span class="nc">PolicyResponse</span><span class="p">(</span>
             <span class="n">policyId</span> <span class="p">=</span> <span class="n">policy</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
             <span class="n">policyCredentialId</span> <span class="p">=</span> <span class="n">policyCredential</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
@@ -2832,13 +2832,13 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="regulatory-compliance--audit-trails">
-  
-  
+
+
     <a href="#regulatory-compliance--audit-trails" class="anchor-heading" aria-labelledby="regulatory-compliance--audit-trails"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Regulatory Compliance &amp; Audit Trails
-  
-  
+
+
 </h2>
-    
+
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -2901,14 +2901,14 @@
 <span class="kd">class</span> <span class="nc">AuditTrailService</span><span class="p">(</span>
     <span class="k">private</span> <span class="kd">val</span> <span class="py">TrustWeave</span><span class="p">:</span> <span class="nc">TrustWeave</span>
 <span class="p">)</span> <span class="p">{</span>
-    
+
     <span class="cm">/**
      * Record audit event and anchor to blockchain
      */</span>
     <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">recordAuditEvent</span><span class="p">(</span>
         <span class="n">event</span><span class="p">:</span> <span class="nc">AuditEvent</span>
     <span class="p">):</span> <span class="nc">AuditRecord</span> <span class="p">{</span>
-        
+
         <span class="c1">// Create audit record</span>
         <span class="kd">val</span> <span class="py">auditRecord</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
             <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="n">event</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
@@ -2918,55 +2918,55 @@
             <span class="nf">put</span><span class="p">(</span><span class="s">"resource"</span><span class="p">,</span> <span class="n">event</span><span class="p">.</span><span class="n">resource</span><span class="p">)</span>
             <span class="nf">put</span><span class="p">(</span><span class="s">"details"</span><span class="p">,</span> <span class="n">event</span><span class="p">.</span><span class="n">details</span><span class="p">)</span>
         <span class="p">}</span>
-        
+
         <span class="c1">// Anchor to blockchain for immutability</span>
         <span class="kd">val</span> <span class="py">anchorResult</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="n">blockchains</span><span class="p">.</span><span class="nf">anchor</span><span class="p">(</span>
             <span class="n">data</span> <span class="p">=</span> <span class="n">auditRecord</span><span class="p">,</span>
             <span class="n">serializer</span> <span class="p">=</span> <span class="nc">JsonObject</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
             <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:mainnet"</span>
         <span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
-        
+
         <span class="k">return</span> <span class="nc">AuditRecord</span><span class="p">(</span>
             <span class="n">eventId</span> <span class="p">=</span> <span class="n">event</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
             <span class="n">anchorRef</span> <span class="p">=</span> <span class="n">anchorResult</span><span class="p">.</span><span class="n">ref</span><span class="p">,</span>
             <span class="n">timestamp</span> <span class="p">=</span> <span class="n">event</span><span class="p">.</span><span class="n">timestamp</span>
         <span class="p">)</span>
     <span class="p">}</span>
-    
+
     <span class="cm">/**
      * Verify audit record integrity
      */</span>
     <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">verifyAuditRecord</span><span class="p">(</span>
         <span class="n">record</span><span class="p">:</span> <span class="nc">AuditRecord</span>
     <span class="p">):</span> <span class="nc">Boolean</span> <span class="p">{</span>
-        
+
         <span class="c1">// Read from blockchain</span>
         <span class="kd">val</span> <span class="py">client</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">getBlockchainClient</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">anchorRef</span><span class="p">.</span><span class="n">chainId</span><span class="p">)</span>
             <span class="o">?:</span> <span class="k">return</span> <span class="k">false</span>
-        
+
         <span class="kd">val</span> <span class="py">anchorResult</span> <span class="p">=</span> <span class="n">client</span><span class="p">.</span><span class="nf">readPayload</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">anchorRef</span><span class="p">)</span>
-        
+
         <span class="c1">// Verify integrity</span>
         <span class="k">return</span> <span class="n">anchorResult</span><span class="p">.</span><span class="n">payload</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"id"</span><span class="p">]</span><span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span> <span class="p">==</span> <span class="n">record</span><span class="p">.</span><span class="n">eventId</span>
     <span class="p">}</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="deployment-strategy">
-  
-  
+
+
     <a href="#deployment-strategy" class="anchor-heading" aria-labelledby="deployment-strategy"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Deployment Strategy
-  
-  
+
+
 </h2>
-    
+
 <h3 id="phase-1-mvp-weeks-1-6">
-  
-  
+
+
     <a href="#phase-1-mvp-weeks-1-6" class="anchor-heading" aria-labelledby="phase-1-mvp-weeks-1-6"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Phase 1: MVP (Weeks 1-6)
-  
-  
+
+
 </h3>
-    
+
 
 <ol>
   <li><strong>Setup TrustWeave</strong>
@@ -2992,13 +2992,13 @@
   </li>
 </ol>
 <h3 id="phase-2-production-months-2-12">
-  
-  
+
+
     <a href="#phase-2-production-months-2-12" class="anchor-heading" aria-labelledby="phase-2-production-months-2-12"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Phase 2: Production (Months 2-12)
-  
-  
+
+
 </h3>
-    
+
 
 <ol>
   <li><strong>Add Heatwave Product</strong></li>
@@ -3008,13 +3008,13 @@
   <li><strong>Reinsurer dashboard</strong></li>
 </ol>
 <h2 id="key-benefits-of-using-trustweave">
-  
-  
+
+
     <a href="#key-benefits-of-using-trustweave" class="anchor-heading" aria-labelledby="key-benefits-of-using-trustweave"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Benefits of Using TrustWeave
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Standardization</strong>: W3C-compliant format works with all EO providers</li>
@@ -3025,13 +3025,13 @@
   <li><strong>Cost Reduction</strong>: Eliminate custom API integrations</li>
 </ol>
 <h2 id="next-steps">
-  
-  
+
+
     <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
-  
-  
+
+
 </h2>
-    
+
 
 <ol>
   <li><strong>Review Existing Scenarios</strong>:
@@ -3055,13 +3055,13 @@
   </li>
 </ol>
 <h2 id="related-documentation">
-  
-  
+
+
     <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
-  
-  
+
+
 </h2>
-    
+
 
 <ul>
   <li><a href="/trustweave/scenarios/parametric-insurance-eo-scenario/">Parametric Insurance with EO Data</a> - EO data insurance patterns</li>
@@ -3070,17 +3070,17 @@
   <li><a href="/trustweave/api-reference/core-api/">API Reference</a> - Complete API documentation</li>
 </ul>
 
-          
 
-          
-            
-          
+
+
+
+
         </main>
-        
+
 
   <hr>
   <footer>
-    
+
 
     <!-- Hidden template for footer injection -->
 <div id="footer-template" style="display: none;">
@@ -3112,7 +3112,7 @@
         // Move footer to body level (outside of any containers)
         document.body.appendChild(footer);
         template.remove();
-        
+
         // Ensure footer spans full width by removing any parent constraints
         footer.style.position = 'relative';
         footer.style.width = '100vw';
@@ -3122,12 +3122,12 @@
         footer.style.zIndex = '0'; // Below search overlay
       }
     }
-    
+
     // Function to update footer visibility based on search state
     function updateFooterVisibility() {
       const footer = document.querySelector('.site-footer');
       const htmlElement = document.documentElement;
-      
+
       if (footer && htmlElement) {
         const isSearchActive = htmlElement.classList.contains('search-active');
         if (isSearchActive) {
@@ -3149,12 +3149,12 @@
         }
       }
     }
-    
+
     // Monitor search state and hide/show footer appropriately
     const observer = new MutationObserver(function(mutations) {
       updateFooterVisibility();
     });
-    
+
     // Also listen for input events on search input as a backup
     // This ensures footer is hidden immediately when user starts typing
     const searchInput = document.getElementById('search-input');
@@ -3163,12 +3163,12 @@
       const handleSearchChange = function() {
         requestAnimationFrame(updateFooterVisibility);
       };
-      
+
       searchInput.addEventListener('input', handleSearchChange);
       searchInput.addEventListener('focus', handleSearchChange);
       searchInput.addEventListener('keydown', handleSearchChange);
     }
-    
+
     // Observe documentElement (html) for class changes (like search-active)
     // The search script adds 'search-active' to documentElement, not body
     if (document.documentElement) {
@@ -3176,7 +3176,7 @@
         attributes: true,
         attributeFilter: ['class']
       });
-      
+
       // Initial check
       updateFooterVisibility();
     }
@@ -3184,31 +3184,31 @@
 </script>
 
 
-    
+
   </footer>
 
 
       </div>
     </div>
-    
-      
+
+
 
 <div class="search-overlay"></div>
 
-    
+
   </div>
 
-  
-    
+
+
 
 
 
 
 
 <script type="module">
-  
+
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
-  
+
 
   var config = {}
 ;
@@ -3220,7 +3220,7 @@
 
 
 
-  
+
 </body>
 </html>
 

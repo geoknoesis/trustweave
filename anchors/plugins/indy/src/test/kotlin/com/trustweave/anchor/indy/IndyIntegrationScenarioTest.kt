@@ -4,11 +4,8 @@ import com.trustweave.TrustWeave
 import com.trustweave.anchor.AnchorRef
 import com.trustweave.anchor.exceptions.BlockchainException
 import com.trustweave.core.*
-import com.trustweave.credential.proof.ProofType
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.did.DidDocument
-import com.trustweave.did.exception.DidException
-import com.trustweave.services.IssuanceConfig
 import com.trustweave.wallet.Wallet
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
@@ -62,10 +59,10 @@ class IndyIntegrationScenarioTest {
 
         // Step 1: Create DIDs for issuer and holder
         println("Step 1: Creating DIDs...")
-        val issuerDid = trustweave.dids.create()
+        val issuerDid = trustweave.createDid()
         println("  ✓ Issuer DID: ${issuerDid.id}")
 
-        val holderDid = trustweave.dids.create()
+        val holderDid = trustweave.createDid()
         println("  ✓ Holder DID: ${holderDid.id}")
 
         // Step 2: Get issuer key ID
@@ -74,21 +71,17 @@ class IndyIntegrationScenarioTest {
 
         // Step 3: Issue a verifiable credential
         println("\nStep 2: Issuing credential...")
-        val credential = trustweave.credentials.issue(
+        val credential = trustweave.issueCredential(
             issuer = issuerDid.id,
-            subject = buildJsonObject {
-                put("id", holderDid.id)
-                put("name", "Alice")
-                put("degree", "Bachelor of Science")
-                put("university", "Test University")
-                put("graduationDate", "2024-05-15")
-            },
-            config = IssuanceConfig(
-                proofType = ProofType.Ed25519Signature2020,
-                keyId = issuerKeyId,
-                issuerDid = issuerDid.id
+            keyId = issuerKeyId,
+            subject = mapOf(
+                "id" to holderDid.id,
+                "name" to "Alice",
+                "degree" to "Bachelor of Science",
+                "university" to "Test University",
+                "graduationDate" to "2024-05-15"
             ),
-            types = listOf("UniversityDegreeCredential", "VerifiableCredential")
+            credentialType = "UniversityDegreeCredential"
         )
         println("  ✓ Credential ID: ${credential.id}")
         println("  ✓ Credential Issuer: ${credential.issuer}")
@@ -98,17 +91,14 @@ class IndyIntegrationScenarioTest {
 
         // Step 4: Verify the credential
         println("\nStep 3: Verifying credential...")
-        val verification = trustweave.credentials.verify(credential)
-        println("  ✓ Verification Valid: ${verification.valid}")
-        println("  ✓ Proof Valid: ${verification.proofValid}")
-        println("  ✓ Issuer Valid: ${verification.issuerValid}")
-        assertTrue(verification.valid, "Credential should be valid")
-        assertTrue(verification.proofValid, "Proof should be valid")
-        assertTrue(verification.issuerValid, "Issuer should be valid")
+        val verification = trustweave.verifyCredential(credential)
+        val isValid = verification is com.trustweave.credential.CredentialVerificationResult.Valid
+        println("  ✓ Verification Valid: $isValid")
+        assertTrue(isValid, "Credential should be valid")
 
         // Step 5: Create wallet and store credential
         println("\nStep 4: Creating wallet and storing credential...")
-        val wallet = trustweave.wallets.create(holderDid = holderDid.id)
+        val wallet = trustweave.createWallet(holderDid = holderDid.id)
         println("  ✓ Wallet ID: ${wallet.walletId}")
 
         val credentialId = requireNotNull(credential.id) { "Credential should have an ID" }
@@ -156,9 +146,10 @@ class IndyIntegrationScenarioTest {
 
         // Step 9: Verify the read credential
         println("\nStep 7: Verifying read credential...")
-        val readVerification = trustweave.credentials.verify(readCredential)
-        println("  ✓ Read Verification Valid: ${readVerification.valid}")
-        assertTrue(readVerification.valid, "Read credential should be valid")
+        val readVerification = trustweave.verifyCredential(readCredential)
+        val readIsValid = readVerification is com.trustweave.credential.CredentialVerificationResult.Valid
+        println("  ✓ Read Verification Valid: $readIsValid")
+        assertTrue(readIsValid, "Read credential should be valid")
 
         println("\n=== Scenario completed successfully! ===\n")
     }
@@ -187,16 +178,21 @@ class IndyIntegrationScenarioTest {
 
         // Test DID resolution error handling
         println("\nTesting DID resolution error handling...")
-        try {
-            val result = trustweave.dids.resolve("did:unknown:test")
-            // May succeed if method is registered
-            println("  ✓ DID resolved (method may be registered)")
-        } catch (error: DidException.DidMethodNotRegistered) {
-            println("  ✓ Correctly identified unregistered DID method")
-        } catch (error: DidException.InvalidDidFormat) {
-            println("  ✓ Correctly identified invalid DID format")
-        } catch (e: Throwable) {
-            println("  ✓ Error: ${e.message}")
+        val resolutionResult = trustweave.resolveDid("did:unknown:test")
+        when (resolutionResult) {
+            is com.trustweave.did.resolver.DidResolutionResult.Success -> {
+                // May succeed if method is registered
+                println("  ✓ DID resolved (method may be registered)")
+            }
+            is com.trustweave.did.resolver.DidResolutionResult.Failure.MethodNotRegistered -> {
+                println("  ✓ Correctly identified unregistered DID method")
+            }
+            is com.trustweave.did.resolver.DidResolutionResult.Failure.InvalidFormat -> {
+                println("  ✓ Correctly identified invalid DID format")
+            }
+            else -> {
+                println("  ✓ Error: ${resolutionResult}")
+            }
         }
 
         println("\n=== Error handling test completed ===\n")
@@ -257,27 +253,23 @@ class IndyIntegrationScenarioTest {
         println("\n=== Indy Integration with Multiple Credentials ===\n")
 
         // Create issuer and holder
-        val issuerDid = trustweave.dids.create()
-        val holderDid = trustweave.dids.create()
+        val issuerDid = trustweave.createDid()
+        val holderDid = trustweave.createDid()
         val issuerKeyId = issuerDid.verificationMethod.first().id
 
         // Issue multiple credentials
         val credentials = mutableListOf<VerifiableCredential>()
 
         for (i in 1..3) {
-            val credential = trustweave.credentials.issue(
+            val credential = trustweave.issueCredential(
                 issuer = issuerDid.id,
-                subject = buildJsonObject {
-                    put("id", holderDid.id)
-                    put("credentialNumber", i)
-                    put("type", "TestCredential$i")
-                },
-                config = IssuanceConfig(
-                    proofType = ProofType.Ed25519Signature2020,
-                    keyId = issuerKeyId,
-                    issuerDid = issuerDid.id
+                keyId = issuerKeyId,
+                subject = mapOf(
+                    "id" to holderDid.id,
+                    "credentialNumber" to i.toString(),
+                    "type" to "TestCredential$i"
                 ),
-                types = listOf("TestCredential$i")
+                credentialType = "TestCredential$i"
             )
 
             credentials.add(credential)
@@ -287,8 +279,9 @@ class IndyIntegrationScenarioTest {
         // Verify all credentials
         println("\nVerifying all credentials...")
         credentials.forEachIndexed { index, credential ->
-            val verification = trustweave.credentials.verify(credential)
-            assertTrue(verification.valid, "Credential ${index + 1} should be valid")
+            val verification = trustweave.verifyCredential(credential)
+            val isValid = verification is com.trustweave.credential.CredentialVerificationResult.Valid
+            assertTrue(isValid, "Credential ${index + 1} should be valid")
             println("  ✓ Credential ${index + 1} verified")
         }
 

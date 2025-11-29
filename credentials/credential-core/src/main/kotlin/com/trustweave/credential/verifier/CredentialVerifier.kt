@@ -3,6 +3,7 @@ package com.trustweave.credential.verifier
 import com.trustweave.credential.CredentialVerificationOptions
 import com.trustweave.credential.CredentialVerificationResult
 import com.trustweave.did.resolver.DidResolver
+import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.schema.SchemaRegistry
 import com.trustweave.credential.proof.ProofValidator
@@ -17,14 +18,14 @@ import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 
 /**
  * Native credential verifier implementation.
- * 
+ *
  * Provides credential verification without dependency on external services.
  * Verifies proof signatures, DID resolution, expiration, revocation, and schema validation.
- * 
+ *
  * **Example Usage**:
  * ```kotlin
  * val verifier = CredentialVerifier(myDidResolver)
- * 
+ *
  * val result = verifier.verify(
  *     credential = credential,
  *     options = CredentialVerificationOptions(
@@ -33,7 +34,7 @@ import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
  *         validateSchema = true
  *     )
  * )
- * 
+ *
  * if (result.valid) {
  *     println("Credential is valid!")
  * }
@@ -45,7 +46,7 @@ class CredentialVerifier(
 
     /**
      * Verify a verifiable credential.
-     * 
+     *
      * Steps:
      * 1. Verify proof signature
      * 2. Verify issuer DID resolution
@@ -53,7 +54,7 @@ class CredentialVerifier(
      * 4. Check revocation status
      * 5. Validate schema (if provided)
      * 6. Verify blockchain anchor (if present)
-     * 
+     *
      * @param credential Credential to verify
      * @param options Verification options
      * @return Verification result with detailed status
@@ -64,7 +65,7 @@ class CredentialVerifier(
     ): CredentialVerificationResult = withContext(Dispatchers.IO) {
         val errors = mutableListOf<String>()
         val warnings = mutableListOf<String>()
-        
+
         var proofValid = false
         var issuerValid = false
         var notExpired = true
@@ -74,7 +75,7 @@ class CredentialVerifier(
         var trustRegistryValid = true
         var delegationValid = true
         var proofPurposeValid = true
-        
+
         val didResolver = buildDidResolver(options)
 
         // 1. Verify proof purpose if enabled (before signature verification)
@@ -101,7 +102,7 @@ class CredentialVerifier(
                 }
             }
         }
-        
+
         // 2. Verify proof signature
         if (credential.proof != null) {
             println("[DEBUG CredentialVerifier] Verifying proof: type=${credential.proof.type}, verificationMethod=${credential.proof.verificationMethod}")
@@ -115,7 +116,7 @@ class CredentialVerifier(
         } else {
             errors.add("Credential has no proof")
         }
-        
+
         // 2. Verify issuer DID resolution
         issuerValid = if (didResolver == null) {
             println("[DEBUG CredentialVerifier] No DID resolver provided, skipping issuer validation")
@@ -124,8 +125,8 @@ class CredentialVerifier(
             try {
                 println("[DEBUG CredentialVerifier] Resolving issuer DID: ${credential.issuer}")
                 val resolution = didResolver.resolve(credential.issuer)
-                issuerValid = resolution?.document != null
-                println("[DEBUG CredentialVerifier] Issuer DID resolution result: document=${resolution?.document != null}")
+                issuerValid = resolution is DidResolutionResult.Success
+                println("[DEBUG CredentialVerifier] Issuer DID resolution result: document=${issuerValid}")
                 if (!issuerValid) {
                     errors.add("Failed to resolve issuer DID: ${credential.issuer}")
                 }
@@ -136,7 +137,7 @@ class CredentialVerifier(
                 false
             }
         }
-        
+
         // 3. Check expiration
         if (options.checkExpiration) {
             credential.expirationDate?.let { expirationDate ->
@@ -151,7 +152,7 @@ class CredentialVerifier(
                 }
             }
         }
-        
+
         // 4. Check revocation status
         if (options.checkRevocation && credential.credentialStatus != null) {
             if (options.statusListManager != null) {
@@ -162,7 +163,7 @@ class CredentialVerifier(
                         VerifiableCredential::class.java,
                         kotlin.coroutines.Continuation::class.java
                     )
-                    
+
                     val revocationStatus = suspendCoroutineUninterceptedOrReturn<com.trustweave.credential.revocation.RevocationStatus> { cont ->
                         try {
                             val result = checkMethod.invoke(options.statusListManager, credential, cont)
@@ -177,7 +178,7 @@ class CredentialVerifier(
                             COROUTINE_SUSPENDED
                         }
                     }
-                    
+
                     if (revocationStatus != null) {
                         notRevoked = !revocationStatus.revoked && !revocationStatus.suspended
                         if (revocationStatus.revoked) {
@@ -195,7 +196,7 @@ class CredentialVerifier(
                 warnings.add("Revocation checking requested but no StatusListManager provided")
             }
         }
-        
+
         // 5. Validate schema if provided
         if (options.validateSchema && credential.credentialSchema != null) {
             try {
@@ -212,7 +213,7 @@ class CredentialVerifier(
                 warnings.add("Schema validation error: ${e.message}")
             }
         }
-        
+
         // 6. Verify blockchain anchor if present
         if (options.verifyBlockchainAnchor && credential.evidence != null) {
             blockchainAnchorValid = verifyBlockchainAnchor(credential, options.chainId)
@@ -220,7 +221,7 @@ class CredentialVerifier(
                 errors.add("Blockchain anchor verification failed")
             }
         }
-        
+
         // 7. Check trust registry if enabled
         if (options.checkTrustRegistry && options.trustRegistry != null) {
             try {
@@ -231,10 +232,10 @@ class CredentialVerifier(
                     String::class.java,
                     kotlin.coroutines.Continuation::class.java
                 )
-                
+
                 // Extract credential type from credential.type
                 val credentialType = credential.type.firstOrNull { it != "VerifiableCredential" }
-                
+
                 // Call isTrustedIssuer using reflection with coroutines
                 val isTrusted = suspendCoroutineUninterceptedOrReturn<Boolean> { cont ->
                     try {
@@ -250,7 +251,7 @@ class CredentialVerifier(
                         COROUTINE_SUSPENDED
                     }
                 } ?: false
-                
+
                 trustRegistryValid = isTrusted
                 if (!trustRegistryValid) {
                     errors.add("Issuer '${credential.issuer}' is not trusted in trust registry")
@@ -260,7 +261,7 @@ class CredentialVerifier(
                 trustRegistryValid = false
             }
         }
-        
+
         // 8. Verify delegation if proof purpose is capabilityDelegation or capabilityInvocation
         if (options.verifyDelegation && credential.proof != null) {
             val proofPurpose = credential.proof.proofPurpose
@@ -295,26 +296,87 @@ class CredentialVerifier(
                 }
             }
         }
-        
-        CredentialVerificationResult(
-            valid = errors.isEmpty() && proofValid && issuerValid && notExpired && notRevoked && schemaValid && blockchainAnchorValid && trustRegistryValid && delegationValid && proofPurposeValid,
-            errors = errors,
-            warnings = warnings,
-            proofValid = proofValid,
-            issuerValid = issuerValid,
-            notExpired = notExpired,
-            notRevoked = notRevoked,
-            schemaValid = schemaValid,
-            blockchainAnchorValid = blockchainAnchorValid,
-            trustRegistryValid = trustRegistryValid,
-            delegationValid = delegationValid,
-            proofPurposeValid = proofPurposeValid
-        )
+
+        // Determine the specific failure case or return Valid
+        when {
+            // All checks passed
+            errors.isEmpty() && proofValid && issuerValid && notExpired && notRevoked && 
+            schemaValid && blockchainAnchorValid && trustRegistryValid && delegationValid && proofPurposeValid -> {
+                CredentialVerificationResult.Valid(credential, warnings)
+            }
+            
+            // Expired (highest priority single failure)
+            !notExpired && options.checkExpiration -> {
+                val expiredAt = credential.expirationDate?.let { 
+                    try { Instant.parse(it) } catch (e: Exception) { null }
+                } ?: Instant.now()
+                CredentialVerificationResult.Invalid.Expired(credential, expiredAt, errors, warnings)
+            }
+            
+            // Revoked (high priority single failure)
+            !notRevoked && options.checkRevocation -> {
+                CredentialVerificationResult.Invalid.Revoked(credential, Instant.now(), errors, warnings)
+            }
+            
+            // Invalid proof purpose
+            !proofPurposeValid && options.validateProofPurpose -> {
+                val actualPurpose = credential.proof?.proofPurpose
+                val requiredPurpose = credential.proof?.proofPurpose ?: "assertionMethod"
+                CredentialVerificationResult.Invalid.InvalidProofPurpose(
+                    credential, requiredPurpose, actualPurpose, errors, warnings
+                )
+            }
+            
+            // Invalid proof signature
+            !proofValid -> {
+                val reason = errors.firstOrNull { it.contains("proof", ignoreCase = true) } 
+                    ?: "Proof signature verification failed"
+                CredentialVerificationResult.Invalid.InvalidProof(credential, reason, errors, warnings)
+            }
+            
+            // Untrusted issuer
+            !trustRegistryValid && options.checkTrustRegistry -> {
+                CredentialVerificationResult.Invalid.UntrustedIssuer(credential, credential.issuer, errors, warnings)
+            }
+            
+            // Invalid issuer (resolution failed)
+            !issuerValid -> {
+                val reason = errors.firstOrNull { it.contains("issuer", ignoreCase = true) }
+                    ?: "Failed to resolve issuer DID"
+                CredentialVerificationResult.Invalid.InvalidIssuer(credential, credential.issuer, reason, errors, warnings)
+            }
+            
+            // Schema validation failed
+            !schemaValid && options.validateSchema -> {
+                CredentialVerificationResult.Invalid.SchemaValidationFailed(
+                    credential, credential.credentialSchema?.id, errors, warnings
+                )
+            }
+            
+            // Invalid blockchain anchor
+            !blockchainAnchorValid && options.verifyBlockchainAnchor -> {
+                val reason = errors.firstOrNull { it.contains("blockchain", ignoreCase = true) }
+                    ?: "Blockchain anchor verification failed"
+                CredentialVerificationResult.Invalid.InvalidBlockchainAnchor(credential, reason, errors, warnings)
+            }
+            
+            // Invalid delegation
+            !delegationValid && options.verifyDelegation -> {
+                val reason = errors.firstOrNull { it.contains("delegation", ignoreCase = true) }
+                    ?: "Delegation verification failed"
+                CredentialVerificationResult.Invalid.InvalidDelegation(credential, reason, errors, warnings)
+            }
+            
+            // Multiple failures
+            else -> {
+                CredentialVerificationResult.Invalid.MultipleFailures(credential, errors, warnings)
+            }
+        }
     }
-    
+
     /**
      * Verify blockchain anchor evidence in credential.
-     * 
+     *
      * Checks if evidence contains blockchain anchor and verifies it exists on the blockchain.
      */
     private suspend fun verifyBlockchainAnchor(
@@ -324,35 +386,35 @@ class CredentialVerifier(
         if (credential.evidence == null || credential.evidence.isEmpty()) {
             return true // No evidence to verify
         }
-        
+
         // Find blockchain anchor evidence
         val anchorEvidence = credential.evidence.find { evidence ->
             evidence.type.contains("BlockchainAnchorEvidence")
         } ?: return true // No blockchain anchor evidence found
-        
+
         // Extract chain ID and transaction hash from evidence
         val evidenceDoc = anchorEvidence.evidenceDocument?.jsonObject ?: return false
         val evidenceChainId = evidenceDoc["chainId"]?.jsonPrimitive?.content
         val txHash = evidenceDoc["txHash"]?.jsonPrimitive?.content
-        
+
         if (txHash == null) {
             return false
         }
-        
+
         // If chainId is specified in options, verify it matches
         if (chainId != null && evidenceChainId != null && evidenceChainId != chainId) {
             return false
         }
-        
+
         // Note: Full verification would require access to BlockchainAnchorRegistry
         // For now, we verify the evidence structure is present
         // Actual blockchain verification should be done via trustweave.verifyCredential with blockchain client
         return evidenceChainId != null && txHash.isNotEmpty()
     }
-    
+
     /**
      * Verify proof signature.
-     * 
+     *
      * Implements actual signature verification based on proof type.
      */
     private suspend fun verifyProof(
@@ -364,21 +426,21 @@ class CredentialVerifier(
         if (proof.type.isBlank()) {
             return false
         }
-        
+
         if (proof.verificationMethod.isBlank()) {
             return false
         }
-        
+
         if (proof.proofValue == null && proof.jws == null) {
             return false
         }
-        
+
         // Use SignatureVerifier for actual verification
         if (didResolver == null) {
             // If no resolver available, can't verify signature
             return false
         }
-        
+
         val signatureVerifier = SignatureVerifier(didResolver)
         return signatureVerifier.verify(credential, proof)
     }

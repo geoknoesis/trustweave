@@ -16,6 +16,10 @@ import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.core.types.Did as CoreDid
 import com.trustweave.trust.types.Did
 import com.trustweave.trust.types.VerificationResult
+import com.trustweave.trust.types.IssuerIdentity
+import com.trustweave.trust.types.VerifierIdentity
+import com.trustweave.trust.types.HolderIdentity
+import com.trustweave.trust.types.CredentialType
 import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -109,6 +113,95 @@ class TrustWeave private constructor(
      */
     suspend fun issue(block: IssuanceBuilder.() -> Unit): VerifiableCredential {
         return context.issue(block)
+    }
+
+    /**
+     * Issue a verifiable credential using simple parameters (non-DSL overload).
+     *
+     * Simple overload for common case - issues a credential with minimal configuration.
+     * For complex cases, use the DSL-based `issue { }` method.
+     *
+     * **Example:**
+     * ```kotlin
+     * val credential = trustWeave.issueCredential(
+     *     issuer = "did:key:university",
+     *     keyId = "key-1",
+     *     subject = mapOf(
+     *         "id" to "did:key:student",
+     *         "degree" to mapOf(
+     *             "type" to "BachelorDegree",
+     *             "name" to "Bachelor of Science"
+     *         )
+     *     ),
+     *     credentialType = "DegreeCredential"
+     * )
+     * ```
+     *
+     * @param issuer The issuer DID
+     * @param keyId The key ID for signing (can be fragment like "key-1" or full like "did:key:...#key-1")
+     * @param subject The credential subject as a map of properties
+     * @param credentialType The credential type (default: "VerifiableCredential")
+     * @param credentialId Optional credential ID (auto-generated if not provided)
+     * @return The issued verifiable credential
+     */
+    suspend fun issueCredential(
+        issuer: String,
+        keyId: String,
+        subject: Map<String, Any>,
+        credentialType: String = "VerifiableCredential",
+        credentialId: String? = null
+    ): VerifiableCredential {
+        return context.issue {
+            credential {
+                if (credentialId != null) {
+                    id(credentialId)
+                }
+                type(credentialType)
+                issuer(issuer)
+                // Convert subject map to JSON structure
+                val subjectId = subject["id"] as? String
+                if (subjectId != null) {
+                    this.subject {
+                        id(subjectId)
+                        // Add other properties
+                        subject.filterKeys { it != "id" }.forEach { (key, value) ->
+                            when (value) {
+                                is Map<*, *> -> {
+                                    // Nested object
+                                    key {
+                                        (value as Map<String, Any>).forEach { (nestedKey, nestedValue) ->
+                                            nestedKey to nestedValue
+                                        }
+                                    }
+                                }
+                                else -> {
+                                    key to value
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    this.subject {
+                        subject.forEach { (key, value) ->
+                            when (value) {
+                                is Map<*, *> -> {
+                                    key {
+                                        (value as Map<String, Any>).forEach { (nestedKey, nestedValue) ->
+                                            nestedKey to nestedValue
+                                        }
+                                    }
+                                }
+                                else -> {
+                                    key to value
+                                }
+                            }
+                        }
+                    }
+                }
+                issued(java.time.Instant.now())
+            }
+            by(issuerDid = issuer, keyId = keyId)
+        }
     }
 
     /**

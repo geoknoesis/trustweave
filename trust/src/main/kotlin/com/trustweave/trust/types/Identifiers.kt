@@ -263,3 +263,49 @@ data class IssuerIdentity(
     }
 }
 
+/**
+ * Verifier Identity.
+ *
+ * Type-safe identifier for credential verifiers in the Web-of-Trust model.
+ * Provides semantic clarity when working with trust relationships and verification operations.
+ *
+ * **Example:**
+ * ```kotlin
+ * val verifier = VerifierIdentity(Did("did:key:employer"))
+ * val path = trustRegistry.findTrustPath(verifier, issuer)
+ * ```
+ */
+@JvmInline
+value class VerifierIdentity(val did: Did) {
+    /**
+     * Get the underlying DID string value.
+     */
+    val value: String
+        get() = did.value
+
+    override fun toString(): String = did.value
+}
+
+/**
+ * Holder Identity.
+ *
+ * Type-safe identifier for credential holders in the Web-of-Trust model.
+ * Provides semantic clarity when working with credential subjects and wallet operations.
+ *
+ * **Example:**
+ * ```kotlin
+ * val holder = HolderIdentity(Did("did:key:student"))
+ * val wallet = trustWeave.createWallet(holder)
+ * ```
+ */
+@JvmInline
+value class HolderIdentity(val did: Did) {
+    /**
+     * Get the underlying DID string value.
+     */
+    val value: String
+        get() = did.value
+
+    override fun toString(): String = did.value
+}
+

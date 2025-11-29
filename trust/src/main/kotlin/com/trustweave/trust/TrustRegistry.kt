@@ -1,5 +1,9 @@
 package com.trustweave.trust
 
+import com.trustweave.trust.types.IssuerIdentity
+import com.trustweave.trust.types.VerifierIdentity
+import com.trustweave.trust.types.CredentialType
+import com.trustweave.core.types.Did
 import java.time.Instant
 
 /**
@@ -40,6 +44,17 @@ interface TrustRegistry {
     suspend fun isTrustedIssuer(issuerDid: String, credentialType: String?): Boolean
 
     /**
+     * Checks if an issuer is trusted for a specific credential type (type-safe overload).
+     *
+     * @param issuer The issuer identity (type-safe)
+     * @param credentialType The credential type (null means check for any type)
+     * @return true if the issuer is trusted, false otherwise
+     */
+    suspend fun isTrustedIssuer(issuer: IssuerIdentity, credentialType: CredentialType?): Boolean {
+        return isTrustedIssuer(issuer.did.value, credentialType?.value)
+    }
+
+    /**
      * Adds a trust anchor to the registry.
      *
      * @param anchorDid The DID of the trust anchor
@@ -66,12 +81,38 @@ interface TrustRegistry {
     suspend fun getTrustPath(fromDid: String, toDid: String): TrustPathResult?
 
     /**
+     * Finds a trust path between two identities (type-safe overload).
+     *
+     * @param from The starting identity (typically the verifier)
+     * @param to The target identity (typically the issuer)
+     * @return TrustPathResult if a path exists, null otherwise
+     */
+    suspend fun getTrustPath(from: VerifierIdentity, to: IssuerIdentity): TrustPathResult? {
+        return getTrustPath(from.did.value, to.did.value)
+    }
+
+    /**
      * Gets all trusted issuers for a specific credential type.
      *
      * @param credentialType The credential type (null means all types)
      * @return List of trusted issuer DIDs
      */
     suspend fun getTrustedIssuers(credentialType: String?): List<String>
+
+    /**
+     * Gets all trusted issuers for a specific credential type (type-safe overload).
+     *
+     * Note: This returns DIDs only, not full IssuerIdentity objects since we don't have key IDs.
+     * For full issuer identities with key IDs, use the string-based overload and construct IssuerIdentity manually.
+     *
+     * @param credentialType The credential type (null means all types)
+     * @return List of trusted issuer DIDs (as Did objects)
+     */
+    suspend fun getTrustedIssuers(credentialType: CredentialType?): List<Did> {
+        return getTrustedIssuers(credentialType?.value).map { didString ->
+            Did(didString)
+        }
+    }
 }
 
 /**

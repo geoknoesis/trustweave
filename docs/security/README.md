@@ -1,6 +1,13 @@
 ---
 title: Security Best Practices
-nav_exclude: true
+nav_order: 1
+parent: Security
+keywords:
+  - security
+  - best practices
+  - production
+  - kms
+  - encryption
 ---
 
 # Security Best Practices
@@ -114,23 +121,33 @@ val wallet = TrustWeave.createWallet(holderDid) {
 - **Revocation Checks**: Verify credential is not revoked
 
 ```kotlin
-val verification = TrustWeave.verifyCredential(credential).getOrThrow()
-
-// Check all validation flags
-if (!verification.valid) {
-    throw SecurityException("Credential validation failed")
-}
-
-if (!verification.proofValid) {
-    throw SecurityException("Proof validation failed")
-}
-
-if (!verification.issuerValid) {
-    throw SecurityException("Issuer validation failed")
-}
-
-if (!verification.notRevoked) {
-    throw SecurityException("Credential is revoked")
+// Verify credential with sealed result
+when (val verification = trustweave.verifyCredential(credential)) {
+    is CredentialVerificationResult.Valid -> {
+        // Additional trust check
+        val issuerTrusted = trustweave.trust.isTrustedIssuer(
+            issuer = IssuerIdentity(credential.issuer),
+            credentialType = CredentialType(credential.type.first())
+        )
+        
+        if (!issuerTrusted) {
+            throw SecurityException("Issuer not trusted")
+        }
+        
+        // Safe to use credential
+    }
+    is CredentialVerificationResult.Invalid.Expired -> {
+        throw SecurityException("Credential expired at ${verification.expiredAt}")
+    }
+    is CredentialVerificationResult.Invalid.Revoked -> {
+        throw SecurityException("Credential revoked at ${verification.revokedAt}")
+    }
+    is CredentialVerificationResult.Invalid.InvalidProof -> {
+        throw SecurityException("Proof validation failed: ${verification.reason}")
+    }
+    else -> {
+        throw SecurityException("Credential validation failed: ${verification.errors}")
+    }
 }
 ```
 
@@ -246,8 +263,17 @@ catch (e: Exception) {
 9. ✅ Conduct security audits
 10. ✅ Follow principle of least privilege
 
+## Trust Boundaries
+
+Understanding trust boundaries is crucial for secure deployments. See [Trust Boundaries](trust-boundaries.md) for detailed guidance on:
+- What to trust and what not to trust
+- Establishing secure trust relationships
+- Trust verification patterns
+- Security zones and boundaries
+
 ## Additional Resources
 
+- [Trust Boundaries](trust-boundaries.md) - Understanding trust boundaries in TrustWeave
 - [Key Rotation Guide](../advanced/key-rotation.md)
 - [Error Handling](../advanced/error-handling.md)
 - [Verification Policies](../advanced/verification-policies.md)

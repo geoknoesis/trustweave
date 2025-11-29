@@ -1318,10 +1318,19 @@ val result = withTimeoutOrError(5000) {
 }
 ```
 
+## Exception vs Sealed Result Patterns
+
+For a detailed explanation of when to use exceptions vs sealed results, see [Error Handling Patterns](error-handling-patterns.md):
+- When to use exceptions (programming errors)
+- When to use sealed results (expected failures)
+- Decision matrix for choosing the right pattern
+- Best practices for each pattern
+
 ## Related Documentation
 
+- [Error Handling Patterns](error-handling-patterns.md) - Exceptions vs sealed results guide
 - [API Reference](../api-reference/)
 - [Verification Policies](verification-policies.md)
-- [Plugin Lifecycle](../advanced/plugin-lifecycle.md)
+- [Plugin Lifecycle](plugin-lifecycle.md)
 - [Troubleshooting](../getting-started/troubleshooting.md)
 

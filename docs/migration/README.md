@@ -36,6 +36,14 @@ TrustWeave follows semantic versioning (SemVer) principles:
 
 ## Migration Guides
 
+### Migrating to Phase 4 API (Service Layer Removal)
+
+See [Migrating to Phase 4 API](migrating-api-phase4.md) for migration from service layer (`dids`, `credentials`, `wallets`) to direct methods:
+- Service layer removal
+- Direct methods migration
+- Error handling updates for sealed results
+- Common migration issues
+
 ### Migrating to 1.0.0
 
 See [Migrating to 1.0.0](migrating-to-1.0.0.md) for detailed migration instructions covering:

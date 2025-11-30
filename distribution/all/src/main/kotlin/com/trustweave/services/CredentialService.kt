@@ -29,21 +29,13 @@ import kotlinx.serialization.json.put
 import java.util.UUID
 
 /**
- * Focused service for credential operations.
+ * Internal service for credential operations.
  *
- * Provides a clean, focused API for issuing, verifying credentials and creating presentations.
- *
- * **Example:**
- * ```kotlin
- * val TrustWeave = TrustWeave.create()
- * val credential = trustweave.credentials.issue(
- *     issuer = "did:key:issuer",
- *     subject = buildJsonObject { put("name", "Alice") },
- *     config = IssuanceConfig(proofType = ProofType.Ed25519Signature2020, keyId = "key-1")
- * )
- * ```
+ * This service is now internal. Use direct methods on TrustWeave instead:
+ * - `trustweave.issueCredential()` instead of `trustweave.credentials.issue()`
+ * - `trustweave.verifyCredential()` instead of `trustweave.credentials.verify()`
  */
-class CredentialService(
+internal class CredentialService(
     private val context: TrustWeaveContext
 ) {
     /**

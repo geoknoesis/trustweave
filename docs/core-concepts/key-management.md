@@ -144,7 +144,7 @@ A `KeyManagementService` is responsible for:
 - **Signing** – produce digital signatures for arbitrary byte arrays.
 - **Deletion / rotation** – remove or rotate keys if the provider supports it.
 
-The interface includes algorithm advertisement and type-safe algorithm support:
+The interface includes algorithm advertisement, type-safe algorithm support, and algorithm validation:
 
 ```kotlin
 interface KeyManagementService {
@@ -160,10 +160,53 @@ interface KeyManagementService {
     suspend fun sign(keyId: KeyId, data: ByteArray, algorithm: Algorithm? = null): ByteArray
     suspend fun sign(keyId: KeyId, data: ByteArray, algorithmName: String?): ByteArray
     suspend fun deleteKey(keyId: KeyId): Boolean
+    
+    // Algorithm validation helper (available to all implementations)
+    suspend fun validateSigningAlgorithm(keyId: KeyId, requestedAlgorithm: Algorithm?): Algorithm
 }
 ```
 
 **All KMS implementations MUST advertise their supported algorithms** via `getSupportedAlgorithms()`.
+
+### Algorithm Validation
+
+TrustWeave provides built-in algorithm validation to ensure that the algorithm specified for signing operations is compatible with the key's actual algorithm. This prevents accidental misuse of keys with incompatible algorithms.
+
+**KeySpec** is a type-safe wrapper that provides algorithm validation:
+
+```kotlin
+import com.trustweave.kms.KeySpec
+
+// Get key specification
+val keyHandle = kms.getPublicKey(keyId)
+val keySpec = KeySpec.fromKeyHandle(keyHandle)
+
+// Validate algorithm compatibility
+val algorithm = Algorithm.Ed25519
+require(keySpec.supports(algorithm)) {
+    "Key does not support algorithm ${algorithm.name}"
+}
+
+// Or use the helper method (recommended)
+val effectiveAlgorithm = kms.validateSigningAlgorithm(keyId, algorithm)
+// This throws UnsupportedAlgorithmException if incompatible
+```
+
+**Best Practice:** Use `validateSigningAlgorithm()` in your KMS implementations to ensure algorithm compatibility:
+
+```kotlin
+override suspend fun sign(
+    keyId: KeyId,
+    data: ByteArray,
+    algorithm: Algorithm?
+): ByteArray {
+    // Validate algorithm compatibility
+    val effectiveAlgorithm = validateSigningAlgorithm(keyId, algorithm)
+    
+    // Proceed with signing using effectiveAlgorithm
+    // ...
+}
+```
 
 ## Built-in Providers
 

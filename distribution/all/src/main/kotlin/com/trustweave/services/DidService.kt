@@ -12,18 +12,13 @@ import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.didCreationOptions
 
 /**
- * Focused service for DID operations.
+ * Internal service for DID operations.
  *
- * Provides a clean, focused API for creating, resolving, updating, and deactivating DIDs.
- *
- * **Example:**
- * ```kotlin
- * val TrustWeave = TrustWeave.create()
- * val did = trustweave.dids.create()
- * val resolved = trustweave.dids.resolve("did:key:...")
- * ```
+ * This service is now internal. Use direct methods on TrustWeave instead:
+ * - `trustweave.createDid()` instead of `trustweave.dids.create()`
+ * - `trustweave.resolveDid()` instead of `trustweave.dids.resolve()`
  */
-class DidService(
+internal class DidService(
     private val context: TrustWeaveContext
 ) {
     /**

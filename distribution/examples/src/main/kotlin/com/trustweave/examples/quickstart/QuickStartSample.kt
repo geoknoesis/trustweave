@@ -28,13 +28,13 @@ fun main(): Unit = runBlocking {
     val digest = DigestUtils.sha256DigestMultibase(credentialSubject)
     println("Canonical credential-subject digest: $digest")
 
-    val issuerDocument = trustweave.dids.create()
+    val issuerDocument = trustweave.createDid()
     val issuerDid = issuerDocument.id
     val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.id
         ?: error("No verification method generated for $issuerDid")
     println("Issuer DID: $issuerDid (keyId=$issuerKeyId)")
 
-    val credential = trustweave.credentials.issue(
+    val credential = trustweave.issueCredential(
         issuer = issuerDid,
         subject = credentialSubject,
         config = IssuanceConfig(
@@ -46,7 +46,7 @@ fun main(): Unit = runBlocking {
     )
     println("Issued credential id: ${credential.id}")
 
-    val verification = trustweave.credentials.verify(credential)
+    val verification = trustweave.verifyCredential(credential)
     if (verification.valid) {
         println(
             "Verification succeeded (proof=${verification.proofValid}, issuer=${verification.issuerValid}, " +

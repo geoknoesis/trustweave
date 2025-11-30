@@ -38,15 +38,15 @@ class KeyManagementServiceTest {
 
     @Test
     fun `test KeyNotFoundException`() {
-        val exception = KeyNotFoundException(keyId = KeyId("key-123").value)
+        val exception = KeyNotFoundException(KeyId("key-123").value)
 
         assertEquals("Key not found: key-123", exception.message)
         assertNull(exception.cause)
     }
 
     @Test
-    fun `test KeyNotFoundException with keyType`() {
-        val exception = KeyNotFoundException(keyId = KeyId("key-123").value, keyType = "Ed25519")
+    fun `test KeyNotFoundException constructor`() {
+        val exception = KeyNotFoundException(KeyId("key-123").value)
 
         assertEquals("Key not found: key-123", exception.message)
     }
@@ -71,11 +71,11 @@ class KeyManagementServiceTest {
             }
 
             override suspend fun getPublicKey(keyId: KeyId): KeyHandle {
-                return keys[keyId] ?: throw KeyNotFoundException(keyId = keyId.value)
+                return keys[keyId] ?: throw KeyNotFoundException(keyId.value)
             }
 
             override suspend fun sign(keyId: KeyId, data: ByteArray, algorithm: Algorithm?): ByteArray {
-                keys[keyId] ?: throw KeyNotFoundException(keyId = keyId.value)
+                keys[keyId] ?: throw KeyNotFoundException(keyId.value)
                 return ByteArray(64) // Mock signature
             }
 
@@ -105,7 +105,7 @@ class KeyManagementServiceTest {
             }
 
             override suspend fun generateKey(algorithm: Algorithm, options: Map<String, Any?>) = TODO()
-            override suspend fun getPublicKey(keyId: KeyId) = throw KeyNotFoundException(keyId = keyId.value)
+            override suspend fun getPublicKey(keyId: KeyId) = throw KeyNotFoundException(keyId.value)
             override suspend fun sign(keyId: KeyId, data: ByteArray, algorithm: Algorithm?) = TODO()
             override suspend fun deleteKey(keyId: KeyId) = TODO()
         }

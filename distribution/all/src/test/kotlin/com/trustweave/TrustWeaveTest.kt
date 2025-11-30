@@ -23,7 +23,7 @@ class TrustWeaveTest {
     @Test
     fun `test createDid with default options`() = runBlocking {
         val trustweave = TrustWeave.create()
-        val didDoc = trustweave.dids.create()
+        val didDoc = trustweave.createDid()
 
         assertNotNull(didDoc)
         assertNotNull(didDoc.id)
@@ -33,9 +33,9 @@ class TrustWeaveTest {
     @Test
     fun `test resolveDid`() = runBlocking {
         val trustweave = TrustWeave.create()
-        val didDoc = trustweave.dids.create()
+        val didDoc = trustweave.createDid()
 
-        val result: com.trustweave.did.resolver.DidResolutionResult = trustweave.dids.resolve(didDoc.id)
+        val result: com.trustweave.did.resolver.DidResolutionResult = trustweave.resolveDid(didDoc.id)
 
         assertNotNull(result)
         assertTrue(result is com.trustweave.did.resolver.DidResolutionResult.Success)
@@ -46,10 +46,10 @@ class TrustWeaveTest {
     @Test
     fun `test issueCredential`() = runBlocking {
         val trustweave = TrustWeave.create()
-        val did = trustweave.dids.create()
+        val did = trustweave.createDid()
         val issuerKeyId = did.verificationMethod.first().id
 
-        val credential = trustweave.credentials.issue(
+        val credential = trustweave.issueCredential(
             issuer = did.id,
             subject = buildJsonObject {
                 put("id", "did:key:subject")
@@ -71,13 +71,13 @@ class TrustWeaveTest {
     @Test
     fun `test verifyCredential`() = runBlocking {
         val trustweave = TrustWeave.create()
-        val did = trustweave.dids.create()
+        val did = trustweave.createDid()
         val issuerKeyId = did.verificationMethod.first().id
 
         println("[DEBUG] Created DID: ${did.id}")
         println("[DEBUG] Verification Method ID: $issuerKeyId")
 
-        val credential = trustweave.credentials.issue(
+        val credential = trustweave.issueCredential(
             issuer = did.id,
             subject = buildJsonObject {
                 put("id", "did:key:subject")
@@ -94,7 +94,7 @@ class TrustWeaveTest {
         println("[DEBUG] Issued credential with proof: ${credential.proof}")
         println("[DEBUG] Proof verificationMethod: ${credential.proof?.verificationMethod}")
 
-        val result = trustweave.credentials.verify(credential)
+        val result = trustweave.verifyCredential(credential)
 
         println("[DEBUG] Verification result:")
         println("[DEBUG]   valid: ${result.valid}")
@@ -116,9 +116,9 @@ class TrustWeaveTest {
     @Test
     fun `test createWallet`() = runBlocking {
         val trustweave = TrustWeave.create()
-        val did = trustweave.dids.create()
+        val did = trustweave.createDid()
 
-        val wallet = trustweave.wallets.create(holderDid = did.id)
+        val wallet = trustweave.createWallet(holderDid = did.id)
 
         assertNotNull(wallet)
         assertNotNull(wallet.walletId)
@@ -127,9 +127,9 @@ class TrustWeaveTest {
     @Test
     fun `test createWallet with custom ID`() = runBlocking {
         val trustweave = TrustWeave.create()
-        val did = trustweave.dids.create()
+        val did = trustweave.createDid()
 
-        val wallet = trustweave.wallets.create(
+        val wallet = trustweave.createWallet(
             holderDid = did.id,
             walletId = "my-custom-wallet"
         )
@@ -144,12 +144,12 @@ class TrustWeaveTest {
         val trustweave = TrustWeave.create()
 
         // Create DIDs for issuer and holder
-        val issuerDid = trustweave.dids.create()
+        val issuerDid = trustweave.createDid()
         val issuerKeyId = issuerDid.verificationMethod.first().id
-        val holderDid = trustweave.dids.create()
+        val holderDid = trustweave.createDid()
 
         // Issue a credential
-        val credential = trustweave.credentials.issue(
+        val credential = trustweave.issueCredential(
             issuer = issuerDid.id,
             subject = buildJsonObject {
                 put("id", holderDid.id)
@@ -165,11 +165,11 @@ class TrustWeaveTest {
         )
 
         // Verify the credential
-        val verificationResult = trustweave.credentials.verify(credential)
+        val verificationResult = trustweave.verifyCredential(credential)
         assertTrue(verificationResult.valid)
 
         // Create wallet and store credential
-        val wallet = trustweave.wallets.create(holderDid = holderDid.id)
+        val wallet = trustweave.createWallet(holderDid = holderDid.id)
         val credentialId = requireNotNull(credential.id) { "Issued credential should contain an id" }
         wallet.store(credential)
 

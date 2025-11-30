@@ -106,16 +106,13 @@ class InMemoryKeyManagementService : KeyManagementService {
         val keyPair = keys[keyId]
             ?: throw KmsException.KeyNotFound(keyId = keyId.value)
 
-        val signAlgorithm = algorithm?.let { alg ->
-            when (alg) {
-                is Algorithm.Ed25519 -> "Ed25519"
-                is Algorithm.Secp256k1 -> "SHA256withECDSA"
-                else -> throw IllegalArgumentException("Unknown algorithm: ${alg.name}")
-            }
-        } ?: when (keyMetadata[keyId]?.algorithm?.uppercase()) {
-            "ED25519" -> "Ed25519"
-            "SECP256K1" -> "SHA256withECDSA"
-            else -> throw IllegalArgumentException("Unknown algorithm for key: ${keyId.value}")
+        // Validate algorithm compatibility using KeySpec
+        val effectiveAlgorithm = validateSigningAlgorithm(keyId, algorithm)
+
+        val signAlgorithm = when (effectiveAlgorithm) {
+            is Algorithm.Ed25519 -> "Ed25519"
+            is Algorithm.Secp256k1 -> "SHA256withECDSA"
+            else -> throw IllegalArgumentException("Unknown algorithm: ${effectiveAlgorithm.name}")
         }
 
         val signature = Signature.getInstance(signAlgorithm).apply {

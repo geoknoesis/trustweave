@@ -17,7 +17,7 @@ suspend fun VerifiableCredential.verify(
     trustweave: TrustWeave,
     config: VerificationConfig = VerificationConfig()
 ): CredentialVerificationResult {
-    return trustweave.credentials.verify(this, config)
+    return trustweave.verifyCredential(this, config)
 }
 
 /**
@@ -29,6 +29,6 @@ suspend fun VerifiableCredential.verify(
  * ```
  */
 suspend fun String.resolveDid(trustweave: TrustWeave): DidResolutionResult {
-    return trustweave.dids.resolve(this)
+    return trustweave.resolveDid(this)
 }
 

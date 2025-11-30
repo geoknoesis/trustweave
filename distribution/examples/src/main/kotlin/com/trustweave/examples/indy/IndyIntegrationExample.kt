@@ -63,7 +63,7 @@ fun main() = runBlocking {
     // Step 2: Create DIDs for issuer and holder
     println("Step 2: Creating DIDs...")
     val issuerDid = try {
-        trustweave.dids.create()
+        trustweave.createDid()
     } catch (error: DidException.DidMethodNotRegistered) {
         println("✗ DID method not registered: ${error.method}")
         println("  Available methods: ${error.availableMethods.joinToString(", ")}")
@@ -75,7 +75,7 @@ fun main() = runBlocking {
     println("✓ Issuer DID created: ${issuerDid.id}")
 
     val holderDid = try {
-        trustweave.dids.create()
+        trustweave.createDid()
     } catch (error: DidException.DidMethodNotRegistered) {
         println("✗ DID method not registered: ${error.method}")
         println("  Available methods: ${error.availableMethods.joinToString(", ")}")
@@ -92,7 +92,7 @@ fun main() = runBlocking {
     // Resolve the DIDs to verify they're accessible
     println("\n  Resolving DIDs to verify accessibility...")
     try {
-        val issuerResolution = trustweave.dids.resolve(issuerDid.id)
+        val issuerResolution = trustweave.resolveDid(issuerDid.id)
         when (issuerResolution) {
             is com.trustweave.did.resolver.DidResolutionResult.Success -> {
                 println("  ✓ Issuer DID resolved successfully")
@@ -106,7 +106,7 @@ fun main() = runBlocking {
     }
 
     try {
-        val holderResolution = trustweave.dids.resolve(holderDid.id)
+        val holderResolution = trustweave.resolveDid(holderDid.id)
         when (holderResolution) {
             is com.trustweave.did.resolver.DidResolutionResult.Success -> {
                 println("  ✓ Holder DID resolved successfully")
@@ -123,7 +123,7 @@ fun main() = runBlocking {
     // Step 3: Issue a verifiable credential
     println("Step 3: Issuing verifiable credential...")
     val credential = try {
-        trustweave.credentials.issue(
+        trustweave.issueCredential(
             issuer = issuerDid.id,
             subject = buildJsonObject {
                 put("id", holderDid.id)
@@ -166,7 +166,7 @@ fun main() = runBlocking {
     // Step 4: Verify the credential
     println("Step 4: Verifying credential...")
     val verification = try {
-        trustweave.credentials.verify(credential)
+        trustweave.verifyCredential(credential)
     } catch (error: CredentialException.CredentialInvalid) {
         println("✗ Credential validation failed: ${error.reason}")
         println("  Field: ${error.field}")
@@ -199,7 +199,7 @@ fun main() = runBlocking {
     // Step 5: Create wallet and store credential
     println("Step 5: Creating wallet and storing credential...")
     val wallet = try {
-        trustweave.wallets.create(holderDid = holderDid.id)
+        trustweave.createWallet(holderDid = holderDid.id)
     } catch (error: WalletException.WalletCreationFailed) {
         println("✗ Wallet creation failed: ${error.reason}")
         return@runBlocking
@@ -300,7 +300,7 @@ fun main() = runBlocking {
     // Step 8: Verify the read credential
     println("Step 8: Verifying read credential...")
     val readVerification = try {
-        trustweave.credentials.verify(readCredential)
+        trustweave.verifyCredential(readCredential)
     } catch (error: Throwable) {
         println("✗ Verification failed: ${error.message}")
         return@runBlocking
@@ -322,7 +322,7 @@ fun main() = runBlocking {
     val additionalCredentials = mutableListOf<VerifiableCredential>()
     for (i in 1..2) {
         try {
-            val additionalCredential = trustweave.credentials.issue(
+            val additionalCredential = trustweave.issueCredential(
                 issuer = issuerDid.id,
                 subject = buildJsonObject {
                     put("id", holderDid.id)
@@ -457,7 +457,7 @@ fun main() = runBlocking {
     // Test DID resolution error
     println("  Testing DID resolution with unregistered method...")
     try {
-        trustweave.dids.resolve("did:unknown:test")
+        trustweave.resolveDid("did:unknown:test")
         println("  ⚠ Unexpected success with unregistered DID method")
     } catch (error: DidException.DidMethodNotRegistered) {
         println("  ✓ Correctly rejected unregistered DID method: ${error.method}")

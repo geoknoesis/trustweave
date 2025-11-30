@@ -73,7 +73,7 @@ fun main() = runBlocking {
     println("  Parameters: Using default DID creation options")
 
     val issuerDid = try {
-        trustweave.dids.create()
+        trustweave.createDid()
     } catch (error: DidException.DidMethodNotRegistered) {
         println("\n📥 RESPONSE: DID Creation Failed")
         println("  ✗ Error Type: DidMethodNotRegistered")
@@ -111,7 +111,7 @@ fun main() = runBlocking {
     println("  DID: ${issuerDid.id}")
 
     try {
-        val resolution = trustweave.dids.resolve(issuerDid.id)
+        val resolution = trustweave.resolveDid(issuerDid.id)
         println("\n📥 RESPONSE: DID Resolution")
         when (resolution) {
             is com.trustweave.did.resolver.DidResolutionResult.Success -> {
@@ -346,7 +346,7 @@ fun main() = runBlocking {
     println(subjectJson.encodeToString(JsonObject.serializer(), credentialSubject))
 
     // Issue the credential using TrustWeave facade
-    val credential = trustweave.credentials.issue(
+    val credential = trustweave.issueCredential(
         issuer = issuerDid.id,
         subject = credentialSubject,
         config = com.trustweave.services.IssuanceConfig(
@@ -386,7 +386,7 @@ fun main() = runBlocking {
     println("    - Expiration check")
     println("    - Revocation status check")
 
-    val verification = trustweave.credentials.verify(credential)
+    val verification = trustweave.verifyCredential(credential)
 
     println("\n📥 RESPONSE: Credential Verification Result")
     if (verification.valid) {

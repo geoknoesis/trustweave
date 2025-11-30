@@ -65,7 +65,7 @@ fun main() = runBlocking {
     println("  Role: Trusted issuer of national-level education credentials")
     println("  Method: key (default)")
 
-    val authorityDid = trustweave.dids.create()
+    val authorityDid = trustweave.createDid()
 
     println("\n📥 RESPONSE: Authority DID Created Successfully")
     println("  ✓ DID: ${authorityDid.id}")
@@ -82,7 +82,7 @@ fun main() = runBlocking {
     println("  Role: Recognized educational institution")
     println("  Institution: University of Algiers (UA-001)")
 
-    val institutionDid = trustweave.dids.create()
+    val institutionDid = trustweave.createDid()
 
     println("\n📥 RESPONSE: Institution DID Created Successfully")
     println("  ✓ DID: ${institutionDid.id}")
@@ -101,7 +101,7 @@ fun main() = runBlocking {
     println("  Student ID: STU-2024-001234")
     println("  National ID: 1234567890123")
 
-    val studentDid = trustweave.dids.create()
+    val studentDid = trustweave.createDid()
 
     println("\n📥 RESPONSE: Student DID Created Successfully")
     println("  ✓ DID: ${studentDid.id}")
@@ -151,7 +151,7 @@ fun main() = runBlocking {
     val subjectJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
     println(subjectJson.encodeToString(JsonObject.serializer(), enrollmentSubject))
 
-    val enrollmentCredential = trustweave.credentials.issue(
+    val enrollmentCredential = trustweave.issueCredential(
         issuer = authorityDid.id,
         subject = enrollmentSubject,
         config = IssuanceConfig(
@@ -193,7 +193,7 @@ fun main() = runBlocking {
     println("    - Expiration check")
     println("    - Revocation status check")
 
-    val enrollmentVerification = trustweave.credentials.verify(enrollmentCredential)
+    val enrollmentVerification = trustweave.verifyCredential(enrollmentCredential)
 
     println("\n📥 RESPONSE: Enrollment Credential Verification Result")
     if (enrollmentVerification.valid) {
@@ -275,7 +275,7 @@ fun main() = runBlocking {
     println("  Credential Subject:")
     println(subjectJson.encodeToString(JsonObject.serializer(), achievementSubject))
 
-    val achievementCredential = trustweave.credentials.issue(
+    val achievementCredential = trustweave.issueCredential(
         issuer = authorityDid.id,
         subject = achievementSubject,
         config = IssuanceConfig(

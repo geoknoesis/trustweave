@@ -10,23 +10,12 @@ import com.trustweave.wallet.services.WalletCreationOptions
 import java.util.UUID
 
 /**
- * Focused service for wallet operations.
+ * Internal service for wallet operations.
  *
- * Provides wallet creation only. All other wallet operations should be performed
- * directly on the wallet instance (no unnecessary wrappers).
- *
- * **Example:**
- * ```kotlin
- * val TrustWeave = TrustWeave.create()
- * val wallet = trustweave.wallets.create(holderDid = "did:key:holder")
- *
- * // Use wallet directly - no wrapper methods
- * wallet.store(credential)
- * wallet.get(credentialId)
- * wallet.list()
- * ```
+ * This service is now internal. Use direct methods on TrustWeave instead:
+ * - `trustweave.createWallet()` instead of `trustweave.wallets.create()`
  */
-class WalletService(
+internal class WalletService(
     private val context: TrustWeaveContext
 ) {
     /**

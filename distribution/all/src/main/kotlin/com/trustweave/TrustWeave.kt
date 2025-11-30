@@ -7,8 +7,10 @@ import com.trustweave.core.*
 import com.trustweave.credential.CredentialServiceRegistry
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.credential.proof.ProofGenerator
+import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.did.DidMethod
+import com.trustweave.did.DidDocument
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.exception.DidException
 import com.trustweave.kms.KeyManagementService
@@ -17,23 +19,27 @@ import com.trustweave.wallet.services.WalletFactory
 import com.trustweave.wallet.services.WalletCreationOptionsBuilder
 import com.trustweave.wallet.services.WalletCreationOptions
 import com.trustweave.core.plugin.PluginLifecycle
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.buildJsonObject
 
 /**
  * Main entry point for TrustWeave library.
  *
  * TrustWeave provides a unified, elegant API for decentralized identity and trust operations.
- * The API is organized into focused services for better discoverability and clarity.
+ * Common operations are available as direct methods for simplicity, while complex operations
+ * are organized in focused services.
  *
  * **Quick Start:**
  * ```kotlin
  * val trustweave = TrustWeave.create()
- * val did = trustweave.dids.create()
- * val credential = trustweave.credentials.issue(
+ * val did = trustweave.createDid()
+ * val credential = trustweave.issueCredential(
  *     issuer = did.id,
- *     subject = buildJsonObject { put("name", "Alice") },
- *     config = IssuanceConfig(proofType = ProofType.Ed25519Signature2020, keyId = "key-1")
+ *     keyId = "key-1",
+ *     subject = mapOf("name" to "Alice")
  * )
- * val wallet = trustweave.wallets.create(holderDid = did.id)
+ * val wallet = trustweave.createWallet(holderDid = did.id)
  * wallet.store(credential)
  * ```
  *
@@ -59,31 +65,10 @@ class TrustWeave private constructor(
     private val context: TrustWeaveContext
 ) {
     /**
-     * DID operations service.
-     *
-     * Provides methods for creating, resolving, updating, and deactivating DIDs.
-     */
-    val dids: DidService = DidService(context)
-
-    /**
-     * Credential operations service.
-     *
-     * Provides methods for issuing and verifying verifiable credentials.
-     */
-    val credentials: com.trustweave.services.CredentialService = com.trustweave.services.CredentialService(context)
-
-    /**
-     * Wallet operations service.
-     *
-     * Provides methods for creating wallets. All other wallet operations
-     * should be performed directly on the wallet instance.
-     */
-    val wallets: WalletService = WalletService(context)
-
-    /**
      * Blockchain anchoring service.
      *
      * Provides methods for anchoring data to blockchains and reading anchored data.
+     * This is a complex service with multiple methods, so it's kept as a separate property.
      */
     val blockchains: BlockchainService = BlockchainService(context)
 
@@ -91,8 +76,305 @@ class TrustWeave private constructor(
      * Smart contract operations service.
      *
      * Provides methods for creating, binding, and executing smart contracts.
+     * This is a complex service with multiple methods, so it's kept as a separate property.
      */
     val contracts: ContractService = ContractService(context)
+
+    // ========================================
+    // DID Operations (Direct Methods)
+    // ========================================
+
+    /**
+     * Creates a new DID using the specified method.
+     *
+     * Simple overload for common case - creates a DID with default method ("key").
+     *
+     * **Example:**
+     * ```kotlin
+     * val did = trustweave.createDid()  // Uses default method "key"
+     * val did = trustweave.createDid(method = "web")  // Uses did:web method
+     * ```
+     *
+     * @param method DID method name (default: "key")
+     * @return The created DID document
+     * @throws DidException.DidMethodNotRegistered if method is not registered
+     */
+    suspend fun createDid(method: String = "key"): DidDocument {
+        val availableMethods = context.getAvailableDidMethods()
+        if (method !in availableMethods) {
+            throw DidException.DidMethodNotRegistered(
+                method = method,
+                availableMethods = availableMethods
+            )
+        }
+
+        val didMethod = context.getDidMethod(method)
+            ?: throw DidException.DidMethodNotRegistered(
+                method = method,
+                availableMethods = availableMethods
+            )
+
+        return didMethod.createDid(com.trustweave.did.DidCreationOptions())
+    }
+
+    /**
+     * Creates a DID using a fluent builder for advanced configuration.
+     *
+     * **Example:**
+     * ```kotlin
+     * val did = trustweave.createDid(method = "key") {
+     *     algorithm = KeyAlgorithm.ED25519
+     *     purpose(KeyPurpose.AUTHENTICATION)
+     * }
+     * ```
+     *
+     * @param method DID method name (default: "key")
+     * @param configure Configuration block for DID creation
+     * @return The created DID document
+     */
+    suspend fun createDid(
+        method: String = "key",
+        configure: com.trustweave.did.DidCreationOptionsBuilder.() -> Unit
+    ): DidDocument {
+        val options = com.trustweave.did.didCreationOptions(configure)
+        return createDid(method, options)
+    }
+
+    /**
+     * Internal helper for creating DID with options.
+     */
+    private suspend fun createDid(method: String, options: com.trustweave.did.DidCreationOptions): DidDocument {
+        val availableMethods = context.getAvailableDidMethods()
+        if (method !in availableMethods) {
+            throw DidException.DidMethodNotRegistered(
+                method = method,
+                availableMethods = availableMethods
+            )
+        }
+
+        val didMethod = context.getDidMethod(method)
+            ?: throw DidException.DidMethodNotRegistered(
+                method = method,
+                availableMethods = availableMethods
+            )
+
+        return didMethod.createDid(options)
+    }
+
+    /**
+     * Resolves a DID to its document.
+     *
+     * Returns a sealed result type for exhaustive error handling.
+     *
+     * **Example:**
+     * ```kotlin
+     * when (val result = trustweave.resolveDid("did:key:z6Mk...")) {
+     *     is DidResolutionResult.Success -> {
+     *         println("Resolved: ${result.document.id}")
+     *     }
+     *     is DidResolutionResult.Failure.NotFound -> {
+     *         println("DID not found")
+     *     }
+     *     // ... handle other cases
+     * }
+     * ```
+     *
+     * @param did The DID string to resolve
+     * @return Resolution result containing the document and metadata
+     */
+    suspend fun resolveDid(did: String): DidResolutionResult {
+        // Validate DID format
+        com.trustweave.did.validation.DidValidator.validateFormat(did).let {
+            if (!it.isValid()) {
+                return DidResolutionResult.Failure.InvalidFormat(
+                    did = did,
+                    reason = it.errorMessage() ?: "Invalid DID format"
+                )
+            }
+        }
+
+        // Validate method is registered
+        val availableMethods = context.getAvailableDidMethods()
+        com.trustweave.did.validation.DidValidator.validateMethod(did, availableMethods).let {
+            if (!it.isValid()) {
+                val methodName = com.trustweave.did.validation.DidValidator.extractMethod(did) ?: "unknown"
+                return DidResolutionResult.Failure.MethodNotRegistered(
+                    method = methodName,
+                    availableMethods = availableMethods
+                )
+            }
+        }
+
+        return context.resolveDid(did)
+    }
+
+    // ========================================
+    // Credential Operations (Direct Methods)
+    // ========================================
+
+    /**
+     * Issues a verifiable credential.
+     *
+     * Simple overload for common case - issues a credential with minimal configuration.
+     *
+     * **Example:**
+     * ```kotlin
+     * val credential = trustweave.issueCredential(
+     *     issuer = "did:key:issuer",
+     *     keyId = "key-1",
+     *     subject = mapOf(
+     *         "id" to "did:key:subject",
+     *         "name" to "Alice"
+     *     ),
+     *     credentialType = "EducationCredential"
+     * )
+     * ```
+     *
+     * @param issuer DID of the credential issuer
+     * @param keyId The key ID for signing (can be fragment like "key-1" or full like "did:key:...#key-1")
+     * @param subject The credential subject as a map of properties
+     * @param credentialType The credential type (default: "VerifiableCredential")
+     * @param expirationDate Optional expiration date (ISO 8601)
+     * @return The issued credential with proof
+     */
+    suspend fun issueCredential(
+        issuer: String,
+        keyId: String,
+        subject: Map<String, Any>,
+        credentialType: String = "VerifiableCredential",
+        expirationDate: String? = null
+    ): VerifiableCredential {
+        val subjectJson = buildJsonObject {
+            subject.forEach { (key, value) ->
+                when (value) {
+                    is Map<*, *> -> {
+                        put(key, buildJsonObject {
+                            @Suppress("UNCHECKED_CAST")
+                            (value as? Map<String, Any> ?: emptyMap()).forEach { (k, v) ->
+                                put(k, v.toString())
+                            }
+                        })
+                    }
+                    else -> put(key, value.toString())
+                }
+            }
+        }
+
+        val config = com.trustweave.services.IssuanceConfig(
+            proofType = com.trustweave.credential.proof.ProofType.Ed25519Signature2020,
+            keyId = keyId,
+            issuerDid = issuer
+        )
+
+        return issueCredential(
+            issuer = issuer,
+            subject = subjectJson,
+            config = config,
+            types = listOf(credentialType),
+            expirationDate = expirationDate
+        )
+    }
+
+    /**
+     * Issues a verifiable credential with advanced configuration.
+     *
+     * **Example:**
+     * ```kotlin
+     * val credential = trustweave.issueCredential(
+     *     issuer = "did:key:issuer",
+     *     subject = buildJsonObject { put("name", "Alice") },
+     *     config = IssuanceConfig(
+     *         proofType = ProofType.Ed25519Signature2020,
+     *         keyId = "key-1",
+     *         issuerDid = "did:key:issuer"
+     *     ),
+     *     types = listOf("EducationCredential")
+     * )
+     * ```
+     *
+     * @param issuer DID of the credential issuer
+     * @param subject The credential subject as JSON
+     * @param config Issuance configuration
+     * @param types Credential types (VerifiableCredential is added automatically)
+     * @param expirationDate Optional expiration date (ISO 8601)
+     * @return The issued credential with proof
+     */
+    suspend fun issueCredential(
+        issuer: String,
+        subject: kotlinx.serialization.json.JsonElement,
+        config: com.trustweave.services.IssuanceConfig,
+        types: List<String> = listOf("VerifiableCredential"),
+        expirationDate: String? = null
+    ): VerifiableCredential {
+        val credentialService = com.trustweave.services.CredentialService(context)
+        return credentialService.issue(issuer, subject, config, types, expirationDate)
+    }
+
+    /**
+     * Verifies a verifiable credential.
+     *
+     * **Example:**
+     * ```kotlin
+     * val result = trustweave.verifyCredential(credential)
+     * if (result.valid) {
+     *     println("Credential is valid")
+     * } else {
+     *     println("Errors: ${result.allErrors}")
+     * }
+     * ```
+     *
+     * @param credential The credential to verify
+     * @param config Verification configuration (optional)
+     * @return Verification result with detailed status
+     */
+    suspend fun verifyCredential(
+        credential: VerifiableCredential,
+        config: com.trustweave.services.VerificationConfig = com.trustweave.services.VerificationConfig()
+    ): com.trustweave.credential.CredentialVerificationResult {
+        val credentialService = com.trustweave.services.CredentialService(context)
+        return credentialService.verify(credential, config)
+    }
+
+    // ========================================
+    // Wallet Operations (Direct Methods)
+    // ========================================
+
+    /**
+     * Creates a wallet with the specified configuration.
+     *
+     * **Example:**
+     * ```kotlin
+     * // Simple usage
+     * val wallet = trustweave.createWallet(holderDid = "did:key:holder")
+     *
+     * // With custom type and options
+     * val wallet = trustweave.createWallet(
+     *     holderDid = "did:key:holder",
+     *     type = WalletType.Database,
+     *     options = walletOptions {
+     *         label = "My Wallet"
+     *         enableOrganization = true
+     *     }
+     * )
+     * ```
+     *
+     * @param holderDid DID of the wallet holder (required)
+     * @param walletId Optional wallet identifier (generated if not provided)
+     * @param type Wallet type (default: InMemory)
+     * @param options Provider-specific configuration
+     * @return The created wallet instance
+     * @throws WalletException.WalletCreationFailed if wallet creation fails
+     */
+    suspend fun createWallet(
+        holderDid: String,
+        walletId: String? = null,
+        type: com.trustweave.wallet.WalletType = com.trustweave.wallet.WalletType.InMemory,
+        options: WalletCreationOptions = WalletCreationOptions()
+    ): com.trustweave.wallet.Wallet {
+        val finalWalletId = walletId ?: java.util.UUID.randomUUID().toString()
+        val walletService = com.trustweave.services.WalletService(context)
+        return walletService.create(holderDid, finalWalletId, type, options)
+    }
 
     // ========================================
     // Plugin Lifecycle

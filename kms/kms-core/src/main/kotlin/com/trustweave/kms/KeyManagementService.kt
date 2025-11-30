@@ -11,7 +11,7 @@ import com.trustweave.core.types.KeyId
  * @param publicKeyMultibase Public key in multibase format (optional)
  */
 data class KeyHandle(
-    val id: com.trustweave.core.types.KeyId,
+    val id: KeyId,
     val algorithm: String,
     val publicKeyJwk: Map<String, Any?>? = null,
     val publicKeyMultibase: String? = null
@@ -123,11 +123,17 @@ interface KeyManagementService {
     /**
      * Signs data using the specified key.
      *
+     * **Algorithm Validation:**
+     * Implementations SHOULD validate that the provided algorithm (if any) is compatible
+     * with the key's actual algorithm. Use [validateSigningAlgorithm] to perform this validation.
+     *
      * @param keyId Type-safe key identifier
      * @param data The data to sign
-     * @param algorithm Optional algorithm override (if null, uses the key's default algorithm)
+     * @param algorithm Optional algorithm override (if null, uses the key's default algorithm).
+     *                  If provided, MUST be compatible with the key's algorithm.
      * @return The signature bytes
      * @throws KeyNotFoundException if the key does not exist
+     * @throws UnsupportedAlgorithmException if the provided algorithm is incompatible with the key
      */
     suspend fun sign(
         keyId: KeyId,
@@ -162,6 +168,47 @@ interface KeyManagementService {
      * @return true if the key was deleted, false if it did not exist
      */
     suspend fun deleteKey(keyId: KeyId): Boolean
+
+    /**
+     * Validates that a requested algorithm is compatible with a key's actual algorithm.
+     *
+     * This helper method can be used by implementations to validate algorithm compatibility
+     * before performing signing operations. It retrieves the key's specification and
+     * validates that the requested algorithm (if provided) is compatible.
+     *
+     * **Example Usage in Implementation:**
+     * ```kotlin
+     * override suspend fun sign(keyId: KeyId, data: ByteArray, algorithm: Algorithm?): ByteArray {
+     *     // Validate algorithm compatibility
+     *     val effectiveAlgorithm = algorithm ?: validateSigningAlgorithm(keyId, null)
+     *     validateSigningAlgorithm(keyId, effectiveAlgorithm)
+     *
+     *     // Proceed with signing...
+     * }
+     * ```
+     *
+     * @param keyId The key identifier
+     * @param requestedAlgorithm The algorithm to validate (null means use key's default)
+     * @return The algorithm to use for signing (either requested or key's default)
+     * @throws KeyNotFoundException if the key does not exist
+     * @throws UnsupportedAlgorithmException if the requested algorithm is incompatible
+     */
+    suspend fun validateSigningAlgorithm(
+        keyId: KeyId,
+        requestedAlgorithm: Algorithm?
+    ): Algorithm {
+        val keyHandle = getPublicKey(keyId)
+        val keySpec = KeySpec.fromKeyHandle(keyHandle)
+
+        return if (requestedAlgorithm != null) {
+            // Validate that the requested algorithm is compatible
+            keySpec.requireSupports(requestedAlgorithm)
+            requestedAlgorithm
+        } else {
+            // Use the key's default algorithm
+            keySpec.algorithm
+        }
+    }
 }
 
 /**
@@ -177,9 +224,9 @@ class UnsupportedAlgorithmException(
  *
  * @deprecated Use KmsException.KeyNotFound instead
  */
-@Deprecated("Use KmsException.KeyNotFound instead", ReplaceWith("KmsException.KeyNotFound(keyId, keyType)"))
+@Deprecated("Use KmsException.KeyNotFound instead", ReplaceWith("KmsException.KeyNotFound(keyId)"))
 class KeyNotFoundException(message: String, cause: Throwable? = null) : Exception(message, cause) {
-    constructor(keyId: String, keyType: String? = null) : this(
+    constructor(keyId: String) : this(
         message = "Key not found: $keyId",
         cause = null
     )

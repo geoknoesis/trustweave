@@ -36,7 +36,7 @@ fun main() = runBlocking {
 
     // Step 2: Create did:jwk with Ed25519
     println("\nStep 2: Creating did:jwk with Ed25519...")
-    val ed25519Did = trustweave.dids.create("jwk") {
+    val ed25519Did = trustweave.createDid("jwk") {
         algorithm = KeyAlgorithm.ED25519
         purpose(KeyPurpose.AUTHENTICATION)
         purpose(KeyPurpose.ASSERTION)
@@ -47,7 +47,7 @@ fun main() = runBlocking {
 
     // Step 3: Resolve did:jwk
     println("\nStep 3: Resolving did:jwk...")
-    val resolved = trustweave.dids.resolve(ed25519Did.id)
+    val resolved = trustweave.resolveDid(ed25519Did.id)
     when (resolved) {
         is com.trustweave.did.resolver.DidResolutionResult.Success -> {
             println("Resolved DID: ${resolved.document.id}")
@@ -62,13 +62,13 @@ fun main() = runBlocking {
     println("\nStep 4: Creating did:jwk with different key types...")
 
     // secp256k1 (EC type)
-    val secp256k1Did = trustweave.dids.create("jwk") {
+    val secp256k1Did = trustweave.createDid("jwk") {
         algorithm = KeyAlgorithm.SECP256K1
     }
     println("Created secp256k1 DID: ${secp256k1Did.id}")
 
     // P-256 (EC type)
-    val p256Did = trustweave.dids.create("jwk") {
+    val p256Did = trustweave.createDid("jwk") {
         algorithm = KeyAlgorithm.P256
     }
     println("Created P-256 DID: ${p256Did.id}")

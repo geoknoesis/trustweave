@@ -1,11 +1,12 @@
 package com.trustweave.examples.national
 
-import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.types.VerificationResult
+import com.trustweave.trust.types.*
 import com.trustweave.core.*
 import com.trustweave.core.util.DigestUtils
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.proof.ProofType
-import com.trustweave.services.IssuanceConfig
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
 import kotlinx.coroutines.runBlocking
@@ -47,10 +48,27 @@ fun main() = runBlocking {
     // In production, use AlgorandBlockchainAnchorClient or other blockchain clients
     // IMPORTANT: Store the client reference so we can reuse it for verification
     val anchorClient = InMemoryBlockchainAnchorClient(chainId)
-    val trustweave = TrustWeave.create {
-        blockchains {
-            chainId to anchorClient
+    
+    // Create KMS instance and capture reference for signer
+    val kms = com.trustweave.testkit.kms.InMemoryKeyManagementService()
+    val kmsRef = kms
+    
+    val trustweave = TrustWeave.build {
+        keys {
+            custom(kmsRef as Any)
+            signer { data, keyId ->
+                kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)
+            }
+            algorithm("Ed25519")
         }
+        did {
+            method("key") {
+                algorithm("Ed25519")
+            }
+        }
+        // Note: Chain is registered manually below, not via DSL
+    }.also {
+        it.configuration.registries.blockchainRegistry.register(chainId, anchorClient)
     }
     println("✓ TrustWeave instance created")
     println("✓ Blockchain client registered: $chainId")
@@ -66,12 +84,19 @@ fun main() = runBlocking {
     println("  Method: key (default)")
 
     val authorityDid = trustweave.createDid()
+    
+    // Resolve authority DID to get document
+    val authorityDidResolution = trustweave.resolveDid(authorityDid)
+    val authorityDidDoc = when (authorityDidResolution) {
+        is com.trustweave.did.resolver.DidResolutionResult.Success -> authorityDidResolution.document
+        else -> throw IllegalStateException("Failed to resolve authority DID")
+    }
 
     println("\n📥 RESPONSE: Authority DID Created Successfully")
-    println("  ✓ DID: ${authorityDid.id}")
-    println("  ✓ Verification Methods: ${authorityDid.verificationMethod.size}")
+    println("  ✓ DID: ${authorityDid.value}")
+    println("  ✓ Verification Methods: ${authorityDidDoc.verificationMethod.size}")
     println("  ✓ Role: National Education Authority (Ministry of Higher Education)")
-    val authorityKeyId = authorityDid.verificationMethod.first().id
+    val authorityKeyId = authorityDidDoc.verificationMethod.first().id.substringAfter("#")
     println("  ✓ Authority Key ID: $authorityKeyId")
     println()
 
@@ -83,13 +108,20 @@ fun main() = runBlocking {
     println("  Institution: University of Algiers (UA-001)")
 
     val institutionDid = trustweave.createDid()
+    
+    // Resolve institution DID
+    val institutionDidResolution = trustweave.resolveDid(institutionDid)
+    val institutionDidDoc = when (institutionDidResolution) {
+        is com.trustweave.did.resolver.DidResolutionResult.Success -> institutionDidResolution.document
+        else -> throw IllegalStateException("Failed to resolve institution DID")
+    }
 
     println("\n📥 RESPONSE: Institution DID Created Successfully")
-    println("  ✓ DID: ${institutionDid.id}")
-    println("  ✓ Verification Methods: ${institutionDid.verificationMethod.size}")
+    println("  ✓ DID: ${institutionDid.value}")
+    println("  ✓ Verification Methods: ${institutionDidDoc.verificationMethod.size}")
     println("  ✓ Institution: University of Algiers")
     println("  ✓ Institution Code: UA-001")
-    val institutionKeyId = institutionDid.verificationMethod.first().id
+    val institutionKeyId = institutionDidDoc.verificationMethod.first().id.substringAfter("#")
     println("  ✓ Institution Key ID: $institutionKeyId")
     println()
 
@@ -104,8 +136,8 @@ fun main() = runBlocking {
     val studentDid = trustweave.createDid()
 
     println("\n📥 RESPONSE: Student DID Created Successfully")
-    println("  ✓ DID: ${studentDid.id}")
-    println("  ✓ Verification Methods: ${studentDid.verificationMethod.size}")
+    println("  ✓ DID: ${studentDid.value}")
+    println("  ✓ Verification Methods: (resolved on demand)")
     println("  ✓ Student ID: STU-2024-001234")
     println("  ✓ National ID: 1234567890123")
     println()
@@ -119,20 +151,20 @@ fun main() = runBlocking {
     println("    - Enrollment is recognized at national level")
     println("    - Credential is portable across institutions")
     println("  Parameters:")
-    println("    - Issuer: ${authorityDid.id} (National Authority)")
-    println("    - Subject: ${studentDid.id} (Student)")
-    println("    - Institution: University of Algiers (${institutionDid.id})")
+    println("    - Issuer: ${authorityDid.value} (National Authority)")
+    println("    - Subject: ${studentDid.value} (Student)")
+    println("    - Institution: University of Algiers (${institutionDid.value})")
     println("    - Program: Computer Science (Bachelor)")
     println("    - Academic Year: 2024-2025")
 
     val enrollmentSubject = buildJsonObject {
-        put("id", studentDid.id)
+        put("id", studentDid.value)
         put("algeroPass", buildJsonObject {
             put("credentialType", "enrollment")
             put("studentId", "STU-2024-001234")
             put("nationalId", "1234567890123")
             put("institution", buildJsonObject {
-                put("institutionDid", institutionDid.id)
+                put("institutionDid", institutionDid.value)
                 put("institutionName", "University of Algiers")
                 put("institutionCode", "UA-001")
             })
@@ -151,16 +183,26 @@ fun main() = runBlocking {
     val subjectJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
     println(subjectJson.encodeToString(JsonObject.serializer(), enrollmentSubject))
 
-    val enrollmentCredential = trustweave.issueCredential(
-        issuer = authorityDid.id,
-        subject = enrollmentSubject,
-        config = IssuanceConfig(
-            proofType = ProofType.Ed25519Signature2020,
-            keyId = authorityKeyId,
-            issuerDid = authorityDid.id
-        ),
-        types = listOf("VerifiableCredential", "AlgeroPassCredential", "EnrollmentCredential", "EducationCredential")
-    )
+    val enrollmentCredential = trustweave.issue {
+        credential {
+            type("AlgeroPassCredential", "EnrollmentCredential", "EducationCredential")
+            issuer(authorityDid.value)
+            subject {
+                val subjectId = enrollmentSubject["id"]?.jsonPrimitive?.content
+                if (subjectId != null) {
+                    id(subjectId)
+                }
+                enrollmentSubject.forEach { (key, value) ->
+                    if (key != "id") {
+                        // JsonElement values (JsonObject, JsonArray, JsonPrimitive) are supported directly
+                        key to value
+                    }
+                }
+            }
+            issued(java.time.Instant.now())
+        }
+        by(issuerDid = authorityDid.value, keyId = authorityKeyId)
+    }
 
     println("\n📥 RESPONSE: Enrollment Credential Issued Successfully")
     println("  ✓ Credential ID: ${enrollmentCredential.id}")
@@ -226,19 +268,19 @@ fun main() = runBlocking {
     println("    - Achievements are recognized at national level")
     println("    - Enables credit transfer between institutions")
     println("  Parameters:")
-    println("    - Issuer: ${authorityDid.id} (National Authority)")
-    println("    - Subject: ${studentDid.id} (Student)")
+    println("    - Issuer: ${authorityDid.value} (National Authority)")
+    println("    - Subject: ${studentDid.value} (Student)")
     println("    - Institution: University of Algiers")
     println("    - Academic Year: 2024-2025")
     println("    - Semester: Fall 2024")
 
     val achievementSubject = buildJsonObject {
-        put("id", studentDid.id)
+        put("id", studentDid.value)
         put("algeroPass", buildJsonObject {
             put("credentialType", "achievement")
             put("studentId", "STU-2024-001234")
             put("institution", buildJsonObject {
-                put("institutionDid", institutionDid.id)
+                put("institutionDid", institutionDid.value)
                 put("institutionName", "University of Algiers")
                 put("institutionCode", "UA-001")
             })
@@ -275,16 +317,26 @@ fun main() = runBlocking {
     println("  Credential Subject:")
     println(subjectJson.encodeToString(JsonObject.serializer(), achievementSubject))
 
-    val achievementCredential = trustweave.issueCredential(
-        issuer = authorityDid.id,
-        subject = achievementSubject,
-        config = IssuanceConfig(
-            proofType = ProofType.Ed25519Signature2020,
-            keyId = authorityKeyId,
-            issuerDid = authorityDid.id
-        ),
-        types = listOf("VerifiableCredential", "AlgeroPassCredential", "AchievementCredential", "EducationCredential")
-    )
+    val achievementCredential = trustweave.issue {
+        credential {
+            type("AlgeroPassCredential", "AchievementCredential", "EducationCredential")
+            issuer(authorityDid.value)
+            subject {
+                val subjectId = achievementSubject["id"] as? String
+                if (subjectId != null) {
+                    id(subjectId)
+                }
+                achievementSubject.forEach { (key, value) ->
+                    if (key != "id") {
+                        // JsonElement values (JsonObject, JsonArray, JsonPrimitive) are supported directly
+                        key to value
+                    }
+                }
+            }
+            issued(java.time.Instant.now())
+        }
+        by(issuerDid = authorityDid.value, keyId = authorityKeyId)
+    }
 
     println("\n📥 RESPONSE: Achievement Credential Issued Successfully")
     println("  ✓ Credential ID: ${achievementCredential.id}")
@@ -327,10 +379,10 @@ fun main() = runBlocking {
 
     // Create AlgeroPass record for enrollment
     val enrollmentRecord = buildJsonObject {
-        put("studentDid", studentDid.id)
+        put("studentDid", studentDid.value)
         put("studentId", "STU-2024-001234")
         put("credentialType", "enrollment")
-        put("institutionDid", institutionDid.id)
+        put("institutionDid", institutionDid.value)
         put("credentialDigest", enrollmentDigest)
         put("credentialId", enrollmentCredential.id)
         put("timestamp", Instant.now().toString())
@@ -354,10 +406,10 @@ fun main() = runBlocking {
 
     // Anchor achievement credential
     val achievementRecord = buildJsonObject {
-        put("studentDid", studentDid.id)
+        put("studentDid", studentDid.value)
         put("studentId", "STU-2024-001234")
         put("credentialType", "achievement")
-        put("institutionDid", institutionDid.id)
+        put("institutionDid", institutionDid.value)
         put("credentialDigest", achievementDigest)
         put("credentialId", achievementCredential.id)
         put("academicYear", "2024-2025")
@@ -419,9 +471,9 @@ fun main() = runBlocking {
     println("AlgeroPass Scenario Summary")
     println("=".repeat(70))
     println("✓ TrustWeave instance created with blockchain integration")
-    println("✓ National Authority DID: ${authorityDid.id}")
-    println("✓ Institution DID: ${institutionDid.id}")
-    println("✓ Student DID: ${studentDid.id}")
+    println("✓ National Authority DID: ${authorityDid.value}")
+    println("✓ Institution DID: ${institutionDid.value}")
+    println("✓ Student DID: ${studentDid.value}")
     println("✓ Enrollment Credential issued: ${enrollmentCredential.id}")
     println("  - Student ID: STU-2024-001234")
     println("  - Institution: University of Algiers")

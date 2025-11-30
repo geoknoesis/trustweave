@@ -1,6 +1,8 @@
 package com.trustweave.examples.eo
 
-import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.types.VerificationResult
+import com.trustweave.trust.types.*
 import com.trustweave.core.*
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
@@ -54,10 +56,27 @@ fun main() = runBlocking {
     // In production, use AlgorandBlockchainAnchorClient or other blockchain clients
     // IMPORTANT: Store the client reference so we can reuse it for verification
     val anchorClient = InMemoryBlockchainAnchorClient(chainId)
-    val trustweave = TrustWeave.create {
-        blockchains {
-            chainId to anchorClient
+    
+    // Create KMS instance and capture reference for signer
+    val kms = com.trustweave.testkit.kms.InMemoryKeyManagementService()
+    val kmsRef = kms
+    
+    val trustweave = TrustWeave.build {
+        keys {
+            custom(kmsRef as Any)
+            signer { data, keyId ->
+                kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)
+            }
+            algorithm("Ed25519")
         }
+        did {
+            method("key") {
+                algorithm("Ed25519")
+            }
+        }
+        // Note: Chain is registered manually below, not via DSL
+    }.also {
+        it.configuration.registries.blockchainRegistry.register(chainId, anchorClient)
     }
     println("✓ TrustWeave instance created")
     println("✓ Blockchain client registered: $chainId")
@@ -87,47 +106,45 @@ fun main() = runBlocking {
         return@runBlocking
     }
 
-    println("\n📥 RESPONSE: DID Created Successfully")
-    println("  ✓ DID Document ID: ${issuerDid.id}")
-    println("  ✓ Verification Methods Count: ${issuerDid.verificationMethod.size}")
+    // Resolve the DID to get the document with verification methods
+    println("\n📤 REQUEST: Resolve DID")
+    println("  Purpose: Get DID document with verification methods")
+    println("  DID: ${issuerDid.value}")
+
+    val issuerDidResolution = try {
+        trustweave.resolveDid(issuerDid)
+    } catch (error: Throwable) {
+        println("\n📥 RESPONSE: DID Resolution Failed")
+        println("  ✗ Error: ${error.message}")
+        return@runBlocking
+    }
+
+    val issuerDidDoc = when (issuerDidResolution) {
+        is com.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
+        else -> {
+            println("\n📥 RESPONSE: DID Resolution Failed")
+            println("  ⚠ Status: No document found (may be in-memory)")
+            return@runBlocking
+        }
+    }
+
+    println("\n📥 RESPONSE: DID Created and Resolved Successfully")
+    println("  ✓ DID Document ID: ${issuerDidDoc.id}")
+    println("  ✓ Verification Methods Count: ${issuerDidDoc.verificationMethod.size}")
     println("\n  DID Document Details:")
-    println("    - ID: ${issuerDid.id}")
-    println("    - Context: ${issuerDid.context.joinToString(", ")}")
-    println("    - Verification Methods: ${issuerDid.verificationMethod.size}")
-    println("    - Authentication: ${issuerDid.authentication.size}")
-    println("    - Services: ${issuerDid.service.size}")
+    println("    - ID: ${issuerDidDoc.id}")
+    println("    - Context: ${issuerDidDoc.context.joinToString(", ")}")
+    println("    - Verification Methods: ${issuerDidDoc.verificationMethod.size}")
+    println("    - Authentication: ${issuerDidDoc.authentication.size}")
+    println("    - Services: ${issuerDidDoc.service.size}")
     println("\n  Verification Methods:")
-    issuerDid.verificationMethod.forEachIndexed { index, vm ->
+    issuerDidDoc.verificationMethod.forEachIndexed { index, vm ->
         println("    ${index + 1}. ID: ${vm.id}")
         println("       Type: ${vm.type}")
         println("       Controller: ${vm.controller}")
     }
-    val issuerKeyId = issuerDid.verificationMethod.first().id
+    val issuerKeyId = issuerDidDoc.verificationMethod.first().id.substringAfter("#")
     println("\n  ✓ Selected Issuer Key ID: $issuerKeyId")
-
-    // Resolve the DID to verify it's accessible
-    println("\n📤 REQUEST: Resolve DID")
-    println("  Purpose: Verify DID is accessible and can be resolved")
-    println("  DID: ${issuerDid.id}")
-
-    try {
-        val resolution = trustweave.resolveDid(issuerDid.id)
-        println("\n📥 RESPONSE: DID Resolution")
-        when (resolution) {
-            is com.trustweave.did.resolver.DidResolutionResult.Success -> {
-                val document = resolution.document
-                println("  ✓ Status: Resolved successfully")
-                println("  ✓ DID Document ID: ${document.id}")
-                println("  ✓ Verification Methods: ${document.verificationMethod.size}")
-            }
-            else -> {
-                println("  ⚠ Status: No document found (may be in-memory)")
-            }
-        }
-    } catch (error: Throwable) {
-        println("\n📥 RESPONSE: DID Resolution Failed")
-        println("  ✗ Error: ${error.message}")
-    }
     println()
 
     // Step 3: Create Artifacts (Metadata, Provenance, Quality)
@@ -172,12 +189,12 @@ fun main() = runBlocking {
     println("  Parameters:")
     println("    - ID: provenance-1")
     println("    - Activity: EO Data Collection")
-    println("    - Agent: ${issuerDid.id}")
+    println("    - Agent: ${issuerDid.value}")
 
     val (provenanceArtifact, provenanceDigest) = TestDataBuilders.createProvenanceArtifact(
         id = "provenance-1",
         activity = "EO Data Collection",
-        agent = issuerDid.id  // Links back to the DID we created in Step 2
+        agent = issuerDid.value  // Links back to the DID we created in Step 2
     )
 
     println("\n📥 RESPONSE: Provenance Artifact Created")
@@ -310,7 +327,7 @@ fun main() = runBlocking {
     println("    - It has associated metadata, provenance, and quality reports")
     println("    - These are linked together via the Linkset")
     println("  Parameters:")
-    println("    - Issuer DID: ${issuerDid.id}")
+    println("    - Issuer DID: ${issuerDid.value}")
     println("    - Issuer Key ID: $issuerKeyId")
     println("    - Credential Types: EarthObservationCredential, VerifiableCredential")
 
@@ -339,23 +356,33 @@ fun main() = runBlocking {
             put("end", "2024-01-15T10:20:00Z")
         })
         put("linksetDigest", linksetDigest)  // Reference to the Linkset digest
-        put("datasetProvider", issuerDid.id)  // Reference to the data provider
+        put("datasetProvider", issuerDid.value)  // Reference to the data provider
     }
     println("  Credential Subject:")
     val subjectJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
     println(subjectJson.encodeToString(JsonObject.serializer(), credentialSubject))
 
     // Issue the credential using TrustWeave facade
-    val credential = trustweave.issueCredential(
-        issuer = issuerDid.id,
-        subject = credentialSubject,
-        config = com.trustweave.services.IssuanceConfig(
-            proofType = com.trustweave.credential.proof.ProofType.Ed25519Signature2020,
-            keyId = issuerKeyId,
-            issuerDid = issuerDid.id
-        ),
-        types = listOf("EarthObservationCredential", "VerifiableCredential")
-    )
+    val credential = trustweave.issue {
+        credential {
+            type("EarthObservationCredential")
+            issuer(issuerDid.value)
+            subject {
+                val subjectId = credentialSubject["id"]?.jsonPrimitive?.content
+                if (subjectId != null) {
+                    id(subjectId)
+                }
+                credentialSubject.forEach { (key, value) ->
+                    if (key != "id") {
+                        // JsonElement values (JsonObject, JsonArray, JsonPrimitive) are supported directly
+                        key to value
+                    }
+                }
+            }
+            issued(java.time.Instant.now())
+        }
+        by(issuerDid = issuerDid.value, keyId = issuerKeyId)
+    }
 
     println("\n📥 RESPONSE: Credential Issued Successfully")
     println("  ✓ Credential ID: ${credential.id}")
@@ -457,7 +484,7 @@ fun main() = runBlocking {
         put("vcId", credential.id)
         put("vcDigest", vcDigest)
         put("digestMultibase", vcDigest) // Also include as digestMultibase for verifier
-        put("issuer", issuerDid.id)
+        put("issuer", issuerDid.value)
         put("linksetDigest", linksetDigest)
         put("timestamp", Instant.now().toString())
     }
@@ -680,7 +707,7 @@ fun main() = runBlocking {
     println("Scenario Summary")
     println("=".repeat(70))
     println("✓ TrustWeave instance created with blockchain integration")
-    println("✓ Issuer DID: ${issuerDid.id}")
+    println("✓ Issuer DID: ${issuerDid.value}")
     println("✓ Issuer Key ID: $issuerKeyId")
     println("✓ Artifacts created: 3")
     println("  - Metadata: $metadataDigest")

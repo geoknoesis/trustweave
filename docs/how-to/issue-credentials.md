@@ -21,10 +21,8 @@ Here's a complete example that issues a credential:
 
 ```kotlin
 import com.trustweave.trust.TrustWeave
-import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
     try {
@@ -42,14 +40,23 @@ fun main() = runBlocking {
         }
 
         // Create issuer DID
-        val issuerDid = trustLayer.createDid {
+        val issuerDid = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
-        val issuerKeyId = "$issuerDid#key-1"
+        
+        // Get key ID from DID document
+        val resolutionResult = trustWeave.resolveDid(issuerDid)
+        val issuerDocument = when (resolutionResult) {
+            is DidResolutionResult.Success -> resolutionResult.document
+            else -> throw IllegalStateException("Failed to resolve issuer DID")
+        }
+        val verificationMethod = issuerDocument.verificationMethod.firstOrNull()
+            ?: throw IllegalStateException("No verification method found")
+        val issuerKeyId = verificationMethod.id.substringAfter("#")
 
         // Issue credential
-        val credential = trustLayer.issue {
+        val credential = trustWeave.issue {
             credential {
                 type("VerifiableCredential", "PersonCredential")
                 issuer(issuerDid)
@@ -65,18 +72,9 @@ fun main() = runBlocking {
         println("✅ Issued credential: ${credential.id}")
         println("   Issuer: ${credential.issuer}")
         println("   Subject: ${credential.credentialSubject}")
-    } catch (error: TrustWeaveError) {
-        when (error) {
-            is TrustWeaveError.CredentialInvalid -> {
-                println("❌ Credential invalid: ${error.reason}")
-            }
-            is TrustWeaveError.InvalidDidFormat -> {
-                println("❌ Invalid issuer DID: ${error.reason}")
-            }
-            else -> {
-                println("❌ Error: ${error.message}")
-            }
-        }
+    } catch (error: Exception) {
+        println("❌ Error: ${error.message}")
+        error.printStackTrace()
     }
 }
 ```
@@ -95,16 +93,25 @@ fun main() = runBlocking {
 First, create a DID for the issuer and extract the key ID:
 
 ```kotlin
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     keys { provider("inMemory"); algorithm("Ed25519") }
     did { method("key") { algorithm("Ed25519") } }
 }
 
-val issuerDid = trustLayer.createDid {
+val issuerDid = trustWeave.createDid {
     method("key")
     algorithm("Ed25519")
 }
-val issuerKeyId = "$issuerDid#key-1"
+
+// Get key ID from DID document
+val resolutionResult = trustWeave.resolveDid(issuerDid)
+val issuerDocument = when (resolutionResult) {
+    is DidResolutionResult.Success -> resolutionResult.document
+    else -> throw IllegalStateException("Failed to resolve issuer DID")
+}
+val verificationMethod = issuerDocument.verificationMethod.firstOrNull()
+    ?: throw IllegalStateException("No verification method found")
+val issuerKeyId = verificationMethod.id.substringAfter("#")
 ```
 
 ### Step 2: Build Credential Subject
@@ -125,7 +132,7 @@ val subject = buildJsonObject {
 Use the `issue` DSL to create and sign the credential:
 
 ```kotlin
-val credential = trustLayer.issue {
+val credential = trustWeave.issue {
     credential {
         type("VerifiableCredential", "PersonCredential")
         issuer(issuerDid)
@@ -199,7 +206,7 @@ Set an expiration date for time-sensitive credentials:
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-val credential = trustLayer.issue {
+val credential = trustWeave.issue {
     credential {
         type("VerifiableCredential", "TemporaryCredential")
         issuer(issuerDid)
@@ -292,32 +299,18 @@ val credential = try {
     trustWeave.issue {
         credential {
             type("VerifiableCredential", "PersonCredential")
-            issuer(issuerDid)
+            issuer(issuerDid.value)
             subject {
                 id("did:key:holder")
                 claim("name", "Alice")
             }
         }
-        signedBy(issuerIdentity)
+        by(issuerDid = issuerDid.value, keyId = issuerKeyId)
     }
-} catch (error: TrustWeaveError) {
-    when (error) {
-        is TrustWeaveError.CredentialInvalid -> {
-            println("Credential validation failed: ${error.reason}")
-            if (error.field != null) {
-                println("Field: ${error.field}")
-            }
-            return@runBlocking
-        }
-        is TrustWeaveError.InvalidDidFormat -> {
-            println("Invalid issuer DID: ${error.reason}")
-            return@runBlocking
-        }
-        else -> {
-            println("Issuance failed: ${error.message}")
-            return@runBlocking
-        }
-    }
+} catch (error: Exception) {
+    println("Issuance failed: ${error.message}")
+    error.printStackTrace()
+    return@runBlocking
 }
 ```
 
@@ -329,7 +322,7 @@ Issue credential with revocation status list:
 // First create a status list (see blockchain-anchored-revocation guide)
 val statusList = // ... create status list ...
 
-val credential = trustLayer.issue {
+val credential = trustWeave.issue {
     credential {
         type("VerifiableCredential", "RevocableCredential")
         issuer(issuerDid)
@@ -347,35 +340,25 @@ val credential = trustLayer.issue {
 
 ## Error Handling
 
-All credential issuance operations throw `TrustWeaveError` exceptions on failure:
+Credential issuance operations may throw exceptions on failure. Always wrap in try-catch:
 
 ```kotlin
 try {
-    val credential = trustLayer.issue { ... }
+    val credential = trustWeave.issue { ... }
     // Use credential
-} catch (error: TrustWeaveError) {
+} catch (error: Exception) {
     when (error) {
-        is TrustWeaveError.CredentialInvalid -> {
-            // Credential validation failed
-            println("Invalid: ${error.reason}")
-            if (error.field != null) {
-                println("Field: ${error.field}")
-            }
+        is IllegalStateException -> {
+            // Configuration or validation error
+            println("Error: ${error.message}")
         }
-        is TrustWeaveError.InvalidDidFormat -> {
-            // Invalid issuer DID format
-            println("Invalid DID: ${error.reason}")
-        }
-        is TrustWeaveError.DidMethodNotRegistered -> {
-            // Issuer DID method not registered
-            println("Method not registered: ${error.method}")
-        }
-        is TrustWeaveError.DidNotFound -> {
-            // Issuer DID cannot be resolved
-            println("DID not found: ${error.did}")
+        is IllegalArgumentException -> {
+            // Invalid parameter
+            println("Invalid parameter: ${error.message}")
         }
         else -> {
-            println("Error: ${error.message}")
+            println("Unexpected error: ${error.message}")
+            error.printStackTrace()
         }
     }
 }

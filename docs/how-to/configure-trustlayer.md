@@ -70,7 +70,7 @@ fun main() = runBlocking {
 
     // Use the configured TrustWeave instance
     val did = trustWeave.createDid { method("key") }
-    println("Created DID: $did")
+    println("Created DID: ${did.value}")
 }
 ```
 

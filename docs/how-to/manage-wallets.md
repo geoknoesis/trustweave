@@ -22,7 +22,7 @@ Here's a complete example that creates a wallet, stores a credential, and organi
 
 ```kotlin
 import com.trustweave.trust.TrustWeave
-import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -41,13 +41,24 @@ fun main() = runBlocking {
         }
 
         // Create wallet
-        val wallet = trustLayer.wallet {
+        val wallet = trustWeave.wallet {
             holder("did:key:holder-placeholder")
         }
 
         // Issue and store credential
-        val issuerDid = trustLayer.createDid { method("key") }
-        val credential = trustLayer.issue {
+        val issuerDid = trustWeave.createDid { method("key") }
+        
+        // Get key ID for signing
+        val resolutionResult = trustWeave.resolveDid(issuerDid)
+        val issuerDocument = when (resolutionResult) {
+            is DidResolutionResult.Success -> resolutionResult.document
+            else -> throw IllegalStateException("Failed to resolve issuer DID")
+        }
+        val verificationMethod = issuerDocument.verificationMethod.firstOrNull()
+            ?: throw IllegalStateException("No verification method found")
+        val issuerKeyId = verificationMethod.id.substringAfter("#")
+        
+        val credential = trustWeave.issue {
             credential {
                 type("VerifiableCredential", "PersonCredential")
                 issuer(issuerDid)
@@ -56,13 +67,14 @@ fun main() = runBlocking {
                     claim("name", "Alice Example")
                 }
             }
-            by(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
+            by(issuerDid = issuerDid.value, keyId = issuerKeyId)
         }
 
         val credentialId = wallet.store(credential)
         println("✅ Stored credential: $credentialId")
-    } catch (error: TrustWeaveError) {
+    } catch (error: Exception) {
         println("❌ Error: ${error.message}")
+        error.printStackTrace()
     }
 }
 ```
@@ -79,7 +91,7 @@ fun main() = runBlocking {
 Create a wallet for a holder:
 
 ```kotlin
-val wallet = trustLayer.wallet {
+val wallet = trustWeave.wallet {
     holder("did:key:holder")
 }
 ```
@@ -139,7 +151,7 @@ val wallet = trustLayer.wallet {
 Enable organization features (collections, tags, metadata):
 
 ```kotlin
-val wallet = trustLayer.wallet {
+val wallet = trustWeave.wallet {
     holder("did:key:holder")
     enableOrganization()
 }
@@ -150,7 +162,7 @@ val wallet = trustLayer.wallet {
 Enable presentation creation:
 
 ```kotlin
-val wallet = trustLayer.wallet {
+val wallet = trustWeave.wallet {
     holder("did:key:holder")
     enablePresentation()
 }
@@ -161,7 +173,7 @@ val wallet = trustLayer.wallet {
 Enable all features:
 
 ```kotlin
-val wallet = trustLayer.wallet {
+val wallet = trustWeave.wallet {
     holder("did:key:holder")
     id("my-wallet-id")  // Optional: custom wallet ID
     enableOrganization()
@@ -197,15 +209,9 @@ Handle storage errors:
 try {
     val credentialId = wallet.store(credential)
     println("Stored: $credentialId")
-} catch (error: TrustWeaveError) {
-    when (error) {
-        is TrustWeaveError.WalletCreationFailed -> {
-            println("Storage failed: ${error.reason}")
-        }
-        else -> {
-            println("Error: ${error.message}")
-        }
-    }
+} catch (error: Exception) {
+    println("Error: ${error.message}")
+    error.printStackTrace()
 }
 ```
 
@@ -441,22 +447,22 @@ Wallet operations can fail. Always handle errors:
 
 ```kotlin
 try {
-    val wallet = trustLayer.wallet {
+    val wallet = trustWeave.wallet {
         holder("did:key:holder")
     }
 
     val credentialId = wallet.store(credential)
-} catch (error: TrustWeaveError) {
+} catch (error: Exception) {
     when (error) {
-        is TrustWeaveError.WalletCreationFailed -> {
-            println("Wallet creation failed: ${error.reason}")
-            println("Provider: ${error.provider}")
+        is IllegalStateException -> {
+            println("Wallet creation failed: ${error.message}")
         }
-        is TrustWeaveError.InvalidDidFormat -> {
-            println("Invalid holder DID: ${error.reason}")
+        is IllegalArgumentException -> {
+            println("Invalid parameter: ${error.message}")
         }
         else -> {
             println("Error: ${error.message}")
+            error.printStackTrace()
         }
     }
 }

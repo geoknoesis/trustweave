@@ -36,29 +36,49 @@ After completing this guide, you will have:
 Here's a complete example showing the simplicity of the facade API:
 
 ```kotlin
-import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustWeave
+import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.trust.types.VerificationResult
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
-    // Step 1: One-line setup
-    val trustweave = TrustWeave.create()
+    // Step 1: Configure TrustWeave
+    val trustWeave = TrustWeave.build {
+        keys {
+            provider("inMemory")
+            algorithm("Ed25519")
+        }
+        did {
+            method("key") {
+                algorithm("Ed25519")
+            }
+        }
+    }
 
-    // Step 2: Create DID (automatic defaults)
-    val issuerDid = trustweave.dids.create()
+    // Step 2: Create DID
+    val issuerDid = trustWeave.createDid()
 
-    // Step 3: Issue credential (3 lines)
-    val credential = trustweave.credentials.issue(
-        issuer = issuerDid.id,
-        subject = buildJsonObject {
-            put("name", "Alice")
-            put("role", "Engineer")
-        },
-        types = listOf("VerifiableCredential", "EmployeeCredential")
+    // Step 3: Get key ID and issue credential
+    val resolutionResult = trustWeave.resolveDid(issuerDid)
+    val issuerDocument = when (resolutionResult) {
+        is DidResolutionResult.Success -> resolutionResult.document
+        else -> throw IllegalStateException("Failed to resolve issuer DID")
+    }
+    val keyId = issuerDocument.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
+    
+    val credential = trustWeave.issueCredential(
+        issuer = issuerDid.value,
+        keyId = keyId,
+        subject = mapOf(
+            "id" to "did:key:holder",
+            "name" to "Alice",
+            "role" to "Engineer"
+        ),
+        credentialType = "EmployeeCredential"
     )
 
-    println("✅ Created DID: ${issuerDid.id}")
+    println("✅ Created DID: ${issuerDid.value}")
     println("✅ Issued credential: ${credential.id}")
 }
 ```
@@ -73,10 +93,20 @@ fun main() = runBlocking {
 
 ### Step 1: Create TrustWeave Instance
 
-The facade provides sensible defaults out of the box:
+Configure TrustWeave with minimal setup:
 
 ```kotlin
-val trustweave = TrustWeave.create()
+val trustWeave = TrustWeave.build {
+    keys {
+        provider("inMemory")
+        algorithm("Ed25519")
+    }
+    did {
+        method("key") {
+            algorithm("Ed25519")
+        }
+    }
+}
 ```
 
 **What this does:**
@@ -94,16 +124,16 @@ val trustweave = TrustWeave.create()
 Create a DID with automatic defaults:
 
 ```kotlin
-val issuerDid = trustweave.dids.create()
+val issuerDid = trustWeave.createDid()  // Uses "key" method by default
 ```
 
 **What this does:**
 - ✅ Uses `did:key` method (default)
 - ✅ Generates Ed25519 key pair
 - ✅ Creates verification method
-- ✅ Returns DID document
+- ✅ Returns type-safe `Did` object
 
-**Expected Result:** A DID string like `did:key:z6Mk...`
+**Expected Result:** A `Did` object with value like `did:key:z6Mk...`
 
 ---
 
@@ -112,13 +142,24 @@ val issuerDid = trustweave.dids.create()
 Issue a credential with minimal configuration:
 
 ```kotlin
-val credential = trustweave.credentials.issue(
-    issuer = issuerDid.id,
-    subject = buildJsonObject {
-        put("name", "Alice")
-        put("role", "Engineer")
-    },
-    types = listOf("VerifiableCredential", "EmployeeCredential")
+// Get key ID first
+val resolutionResult = trustWeave.resolveDid(issuerDid)
+val issuerDocument = when (resolutionResult) {
+    is com.trustweave.did.resolver.DidResolutionResult.Success -> resolutionResult.document
+    else -> throw IllegalStateException("Failed to resolve issuer DID")
+}
+val keyId = issuerDocument.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    ?: throw IllegalStateException("No verification method found")
+
+val credential = trustWeave.issueCredential(
+    issuer = issuerDid.value,
+    keyId = keyId,
+    subject = mapOf(
+        "id" to "did:key:holder",
+        "name" to "Alice",
+        "role" to "Engineer"
+    ),
+    credentialType = "EmployeeCredential"
 )
 ```
 
@@ -137,11 +178,14 @@ val credential = trustweave.credentials.issue(
 Verify the credential you just issued:
 
 ```kotlin
-val result = trustweave.credentials.verify(credential)
-if (result.valid) {
-    println("✅ Credential is valid")
-} else {
-    println("❌ Credential invalid: ${result.errors}")
+val result = trustWeave.verifyCredential(credential)
+when (result) {
+    is com.trustweave.trust.types.VerificationResult.Valid -> {
+        println("✅ Credential is valid")
+    }
+    else -> {
+        println("❌ Credential invalid: ${result.errors.joinToString()}")
+    }
 }
 ```
 
@@ -151,13 +195,16 @@ if (result.valid) {
 
 ## Comparison: Facade vs. TrustLayer
 
-### Using Facade (Simple)
+### Using TrustWeave (Simple)
 
 ```kotlin
-// 3 lines total
-val trustweave = TrustWeave.create()
-val issuerDid = trustweave.dids.create()
-val credential = trustweave.credentials.issue(...)
+// Minimal setup
+val trustWeave = TrustWeave.build {
+    keys { provider("inMemory"); algorithm("Ed25519") }
+    did { method("key") { algorithm("Ed25519") } }
+}
+val issuerDid = trustWeave.createDid()
+val credential = trustWeave.issueCredential(...)
 ```
 
 **Best for:**
@@ -166,17 +213,20 @@ val credential = trustweave.credentials.issue(...)
 - ✅ Learning TrustWeave
 - ✅ Simple use cases
 
-### Using TrustLayer (Full Control)
+### Using TrustWeave with Full Configuration
 
 ```kotlin
-// 20+ lines with full configuration
-val trustLayer = TrustLayer.build {
+// Full configuration with all options
+val trustWeave = TrustWeave.build {
     keys { provider("inMemory"); algorithm("Ed25519") }
     did { method("key") { algorithm("Ed25519") } }
+    anchor { chain("algorand:testnet") { provider("algorand") } }
+    trust { provider("inMemory") }
+    revocation { provider("inMemory") }
     // ... more configuration
 }
-val issuerDid = trustLayer.createDid { method("key") }
-val credential = trustLayer.issue { ... }
+val issuerDid = trustWeave.createDid { method("key") }
+val credential = trustWeave.issue { ... }
 ```
 
 **Best for:**
@@ -192,16 +242,17 @@ val credential = trustLayer.issue { ... }
 
 ### Custom Configuration
 
-You can customize the facade while keeping simplicity:
+You can customize TrustWeave while keeping simplicity:
 
 ```kotlin
-val trustweave = TrustWeave.create {
-    didMethods {
-        + DidKeyMethod()
-        + DidWebMethod(domain = "example.com")
+val trustWeave = TrustWeave.build {
+    keys { provider("inMemory"); algorithm("Ed25519") }
+    did {
+        method("key") { algorithm("Ed25519") }
+        method("web") { domain("example.com") }
     }
-    blockchains {
-        "algorand:testnet" to algorandClient
+    anchor {
+        chain("algorand:testnet") { provider("algorand") }
     }
 }
 ```
@@ -221,25 +272,37 @@ val trustweave = TrustWeave.create {
 For rapid prototyping and testing:
 
 ```kotlin
-val trustweave = TrustWeave.create()
+val trustWeave = TrustWeave.build {
+    keys { provider("inMemory"); algorithm("Ed25519") }
+    did { method("key") { algorithm("Ed25519") } }
+}
 
 // Create identities
-val issuerDid = trustweave.dids.create()
-val holderDid = trustweave.dids.create()
+val issuerDid = trustWeave.createDid()
+val holderDid = trustWeave.createDid()
 
-// Issue credential
-val credential = trustweave.credentials.issue(
-    issuer = issuerDid.id,
-    subject = buildJsonObject {
-        put("id", holderDid.id)
-        put("name", "Alice")
-    },
-    types = listOf("VerifiableCredential", "PersonCredential")
+// Get key ID and issue credential
+val resolutionResult = trustWeave.resolveDid(issuerDid)
+val issuerDocument = when (resolutionResult) {
+    is com.trustweave.did.resolver.DidResolutionResult.Success -> resolutionResult.document
+    else -> throw IllegalStateException("Failed to resolve issuer DID")
+}
+val keyId = issuerDocument.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    ?: throw IllegalStateException("No verification method found")
+
+val credential = trustWeave.issueCredential(
+    issuer = issuerDid.value,
+    keyId = keyId,
+    subject = mapOf("id" to holderDid.value, "name" to "Alice"),
+    credentialType = "PersonCredential"
 )
 
 // Verify
-val result = trustweave.credentials.verify(credential)
-println("Valid: ${result.valid}")
+val result = trustWeave.verifyCredential(credential)
+when (result) {
+    is VerificationResult.Valid -> println("Valid: true")
+    else -> println("Valid: false")
+}
 ```
 
 ### Pattern 2: Production with Customization
@@ -247,53 +310,73 @@ println("Valid: ${result.valid}")
 For production with some customization:
 
 ```kotlin
-val trustweave = TrustWeave.create {
+val trustWeave = TrustWeave.build {
     // Use production KMS
-    kmsProvider("awsKms")
+    keys {
+        provider("awsKms")  // or your production KMS
+        algorithm("Ed25519")
+    }
 
     // Add multiple DID methods
-    didMethods {
-        + DidKeyMethod()
-        + DidWebMethod(domain = "yourdomain.com")
+    did {
+        method("key") { algorithm("Ed25519") }
+        method("web") { domain("yourdomain.com") }
     }
 
     // Register blockchains
-    blockchains {
-        "algorand:mainnet" to algorandClient
-        "polygon:mainnet" to polygonClient
+    anchor {
+        chain("algorand:mainnet") { provider("algorand") }
+        chain("polygon:mainnet") { provider("polygon") }
     }
 }
 ```
 
 ### Pattern 3: Complete Workflow
 
-End-to-end workflow using the facade:
+End-to-end workflow using TrustWeave:
 
 ```kotlin
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     // 1. Create issuer
-    val issuerDid = trustweave.dids.create()
+    val issuerDid = trustWeave.createDid()
 
     // 2. Create holder
-    val holderDid = trustweave.dids.create()
+    val holderDid = trustWeave.createDid()
 
-    // 3. Issue credential
-    val credential = trustweave.credentials.issue(
-        issuer = issuerDid.id,
-        subject = buildJsonObject {
-            put("id", holderDid.id)
-            put("degree", "Bachelor of Science")
-            put("university", "Example University")
-        },
-        types = listOf("VerifiableCredential", "EducationCredential")
+    // 3. Get key ID and issue credential
+    val resolutionResult = trustWeave.resolveDid(issuerDid)
+    val issuerDocument = when (resolutionResult) {
+        is com.trustweave.did.resolver.DidResolutionResult.Success -> resolutionResult.document
+        else -> throw IllegalStateException("Failed to resolve issuer DID")
+    }
+    val keyId = issuerDocument.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
+
+    val credential = trustWeave.issueCredential(
+        issuer = issuerDid.value,
+        keyId = keyId,
+        subject = mapOf(
+            "id" to holderDid.value,
+            "degree" to "Bachelor of Science",
+            "university" to "Example University"
+        ),
+        credentialType = "EducationCredential"
     )
 
     // 4. Verify credential
-    val verification = trustweave.credentials.verify(credential)
-    if (verification.valid) {
-        println("✅ Credential verified successfully")
+    val verification = trustWeave.verifyCredential(credential)
+    when (verification) {
+        is VerificationResult.Valid -> {
+            println("✅ Credential verified successfully")
+        }
+        else -> {
+            println("❌ Credential verification failed")
+        }
     }
 }
 ```
@@ -302,27 +385,30 @@ fun main() = runBlocking {
 
 ## Error Handling
 
-Handle errors when using the facade:
+Handle errors when using TrustWeave:
 
 ```kotlin
 import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.did.exception.DidException
-import com.trustweave.credential.exception.CredentialException
+import com.trustweave.did.resolver.DidResolutionResult
 
 try {
-    val trustweave = TrustWeave.create()
-    val issuerDid = trustweave.dids.create()
-    val credential = trustweave.credentials.issue(...)
-} catch (error: TrustWeaveException) {
+    val trustWeave = TrustWeave.build {
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
+    val issuerDid = trustWeave.createDid()
+    // ... issue credential
+} catch (error: Exception) {
     when (error) {
-        is DidException.DidMethodNotRegistered -> {
-            println("DID method not available: ${error.method}")
+        is TrustWeaveException -> {
+            println("TrustWeave error: ${error.message}")
         }
-        is CredentialException.CredentialIssuanceFailed -> {
-            println("Issuance failed: ${error.reason}")
+        is IllegalStateException -> {
+            println("Configuration error: ${error.message}")
         }
         else -> {
             println("Error: ${error.message}")
+            error.printStackTrace()
         }
     }
 }
@@ -332,7 +418,7 @@ try {
 
 ## When to Use Facade vs. TrustLayer
 
-### Use Facade When:
+### Use Simple Configuration When:
 
 - ✅ Building prototypes or demos
 - ✅ Learning TrustWeave
@@ -340,7 +426,7 @@ try {
 - ✅ Quick examples and tutorials
 - ✅ Testing and experimentation
 
-### Use TrustLayer When:
+### Use Full Configuration When:
 
 - ✅ Production applications
 - ✅ Need multiple DID methods

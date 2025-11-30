@@ -23,7 +23,8 @@ Here's a complete example that creates a DID, extracts the key ID, and uses it:
 ```kotlin
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.types.Did
-import com.trustweave.core.TrustWeaveError
+import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -47,31 +48,35 @@ fun main() = runBlocking {
             algorithm("Ed25519")
         }
 
-        // Extract key ID for signing
-        // Note: When using keyHandle.id, it's already a KeyId value class
-        // For string-based key IDs, construct using KeyId("...")
-        val issuerKeyId = KeyId("${issuerDid.value}#key-1")
+        // Extract key ID for signing by resolving the DID
+        val resolutionResult = trustWeave.resolveDid(issuerDid)
+        val issuerDocument = when (resolutionResult) {
+            is DidResolutionResult.Success -> resolutionResult.document
+            else -> throw IllegalStateException("Failed to resolve issuer DID")
+        }
+        val verificationMethod = issuerDocument.verificationMethod.firstOrNull()
+            ?: throw IllegalStateException("No verification method found")
+        val issuerKeyId = verificationMethod.id.substringAfter("#")
 
         println("Created DID: ${issuerDid.value}")
         println("Key ID: $issuerKeyId")
-    } catch (error: TrustWeaveError) {
-        when (error) {
-            is TrustWeaveError.DidMethodNotRegistered -> {
-                println("❌ DID method not registered: ${error.method}")
-                println("Available methods: ${error.availableMethods}")
-            }
-            else -> {
-                println("❌ Error: ${error.message}")
-            }
+} catch (error: TrustWeaveException) {
+    when (error) {
+        is TrustWeaveException.PluginNotFound -> {
+            println("❌ DID method not registered: ${error.pluginId}")
+        }
+        else -> {
+            println("❌ Error: ${error.message}")
         }
     }
+}
 }
 ```
 
 **Expected Output:**
 ```
 Created DID: did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK
-Key ID: did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#key-1
+Key ID: key-1
 ```
 
 **Note:** `createDid()` returns a type-safe `Did` object. Access the string value using `.value` property.
@@ -106,13 +111,16 @@ Create a DID using the default method (did:key) or specify a method:
 
 ```kotlin
 // Simple: Use defaults (did:key, ED25519)
-val did = trustLayer.createDid {
+val did = trustWeave.createDid {
     method("key")
     algorithm("Ed25519")
 }
 
+// Or even simpler with default method
+val didSimple = trustWeave.createDid()  // Uses "key" method by default
+
 // With custom method
-val webDid = trustLayer.createDid {
+val webDid = trustWeave.createDid {
     method("web")
     domain("example.com")
 }
@@ -123,8 +131,19 @@ val webDid = trustLayer.createDid {
 Extract the key ID from the DID for signing operations:
 
 ```kotlin
-val did = trustLayer.createDid { method("key") }
-val keyId = KeyId("${did.value}#key-1")  // Standard key ID format using KeyId value class
+val did = trustWeave.createDid { method("key") }
+
+// Resolve DID to get verification method
+val resolutionResult = trustWeave.resolveDid(did)
+val document = when (resolutionResult) {
+    is DidResolutionResult.Success -> resolutionResult.document
+    else -> throw IllegalStateException("Failed to resolve DID")
+}
+
+// Extract key ID from verification method
+val verificationMethod = document.verificationMethod.firstOrNull()
+    ?: throw IllegalStateException("No verification method found")
+val keyId = verificationMethod.id.substringAfter("#")  // e.g., "key-1"
 ```
 
 ### Step 4: Use the DID
@@ -132,12 +151,12 @@ val keyId = KeyId("${did.value}#key-1")  // Standard key ID format using KeyId v
 Use the DID and key ID in credential operations:
 
 ```kotlin
-val credential = trustLayer.issue {
+val credential = trustWeave.issue {
     credential {
         issuer(did.value)
         // ... credential configuration
     }
-    by(issuerDid = did.value, keyId = keyId.value)
+    by(issuerDid = did.value, keyId = keyId)  // keyId is already a String
 }
 ```
 
@@ -148,9 +167,9 @@ val credential = trustLayer.issue {
 Create DIDs for different roles (issuer, holder, verifier):
 
 ```kotlin
-val issuerDid = trustLayer.createDid { method("key") }
-val holderDid = trustLayer.createDid { method("key") }
-val verifierDid = trustLayer.createDid { method("key") }
+val issuerDid = trustWeave.createDid { method("key") }
+val holderDid = trustWeave.createDid { method("key") }
+val verifierDid = trustWeave.createDid { method("key") }
 
 println("Issuer: $issuerDid")
 println("Holder: $holderDid")
@@ -163,19 +182,14 @@ Handle errors gracefully:
 
 ```kotlin
 val did = try {
-        trustWeave.createDid {
+    trustWeave.createDid {
         method("key")
         algorithm("Ed25519")
     }
-} catch (error: TrustWeaveError) {
+} catch (error: TrustWeaveException) {
     when (error) {
-        is TrustWeaveError.DidMethodNotRegistered -> {
-            println("Method not registered: ${error.method}")
-            println("Available: ${error.availableMethods}")
-            return@runBlocking
-        }
-        is TrustWeaveError.ValidationFailed -> {
-            println("Validation failed: ${error.reason}")
+        is TrustWeaveException.PluginNotFound -> {
+            println("DID method not registered: ${error.pluginId}")
             return@runBlocking
         }
         else -> {
@@ -191,15 +205,25 @@ val did = try {
 Resolve a DID to get its document:
 
 ```kotlin
-val context = trustLayer.getDslContext()
-val resolver = context.getDidResolver()
-val result = resolver?.resolve("did:key:z6Mk...")
+val result = trustWeave.resolveDid("did:key:z6Mk...")
 
-if (result?.document != null) {
-    println("DID resolved: ${result.document.id}")
-    println("Verification methods: ${result.document.verificationMethod.size}")
-} else {
-    println("DID not found: ${result?.metadata?.error}")
+when (result) {
+    is DidResolutionResult.Success -> {
+        println("DID resolved: ${result.document.id}")
+        println("Verification methods: ${result.document.verificationMethod.size}")
+    }
+    is DidResolutionResult.Failure.NotFound -> {
+        println("DID not found: ${result.did}")
+    }
+    is DidResolutionResult.Failure.InvalidFormat -> {
+        println("Invalid DID format: ${result.reason}")
+    }
+    is DidResolutionResult.Failure.MethodNotRegistered -> {
+        println("DID method not registered: ${result.method}")
+    }
+    else -> {
+        println("Resolution failed: ${result}")
+    }
 }
 ```
 
@@ -208,10 +232,10 @@ if (result?.document != null) {
 Update a DID document to add services or verification methods:
 
 ```kotlin
-val updated = trustLayer.updateDid {
+val updated = trustWeave.updateDid {
     did("did:key:example")
     addService {
-        id("${did}#service-1")
+        id("${did.value}#service-1")
         type("LinkedDomains")
         endpoint("https://example.com/service")
     }
@@ -223,14 +247,10 @@ val updated = trustLayer.updateDid {
 Deactivate a DID when it's no longer needed:
 
 ```kotlin
-val context = trustLayer.getDslContext()
-val deactivated = context.deactivateDid("did:key:example")
-
-if (deactivated) {
-    println("DID deactivated successfully")
-} else {
-    println("DID deactivation failed or DID already deactivated")
-}
+// Note: Deactivation depends on the DID method implementation
+// For did:key, deactivation is typically not supported as it's stateless
+// For other methods like did:web or did:ion, use the method-specific deactivation API
+// This is typically handled through updateDid with a deactivated flag
 ```
 
 ## DID Methods
@@ -249,29 +269,33 @@ See [DID Method Integrations](../how-to/README.md#did-method-integrations) for c
 
 ## Error Handling
 
-All DID operations throw `TrustWeaveError` exceptions on failure. Always wrap in try-catch:
+DID operations may throw `TrustWeaveException` on failure. Always wrap in try-catch:
 
 ```kotlin
+import com.trustweave.core.exception.TrustWeaveException
+
 try {
-    val did = trustLayer.createDid { method("key") }
+    val did = trustWeave.createDid { method("key") }
     // Use DID
-} catch (error: TrustWeaveError) {
+} catch (error: TrustWeaveException) {
     when (error) {
-        is TrustWeaveError.DidMethodNotRegistered -> {
+        is TrustWeaveException.PluginNotFound -> {
             // Method not available
+            println("DID method not found: ${error.pluginId}")
         }
-        is TrustWeaveError.ValidationFailed -> {
-            // Invalid configuration
-        }
-        is TrustWeaveError.InvalidOperation -> {
-            // KMS or other operation failed
+        is TrustWeaveException.Unknown -> {
+            // Other operation failed
+            println("Error: ${error.message}")
         }
         else -> {
             // Other error
+            println("Unexpected error: ${error.message}")
         }
     }
 }
 ```
+
+**Note:** `resolveDid()` returns a sealed result type instead of throwing exceptions, which is preferred for exhaustive error handling.
 
 ## API Reference
 

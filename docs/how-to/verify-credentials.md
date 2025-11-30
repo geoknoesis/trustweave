@@ -22,7 +22,6 @@ Here's a complete example that verifies a credential:
 ```kotlin
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.types.VerificationResult
-import com.trustweave.core.exception.TrustWeaveException
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -76,7 +75,7 @@ fun main() = runBlocking {
                 println("❌ Verification failed")
             }
         }
-    } catch (error: TrustWeaveError) {
+    } catch (error: Exception) {
         println("❌ Verification error: ${error.message}")
     }
 }
@@ -102,22 +101,37 @@ val credential: VerifiableCredential = // ... get credential ...
 Use the `verify` DSL to verify the credential:
 
 ```kotlin
-val verification = trustLayer.verify {
+val verification = trustWeave.verify {
     credential(credential)
 }
 ```
 
 ### Step 3: Check Verification Result
 
-Examine the verification result:
+Examine the verification result using sealed type for exhaustive handling:
 
 ```kotlin
-if (verification.valid) {
-    // Credential passed all checks
-    println("Credential is valid")
-} else {
-    // Credential failed one or more checks
-    println("Credential invalid: ${verification.errors}")
+when (verification) {
+    is VerificationResult.Valid -> {
+        println("✅ Credential is valid")
+        println("  - Proof valid: ${verification.proofValid}")
+        println("  - Issuer valid: ${verification.issuerValid}")
+    }
+    is VerificationResult.Invalid.Expired -> {
+        println("❌ Credential expired at ${verification.expiredAt}")
+    }
+    is VerificationResult.Invalid.Revoked -> {
+        println("❌ Credential revoked")
+    }
+    is VerificationResult.Invalid.InvalidProof -> {
+        println("❌ Invalid proof: ${verification.reason}")
+    }
+    is VerificationResult.Invalid.UntrustedIssuer -> {
+        println("❌ Untrusted issuer: ${verification.issuer}")
+    }
+    is VerificationResult.Invalid.SchemaValidationFailed -> {
+        println("❌ Schema validation failed: ${verification.errors.joinToString()}")
+    }
 }
 ```
 
@@ -126,9 +140,16 @@ if (verification.valid) {
 Check for warnings even if verification passed:
 
 ```kotlin
-if (verification.valid && verification.warnings.isNotEmpty()) {
-    verification.warnings.forEach { warning ->
-        println("Warning: $warning")
+when (verification) {
+    is VerificationResult.Valid -> {
+        if (verification.warnings.isNotEmpty()) {
+            verification.warnings.forEach { warning ->
+                println("Warning: $warning")
+            }
+        }
+    }
+    else -> {
+        // Handle invalid cases
     }
 }
 ```
@@ -142,10 +163,18 @@ TrustWeave performs multiple checks during verification:
 Checks that the cryptographic proof (signature) is valid:
 
 ```kotlin
-if (verification.proofValid) {
-    println("Proof signature is valid")
-} else {
-    println("Proof signature is invalid")
+when (verification) {
+    is VerificationResult.Valid -> {
+        if (verification.proofValid) {
+            println("Proof signature is valid")
+        }
+    }
+    is VerificationResult.Invalid.InvalidProof -> {
+        println("Proof signature is invalid: ${verification.reason}")
+    }
+    else -> {
+        // Other failure cases
+    }
 }
 ```
 
@@ -159,10 +188,18 @@ if (verification.proofValid) {
 Checks that the issuer DID can be resolved:
 
 ```kotlin
-if (verification.issuerValid) {
-    println("Issuer DID resolved successfully")
-} else {
-    println("Issuer DID resolution failed")
+when (verification) {
+    is VerificationResult.Valid -> {
+        if (verification.issuerValid) {
+            println("Issuer DID resolved successfully")
+        }
+    }
+    is VerificationResult.Invalid.UntrustedIssuer -> {
+        println("Issuer DID resolution failed or issuer not trusted: ${verification.issuer}")
+    }
+    else -> {
+        // Other failure cases
+    }
 }
 ```
 
@@ -177,10 +214,16 @@ if (verification.issuerValid) {
 Checks if the credential has expired:
 
 ```kotlin
-if (verification.notExpired) {
-    println("Credential has not expired")
-} else {
-    println("Credential has expired")
+when (verification) {
+    is VerificationResult.Valid -> {
+        println("Credential has not expired")
+    }
+    is VerificationResult.Invalid.Expired -> {
+        println("Credential has expired at ${verification.expiredAt}")
+    }
+    else -> {
+        // Other failure cases
+    }
 }
 ```
 
@@ -193,10 +236,16 @@ if (verification.notExpired) {
 Checks if the credential has been revoked:
 
 ```kotlin
-if (verification.notRevoked) {
-    println("Credential is not revoked")
-} else {
-    println("Credential has been revoked")
+when (verification) {
+    is VerificationResult.Valid -> {
+        println("Credential is not revoked")
+    }
+    is VerificationResult.Invalid.Revoked -> {
+        println("Credential has been revoked")
+    }
+    else -> {
+        // Other failure cases
+    }
 }
 ```
 
@@ -214,7 +263,7 @@ Configure verification behavior using verification options:
 Default verification checks all aspects:
 
 ```kotlin
-val verification = trustLayer.verify {
+val verification = trustWeave.verify {
     credential(credential)
     // All checks enabled by default
 }
@@ -225,12 +274,11 @@ val verification = trustLayer.verify {
 Control which checks are performed:
 
 ```kotlin
-val verification = trustLayer.verify {
+val verification = trustWeave.verify {
     credential(credential)
-    checkExpiration(true)      // Check expiration (default: true)
-    checkRevocation(true)      // Check revocation (default: true)
+    checkExpiration()          // Check expiration (default: enabled)
+    checkRevocation()          // Check revocation (default: enabled)
     checkTrust(false)          // Check trust registry (default: false)
-    expectedAudience(null)     // Expected audience DID (default: null)
 }
 ```
 
@@ -239,9 +287,10 @@ val verification = trustLayer.verify {
 For credentials without expiration or when expiration doesn't matter:
 
 ```kotlin
-val verification = trustLayer.verify {
+// Simply don't call checkExpiration() - it's optional
+val verification = trustWeave.verify {
     credential(credential)
-    checkExpiration(false)  // Skip expiration check
+    // Expiration check skipped
 }
 ```
 
@@ -250,9 +299,10 @@ val verification = trustLayer.verify {
 For credentials without revocation status or when revocation doesn't matter:
 
 ```kotlin
-val verification = trustLayer.verify {
+// Simply don't call checkRevocation() - it's optional
+val verification = trustWeave.verify {
     credential(credential)
-    checkRevocation(false)  // Skip revocation check
+    // Revocation check skipped
 }
 ```
 
@@ -261,13 +311,13 @@ val verification = trustLayer.verify {
 Verify that the issuer is in the trust registry:
 
 ```kotlin
-val verification = trustLayer.verify {
+val verification = trustWeave.verify {
     credential(credential)
     checkTrust(true)  // Verify issuer is trusted
 }
 ```
 
-**Note:** Requires trust registry to be configured in TrustLayer.
+**Note:** Requires trust registry to be configured in TrustWeave.
 
 ## Common Patterns
 
@@ -276,27 +326,45 @@ val verification = trustLayer.verify {
 Get detailed information about each check:
 
 ```kotlin
-val verification = trustLayer.verify {
+val verification = trustWeave.verify {
     credential(credential)
 }
 
-println("Overall valid: ${verification.valid}")
-println("Proof valid: ${verification.proofValid}")
-println("Issuer valid: ${verification.issuerValid}")
-println("Not expired: ${verification.notExpired}")
-println("Not revoked: ${verification.notRevoked}")
-
-if (verification.errors.isNotEmpty()) {
-    println("Errors:")
-    verification.errors.forEach { error ->
-        println("  - $error")
+when (verification) {
+    is VerificationResult.Valid -> {
+        println("✅ Overall valid: true")
+        println("  - Proof valid: ${verification.proofValid}")
+        println("  - Issuer valid: ${verification.issuerValid}")
+        if (verification.warnings.isNotEmpty()) {
+            println("  - Warnings:")
+            verification.warnings.forEach { warning ->
+                println("    - $warning")
+            }
+        }
     }
-}
-
-if (verification.warnings.isNotEmpty()) {
-    println("Warnings:")
-    verification.warnings.forEach { warning ->
-        println("  - $warning")
+    is VerificationResult.Invalid.Expired -> {
+        println("❌ Credential expired at ${verification.expiredAt}")
+        verification.errors.forEach { error ->
+            println("  - $error")
+        }
+    }
+    is VerificationResult.Invalid.Revoked -> {
+        println("❌ Credential revoked")
+        verification.errors.forEach { error ->
+            println("  - $error")
+        }
+    }
+    is VerificationResult.Invalid.InvalidProof -> {
+        println("❌ Invalid proof: ${verification.reason}")
+    }
+    is VerificationResult.Invalid.UntrustedIssuer -> {
+        println("❌ Untrusted issuer: ${verification.issuer}")
+    }
+    is VerificationResult.Invalid.SchemaValidationFailed -> {
+        println("❌ Schema validation failed:")
+        verification.errors.forEach { error ->
+            println("  - $error")
+        }
     }
 }
 ```
@@ -309,20 +377,31 @@ Verify a batch of credentials:
 val credentials: List<VerifiableCredential> = // ... get credentials ...
 
 val results = credentials.map { cred ->
-    val verification = trustLayer.verify {
+    val verification = trustWeave.verify {
         credential(cred)
     }
     cred.id to verification
 }
 
-val valid = results.filter { (_, verification) -> verification.valid }
-val invalid = results.filter { (_, verification) -> !verification.valid }
+val valid = results.filter { (_, verification) -> 
+    verification is VerificationResult.Valid 
+}
+val invalid = results.filter { (_, verification) -> 
+    verification !is VerificationResult.Valid 
+}
 
 println("Valid: ${valid.size}/${results.size}")
 println("Invalid: ${invalid.size}/${results.size}")
 
 invalid.forEach { (credId, verification) ->
-    println("Credential $credId failed: ${verification.errors.joinToString()}")
+    when (verification) {
+        is VerificationResult.Invalid -> {
+            println("Credential $credId failed: ${verification.errors.joinToString()}")
+        }
+        else -> {
+            println("Credential $credId failed: Unknown error")
+        }
+    }
 }
 ```
 
@@ -331,24 +410,17 @@ invalid.forEach { (credId, verification) ->
 Handle verification errors gracefully:
 
 ```kotlin
-val verification = try {
-        trustWeave.verify {
-        credential(credential)
+// Verification returns a sealed result type, so no exceptions needed
+val verification = trustWeave.verify {
+    credential(credential)
+}
+
+when (verification) {
+    is VerificationResult.Valid -> {
+        println("✅ Credential is valid")
     }
-} catch (error: TrustWeaveError) {
-    when (error) {
-        is TrustWeaveError.CredentialInvalid -> {
-            println("Credential structure invalid: ${error.reason}")
-            return@runBlocking
-        }
-        is TrustWeaveError.DidMethodNotRegistered -> {
-            println("Issuer DID method not registered: ${error.method}")
-            return@runBlocking
-        }
-        else -> {
-            println("Verification error: ${error.message}")
-            return@runBlocking
-        }
+    is VerificationResult.Invalid -> {
+        println("❌ Credential invalid: ${verification.errors.joinToString()}")
     }
 }
 ```
@@ -361,12 +433,14 @@ Verify with different policies based on context:
 fun verifyCredential(
     credential: VerifiableCredential,
     strict: Boolean = false
-): CredentialVerificationResult {
-    return trustLayer.verify {
+): VerificationResult {
+    return trustWeave.verify {
         credential(credential)
-        checkExpiration(strict)      // Only check expiration if strict
-        checkRevocation(strict)      // Only check revocation if strict
-        checkTrust(strict)            // Only check trust if strict
+        if (strict) {
+            checkExpiration()      // Only check expiration if strict
+            checkRevocation()      // Only check revocation if strict
+            checkTrust(true)       // Only check trust if strict
+        }
     }
 }
 
@@ -383,31 +457,33 @@ Verification can fail in several ways:
 
 ### Verification Result Errors
 
-The verification result contains errors if checks fail:
+The verification result is a sealed type with detailed error information:
 
 ```kotlin
-val verification = trustLayer.verify {
+val verification = trustWeave.verify {
     credential(credential)
 }
 
-if (!verification.valid) {
-    verification.errors.forEach { error ->
-        when {
-            error.contains("proof") -> {
-                println("Proof validation failed")
-            }
-            error.contains("issuer") -> {
-                println("Issuer validation failed")
-            }
-            error.contains("expired") -> {
-                println("Credential expired")
-            }
-            error.contains("revoked") -> {
-                println("Credential revoked")
-            }
-            else -> {
-                println("Verification error: $error")
-            }
+when (verification) {
+    is VerificationResult.Valid -> {
+        println("✅ Credential is valid")
+    }
+    is VerificationResult.Invalid.Expired -> {
+        println("❌ Credential expired at ${verification.expiredAt}")
+    }
+    is VerificationResult.Invalid.Revoked -> {
+        println("❌ Credential revoked")
+    }
+    is VerificationResult.Invalid.InvalidProof -> {
+        println("❌ Proof validation failed: ${verification.reason}")
+    }
+    is VerificationResult.Invalid.UntrustedIssuer -> {
+        println("❌ Issuer validation failed: ${verification.issuer}")
+    }
+    is VerificationResult.Invalid.SchemaValidationFailed -> {
+        println("❌ Schema validation failed")
+        verification.errors.forEach { error ->
+            println("  - $error")
         }
     }
 }
@@ -415,49 +491,65 @@ if (!verification.valid) {
 
 ### Exception Handling
 
-Verification can throw exceptions for structural issues:
+Verification returns a sealed result type, so exceptions are rare. However, you should handle the result exhaustively:
 
 ```kotlin
-try {
-    val verification = trustLayer.verify {
-        credential(credential)
+val verification = trustWeave.verify {
+    credential(credential)
+}
+
+// Exhaustive handling ensures all cases are covered
+when (verification) {
+    is VerificationResult.Valid -> {
+        // Use valid credential
+        println("Credential is valid: ${verification.credential.id}")
     }
-    // Use verification result
-} catch (error: TrustWeaveError) {
-    when (error) {
-        is TrustWeaveError.CredentialInvalid -> {
-            println("Credential structure invalid: ${error.reason}")
-            if (error.field != null) {
-                println("Field: ${error.field}")
-            }
-        }
-        is TrustWeaveError.DidMethodNotRegistered -> {
-            println("Issuer DID method not registered: ${error.method}")
-        }
-        is TrustWeaveError.DidNotFound -> {
-            println("Issuer DID not found: ${error.did}")
-        }
-        else -> {
-            println("Error: ${error.message}")
-        }
+    is VerificationResult.Invalid -> {
+        // Handle all invalid cases
+        println("Credential invalid: ${verification.errors.joinToString()}")
     }
 }
 ```
 
 ## Verification Result Structure
 
-The `CredentialVerificationResult` contains:
+The `VerificationResult` is a sealed class for exhaustive error handling:
 
 ```kotlin
-data class CredentialVerificationResult(
-    val valid: Boolean,              // Overall validity (all checks passed)
-    val proofValid: Boolean,          // Proof signature is valid
-    val issuerValid: Boolean,         // Issuer DID resolved successfully
-    val notExpired: Boolean,          // Credential has not expired
-    val notRevoked: Boolean,          // Credential is not revoked
-    val errors: List<String>,        // List of error messages
-    val warnings: List<String>       // List of warnings
-)
+sealed class VerificationResult {
+    data class Valid(
+        val credential: VerifiableCredential,
+        val proofValid: Boolean,
+        val issuerValid: Boolean,
+        val warnings: List<String> = emptyList()
+    ) : VerificationResult()
+    
+    sealed class Invalid : VerificationResult() {
+        data class Expired(
+            val expiredAt: Instant,
+            val errors: List<String>
+        ) : Invalid()
+        
+        data class Revoked(
+            val revokedAt: Instant?,
+            val errors: List<String>
+        ) : Invalid()
+        
+        data class InvalidProof(
+            val reason: String,
+            val errors: List<String>
+        ) : Invalid()
+        
+        data class UntrustedIssuer(
+            val issuer: String,
+            val errors: List<String>
+        ) : Invalid()
+        
+        data class SchemaValidationFailed(
+            val errors: List<String>
+        ) : Invalid()
+    }
+}
 ```
 
 ## API Reference

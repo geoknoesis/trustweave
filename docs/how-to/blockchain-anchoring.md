@@ -21,10 +21,13 @@ Here's a complete example that anchors a credential digest to a blockchain:
 
 ```kotlin
 import com.trustweave.trust.TrustWeave
-import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.anchor.AnchorResult
+import com.trustweave.anchor.AnchorRef
+import com.trustweave.anchor.BlockchainAnchorClient
+import com.trustweave.anchor.exceptions.BlockchainException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 @Serializable
 data class CredentialDigest(
@@ -41,8 +44,10 @@ fun main() = runBlocking {
                 provider("inMemory")
                 algorithm("Ed25519")
             }
-            blockchains {
-                "algorand:testnet" to InMemoryBlockchainAnchorClient("algorand:testnet")
+            anchor {
+                chain("algorand:testnet") {
+                    inMemory()
+                }
             }
         }
 
@@ -53,18 +58,24 @@ fun main() = runBlocking {
             issuer = "did:key:issuer"
         )
 
-        // Anchor to blockchain
-        val anchorResult = trustLayer.anchor {
-            data(digest)
-            chain("algorand:testnet")
-        }
+        // Anchor to blockchain - get client from registry
+        val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get("algorand:testnet")
+            as? BlockchainAnchorClient
+            ?: throw IllegalStateException("Blockchain client not found")
+        
+        // Serialize and anchor data
+        val json = kotlinx.serialization.json.Json.encodeToJsonElement(
+            CredentialDigest.serializer(),
+            digest
+        )
+        val anchorResult = anchorClient.writePayload(json)
 
         println("✅ Anchored at: ${anchorResult.ref.txHash}")
         println("   Chain: ${anchorResult.ref.chainId}")
         println("   Timestamp: ${anchorResult.timestamp}")
-    } catch (error: TrustWeaveError) {
+    } catch (error: BlockchainException) {
         when (error) {
-            is TrustWeaveError.ChainNotRegistered -> {
+            is BlockchainException.ChainNotRegistered -> {
                 println("❌ Chain not registered: ${error.chainId}")
             }
             else -> {
@@ -86,16 +97,18 @@ fun main() = runBlocking {
 
 ### Step 1: Configure Blockchain Support
 
-Register blockchain clients in TrustLayer:
+Register blockchain clients in TrustWeave:
 
 ```kotlin
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     keys {
         provider("inMemory")
         algorithm("Ed25519")
     }
-    blockchains {
-        "algorand:testnet" to InMemoryBlockchainAnchorClient("algorand:testnet")
+    anchor {
+        chain("algorand:testnet") {
+            inMemory()
+        }
         // Add more chains as needed
     }
 }
@@ -106,6 +119,8 @@ val trustLayer = TrustLayer.build {
 Create the data structure to anchor:
 
 ```kotlin
+import kotlinx.serialization.Serializable
+
 @Serializable
 data class CredentialDigest(
     val credentialId: String,
@@ -125,10 +140,16 @@ val digest = CredentialDigest(
 Anchor data to the blockchain:
 
 ```kotlin
-val anchorResult = trustLayer.anchor {
-    data(digest)
-    chain("algorand:testnet")
-}
+import kotlinx.serialization.json.Json
+
+// Get anchor client from registry
+val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get("algorand:testnet")
+    as? BlockchainAnchorClient
+    ?: throw IllegalStateException("Blockchain client not found")
+
+// Serialize and anchor
+val json = Json.encodeToJsonElement(CredentialDigest.serializer(), digest)
+val anchorResult = anchorClient.writePayload(json)
 ```
 
 ### Step 4: Store Anchor Reference
@@ -164,15 +185,21 @@ Select a blockchain based on your requirements:
 Anchor any serializable data:
 
 ```kotlin
+import kotlinx.serialization.json.Json
+
 @Serializable
 data class MyData(val id: String, val value: String)
 
 val data = MyData(id = "123", value = "test")
 
-val anchorResult = trustLayer.anchor {
-    data(data)
-    chain("algorand:testnet")
-}
+// Get anchor client from registry
+val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get("algorand:testnet")
+    as? BlockchainAnchorClient
+    ?: throw IllegalStateException("Blockchain client not found")
+
+// Serialize and anchor
+val json = Json.encodeToJsonElement(MyData.serializer(), data)
+val anchorResult = anchorClient.writePayload(json)
 ```
 
 ### Anchoring Credentials
@@ -180,8 +207,10 @@ val anchorResult = trustLayer.anchor {
 Anchor credential digests:
 
 ```kotlin
+import kotlinx.serialization.json.Json
+
 // Issue credential first
-val credential = trustLayer.issue { ... }
+val credential = trustWeave.issue { ... }
 
 // Create digest
 val digest = CredentialDigest(
@@ -190,11 +219,13 @@ val digest = CredentialDigest(
     issuer = credential.issuer
 )
 
-// Anchor digest
-val anchorResult = trustLayer.anchor {
-    data(digest)
-    chain("algorand:testnet")
-}
+// Get anchor client and anchor digest
+val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get("algorand:testnet")
+    as? BlockchainAnchorClient
+    ?: throw IllegalStateException("Blockchain client not found")
+
+val json = Json.encodeToJsonElement(CredentialDigest.serializer(), digest)
+val anchorResult = anchorClient.writePayload(json)
 ```
 
 ### What Gets Stored On-Chain?
@@ -214,30 +245,48 @@ The original data must be stored separately (database, IPFS, etc.) if you need t
 Read anchored data using the anchor reference:
 
 ```kotlin
+import kotlinx.serialization.json.Json
+
 val anchorRef = AnchorRef(
     chainId = "algorand:testnet",
     txHash = "tx-abc123..."
 )
 
-val data = trustLayer.readAnchor<CredentialDigest> {
-    ref(anchorRef)
-}
+// Get anchor client and read
+val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get(anchorRef.chainId)
+    as? BlockchainAnchorClient
+    ?: throw IllegalStateException("Blockchain client not found")
+
+val result = anchorClient.readPayload(anchorRef)
+val data = Json.decodeFromJsonElement(CredentialDigest.serializer(), result.payload)
 ```
 
 ### Verify Integrity
 
-The read operation automatically verifies that the data matches the on-chain digest:
+Verify that the data matches the on-chain digest:
 
 ```kotlin
+import kotlinx.serialization.json.Json
+
 try {
-    val data = trustLayer.readAnchor<CredentialDigest> {
-        ref(anchorRef)
-    }
-    println("✅ Data verified against on-chain digest")
-} catch (error: TrustWeaveError) {
-    if (error is TrustWeaveError.ValidationFailed) {
+    val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get(anchorRef.chainId)
+        as? BlockchainAnchorClient
+        ?: throw IllegalStateException("Blockchain client not found")
+    
+    val result = anchorClient.readPayload(anchorRef)
+    val data = Json.decodeFromJsonElement(CredentialDigest.serializer(), result.payload)
+    
+    // Verify digest matches
+    val computedDigest = computeDigest(data)
+    val isIntact = computedDigest == data.digest
+    
+    if (isIntact) {
+        println("✅ Data verified against on-chain digest")
+    } else {
         println("❌ Data verification failed - possible tampering!")
     }
+} catch (error: Exception) {
+    println("❌ Error reading anchor: ${error.message}")
 }
 ```
 
@@ -250,16 +299,21 @@ Anchor the same data to multiple blockchains for redundancy:
 Anchor to multiple chains one at a time:
 
 ```kotlin
+import kotlinx.serialization.json.Json
+
 val chains = listOf("algorand:testnet", "polygon:testnet")
 val anchorResults = chains.mapNotNull { chainId ->
     try {
-        val anchor = trustLayer.anchor {
-            data(digest)
-            chain(chainId)
-        }
+        val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get(chainId)
+            as? BlockchainAnchorClient
+            ?: throw IllegalStateException("Blockchain client not found for $chainId")
+        
+        val json = Json.encodeToJsonElement(CredentialDigest.serializer(), digest)
+        val anchor = anchorClient.writePayload(json)
+        
         println("✅ Anchored to $chainId: ${anchor.ref.txHash}")
         anchor
-    } catch (error: TrustWeaveError) {
+    } catch (error: Exception) {
         println("❌ Failed to anchor to $chainId: ${error.message}")
         null
     }
@@ -273,16 +327,19 @@ Anchor to multiple chains concurrently:
 ```kotlin
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.serialization.json.Json
 
 val chains = listOf("algorand:testnet", "polygon:testnet")
 val anchorResults = chains.map { chainId ->
     async {
         try {
-            trustWeave.anchor {
-                data(digest)
-                chain(chainId)
-            }
-        } catch (error: TrustWeaveError) {
+            val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get(chainId)
+                as? BlockchainAnchorClient
+                ?: throw IllegalStateException("Blockchain client not found for $chainId")
+            
+            val json = Json.encodeToJsonElement(CredentialDigest.serializer(), digest)
+            anchorClient.writePayload(json)
+        } catch (error: Exception) {
             println("Failed to anchor to $chainId: ${error.message}")
             null
         }
@@ -307,23 +364,28 @@ database.saveAnchorRefs(credentialId, anchorRefs)
 Retry anchoring on failure:
 
 ```kotlin
+import kotlinx.coroutines.delay
+import kotlinx.serialization.json.Json
+
 suspend fun anchorWithRetry(
     data: CredentialDigest,
     chainId: String,
     maxRetries: Int = 3
 ): AnchorResult? {
+    val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get(chainId)
+        as? BlockchainAnchorClient
+        ?: throw IllegalStateException("Blockchain client not found for $chainId")
+    
     repeat(maxRetries) { attempt ->
         try {
-            return trustLayer.anchor {
-                this.data(data)
-                chain(chainId)
-            }
-        } catch (error: TrustWeaveError) {
+            val json = Json.encodeToJsonElement(CredentialDigest.serializer(), data)
+            return anchorClient.writePayload(json)
+        } catch (error: Exception) {
             if (attempt == maxRetries - 1) {
                 println("Failed after $maxRetries attempts: ${error.message}")
                 return null
             }
-            kotlinx.coroutines.delay(1000 * (attempt + 1)) // Exponential backoff
+            delay(1000 * (attempt + 1)) // Exponential backoff
         }
     }
     return null
@@ -336,12 +398,15 @@ Add timeout to anchoring operations:
 
 ```kotlin
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.Json
 
 val anchorResult = withTimeout(30000) { // 30 second timeout
-    trustLayer.anchor {
-        data(digest)
-        chain("algorand:testnet")
-    }
+    val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get("algorand:testnet")
+        as? BlockchainAnchorClient
+        ?: throw IllegalStateException("Blockchain client not found")
+    
+    val json = Json.encodeToJsonElement(CredentialDigest.serializer(), digest)
+    anchorClient.writePayload(json)
 }
 ```
 
@@ -352,11 +417,13 @@ Check if an anchor exists before reading:
 ```kotlin
 suspend fun verifyAnchorExists(ref: AnchorRef): Boolean {
     return try {
-        trustWeave.readAnchor<CredentialDigest> {
-            this.ref(ref)
-        }
+        val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get(ref.chainId)
+            as? BlockchainAnchorClient
+            ?: return false
+        
+        anchorClient.readPayload(ref)
         true
-    } catch (error: TrustWeaveError) {
+    } catch (error: Exception) {
         false
     }
 }
@@ -367,29 +434,33 @@ suspend fun verifyAnchorExists(ref: AnchorRef): Boolean {
 Handle anchoring errors gracefully:
 
 ```kotlin
+import kotlinx.serialization.json.Json
+
 try {
-    val anchorResult = trustLayer.anchor {
-        data(digest)
-        chain("algorand:testnet")
-    }
+    val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get("algorand:testnet")
+        as? BlockchainAnchorClient
+        ?: throw IllegalStateException("Blockchain client not found")
+    
+    val json = Json.encodeToJsonElement(CredentialDigest.serializer(), digest)
+    val anchorResult = anchorClient.writePayload(json)
     // Use anchor result
-} catch (error: TrustWeaveError) {
+} catch (error: BlockchainException) {
     when (error) {
-        is TrustWeaveError.ChainNotRegistered -> {
+        is BlockchainException.ChainNotRegistered -> {
             println("Chain not registered: ${error.chainId}")
             println("Available chains: ${error.availableChains}")
         }
-        is TrustWeaveError.ValidationFailed -> {
-            println("Validation failed: ${error.reason}")
+        is BlockchainException.TransactionFailed -> {
+            println("Transaction failed: ${error.reason}")
         }
-        is TrustWeaveError.Unknown -> {
+        else -> {
             println("Blockchain error: ${error.message}")
             // Could be network issue, insufficient funds, etc.
         }
-        else -> {
-            println("Error: ${error.message}")
-        }
     }
+} catch (error: Exception) {
+    println("Error: ${error.message}")
+    error.printStackTrace()
 }
 ```
 

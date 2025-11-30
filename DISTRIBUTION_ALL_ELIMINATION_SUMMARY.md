@@ -131,3 +131,4 @@ dependencies {
 3. ✅ Remove `distribution/all` module from `settings.gradle.kts` if no longer needed
 4. ⚠️ Note: `IssuanceConfig` imports in examples may be broken (needs investigation)
 
+

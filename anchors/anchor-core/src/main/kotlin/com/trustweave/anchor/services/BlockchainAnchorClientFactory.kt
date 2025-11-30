@@ -1,5 +1,7 @@
 package com.trustweave.anchor.services
 
+import com.trustweave.anchor.BlockchainAnchorClient
+
 /**
  * Factory interface for creating BlockchainAnchorClient instances.
  *
@@ -11,14 +13,14 @@ interface BlockchainAnchorClientFactory {
      *
      * @param chainId The chain identifier (e.g., "algorand:testnet")
      * @param providerName The provider name (e.g., "algorand", "inMemory")
-     * @param config The anchor client configuration (as Any to avoid dependency)
-     * @return The blockchain anchor client instance (as Any to avoid dependency)
+     * @param config The anchor client configuration (typically a Map<String, Any?>)
+     * @return The blockchain anchor client instance
      * @throws IllegalStateException if the provider is not found or cannot be instantiated
      */
     suspend fun create(
         chainId: String,
         providerName: String,
-        config: Any // AnchorConfig - using Any to avoid dependency
-    ): Any // BlockchainAnchorClient - using Any to avoid dependency
+        config: Map<String, Any?>
+    ): BlockchainAnchorClient
 }
 

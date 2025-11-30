@@ -34,8 +34,15 @@ class DidBuilder(
 
     /**
      * Set DID method (e.g., "key", "web", "ion").
+     * 
+     * @param name Must be a non-blank string containing only alphanumeric characters and hyphens
+     * @throws IllegalArgumentException if name is blank or contains invalid characters
      */
     fun method(name: String) {
+        require(name.isNotBlank()) { "DID method name cannot be blank" }
+        require(name.matches(Regex("^[a-z0-9-]+$"))) { 
+            "DID method name must contain only lowercase letters, numbers, and hyphens. Got: $name" 
+        }
         this.method = name
     }
 

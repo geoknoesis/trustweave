@@ -108,7 +108,9 @@ class VerificationBuilder(
      * and uses the configured dispatcher. It is non-blocking and can be cancelled.
      */
     suspend fun build(): CredentialVerificationResult = withContext(ioDispatcher) {
-        val cred = credential ?: throw IllegalStateException("Credential is required")
+        val cred = credential ?: throw IllegalStateException(
+            "Credential is required. Use credential(credential) to specify the credential to verify."
+        )
 
         val options = CredentialVerificationOptions(
             checkRevocation = checkRevocation,

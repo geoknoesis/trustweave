@@ -224,42 +224,14 @@ class TrustWeave private constructor(
                     issuer(issuer)
                     // Convert subject map to JSON structure
                     val subjectId = subject["id"] as? String
-                    if (subjectId != null) {
-                        this.subject {
+                    this.subject {
+                        if (subjectId != null) {
                             id(subjectId)
-                            // Add other properties
-                            subject.filterKeys { it != "id" }.forEach { (key, value) ->
-                                when (value) {
-                                    is Map<*, *> -> {
-                                        // Nested object
-                                        key {
-                                            (value as Map<String, Any>).forEach { (nestedKey, nestedValue) ->
-                                                nestedKey to nestedValue
-                                            }
-                                        }
-                                    }
-                                    else -> {
-                                        key to value
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        this.subject {
-                            subject.forEach { (key, value) ->
-                                when (value) {
-                                    is Map<*, *> -> {
-                                        key {
-                                            (value as Map<String, Any>).forEach { (nestedKey, nestedValue) ->
-                                                nestedKey to nestedValue
-                                            }
-                                        }
-                                    }
-                                    else -> {
-                                        key to value
-                                    }
-                                }
-                            }
+                            // Add other properties (excluding id)
+                            addClaims(subject.filterKeys { it != "id" })
+                        } else {
+                            // Add all properties including id if present
+                            addClaims(subject)
                         }
                     }
                     issued(java.time.Instant.now())

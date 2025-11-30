@@ -51,8 +51,15 @@ class CredentialBuilder {
 
     /**
      * Set credential ID.
+     * 
+     * @param id Must be a valid URI or follow the format: `credential:<identifier>`
+     * @throws IllegalArgumentException if id is blank or contains invalid characters
      */
     fun id(id: String) {
+        require(id.isNotBlank()) { "Credential ID cannot be blank" }
+        require(id.matches(Regex("^[a-zA-Z0-9._:/?#\\[\\]@!$&'()*+,;=%-]+$"))) { 
+            "Credential ID contains invalid characters. Must be a valid URI or identifier." 
+        }
         this.id = id
     }
 
@@ -65,8 +72,15 @@ class CredentialBuilder {
 
     /**
      * Set issuer DID.
+     * 
+     * @param did Must be a valid DID starting with "did:"
+     * @throws IllegalArgumentException if did is blank or doesn't start with "did:"
      */
     fun issuer(did: String) {
+        require(did.isNotBlank()) { "Issuer DID cannot be blank" }
+        require(did.startsWith("did:")) { 
+            "Issuer DID must start with 'did:'. Got: $did" 
+        }
         this.issuer = did
     }
 
@@ -154,15 +168,21 @@ class CredentialBuilder {
         }
 
         val subject = subjectBuilder?.build()
-            ?: throw IllegalStateException("Credential subject is required")
+            ?: throw IllegalStateException(
+                "Credential subject is required. Use subject { ... } to build the credential subject."
+            )
 
         val issuanceDateStr = issuanceDate?.toString()
-            ?: throw IllegalStateException("Issuance date is required")
+            ?: throw IllegalStateException(
+                "Issuance date is required. Use issued(Instant) to set the issuance date."
+            )
 
         return VerifiableCredential(
             id = id,
             type = allTypes,
-            issuer = issuer ?: throw IllegalStateException("Issuer is required"),
+            issuer = issuer ?: throw IllegalStateException(
+                "Issuer is required. Use issuer(did) to specify the credential issuer DID."
+            ),
             credentialSubject = subject,
             issuanceDate = issuanceDateStr,
             expirationDate = expirationDate?.toString(),
@@ -189,6 +209,30 @@ class SubjectBuilder {
      */
     fun id(did: String) {
         properties["id"] = JsonPrimitive(did)
+    }
+
+    /**
+     * Add claims from a map, handling nested structures.
+     * 
+     * This is a helper method to add multiple claims at once, properly handling
+     * nested maps and primitive values.
+     */
+    internal fun addClaims(claims: Map<String, Any>) {
+        claims.forEach { (key, value) ->
+            when (value) {
+                is Map<*, *> -> {
+                    // Nested object
+                    key {
+                        (value as Map<String, Any>).forEach { (nestedKey, nestedValue) ->
+                            nestedKey to nestedValue
+                        }
+                    }
+                }
+                else -> {
+                    key to value
+                }
+            }
+        }
     }
 
     /**

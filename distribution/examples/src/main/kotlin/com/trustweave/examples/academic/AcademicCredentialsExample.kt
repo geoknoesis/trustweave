@@ -15,6 +15,8 @@ import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.kms.KeyManagementService
+import com.trustweave.did.DidMethod
+import com.trustweave.did.DidCreationOptions
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -35,20 +37,18 @@ fun main() = runBlocking {
             didMethodFactory = object : com.trustweave.did.services.DidMethodFactory {
                 override suspend fun create(
                     methodName: String,
-                    config: Any,
-                    kms: Any
-                ): Any? {
+                    config: DidCreationOptions,
+                    kms: KeyManagementService
+                ): DidMethod? {
                     if (methodName == "key") {
-                        val keyManagementService = kms as? KeyManagementService
-                            ?: throw IllegalArgumentException("KMS must be KeyManagementService instance")
                         // CRITICAL: Verify this is the same KMS instance we're using for signing
-                        if (keyManagementService !== kmsRef) {
+                        if (kms !== kmsRef) {
                             throw IllegalStateException(
                                 "KMS instance mismatch: Factory received different KMS instance than signer. " +
                                 "This will cause KeyNotFound errors during signing."
                             )
                         }
-                        return DidKeyMockMethod(keyManagementService) as Any
+                        return DidKeyMockMethod(kms)
                     }
                     return null
                 }

@@ -123,3 +123,4 @@ val credential = trustWeave.issue { ... }
 **Net Reduction:** ~764 lines  
 **Result:** Cleaner architecture, single source of truth
 
+

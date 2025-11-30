@@ -1,5 +1,9 @@
 package com.trustweave.did.services
 
+import com.trustweave.did.DidMethod
+import com.trustweave.did.DidCreationOptions
+import com.trustweave.kms.KeyManagementService
+
 /**
  * Factory interface for creating DID method instances.
  *
@@ -10,15 +14,15 @@ interface DidMethodFactory {
      * Creates a DID method instance.
      *
      * @param methodName The DID method name (e.g., "key", "web", "ion")
-     * @param config Method-specific configuration (typically DidCreationOptions or Map)
+     * @param config Method-specific configuration (typically DidCreationOptions or Map<String, Any?>)
      * @param kms The key management service instance
      * @return The DID method instance, or null if the method is not found
      */
     suspend fun create(
         methodName: String,
-        config: Any,
-        kms: Any
-    ): Any? // Returns DidMethod
+        config: DidCreationOptions,
+        kms: KeyManagementService
+    ): DidMethod?
 }
 
 

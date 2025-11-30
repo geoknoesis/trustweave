@@ -228,8 +228,12 @@ class TrustWeaveContext(
      * This operation uses the configured dispatcher for I/O-bound work.
      */
     suspend fun rotateKey(block: KeyRotationBuilder.() -> Unit): DidDocument {
-        val kms = getKms() ?: throw IllegalStateException("KMS is not configured")
-        val kmsService = getKmsService() ?: throw IllegalStateException("KmsService is not configured")
+        val kms = getKms() ?: throw IllegalStateException(
+            "KMS is not configured. Configure it in TrustWeave.build { keys { provider(\"inMemory\") } }"
+        )
+        val kmsService = getKmsService() ?: throw IllegalStateException(
+            "KmsService is not configured. Configure it in TrustWeave.build { keys { provider(\"inMemory\") } }"
+        )
         val builder = KeyRotationBuilder(this, kms, kmsService, config.ioDispatcher)
         builder.block()
         return builder.rotate()

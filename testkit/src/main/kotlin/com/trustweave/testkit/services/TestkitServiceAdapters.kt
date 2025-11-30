@@ -31,19 +31,19 @@ import java.util.ServiceLoader
  * Handles both testkit implementations and SPI-based providers.
  */
 class TestkitKmsFactory : KmsFactory {
-    override suspend fun createInMemory(): Pair<Any, (suspend (ByteArray, String) -> ByteArray)?> {
+    override suspend fun createInMemory(): Pair<KeyManagementService, (suspend (ByteArray, String) -> ByteArray)?> {
         val kms = InMemoryKeyManagementService()
         val kmsRef = kms
         val signerFn: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
             kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)
         }
-        return Pair(kms as Any, signerFn)
+        return Pair(kms, signerFn)
     }
 
     override suspend fun createFromProvider(
         providerName: String,
         algorithm: String
-    ): Pair<Any, (suspend (ByteArray, String) -> ByteArray)?> {
+    ): Pair<KeyManagementService, (suspend (ByteArray, String) -> ByteArray)?> {
         if (providerName == "inMemory") {
             return createInMemory()
         }
@@ -56,7 +56,7 @@ class TestkitKmsFactory : KmsFactory {
                 val kms = provider.create(mapOf("algorithm" to algorithm))
                 // For SPI providers, we can't easily create a signer without knowing the implementation
                 // Return null signer - caller must provide one
-                return Pair(kms as Any, null)
+                return Pair(kms, null)
             }
         } catch (e: Exception) {
             // SPI classes not available or provider not found
@@ -76,32 +76,25 @@ class TestkitKmsFactory : KmsFactory {
 class TestkitDidMethodFactory : DidMethodFactory {
     override suspend fun create(
         methodName: String,
-        config: Any,
-        kms: Any
-    ): Any? {
+        config: DidCreationOptions,
+        kms: KeyManagementService
+    ): DidMethod? {
         // Try SPI discovery first
         try {
             val providers = ServiceLoader.load(DidMethodProvider::class.java)
             for (provider in providers) {
                 if (methodName in provider.supportedMethods) {
-                    val keyManagementService = kms as? KeyManagementService
-                        ?: throw IllegalArgumentException("KMS must be KeyManagementService instance")
-
-                    // Convert config to options map
-                    var creationOptions = when (config) {
-                        is DidCreationOptions -> config
-                        is Map<*, *> -> DidCreationOptions.fromMap(config.toStringKeyMap())
-                        else -> DidCreationOptions()
-                    }
+                    // Add KMS to config if not already present
+                    var creationOptions = config
                     if (!creationOptions.additionalProperties.containsKey("kms")) {
                         creationOptions = creationOptions.copy(
-                            additionalProperties = creationOptions.additionalProperties + ("kms" to keyManagementService)
+                            additionalProperties = creationOptions.additionalProperties + ("kms" to kms)
                         )
                     }
 
                     val method = provider.create(methodName, creationOptions)
                     if (method != null) {
-                        return method as Any
+                        return method
                     }
                 }
             }
@@ -111,9 +104,7 @@ class TestkitDidMethodFactory : DidMethodFactory {
 
         // Fallback to testkit for "key" method
         if (methodName == "key") {
-            val keyManagementService = kms as? KeyManagementService
-                ?: throw IllegalArgumentException("KMS must be KeyManagementService instance")
-            return DidKeyMockMethod(keyManagementService) as Any
+            return DidKeyMockMethod(kms)
         }
 
         return null // Method not found
@@ -124,9 +115,9 @@ class TestkitDidMethodFactory : DidMethodFactory {
  * StatusListRegistry Factory implementation.
  */
 class TestkitStatusListRegistryFactory : StatusListRegistryFactory {
-    override suspend fun create(providerName: String): Any {
+    override suspend fun create(providerName: String): com.trustweave.credential.revocation.StatusListManager {
         if (providerName == "inMemory") {
-            return InMemoryStatusListManager() as Any
+            return InMemoryStatusListManager()
         }
         throw IllegalStateException(
             "StatusListManager provider '$providerName' not found. " +
@@ -139,9 +130,9 @@ class TestkitStatusListRegistryFactory : StatusListRegistryFactory {
  * TrustRegistry Factory implementation.
  */
 class TestkitTrustRegistryFactory : TrustRegistryFactory {
-    override suspend fun create(providerName: String): Any {
+    override suspend fun create(providerName: String): com.trustweave.trust.TrustRegistry {
         if (providerName == "inMemory") {
-            return InMemoryTrustRegistry() as Any
+            return InMemoryTrustRegistry()
         }
         throw IllegalStateException(
             "TrustRegistry provider '$providerName' not found. " +
@@ -158,22 +149,22 @@ class TestkitBlockchainAnchorClientFactory : BlockchainAnchorClientFactory {
     override suspend fun create(
         chainId: String,
         providerName: String,
-        config: Any
-    ): Any {
+        config: Map<String, Any?>
+    ): BlockchainAnchorClient {
         if (providerName == "inMemory") {
-            val configMap = config as? Map<*, *>
-            val contract = configMap?.get("contract") as? String
-            return InMemoryBlockchainAnchorClient(chainId, contract) as Any
+            val contract = config["contract"] as? String
+            return InMemoryBlockchainAnchorClient(chainId, contract)
         }
 
         // Try SPI discovery
         try {
             val providers = ServiceLoader.load(BlockchainAnchorClientProvider::class.java)
             val provider = providers.find { it.name == providerName }
-                if (provider != null) {
-                    val configMap = (config as? Map<*, *>)?.toStringKeyMap() ?: emptyMap()
-                    val client = provider.create(chainId, configMap)
-                    return client as Any
+            if (provider != null) {
+                val client = provider.create(chainId, config)
+                if (client != null) {
+                    return client
+                }
             }
         } catch (e: Exception) {
             // SPI classes not available or provider not found

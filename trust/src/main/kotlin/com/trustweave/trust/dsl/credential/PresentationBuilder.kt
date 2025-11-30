@@ -103,10 +103,14 @@ class PresentationBuilder(
      * Build the verifiable presentation.
      */
     suspend fun build(): VerifiablePresentation = withContext(Dispatchers.IO) {
-        val holder = holderDid ?: throw IllegalStateException("Holder DID is required")
+        val holder = holderDid ?: throw IllegalStateException(
+            "Holder DID is required. Use holder(holderDid) to specify the credential holder."
+        )
 
         if (credentials.isEmpty()) {
-            throw IllegalStateException("At least one credential is required")
+            throw IllegalStateException(
+                "At least one credential is required. Use credential(credential) or credentials(vararg credentials) to add credentials to the presentation."
+            )
         }
 
         val options = PresentationOptions(
@@ -141,12 +145,22 @@ class SelectiveDisclosureBuilder {
     }
 
     /**
-     * Hide specific fields (not implemented yet, fields not in reveal list are hidden).
+     * Hide specific fields.
+     * 
+     * **Note:** Currently, selective disclosure is based on revealed fields only.
+     * Fields not in the reveal list are automatically hidden. This method is
+     * reserved for future implementation of explicit field hiding.
+     * 
+     * @param fields Fields to hide (not yet implemented)
      */
-    @Suppress("UNUSED_PARAMETER")
+    @Deprecated(
+        message = "Not yet implemented. Use reveal() to specify visible fields. Fields not in reveal list are automatically hidden.",
+        level = DeprecationLevel.WARNING
+    )
     fun hide(vararg fields: String) {
         // For now, selective disclosure is based on revealed fields only
         // Fields not in reveal list are automatically hidden
+        // TODO: Implement explicit field hiding
     }
 }
 

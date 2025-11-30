@@ -133,17 +133,30 @@ fun main() = runBlocking {
 
     // Step 3: Store education credentials using DSL
     println("\nStep 3: Storing education credentials...")
-    // Generate keys for issuers using the same KMS
-    val universityKey = kms.generateKey("Ed25519")
-    // Verify key exists
-    kms.getPublicKey(universityKey.id)
+    // Create issuer DID for university
+    val universityDid = trustWeave.createDid {
+        method(DidMethods.KEY)
+        algorithm(KeyAlgorithms.ED25519)
+    }
+    println("University DID: ${universityDid.value}")
+    
+    // Get the key ID from the university DID document
+    val universityDidResolution = trustWeave.configuration.registries.didRegistry.resolve(universityDid.value)
+        ?: throw IllegalStateException("Failed to resolve university DID")
+    val universityDidDoc = when (universityDidResolution) {
+        is com.trustweave.did.resolver.DidResolutionResult.Success -> universityDidResolution.document
+        else -> throw IllegalStateException("Failed to resolve university DID")
+    }
+    val universityVerificationMethod = universityDidDoc.verificationMethod.firstOrNull()
+        ?: throw IllegalStateException("No verification method found in university DID document")
+    val universityKeyId = universityVerificationMethod.id.substringAfter("#")
 
     // Issue credentials using new DSL with revocation support
     val bachelorDegree = trustWeave.issue {
         credential {
             id("https://example.edu/credentials/bachelor-${professionalDid.value.substringAfterLast(":")}")
             type(CredentialTypes.EDUCATION, "BachelorDegreeCredential")
-            issuer("did:key:university")
+            issuer(universityDid.value)
             subject {
                 id(professionalDid.value)
                 "degree" {
@@ -155,7 +168,7 @@ fun main() = runBlocking {
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = "did:key:university", keyId = universityKey.id.value)
+        signedBy(issuerDid = universityDid.value, keyId = universityKeyId)
     }
     val bachelorStored = bachelorDegree.storeIn(wallet)
     val bachelorId = requireNotNull(bachelorStored.id) { "Credential must have an id" }
@@ -164,7 +177,7 @@ fun main() = runBlocking {
         credential {
             id("https://example.edu/credentials/master-${professionalDid.value.substringAfterLast(":")}")
             type(CredentialTypes.EDUCATION, "MasterDegreeCredential")
-            issuer("did:key:university")
+            issuer(universityDid.value)
             subject {
                 id(professionalDid.value)
                 "degree" {
@@ -176,7 +189,7 @@ fun main() = runBlocking {
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = "did:key:university", keyId = universityKey.id.value)
+        signedBy(issuerDid = universityDid.value, keyId = universityKeyId)
     }
     val masterStored = masterDegree.storeIn(wallet)
     val masterId = requireNotNull(masterStored.id) { "Credential must have an id" }
@@ -434,7 +447,9 @@ fun createEmploymentCredential(
     achievements: List<String>
 ): VerifiableCredential {
     return credential {
-        id("https://example.com/employment/${company.lowercase()}-${holderDid.substringAfterLast(":")}")
+        // Sanitize company name for URI (replace spaces and special chars with hyphens)
+        val sanitizedCompany = company.lowercase().replace(Regex("[^a-z0-9]+"), "-")
+        id("https://example.com/employment/${sanitizedCompany}-${holderDid.substringAfterLast(":")}")
         type("EmploymentCredential")
         issuer(issuerDid)
         subject {

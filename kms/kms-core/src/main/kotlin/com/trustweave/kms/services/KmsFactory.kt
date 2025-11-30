@@ -1,5 +1,7 @@
 package com.trustweave.kms.services
 
+import com.trustweave.kms.KeyManagementService
+
 /**
  * Factory interface for creating Key Management Service instances.
  *
@@ -12,7 +14,7 @@ interface KmsFactory {
      * @return Pair of (KMS instance, signer function), where signer function may be null
      *         if the KMS provides its own signing mechanism
      */
-    suspend fun createInMemory(): Pair<Any, (suspend (ByteArray, String) -> ByteArray)?> // Pair<KeyManagementService, SignerFunction?>
+    suspend fun createInMemory(): Pair<KeyManagementService, (suspend (ByteArray, String) -> ByteArray)?>
 
     /**
      * Creates a KMS instance from a provider name.
@@ -26,6 +28,6 @@ interface KmsFactory {
     suspend fun createFromProvider(
         providerName: String,
         algorithm: String
-    ): Pair<Any, (suspend (ByteArray, String) -> ByteArray)?> // Pair<KeyManagementService, SignerFunction?>
+    ): Pair<KeyManagementService, (suspend (ByteArray, String) -> ByteArray)?>
 }
 

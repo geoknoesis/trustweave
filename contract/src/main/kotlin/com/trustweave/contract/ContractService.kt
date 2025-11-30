@@ -164,3 +164,4 @@ class ContractService(
     ): Result<VerifiableCredential> = issueContractCredential(contract, issuerDid, issuerKeyId)
 }
 
+

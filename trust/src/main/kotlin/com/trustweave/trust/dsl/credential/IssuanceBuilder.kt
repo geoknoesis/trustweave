@@ -136,9 +136,11 @@ class IssuanceBuilder(
      * and uses the configured dispatcher. It is non-blocking and can be cancelled.
      */
     suspend fun build(): VerifiableCredential = withContext(ioDispatcher) {
-        val cred = credential ?: throw IllegalStateException("Credential is required")
+        val cred = credential ?: throw IllegalStateException(
+            "Credential is required. Use credential { ... } to build the credential."
+        )
         val resolvedIssuerIdentity = issuerIdentity ?: throw IllegalStateException(
-            "Issuer identity is required. Use signedBy(IssuerIdentity.from(issuerDid, keyId))"
+            "Issuer identity is required. Use signedBy(IssuerIdentity.from(issuerDid, keyId)) to specify the issuer."
         )
 
         // Handle auto-revocation if enabled

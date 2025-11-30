@@ -292,38 +292,37 @@ class TrustWeaveConfig private constructor(
             // Resolve KMS
             val (resolvedKms, resolvedSigner) = if (kms != null) {
                 // Custom KMS provided - create signer if not provided
+                val kmsRef = requireNotNull(kms) { "KMS cannot be null" }
                 val signer = kmsSigner ?: { data: ByteArray, keyId: String ->
-                    kms!!.sign(com.trustweave.core.types.KeyId(keyId), data)
+                    kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)
                 }
-                Pair(kms!!, signer)
+                Pair(kmsRef, signer)
             } else {
                 // Use factory to create KMS
                 resolveKms(kmsProvider ?: "inMemory", kmsAlgorithm)
             }
-            requireNotNull(resolvedKms) {
+            val nonNullKms = requireNotNull(resolvedKms) {
                 "KMS cannot be null. Provide a custom KMS or ensure a provider is configured."
             }
 
             // Use the resolved signer (auto-created from KMS if not provided)
             val finalSigner = resolvedSigner ?: { data: ByteArray, keyId: String ->
-                resolvedKms.sign(com.trustweave.core.types.KeyId(keyId), data)
+                nonNullKms.sign(com.trustweave.core.types.KeyId(keyId), data)
             }
 
             // Resolve DID methods
             for ((methodName, config) in didMethodConfigs) {
-                val resolvedMethod = resolveDidMethod(methodName, config, resolvedKms) as? DidMethod
-                    ?: throw IllegalStateException("Invalid DID method returned for '$methodName'")
+                val resolvedMethod = resolveDidMethod(methodName, config, nonNullKms)
                 registries.didRegistry.register(resolvedMethod)
             }
 
             for ((chainId, config) in anchorConfigs) {
-                val client = resolveAnchorClient(chainId, config) as? BlockchainAnchorClient
-                    ?: throw IllegalStateException("Invalid blockchain anchor client returned for '$chainId'")
+                val client = resolveAnchorClient(chainId, config)
                 registries.blockchainRegistry.register(chainId, client)
             }
 
             // Create proof generator
-            val proofGenerator = createProofGenerator(defaultProofType, resolvedKms, finalSigner)
+            val proofGenerator = createProofGenerator(defaultProofType, nonNullKms, finalSigner)
             registries.proofRegistry.register(proofGenerator)
 
             // Resolve status list manager if revocation is configured
@@ -364,7 +363,7 @@ class TrustWeaveConfig private constructor(
 
             return TrustWeaveConfig(
                 name = name,
-                kms = resolvedKms,
+                kms = nonNullKms,
                 registries = registriesSnapshot,
                 credentialConfig = CredentialConfig(
                     defaultProofType = defaultProofType,
@@ -385,8 +384,7 @@ class TrustWeaveConfig private constructor(
             val factory = kmsFactory ?: throw IllegalStateException(
                 "KMS factory is required. Provide it via Builder.factories(kmsFactory = ...)"
             )
-            val (kms, signer) = factory.createFromProvider(providerName, algorithm)
-            return Pair(kms as KeyManagementService, signer)
+            return factory.createFromProvider(providerName, algorithm)
         }
 
         private suspend fun resolveDidMethod(
@@ -398,7 +396,7 @@ class TrustWeaveConfig private constructor(
             val factory = didMethodFactory ?: throw IllegalStateException(
                 "DID method factory is required. Provide it via Builder.factories(didMethodFactory = ...)"
             )
-            val method = factory.create(methodName, config.toOptions(kms), kms) as? DidMethod
+            val method = factory.create(methodName, config.toOptions(kms), kms)
             return method ?: throw IllegalStateException(
                 "DID method '$methodName' not found. " +
                 "Ensure appropriate DID method provider is on classpath."
@@ -412,26 +410,21 @@ class TrustWeaveConfig private constructor(
             val factory = anchorClientFactory ?: throw IllegalStateException(
                 "BlockchainAnchorClient factory is required. Provide it via Builder.factories(anchorClientFactory = ...)"
             )
-            val client = factory.create(chainId, config.provider, config.options)
-            return client as? BlockchainAnchorClient ?: throw IllegalStateException(
-                "Invalid blockchain anchor client implementation returned for $chainId"
-            )
+            return factory.create(chainId, config.provider, config.options)
         }
 
         private suspend fun resolveStatusListManager(providerName: String): StatusListManager {
             val factory = statusListRegistryFactory ?: throw IllegalStateException(
                 "StatusListRegistry factory is required. Provide it via Builder.factories(statusListRegistryFactory = ...)"
             )
-            @Suppress("UNCHECKED_CAST")
-            return factory.create(providerName) as StatusListManager
+            return factory.create(providerName)
         }
 
         private suspend fun resolveTrustRegistry(providerName: String): TrustRegistry {
             val factory = trustRegistryFactory ?: throw IllegalStateException(
                 "TrustRegistry factory is required. Provide it via Builder.factories(trustRegistryFactory = ...)"
             )
-            @Suppress("UNCHECKED_CAST")
-            return factory.create(providerName) as TrustRegistry
+            return factory.create(providerName)
         }
 
         // Wallet factory is optional - no default needed

@@ -62,3 +62,4 @@ Continue fixing remaining errors systematically, focusing on:
 3. Remaining credential issuance calls
 4. Verification result property access
 
+

@@ -166,6 +166,7 @@ import com.trustweave.testkit.credential.InMemoryWallet
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.did.DidMethodRegistry
+import com.trustweave.trust.dsl.credential.credential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -424,22 +425,22 @@ fun createEducationCredential(
     institution: String,
     year: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        id = "https://example.edu/credentials/${degreeType.lowercase()}-${holderDid.substringAfterLast(":")}",
-        type = listOf("VerifiableCredential", "EducationCredential", "${degreeType}DegreeCredential"),
-        issuer = issuerDid,
-        credentialSubject = buildJsonObject {
-            put("id", holderDid)
-            put("degree", buildJsonObject {
-                put("type", degreeType)
-                put("field", field)
-                put("institution", institution)
-                put("year", year)
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null // Education credentials typically don't expire
-    )
+    return credential {
+        id("https://example.edu/credentials/${degreeType.lowercase()}-${holderDid.substringAfterLast(":")}")
+        type("EducationCredential", "${degreeType}DegreeCredential")
+        issuer(issuerDid)
+        subject {
+            id(holderDid)
+            "degree" {
+                "type" to degreeType
+                "field" to field
+                "institution" to institution
+                "year" to year
+            }
+        }
+        issued(Instant.now())
+        // Education credentials typically don't expire
+    }
 }
 
 fun createEmploymentCredential(
@@ -451,27 +452,28 @@ fun createEmploymentCredential(
     endDate: String?,
     achievements: List<String>
 ): VerifiableCredential {
-    return VerifiableCredential(
-        id = "https://example.com/employment/${company.lowercase()}-${holderDid.substringAfterLast(":")}",
-        type = listOf("VerifiableCredential", "EmploymentCredential"),
-        issuer = issuerDid,
-        credentialSubject = buildJsonObject {
-            put("id", holderDid)
-            put("employment", buildJsonObject {
-                put("company", company)
-                put("role", role)
-                put("startDate", startDate)
+    return credential {
+        // Sanitize company name for URI (replace spaces and special chars with hyphens)
+        val sanitizedCompany = company.lowercase().replace(Regex("[^a-z0-9]+"), "-")
+        id("https://example.com/employment/${sanitizedCompany}-${holderDid.substringAfterLast(":")}")
+        type("EmploymentCredential")
+        issuer(issuerDid)
+        subject {
+            id(holderDid)
+            "employment" {
+                "company" to company
+                "role" to role
+                "startDate" to startDate
                 if (endDate != null) {
-                    put("endDate", endDate)
+                    "endDate" to endDate
                 } else {
-                    put("current", true)
+                    "current" to true
                 }
-                put("achievements", achievements)
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null
-    )
+                "achievements" to achievements
+            }
+        }
+        issued(Instant.now())
+    }
 }
 
 fun createCertificationCredential(
@@ -483,23 +485,36 @@ fun createCertificationCredential(
     expirationDate: String,
     credentialId: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        id = "https://example.com/certifications/$credentialId",
-        type = listOf("VerifiableCredential", "CertificationCredential"),
-        issuer = issuerDid,
-        credentialSubject = buildJsonObject {
-            put("id", holderDid)
-            put("certification", buildJsonObject {
-                put("name", certificationName)
-                put("issuer", issuer)
-                put("issueDate", issueDate)
-                put("expirationDate", expirationDate)
-                put("credentialId", credentialId)
-            })
-        },
-        issuanceDate = issueDate,
-        expirationDate = expirationDate
-    )
+    // Parse dates - handle both ISO format with time and date-only format
+    val parsedIssueDate = if (issueDate.contains("T")) {
+        Instant.parse(issueDate)
+    } else {
+        Instant.parse("${issueDate}T00:00:00Z")
+    }
+
+    val parsedExpirationDate = if (expirationDate.contains("T")) {
+        Instant.parse(expirationDate)
+    } else {
+        Instant.parse("${expirationDate}T00:00:00Z")
+    }
+
+    return credential {
+        id("https://example.com/certifications/$credentialId")
+        type("CertificationCredential")
+        issuer(issuerDid)
+        subject {
+            id(holderDid)
+            "certification" {
+                "name" to certificationName
+                "issuer" to issuer
+                "issueDate" to issueDate
+                "expirationDate" to expirationDate
+                "credentialId" to credentialId
+            }
+        }
+        issued(parsedIssueDate)
+        expires(parsedExpirationDate)
+    }
 }
 ```
 

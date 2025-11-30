@@ -64,8 +64,8 @@ import kotlinx.serialization.json.*
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
         keys { provider("inMemory"); algorithm("Ed25519") }
         did { method("key") { algorithm("Ed25519") } }
@@ -74,8 +74,8 @@ fun main() = runBlocking {
 
     // Create issuer DID
     val issuerDid = trustWeave.createDid {
-        method(DidMethods.KEY)
-        algorithm(KeyAlgorithms.ED25519)
+        method("key")  // Using string for simplicity
+        algorithm("Ed25519")
     }
     
     // Resolve DID to get key ID
@@ -129,8 +129,8 @@ import java.time.temporal.ChronoUnit
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
         keys { provider("inMemory"); algorithm("Ed25519") }
         did { method("key") { algorithm("Ed25519") } }
@@ -193,8 +193,8 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
         keys { provider("inMemory"); algorithm("Ed25519") }
         did { method("key") { algorithm("Ed25519") } }
@@ -236,8 +236,8 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
         keys { provider("inMemory"); algorithm("Ed25519") }
         did { method("key") { algorithm("Ed25519") } }
@@ -280,8 +280,8 @@ import kotlinx.serialization.json.*
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
         keys { provider("inMemory"); algorithm("Ed25519") }
         did { method("key") { algorithm("Ed25519") } }
@@ -289,8 +289,8 @@ fun main() = runBlocking {
     }
     
     val issuerDid = trustWeave.createDid {
-        method(DidMethods.KEY)
-        algorithm(KeyAlgorithms.ED25519)
+        method("key")  // Using string for simplicity
+        algorithm("Ed25519")
     }
     
     val resolution = trustWeave.resolveDid(issuerDid)
@@ -352,8 +352,8 @@ import kotlinx.serialization.json.*
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
         keys { provider("inMemory"); algorithm("Ed25519") }
         did { method("key") { algorithm("Ed25519") } }
@@ -413,8 +413,8 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
         keys { provider("inMemory"); algorithm("Ed25519") }
         did { method("key") { algorithm("Ed25519") } }
@@ -472,8 +472,8 @@ import kotlinx.serialization.json.*
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
         keys { provider("inMemory"); algorithm("Ed25519") }
         did { method("key") { algorithm("Ed25519") } }

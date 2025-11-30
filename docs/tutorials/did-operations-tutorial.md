@@ -62,15 +62,16 @@ interface DidMethod {
 
 ```kotlin
 import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
+// Note: TestkitDidMethodFactory is for testing/tutorials only
+// In production, use appropriate DID method factories
 import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
+    // Build TrustWeave instance with testkit factories (for tutorials)
     val trustWeave = TrustWeave.build {
         factories(
-            didMethodFactory = TestkitDidMethodFactory()
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
         keys {
             provider("inMemory")
@@ -86,8 +87,8 @@ fun main() = runBlocking {
     // Create DID using did:key method (returns type-safe Did)
     try {
         val did = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
+            method("key")  // Using string for simplicity
+            algorithm("Ed25519")
         }
         println("Created DID: ${did.value}")
     } catch (error: Exception) {
@@ -102,14 +103,14 @@ fun main() = runBlocking {
 
 ```kotlin
 import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
+// Note: TestkitDidMethodFactory is for testing/tutorials only
 import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
+    // Build TrustWeave instance with testkit factories (for tutorials)
     val trustWeave = TrustWeave.build {
-        factories(didMethodFactory = TestkitDidMethodFactory())
+        factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
         keys { provider("inMemory"); algorithm("Ed25519") }
         did {
             method("key") { algorithm("Ed25519") }
@@ -119,8 +120,8 @@ fun main() = runBlocking {
 
     // Create DID with did:key method
     val keyDid = trustWeave.createDid {
-        method(DidMethods.KEY)
-        algorithm(KeyAlgorithms.ED25519)
+        method("key")  // Using string for simplicity
+        algorithm("Ed25519")
     }
 
     // Create DID with did:web method
@@ -361,12 +362,17 @@ import com.trustweave.did.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
+    // Build TrustWeave instance with testkit factories (for tutorials)
+    val trustWeave = TrustWeave.build {
+        factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     try {
         val did = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
+            method("key")  // Using string for simplicity
+            algorithm("Ed25519")
         }
         
         // Resolve DID to get document
@@ -403,16 +409,17 @@ import com.trustweave.core.exception.TrustWeaveError
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
+    // Build TrustWeave instance with testkit factories (for tutorials)
     val trustWeave = TrustWeave.build {
-        factories(didMethodFactory = TestkitDidMethodFactory())
+        factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
         keys { provider("inMemory"); algorithm("Ed25519") }
         did { method("key") { algorithm("Ed25519") } }
     }
 
     try {
         val did = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
+            method("key")  // Using string for simplicity
+            algorithm("Ed25519")
         }
         println("Created: ${did.value}")
     } catch (error: Exception) {

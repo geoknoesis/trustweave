@@ -56,7 +56,12 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     // Create TrustWeave with default configuration
     // This includes did:key method by default
-    val TrustWeave = TrustWeave.create()
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     println("✅ TrustWeave initialized")
 }
@@ -70,19 +75,25 @@ fun main() = runBlocking {
 import com.trustweave.core.*
 
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     // Create a DID using the default method (did:key)
     val did = trustWeave.createDid { method("key") }
-    println("Created DID: ${did.value}")
-        onSuccess = { didDocument ->
-            println("✅ Created DID: ${didDocument.id}")
-            println("   Verification Methods: ${didDocument.verificationMethod.size}")
-        },
-        onFailure = { error ->
-            println("❌ Failed to create DID: ${error.message}")
+    val resolution = trustWeave.resolveDid(did)
+    when (resolution) {
+        is DidResolutionResult.Success -> {
+            println("✅ Created DID: ${did.value}")
+            println("   Verification Methods: ${resolution.document.verificationMethod.size}")
         }
-    )
+        is DidResolutionResult.Failure -> {
+            println("❌ Failed to create DID: ${resolution.reason}")
+        }
+    }
 }
 ```
 
@@ -94,35 +105,28 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
-    // Create a DID
-    val did = TrustWeave.dids.create()
-    val createResult = Result.success(did)
+    // Create a DID using the modern DSL
+    val did = trustWeave.createDid { method("key") }
+    println("Created DID: ${did.value}")
 
-    createResult.fold(
-        onSuccess = { didDocument ->
-            val did = didDocument.id
-            println("Created DID: $did")
-
-            // Resolve the DID we just created
-            val resolution = TrustWeave.dids.resolve(did)
-            val resolveResult = Result.success(resolution)
-
-            resolveResult.fold(
-                onSuccess = { resolution ->
-                    println("✅ Resolved DID: ${resolution.document?.id}")
-                    println("   Methods: ${resolution.document?.verificationMethod?.size ?: 0}")
-                },
-                onFailure = { error ->
-                    println("❌ Failed to resolve: ${error.message}")
-                }
-            )
-        },
-        onFailure = { error ->
-            println("❌ Failed to create DID: ${error.message}")
+    // Resolve the DID we just created
+    val resolution = trustWeave.resolveDid(did)
+    when (resolution) {
+        is DidResolutionResult.Success -> {
+            println("✅ Resolved DID: ${did.value}")
+            println("   Methods: ${resolution.document.verificationMethod.size}")
         }
-    )
+        is DidResolutionResult.Failure -> {
+            println("❌ Failed to resolve: ${resolution.reason}")
+        }
+    }
 }
 ```
 
@@ -132,31 +136,33 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     // Try to resolve a non-existent DID
-    val resolution = TrustWeave.dids.resolve("did:key:invalid")
-    val result = Result.success(resolution)
-
-    result.fold(
-        onSuccess = { resolution ->
-            println("Resolved: ${resolution.document?.id}")
-        },
-        onFailure = { error ->
-            when (error) {
-                is TrustWeaveError.DidNotFound -> {
-                    println("❌ DID not found: ${error.did}")
-                    println("   Available methods: ${error.availableMethods}")
+    val resolution = trustWeave.resolveDid("did:key:invalid")
+    when (resolution) {
+        is DidResolutionResult.Success -> {
+            println("Resolved: ${resolution.document.id}")
+        }
+        is DidResolutionResult.Failure -> {
+            when (resolution) {
+                is DidResolutionResult.Failure.NotFound -> {
+                    println("❌ DID not found: did:key:invalid")
                 }
-                is TrustWeaveError.InvalidDidFormat -> {
-                    println("❌ Invalid DID format: ${error.reason}")
+                is DidResolutionResult.Failure.InvalidFormat -> {
+                    println("❌ Invalid DID format: ${resolution.reason}")
                 }
                 else -> {
-                    println("❌ Error: ${error.message}")
+                    println("❌ Error: ${resolution.reason}")
                 }
             }
         }
-    )
+    }
 }
 ```
 
@@ -193,7 +199,12 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     // Create issuer DID (the organization issuing credentials)
     val issuerDid = trustWeave.createDid { method("key") }
@@ -213,7 +224,15 @@ fun main() = runBlocking {
 import com.trustweave.credential.*
 
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     // Create DIDs
     val issuerDid = trustWeave.createDid { method("key") }
@@ -264,7 +283,15 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     // ... (create DIDs and issue credential from Step 2) ...
 
@@ -305,7 +332,15 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     // ... (create DIDs) ...
 
@@ -393,7 +428,15 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     // Create DIDs and issue credential (from Tutorial 2)
     val issuerDid = trustWeave.createDid { method("key") }
@@ -426,7 +469,15 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     // ... (create wallet and store credentials) ...
 
@@ -454,12 +505,22 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     // Create wallet with organization features enabled
-    val wallet = TrustWeave.createWallet(holderDid.id) {
-        enableOrganization = true
-    }.getOrThrow()
+    val wallet = trustWeave.wallet {
+        holder(holderDid.value)
+        type("inMemory")
+        // Organization features can be configured here
+    }
 
     // Store credentials
     val credential = /* ... */
@@ -557,7 +618,15 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     // ... (setup parties) ...
 
@@ -583,7 +652,15 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     // ... (setup and issue) ...
 
@@ -669,7 +746,15 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     // ... (setup and issue) ...
 

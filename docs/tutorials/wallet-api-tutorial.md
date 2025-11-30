@@ -46,14 +46,21 @@ import com.trustweave.wallet.WalletCreationOptions
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     try {
-        val wallet = trustweave.wallets.create(
-            holderDid = "did:key:holder",
-            options = WalletCreationOptions(
-                label = "Holder Wallet",
-                enableOrganization = true,
+        val wallet = trustWeave.wallet {
+            holder("did:key:holder")
+            type("inMemory")
+            // Organization features can be configured here
                 enablePresentation = true
             )
         )
@@ -483,8 +490,19 @@ import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
     // Create wallet using TrustWeave service API
-    val trustweave = TrustWeave.create()
-    val wallet = trustweave.wallets.create(holderDid = "did:key:holder")
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
+    val wallet = trustWeave.wallet {
+        holder("did:key:holder")
+        type("inMemory")
+    }
 
     // Store credentials
     val credential1 = createCredential("Alice", "alice@example.com")

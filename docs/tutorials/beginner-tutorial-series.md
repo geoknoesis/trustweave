@@ -249,10 +249,10 @@ fun main() = runBlocking {
 
     // Issue a credential
     val credentialResult = TrustWeave.issueCredential(
-        issuerDid = issuerDid.id,
+        issuerDid = issuerDid.value,
         issuerKeyId = issuerKeyId,
         credentialSubject = mapOf(
-            "id" to holderDid.id,
+            "id" to holderDid.value,
             "name" to "Alice",
             "degree" to "Bachelor of Science",
             "university" to "Example University"
@@ -348,10 +348,10 @@ fun main() = runBlocking {
     val expirationDate = Instant.now().plus(365, ChronoUnit.DAYS)
 
     val credentialResult = TrustWeave.issueCredential(
-        issuerDid = issuerDid.id,
+        issuerDid = issuerDid.value,
         issuerKeyId = issuerKeyId,
         credentialSubject = mapOf(
-            "id" to holderDid.id,
+            "id" to holderDid.value,
             "name" to "Alice",
             "degree" to "Bachelor of Science"
         ),
@@ -493,7 +493,7 @@ fun main() = runBlocking {
 
     // Query by issuer
     val issuerCreds = wallet.queryCredentials(
-        issuer = issuerDid.id
+        issuer = issuerDid.value
     )
     println("Credentials from issuer: ${issuerCreds.size}")
 }
@@ -632,10 +632,10 @@ fun main() = runBlocking {
 
     // ISSUER: Issue credential
     val credential = TrustWeave.issueCredential(
-        issuerDid = issuerDid.id,
+        issuerDid = issuerDid.value,
         issuerKeyId = issuerKeyId,
         credentialSubject = mapOf(
-            "id" to holderDid.id,
+            "id" to holderDid.value,
             "name" to "Alice",
             "degree" to "Bachelor of Science in Computer Science",
             "university" to "Example University",
@@ -684,7 +684,7 @@ fun main() = runBlocking {
     val presentationResult = holderWallet.withPresentation { pres ->
         pres.createPresentation(
             credentials = listOf(credential),
-            holderDid = holderDid.id,
+            holderDid = holderDid.value,
             challenge = "verifier-challenge-123",  // Nonce from verifier
             domain = "example-employer.com"
         )
@@ -763,7 +763,7 @@ fun main() = runBlocking {
     val presentation = holderWallet.withPresentation { pres ->
         pres.createPresentation(
             credentials = listOf(credential),
-            holderDid = holderDid.id,
+            holderDid = holderDid.value,
             challenge = "challenge-123",
             domain = "example.com",
             revealFields = mapOf(
@@ -922,7 +922,7 @@ fun main() = runBlocking {
 
     // Create status list for revocation
     val statusList = TrustWeave.createStatusList(
-        issuerDid = issuerDid.id,
+        issuerDid = issuerDid.value,
         purpose = StatusPurpose.REVOCATION
     ).getOrThrow()
 

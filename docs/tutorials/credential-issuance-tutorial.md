@@ -312,9 +312,6 @@ fun main() = runBlocking {
                 issued(Instant.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
-                issuerDid = issuerDid.id
-            ),
-            types = listOf("VerifiableCredential")
         )
 
         println("Issued: ${credential.id}")
@@ -434,11 +431,11 @@ fun main() = runBlocking {
     try {
         val presentation = trustweave.credentials.createPresentation(
             credentials = credentials,
-            holderDid = holderDid.id,
+            holderDid = holderDid.value,
             config = PresentationConfig(
                 proofType = ProofType.Ed25519Signature2020,
                 keyId = holderKeyId,
-                holderDid = holderDid.id
+                holderDid = holderDid.value
             )
         )
 

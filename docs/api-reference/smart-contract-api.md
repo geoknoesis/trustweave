@@ -15,8 +15,10 @@ The Smart Contract API provides methods for creating, binding, executing, and ma
 ## Service Access
 
 ```kotlin
-val TrustWeave = TrustWeave.create()
-val contracts = TrustWeave.contracts
+import com.trustweave.trust.TrustWeave
+
+val trustWeave = TrustWeave.build { ... }
+val contracts = trustWeave.contracts
 ```
 
 ## API Methods
@@ -52,8 +54,12 @@ suspend fun createDraft(
 
 **Example:**
 ```kotlin
+import com.trustweave.trust.TrustWeave
+
+val trustWeave = TrustWeave.build { ... }
+
 // Recommended: Use draft() for cleaner API
-val contract = TrustWeave.contracts.draft(
+val contract = trustWeave.contracts.draft(
     request = ContractDraftRequest(
         contractType = ContractType.Insurance,
         executionModel = ExecutionModel.Parametric(...),
@@ -65,7 +71,7 @@ val contract = TrustWeave.contracts.draft(
 ).getOrThrow()
 
 // Alternative: createDraft() is also available
-val contract2 = TrustWeave.contracts.createDraft(request).getOrThrow()
+val contract2 = trustWeave.contracts.createDraft(request).getOrThrow()
 ```
 
 **Validation:**
@@ -104,7 +110,7 @@ suspend fun bindContract(
 
 **Example:**
 ```kotlin
-val bound = TrustWeave.contracts.bindContract(
+val bound = trustWeave.contracts.bindContract(
     contractId = contract.id,
     issuerDid = insurerDid,
     issuerKeyId = insurerKeyId,
@@ -135,7 +141,7 @@ suspend fun activateContract(
 
 **Example:**
 ```kotlin
-val active = TrustWeave.contracts.activateContract(contractId).getOrThrow()
+val active = trustWeave.contracts.activateContract(contractId).getOrThrow()
 ```
 
 **Validation:**
@@ -177,7 +183,7 @@ suspend fun executeContract(
 
 **Example:**
 ```kotlin
-val result = TrustWeave.contracts.executeContract(
+val result = trustWeave.contracts.executeContract(
     contract = activeContract,
     executionContext = ExecutionContext(
         triggerData = buildJsonObject {
@@ -220,7 +226,7 @@ suspend fun evaluateConditions(
 
 **Example:**
 ```kotlin
-val evaluation = TrustWeave.contracts.evaluateConditions(
+val evaluation = trustWeave.contracts.evaluateConditions(
     contract = contract,
     inputData = buildJsonObject {
         put("floodDepthCm", 75.0)
@@ -259,7 +265,7 @@ suspend fun updateStatus(
 
 **Example:**
 ```kotlin
-val updated = TrustWeave.contracts.updateStatus(
+val updated = trustWeave.contracts.updateStatus(
     contractId = contract.id,
     newStatus = ContractStatus.SUSPENDED,
     reason = "Under review"
@@ -289,7 +295,7 @@ suspend fun getContract(contractId: String): Result<SmartContract>
 
 **Example:**
 ```kotlin
-val contract = TrustWeave.contracts.getContract(contractId).getOrThrow()
+val contract = trustWeave.contracts.getContract(contractId).getOrThrow()
 ```
 
 **Errors:**
@@ -316,7 +322,7 @@ suspend fun verifyContract(
 
 **Example:**
 ```kotlin
-val isValid = TrustWeave.contracts.verifyContract(credentialId).getOrThrow()
+val isValid = trustWeave.contracts.verifyContract(credentialId).getOrThrow()
 ```
 
 ---

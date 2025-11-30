@@ -5,6 +5,7 @@ import com.trustweave.did.DidDocument
 import com.trustweave.kms.KeyHandle
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.credential.credential
 import com.trustweave.trust.types.ProofType
@@ -31,8 +32,11 @@ class IssuanceDslTest {
         val kmsRef = kms
 
         trustWeave = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
-                custom(kmsRef as Any)
+                custom(kmsRef)
                 // Provide signer function directly to avoid reflection
                 signer { data, keyId ->
                     kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)
@@ -68,7 +72,7 @@ class IssuanceDslTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDidId, keyId = issuerKey.id.value)
+            signedBy(issuerDid = issuerDidId, keyId = issuerKey.id.value)
         }
 
         assertNotNull(issuedCredential)
@@ -97,7 +101,7 @@ class IssuanceDslTest {
 
         val issuedCredential = trustWeave.issue {
             credential(credential)
-            by(issuerDid = issuerDidId, keyId = issuerKey.id.value)
+            signedBy(issuerDid = issuerDidId, keyId = issuerKey.id.value)
         }
 
         assertNotNull(issuedCredential)
@@ -120,7 +124,7 @@ class IssuanceDslTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDidId, keyId = issuerKey.id.value)
+            signedBy(issuerDid = issuerDidId, keyId = issuerKey.id.value)
             withProof(ProofType.Ed25519Signature2020)
         }
 
@@ -144,7 +148,7 @@ class IssuanceDslTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDidId, keyId = issuerKey.id.value)
+            signedBy(issuerDid = issuerDidId, keyId = issuerKey.id.value)
             challenge("challenge-123")
             domain("example.com")
         }
@@ -164,7 +168,7 @@ class IssuanceDslTest {
         assertFailsWith<IllegalStateException> {
             trustWeave.issue {
                 // Missing credential
-                by(issuerDid = issuerDidId, keyId = issuerKey.id.value)
+                signedBy(issuerDid = issuerDidId, keyId = issuerKey.id.value)
             }
         }
     }
@@ -181,7 +185,7 @@ class IssuanceDslTest {
                     }
                     issued(Instant.now())
                 }
-                // Missing by() call
+                // Missing signedBy() call
             }
         }
     }

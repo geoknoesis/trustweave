@@ -22,12 +22,17 @@ Here's a complete example that issues a credential:
 ```kotlin
 import com.trustweave.trust.TrustWeave
 import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     try {
         // Create TrustWeave instance
         val trustWeave = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
                 provider("inMemory")
                 algorithm("Ed25519")
@@ -93,7 +98,13 @@ fun main() = runBlocking {
 First, create a DID for the issuer and extract the key ID:
 
 ```kotlin
+import com.trustweave.testkit.services.*
+
 val trustWeave = TrustWeave.build {
+    factories(
+        kmsFactory = TestkitKmsFactory(),
+        didMethodFactory = TestkitDidMethodFactory()
+    )
     keys { provider("inMemory"); algorithm("Ed25519") }
     did { method("key") { algorithm("Ed25519") } }
 }

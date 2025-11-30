@@ -9,9 +9,11 @@ import com.trustweave.trust.dsl.did.*
 import com.trustweave.credential.anchor.CredentialAnchorService
 import com.trustweave.did.DidDocument
 import com.trustweave.did.DidMethod
+import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.did.resolver.DidResolver
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.verifier.DelegationChainResult
+import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.kms.KeyManagementService
 import com.trustweave.kms.services.KmsService
 import com.trustweave.credential.revocation.StatusListManager
@@ -38,7 +40,7 @@ import kotlinx.coroutines.withContext
  *
  * val credential = trustWeave.issue {
  *     credential { ... }
- *     by(issuerDid = "did:key:issuer", keyId = "key-1")
+ *     signedBy(issuerDid = "did:key:issuer", keyId = "key-1")
  * }
  * ```
  */
@@ -83,8 +85,11 @@ class TrustWeaveContext(
 
     /**
      * Get an anchor client by chain ID.
+     *
+     * @param chainId The blockchain chain identifier (e.g., "algorand:testnet")
+     * @return The blockchain anchor client, or null if not registered
      */
-    fun getAnchorClient(chainId: String): Any? {
+    fun getAnchorClient(chainId: String): BlockchainAnchorClient? {
         return config.registries.blockchainRegistry.get(chainId)
     }
 
@@ -104,7 +109,7 @@ class TrustWeaveContext(
     }
 
     override fun getStatusListManager(): StatusListManager? {
-        return config.statusListManager as? StatusListManager
+        return config.statusListManager
     }
 
     override fun getDefaultProofType(): ProofType {
@@ -132,8 +137,10 @@ class TrustWeaveContext(
 
     /**
      * Get the DID registry.
+     *
+     * @return The DID method registry
      */
-    fun getDidRegistry(): Any? {
+    fun getDidRegistry(): DidMethodRegistry {
         return config.registries.didRegistry
     }
 
@@ -141,7 +148,7 @@ class TrustWeaveContext(
      * Get the trust registry.
      */
     fun getTrustRegistry(): TrustRegistry? {
-        return config.trustRegistry as? TrustRegistry
+        return config.trustRegistry
     }
 
     /**
@@ -152,10 +159,19 @@ class TrustWeaveContext(
     }
 
     /**
+     * Get the configured I/O dispatcher.
+     * 
+     * Returns the dispatcher configured in TrustWeaveConfig, or Dispatchers.IO as default.
+     */
+    private fun getIoDispatcher() = config.ioDispatcher
+
+    /**
      * Issue a credential using the TrustWeave configuration.
      * Uses CredentialDslProvider to delegate to credential DSL.
+     * 
+     * This operation performs I/O-bound work and uses the configured dispatcher.
      */
-    suspend fun issue(block: IssuanceBuilder.() -> Unit): VerifiableCredential = withContext(Dispatchers.IO) {
+    suspend fun issue(block: IssuanceBuilder.() -> Unit): VerifiableCredential = withContext(getIoDispatcher()) {
         (this@TrustWeaveContext as CredentialDslProvider).issue(block)
     }
 
@@ -208,13 +224,29 @@ class TrustWeaveContext(
 
     /**
      * Rotate a key in a DID document using the TrustWeave configuration.
+     * 
+     * This operation uses the configured dispatcher for I/O-bound work.
      */
-    suspend fun rotateKey(block: KeyRotationBuilder.() -> Unit): Any {
+    suspend fun rotateKey(block: KeyRotationBuilder.() -> Unit): DidDocument {
         val kms = getKms() ?: throw IllegalStateException("KMS is not configured")
         val kmsService = getKmsService() ?: throw IllegalStateException("KmsService is not configured")
-        val builder = KeyRotationBuilder(this, kms, kmsService)
+        val builder = KeyRotationBuilder(this, kms, kmsService, config.ioDispatcher)
         builder.block()
         return builder.rotate()
+    }
+
+    /**
+     * Revoke a credential using the TrustWeave configuration.
+     * 
+     * This operation uses the configured dispatcher for I/O-bound work.
+     */
+    suspend fun revoke(block: com.trustweave.trust.dsl.credential.RevocationBuilder.() -> Unit): Boolean {
+        val statusListManager = getStatusListManager()
+        val builder = com.trustweave.trust.dsl.credential.RevocationBuilder(statusListManager)
+        builder.block()
+        return withContext(config.ioDispatcher) {
+            builder.revoke()
+        }
     }
 }
 

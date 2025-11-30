@@ -71,15 +71,15 @@ trustweave-contract
 
 ### Integration
 
-- **`ContractService`**: Service wrapper exposed via `TrustWeave.contracts`
+- **`ContractService`**: Service wrapper exposed via `trustWeave.contracts` property
 
 ## Usage Example
 
 ```kotlin
-import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustWeave
 import com.trustweave.contract.models.*
 
-val trustweave = TrustWeave.create()
+val trustweave = TrustWeave.build { ... }
 
 // Create contract draft
 val contract = trustweave.contracts.draft(

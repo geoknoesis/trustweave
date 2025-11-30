@@ -236,8 +236,7 @@ sealed class VerificationResult {
 }
 
 /**
- * Extension properties for backward compatibility with tests.
- * These allow accessing properties similar to CredentialVerificationResult.
+ * Extension property to check if verification result is valid.
  */
 val VerificationResult.valid: Boolean
     get() = this is VerificationResult.Valid
@@ -313,6 +312,34 @@ val VerificationResult.proofPurposeValid: Boolean
             }
             !hasProofPurposeErrors
         }
+    }
+
+val VerificationResult.notExpired: Boolean
+    get() = this !is VerificationResult.Invalid.Expired
+
+val VerificationResult.notRevoked: Boolean
+    get() = this !is VerificationResult.Invalid.Revoked
+
+val VerificationResult.allWarnings: List<String>
+    get() = warnings
+
+val VerificationResult.allErrors: List<String>
+    get() = errors
+
+/**
+ * Get the credential from any VerificationResult variant.
+ */
+val VerificationResult.credential: VerifiableCredential
+    get() = when (this) {
+        is VerificationResult.Valid -> this.credential
+        is VerificationResult.Invalid.Expired -> this.credential
+        is VerificationResult.Invalid.Revoked -> this.credential
+        is VerificationResult.Invalid.InvalidProof -> this.credential
+        is VerificationResult.Invalid.IssuerResolutionFailed -> this.credential
+        is VerificationResult.Invalid.UntrustedIssuer -> this.credential
+        is VerificationResult.Invalid.SchemaValidationFailed -> this.credential
+        is VerificationResult.Invalid.MultipleFailures -> this.credential
+        is VerificationResult.Invalid.Other -> this.credential
     }
 
 /**

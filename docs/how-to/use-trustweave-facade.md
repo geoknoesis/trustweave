@@ -39,11 +39,16 @@ Here's a complete example showing the simplicity of the facade API:
 import com.trustweave.trust.TrustWeave
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.trust.types.VerificationResult
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     // Step 1: Configure TrustWeave
     val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
         keys {
             provider("inMemory")
             algorithm("Ed25519")
@@ -96,7 +101,13 @@ fun main() = runBlocking {
 Configure TrustWeave with minimal setup:
 
 ```kotlin
+import com.trustweave.testkit.services.*
+
 val trustWeave = TrustWeave.build {
+    factories(
+        kmsFactory = TestkitKmsFactory(),
+        didMethodFactory = TestkitDidMethodFactory()
+    )
     keys {
         provider("inMemory")
         algorithm("Ed25519")
@@ -216,8 +227,17 @@ val credential = trustWeave.issueCredential(...)
 ### Using TrustWeave with Full Configuration
 
 ```kotlin
+import com.trustweave.testkit.services.*
+
 // Full configuration with all options
 val trustWeave = TrustWeave.build {
+    factories(
+        kmsFactory = TestkitKmsFactory(),
+        didMethodFactory = TestkitDidMethodFactory(),
+        anchorClientFactory = TestkitBlockchainAnchorClientFactory(),
+        trustRegistryFactory = TestkitTrustRegistryFactory(),
+        statusListRegistryFactory = TestkitStatusListRegistryFactory()
+    )
     keys { provider("inMemory"); algorithm("Ed25519") }
     did { method("key") { algorithm("Ed25519") } }
     anchor { chain("algorand:testnet") { provider("algorand") } }
@@ -245,7 +265,14 @@ val credential = trustWeave.issue { ... }
 You can customize TrustWeave while keeping simplicity:
 
 ```kotlin
+import com.trustweave.testkit.services.*
+
 val trustWeave = TrustWeave.build {
+    factories(
+        kmsFactory = TestkitKmsFactory(),
+        didMethodFactory = TestkitDidMethodFactory(),
+        anchorClientFactory = TestkitBlockchainAnchorClientFactory()
+    )
     keys { provider("inMemory"); algorithm("Ed25519") }
     did {
         method("key") { algorithm("Ed25519") }
@@ -272,7 +299,13 @@ val trustWeave = TrustWeave.build {
 For rapid prototyping and testing:
 
 ```kotlin
+import com.trustweave.testkit.services.*
+
 val trustWeave = TrustWeave.build {
+    factories(
+        kmsFactory = TestkitKmsFactory(),
+        didMethodFactory = TestkitDidMethodFactory()
+    )
     keys { provider("inMemory"); algorithm("Ed25519") }
     did { method("key") { algorithm("Ed25519") } }
 }
@@ -310,7 +343,14 @@ when (result) {
 For production with some customization:
 
 ```kotlin
+import com.trustweave.testkit.services.*
+
 val trustWeave = TrustWeave.build {
+    factories(
+        kmsFactory = TestkitKmsFactory(),  // Use production KMS factory in production
+        didMethodFactory = TestkitDidMethodFactory(),
+        anchorClientFactory = TestkitBlockchainAnchorClientFactory()
+    )
     // Use production KMS
     keys {
         provider("awsKms")  // or your production KMS
@@ -336,8 +376,14 @@ val trustWeave = TrustWeave.build {
 End-to-end workflow using TrustWeave:
 
 ```kotlin
+import com.trustweave.testkit.services.*
+
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
         keys { provider("inMemory"); algorithm("Ed25519") }
         did { method("key") { algorithm("Ed25519") } }
     }

@@ -4,7 +4,7 @@ import com.trustweave.kms.services.KmsFactory
 import com.trustweave.did.services.DidMethodFactory
 import com.trustweave.anchor.services.BlockchainAnchorClientFactory
 import com.trustweave.trust.services.TrustRegistryFactory
-import com.trustweave.revocation.services.StatusListManagerFactory
+import com.trustweave.revocation.services.StatusListRegistryFactory
 import com.trustweave.kms.KeyManagementService
 import com.trustweave.kms.spi.KeyManagementServiceProvider
 import com.trustweave.did.DidMethod
@@ -121,9 +121,9 @@ class TestkitDidMethodFactory : DidMethodFactory {
 }
 
 /**
- * StatusListManager Factory implementation.
+ * StatusListRegistry Factory implementation.
  */
-class TestkitStatusListManagerFactory : StatusListManagerFactory {
+class TestkitStatusListRegistryFactory : StatusListRegistryFactory {
     override suspend fun create(providerName: String): Any {
         if (providerName == "inMemory") {
             return InMemoryStatusListManager() as Any

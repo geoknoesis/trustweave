@@ -9,6 +9,9 @@ import com.trustweave.trust.types.*
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.testkit.services.TestkitDidMethodFactory
+import com.trustweave.testkit.services.TestkitTrustRegistryFactory
+import com.trustweave.testkit.services.TestkitKmsFactory
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -27,6 +30,10 @@ class WebOfTrustIntegrationTest {
         val kmsRef = kms
 
         val trustLayer = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory()
+            )
             keys {
                 custom(kmsRef)
                 signer { data, keyId -> kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data) }
@@ -80,7 +87,7 @@ class WebOfTrustIntegrationTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDid.value, keyId = keyId)
+            signedBy(issuerDid = issuerDid.value, keyId = keyId)
         }
 
         // Verify with trust registry
@@ -96,6 +103,9 @@ class WebOfTrustIntegrationTest {
     @Test
     fun `test delegation chain with credential issuance`() = runBlocking {
         val trustLayer = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
         }
@@ -142,7 +152,7 @@ class WebOfTrustIntegrationTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = delegateDid.value, keyId = "key-1")
+            signedBy(issuerDid = delegateDid.value, keyId = "key-1")
         }
 
         assertNotNull(credential)
@@ -151,6 +161,11 @@ class WebOfTrustIntegrationTest {
     @Test
     fun `test trust path discovery with multiple anchors`() = runBlocking {
         val trustLayer = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory()
+            )
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -181,16 +196,22 @@ class WebOfTrustIntegrationTest {
             registry?.addTrustRelationship(anchor1.value, anchor2.value)
             registry?.addTrustRelationship(anchor2.value, anchor3.value)
 
-            val path = getTrustPath(anchor1.value, anchor3.value)
-            assertNotNull(path)
-            assertTrue(path.valid)
-            assertTrue(path.path.size >= 2)
+            val path = findTrustPath(
+                com.trustweave.trust.types.VerifierIdentity(com.trustweave.trust.types.Did(anchor1.value)),
+                com.trustweave.trust.types.IssuerIdentity.from(anchor3.value, "key-1")
+            )
+            assertTrue(path is com.trustweave.trust.types.TrustPath.Verified)
+            val verified = path as com.trustweave.trust.types.TrustPath.Verified
+            assertTrue(verified.fullPath.size >= 2)
         }
     }
 
     @Test
     fun `test proof purpose validation in credential verification`() = runBlocking {
         val trustLayer = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
         }
@@ -226,7 +247,7 @@ class WebOfTrustIntegrationTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDid.value, keyId = "key-1")
+            signedBy(issuerDid = issuerDid.value, keyId = "key-1")
         }
 
         // Verify with proof purpose validation

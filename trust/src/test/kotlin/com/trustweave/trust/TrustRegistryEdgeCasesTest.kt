@@ -57,10 +57,12 @@ class TrustRegistryEdgeCasesTest {
         registry.addTrustRelationship("did:key:anchor1", "did:key:anchor2")
         registry.addTrustRelationship("did:key:anchor2", "did:key:anchor1")
 
-        val path = registry.getTrustPath("did:key:anchor1", "did:key:anchor2")
+        val path = registry.findTrustPath(
+            com.trustweave.trust.types.VerifierIdentity(com.trustweave.trust.types.Did("did:key:anchor1")),
+            com.trustweave.trust.types.IssuerIdentity.from("did:key:anchor2", "key-1")
+        )
 
-        assertNotNull(path)
-        assertTrue(path.valid)
+        assertTrue(path is com.trustweave.trust.types.TrustPath.Verified)
         // Should handle circular references gracefully
     }
 
@@ -72,9 +74,12 @@ class TrustRegistryEdgeCasesTest {
         registry.addTrustAnchor("did:key:anchor2", TrustAnchorMetadata())
         // No relationship between them
 
-        val path = registry.getTrustPath("did:key:anchor1", "did:key:anchor2")
+        val path = registry.findTrustPath(
+            com.trustweave.trust.types.VerifierIdentity(com.trustweave.trust.types.Did("did:key:anchor1")),
+            com.trustweave.trust.types.IssuerIdentity.from("did:key:anchor2", "key-1")
+        )
 
-        assertNull(path)
+        assertTrue(path is com.trustweave.trust.types.TrustPath.NotFound)
     }
 
     @Test
@@ -90,18 +95,30 @@ class TrustRegistryEdgeCasesTest {
         registry.addTrustRelationship("did:key:a2", "did:key:a3")
         registry.addTrustRelationship("did:key:a3", "did:key:a4")
 
-        val path1 = registry.getTrustPath("did:key:a1", "did:key:a1")
-        assertNotNull(path1)
-        assertEquals(1.0, path1.trustScore)
+        val path1 = registry.findTrustPath(
+            com.trustweave.trust.types.VerifierIdentity(com.trustweave.trust.types.Did("did:key:a1")),
+            com.trustweave.trust.types.IssuerIdentity.from("did:key:a1", "key-1")
+        )
+        assertTrue(path1 is com.trustweave.trust.types.TrustPath.Verified)
+        val verified1 = path1 as com.trustweave.trust.types.TrustPath.Verified
+        assertEquals(1.0, verified1.trustScore)
 
-        val path2 = registry.getTrustPath("did:key:a1", "did:key:a2")
-        assertNotNull(path2)
-        assertTrue(path2.trustScore in 0.0..1.0)
+        val path2 = registry.findTrustPath(
+            com.trustweave.trust.types.VerifierIdentity(com.trustweave.trust.types.Did("did:key:a1")),
+            com.trustweave.trust.types.IssuerIdentity.from("did:key:a2", "key-1")
+        )
+        assertTrue(path2 is com.trustweave.trust.types.TrustPath.Verified)
+        val verified2 = path2 as com.trustweave.trust.types.TrustPath.Verified
+        assertTrue(verified2.trustScore in 0.0..1.0)
 
-        val path3 = registry.getTrustPath("did:key:a1", "did:key:a4")
-        assertNotNull(path3)
-        assertTrue(path3.trustScore in 0.0..1.0)
-        assertTrue(path3.trustScore < path2.trustScore) // Longer path = lower score
+        val path3 = registry.findTrustPath(
+            com.trustweave.trust.types.VerifierIdentity(com.trustweave.trust.types.Did("did:key:a1")),
+            com.trustweave.trust.types.IssuerIdentity.from("did:key:a4", "key-1")
+        )
+        assertTrue(path3 is com.trustweave.trust.types.TrustPath.Verified)
+        val verified3 = path3 as com.trustweave.trust.types.TrustPath.Verified
+        assertTrue(verified3.trustScore in 0.0..1.0)
+        assertTrue(verified3.trustScore < verified2.trustScore) // Longer path = lower score
     }
 
     @Test

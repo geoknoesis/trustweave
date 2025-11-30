@@ -5,6 +5,7 @@ import com.trustweave.did.DidDocument
 import com.trustweave.kms.KeyHandle
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.TrustWeaveConfig
 import com.trustweave.trust.dsl.trustWeave
@@ -36,8 +37,11 @@ class IssuanceBuilderBranchCoverageTest {
         val kmsRef = kms
 
         trustWeave = trustWeave {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
-                custom(kmsRef as Any) // Cast to Any for DSL
+                custom(kmsRef)
                 // Provide signer function directly to avoid reflection
                 signer { data, keyId ->
                     kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)
@@ -60,7 +64,7 @@ class IssuanceBuilderBranchCoverageTest {
         assertFailsWith<IllegalStateException> {
             trustWeave.issue {
                 // Missing credential
-                by(issuerDid = "did:key:issuer", keyId = "key-1")
+                signedBy(issuerDid = "did:key:issuer", keyId = "key-1")
             }
         }
     }
@@ -80,7 +84,7 @@ class IssuanceBuilderBranchCoverageTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
         }
 
         assertNotNull(issuedCredential)
@@ -103,7 +107,7 @@ class IssuanceBuilderBranchCoverageTest {
 
         val issuedCredential = trustWeave.issue {
             credential(preBuiltCredential)
-            by(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
         }
 
         assertNotNull(issuedCredential)
@@ -123,7 +127,7 @@ class IssuanceBuilderBranchCoverageTest {
                     }
                     issued(Instant.now())
                 }
-                // Missing by() call
+                // Missing signedBy() call
             }
         }
     }
@@ -143,7 +147,7 @@ class IssuanceBuilderBranchCoverageTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
         }
 
         assertNotNull(issuedCredential)
@@ -166,7 +170,7 @@ class IssuanceBuilderBranchCoverageTest {
                     }
                     issued(Instant.now())
                 }
-                by(issuerDid = issuerDidDoc.id, keyId = "") // Empty key ID
+                signedBy(issuerDid = issuerDidDoc.id, keyId = "") // Empty key ID
             }
         }
     }
@@ -188,7 +192,7 @@ class IssuanceBuilderBranchCoverageTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             // No proof type - uses default
         }
 
@@ -211,7 +215,7 @@ class IssuanceBuilderBranchCoverageTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             withProof(ProofType.Ed25519Signature2020) // Use supported proof type
         }
 
@@ -236,7 +240,7 @@ class IssuanceBuilderBranchCoverageTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             challenge("challenge-123")
         }
 
@@ -259,7 +263,7 @@ class IssuanceBuilderBranchCoverageTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             domain("example.com")
         }
 
@@ -282,7 +286,7 @@ class IssuanceBuilderBranchCoverageTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             challenge("challenge-123")
             domain("example.com")
         }
@@ -309,7 +313,7 @@ class IssuanceBuilderBranchCoverageTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             // autoAnchor is false in config
         }
 
@@ -319,9 +323,13 @@ class IssuanceBuilderBranchCoverageTest {
 
     @Test
     fun `test branch auto-anchor enabled in config`() = runBlocking {
+        val kmsRef = kms
         val trustLayerWithAutoAnchor = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
-                custom(kms as Any)
+                custom(kmsRef)
             }
             did {
                 method("key") {}
@@ -351,7 +359,7 @@ class IssuanceBuilderBranchCoverageTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
         }
 
         assertNotNull(issuedCredential)
@@ -360,9 +368,10 @@ class IssuanceBuilderBranchCoverageTest {
 
     @Test
     fun `test branch explicit anchor call`() = runBlocking {
+        val kmsRef = kms
         val trustLayerWithAnchor = TrustWeave.build {
             keys {
-                custom(kms as Any)
+                custom(kmsRef)
             }
             did {
                 method("key") {}
@@ -391,7 +400,7 @@ class IssuanceBuilderBranchCoverageTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             // Note: anchor() function not available in current DSL
         }
 
@@ -400,9 +409,13 @@ class IssuanceBuilderBranchCoverageTest {
 
     @Test
     fun `test branch anchor error when chain ID missing`() = runBlocking {
+        val kmsRef = kms
         val trustLayerWithAutoAnchor = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
-                custom(kms as Any)
+                custom(kmsRef)
             }
             did {
                 method("key") {}
@@ -429,7 +442,7 @@ class IssuanceBuilderBranchCoverageTest {
                     }
                     issued(Instant.now())
                 }
-                by(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+                signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
                 // No anchor() call and no defaultChain
             }
         }
@@ -437,9 +450,13 @@ class IssuanceBuilderBranchCoverageTest {
 
     @Test
     fun `test branch anchor error when anchor client not found`() = runBlocking {
+        val kmsRef = kms
         val trustLayerWithAutoAnchor = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
-                custom(kms as Any)
+                custom(kmsRef)
             }
             did {
                 method("key") {}
@@ -465,7 +482,7 @@ class IssuanceBuilderBranchCoverageTest {
                     }
                     issued(Instant.now())
                 }
-                by(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+                signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             }
         }
     }
@@ -474,9 +491,13 @@ class IssuanceBuilderBranchCoverageTest {
     fun `test branch anchor failure handling`() = runBlocking {
         // This tests the exception handling when anchoring fails
         // The credential should still be issued even if anchoring fails
+        val kmsRef = kms
         val trustLayerWithAutoAnchor = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
-                custom(kms as Any)
+                custom(kmsRef)
             }
             did {
                 method("key") {}
@@ -507,7 +528,7 @@ class IssuanceBuilderBranchCoverageTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
         }
 
         assertNotNull(issuedCredential)

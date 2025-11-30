@@ -1,8 +1,10 @@
 package com.trustweave.trust.dsl
 
 import com.trustweave.trust.TrustAnchorMetadata
-import com.trustweave.trust.TrustPathResult
 import com.trustweave.trust.TrustRegistry
+import com.trustweave.trust.types.TrustPath
+import com.trustweave.trust.types.VerifierIdentity
+import com.trustweave.trust.types.IssuerIdentity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.Instant
@@ -58,10 +60,29 @@ class TrustBuilder(
     }
 
     /**
-     * Find a trust path between two DIDs.
+     * Find a trust path between two identities (first-class type).
+     *
+     * Returns a sealed TrustPath type that makes trust relationships explicit.
+     *
+     * **Example:**
+     * ```kotlin
+     * when (val path = findTrustPath(verifier, issuer)) {
+     *     is TrustPath.Verified -> {
+     *         println("Trusted via path: ${path.anchors.map { it.did }}")
+     *         println("Path length: ${path.length}")
+     *     }
+     *     is TrustPath.NotFound -> {
+     *         println("No trust path found: ${path.reason}")
+     *     }
+     * }
+     * ```
+     *
+     * @param from The verifier identity
+     * @param to The issuer identity
+     * @return TrustPath.Verified if a path exists, TrustPath.NotFound otherwise
      */
-    suspend fun getTrustPath(fromDid: String, toDid: String): TrustPathResult? {
-        return registry.getTrustPath(fromDid, toDid)
+    suspend fun findTrustPath(from: VerifierIdentity, to: IssuerIdentity): TrustPath {
+        return registry.findTrustPath(from, to)
     }
 
     /**

@@ -3,6 +3,9 @@ package com.trustweave.trust.dsl
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.trust.InMemoryTrustRegistry
+import com.trustweave.testkit.services.TestkitDidMethodFactory
+import com.trustweave.testkit.services.TestkitTrustRegistryFactory
+import com.trustweave.testkit.services.TestkitKmsFactory
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
@@ -22,6 +25,11 @@ class TrustDslTest {
     @Test
     fun `test trust layer configuration with trust registry`() = runBlocking {
         val trustWeave = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory()
+            )
             keys {
                 provider("inMemory")
                 algorithm(KeyAlgorithms.ED25519)
@@ -45,6 +53,11 @@ class TrustDslTest {
     @Test
     fun `test add anchor via DSL`() = runBlocking {
         val trustWeave = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory()
+            )
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -63,6 +76,11 @@ class TrustDslTest {
     @Test
     fun `test check trust via DSL`() = runBlocking {
         val trustWeave = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory()
+            )
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -84,6 +102,11 @@ class TrustDslTest {
     @Test
     fun `test get trust path via DSL`() = runBlocking {
         val trustWeave = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory()
+            )
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -100,15 +123,22 @@ class TrustDslTest {
             val registry = trustWeave.getDslContext().getTrustRegistry() as? InMemoryTrustRegistry
             registry?.addTrustRelationship(anchor1, anchor2)
 
-            val path = getTrustPath(anchor1, anchor2)
-            assertNotNull(path)
-            assertTrue(path.valid)
+            val path = findTrustPath(
+                com.trustweave.trust.types.VerifierIdentity(com.trustweave.trust.types.Did(anchor1)),
+                com.trustweave.trust.types.IssuerIdentity.from(anchor2, "key-1")
+            )
+            assertTrue(path is com.trustweave.trust.types.TrustPath.Verified)
         }
     }
 
     @Test
     fun `test get trusted issuers via DSL`() = runBlocking {
         val trustWeave = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory()
+            )
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -131,6 +161,11 @@ class TrustDslTest {
     @Test
     fun `test remove anchor via DSL`() = runBlocking {
         val trustWeave = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory()
+            )
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }

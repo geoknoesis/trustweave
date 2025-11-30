@@ -21,6 +21,8 @@ import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.wallet.CredentialOrganization
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.testkit.services.TestkitDidMethodFactory
+import com.trustweave.testkit.services.TestkitWalletFactory
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import java.time.Instant
@@ -40,6 +42,10 @@ fun main() = runBlocking {
     )
 
     val trustWeave = TrustWeave.build {
+        factories(
+            didMethodFactory = TestkitDidMethodFactory(),
+            walletFactory = TestkitWalletFactory()
+        )
         keys {
             custom(kmsRef)
             // Provide signer function directly to avoid reflection issues
@@ -58,18 +64,9 @@ fun main() = runBlocking {
             defaultProofType(ProofType.Ed25519Signature2020)
         }
 
-        revocation {
-            provider("inMemory")
-        }
-
         schemas {
             autoValidate(false)
             defaultFormat(SchemaFormat.JSON_SCHEMA)
-        }
-
-        // Configure trust registry
-        trust {
-            provider("inMemory")
         }
     }
 
@@ -158,7 +155,7 @@ fun main() = runBlocking {
             }
             issued(Instant.now())
         }
-        by(issuerDid = "did:key:university", keyId = universityKey.id.value)
+        signedBy(issuerDid = "did:key:university", keyId = universityKey.id.value)
     }
     val bachelorStored = bachelorDegree.storeIn(wallet)
     val bachelorId = requireNotNull(bachelorStored.id) { "Credential must have an id" }
@@ -179,7 +176,7 @@ fun main() = runBlocking {
             }
             issued(Instant.now())
         }
-        by(issuerDid = "did:key:university", keyId = universityKey.id.value)
+        signedBy(issuerDid = "did:key:university", keyId = universityKey.id.value)
     }
     val masterStored = masterDegree.storeIn(wallet)
     val masterId = requireNotNull(masterStored.id) { "Credential must have an id" }

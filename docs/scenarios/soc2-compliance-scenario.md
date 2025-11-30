@@ -297,7 +297,7 @@ fun main() = runBlocking {
     }
 
     // Anchor audit log to blockchain for immutability
-    val auditAnchorResult = TrustWeave.blockchains.anchor(
+    val auditAnchorResult = trustWeave.blockchains.anchor(
         data = auditLogEntry,
         serializer = JsonObject.serializer(),
         chainId = "algorand:testnet"
@@ -369,7 +369,7 @@ fun main() = runBlocking {
     println("✅ Key rotation credential issued: ${keyRotationCredential.id}")
 
     // Anchor key rotation to blockchain
-    val keyRotationAnchor = TrustWeave.blockchains.anchor(
+    val keyRotationAnchor = trustWeave.blockchains.anchor(
         data = keyRotationCredential,
         serializer = VerifiableCredential.serializer(),
         chainId = "algorand:testnet"
@@ -478,7 +478,7 @@ fun main() = runBlocking {
     }
 
     // Anchor compliance report
-    val reportAnchor = TrustWeave.blockchains.anchor(
+    val reportAnchor = trustWeave.blockchains.anchor(
         data = complianceReport,
         serializer = JsonObject.serializer(),
         chainId = "algorand:testnet"
@@ -607,7 +607,7 @@ suspend fun logAuditEvent(
     saveAuditLogToDatabase(auditEntry)
 
     // Anchor to blockchain for immutability
-    val anchorResult = TrustWeave.blockchains.anchor(
+    val anchorResult = trustWeave.blockchains.anchor(
         data = auditEntry,
         serializer = JsonObject.serializer(),
         chainId = "algorand:testnet"
@@ -658,7 +658,7 @@ suspend fun rotateKeyWithHistory(
     ).getOrThrow()
 
     // Anchor rotation to blockchain
-    TrustWeave.blockchains.anchor(
+    trustWeave.blockchains.anchor(
         data = rotationCredential,
         serializer = VerifiableCredential.serializer(),
         chainId = "algorand:testnet"
@@ -726,7 +726,7 @@ suspend fun generateComplianceReport(
     }
 
     // Anchor report to blockchain
-    TrustWeave.blockchains.anchor(
+    trustWeave.blockchains.anchor(
         data = report,
         serializer = JsonObject.serializer(),
         chainId = "algorand:testnet"

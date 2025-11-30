@@ -22,9 +22,10 @@ class KeyRotationDslTest {
     fun setup() = runBlocking {
         kms = InMemoryKeyManagementService()
 
+        val kmsRef = kms
         trustWeave = trustWeave {
             keys {
-                custom(kms as Any)
+                custom(kmsRef)
             }
             did {
                 method("key") {

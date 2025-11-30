@@ -390,13 +390,13 @@ sealed class CredentialVerificationResult {
         }
 
     /**
-     * Backward compatibility: alias for isValid.
+     * Convenience property: alias for isValid.
      */
     val valid: Boolean
         get() = isValid
 
     /**
-     * Backward compatibility: check if proof is valid.
+     * Convenience property: check if proof is valid.
      */
     val proofValid: Boolean
         get() = when (this) {
@@ -414,7 +414,7 @@ sealed class CredentialVerificationResult {
         }
 
     /**
-     * Backward compatibility: check if issuer is valid.
+     * Convenience property: check if issuer is valid.
      */
     val issuerValid: Boolean
         get() = when (this) {
@@ -428,25 +428,25 @@ sealed class CredentialVerificationResult {
         }
 
     /**
-     * Backward compatibility: check if credential is not expired.
+     * Convenience property: check if credential is not expired.
      */
     val notExpired: Boolean
         get() = this !is Invalid.Expired
 
     /**
-     * Backward compatibility: check if credential is not revoked.
+     * Convenience property: check if credential is not revoked.
      */
     val notRevoked: Boolean
         get() = this !is Invalid.Revoked
 
     /**
-     * Backward compatibility: check if schema validation passed.
+     * Convenience property: check if schema validation passed.
      */
     val schemaValid: Boolean
         get() = this !is Invalid.SchemaValidationFailed
 
     /**
-     * Backward compatibility: check if blockchain anchor is valid.
+     * Convenience property: check if blockchain anchor is valid.
      */
     val blockchainAnchorValid: Boolean
         get() = this !is Invalid.InvalidBlockchainAnchor

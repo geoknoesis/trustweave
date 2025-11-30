@@ -20,7 +20,7 @@ A parametric insurance MGA platform that:
 ### Step 1: Create Smart Contract
 ```kotlin
 // Create parametric insurance contract
-val contract = TrustWeave.contracts.draft(
+val contract = trustWeave.contracts.draft(
     request = ContractDraftRequest(
         contractType = ContractType.Insurance,
         executionModel = ExecutionModel.Parametric(
@@ -41,7 +41,7 @@ val contract = TrustWeave.contracts.draft(
 ### Step 2: Bind Contract (Issue VC & Anchor)
 ```kotlin
 // Bind contract - issues VC and anchors to blockchain
-val bound = TrustWeave.contracts.bindContract(
+val bound = trustWeave.contracts.bindContract(
     contractId = contract.id,
     issuerDid = insurerDid,
     issuerKeyId = insurerKeyId,
@@ -49,7 +49,7 @@ val bound = TrustWeave.contracts.bindContract(
 ).getOrThrow()
 
 // Activate contract
-val active = TrustWeave.contracts.activateContract(bound.contract.id).getOrThrow()
+val active = trustWeave.contracts.activateContract(bound.contract.id).getOrThrow()
 ```
 
 ### Step 3: EO Provider Issues Data Credential
@@ -65,7 +65,7 @@ val floodCredential = TrustWeave.credentials.issue(
 ### Step 4: Execute Contract & Payout
 ```kotlin
 // Execute contract with EO data
-val result = TrustWeave.contracts.executeContract(
+val result = trustWeave.contracts.executeContract(
     contract = active,
     executionContext = ExecutionContext(
         triggerData = buildJsonObject {
@@ -188,7 +188,7 @@ val TrustWeave = TrustWeave.create {
 
 ### Create Flood Insurance Contract
 ```kotlin
-val contract = TrustWeave.contracts.draft(
+val contract = trustWeave.contracts.draft(
     request = ContractDraftRequest(
         contractType = ContractType.Insurance,
         executionModel = ExecutionModel.Parametric(
@@ -229,14 +229,14 @@ val contract = TrustWeave.contracts.draft(
 ### Bind and Activate Contract
 ```kotlin
 // Bind contract (issues VC and anchors)
-val bound = TrustWeave.contracts.bindContract(
+val bound = trustWeave.contracts.bindContract(
     contractId = contract.id,
     issuerDid = insurerDid,
     issuerKeyId = insurerKeyId
 ).getOrThrow()
 
 // Activate contract
-val active = TrustWeave.contracts.activateContract(bound.contract.id).getOrThrow()
+val active = trustWeave.contracts.activateContract(bound.contract.id).getOrThrow()
 ```
 
 ### Issue EO Data Credential
@@ -254,7 +254,7 @@ val floodCredential = TrustWeave.credentials.issue(
 
 ### Execute Contract
 ```kotlin
-val result = TrustWeave.contracts.executeContract(
+val result = trustWeave.contracts.executeContract(
     contract = active,
     executionContext = ExecutionContext(
         triggerData = buildJsonObject {

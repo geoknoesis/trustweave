@@ -345,7 +345,7 @@ println("Engine hash: ${engine.implementationHash}")
 ### Step 3: Use in Contracts
 
 ```kotlin
-val contract = TrustWeave.contracts.draft(
+val contract = trustWeave.contracts.draft(
     request = ContractDraftRequest(
         executionModel = ExecutionModel.Parametric(
             triggerType = TriggerType.EarthObservation,
@@ -433,7 +433,7 @@ val engine = ParametricInsuranceEngine()
 engines += engine
 
 // Create parametric insurance contract
-val contract = TrustWeave.contracts.draft(
+val contract = trustWeave.contracts.draft(
     request = ContractDraftRequest(
         executionModel = ExecutionModel.Parametric(
             triggerType = TriggerType.EarthObservation,
@@ -454,14 +454,14 @@ val contract = TrustWeave.contracts.draft(
 )
 
 // Bind contract (engine hash is captured)
-val bound = TrustWeave.contracts.bindContract(
+val bound = trustWeave.contracts.bindContract(
     contractId = contract.id,
     issuerDid = issuerDid,
     issuerKeyId = issuerKeyId
 )
 
 // Execute contract (engine integrity is verified)
-val result = TrustWeave.contracts.executeContract(
+val result = trustWeave.contracts.executeContract(
     contract = bound.contract,
     executionContext = ExecutionContext(
         triggerData = buildJsonObject {
@@ -579,7 +579,7 @@ Evaluation engines integrate seamlessly with TrustWeave's contract system:
 ### Contract Creation
 
 ```kotlin
-val contract = TrustWeave.contracts.draft(
+val contract = trustWeave.contracts.draft(
     request = ContractDraftRequest(
         executionModel = ExecutionModel.Parametric(
             triggerType = TriggerType.EarthObservation,
@@ -595,7 +595,7 @@ val contract = TrustWeave.contracts.draft(
 During binding, the engine hash is automatically captured:
 
 ```kotlin
-val bound = TrustWeave.contracts.bindContract(
+val bound = trustWeave.contracts.bindContract(
     contractId = contract.id,
     issuerDid = issuerDid,
     issuerKeyId = issuerKeyId
@@ -608,7 +608,7 @@ val bound = TrustWeave.contracts.bindContract(
 During execution, engine integrity is automatically verified:
 
 ```kotlin
-val result = TrustWeave.contracts.executeContract(
+val result = trustWeave.contracts.executeContract(
     contract = contract,
     executionContext = ExecutionContext(
         triggerData = inputData

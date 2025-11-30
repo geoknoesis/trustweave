@@ -154,7 +154,7 @@ fun main() = runBlocking {
             issued(Instant.now())
             schema("https://example.com/schemas/degree", SchemaValidatorTypes.JSON_SCHEMA)
         }
-        by(issuerDid = issuerDid.value, keyId = "key-1")
+        signedBy(issuerDid = issuerDid.value, keyId = "key-1")
         withRevocation() // Auto-creates status list
     }
     println("✓ Credential issued with ID: ${credential.id}")

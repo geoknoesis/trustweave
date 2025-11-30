@@ -39,10 +39,17 @@ Here's a complete example showing the power of declarative configuration:
 ```kotlin
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.types.ProofType
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory(),
+            anchorClientFactory = TestkitBlockchainAnchorClientFactory(),
+            trustRegistryFactory = TestkitTrustRegistryFactory()
+        )
         keys {
             provider("inMemory")
             algorithm("Ed25519")
@@ -79,6 +86,30 @@ fun main() = runBlocking {
 Created DID: did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK
 ```
 
+## Factory Configuration
+
+When using `TrustWeave.build { }` with providers like `"inMemory"`, you must explicitly provide factory instances. This ensures type safety and avoids reflection-based service discovery.
+
+**Required Factories:**
+- `kmsFactory` - Required when using `keys { provider("inMemory") }`
+- `didMethodFactory` - Required when using `did { method("key") }`
+- `anchorClientFactory` - Required when using `anchor { chain(...) { inMemory() } }`
+- `trustRegistryFactory` - Required when using `trust { provider("inMemory") }`
+- `statusListRegistryFactory` - Required when using `revocation { provider("inMemory") }`
+- `walletFactory` - Required when using `wallet { }`
+
+**For Testing:**
+Use testkit factories from `com.trustweave.testkit.services`:
+- `TestkitKmsFactory()`
+- `TestkitDidMethodFactory()`
+- `TestkitBlockchainAnchorClientFactory()`
+- `TestkitTrustRegistryFactory()`
+- `TestkitStatusListRegistryFactory()`
+- `TestkitWalletFactory()`
+
+**For Production:**
+Use production factories from your KMS, DID method, and anchor client providers.
+
 ## Step-by-Step Guide
 
 ### Step 1: Start with Basic Configuration
@@ -86,7 +117,12 @@ Created DID: did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK
 Begin by creating a minimal TrustWeave configuration with just key management:
 
 ```kotlin
+import com.trustweave.testkit.services.*
+
 val trustWeave = TrustWeave.build {
+    factories(
+        kmsFactory = TestkitKmsFactory()
+    )
     keys {
         provider("inMemory")
         algorithm("Ed25519")
@@ -108,7 +144,13 @@ val trustWeave = TrustWeave.build {
 Add DID method support to your configuration:
 
 ```kotlin
+import com.trustweave.testkit.services.*
+
 val trustWeave = TrustWeave.build {
+    factories(
+        kmsFactory = TestkitKmsFactory(),
+        didMethodFactory = TestkitDidMethodFactory()
+    )
     keys {
         provider("inMemory")
         algorithm("Ed25519")
@@ -136,7 +178,13 @@ val trustWeave = TrustWeave.build {
 Register additional DID methods for different use cases:
 
 ```kotlin
+import com.trustweave.testkit.services.*
+
 val trustWeave = TrustWeave.build {
+    factories(
+        kmsFactory = TestkitKmsFactory(),
+        didMethodFactory = TestkitDidMethodFactory()
+    )
     keys {
         provider("inMemory")
         algorithm("Ed25519")
@@ -171,9 +219,14 @@ val trustWeave = TrustWeave.build {
 Add blockchain anchoring support for tamper evidence:
 
 ```kotlin
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.testkit.services.*
 
 val trustWeave = TrustWeave.build {
+    factories(
+        kmsFactory = TestkitKmsFactory(),
+        didMethodFactory = TestkitDidMethodFactory(),
+        anchorClientFactory = TestkitBlockchainAnchorClientFactory()
+    )
     keys {
         provider("inMemory")
         algorithm("Ed25519")
@@ -188,8 +241,8 @@ val trustWeave = TrustWeave.build {
     anchor {
         chain("algorand:testnet") {
             provider("algorand")
-            // Or use test client for development
-            // client(InMemoryBlockchainAnchorClient("algorand:testnet"))
+            // Or use inMemory for testing
+            // inMemory()
         }
         chain("polygon:mainnet") {
             provider("polygon")
@@ -212,7 +265,15 @@ val trustWeave = TrustWeave.build {
 Add trust registry for managing trusted issuers:
 
 ```kotlin
+import com.trustweave.testkit.services.*
+
 val trustWeave = TrustWeave.build {
+    factories(
+        kmsFactory = TestkitKmsFactory(),
+        didMethodFactory = TestkitDidMethodFactory(),
+        anchorClientFactory = TestkitBlockchainAnchorClientFactory(),
+        trustRegistryFactory = TestkitTrustRegistryFactory()
+    )
     keys {
         provider("inMemory")
         algorithm("Ed25519")
@@ -250,7 +311,15 @@ val trustWeave = TrustWeave.build {
 Here's a complete production-ready configuration:
 
 ```kotlin
+import com.trustweave.testkit.services.*
+
 val trustWeave = TrustWeave.build {
+    factories(
+        kmsFactory = TestkitKmsFactory(),
+        didMethodFactory = TestkitDidMethodFactory(),
+        anchorClientFactory = TestkitBlockchainAnchorClientFactory(),
+        trustRegistryFactory = TestkitTrustRegistryFactory()
+    )
     keys {
         provider("inMemory")  // Use "awsKms" or "azureKeyVault" in production
         algorithm("Ed25519")
@@ -325,8 +394,16 @@ val trustWeave = TrustWeave(config)
 ### After (Declarative DSL)
 
 ```kotlin
+import com.trustweave.testkit.services.*
+
 // Declarative, readable configuration
 val trustWeave = TrustWeave.build {
+    factories(
+        kmsFactory = TestkitKmsFactory(),
+        didMethodFactory = TestkitDidMethodFactory(),
+        anchorClientFactory = TestkitBlockchainAnchorClientFactory(),
+        trustRegistryFactory = TestkitTrustRegistryFactory()
+    )
     keys { provider("inMemory"); algorithm("Ed25519") }
     did { method("key") { algorithm("Ed25519") } }
     anchor {
@@ -352,7 +429,15 @@ val trustWeave = TrustWeave.build {
 For local development and testing:
 
 ```kotlin
+import com.trustweave.testkit.services.*
+
 val trustWeave = TrustWeave.build {
+    factories(
+        kmsFactory = TestkitKmsFactory(),
+        didMethodFactory = TestkitDidMethodFactory(),
+        anchorClientFactory = TestkitBlockchainAnchorClientFactory(),
+        trustRegistryFactory = TestkitTrustRegistryFactory()
+    )
     keys {
         provider("inMemory")
         algorithm("Ed25519")
@@ -364,7 +449,7 @@ val trustWeave = TrustWeave.build {
     }
     anchor {
         chain("algorand:testnet") {
-            client(InMemoryBlockchainAnchorClient("algorand:testnet"))
+            inMemory()
         }
     }
     trust {
@@ -411,7 +496,13 @@ val trustWeave = TrustWeave.build {
 Supporting multiple DID methods:
 
 ```kotlin
+import com.trustweave.testkit.services.*
+
 val trustWeave = TrustWeave.build {
+    factories(
+        kmsFactory = TestkitKmsFactory(),
+        didMethodFactory = TestkitDidMethodFactory()
+    )
     keys {
         provider("inMemory")
         algorithm("Ed25519")
@@ -441,9 +532,14 @@ Handle configuration errors gracefully:
 
 ```kotlin
 import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.testkit.services.*
 
 try {
     val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
         keys {
             provider("inMemory")
             algorithm("Ed25519")

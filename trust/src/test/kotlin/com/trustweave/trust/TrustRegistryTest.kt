@@ -91,12 +91,17 @@ class TrustRegistryTest {
         registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
         registry.addTrustAnchor("did:key:anchor2", TrustAnchorMetadata())
 
-        val path = registry.getTrustPath("did:key:anchor1", "did:key:anchor1")
+        val path = registry.findTrustPath(
+            com.trustweave.trust.types.VerifierIdentity(com.trustweave.trust.types.Did("did:key:anchor1")),
+            com.trustweave.trust.types.IssuerIdentity.from("did:key:anchor1", "key-1")
+        )
 
-        assertNotNull(path)
-        assertTrue(path.valid)
-        assertEquals(1, path.path.size)
-        assertEquals("did:key:anchor1", path.path[0])
+        assertTrue(path is com.trustweave.trust.types.TrustPath.Verified)
+        val verified = path as com.trustweave.trust.types.TrustPath.Verified
+        // When from == to, fullPath is [from.did, to.did] = 2 elements (both are the same DID)
+        assertEquals(2, verified.fullPath.size)
+        assertEquals("did:key:anchor1", verified.fullPath[0].value)
+        assertEquals("did:key:anchor1", verified.fullPath[1].value)
     }
 
     @Test
@@ -107,12 +112,15 @@ class TrustRegistryTest {
         registry.addTrustAnchor("did:key:anchor2", TrustAnchorMetadata())
         registry.addTrustRelationship("did:key:anchor1", "did:key:anchor2")
 
-        val path = registry.getTrustPath("did:key:anchor1", "did:key:anchor2")
+        val path = registry.findTrustPath(
+            com.trustweave.trust.types.VerifierIdentity(com.trustweave.trust.types.Did("did:key:anchor1")),
+            com.trustweave.trust.types.IssuerIdentity.from("did:key:anchor2", "key-1")
+        )
 
-        assertNotNull(path)
-        assertTrue(path.valid)
-        assertEquals(2, path.path.size)
-        assertTrue(path.trustScore > 0.0)
+        assertTrue(path is com.trustweave.trust.types.TrustPath.Verified)
+        val verified = path as com.trustweave.trust.types.TrustPath.Verified
+        assertTrue(verified.fullPath.size >= 2)
+        assertTrue(verified.trustScore > 0.0)
     }
 
     @Test
@@ -122,9 +130,12 @@ class TrustRegistryTest {
         registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
         // anchor2 not added, so no path
 
-        val path = registry.getTrustPath("did:key:anchor1", "did:key:anchor2")
+        val path = registry.findTrustPath(
+            com.trustweave.trust.types.VerifierIdentity(com.trustweave.trust.types.Did("did:key:anchor1")),
+            com.trustweave.trust.types.IssuerIdentity.from("did:key:anchor2", "key-1")
+        )
 
-        assertNull(path)
+        assertTrue(path is com.trustweave.trust.types.TrustPath.NotFound)
     }
 
     @Test
@@ -168,11 +179,15 @@ class TrustRegistryTest {
         registry.addTrustAnchor("did:key:anchor2", TrustAnchorMetadata())
         registry.addTrustRelationship("did:key:anchor1", "did:key:anchor2")
 
-        val path = registry.getTrustPath("did:key:anchor1", "did:key:anchor2")
+        val path = registry.findTrustPath(
+            com.trustweave.trust.types.VerifierIdentity(com.trustweave.trust.types.Did("did:key:anchor1")),
+            com.trustweave.trust.types.IssuerIdentity.from("did:key:anchor2", "key-1")
+        )
 
-        assertNotNull(path)
-        assertTrue(path.trustScore in 0.0..1.0)
-        assertTrue(path.trustScore > 0.0)
+        assertTrue(path is com.trustweave.trust.types.TrustPath.Verified)
+        val verified = path as com.trustweave.trust.types.TrustPath.Verified
+        assertTrue(verified.trustScore in 0.0..1.0)
+        assertTrue(verified.trustScore > 0.0)
     }
 
     @Test

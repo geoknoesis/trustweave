@@ -8,6 +8,7 @@ import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.testkit.integrity.IntegrityVerifier
 import com.trustweave.testkit.integrity.TestDataBuilders
+import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
 import com.trustweave.core.util.DigestUtils
 import com.trustweave.did.exception.DidException
@@ -62,8 +63,11 @@ fun main() = runBlocking {
     val kmsRef = kms
     
     val trustweave = TrustWeave.build {
+        factories(
+            didMethodFactory = TestkitDidMethodFactory()
+        )
         keys {
-            custom(kmsRef as Any)
+            custom(kmsRef)
             signer { data, keyId ->
                 kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)
             }
@@ -381,7 +385,7 @@ fun main() = runBlocking {
             }
             issued(java.time.Instant.now())
         }
-        by(issuerDid = issuerDid.value, keyId = issuerKeyId)
+        signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
     }
 
     println("\n📥 RESPONSE: Credential Issued Successfully")

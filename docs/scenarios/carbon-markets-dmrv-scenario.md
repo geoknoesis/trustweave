@@ -268,7 +268,7 @@ fun main() = runBlocking {
     println("   Status: issued")
 
     // Step 6: Anchor credit to blockchain (prevent double counting)
-    val anchorResult = TrustWeave.blockchains.anchor(
+    val anchorResult = trustWeave.blockchains.anchor(
         data = carbonCredit,
         serializer = VerifiableCredential.serializer(),
         chainId = "algorand:testnet"

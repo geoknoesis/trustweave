@@ -2,11 +2,13 @@ package com.trustweave.trust.dsl
 
 import com.trustweave.did.DidDocument
 import com.trustweave.did.DidMethod
+import com.trustweave.did.DidCreationOptions
 import com.trustweave.did.VerificationMethod
 import com.trustweave.trust.dsl.did.DidDslProvider
 import com.trustweave.kms.services.KmsService
 import com.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
 /**
@@ -30,12 +32,25 @@ import kotlinx.coroutines.withContext
 class KeyRotationBuilder(
     private val didProvider: DidDslProvider,
     private val kms: KeyManagementService,
-    private val kmsService: KmsService
+    private val kmsService: KmsService,
+    /**
+     * Coroutine dispatcher for I/O-bound operations.
+     * Defaults to [Dispatchers.IO] if not provided.
+     */
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private var did: String? = null
     private var method: String? = null
-    private var algorithm: String = "Ed25519"
+    private var algorithmString: String = "Ed25519"
+    private var algorithmEnum: DidCreationOptions.KeyAlgorithm? = null
     private val oldKeyIds = mutableListOf<String>()
+
+    /**
+     * Get the resolved algorithm string.
+     * Prefers enum value if set, otherwise uses string value.
+     */
+    private val algorithm: String
+        get() = algorithmEnum?.algorithmName ?: algorithmString
 
     /**
      * Set DID to rotate keys for.
@@ -52,10 +67,23 @@ class KeyRotationBuilder(
     }
 
     /**
-     * Set key algorithm for new key.
+     * Set key algorithm for new key by string name.
+     * 
+     * For type safety, prefer using algorithm(value: DidCreationOptions.KeyAlgorithm).
      */
     fun algorithm(algorithm: String) {
-        this.algorithm = algorithm
+        this.algorithmString = algorithm
+        this.algorithmEnum = null
+    }
+
+    /**
+     * Set key algorithm using type-safe enum.
+     * 
+     * This is the preferred method for compile-time type safety.
+     */
+    fun algorithm(value: DidCreationOptions.KeyAlgorithm) {
+        this.algorithmEnum = value
+        this.algorithmString = value.algorithmName
     }
 
     /**
@@ -67,10 +95,13 @@ class KeyRotationBuilder(
 
     /**
      * Rotate the key.
+     * 
+     * This operation performs I/O-bound work (key generation, DID document updates)
+     * and uses the configured dispatcher. It is non-blocking and can be cancelled.
      *
      * @return Updated DID document
      */
-    suspend fun rotate(): DidDocument = withContext(Dispatchers.IO) {
+    suspend fun rotate(): DidDocument = withContext(ioDispatcher) {
         val targetDid = did ?: throw IllegalStateException(
             "DID is required. Use did(\"did:key:...\")"
         )

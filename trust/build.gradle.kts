@@ -11,6 +11,7 @@ dependencies {
     implementation(project(":anchors:anchor-core"))     // BlockchainAnchorClientFactory
     implementation(project(":did:did-core"))         // DID DSLs and services
     implementation(project(":kms:kms-core"))         // KMS service interfaces
+    implementation(project(":contract"))              // Smart contract services
     compileOnly(project(":credentials:plugins:status-list:database"))  // StatusListManagerFactory (compileOnly to avoid circular dependency)
 
     // Kotlin Coroutines
@@ -22,6 +23,7 @@ dependencies {
     testImplementation(project(":testkit"))
     testImplementation(project(":did:did-core"))
     testImplementation(project(":kms:kms-core"))
+    testImplementation(project(":credentials:plugins:status-list:database"))  // StatusListRegistryFactory for tests
 }
 
 

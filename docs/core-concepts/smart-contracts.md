@@ -158,7 +158,7 @@ ExecutionModel.Manual
 | `SmartContractService` | Interface for contract operations |
 | `DefaultSmartContractService` | In-memory implementation (for testing/development) |
 | `ContractValidator` | Validates parties, dates, terms, and state transitions |
-| `TrustWeave.contracts` | High-level facade for contract operations |
+| `trustWeave.contracts` | High-level facade for contract operations |
 
 ## Example: Creating a Contract
 
@@ -300,7 +300,7 @@ TrustWeave automatically validates:
 
 ```kotlin
 // Validation happens automatically in draft()
-val trustweave = TrustWeave.create()
+val trustweave = TrustWeave.build { ... }
 try {
     val contract = trustweave.contracts.draft(request).getOrThrow()
     println("Contract created: ${contract.id}")
@@ -326,7 +326,7 @@ Valid state transitions are enforced:
 
 ```kotlin
 // Invalid transition will throw InvalidOperationException
-val trustweave = TrustWeave.create()
+val trustweave = TrustWeave.build { ... }
 try {
     trustweave.contracts.updateStatus(
         contractId = contract.id,
@@ -347,7 +347,7 @@ Contracts are issued as Verifiable Credentials:
 
 ```kotlin
 // Contract credential is automatically issued during bindContract()
-val trustweave = TrustWeave.create()
+val trustweave = TrustWeave.build { ... }
 val bound = trustweave.contracts.bindContract(...).getOrThrow()
 // bound.credentialId contains the VC ID
 ```
@@ -358,7 +358,7 @@ Contracts are anchored to blockchain for audit trails:
 
 ```kotlin
 // Anchor reference is stored in contract.anchorRef
-val trustweave = TrustWeave.create()
+val trustweave = TrustWeave.build { ... }
 val contract = trustweave.contracts.getContract(contractId).getOrThrow()
 contract.anchorRef?.let { anchor ->
     println("Anchored on: ${anchor.chainId}")

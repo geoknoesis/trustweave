@@ -264,7 +264,9 @@ class JsonObjectBuilder {
     }
 
     /**
-     * Put a property value (for compatibility with SchemaDsl).
+     * Put a property value.
+     * 
+     * This method supports the SchemaDsl interface pattern.
      */
     fun put(key: String, value: String) {
         properties[key] = JsonPrimitive(value)

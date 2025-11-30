@@ -10,6 +10,11 @@ import com.trustweave.trust.types.*
 import com.trustweave.credential.presentation.PresentationService
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.annotations.RequiresPlugin
+import com.trustweave.testkit.services.TestkitDidMethodFactory
+import com.trustweave.testkit.services.TestkitTrustRegistryFactory
+import com.trustweave.testkit.services.TestkitWalletFactory
+import com.trustweave.testkit.services.TestkitStatusListRegistryFactory
+import com.trustweave.testkit.services.TestkitBlockchainAnchorClientFactory
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -37,6 +42,11 @@ class InMemoryTrustLayerIntegrationTest {
 
         // Step 2: Configure TrustWeave with in-memory components
         val trustWeave = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory(),
+                walletFactory = TestkitWalletFactory()
+            )
             keys {
                 custom(kms)
                 signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
@@ -94,7 +104,7 @@ class InMemoryTrustLayerIntegrationTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDid.value, keyId = keyId) // MUST match key in DID document
+            signedBy(issuerDid = issuerDid.value, keyId = keyId) // MUST match key in DID document
         }
 
         assertNotNull(credential, "Credential should be issued")
@@ -157,6 +167,11 @@ class InMemoryTrustLayerIntegrationTest {
         val kms = InMemoryKeyManagementService()
 
         val trustWeave = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory(),
+                statusListRegistryFactory = TestkitStatusListRegistryFactory()
+            )
             keys {
                 custom(kms)
                 signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
@@ -199,7 +214,7 @@ class InMemoryTrustLayerIntegrationTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDid.value, keyId = keyId)
+            signedBy(issuerDid = issuerDid.value, keyId = keyId)
             withRevocation() // Enable revocation status list
         }
 
@@ -241,6 +256,11 @@ class InMemoryTrustLayerIntegrationTest {
         val kms = InMemoryKeyManagementService()
 
         val trustWeave = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory(),
+                walletFactory = TestkitWalletFactory()
+            )
             keys {
                 custom(kms)
                 signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
@@ -282,7 +302,7 @@ class InMemoryTrustLayerIntegrationTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDid.value, keyId = keyId)
+            signedBy(issuerDid = issuerDid.value, keyId = keyId)
         }
 
         // Create wallet for holder
@@ -322,6 +342,11 @@ class InMemoryTrustLayerIntegrationTest {
         val kms = InMemoryKeyManagementService()
 
         val trustWeave = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory(),
+                walletFactory = TestkitWalletFactory()
+            )
             keys {
                 custom(kms)
                 signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
@@ -371,7 +396,7 @@ class InMemoryTrustLayerIntegrationTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDid.value, keyId = issuerKeyId)
+            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
         }
 
         val credential2 = trustWeave.issue {
@@ -385,7 +410,7 @@ class InMemoryTrustLayerIntegrationTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDid.value, keyId = issuerKeyId)
+            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
         }
 
         // Create wallet and store credentials
@@ -440,6 +465,11 @@ class InMemoryTrustLayerIntegrationTest {
         val kms = InMemoryKeyManagementService()
 
         val trustWeave = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory(),
+                walletFactory = TestkitWalletFactory()
+            )
             keys {
                 custom(kms)
                 signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
@@ -498,7 +528,7 @@ class InMemoryTrustLayerIntegrationTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDid.value, keyId = keyId)
+            signedBy(issuerDid = issuerDid.value, keyId = keyId)
         }
 
         assertNotNull(credential, "Credential should be issued with updated DID")
@@ -518,6 +548,11 @@ class InMemoryTrustLayerIntegrationTest {
         val kms = InMemoryKeyManagementService()
 
         val trustWeave = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory(),
+                anchorClientFactory = TestkitBlockchainAnchorClientFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory()
+            )
             keys {
                 custom(kms)
                 signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
@@ -567,7 +602,7 @@ class InMemoryTrustLayerIntegrationTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDid.value, keyId = keyId)
+            signedBy(issuerDid = issuerDid.value, keyId = keyId)
             // Note: anchor() function not available in current DSL
         }
 
@@ -597,6 +632,11 @@ class InMemoryTrustLayerIntegrationTest {
         val kms = InMemoryKeyManagementService()
 
         val trustWeave = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory(),
+                anchorClientFactory = TestkitBlockchainAnchorClientFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory()
+            )
             keys {
                 custom(kms)
                 signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
@@ -653,7 +693,7 @@ class InMemoryTrustLayerIntegrationTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDid.value, keyId = keyId)
+            signedBy(issuerDid = issuerDid.value, keyId = keyId)
             // Note: anchor() function not available in current DSL
         }
 

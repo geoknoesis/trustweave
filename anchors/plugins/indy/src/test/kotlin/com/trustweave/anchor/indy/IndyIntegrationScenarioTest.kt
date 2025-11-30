@@ -8,6 +8,8 @@ import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.did.DidDocument
 import com.trustweave.wallet.Wallet
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.testkit.services.TestkitDidMethodFactory
+import com.trustweave.testkit.services.TestkitWalletFactory
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
@@ -49,11 +51,18 @@ class IndyIntegrationScenarioTest {
 
         // Create KMS instance and capture reference for signer
         kms = InMemoryKeyManagementService()
+        val kmsRef = kms
 
         trustweave = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory(),
+                walletFactory = TestkitWalletFactory()
+            )
             keys {
-                provider("inMemory")
-                algorithm("Ed25519")
+                custom(kmsRef)
+                signer { data, keyId ->
+                    kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)
+                }
             }
             did {
                 method("key") {
@@ -104,7 +113,7 @@ class IndyIntegrationScenarioTest {
                 }
                 issued(java.time.Instant.now())
             }
-            by(issuerDid = issuerDid.value, keyId = issuerKeyId)
+            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
         }
         println("  ✓ Credential ID: ${credential.id}")
         println("  ✓ Credential Issuer: ${credential.issuer}")
@@ -306,7 +315,7 @@ class IndyIntegrationScenarioTest {
                     }
                     issued(java.time.Instant.now())
                 }
-                by(issuerDid = issuerDid.value, keyId = issuerKeyId)
+                signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
             }
 
             credentials.add(credential)

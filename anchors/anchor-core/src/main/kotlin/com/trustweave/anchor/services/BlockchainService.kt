@@ -1,13 +1,12 @@
-package com.trustweave.services
+package com.trustweave.anchor.services
 
-import com.trustweave.TrustWeaveContext
 import com.trustweave.anchor.AnchorResult
 import com.trustweave.anchor.AnchorRef
 import com.trustweave.anchor.anchorTyped
-import com.trustweave.core.util.ValidationResult
 import com.trustweave.anchor.validation.ChainIdValidator
 import com.trustweave.anchor.exceptions.BlockchainException
 import com.trustweave.anchor.BlockchainAnchorClient
+import com.trustweave.anchor.BlockchainAnchorRegistry
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 
@@ -18,8 +17,8 @@ import kotlinx.serialization.json.Json
  *
  * **Example:**
  * ```kotlin
- * val TrustWeave = TrustWeave.create()
- * val anchor = trustweave.blockchains.anchor(
+ * val blockchainService = BlockchainService(blockchainRegistry)
+ * val anchor = blockchainService.anchor(
  *     data = myData,
  *     serializer = MyData.serializer(),
  *     chainId = "algorand:testnet"
@@ -27,14 +26,14 @@ import kotlinx.serialization.json.Json
  * ```
  */
 class BlockchainService(
-    private val context: TrustWeaveContext
+    private val blockchainRegistry: BlockchainAnchorRegistry
 ) {
     /**
      * Anchors data to a blockchain.
      *
      * **Example:**
      * ```kotlin
-     * val anchor = trustweave.blockchains.anchor(
+     * val anchor = blockchainService.anchor(
      *     data = myData,
      *     serializer = MyData.serializer(),
      *     chainId = "algorand:testnet"
@@ -53,18 +52,19 @@ class BlockchainService(
         serializer: KSerializer<T>,
         chainId: String
     ): AnchorResult {
+        val availableChains = blockchainRegistry.getAllChainIds()
+        
         // Validate chain ID format
         ChainIdValidator.validateFormat(chainId).let {
             if (!it.isValid()) {
                 throw BlockchainException.ChainNotRegistered(
                     chainId = chainId,
-                    availableChains = context.getAvailableChains()
+                    availableChains = availableChains
                 )
             }
         }
 
         // Validate chain is registered
-        val availableChains = context.getAvailableChains()
         ChainIdValidator.validateRegistered(chainId, availableChains).let {
             if (!it.isValid()) {
                 throw BlockchainException.ChainNotRegistered(
@@ -74,7 +74,7 @@ class BlockchainService(
             }
         }
 
-        val client = context.getBlockchainClient(chainId)
+        val client = blockchainRegistry.get(chainId) as? BlockchainAnchorClient
             ?: throw BlockchainException.ChainNotRegistered(
                 chainId = chainId,
                 availableChains = availableChains
@@ -93,7 +93,7 @@ class BlockchainService(
      *     chainId = "algorand:testnet",
      *     txHash = "abc123..."
      * )
-     * val data = trustweave.blockchains.read<MyData>(
+     * val data = blockchainService.read<MyData>(
      *     ref = anchorRef,
      *     serializer = MyData.serializer()
      * )
@@ -109,8 +109,8 @@ class BlockchainService(
         serializer: KSerializer<T>
     ): T {
         val chainId = ref.chainId
-
-        val availableChains = context.getAvailableChains()
+        val availableChains = blockchainRegistry.getAllChainIds()
+        
         if (chainId !in availableChains) {
             throw BlockchainException.ChainNotRegistered(
                 chainId = chainId,
@@ -118,7 +118,7 @@ class BlockchainService(
             )
         }
 
-        val client = context.getBlockchainClient(chainId)
+        val client = blockchainRegistry.get(chainId) as? BlockchainAnchorClient
             ?: throw BlockchainException.ChainNotRegistered(
                 chainId = chainId,
                 availableChains = availableChains
@@ -133,6 +133,6 @@ class BlockchainService(
      *
      * @return List of registered blockchain chain IDs
      */
-    fun availableChains(): List<String> = context.getAvailableChains()
+    fun availableChains(): List<String> = blockchainRegistry.getAllChainIds()
 }
 

@@ -3,6 +3,7 @@ package com.trustweave.trust.dsl
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.testkit.credential.InMemoryWallet
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.trust.dsl.TrustWeaveConfig
 import com.trustweave.trust.dsl.trustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
@@ -32,8 +33,11 @@ class TrustLayerExtensionsTest {
         )
 
         trustWeave = trustWeave {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
-                custom(kms as Any)
+                custom(kms)
                 signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
             }
             did {

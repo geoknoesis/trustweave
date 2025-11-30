@@ -152,7 +152,7 @@ val insuranceDid = TrustWeave.dids.create(method = "key")
 **Purpose**: Executable agreements with automatic execution
 ```kotlin
 // Create parametric insurance contract
-val contract = TrustWeave.contracts.draft(
+val contract = trustWeave.contracts.draft(
     request = ContractDraftRequest(
         contractType = ContractType.Insurance,
         executionModel = ExecutionModel.Parametric(
@@ -165,14 +165,14 @@ val contract = TrustWeave.contracts.draft(
 ).getOrThrow()
 
 // Bind contract (issues VC and anchors)
-val bound = TrustWeave.contracts.bindContract(
+val bound = trustWeave.contracts.bindContract(
     contractId = contract.id,
     issuerDid = insurerDid,
     issuerKeyId = insurerKeyId
 ).getOrThrow()
 
 // Activate contract
-val active = TrustWeave.contracts.activateContract(bound.contract.id).getOrThrow()
+val active = trustWeave.contracts.activateContract(bound.contract.id).getOrThrow()
 ```
 
 ### 3. Verifiable Credentials
@@ -192,7 +192,7 @@ val floodCredential = TrustWeave.credentials.issue(
 **Purpose**: Automatically execute contracts based on EO data
 ```kotlin
 // Execute contract with EO data
-val result = TrustWeave.contracts.executeContract(
+val result = trustWeave.contracts.executeContract(
     contract = active,
     executionContext = ExecutionContext(
         triggerData = buildJsonObject {
@@ -224,7 +224,7 @@ if (!verification.valid) {
 **Purpose**: Tamper-proof audit trails
 ```kotlin
 // Anchor trigger to blockchain
-val anchorResult = TrustWeave.blockchains.anchor(
+val anchorResult = trustWeave.blockchains.anchor(
     data = payoutCredential,
     chainId = "algorand:mainnet"
 ).getOrThrow()
@@ -378,7 +378,7 @@ val floodCredential = TrustWeave.credentials.issue(
 ).getOrThrow()
 
 // Anchor to blockchain
-TrustWeave.blockchains.anchor(
+trustWeave.blockchains.anchor(
     data = floodCredential,
     serializer = VerifiableCredential.serializer(),
     chainId = "algorand:mainnet"

@@ -1,11 +1,12 @@
 package com.trustweave.examples.quickstart
 
-import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.types.VerificationResult
+import com.trustweave.trust.types.*
 import com.trustweave.anchor.BlockchainAnchorRegistry
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.proof.ProofType
 import com.trustweave.core.util.DigestUtils
-import com.trustweave.services.IssuanceConfig
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -18,7 +19,17 @@ import kotlinx.serialization.json.put
  * Invoke using `./gradlew :TrustWeave-examples:runQuickStartSample`.
  */
 fun main(): Unit = runBlocking {
-    val trustweave = TrustWeave.create()
+    val trustweave = TrustWeave.build {
+        keys {
+            provider("inMemory")
+            algorithm("Ed25519")
+        }
+        did {
+            method("key") {
+                algorithm("Ed25519")
+            }
+        }
+    }
 
     val credentialSubject = buildJsonObject {
         put("id", "did:key:holder-placeholder")
@@ -28,22 +39,31 @@ fun main(): Unit = runBlocking {
     val digest = DigestUtils.sha256DigestMultibase(credentialSubject)
     println("Canonical credential-subject digest: $digest")
 
-    val issuerDocument = trustweave.createDid()
-    val issuerDid = issuerDocument.id
-    val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method generated for $issuerDid")
-    println("Issuer DID: $issuerDid (keyId=$issuerKeyId)")
+    val issuerDid = trustweave.createDid()
+    
+    // Resolve DID to get verification method
+    val issuerDidResolution = trustweave.resolveDid(issuerDid)
+    val issuerDidDoc = when (issuerDidResolution) {
+        is com.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
+        else -> throw IllegalStateException("Failed to resolve issuer DID")
+    }
+    val issuerKeyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: error("No verification method generated for ${issuerDid.value}")
+    println("Issuer DID: ${issuerDid.value} (keyId=$issuerKeyId)")
 
-    val credential = trustweave.issueCredential(
-        issuer = issuerDid,
-        subject = credentialSubject,
-        config = IssuanceConfig(
-            proofType = ProofType.Ed25519Signature2020,
-            keyId = issuerKeyId,
-            issuerDid = issuerDid
-        ),
-        types = listOf("VerifiableCredential", "QuickStartCredential")
-    )
+    val credential = trustweave.issue {
+        credential {
+            type("QuickStartCredential")
+            issuer(issuerDid.value)
+            subject {
+                id("did:key:holder-placeholder")
+                "name" to "Alice Example"
+                "role" to "Site Reliability Engineer"
+            }
+            issued(java.time.Instant.now())
+        }
+        signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+    }
     println("Issued credential id: ${credential.id}")
 
     val verification = trustweave.verifyCredential(credential)

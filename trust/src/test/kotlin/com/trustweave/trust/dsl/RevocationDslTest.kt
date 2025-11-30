@@ -4,6 +4,8 @@ import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.revocation.InMemoryStatusListManager
 import com.trustweave.credential.revocation.StatusPurpose
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.testkit.services.TestkitDidMethodFactory
+import com.trustweave.testkit.services.TestkitStatusListRegistryFactory
 import com.trustweave.trust.dsl.TrustWeaveConfig
 import com.trustweave.trust.dsl.trustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
@@ -29,6 +31,10 @@ class RevocationDslTest {
         statusListManager = InMemoryStatusListManager()
 
         trustWeave = trustWeave {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory(),
+                statusListRegistryFactory = TestkitStatusListRegistryFactory()
+            )
             keys {
                 custom(kms)
                 signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }

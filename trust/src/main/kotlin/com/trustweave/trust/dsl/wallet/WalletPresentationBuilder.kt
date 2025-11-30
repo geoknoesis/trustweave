@@ -119,6 +119,9 @@ class WalletPresentationBuilder(
 
     /**
      * Build the verifiable presentation.
+     * 
+     * This operation performs I/O-bound work (credential retrieval, presentation creation)
+     * and is dispatched to I/O threads. It is non-blocking and can be cancelled.
      *
      * @return Verifiable presentation
      */

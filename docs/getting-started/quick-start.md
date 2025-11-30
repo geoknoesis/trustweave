@@ -44,6 +44,7 @@ import com.trustweave.credential.exception.CredentialException.CredentialInvalid
 import com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed
 import com.trustweave.wallet.exception.WalletException
 import com.trustweave.wallet.exception.WalletException.WalletCreationFailed
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -52,6 +53,10 @@ fun main() = runBlocking {
     try {
         // Step 1: Create TrustWeave instance with defaults
         val trustWeave = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
                 provider("inMemory")
                 algorithm("Ed25519")
@@ -185,8 +190,14 @@ fun main() = runBlocking {
 For quick testing and prototypes, you can use a simplified version without detailed error handling. **Do not use this in production:**
 
 ```kotlin
+import com.trustweave.testkit.services.*
+
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
         keys { provider("inMemory"); algorithm("Ed25519") }
         did { method("key") { algorithm("Ed25519") } }
     }
@@ -211,9 +222,14 @@ import com.trustweave.did.exception.DidException.DidNotFound
 import com.trustweave.credential.exception.CredentialException
 import com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed
 import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
         keys {
             provider("inMemory")
             algorithm("Ed25519")
@@ -342,6 +358,7 @@ TrustWeave promotes a “batteries included” experience for newcomers. The mon
 import com.trustweave.trust.TrustWeave
 import com.trustweave.core.util.DigestUtils
 import com.trustweave.core.TrustWeaveError
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -349,6 +366,10 @@ import kotlinx.serialization.json.put
 fun main() = runBlocking {
     // Create TrustWeave with sensible defaults (in-memory KMS, did:key method)
     val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
         keys {
             provider("inMemory")
             algorithm("Ed25519")

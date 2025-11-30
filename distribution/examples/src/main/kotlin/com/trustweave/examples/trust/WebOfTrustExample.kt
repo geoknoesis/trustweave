@@ -159,7 +159,7 @@ fun main() = runBlocking {
             }
             issued(Instant.now())
         }
-        by(issuerDid = universityDid.value, keyId = "key-1")
+        signedBy(issuerDid = universityDid.value, keyId = "key-1")
     }
     println("✓ Issued degree credential from university")
 
@@ -179,7 +179,7 @@ fun main() = runBlocking {
             }
             issued(Instant.now())
         }
-        by(issuerDid = hrDeptDid.value, keyId = "key-1")
+        signedBy(issuerDid = hrDeptDid.value, keyId = "key-1")
     }
     println("✓ Issued employment credential from HR department (delegated)\n")
 
@@ -264,24 +264,36 @@ fun main() = runBlocking {
     // Step 7: Find trust paths
     println("Step 7: Finding trust paths...")
     trustWeave.trust {
-        val trustPath = getTrustPath(verifierDid.value, universityDid.value)
-        if (trustPath != null) {
-            println("Trust path from verifier to university:")
-            println("  Path: ${trustPath.path.joinToString(" -> ")}")
-            println("  Trust Score: ${trustPath.trustScore}")
-            println("  Valid: ${trustPath.valid}")
-        } else {
-            println("No trust path found from verifier to university")
+        val trustPath = findTrustPath(
+            com.trustweave.trust.types.VerifierIdentity(verifierDid),
+            com.trustweave.trust.types.IssuerIdentity.from(universityDid.value, "key-1")
+        )
+        when (trustPath) {
+            is com.trustweave.trust.types.TrustPath.Verified -> {
+                println("Trust path from verifier to university:")
+                println("  Path: ${trustPath.fullPath.joinToString(" -> ") { it.value }}")
+                println("  Trust Score: ${trustPath.trustScore}")
+                println("  Verified: ${trustPath.verified}")
+            }
+            is com.trustweave.trust.types.TrustPath.NotFound -> {
+                println("No trust path found from verifier to university: ${trustPath.reason}")
+            }
         }
 
-        val trustPath2 = getTrustPath(verifierDid.value, companyDid.value)
-        if (trustPath2 != null) {
-            println("\nTrust path from verifier to company:")
-            println("  Path: ${trustPath2.path.joinToString(" -> ")}")
-            println("  Trust Score: ${trustPath2.trustScore}")
-            println("  Valid: ${trustPath2.valid}")
-        } else {
-            println("No trust path found from verifier to company")
+        val trustPath2 = findTrustPath(
+            com.trustweave.trust.types.VerifierIdentity(verifierDid),
+            com.trustweave.trust.types.IssuerIdentity.from(companyDid.value, "key-1")
+        )
+        when (trustPath2) {
+            is com.trustweave.trust.types.TrustPath.Verified -> {
+                println("\nTrust path from verifier to company:")
+                println("  Path: ${trustPath2.fullPath.joinToString(" -> ") { it.value }}")
+                println("  Trust Score: ${trustPath2.trustScore}")
+                println("  Verified: ${trustPath2.verified}")
+            }
+            is com.trustweave.trust.types.TrustPath.NotFound -> {
+                println("No trust path found from verifier to company: ${trustPath2.reason}")
+            }
         }
     }
     println()

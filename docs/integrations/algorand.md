@@ -180,7 +180,7 @@ runBlocking {
 
     // Anchor credential
     val credential = /* your credential */
-    val anchorResult = TrustWeave.blockchains.anchor(
+    val anchorResult = trustWeave.blockchains.anchor(
         data = credential,
         serializer = VerifiableCredential.serializer(),
         chainId = "algorand:testnet"

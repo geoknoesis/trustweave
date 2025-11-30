@@ -72,24 +72,15 @@ interface TrustRegistry {
     suspend fun removeTrustAnchor(anchorDid: String): Boolean
 
     /**
-     * Finds a trust path between two DIDs.
+     * Finds a trust path between two identities (first-class type).
      *
-     * @param fromDid The starting DID (typically the verifier)
-     * @param toDid The target DID (typically the issuer)
-     * @return TrustPathResult if a path exists, null otherwise
-     */
-    suspend fun getTrustPath(fromDid: String, toDid: String): TrustPathResult?
-
-    /**
-     * Finds a trust path between two identities (type-safe overload).
+     * Returns a sealed TrustPath type that makes trust relationships explicit.
      *
      * @param from The starting identity (typically the verifier)
      * @param to The target identity (typically the issuer)
-     * @return TrustPathResult if a path exists, null otherwise
+     * @return TrustPath.Verified if a path exists, TrustPath.NotFound otherwise
      */
-    suspend fun getTrustPath(from: VerifierIdentity, to: IssuerIdentity): TrustPathResult? {
-        return getTrustPath(from.did.value, to.did.value)
-    }
+    suspend fun findTrustPath(from: VerifierIdentity, to: IssuerIdentity): com.trustweave.trust.types.TrustPath
 
     /**
      * Gets all trusted issuers for a specific credential type.
@@ -129,13 +120,13 @@ data class TrustAnchorMetadata(
 )
 
 /**
- * Result of trust path discovery.
+ * Internal result of trust path discovery (used only for internal implementations).
  *
  * @param path List of DIDs forming the trust path from source to target
  * @param trustScore Trust score between 0.0 and 1.0 (higher is more trusted)
  * @param valid Whether the trust path is valid
  */
-data class TrustPathResult(
+internal data class TrustPathResult(
     val path: List<String>,
     val trustScore: Double,
     val valid: Boolean = true

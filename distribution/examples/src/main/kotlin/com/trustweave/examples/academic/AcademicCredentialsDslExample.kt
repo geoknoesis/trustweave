@@ -117,7 +117,7 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(365 * 10, ChronoUnit.DAYS) // Valid for 10 years
         }
-        by(issuerDid = universityDid.value, keyId = issuerKey.id.value)
+        signedBy(issuerDid = universityDid.value, keyId = issuerKey.id.value)
         withRevocation() // Auto-create status list
     }
 

@@ -1,7 +1,6 @@
 package com.trustweave.testkit.trust
 
 import com.trustweave.trust.TrustAnchorMetadata
-import com.trustweave.trust.TrustPathResult
 import com.trustweave.trust.TrustRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -71,42 +70,68 @@ class InMemoryTrustRegistry : TrustRegistry {
             removed
         }
 
-    override suspend fun getTrustPath(fromDid: String, toDid: String): TrustPathResult? =
-        withContext(Dispatchers.Default) {
-            // Direct trust check
-            if (fromDid == toDid) {
-                return@withContext TrustPathResult(
-                    path = listOf(fromDid),
-                    trustScore = 1.0,
-                    valid = true
-                )
-            }
-
-            // Check if both DIDs are trust anchors
-            val fromIsAnchor = trustAnchors.containsKey(fromDid)
-            val toIsAnchor = trustAnchors.containsKey(toDid)
-
-            if (!fromIsAnchor && !toIsAnchor) {
-                return@withContext null
-            }
-
-            // If both are anchors, find path using BFS
-            val path = findPathBFS(fromDid, toDid)
-
-            if (path.isEmpty()) {
-                return@withContext null
-            }
-
-            // Calculate trust score based on path length
-            // Shorter paths = higher trust score
-            val trustScore = calculateTrustScore(path.size)
-
-            TrustPathResult(
-                path = path,
-                trustScore = trustScore,
-                valid = true
+    override suspend fun findTrustPath(
+        from: com.trustweave.trust.types.VerifierIdentity,
+        to: com.trustweave.trust.types.IssuerIdentity
+    ): com.trustweave.trust.types.TrustPath {
+        val fromDid = from.did.value
+        val toDid = to.did.value
+        
+        // Direct trust check
+        if (fromDid == toDid) {
+            return com.trustweave.trust.types.TrustPath.Verified(
+                from = from,
+                to = to,
+                anchors = emptyList(),
+                verified = true,
+                trustScore = 1.0
             )
         }
+
+        // Check if both DIDs are trust anchors
+        val fromIsAnchor = trustAnchors.containsKey(fromDid)
+        val toIsAnchor = trustAnchors.containsKey(toDid)
+
+        if (!fromIsAnchor && !toIsAnchor) {
+            return com.trustweave.trust.types.TrustPath.NotFound(
+                from = from,
+                to = to,
+                reason = "Neither ${fromDid} nor ${toDid} are trust anchors"
+            )
+        }
+
+        // If both are anchors, find path using BFS
+        val path = findPathBFS(fromDid, toDid)
+
+        if (path.isEmpty()) {
+            return com.trustweave.trust.types.TrustPath.NotFound(
+                from = from,
+                to = to,
+                reason = "No trust path found between ${fromDid} and ${toDid}"
+            )
+        }
+
+        // Calculate trust score based on path length
+        val trustScore = calculateTrustScore(path.size)
+
+        // Convert path to TrustAnchor list (excluding endpoints)
+        val anchors = path.drop(1).dropLast(1).map { didString ->
+            val metadata = trustAnchors[didString] ?: com.trustweave.trust.TrustAnchorMetadata()
+            com.trustweave.trust.types.TrustAnchor(
+                did = com.trustweave.trust.types.Did(didString),
+                metadata = metadata
+            )
+        }
+
+        return com.trustweave.trust.types.TrustPath.Verified(
+            from = from,
+            to = to,
+            anchors = anchors,
+            verified = true,
+            trustScore = trustScore
+        )
+    }
+
 
     override suspend fun getTrustedIssuers(credentialType: String?): List<String> =
         withContext(Dispatchers.Default) {

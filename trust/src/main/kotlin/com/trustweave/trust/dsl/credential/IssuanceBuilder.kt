@@ -12,6 +12,7 @@ import com.trustweave.trust.types.ProofType
 import com.trustweave.trust.types.Did
 import com.trustweave.trust.types.KeyId
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
 /**
@@ -37,7 +38,7 @@ import kotlinx.coroutines.withContext
  *         issued(Instant.now())
  *         withRevocation() // Auto-creates status list if needed
  *     }
- *     signedBy(IssuerIdentity.from("did:key:university", "key-1"))
+ *     signedBy("did:key:university", "key-1")
  *     withProof(ProofType.Ed25519Signature2020)
  * }
  * ```
@@ -45,7 +46,12 @@ import kotlinx.coroutines.withContext
 class IssuanceBuilder(
     private val issuer: CredentialIssuer,
     private val statusListManager: StatusListManager? = null,
-    private val defaultProofType: ProofType = ProofType.Ed25519Signature2020
+    private val defaultProofType: ProofType = ProofType.Ed25519Signature2020,
+    /**
+     * Coroutine dispatcher for I/O-bound operations.
+     * Defaults to [Dispatchers.IO] if not provided.
+     */
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private var credential: VerifiableCredential? = null
     private var issuerIdentity: IssuerIdentity? = null
@@ -80,12 +86,14 @@ class IssuanceBuilder(
     }
 
     /**
-     * Convenience method to set issuer identity from DID and key ID strings.
+     * Set issuer identity for signing from DID and key ID strings.
+     *
+     * Domain-precise naming that clearly indicates signing operation.
      *
      * @param issuerDid The issuer DID
      * @param keyId The key ID (can be just the fragment or full key ID)
      */
-    fun by(issuerDid: String, keyId: String) {
+    fun signedBy(issuerDid: String, keyId: String) {
         require(issuerDid.isNotBlank()) { "Issuer DID cannot be blank" }
         require(keyId.isNotBlank()) { "Key ID cannot be blank" }
         this.issuerIdentity = IssuerIdentity.from(issuerDid, keyId)
@@ -123,8 +131,11 @@ class IssuanceBuilder(
 
     /**
      * Build and issue the credential.
+     * 
+     * This operation performs I/O-bound work (credential issuance, status list operations)
+     * and uses the configured dispatcher. It is non-blocking and can be cancelled.
      */
-    suspend fun build(): VerifiableCredential = withContext(Dispatchers.IO) {
+    suspend fun build(): VerifiableCredential = withContext(ioDispatcher) {
         val cred = credential ?: throw IllegalStateException("Credential is required")
         val resolvedIssuerIdentity = issuerIdentity ?: throw IllegalStateException(
             "Issuer identity is required. Use signedBy(IssuerIdentity.from(issuerDid, keyId))"
@@ -193,12 +204,18 @@ class IssuanceBuilder(
 
 /**
  * Extension function to issue credentials using CredentialDslProvider.
+ * 
+ * Uses the configured dispatcher if the provider is a TrustWeaveContext,
+ * otherwise defaults to Dispatchers.IO.
  */
 suspend fun CredentialDslProvider.issue(block: IssuanceBuilder.() -> Unit): VerifiableCredential {
+    val dispatcher = (this as? com.trustweave.trust.dsl.TrustWeaveContext)?.getConfig()?.ioDispatcher
+        ?: Dispatchers.IO
     val builder = IssuanceBuilder(
         issuer = getIssuer(),
         statusListManager = getStatusListManager(),
-        defaultProofType = getDefaultProofType()
+        defaultProofType = getDefaultProofType(),
+        ioDispatcher = dispatcher
     )
     builder.block()
     return builder.build()

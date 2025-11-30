@@ -434,7 +434,7 @@ Anchor credentials to blockchain for immutable audit trail:
 
 ```kotlin
 // Anchor EO data credential
-val anchorResult = TrustWeave.blockchains.anchor(
+val anchorResult = trustWeave.blockchains.anchor(
     data = eoDataCredential,
     serializer = VerifiableCredential.serializer(),
     chainId = "algorand:testnet"

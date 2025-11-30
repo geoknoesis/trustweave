@@ -760,7 +760,7 @@ fun main() = runBlocking {
     )
 
     // Anchor to blockchain
-    val anchorResult = TrustWeave.blockchains.anchor(
+    val anchorResult = trustWeave.blockchains.anchor(
         data = data,
         serializer = ImportantData.serializer(),
         chainId = "algorand:testnet"
@@ -828,7 +828,7 @@ fun main() = runBlocking {
 
     // Anchor status list to blockchain
     // This makes revocation status tamper-evident
-    val anchorResult = TrustWeave.blockchains.anchor(
+    val anchorResult = trustWeave.blockchains.anchor(
         data = statusList,
         serializer = StatusListCredential.serializer(),
         chainId = "algorand:testnet"

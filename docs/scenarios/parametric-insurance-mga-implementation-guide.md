@@ -146,7 +146,7 @@ class SarFloodProduct(
         location: Location
     ): SmartContract {
 
-        val contract = TrustWeave.contracts.draft(
+        val contract = trustWeave.contracts.draft(
             request = ContractDraftRequest(
                 contractType = ContractType.Insurance,
                 executionModel = ExecutionModel.Parametric(
@@ -227,7 +227,7 @@ class SarFloodProduct(
         insurerKeyId: String
     ): BoundContract {
 
-        val bound = TrustWeave.contracts.bindContract(
+        val bound = trustWeave.contracts.bindContract(
             contractId = contract.id,
             issuerDid = insurerDid,
             issuerKeyId = insurerKeyId,
@@ -305,7 +305,7 @@ class SarFloodProduct(
         ).getOrThrow()
 
         // Step 4: Anchor to blockchain for tamper-proof record
-        val anchorResult = TrustWeave.blockchains.anchor(
+        val anchorResult = trustWeave.blockchains.anchor(
             data = floodCredential,
             serializer = VerifiableCredential.serializer(),
             chainId = "algorand:mainnet"
@@ -342,7 +342,7 @@ class SarFloodProduct(
         )
 
         // Execute contract
-        val result = TrustWeave.contracts.executeContract(
+        val result = trustWeave.contracts.executeContract(
             contract = contract,
             executionContext = executionContext
         ).getOrThrow()
@@ -465,7 +465,7 @@ class HeatwaveProduct(
         ).getOrThrow()
 
         // Anchor to blockchain
-        TrustWeave.blockchains.anchor(
+        trustWeave.blockchains.anchor(
             data = heatwaveCredential,
             serializer = VerifiableCredential.serializer(),
             chainId = "algorand:mainnet"
@@ -485,7 +485,7 @@ class HeatwaveProduct(
         location: Location
     ): SmartContract {
 
-        val contract = TrustWeave.contracts.draft(
+        val contract = trustWeave.contracts.draft(
             request = ContractDraftRequest(
                 contractType = ContractType.Insurance,
                 executionModel = ExecutionModel.Parametric(
@@ -564,7 +564,7 @@ class HeatwaveProduct(
             }
         )
 
-        return TrustWeave.contracts.executeContract(
+        return trustWeave.contracts.executeContract(
             contract = contract,
             executionContext = executionContext
         ).getOrThrow()
@@ -693,7 +693,7 @@ class SolarAttenuationProduct(
         ).getOrThrow()
 
         // Anchor to blockchain
-        TrustWeave.blockchains.anchor(
+        trustWeave.blockchains.anchor(
             data = solarCredential,
             serializer = VerifiableCredential.serializer(),
             chainId = "algorand:mainnet"
@@ -812,7 +812,7 @@ suspend fun completeFloodInsuranceWorkflow() {
     )
 
     // Step 6: Activate contract
-    val active = TrustWeave.contracts.activateContract(bound.contract.id).getOrThrow()
+    val active = trustWeave.contracts.activateContract(bound.contract.id).getOrThrow()
 
     // Step 7: Process EO data (in production, this comes from EO provider)
     val floodCredential = floodProduct.processSarFloodData(
@@ -1143,7 +1143,7 @@ class AuditTrailService(
         }
 
         // Anchor to blockchain for immutability
-        val anchorResult = TrustWeave.blockchains.anchor(
+        val anchorResult = trustWeave.blockchains.anchor(
             data = auditRecord,
             serializer = JsonObject.serializer(),
             chainId = "algorand:mainnet"

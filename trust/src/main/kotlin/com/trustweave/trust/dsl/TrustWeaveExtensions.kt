@@ -8,8 +8,13 @@ import com.trustweave.trust.types.Did
 import com.trustweave.trust.types.VerificationResult
 import com.trustweave.did.DidDocument
 
-// TODO: StoredCredential needs to be defined in credential-dsl module
-// For now, using VerifiableCredential as a placeholder
+/**
+ * Stored Credential type alias.
+ *
+ * Represents a credential that has been stored in a wallet.
+ * Currently aliased to VerifiableCredential, but may be extended in the future
+ * to include wallet-specific metadata (e.g., storage location, organization tags).
+ */
 typealias StoredCredential = VerifiableCredential
 
 /**
@@ -34,7 +39,7 @@ suspend fun VerifiableCredential.storeIn(wallet: Wallet): StoredCredential {
  *     .let { did ->
  *         trustWeave.issue {
  *             credential { issuer(did); subject { id(did) } }
- *             by(issuerDid = did, keyId = "key-1")
+ *             signedBy(issuerDid = did, keyId = "key-1")
  *         }
  *     }
  *     .storeIn(wallet)
@@ -134,7 +139,7 @@ suspend fun TrustWeaveConfig.updateDid(block: com.trustweave.trust.dsl.did.DidDo
     return getDslContext().updateDid(block)
 }
 
-suspend fun TrustWeaveConfig.rotateKey(block: com.trustweave.trust.dsl.KeyRotationBuilder.() -> Unit): Any {
+suspend fun TrustWeaveConfig.rotateKey(block: com.trustweave.trust.dsl.KeyRotationBuilder.() -> Unit): com.trustweave.did.DidDocument {
     return getDslContext().rotateKey(block)
 }
 
@@ -198,6 +203,4 @@ suspend fun TrustWeaveConfig.completeWorkflow(
 ): WorkflowResult {
     return getDslContext().completeWorkflow(didBlock, credentialBlock, wallet, organizeBlock)
 }
-
-
 

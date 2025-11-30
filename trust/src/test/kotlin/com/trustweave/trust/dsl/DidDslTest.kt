@@ -9,6 +9,7 @@ import com.trustweave.testkit.credential.InMemoryWallet
 import com.trustweave.did.DidDocument
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.trust.dsl.TrustWeaveConfig
 import com.trustweave.trust.dsl.trustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
@@ -33,6 +34,9 @@ class DidDslTest {
         kms = InMemoryKeyManagementService()
         val kmsInstance = kms
         trustWeave = trustWeave {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
                 custom(kmsInstance)
                 signer { data, keyId -> kmsInstance.sign(com.trustweave.core.types.KeyId(keyId), data) }

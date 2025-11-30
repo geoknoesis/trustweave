@@ -30,7 +30,7 @@ class VerificationDslTest {
 
         trustWeave = trustWeave {
             keys {
-                custom(kmsRef as Any)
+                custom(kmsRef)
                 // Provide signer function directly to avoid reflection
                 signer { data, keyId ->
                     kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)

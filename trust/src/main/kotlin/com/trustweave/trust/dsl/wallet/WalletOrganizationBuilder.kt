@@ -82,6 +82,9 @@ class WalletOrganizationBuilder(
 
     /**
      * Execute all organization operations.
+     * 
+     * This operation performs I/O-bound work (wallet operations, credential organization)
+     * and is dispatched to I/O threads. It is non-blocking and can be cancelled.
      */
     suspend fun execute(): OrganizationResult = withContext(Dispatchers.IO) {
         val orgWallet = wallet as? CredentialOrganization

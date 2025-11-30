@@ -5,6 +5,7 @@ import com.trustweave.did.DidCreationOptionsBuilder
 import com.trustweave.did.DidMethod
 import com.trustweave.trust.types.Did
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
 /**
@@ -21,7 +22,12 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class DidBuilder(
-    private val provider: DidDslProvider
+    private val provider: DidDslProvider,
+    /**
+     * Coroutine dispatcher for I/O-bound operations.
+     * Defaults to [Dispatchers.IO] if not provided.
+     */
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private var method: String? = null
     private val optionsBuilder = DidCreationOptionsBuilder()
@@ -34,12 +40,23 @@ class DidBuilder(
     }
 
     /**
-     * Set key algorithm (e.g., "Ed25519", "secp256k1").
+     * Set key algorithm by string name (e.g., "Ed25519", "secp256k1").
+     * 
+     * For type safety, prefer using algorithm(value: DidCreationOptions.KeyAlgorithm).
      */
     fun algorithm(name: String) {
         val keyAlgorithm = DidCreationOptions.KeyAlgorithm.fromName(name)
             ?: throw IllegalArgumentException("Unsupported key algorithm: $name")
         optionsBuilder.algorithm = keyAlgorithm
+    }
+
+    /**
+     * Set key algorithm using type-safe enum.
+     * 
+     * This is the preferred method for compile-time type safety.
+     */
+    fun algorithm(value: DidCreationOptions.KeyAlgorithm) {
+        optionsBuilder.algorithm = value
     }
 
     /**
@@ -51,10 +68,13 @@ class DidBuilder(
 
     /**
      * Build and create the DID.
+     * 
+     * This operation performs I/O-bound work (key generation, DID document creation)
+     * and uses the configured dispatcher. It is non-blocking and can be cancelled.
      *
      * @return Type-safe Did (e.g., Did("did:key:z6Mk..."))
      */
-    suspend fun build(): Did = withContext(Dispatchers.IO) {
+    suspend fun build(): Did = withContext(ioDispatcher) {
         val methodName = method ?: throw IllegalStateException(
             "DID method is required. Use method(\"key\") or method(\"web\") etc."
         )
@@ -74,9 +94,14 @@ class DidBuilder(
  * Extension function to create a DID using a DID DSL provider.
  *
  * Returns a type-safe Did.
+ * 
+ * Uses the default dispatcher ([Dispatchers.IO]) unless the provider
+ * is a [TrustWeaveContext] with a custom dispatcher configured.
  */
 suspend fun DidDslProvider.createDid(block: DidBuilder.() -> Unit): Did {
-    val builder = DidBuilder(this)
+    val dispatcher = (this as? com.trustweave.trust.dsl.TrustWeaveContext)?.getConfig()?.ioDispatcher
+        ?: Dispatchers.IO
+    val builder = DidBuilder(this, dispatcher)
     builder.block()
     return builder.build()
 }

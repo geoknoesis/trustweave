@@ -4,6 +4,9 @@ import com.trustweave.did.DidDocument
 import com.trustweave.kms.KeyHandle
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.testkit.services.TestkitDidMethodFactory
+import com.trustweave.testkit.services.TestkitKmsFactory
+import com.trustweave.testkit.services.TestkitBlockchainAnchorClientFactory
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.TrustWeaveConfig
 import com.trustweave.trust.dsl.trustWeave
@@ -32,6 +35,9 @@ class TrustLayerConfigBranchCoverageTest {
         val customKms = InMemoryKeyManagementService()
 
         val trustWeaveConfig = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
                 provider("waltid") // This should be ignored
                 custom(customKms)
@@ -48,6 +54,10 @@ class TrustLayerConfigBranchCoverageTest {
     @Test
     fun `test branch KMS provider resolution with inMemory`() = runBlocking {
         val trustWeaveConfig = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
                 provider("inMemory")
                 algorithm("Ed25519")
@@ -65,6 +75,10 @@ class TrustLayerConfigBranchCoverageTest {
         // This tests the SPI resolution path (may fail if provider not available)
         try {
             val trustWeaveConfig = TrustWeave.build {
+                factories(
+                    kmsFactory = TestkitKmsFactory(),
+                    didMethodFactory = TestkitDidMethodFactory()
+                )
                 keys {
                     provider("waltid")
                     algorithm("Ed25519")
@@ -83,6 +97,10 @@ class TrustLayerConfigBranchCoverageTest {
     @Test
     fun `test branch KMS default algorithm when not specified`() = runBlocking {
         val trustWeaveConfig = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
                 provider("inMemory")
                 // No algorithm specified - should default to Ed25519
@@ -127,8 +145,11 @@ class TrustLayerConfigBranchCoverageTest {
     fun `test branch DID method resolution with testkit key method`() = runBlocking {
         val kms = InMemoryKeyManagementService()
         val trustWeaveConfig = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
-                custom(kms as Any)
+                custom(kms)
                 signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
             }
             did {
@@ -146,8 +167,11 @@ class TrustLayerConfigBranchCoverageTest {
         val kms = InMemoryKeyManagementService()
         try {
             val trustWeaveConfig = TrustWeave.build {
+                factories(
+                    didMethodFactory = TestkitDidMethodFactory()
+                )
                 keys {
-                    custom(kms as Any)
+                    custom(kms)
                     signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
                 }
                 did {
@@ -172,8 +196,11 @@ class TrustLayerConfigBranchCoverageTest {
         val kms = InMemoryKeyManagementService()
         try {
             val trustWeaveConfig = TrustWeave.build {
+                factories(
+                    didMethodFactory = TestkitDidMethodFactory()
+                )
                 keys {
-                    custom(kms as Any)
+                    custom(kms)
                     signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
                 }
                 did {
@@ -198,8 +225,11 @@ class TrustLayerConfigBranchCoverageTest {
         val kms = InMemoryKeyManagementService()
         assertFailsWith<IllegalStateException> {
             trustWeave {
+                factories(
+                    didMethodFactory = TestkitDidMethodFactory()
+                )
                 keys {
-                    custom(kms as Any)
+                    custom(kms)
                     signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
                 }
                 did {
@@ -213,8 +243,11 @@ class TrustLayerConfigBranchCoverageTest {
     fun `test branch multiple DID methods registration`() = runBlocking {
         val kms = InMemoryKeyManagementService()
         val trustWeaveConfig = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
-                custom(kms as Any)
+                custom(kms)
                 signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
             }
             did {
@@ -234,6 +267,11 @@ class TrustLayerConfigBranchCoverageTest {
     @Test
     fun `test branch anchor client resolution with inMemory`() = runBlocking {
         val trustWeaveConfig = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                anchorClientFactory = TestkitBlockchainAnchorClientFactory()
+            )
             keys {
                 provider("inMemory")
             }
@@ -253,6 +291,11 @@ class TrustLayerConfigBranchCoverageTest {
     @Test
     fun `test branch anchor client resolution with inMemory and contract`() = runBlocking {
         val trustWeaveConfig = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                anchorClientFactory = TestkitBlockchainAnchorClientFactory()
+            )
             keys {
                 provider("inMemory")
             }
@@ -273,6 +316,11 @@ class TrustLayerConfigBranchCoverageTest {
     fun `test branch anchor client resolution with SPI provider`() = runBlocking {
         try {
             val trustWeaveConfig = TrustWeave.build {
+                factories(
+                    kmsFactory = TestkitKmsFactory(),
+                    didMethodFactory = TestkitDidMethodFactory(),
+                    anchorClientFactory = TestkitBlockchainAnchorClientFactory()
+                )
                 keys {
                     provider("inMemory")
                 }
@@ -291,7 +339,7 @@ class TrustLayerConfigBranchCoverageTest {
             assertTrue(trustWeaveConfig.configuration.anchorClients.containsKey("algorand:testnet"))
         } catch (e: IllegalStateException) {
             // Provider not available - expected
-            assertTrue(e.message?.contains("not found") == true)
+            assertTrue(e.message?.contains("not found") == true || e.message?.contains("factory is required") == true)
         }
     }
 
@@ -299,6 +347,10 @@ class TrustLayerConfigBranchCoverageTest {
     fun `test branch anchor client error when provider not found`() = runBlocking {
         assertFailsWith<IllegalStateException> {
             trustWeave {
+                factories(
+                    kmsFactory = TestkitKmsFactory(),
+                    didMethodFactory = TestkitDidMethodFactory()
+                )
                 keys {
                     provider("inMemory")
                 }
@@ -318,6 +370,10 @@ class TrustLayerConfigBranchCoverageTest {
     fun `test branch anchor client error when provider not specified`() = runBlocking {
         assertFailsWith<IllegalStateException> {
             trustWeave {
+                factories(
+                    kmsFactory = TestkitKmsFactory(),
+                    didMethodFactory = TestkitDidMethodFactory()
+                )
                 keys {
                     provider("inMemory")
                 }
@@ -336,6 +392,11 @@ class TrustLayerConfigBranchCoverageTest {
     @Test
     fun `test branch multiple anchor chains`() = runBlocking {
         val trustWeaveConfig = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                anchorClientFactory = TestkitBlockchainAnchorClientFactory()
+            )
             keys {
                 provider("inMemory")
             }
@@ -362,6 +423,10 @@ class TrustLayerConfigBranchCoverageTest {
     @Test
     fun `test branch credential config with defaults`() = runBlocking {
         val trustWeaveConfig = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
                 provider("inMemory")
             }
@@ -378,6 +443,11 @@ class TrustLayerConfigBranchCoverageTest {
     @Test
     fun `test branch credential config with custom values`() = runBlocking {
         val trustWeaveConfig = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                anchorClientFactory = TestkitBlockchainAnchorClientFactory()
+            )
             keys {
                 provider("inMemory")
             }
@@ -404,6 +474,10 @@ class TrustLayerConfigBranchCoverageTest {
     @Test
     fun `test branch credential config partial override`() = runBlocking {
         val trustWeaveConfig = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
                 provider("inMemory")
             }
@@ -426,6 +500,10 @@ class TrustLayerConfigBranchCoverageTest {
     @Test
     fun `test branch named trust layer`() = runBlocking {
         val trustLayer = TrustWeave.build("production") {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
                 provider("inMemory")
             }
@@ -440,6 +518,10 @@ class TrustLayerConfigBranchCoverageTest {
     @Test
     fun `test branch default named trust layer`() = runBlocking {
         val trustWeaveConfig = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
                 provider("inMemory")
             }
@@ -456,6 +538,10 @@ class TrustLayerConfigBranchCoverageTest {
     @Test
     fun `test branch proof generator creation with KMS`() = runBlocking {
         val trustWeaveConfig = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
                 provider("inMemory")
             }
@@ -471,6 +557,10 @@ class TrustLayerConfigBranchCoverageTest {
     fun `test branch proof generator uses signer function when provided`() = runBlocking {
         var signerCalled = false
         val trustWeaveConfig = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
                 provider("inMemory")
                 signer { data, keyId ->
@@ -494,6 +584,10 @@ class TrustLayerConfigBranchCoverageTest {
         // This tests the ClassNotFoundException path in resolveKms
         // We can't easily simulate this without mocking, but the branch exists
         assertNotNull(trustWeave {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
                 provider("inMemory")
             }
@@ -506,6 +600,10 @@ class TrustLayerConfigBranchCoverageTest {
     @Test
     fun `test branch handles DID registry registration`() = runBlocking {
         val trustWeaveConfig = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
                 provider("inMemory")
             }
@@ -522,6 +620,11 @@ class TrustLayerConfigBranchCoverageTest {
     fun `test branch error when blockchain registry not available`() = runBlocking {
         // This tests the exception handling when BlockchainRegistry is not available
         val trustWeaveConfig = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                anchorClientFactory = TestkitBlockchainAnchorClientFactory()
+            )
             keys {
                 provider("inMemory")
             }

@@ -56,7 +56,7 @@ fun main() = runBlocking {
         )
         
         keys {
-            custom(kmsRef as Any)
+            custom(kmsRef)
             // Ensure signer uses the same KMS instance that was used to create DIDs
             // Extract fragment if keyId is in format "did:key:xxx#key-id", otherwise use as-is
             signer { data, keyId ->
@@ -163,7 +163,7 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(365 * 10, ChronoUnit.DAYS) // Valid for 10 years
         }
-        by(issuerDid = universityDid.value, keyId = issuerKeyId)
+        signedBy(issuerDid = universityDid.value, keyId = issuerKeyId)
     }
 
     println("Credential issued:")

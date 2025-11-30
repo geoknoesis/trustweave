@@ -7,6 +7,7 @@ import com.trustweave.credential.revocation.StatusListManager
 import com.trustweave.credential.verifier.CredentialVerifier
 import com.trustweave.trust.types.VerificationResult
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
 /**
@@ -27,7 +28,12 @@ import kotlinx.coroutines.withContext
  */
 class VerificationBuilder(
     private val verifier: CredentialVerifier,
-    private val statusListManager: StatusListManager? = null
+    private val statusListManager: StatusListManager? = null,
+    /**
+     * Coroutine dispatcher for I/O-bound operations.
+     * Defaults to [Dispatchers.IO] if not provided.
+     */
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     internal var credential: VerifiableCredential? = null
         private set
@@ -97,8 +103,11 @@ class VerificationBuilder(
 
     /**
      * Build and perform verification.
+     * 
+     * This operation performs I/O-bound work (credential verification, DID resolution, revocation checking)
+     * and uses the configured dispatcher. It is non-blocking and can be cancelled.
      */
-    suspend fun build(): CredentialVerificationResult = withContext(Dispatchers.IO) {
+    suspend fun build(): CredentialVerificationResult = withContext(ioDispatcher) {
         val cred = credential ?: throw IllegalStateException("Credential is required")
 
         val options = CredentialVerificationOptions(
@@ -139,13 +148,16 @@ class VerificationBuilder(
  * ```
  */
 suspend fun CredentialDslProvider.verify(block: VerificationBuilder.() -> Unit): VerificationResult {
+    val dispatcher = (this as? com.trustweave.trust.dsl.TrustWeaveContext)?.getConfig()?.ioDispatcher
+        ?: Dispatchers.IO
     val builder = VerificationBuilder(
         verifier = getVerifier(),
-        statusListManager = getStatusListManager()
+        statusListManager = getStatusListManager(),
+        ioDispatcher = dispatcher
     )
     builder.block()
     val credential = builder.credential ?: throw IllegalStateException("Credential is required")
-    val legacyResult = builder.build()
-    return VerificationResult.from(credential, legacyResult)
+    val verificationResult = builder.build()
+    return VerificationResult.from(credential, verificationResult)
 }
 

@@ -713,7 +713,7 @@ Anchor travel credentials to blockchain for immutable audit trail:
 
 ```kotlin
 // Anchor flight delay credential
-val anchorResult = TrustWeave.blockchains.anchor(
+val anchorResult = trustWeave.blockchains.anchor(
     data = flightDelayCredential,
     serializer = VerifiableCredential.serializer(),
     chainId = "algorand:testnet"

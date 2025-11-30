@@ -1,6 +1,8 @@
 package com.trustweave.examples.indy
 
-import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.types.VerificationResult
+import com.trustweave.trust.types.*
 import com.trustweave.core.*
 import com.trustweave.credential.proof.ProofType
 import com.trustweave.credential.models.VerifiableCredential
@@ -11,7 +13,6 @@ import com.trustweave.anchor.exceptions.BlockchainException
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.anchor.indy.IndyBlockchainAnchorClient
 import com.trustweave.anchor.indy.IndyIntegration
-import com.trustweave.services.IssuanceConfig
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlinx.serialization.Serializable
@@ -47,14 +48,27 @@ fun main() = runBlocking {
     // Create TrustWeave instance with Indy blockchain client
     // Using in-memory fallback mode (empty options) for testing
     // In production, provide: walletName, walletKey, did, poolEndpoint
-    val trustweave = TrustWeave.create {
-        val indyClient = IndyBlockchainAnchorClient(
-            chainId = chainId,
-            options = emptyMap() // In-memory fallback mode for testing
-        )
-        blockchains {
-            chainId to indyClient
+    val indyClient = IndyBlockchainAnchorClient(
+        chainId = chainId,
+        options = emptyMap() // In-memory fallback mode for testing
+    )
+    val trustweave = TrustWeave.build {
+        keys {
+            provider("inMemory")
+            algorithm("Ed25519")
         }
+        did {
+            method("key") {
+                algorithm("Ed25519")
+            }
+        }
+        anchor {
+            chain(chainId) {
+                // Client registered manually below
+            }
+        }
+    }.also {
+        it.configuration.registries.blockchainRegistry.register(chainId, indyClient)
     }
     println("✓ TrustWeave instance created")
     println("✓ Indy blockchain client registered: $chainId")
@@ -72,7 +86,7 @@ fun main() = runBlocking {
         println("✗ Failed to create issuer DID: ${error.message}")
         return@runBlocking
     }
-    println("✓ Issuer DID created: ${issuerDid.id}")
+    println("✓ Issuer DID created: ${issuerDid.value}")
 
     val holderDid = try {
         trustweave.createDid()
@@ -84,29 +98,31 @@ fun main() = runBlocking {
         println("✗ Failed to create holder DID: ${error.message}")
         return@runBlocking
     }
-    println("✓ Holder DID created: ${holderDid.id}")
+    println("✓ Holder DID created: ${holderDid.value}")
 
-    val issuerKeyId = issuerDid.verificationMethod.first().id
-    println("✓ Issuer Key ID: $issuerKeyId")
-
-    // Resolve the DIDs to verify they're accessible
-    println("\n  Resolving DIDs to verify accessibility...")
-    try {
-        val issuerResolution = trustweave.resolveDid(issuerDid.id)
-        when (issuerResolution) {
-            is com.trustweave.did.resolver.DidResolutionResult.Success -> {
-                println("  ✓ Issuer DID resolved successfully")
-            }
+    // Resolve issuer DID to get key ID
+    val issuerKeyId = try {
+        val issuerResolution = trustweave.resolveDid(issuerDid)
+        val issuerDidDoc = when (issuerResolution) {
+            is com.trustweave.did.resolver.DidResolutionResult.Success -> issuerResolution.document
             else -> {
                 println("  ⚠ Issuer DID resolution returned no document (may be in-memory)")
+                return@runBlocking
             }
         }
+        println("  ✓ Issuer DID resolved successfully")
+        val keyId = issuerDidDoc.verificationMethod.first().id.substringAfter("#")
+        println("✓ Issuer Key ID: $keyId")
+        keyId
     } catch (e: Throwable) {
         println("  ⚠ Issuer DID resolution failed: ${e.message}")
+        return@runBlocking
     }
 
+    // Resolve holder DID
+    println("\n  Resolving holder DID...")
     try {
-        val holderResolution = trustweave.resolveDid(holderDid.id)
+        val holderResolution = trustweave.resolveDid(holderDid)
         when (holderResolution) {
             is com.trustweave.did.resolver.DidResolutionResult.Success -> {
                 println("  ✓ Holder DID resolved successfully")
@@ -123,24 +139,23 @@ fun main() = runBlocking {
     // Step 3: Issue a verifiable credential
     println("Step 3: Issuing verifiable credential...")
     val credential = try {
-        trustweave.issueCredential(
-            issuer = issuerDid.id,
-            subject = buildJsonObject {
-                put("id", holderDid.id)
-                put("name", "Alice Smith")
-                put("degree", "Bachelor of Science in Computer Science")
-                put("university", "Example University")
-                put("graduationDate", "2024-05-15")
-                put("gpa", "3.8")
-                put("honors", true)
-            },
-            config = IssuanceConfig(
-                proofType = ProofType.Ed25519Signature2020,
-                keyId = issuerKeyId,
-                issuerDid = issuerDid.id
-            ),
-            types = listOf("UniversityDegreeCredential", "VerifiableCredential")
-        )
+        trustweave.issue {
+            credential {
+                type("UniversityDegreeCredential")
+                issuer(issuerDid.value)
+                subject {
+                    id(holderDid.value)
+                    "name" to "Alice Smith"
+                    "degree" to "Bachelor of Science in Computer Science"
+                    "university" to "Example University"
+                    "graduationDate" to "2024-05-15"
+                    "gpa" to "3.8"
+                    "honors" to true
+                }
+                issued(java.time.Instant.now())
+            }
+            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+        }
     } catch (error: DidException.InvalidDidFormat) {
         println("✗ Invalid DID format: ${error.reason}")
         return@runBlocking
@@ -199,7 +214,9 @@ fun main() = runBlocking {
     // Step 5: Create wallet and store credential
     println("Step 5: Creating wallet and storing credential...")
     val wallet = try {
-        trustweave.createWallet(holderDid = holderDid.id)
+        trustweave.wallet {
+            holder(holderDid.value)
+        }
     } catch (error: WalletException.WalletCreationFailed) {
         println("✗ Wallet creation failed: ${error.reason}")
         return@runBlocking
@@ -322,21 +339,20 @@ fun main() = runBlocking {
     val additionalCredentials = mutableListOf<VerifiableCredential>()
     for (i in 1..2) {
         try {
-            val additionalCredential = trustweave.issueCredential(
-                issuer = issuerDid.id,
-                subject = buildJsonObject {
-                    put("id", holderDid.id)
-                    put("certificateType", "Professional Certification $i")
-                    put("organization", "Example Professional Body")
-                    put("issueDate", "2024-0$i-01")
-                },
-                config = IssuanceConfig(
-                    proofType = ProofType.Ed25519Signature2020,
-                    keyId = issuerKeyId,
-                    issuerDid = issuerDid.id
-                ),
-                types = listOf("ProfessionalCertification", "VerifiableCredential")
-            )
+            val additionalCredential = trustweave.issue {
+                credential {
+                    type("ProfessionalCertification")
+                    issuer(issuerDid.value)
+                    subject {
+                        id(holderDid.value)
+                        "certificateType" to "Professional Certification $i"
+                        "organization" to "Example Professional Body"
+                        "issueDate" to "2024-0$i-01"
+                    }
+                    issued(java.time.Instant.now())
+                }
+                signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+            }
 
             additionalCredentials.add(additionalCredential)
             wallet.store(additionalCredential)
@@ -474,8 +490,8 @@ fun main() = runBlocking {
     println("Scenario Summary")
     println("=".repeat(70))
     println("✓ TrustWeave instance created with Indy integration")
-    println("✓ Issuer DID: ${issuerDid.id}")
-    println("✓ Holder DID: ${holderDid.id}")
+    println("✓ Issuer DID: ${issuerDid.value}")
+    println("✓ Holder DID: ${holderDid.value}")
     println("✓ Issuer Key ID: $issuerKeyId")
     println("✓ Credential issued: ${credential.id}")
     println("  - Types: ${credential.type.joinToString(", ")}")

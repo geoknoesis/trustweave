@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Instance-based registry for credential services.
  *
- * This replaces the legacy `CredentialRegistry` singleton by providing an explicit
+ * This replaces the previous `CredentialRegistry` singleton by providing an explicit
  * registry that can be owned by a specific application or test scope. The API is a
  * one-to-one match with the previous singleton to simplify migration.
  */

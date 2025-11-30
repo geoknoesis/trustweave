@@ -4,6 +4,9 @@ import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.did.DidDocument
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.testkit.services.TestkitDidMethodFactory
+import com.trustweave.testkit.services.TestkitTrustRegistryFactory
+import com.trustweave.testkit.services.TestkitKmsFactory
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
@@ -25,6 +28,11 @@ class TrustRegistryDslComprehensiveTest {
     @Test
     fun `test trust registry configuration in trust layer`() = runBlocking {
         val trustWeave = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory()
+            )
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -37,6 +45,11 @@ class TrustRegistryDslComprehensiveTest {
     @Test
     fun `test add multiple trust anchors with different credential types`() = runBlocking {
         val trustWeave = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory()
+            )
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -73,6 +86,11 @@ class TrustRegistryDslComprehensiveTest {
     @Test
     fun `test trust path discovery with multiple anchors`() = runBlocking {
         val trustWeave = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory()
+            )
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -102,18 +120,26 @@ class TrustRegistryDslComprehensiveTest {
             registry?.addTrustRelationship(anchor1.value, anchor2.value)
             registry?.addTrustRelationship(anchor2.value, anchor3.value)
 
-            val path = getTrustPath(anchor1.value, anchor3.value)
-            assertNotNull(path)
-            assertTrue(path.valid)
-            assertTrue(path.path.size >= 2)
-            assertTrue(path.trustScore > 0.0)
-            assertTrue(path.trustScore <= 1.0)
+            val path = findTrustPath(
+                com.trustweave.trust.types.VerifierIdentity(com.trustweave.trust.types.Did(anchor1.value)),
+                com.trustweave.trust.types.IssuerIdentity.from(anchor3.value, "key-1")
+            )
+            assertTrue(path is com.trustweave.trust.types.TrustPath.Verified)
+            val verified = path as com.trustweave.trust.types.TrustPath.Verified
+            assertTrue(verified.fullPath.size >= 2)
+            assertTrue(verified.trustScore > 0.0)
+            assertTrue(verified.trustScore <= 1.0)
         }
     }
 
     @Test
     fun `test get trusted issuers with filtering`() = runBlocking {
         val trustWeave = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory()
+            )
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -164,6 +190,11 @@ class TrustRegistryDslComprehensiveTest {
     @Test
     fun `test remove trust anchor via DSL`() = runBlocking {
         val trustWeave = TrustWeave.build {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory()
+            )
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -194,6 +225,10 @@ class TrustRegistryDslComprehensiveTest {
         val kmsRef = kms
 
         val trustWeave = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory(),
+                trustRegistryFactory = TestkitTrustRegistryFactory()
+            )
             keys {
                 custom(kmsRef)
                 signer { data, keyId -> kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data) }
@@ -246,7 +281,7 @@ class TrustRegistryDslComprehensiveTest {
                 }
                 issued(Instant.now())
             }
-            by(issuerDid = issuerDid.value, keyId = keyId)
+            signedBy(issuerDid = issuerDid.value, keyId = keyId)
         }
 
         val result = trustWeave.verify {

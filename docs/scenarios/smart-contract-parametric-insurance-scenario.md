@@ -85,7 +85,7 @@ suspend fun createFloodInsuranceContract(
     location: Location
 ): SmartContract {
 
-    val contract = TrustWeave.contracts.draft(
+    val contract = trustWeave.contracts.draft(
         request = ContractDraftRequest(
             contractType = ContractType.Insurance,
             executionModel = ExecutionModel.Parametric(
@@ -182,7 +182,7 @@ suspend fun bindInsuranceContract(
     insurerKeyId: String
 ): BoundContract {
 
-    val bound = TrustWeave.contracts.bindContract(
+    val bound = trustWeave.contracts.bindContract(
         contractId = contract.id,
         issuerDid = insurerDid,
         issuerKeyId = insurerKeyId,
@@ -207,7 +207,7 @@ suspend fun activateContract(
     contractId: String
 ): SmartContract {
 
-    val active = TrustWeave.contracts.activateContract(contractId).getOrThrow()
+    val active = trustWeave.contracts.activateContract(contractId).getOrThrow()
 
     println("✅ Contract activated: ${active.id}")
     println("   Status: ${active.status}")
@@ -240,7 +240,7 @@ suspend fun processFloodDataAndExecute(
     )
 
     // Execute contract
-    val result = TrustWeave.contracts.executeContract(
+    val result = trustWeave.contracts.executeContract(
         contract = contract,
         executionContext = executionContext
     ).getOrThrow()

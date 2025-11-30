@@ -1,6 +1,9 @@
 package com.trustweave.trust.dsl
 
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.testkit.services.TestkitDidMethodFactory
+import com.trustweave.testkit.services.TestkitKmsFactory
+import com.trustweave.testkit.services.TestkitBlockchainAnchorClientFactory
 import com.trustweave.trust.dsl.TrustWeaveConfig
 import com.trustweave.trust.dsl.trustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
@@ -24,6 +27,11 @@ class TrustLayerConfigTest {
     @Test
     fun `test trust layer configuration with inMemory KMS`() = runBlocking {
         val trustWeave = trustWeave {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                anchorClientFactory = TestkitBlockchainAnchorClientFactory()
+            )
             keys {
                 provider("inMemory")
                 algorithm("Ed25519")
@@ -61,6 +69,10 @@ class TrustLayerConfigTest {
         // For custom KMS without signer function, use provider("inMemory") instead
         // This test verifies that custom KMS can be set, but signer must be provided
         val trustWeave = trustWeave {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
                 provider("inMemory")
             }
@@ -79,6 +91,11 @@ class TrustLayerConfigTest {
     @Test
     fun `test trust layer configuration with multiple DID methods`() = runBlocking {
         val trustWeave = trustWeave {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                anchorClientFactory = TestkitBlockchainAnchorClientFactory()
+            )
             keys {
                 provider("inMemory")
             }
@@ -102,6 +119,11 @@ class TrustLayerConfigTest {
     @Test
     fun `test trust layer configuration with multiple anchor chains`() = runBlocking {
         val trustWeave = trustWeave {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory(),
+                anchorClientFactory = TestkitBlockchainAnchorClientFactory()
+            )
             keys {
                 provider("inMemory")
             }
@@ -129,6 +151,10 @@ class TrustLayerConfigTest {
     @Test
     fun `test trust layer configuration with named layer`() = runBlocking {
         val trustWeave = trustWeave("production") {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
                 provider("inMemory")
             }
@@ -146,6 +172,10 @@ class TrustLayerConfigTest {
     @Test
     fun `test trust layer credential config defaults`() = runBlocking {
         val trustWeave = trustWeave {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
                 provider("inMemory")
             }
@@ -165,6 +195,10 @@ class TrustLayerConfigTest {
     @Test
     fun `test trust layer credential config custom values`() = runBlocking {
         val trustWeave = trustWeave {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
                 provider("inMemory")
             }
@@ -190,6 +224,10 @@ class TrustLayerConfigTest {
     @Test
     fun `test trust layer context provides access to components`() = runBlocking {
         val trustWeave = trustWeave {
+            factories(
+                kmsFactory = TestkitKmsFactory(),
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
                 provider("inMemory")
             }

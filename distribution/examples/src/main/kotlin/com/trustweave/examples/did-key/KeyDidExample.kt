@@ -1,6 +1,6 @@
 package com.trustweave.examples.did_key
 
-import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustWeave
 import com.trustweave.did.*
 import com.trustweave.did.DidCreationOptions.KeyAlgorithm
 import com.trustweave.did.DidCreationOptions.KeyPurpose
@@ -26,28 +26,30 @@ fun main() = runBlocking {
     println("Step 1: Setting up TrustWeave with did:key...")
     val kms = InMemoryKeyManagementService()
 
-    val trustweave = TrustWeave.create {
-        this.kms = kms
-
-        didMethods {
-            + (KeyDidMethod(kms) as DidMethod)
+    val trustweave = TrustWeave.build {
+        keys {
+            provider("inMemory")
+            algorithm("Ed25519")
+        }
+        did {
+            method("key") {
+                algorithm("Ed25519")
+            }
         }
     }
 
     // Step 2: Create did:key with Ed25519
     println("\nStep 2: Creating did:key with Ed25519...")
-    val ed25519Did = trustweave.createDid("key") {
-        algorithm = KeyAlgorithm.ED25519
-        purpose(KeyPurpose.AUTHENTICATION)
-        purpose(KeyPurpose.ASSERTION)
+    val ed25519Did = trustweave.createDid {
+        method("key")
+        algorithm("Ed25519")
     }
 
-    println("Created Ed25519 DID: ${ed25519Did.id}")
-    println("Verification methods: ${ed25519Did.verificationMethod.size}")
+    println("Created Ed25519 DID: ${ed25519Did.value}")
 
     // Step 3: Resolve did:key
     println("\nStep 3: Resolving did:key...")
-    val resolved = trustweave.resolveDid(ed25519Did.id)
+    val resolved = trustweave.resolveDid(ed25519Did)
     when (resolved) {
         is com.trustweave.did.resolver.DidResolutionResult.Success -> {
             println("Resolved DID: ${resolved.document.id}")
@@ -62,16 +64,18 @@ fun main() = runBlocking {
     println("\nStep 4: Creating did:key with different algorithms...")
 
     // secp256k1 (Ethereum-compatible)
-    val secp256k1Did = trustweave.createDid("key") {
-        algorithm = KeyAlgorithm.SECP256K1
+    val secp256k1Did = trustweave.createDid {
+        method("key")
+        algorithm("secp256k1")
     }
-    println("Created secp256k1 DID: ${secp256k1Did.id}")
+    println("Created secp256k1 DID: ${secp256k1Did.value}")
 
     // P-256 (NIST)
-    val p256Did = trustweave.createDid("key") {
-        algorithm = KeyAlgorithm.P256
+    val p256Did = trustweave.createDid {
+        method("key")
+        algorithm("P-256")
     }
-    println("Created P-256 DID: ${p256Did.id}")
+    println("Created P-256 DID: ${p256Did.value}")
 
     println("\n" + "=".repeat(70))
     println("did:key Example Complete!")

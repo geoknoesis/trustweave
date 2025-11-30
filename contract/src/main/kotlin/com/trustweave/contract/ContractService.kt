@@ -1,25 +1,26 @@
-package com.trustweave.services
+package com.trustweave.contract
 
-import com.trustweave.TrustWeaveContext
-import com.trustweave.contract.*
 import com.trustweave.contract.models.*
 import com.trustweave.credential.CredentialService
-import kotlin.Result
-import com.trustweave.anchor.BlockchainAnchorClient
+import com.trustweave.credential.CredentialServiceRegistry
 import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.anchor.AnchorRef
 import com.trustweave.credential.models.VerifiableCredential
-import kotlinx.serialization.json.JsonElement
+import kotlin.Result
 
 /**
  * Service for SmartContract operations.
  *
  * Provides a clean, focused API for creating, binding, and executing smart contracts.
+ * This is a convenience wrapper around DefaultSmartContractService that integrates
+ * with TrustWeave's registries.
  *
  * **Example:**
  * ```kotlin
- * val TrustWeave = TrustWeave.create()
- * val contract = trustweave.contracts.draft(
+ * val contractService = ContractService(
+ *     credentialRegistry = credentialRegistry,
+ *     blockchainRegistry = blockchainRegistry
+ * )
+ * val contract = contractService.draft(
  *     request = ContractDraftRequest(
  *         contractType = ContractType.Insurance,
  *         executionModel = ExecutionModel.Parametric(...),
@@ -32,16 +33,17 @@ import kotlinx.serialization.json.JsonElement
  * ```
  */
 class ContractService(
-    private val context: TrustWeaveContext
+    credentialRegistry: CredentialServiceRegistry? = null,
+    blockchainRegistry: BlockchainAnchorRegistry? = null
 ) : SmartContractService {
     private val delegate: SmartContractService by lazy {
-        // Get credential service from context (optional - null is allowed)
-        val credentialService = context.credentialRegistry.get()
+        // Get credential service from registry (optional - null is allowed)
+        val credentialService = credentialRegistry?.getAll()?.values?.firstOrNull()
 
-        // Pass blockchain registry for chain-specific client resolution
+        // Create DefaultSmartContractService with the registries
         DefaultSmartContractService(
             credentialService = credentialService,
-            blockchainRegistry = context.blockchainRegistry
+            blockchainRegistry = blockchainRegistry
         )
     }
 
@@ -72,7 +74,7 @@ class ContractService(
         contract: SmartContract,
         credential: VerifiableCredential,
         chainId: String
-    ): Result<AnchorRef> {
+    ): Result<com.trustweave.anchor.AnchorRef> {
         return delegate.anchorContract(contract, credential, chainId)
     }
 
@@ -112,7 +114,7 @@ class ContractService(
      */
     override suspend fun evaluateConditions(
         contract: SmartContract,
-        inputData: JsonElement
+        inputData: kotlinx.serialization.json.JsonElement
     ): Result<ConditionEvaluation> {
         return delegate.evaluateConditions(contract, inputData)
     }
@@ -124,7 +126,7 @@ class ContractService(
         contractId: String,
         newStatus: ContractStatus,
         reason: String?,
-        metadata: JsonElement?
+        metadata: kotlinx.serialization.json.JsonElement?
     ): Result<SmartContract> {
         return delegate.updateStatus(contractId, newStatus, reason, metadata)
     }

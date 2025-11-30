@@ -1488,7 +1488,7 @@ Gets a list of available blockchain chain IDs.
 fun availableChains(): List<String>
 ```
 
-**Access via:** `TrustWeave.blockchains.availableChains()`
+**Access via:** `trustWeave.blockchains.availableChains()`
 
 **Returns:** `List<String>` - List of registered blockchain chain IDs in CAIP-2 format
 
@@ -1510,7 +1510,7 @@ Creates a contract draft.
 suspend fun draft(request: ContractDraftRequest): Result<SmartContract>
 ```
 
-**Access via:** `TrustWeave.contracts.draft(request)`
+**Access via:** `trustWeave.contracts.draft(request)`
 
 **Parameters:**
 - **`request`** (ContractDraftRequest, required): Contract draft request containing contract type, execution model, parties, terms, etc.
@@ -1544,7 +1544,7 @@ suspend fun bindContract(
 ): Result<BoundContract>
 ```
 
-**Access via:** `TrustWeave.contracts.bindContract(...)`
+**Access via:** `trustWeave.contracts.bindContract(...)`
 
 **Returns:** `Result<BoundContract>` - The bound contract with credential and anchor reference
 
@@ -1559,7 +1559,7 @@ suspend fun executeContract(
 ): Result<ExecutionResult>
 ```
 
-**Access via:** `TrustWeave.contracts.executeContract(contract, executionContext)`
+**Access via:** `trustWeave.contracts.executeContract(contract, executionContext)`
 
 **Returns:** `Result<ExecutionResult>` - The execution result
 

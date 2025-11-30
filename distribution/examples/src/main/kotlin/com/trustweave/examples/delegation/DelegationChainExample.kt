@@ -144,7 +144,7 @@ fun main() = runBlocking {
             }
             issued(Instant.now())
         }
-        by(issuerDid = hrManagerDid.value, keyId = "key-1")
+        signedBy(issuerDid = hrManagerDid.value, keyId = "key-1")
     }
     println("✓ Credential issued by HR Manager (delegated authority)\n")
 

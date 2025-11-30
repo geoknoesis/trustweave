@@ -359,7 +359,7 @@ fun main() = runBlocking {
     }
 
     // Step 11: Anchor to blockchain for audit trail
-    val anchorResult = TrustWeave.blockchains.anchor(
+    val anchorResult = trustWeave.blockchains.anchor(
         data = dppCredential,
         serializer = VerifiableCredential.serializer(),
         chainId = "algorand:testnet"

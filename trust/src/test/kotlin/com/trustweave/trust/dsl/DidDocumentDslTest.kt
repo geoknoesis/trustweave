@@ -30,9 +30,10 @@ class DidDocumentDslTest {
         didRegistry = DidMethodRegistry()
         didRegistry.register(didMethod)
 
+        val kmsRef = kms
         trustWeave = trustWeave {
             keys {
-                custom(kms as Any)
+                custom(kmsRef)
             }
             did {
                 method("key") {

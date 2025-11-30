@@ -9,6 +9,7 @@ import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.proof.ProofType
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
+import com.trustweave.testkit.services.TestkitDidMethodFactory
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import java.time.Instant
@@ -54,8 +55,11 @@ fun main() = runBlocking {
     val kmsRef = kms
     
     val trustweave = TrustWeave.build {
+        factories(
+            didMethodFactory = TestkitDidMethodFactory()
+        )
         keys {
-            custom(kmsRef as Any)
+            custom(kmsRef)
             signer { data, keyId ->
                 kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)
             }
@@ -83,13 +87,29 @@ fun main() = runBlocking {
     println("  Role: Trusted issuer of national-level education credentials")
     println("  Method: key (default)")
 
-    val authorityDid = trustweave.createDid()
+    val authorityDid = try {
+        trustweave.createDid()
+    } catch (error: Throwable) {
+        println("\n📥 RESPONSE: DID Creation Failed")
+        println("  ✗ Error: ${error.message}")
+        return@runBlocking
+    }
     
     // Resolve authority DID to get document
-    val authorityDidResolution = trustweave.resolveDid(authorityDid)
+    val authorityDidResolution = try {
+        trustweave.resolveDid(authorityDid)
+    } catch (error: Throwable) {
+        println("\n📥 RESPONSE: DID Resolution Failed")
+        println("  ✗ Error: ${error.message}")
+        return@runBlocking
+    }
     val authorityDidDoc = when (authorityDidResolution) {
         is com.trustweave.did.resolver.DidResolutionResult.Success -> authorityDidResolution.document
-        else -> throw IllegalStateException("Failed to resolve authority DID")
+        else -> {
+            println("\n📥 RESPONSE: DID Resolution Failed")
+            println("  ⚠ Status: No document found (may be in-memory)")
+            return@runBlocking
+        }
     }
 
     println("\n📥 RESPONSE: Authority DID Created Successfully")
@@ -107,13 +127,29 @@ fun main() = runBlocking {
     println("  Role: Recognized educational institution")
     println("  Institution: University of Algiers (UA-001)")
 
-    val institutionDid = trustweave.createDid()
+    val institutionDid = try {
+        trustweave.createDid()
+    } catch (error: Throwable) {
+        println("\n📥 RESPONSE: DID Creation Failed")
+        println("  ✗ Error: ${error.message}")
+        return@runBlocking
+    }
     
     // Resolve institution DID
-    val institutionDidResolution = trustweave.resolveDid(institutionDid)
+    val institutionDidResolution = try {
+        trustweave.resolveDid(institutionDid)
+    } catch (error: Throwable) {
+        println("\n📥 RESPONSE: DID Resolution Failed")
+        println("  ✗ Error: ${error.message}")
+        return@runBlocking
+    }
     val institutionDidDoc = when (institutionDidResolution) {
         is com.trustweave.did.resolver.DidResolutionResult.Success -> institutionDidResolution.document
-        else -> throw IllegalStateException("Failed to resolve institution DID")
+        else -> {
+            println("\n📥 RESPONSE: DID Resolution Failed")
+            println("  ⚠ Status: No document found (may be in-memory)")
+            return@runBlocking
+        }
     }
 
     println("\n📥 RESPONSE: Institution DID Created Successfully")
@@ -201,7 +237,7 @@ fun main() = runBlocking {
             }
             issued(java.time.Instant.now())
         }
-        by(issuerDid = authorityDid.value, keyId = authorityKeyId)
+        signedBy(issuerDid = authorityDid.value, keyId = authorityKeyId)
     }
 
     println("\n📥 RESPONSE: Enrollment Credential Issued Successfully")
@@ -335,7 +371,7 @@ fun main() = runBlocking {
             }
             issued(java.time.Instant.now())
         }
-        by(issuerDid = authorityDid.value, keyId = authorityKeyId)
+        signedBy(issuerDid = authorityDid.value, keyId = authorityKeyId)
     }
 
     println("\n📥 RESPONSE: Achievement Credential Issued Successfully")

@@ -2,6 +2,7 @@ package com.trustweave.trust.dsl
 
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.TrustWeaveConfig
 import com.trustweave.trust.dsl.TrustWeaveContext
@@ -28,9 +29,10 @@ class VerificationBuilderBranchCoverageTest {
     @BeforeEach
     fun setUp() = runBlocking {
         kms = InMemoryKeyManagementService()
+        val kmsRef = kms
         val config = trustWeave {
             keys {
-                custom(kms as Any)
+                custom(kmsRef)
             }
             did {
                 method("key") {}
@@ -333,9 +335,13 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch anchor verification enabled without chain ID`() = runBlocking {
+        val kmsRef = kms
         val trustWeaveWithAnchor = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
-                custom(kms as Any)
+                custom(kmsRef)
             }
             did {
                 method("key") {}
@@ -370,9 +376,13 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch anchor verification enabled with explicit chain ID`() = runBlocking {
+        val kmsRef = kms
         val trustWeaveWithAnchor = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
-                custom(kms as Any)
+                custom(kmsRef)
             }
             did {
                 method("key") {}
@@ -406,9 +416,13 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch anchor verification error when no chain ID`() = runBlocking {
+        val kmsRef = kms
         val trustWeaveNoAnchor = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
-                custom(kms as Any)
+                custom(kmsRef)
             }
             did {
                 method("key") {}
@@ -440,9 +454,13 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch all verification options enabled`() = runBlocking {
+        val kmsRef = kms
         val trustWeaveWithAnchor = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
             keys {
-                custom(kms as Any)
+                custom(kmsRef)
             }
             did {
                 method("key") {}

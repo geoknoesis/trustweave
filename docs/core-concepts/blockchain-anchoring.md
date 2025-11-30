@@ -49,8 +49,10 @@ import com.trustweave.core.*
 import kotlinx.serialization.json.Json
 
 // Using TrustWeave facade (recommended)
-val TrustWeave = TrustWeave.create()
-val anchorResult = TrustWeave.blockchains.anchor(
+import com.trustweave.trust.TrustWeave
+
+val trustWeave = TrustWeave.build { ... }
+val anchorResult = trustWeave.blockchains.anchor(
     data = credential,
     serializer = VerifiableCredential.serializer(),
     chainId = "algorand:testnet"
@@ -59,7 +61,7 @@ println("Anchored tx: ${anchorResult.ref.txHash}")
 
 // With error handling (wrap in try-catch)
 try {
-    val anchor = TrustWeave.blockchains.anchor(data, serializer, chainId)
+    val anchor = trustWeave.blockchains.anchor(data, serializer, chainId)
 result.fold(
     onSuccess = { anchor -> println("Anchored tx: ${anchor.ref.txHash}") },
     onFailure = { error ->
@@ -84,12 +86,12 @@ result.fold(
 ## Reading and verifying
 
 ```kotlin
-import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustWeave
 import com.trustweave.core.*
 
 // Using TrustWeave facade (recommended)
-val TrustWeave = TrustWeave.create()
-val data = TrustWeave.blockchains.read<VerifiableCredential>(
+val trustWeave = TrustWeave.build { ... }
+val data = trustWeave.blockchains.read<VerifiableCredential>(
     ref = anchorRef,
     serializer = VerifiableCredential.serializer()
 )
@@ -97,7 +99,7 @@ println("Read credential: ${data.id}")
 
 // With error handling (wrap in try-catch)
 try {
-    val data = TrustWeave.blockchains.read<VerifiableCredential>(ref, serializer)
+    val data = trustWeave.blockchains.read<VerifiableCredential>(ref, serializer)
 result.fold(
     onSuccess = { data -> println("Read: ${data.id}") },
     onFailure = { error ->

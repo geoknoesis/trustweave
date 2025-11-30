@@ -80,7 +80,7 @@ fun main() = runBlocking {
                 claim("email", "alice@example.com")
             }
         }
-        by(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
+        signedBy(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
     }
 
     // Verify the credential
@@ -254,7 +254,7 @@ val degree = trustLayer.issue {
             claim("major", "Computer Science")
         }
     }
-    by(issuerDid = universityDid, keyId = "$universityDid#key-1")
+    signedBy(issuerDid = universityDid, keyId = "$universityDid#key-1")
 }
 
 // Age Verification (Privacy-Preserving)
@@ -271,7 +271,7 @@ val ageCredential = trustLayer.issue {
             }
         }
     }
-    by(issuerDid = identityProviderDid, keyId = "$identityProviderDid#key-1")
+    signedBy(issuerDid = identityProviderDid, keyId = "$identityProviderDid#key-1")
 }
 
 // Internet of Things (IoT) Sensor Data Provenance
@@ -287,7 +287,7 @@ val sensorData = trustLayer.issue {
             }
         }
     }
-    by(issuerDid = sensorDid, keyId = "$sensorDid#key-1")
+    signedBy(issuerDid = sensorDid, keyId = "$sensorDid#key-1")
 }
 ```
 

@@ -144,34 +144,41 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for insurance company and EO data provider
-    val insuranceDid = TrustWeave.dids.create()
-    Result.success(insuranceDid).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to create insurance DID: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val insuranceDid = trustWeave.createDid {
+        method("key")
+        algorithm("Ed25519")
+    }
+    println("✅ Created insurance DID: ${insuranceDid.value}")
+    
+    // Continue with EO provider DID creation
+    val eoProviderDid = trustWeave.createDid {
+        method("key")
+        algorithm("Ed25519")
+    }
+    println("✅ Created EO provider DID: ${eoProviderDid.value}")
 
-    val eoProviderDid = TrustWeave.dids.create()
-    Result.success(eoProviderDid).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to create EO provider DID: ${error.message}")
-            return@runBlocking
-        }
-    )
-
-    println("✅ Insurance Company DID: ${insuranceDid.id}")
-    println("✅ EO Data Provider DID: ${eoProviderDid.id}")
+    println("✅ Insurance Company DID: ${insuranceDid.value}")
+    println("✅ EO Data Provider DID: ${eoProviderDid.value}")
 
     // Step 3: EO Data Provider issues credential for rainfall data
-    val eoProviderKeyId = eoProviderDid.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val eoProviderResolution = trustWeave.resolveDid(eoProviderDid)
+    val eoProviderDoc = when (eoProviderResolution) {
+        is DidResolutionResult.Success -> eoProviderResolution.document
+        else -> throw IllegalStateException("Failed to resolve EO provider DID")
+    }
+    val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
     // Create EO data payload (rainfall measurement)
     val rainfallData = buildJsonObject {
@@ -199,38 +206,39 @@ fun main() = runBlocking {
     val dataDigest = DigestUtils.sha256DigestMultibase(rainfallData)
 
     // Issue verifiable credential for EO data
-    val eoDataCredential = TrustWeave.credentials.issue(
-        issuerDid = eoProviderDid.id,
-        issuerKeyId = eoProviderKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", "rainfall-measurement-2024-06-15")
-            put("dataType", "RainfallMeasurement")
-            put("data", rainfallData)
-            put("dataDigest", dataDigest)
-            put("provider", eoProviderDid.id)
-            put("timestamp", Instant.now().toString())
-        },
-        types = listOf("VerifiableCredential", "EarthObservationCredential", "InsuranceOracleCredential")
-    ).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to issue EO data credential: ${error.message}")
-            return@runBlocking
+    val eoDataCredential = trustWeave.issue {
+        credential {
+            type("EarthObservationCredential", "InsuranceOracleCredential")
+            issuer(eoProviderDid.value)
+            subject {
+                id("rainfall-measurement-2024-06-15")
+                claim("dataType", "RainfallMeasurement")
+                claim("data", rainfallData)
+                claim("dataDigest", dataDigest)
+                claim("provider", eoProviderDid.value)
+                claim("timestamp", Instant.now().toString())
+            }
+            issued(Instant.now())
         }
-    )
+        signedBy(issuerDid = eoProviderDid.value, keyId = eoProviderKeyId)
+    }
 
     println("✅ EO Data Credential issued: ${eoDataCredential.id}")
     println("   Data digest: $dataDigest")
 
     // Step 4: Verify EO data credential (insurance company verifies before using)
-    val verification = TrustWeave.credentials.verify(eoDataCredential)
-    if (verification.valid) {
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Verification failed: ${error.message}")
+    val verification = trustWeave.verify {
+        credential(eoDataCredential)
+    }
+    when (verification) {
+        is VerificationResult.Valid -> {
+            // Credential is valid, continue
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ Verification failed: ${verification.reason}")
             return@runBlocking
         }
-    )
+    }
 
     if (!verification.valid) {
         println("❌ EO data credential invalid: ${verification.errors}")
@@ -261,32 +269,34 @@ fun main() = runBlocking {
         println("   💰 Insurance payout should be triggered")
 
         // Step 6: Create payout credential (insurance company issues)
-        val insuranceKeyId = insuranceDid.verificationMethod.firstOrNull()?.id
-            ?: error("No verification method found")
+        val insuranceResolution = trustWeave.resolveDid(insuranceDid)
+        val insuranceDoc = when (insuranceResolution) {
+            is DidResolutionResult.Success -> insuranceResolution.document
+            else -> throw IllegalStateException("Failed to resolve insurance DID")
+        }
+        val insuranceKeyId = insuranceDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+            ?: throw IllegalStateException("No verification method found")
 
-        val payoutCredential = TrustWeave.credentials.issue(
-            issuerDid = insuranceDid.id,
-            issuerKeyId = insuranceKeyId,
-            credentialSubject = buildJsonObject {
-                put("id", "payout-2024-06-15")
-                put("policyId", "POL-12345")
-                put("triggerType", "RainfallBelowThreshold")
-                put("triggerValue", rainfallValue)
-                put("threshold", triggerThreshold)
-                put("dataCredentialId", eoDataCredential.id)
-                put("dataDigest", dataDigest)
-                put("payoutAmount", 50000.0)
-                put("currency", "USD")
-                put("timestamp", Instant.now().toString())
-            },
-            types = listOf("VerifiableCredential", "InsurancePayoutCredential")
-        ).fold(
-            onSuccess = { it },
-            onFailure = { error ->
-                println("❌ Failed to issue payout credential: ${error.message}")
-                return@runBlocking
+        val payoutCredential = trustWeave.issue {
+            credential {
+                type("InsurancePayoutCredential")
+                issuer(insuranceDid.value)
+                subject {
+                    id("payout-2024-06-15")
+                    claim("policyId", "POL-12345")
+                    claim("triggerType", "RainfallBelowThreshold")
+                    claim("triggerValue", rainfallValue)
+                    claim("threshold", triggerThreshold)
+                    claim("dataCredentialId", eoDataCredential.id)
+                    claim("dataDigest", dataDigest)
+                    claim("payoutAmount", 50000.0)
+                    claim("currency", "USD")
+                    claim("timestamp", Instant.now().toString())
+                }
+                issued(Instant.now())
             }
-        )
+            signedBy(issuerDid = insuranceDid.value, keyId = insuranceKeyId)
+        }
 
         println("✅ Payout Credential issued: ${payoutCredential.id}")
         println("   Payout amount: $50,000 USD")
@@ -362,8 +372,17 @@ suspend fun acceptEODataFromAnyProvider(
     dataCredential: VerifiableCredential
 ): Boolean {
     // Verify credential
-    val verification = TrustWeave.credentials.verify(dataCredential)
-    if (!verification.valid) return false
+    val verification = trustWeave.verify {
+        credential(dataCredential)
+    }
+    when (verification) {
+        is VerificationResult.Valid -> {
+            // Credential is valid, continue
+        }
+        is VerificationResult.Invalid -> {
+            return false
+        }
+    }
 
     // Check if provider is certified
     val isCertified = checkProviderCertification(providerDid)
@@ -404,18 +423,21 @@ val spectralData = buildJsonObject {
 
 val spectralDigest = DigestUtils.sha256DigestMultibase(spectralData)
 
-val spectralCredential = TrustWeave.credentials.issue(
-    issuerDid = eoProviderDid.id,
-    issuerKeyId = eoProviderKeyId,
-    credentialSubject = buildJsonObject {
-        put("id", "spectral-fingerprint-wildfire-2024")
-        put("dataType", "SpectralFingerprint")
-        put("data", spectralData)
-        put("dataDigest", spectralDigest)
-        put("provider", eoProviderDid.id)
-    },
-    types = listOf("VerifiableCredential", "SpectralAnalysisCredential", "InsuranceOracleCredential")
-).getOrThrow()
+val spectralCredential = trustWeave.issue {
+    credential {
+        type("SpectralAnalysisCredential", "InsuranceOracleCredential")
+        issuer(eoProviderDid.value)
+        subject {
+            id("spectral-fingerprint-wildfire-2024")
+            claim("dataType", "SpectralFingerprint")
+            claim("data", spectralData)
+            claim("dataDigest", spectralDigest)
+            claim("provider", eoProviderDid.value)
+        }
+        issued(Instant.now())
+    }
+    signedBy(issuerDid = eoProviderDid.value, keyId = eoProviderKeyId)
+}
 
 // Verify spectral fingerprint matches underwriting model
 val modelFingerprint = getUnderwritingModelFingerprint()

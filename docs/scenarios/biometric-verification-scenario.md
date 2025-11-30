@@ -179,19 +179,18 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for identity provider, individual, and service providers
-    val identityProviderDidDoc = TrustWeave.dids.create()
-    val identityProviderDid = identityProviderDidDoc.id
-    val identityProviderKeyId = identityProviderDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val identityProviderDid = trustWeave.createDid { method("key") }
+    val identityProviderResolution = trustWeave.resolveDid(identityProviderDid)
+    val identityProviderDoc = when (identityProviderResolution) {
+        is DidResolutionResult.Success -> identityProviderResolution.document
+        else -> throw IllegalStateException("Failed to resolve identity provider DID")
+    }
+    val identityProviderKeyId = identityProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val individualDidDoc = TrustWeave.dids.create()
-    val individualDid = individualDidDoc.id
-
-    val bankDidDoc = TrustWeave.dids.create()
-    val bankDid = bankDidDoc.id
-
-    val buildingAccessDidDoc = TrustWeave.dids.create()
-    val buildingAccessDid = buildingAccessDidDoc.id
+    val individualDid = trustWeave.createDid { method("key") }
+    val bankDid = trustWeave.createDid { method("key") }
+    val buildingAccessDid = trustWeave.createDid { method("key") }
 
     println("✅ Identity Provider DID: $identityProviderDid")
     println("✅ Individual DID: $individualDid")

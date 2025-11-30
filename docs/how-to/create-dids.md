@@ -156,7 +156,7 @@ val credential = trustWeave.issue {
         issuer(did.value)
         // ... credential configuration
     }
-    by(issuerDid = did.value, keyId = keyId)  // keyId is already a String
+    signedBy(issuerDid = did.value, keyId = keyId)  // keyId is already a String
 }
 ```
 

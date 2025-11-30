@@ -144,36 +144,34 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance with blockchain
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for carbon credit issuer, verifier, and buyer
-    val issuerDid = TrustWeave.dids.create()
-    Result.success(issuerDid).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to create issuer DID: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val issuerDid = trustWeave.createDid {
+        method("key")
+        algorithm("Ed25519")
+    }
+    println("✅ Created issuer DID: ${issuerDid.value}")
 
-    val verifierDid = TrustWeave.dids.create()
-    Result.success(verifierDid).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to create verifier DID: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val verifierDid = trustWeave.createDid {
+        method("key")
+        algorithm("Ed25519")
+    }
+    println("✅ Created verifier DID: ${verifierDid.value}")
 
-    val buyerDid = TrustWeave.dids.create()
-    Result.success(buyerDid).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to create buyer DID: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val buyerDid = trustWeave.createDid {
+        method("key")
+        algorithm("Ed25519")
+    }
+    println("✅ Created buyer DID: ${buyerDid.value}")
 
     println("✅ Issuer DID: ${issuerDid.id}")
     println("✅ Verifier DID: ${verifierDid.id}")

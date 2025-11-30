@@ -55,11 +55,17 @@ val active = trustWeave.contracts.activateContract(bound.contract.id).getOrThrow
 ### Step 3: EO Provider Issues Data Credential
 ```kotlin
 // EO provider wraps SAR flood data in Verifiable Credential
-val floodCredential = TrustWeave.credentials.issue(
-    issuer = eoProviderDid,
-    subject = sarFloodData,
-    types = listOf("EarthObservationCredential", "InsuranceOracleCredential")
-).getOrThrow()
+val floodCredential = trustWeave.issue {
+    credential {
+        type("EarthObservationCredential", "InsuranceOracleCredential")
+        issuer(eoProviderDid)
+        subject {
+            addClaims(sarFloodData)
+        }
+        issued(Instant.now())
+    }
+    signedBy(issuerDid = eoProviderDid, keyId = eoProviderKeyId)
+}
 ```
 
 ### Step 4: Execute Contract & Payout
@@ -241,15 +247,19 @@ val active = trustWeave.contracts.activateContract(bound.contract.id).getOrThrow
 
 ### Issue EO Data Credential
 ```kotlin
-val floodCredential = TrustWeave.credentials.issue(
-    issuer = eoProviderDid,
-    subject = buildJsonObject {
-        put("dataType", "SarFloodMeasurement")
-        put("data", floodData)
-        put("dataDigest", dataDigest)
-    },
-    types = listOf("EarthObservationCredential", "InsuranceOracleCredential")
-).getOrThrow()
+val floodCredential = trustWeave.issue {
+    credential {
+        type("EarthObservationCredential", "InsuranceOracleCredential")
+        issuer(eoProviderDid)
+        subject {
+            claim("dataType", "SarFloodMeasurement")
+            claim("data", floodData)
+            claim("dataDigest", dataDigest)
+        }
+        issued(Instant.now())
+    }
+    signedBy(issuerDid = eoProviderDid, keyId = eoProviderKeyId)
+}
 ```
 
 ### Execute Contract

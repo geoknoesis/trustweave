@@ -62,32 +62,47 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
-
-    // Create issuer DID
-    val issuerDid = trustweave.dids.create()
-    val issuerKeyId = issuerDid.document.verificationMethod.first().id
-
-    // Create credential subject
-    val credentialSubject = buildJsonObject {
-        put("id", "did:key:subject")
-        put("type", "Person")
-        put("name", "Alice")
-        put("email", "alice@example.com")
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
 
-    // Issue credential
+    // Create issuer DID
+    val issuerDid = trustWeave.createDid {
+        method(DidMethods.KEY)
+        algorithm(KeyAlgorithms.ED25519)
+    }
+    
+    // Resolve DID to get key ID
+    val resolution = trustWeave.resolveDid(issuerDid)
+    val issuerDoc = when (resolution) {
+        is DidResolutionResult.Success -> resolution.document
+        else -> throw IllegalStateException("Failed to resolve issuer DID")
+    }
+    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
+
+    // Issue credential using DSL
     try {
-        val credential = trustweave.credentials.issue(
-            issuer = issuerDid.id,
-            subject = credentialSubject,
-            config = IssuanceConfig(
-                proofType = ProofType.Ed25519Signature2020,
-                keyId = issuerKeyId,
-                issuerDid = issuerDid.id
-            ),
-            types = listOf("VerifiableCredential", "PersonCredential")
-        )
+        val credential = trustWeave.issue {
+            credential {
+                type("PersonCredential")
+                issuer(issuerDid.value)
+                subject {
+                    id("did:key:subject")
+                    claim("type", "Person")
+                    claim("name", "Alice")
+                    claim("email", "alice@example.com")
+                }
+                issued(Instant.now())
+            }
+            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+        }
 
         println("Issued credential: ${credential.id}")
         println("Issuer: ${credential.issuer}")
@@ -112,9 +127,22 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
-    val issuerDid = trustweave.dids.create()
-    val issuerKeyId = issuerDid.document.verificationMethod.first().id
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
+    val issuerDid = trustWeave.createDid { method("key") }
+    val issuerResolution = trustWeave.resolveDid(issuerDid)
+    val issuerDoc = when (issuerResolution) {
+        is DidResolutionResult.Success -> issuerResolution.document
+        else -> throw IllegalStateException("Failed to resolve issuer DID")
+    }
+    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
     // Create credential subject
     val credentialSubject = buildJsonObject {
@@ -125,17 +153,21 @@ fun main() = runBlocking {
 
     // Issue credential with custom expiration
     try {
-        val credential = trustweave.credentials.issue(
-            issuer = issuerDid.id,
-            subject = credentialSubject,
-            config = IssuanceConfig(
-                proofType = ProofType.Ed25519Signature2020,
-                keyId = issuerKeyId,
-                issuerDid = issuerDid.id,
-                expirationDate = Instant.now().plus(365, ChronoUnit.DAYS).toString()
-            ),
-            types = listOf("VerifiableCredential", "PersonCredential")
-        )
+        val credential = trustWeave.issue {
+            credential {
+                type("PersonCredential")
+                issuer(issuerDid.value)
+                subject {
+                    id("did:key:subject")
+                    claim("type", "Person")
+                    claim("name", "Alice")
+                    claim("email", "alice@example.com")
+                }
+                issued(Instant.now())
+                expires(Instant.now().plus(365, ChronoUnit.DAYS))
+            }
+            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+        }
 
         println("Issued credential with expiration: ${credential.expirationDate}")
         if (credential.credentialStatus != null) {
@@ -159,13 +191,22 @@ import com.trustweave.credential.VerificationConfig
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     val credential = /* previously issued credential */
 
     // Verify credential
     try {
-        val result = trustweave.credentials.verify(credential)
+        val result = trustWeave.verify {
+            credential(credential)
+        }
 
         if (result.valid) {
             println("Credential is valid")
@@ -193,19 +234,24 @@ import com.trustweave.credential.VerificationConfig
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     val credential = /* previously issued credential */
 
     // Verify credential with custom configuration
     try {
-        val config = VerificationConfig(
-            checkExpiration = true,
-            checkRevocation = true,
-            verifyBlockchainAnchor = false
-        )
-
-        val result = trustweave.credentials.verify(credential, config)
+        val result = trustWeave.verify {
+            credential(credential)
+            checkExpiration()
+            checkRevocation()
+        }
 
         if (result.valid) {
             println("Credential verified successfully")
@@ -232,18 +278,40 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
-    val issuerDid = trustweave.dids.create()
-    val issuerKeyId = issuerDid.document.verificationMethod.first().id
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
+    }
+    
+    val issuerDid = trustWeave.createDid {
+        method(DidMethods.KEY)
+        algorithm(KeyAlgorithms.ED25519)
+    }
+    
+    val resolution = trustWeave.resolveDid(issuerDid)
+    val issuerDoc = when (resolution) {
+        is DidResolutionResult.Success -> resolution.document
+        else -> throw IllegalStateException("Failed to resolve issuer DID")
+    }
+    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
     // Issue credential
     try {
-        val credential = trustweave.credentials.issue(
-            issuer = issuerDid.id,
-            subject = buildJsonObject { put("id", "did:key:subject") },
-            config = IssuanceConfig(
-                proofType = ProofType.Ed25519Signature2020,
-                keyId = issuerKeyId,
+        val credential = trustWeave.issue {
+            credential {
+                issuer(issuerDid.value)
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Instant.now())
+            }
+            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
                 issuerDid = issuerDid.id
             ),
             types = listOf("VerifiableCredential")
@@ -252,8 +320,13 @@ fun main() = runBlocking {
         println("Issued: ${credential.id}")
 
         // Verify credential
-        val verificationResult = trustweave.credentials.verify(credential)
-        println("Valid: ${verificationResult.valid}")
+        val verificationResult = trustWeave.verify {
+            credential(credential)
+        }
+        when (verificationResult) {
+            is VerificationResult.Valid -> println("Valid: true")
+            is VerificationResult.Invalid -> println("Valid: false - ${verificationResult.reason}")
+        }
 
         // Note: Revocation is typically handled through credential status lists
         // and checked during verification. See revocation documentation for details.
@@ -277,9 +350,22 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
-    val issuerDid = trustweave.dids.create()
-    val issuerKeyId = issuerDid.document.verificationMethod.first().id
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
+    val issuerDid = trustWeave.createDid { method("key") }
+    val issuerResolution = trustWeave.resolveDid(issuerDid)
+    val issuerDoc = when (issuerResolution) {
+        is DidResolutionResult.Success -> issuerResolution.document
+        else -> throw IllegalStateException("Failed to resolve issuer DID")
+    }
+    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
     // Create multiple credential subjects
     val subjects = listOf(
@@ -291,16 +377,17 @@ fun main() = runBlocking {
     // Issue credentials in batch
     val credentials = subjects.mapNotNull { subject ->
         try {
-            trustweave.credentials.issue(
-                issuer = issuerDid.id,
-                subject = subject,
-                config = IssuanceConfig(
-                    proofType = ProofType.Ed25519Signature2020,
-                    keyId = issuerKeyId,
-                    issuerDid = issuerDid.id
-                ),
-                types = listOf("VerifiableCredential", "PersonCredential")
-            )
+            trustWeave.issue {
+                credential {
+                    type("PersonCredential")
+                    issuer(issuerDid.value)
+                    subject {
+                        addClaims(subject)
+                    }
+                    issued(Instant.now())
+                }
+                signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+            }
         } catch (error: TrustWeaveError) {
             println("Failed to issue credential for ${subject["id"]}: ${error.message}")
             null
@@ -324,11 +411,24 @@ import com.trustweave.credential.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     val credentials = /* list of credentials */
-    val holderDid = trustweave.dids.create()
-    val holderKeyId = holderDid.document.verificationMethod.first().id
+    val holderDid = trustWeave.createDid { method("key") }
+    val holderResolution = trustWeave.resolveDid(holderDid)
+    val holderDoc = when (holderResolution) {
+        is DidResolutionResult.Success -> holderResolution.document
+        else -> throw IllegalStateException("Failed to resolve holder DID")
+    }
+    val holderKeyId = holderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
     // Create presentation
     try {
@@ -370,21 +470,34 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
-    val issuerDid = trustweave.dids.create()
-    val issuerKeyId = issuerDid.document.verificationMethod.first().id
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
+    val issuerDid = trustWeave.createDid { method("key") }
+    val issuerResolution = trustWeave.resolveDid(issuerDid)
+    val issuerDoc = when (issuerResolution) {
+        is DidResolutionResult.Success -> issuerResolution.document
+        else -> throw IllegalStateException("Failed to resolve issuer DID")
+    }
+    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
     try {
-        val credential = trustweave.credentials.issue(
-            issuer = issuerDid.id,
-            subject = buildJsonObject { put("id", "did:key:subject") },
-            config = IssuanceConfig(
-                proofType = ProofType.Ed25519Signature2020,
-                keyId = issuerKeyId,
-                issuerDid = issuerDid.id
-            ),
-            types = listOf("VerifiableCredential")
-        )
+        val credential = trustWeave.issue {
+            credential {
+                issuer(issuerDid.value)
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Instant.now())
+            }
+            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+        }
 
         println("Issued: ${credential.id}")
 

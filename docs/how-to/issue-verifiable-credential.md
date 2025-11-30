@@ -177,7 +177,7 @@ val credential = trustWeave.issue {
         issued(Instant.now())
         expires(365 * 10, ChronoUnit.DAYS) // Valid for 10 years
     }
-    by(issuerDid = issuerDid.value, keyId = keyId)
+    signedBy(issuerDid = issuerDid.value, keyId = keyId)
 }
 ```
 
@@ -206,7 +206,7 @@ val issuedCredential = trustWeave.issue {
     credential {
         // ... credential definition from Step 4
     }
-    by(issuerDid = issuerDid.value, keyId = keyId)
+    signedBy(issuerDid = issuerDid.value, keyId = keyId)
     withProof(ProofType.Ed25519Signature2020)
 }
 ```
@@ -323,7 +323,7 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(365 * 10, ChronoUnit.DAYS)
         }
-        by(issuerDid = issuerDid.value, keyId = keyId)
+        signedBy(issuerDid = issuerDid.value, keyId = keyId)
     }
     
     println("Credential issued:")
@@ -444,13 +444,13 @@ Credential issued:
 // ❌ Missing issuer identity
 trustWeave.issue {
     credential { ... }
-    // Missing: by(issuerDid = ..., keyId = ...)
+    // Missing: signedBy(issuerDid = ..., keyId = ...)
 }
 
 // ✅ Correct
 trustWeave.issue {
     credential { ... }
-    by(issuerDid = issuerDid.value, keyId = keyId)
+    signedBy(issuerDid = issuerDid.value, keyId = keyId)
 }
 ```
 
@@ -571,7 +571,7 @@ Enable credential revocation using status lists:
 ```kotlin
 val credential = trustWeave.issue {
     credential { ... }
-    by(issuerDid = issuerDid.value, keyId = keyId)
+    signedBy(issuerDid = issuerDid.value, keyId = keyId)
     withRevocation()  // Auto-creates status list
 }
 ```

@@ -71,7 +71,7 @@ fun main() = runBlocking {
                     claim("role", "Site Reliability Engineer")
                 }
             }
-            by(issuerDid = issuerDid, keyId = issuerKeyId)
+            signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
         }
 
         println("✅ Issued credential: ${credential.id}")
@@ -153,7 +153,7 @@ val credential = trustWeave.issue {
             claim("email", "alice@example.com")
         }
     }
-    by(issuerDid = issuerDid, keyId = issuerKeyId)
+    signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
 }
 ```
 
@@ -224,7 +224,7 @@ val credential = trustWeave.issue {
         subject { id("did:key:holder"); claim("access", "temporary") }
         expires(Instant.now().plus(30, ChronoUnit.DAYS))
     }
-    by(issuerDid = issuerDid, keyId = issuerKeyId)
+    signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
 }
 ```
 
@@ -316,7 +316,7 @@ val credential = try {
                 claim("name", "Alice")
             }
         }
-        by(issuerDid = issuerDid.value, keyId = issuerKeyId)
+        signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
     }
 } catch (error: Exception) {
     println("Issuance failed: ${error.message}")
@@ -345,7 +345,7 @@ val credential = trustWeave.issue {
             statusListIndex(0)
         }
     }
-    by(issuerDid = issuerDid, keyId = issuerKeyId)
+    signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
 }
 ```
 

@@ -176,22 +176,36 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for software publisher, build system, and consumer
-    val publisherDidDoc = TrustWeave.dids.create()
-    val publisherDid = publisherDidDoc.id
-    val publisherKeyId = publisherDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val publisherDid = trustWeave.createDid { method("key") }
+    val publisherResolution = trustWeave.resolveDid(publisherDid)
+    val publisherDoc = when (publisherResolution) {
+        is DidResolutionResult.Success -> publisherResolution.document
+        else -> throw IllegalStateException("Failed to resolve publisher DID")
+    }
+    val publisherKeyId = publisherDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val buildSystemDidDoc = TrustWeave.dids.create()
-    val buildSystemDid = buildSystemDidDoc.id
-    val buildSystemKeyId = buildSystemDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val buildSystemDid = trustWeave.createDid { method("key") }
+    val buildSystemResolution = trustWeave.resolveDid(buildSystemDid)
+    val buildSystemDoc = when (buildSystemResolution) {
+        is DidResolutionResult.Success -> buildSystemResolution.document
+        else -> throw IllegalStateException("Failed to resolve build system DID")
+    }
+    val buildSystemKeyId = buildSystemDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val consumerDidDoc = TrustWeave.dids.create()
-    val consumerDid = consumerDidDoc.id
+    val consumerDid = trustWeave.createDid { method("key") }
 
     println("✅ Software Publisher DID: $publisherDid")
     println("✅ Build System DID: $buildSystemDid")

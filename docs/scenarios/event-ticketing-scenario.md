@@ -177,19 +177,18 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for event organizer, attendee, and venue
-    val organizerDidDoc = TrustWeave.dids.create()
-    val organizerDid = organizerDidDoc.id
-    val organizerKeyId = organizerDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val organizerDid = trustWeave.createDid { method("key") }
+    val organizerResolution = trustWeave.resolveDid(organizerDid)
+    val organizerDoc = when (organizerResolution) {
+        is DidResolutionResult.Success -> organizerResolution.document
+        else -> throw IllegalStateException("Failed to resolve organizer DID")
+    }
+    val organizerKeyId = organizerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val attendeeDidDoc = TrustWeave.dids.create()
-    val attendeeDid = attendeeDidDoc.id
-
-    val newAttendeeDidDoc = TrustWeave.dids.create()
-    val newAttendeeDid = newAttendeeDidDoc.id
-
-    val venueDidDoc = TrustWeave.dids.create()
-    val venueDid = venueDidDoc.id
+    val attendeeDid = trustWeave.createDid { method("key") }
+    val newAttendeeDid = trustWeave.createDid { method("key") }
+    val venueDid = trustWeave.createDid { method("key") }
 
     println("✅ Event Organizer DID: $organizerDid")
     println("✅ Attendee DID: $attendeeDid")

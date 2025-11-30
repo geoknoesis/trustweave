@@ -229,11 +229,18 @@ fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
 
     // 2. Create DIDs
-    val issuerDid = TrustWeave.dids.create()
-    val holderDid = TrustWeave.dids.create()
+    val issuerDid = trustWeave.createDid { method("key") }
+    val holderDid = trustWeave.createDid { method("key") }
 
     // 3. Issue Credential
-    val credential = TrustWeave.issueCredential(...).getOrThrow()
+    val credential = trustWeave.issue {
+        credential {
+            issuer(issuerDid.value)
+            subject { id(holderDid.value) }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = issuerDid.value, keyId = "key-1")
+    }
 
     // 4. Store in Wallet
     val wallet = TrustWeave.createWallet(holderDid.id).getOrThrow()

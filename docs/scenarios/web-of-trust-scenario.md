@@ -140,7 +140,7 @@ val degreeCredential = trustLayer.issue {
         issued(Instant.now())
         expires(Instant.now().plusSeconds(31536000)) // 1 year
     }
-    by(issuerDid = universityDid, keyId = "key-1")
+    signedBy(issuerDid = universityDid, keyId = "key-1")
 }
 
 // Verify with trust registry
@@ -214,7 +214,7 @@ val employmentCredential = trustLayer.issue {
         }
         issued(Instant.now())
     }
-    by(issuerDid = hrDeptDid, keyId = "key-1")
+    signedBy(issuerDid = hrDeptDid, keyId = "key-1")
 }
 
 // Verify credential with delegation check
@@ -309,7 +309,7 @@ val validatedCredential = trustLayer.issue {
         }
         issued(Instant.now())
     }
-    by(issuerDid = universityDid, keyId = "key-1")
+    signedBy(issuerDid = universityDid, keyId = "key-1")
     proofPurpose(ProofPurposes.ASSERTION_METHOD)
 }
 
@@ -370,7 +370,7 @@ fun completeWebOfTrustWorkflow() = runBlocking {
             }
             issued(Instant.now())
         }
-        by(issuerDid = issuerDid, keyId = "key-1")
+        signedBy(issuerDid = issuerDid, keyId = "key-1")
         proofPurpose(ProofPurposes.ASSERTION_METHOD)
     }
 

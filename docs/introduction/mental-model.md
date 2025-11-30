@@ -315,7 +315,7 @@ val holderDid = trustWeave.createDid { ... }
 // Issue credential
 val credential = trustWeave.issue {
     credential { issuer(issuerDid); subject { id(holderDid) } }
-    by(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
+    signedBy(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
 }
 
 // Store in wallet

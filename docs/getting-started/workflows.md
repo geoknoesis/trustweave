@@ -53,7 +53,7 @@ suspend fun issueCredentialWorkflow(
                     }
                 }
             }
-            by(issuerDid = issuerDid, keyId = issuerKeyId)
+            signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
         }
 
         Result.success(credential)
@@ -292,7 +292,7 @@ suspend fun walletManagementWorkflow(
                     claim("name", "Alice")
                 }
             }
-            by(issuerDid = "did:key:issuer", keyId = "did:key:issuer#key-1")
+            signedBy(issuerDid = "did:key:issuer", keyId = "did:key:issuer#key-1")
         }
 
         val credentialId = wallet.store(credential)
@@ -348,7 +348,7 @@ suspend fun batchIssuanceWorkflow(
                             }
                         }
                     }
-                    by(issuerDid = request.issuerDid, keyId = request.keyId)
+                    signedBy(issuerDid = request.issuerDid, keyId = request.keyId)
                 }
             }
         }.awaitAll()

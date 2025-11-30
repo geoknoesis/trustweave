@@ -278,7 +278,7 @@ fun main() = runBlocking {
             }
             issued(Instant.now())
         }
-        by(issuerDid = issuerDid.value, keyId = issuerKeyId)
+        signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
     }
     
     println("✅ Credential issued: ${credential.id}")

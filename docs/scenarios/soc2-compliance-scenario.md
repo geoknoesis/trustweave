@@ -174,45 +174,28 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for organization, employees, and auditors
-    val organizationDid = TrustWeave.dids.create()
-    val result = Result.success(organizationDid).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to create organization DID: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val organizationDid = trustWeave.createDid { method("key") }
+    println("✅ Created organization DID: ${organizationDid.value}")
 
-    val adminDid = TrustWeave.dids.create()
-    Result.success(adminDid).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to create admin DID: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val adminDid = trustWeave.createDid { method("key") }
+    println("✅ Created admin DID: ${adminDid.value}")
 
-    val employeeDid = TrustWeave.dids.create()
-    Result.success(employeeDid).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to create employee DID: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val employeeDid = trustWeave.createDid { method("key") }
+    println("✅ Created employee DID: ${employeeDid.value}")
 
-    val auditorDid = TrustWeave.dids.create()
-    Result.success(auditorDid).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to create auditor DID: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val auditorDid = trustWeave.createDid { method("key") }
+    println("✅ Created auditor DID: ${auditorDid.value}")
 
     println("✅ Organization DID: ${organizationDid.id}")
     println("✅ Admin DID: ${adminDid.id}")
@@ -334,14 +317,8 @@ fun main() = runBlocking {
     println("   Issuer valid: ${adminVerification.issuerValid}")
 
     // Step 6: Key rotation with history preservation (CC7.3)
-    val newAdminDid = TrustWeave.dids.create()
-    Result.success(newAdminDid).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to create new admin DID: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val newAdminDid = trustWeave.createDid { method("key") }
+    println("✅ Created new admin DID: ${newAdminDid.value}")
 
     // Issue key rotation credential
     val keyRotationCredential = TrustWeave.issueCredential(
@@ -639,9 +616,14 @@ suspend fun rotateKeyWithHistory(
     oldKeyId: String
 ): String {
     // Create new key
-    val newDid = TrustWeave.dids.create()
-    val newKeyId = newDid.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val newDid = trustWeave.createDid { method("key") }
+    val newDidResolution = trustWeave.resolveDid(newDid)
+    val newDidDoc = when (newDidResolution) {
+        is DidResolutionResult.Success -> newDidResolution.document
+        else -> throw IllegalStateException("Failed to resolve new DID")
+    }
+    val newKeyId = newDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
     // Issue rotation credential
     val rotationCredential = TrustWeave.issueCredential(

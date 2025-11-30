@@ -276,30 +276,29 @@ class SarFloodProduct(
         val dataDigest = DigestUtils.sha256DigestMultibase(floodData)
 
         // Step 3: Issue verifiable credential for EO data
-        val eoProviderKeyId = TrustWeave.dids.resolve(eoProviderDid)
-            .getOrThrow()
-            .verificationMethod
-            .firstOrNull()?.id
-            ?: error("No verification method found")
+        val resolution = trustWeave.resolveDid(eoProviderDid)
+        val eoProviderDoc = when (resolution) {
+            is DidResolutionResult.Success -> resolution.document
+            else -> throw IllegalStateException("Failed to resolve EO provider DID")
+        }
+        val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+            ?: throw IllegalStateException("No verification method found")
 
-        val floodCredential = TrustWeave.credentials.issue(
-            issuer = eoProviderDid,
-            subject = buildJsonObject {
-                put("id", "sar-flood-${location.id}-${timestamp.toEpochMilli()}")
-                put("dataType", "SarFloodMeasurement")
-                put("data", floodData)
-                put("dataDigest", dataDigest)
-                put("provider", eoProviderDid)
-                put("timestamp", timestamp.toString())
-            },
-            config = IssuanceConfig(
-                proofType = ProofType.Ed25519Signature2020,
-                keyId = eoProviderKeyId
-            ),
-            types = listOf(
-                "VerifiableCredential",
-                "EarthObservationCredential",
-                "InsuranceOracleCredential",
+        val floodCredential = trustWeave.issue {
+            credential {
+                issuer(eoProviderDid.value)
+                subject {
+                    id("sar-flood-${location.id}-${timestamp.toEpochMilli()}")
+                    claim("dataType", "SarFloodMeasurement")
+                    claim("data", floodData)
+                    claim("dataDigest", dataDigest)
+                    claim("provider", eoProviderDid.value)
+                    claim("timestamp", timestamp.toString())
+                }
+                issued(Instant.now())
+            }
+            signedBy(issuerDid = eoProviderDid.value, keyId = eoProviderKeyId)
+        }
                 "SarFloodCredential"
             )
         ).getOrThrow()
@@ -439,30 +438,30 @@ class HeatwaveProduct(
 
         val dataDigest = DigestUtils.sha256DigestMultibase(heatwaveData)
 
-        val eoProviderKeyId = TrustWeave.dids.resolve(eoProviderDid)
-            .getOrThrow()
-            .verificationMethod
-            .firstOrNull()?.id
-            ?: error("No verification method found")
+        val eoProviderResolution = trustWeave.resolveDid(eoProviderDid)
+        val eoProviderDoc = when (eoProviderResolution) {
+            is DidResolutionResult.Success -> eoProviderResolution.document
+            else -> throw IllegalStateException("Failed to resolve EO provider DID")
+        }
+        val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+            ?: throw IllegalStateException("No verification method found")
 
-        val heatwaveCredential = TrustWeave.credentials.issue(
-            issuerDid = eoProviderDid,
-            issuerKeyId = eoProviderKeyId,
-            credentialSubject = buildJsonObject {
-                put("id", "heatwave-${location.id}-${Instant.now().toEpochMilli()}")
-                put("dataType", "HeatwaveMeasurement")
-                put("data", heatwaveData)
-                put("dataDigest", dataDigest)
-                put("provider", eoProviderDid)
-                put("timestamp", Instant.now().toString())
-            },
-            types = listOf(
-                "VerifiableCredential",
-                "EarthObservationCredential",
-                "InsuranceOracleCredential",
-                "HeatwaveCredential"
-            )
-        ).getOrThrow()
+        val heatwaveCredential = trustWeave.issue {
+            credential {
+                type("EarthObservationCredential", "InsuranceOracleCredential", "HeatwaveCredential")
+                issuer(eoProviderDid.value)
+                subject {
+                    id("heatwave-${location.id}-${Instant.now().toEpochMilli()}")
+                    claim("dataType", "HeatwaveMeasurement")
+                    claim("data", heatwaveData)
+                    claim("dataDigest", dataDigest)
+                    claim("provider", eoProviderDid.value)
+                    claim("timestamp", Instant.now().toString())
+                }
+                issued(Instant.now())
+            }
+            signedBy(issuerDid = eoProviderDid.value, keyId = eoProviderKeyId)
+        }
 
         // Anchor to blockchain
         trustWeave.blockchains.anchor(
@@ -667,30 +666,30 @@ class SolarAttenuationProduct(
 
         val dataDigest = DigestUtils.sha256DigestMultibase(solarData)
 
-        val eoProviderKeyId = TrustWeave.dids.resolve(eoProviderDid)
-            .getOrThrow()
-            .verificationMethod
-            .firstOrNull()?.id
-            ?: error("No verification method found")
+        val eoProviderResolution = trustWeave.resolveDid(eoProviderDid)
+        val eoProviderDoc = when (eoProviderResolution) {
+            is DidResolutionResult.Success -> eoProviderResolution.document
+            else -> throw IllegalStateException("Failed to resolve EO provider DID")
+        }
+        val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+            ?: throw IllegalStateException("No verification method found")
 
-        val solarCredential = TrustWeave.credentials.issue(
-            issuerDid = eoProviderDid,
-            issuerKeyId = eoProviderKeyId,
-            credentialSubject = buildJsonObject {
-                put("id", "solar-attenuation-${location.id}-${Instant.now().toEpochMilli()}")
-                put("dataType", "SolarAttenuationMeasurement")
-                put("data", solarData)
-                put("dataDigest", dataDigest)
-                put("provider", eoProviderDid)
-                put("timestamp", Instant.now().toString())
-            },
-            types = listOf(
-                "VerifiableCredential",
-                "EarthObservationCredential",
-                "InsuranceOracleCredential",
-                "SolarAttenuationCredential"
-            )
-        ).getOrThrow()
+        val solarCredential = trustWeave.issue {
+            credential {
+                type("EarthObservationCredential", "InsuranceOracleCredential", "SolarAttenuationCredential")
+                issuer(eoProviderDid.value)
+                subject {
+                    id("solar-attenuation-${location.id}-${Instant.now().toEpochMilli()}")
+                    claim("dataType", "SolarAttenuationMeasurement")
+                    claim("data", solarData)
+                    claim("dataDigest", dataDigest)
+                    claim("provider", eoProviderDid.value)
+                    claim("timestamp", Instant.now().toString())
+                }
+                issued(Instant.now())
+            }
+            signedBy(issuerDid = eoProviderDid.value, keyId = eoProviderKeyId)
+        }
 
         // Anchor to blockchain
         trustWeave.blockchains.anchor(
@@ -710,9 +709,16 @@ class SolarAttenuationProduct(
         solarCredential: VerifiableCredential
     ): TriggerResult {
 
-        val verification = TrustWeave.credentials.verify(solarCredential)
-        if (!verification.valid) {
-            return TriggerResult(triggered = false, reason = "Credential invalid")
+        val verification = trustWeave.verify {
+            credential(solarCredential)
+        }
+        when (verification) {
+            is VerificationResult.Valid -> {
+                // Credential is valid, continue
+            }
+            is VerificationResult.Invalid -> {
+                return TriggerResult(triggered = false, reason = "Credential invalid: ${verification.reason}")
+            }
         }
 
         val credentialSubject = solarCredential.credentialSubject
@@ -774,21 +780,32 @@ data class SolarPolicy(
 ```kotlin
 suspend fun completeFloodInsuranceWorkflow() {
     // Step 1: Initialize TrustWeave
-    val TrustWeave = TrustWeave.create {
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
         blockchains {
             "algorand:mainnet" to algorandClient
         }
     }
 
     // Step 2: Create DIDs for parties
-    val insurerDid = TrustWeave.dids.create(method = "key")
-    val insuredDid = TrustWeave.dids.create(method = "key")
-    val eoProviderDid = TrustWeave.dids.create(method = "key")
-    val insurerKeyId = TrustWeave.dids.resolve(insurerDid.id)
-        .verificationMethod.firstOrNull()?.id ?: error("No key found")
+    val insurerDid = trustWeave.createDid { method("key") }
+    val insuredDid = trustWeave.createDid { method("key") }
+    val eoProviderDid = trustWeave.createDid { method("key") }
+    val insurerResolution = trustWeave.resolveDid(insurerDid)
+    val insurerDoc = when (insurerResolution) {
+        is DidResolutionResult.Success -> insurerResolution.document
+        else -> throw IllegalStateException("Failed to resolve insurer DID")
+    }
+    val insurerKeyId = insurerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No key found")
 
     // Step 3: Initialize product
-    val floodProduct = SarFloodProduct(TrustWeave, eoProviderDid.id)
+    val floodProduct = SarFloodProduct(trustWeave, eoProviderDid.value)
 
     // Step 4: Create contract
     val contract = floodProduct.createFloodContract(
@@ -885,13 +902,13 @@ class AtlasParametricPlatform {
 
         // Create DIDs for EO providers
         val eoProviderDid = runBlocking {
-            TrustWeave.dids.create(method = "key")
+            trustWeave.createDid { method("key") }
         }
 
         // Initialize products
-        sarFloodProduct = SarFloodProduct(TrustWeave, eoProviderDid.id)
-        heatwaveProduct = HeatwaveProduct(TrustWeave, eoProviderDid.id)
-        solarProduct = SolarAttenuationProduct(TrustWeave, eoProviderDid.id)
+        sarFloodProduct = SarFloodProduct(trustWeave, eoProviderDid.value)
+        heatwaveProduct = HeatwaveProduct(trustWeave, eoProviderDid.value)
+        solarProduct = SolarAttenuationProduct(trustWeave, eoProviderDid.value)
     }
 
     /**

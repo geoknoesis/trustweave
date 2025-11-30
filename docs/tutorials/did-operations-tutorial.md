@@ -58,51 +58,79 @@ interface DidMethod {
 
 ## Creating DIDs
 
-### Using TrustWeave Facade (Recommended)
+### Using TrustWeave DSL (Recommended)
 
 ```kotlin
-import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        factories(
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys {
+            provider("inMemory")
+            algorithm("Ed25519")
+        }
+        did {
+            method("key") {
+                algorithm("Ed25519")
+            }
+        }
+    }
 
-    // Create DID using did:key method
+    // Create DID using did:key method (returns type-safe Did)
     try {
-        val did = trustweave.dids.create()
-        println("Created DID: ${did.id}")
-        println("DID Document ID: ${did.id}")
-    } catch (error: TrustWeaveError) {
+        val did = trustWeave.createDid {
+            method(DidMethods.KEY)
+            algorithm(KeyAlgorithms.ED25519)
+        }
+        println("Created DID: ${did.value}")
+    } catch (error: Exception) {
         println("DID creation failed: ${error.message}")
     }
 }
 ```
 
-**Outcome:** Creates a DID using the default DID method (typically `did:key`) with sensible defaults.
+**Outcome:** Creates a DID using the configured DID method. Returns a type-safe `Did` object - access the string value using `.value`.
 
 ### Creating DIDs with Specific Methods
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.did.*
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        factories(didMethodFactory = TestkitDidMethodFactory())
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did {
+            method("key") { algorithm("Ed25519") }
+            method("web") { domain("example.com") }
+        }
+    }
 
     // Create DID with did:key method
-    val keyDid = trustweave.dids.create("key") {
-        algorithm = KeyAlgorithm.Ed25519
+    val keyDid = trustWeave.createDid {
+        method(DidMethods.KEY)
+        algorithm(KeyAlgorithms.ED25519)
     }
 
-    // Create DID with did:web method (requires did:web method registration)
-    val webDid = trustweave.dids.create("web") {
-        algorithm = KeyAlgorithm.Ed25519
-        // Note: did:web specific options would be in additionalProperties
+    // Create DID with did:web method
+    val webDid = trustWeave.createDid {
+        method("web")
+        domain("example.com")
     }
 
-    println("Key DID: ${keyDid.id}")
-    println("Web DID: ${webDid.id}")
+    println("Key DID: ${keyDid.value}")
+    println("Web DID: ${webDid.value}")
 }
 ```
 
@@ -143,32 +171,48 @@ fun main() = runBlocking {
 
 ## Resolving DIDs
 
-### Resolving DIDs with TrustWeave Facade
+### Resolving DIDs with TrustWeave DSL
 
 ```kotlin
-import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.types.Did
+import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        factories(didMethodFactory = TestkitDidMethodFactory())
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
-    val did = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
-    try {
-        val resolution = trustweave.dids.resolve(did)
-        if (resolution.document != null) {
+    val didString = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+    val resolution = trustWeave.resolveDid(didString)
+    
+    when (resolution) {
+        is DidResolutionResult.Success -> {
             println("Resolved DID: ${resolution.document.id}")
             println("Document: ${resolution.document}")
-            println("Metadata method: ${resolution.metadata.method}")
-        } else {
-            println("DID not found: ${resolution.metadata.error}")
+            println("Verification methods: ${resolution.document.verificationMethod.size}")
         }
-    } catch (error: TrustWeaveError) {
-        println("Resolution failed: ${error.message}")
+        is DidResolutionResult.Failure.NotFound -> {
+            println("DID not found: ${resolution.did.value}")
+        }
+        is DidResolutionResult.Failure.InvalidFormat -> {
+            println("Invalid DID format: ${resolution.reason}")
+        }
+        is DidResolutionResult.Failure.MethodNotRegistered -> {
+            println("DID method not registered: ${resolution.method}")
+        }
+        else -> {
+            println("Resolution failed")
+        }
     }
 }
 ```
 
-**Outcome:** Resolves a DID using the appropriate DID method automatically.
+**Outcome:** Resolves a DID using the appropriate DID method automatically. Returns a sealed `DidResolutionResult` for type-safe error handling.
 
 ### Resolving DIDs with Method Registry
 
@@ -206,26 +250,29 @@ import com.trustweave.did.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        factories(didMethodFactory = TestkitDidMethodFactory())
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
-    val did = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+    val didString = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
 
     // Update DID document
     try {
-        val updatedDoc = trustweave.dids.update(did) { document ->
+        val updatedDoc = trustWeave.updateDid {
+            did(didString)
             // Add a new service endpoint
-            document.copy(
-                service = document.service + Service(
-                    id = "${document.id}#service-1",
-                    type = "LinkedDomains",
-                    serviceEndpoint = "https://example.com/service"
-                )
-            )
+            service {
+                id("${didString}#service-1")
+                type("LinkedDomains")
+                endpoint("https://example.com/service")
+            }
         }
 
         println("Updated DID: ${updatedDoc.id}")
         println("Services: ${updatedDoc.service.size}")
-    } catch (error: TrustWeaveError) {
+    } catch (error: Exception) {
         println("Update failed: ${error.message}")
     }
 }
@@ -242,19 +289,22 @@ import com.trustweave.TrustWeave
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        factories(didMethodFactory = TestkitDidMethodFactory())
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
-    val did = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+    val didString = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
 
-    // Deactivate DID
+    // Deactivate DID (via updateDid with deactivated flag)
     try {
-        val success = trustweave.dids.deactivate(did)
-        if (success) {
-            println("DID deactivated successfully")
-        } else {
-            println("DID deactivation failed")
+        val updatedDoc = trustWeave.updateDid {
+            did(didString)
+            deactivated(true)
         }
-    } catch (error: TrustWeaveError) {
+        println("DID deactivated successfully: ${updatedDoc.id}")
+    } catch (error: Exception) {
         println("Deactivation error: ${error.message}")
     }
 }
@@ -314,8 +364,17 @@ fun main() = runBlocking {
     val trustweave = TrustWeave.create()
 
     try {
-        val did = trustweave.dids.create()
-        val document = did
+        val did = trustWeave.createDid {
+            method(DidMethods.KEY)
+            algorithm(KeyAlgorithms.ED25519)
+        }
+        
+        // Resolve DID to get document
+        val resolution = trustWeave.resolveDid(did)
+        val document = when (resolution) {
+            is DidResolutionResult.Success -> resolution.document
+            else -> throw IllegalStateException("Failed to resolve DID")
+        }
 
         // Access verification methods
         val verificationMethods = document.verificationMethod
@@ -328,7 +387,7 @@ fun main() = runBlocking {
         // Access authentication methods
         val authentication = document.authentication
         println("Authentication methods: ${authentication.size}")
-    } catch (error: TrustWeaveError) {
+    } catch (error: Exception) {
         println("Error: ${error.message}")
     }
 }
@@ -344,19 +403,29 @@ import com.trustweave.core.exception.TrustWeaveError
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        factories(didMethodFactory = TestkitDidMethodFactory())
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
 
     try {
-        val did = trustweave.dids.create()
-        println("Created: ${did.id}")
-    } catch (error: TrustWeaveError) {
+        val did = trustWeave.createDid {
+            method(DidMethods.KEY)
+            algorithm(KeyAlgorithms.ED25519)
+        }
+        println("Created: ${did.value}")
+    } catch (error: Exception) {
         when (error) {
-            is TrustWeaveError.DidMethodNotRegistered -> {
-                println("Method not registered: ${error.method}")
-                println("Available methods: ${error.availableMethods}")
+            is IllegalStateException -> {
+                if (error.message?.contains("not configured") == true) {
+                    println("DID method not configured: ${error.message}")
+                } else {
+                    println("Error: ${error.message}")
+                }
             }
-            is TrustWeaveError.InvalidDidFormat -> {
-                println("Invalid DID format: ${error.reason}")
+            else -> {
+                println("Error: ${error.message}")
             }
             is TrustWeaveError.DidNotFound -> {
                 println("DID not found: ${error.did}")

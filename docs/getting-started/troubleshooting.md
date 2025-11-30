@@ -34,7 +34,7 @@ val TrustWeave = TrustWeave.create {
 ```
 
 **Prevention:**
-- Always check available methods: `trustweave.dids.availableMethods()`
+- Check available methods via configuration: `trustWeave.configuration.registries.didRegistry.getAllMethodNames()`
 - Use `did:key` for testing (included by default)
 - Register methods during TrustWeave initialization
 
@@ -59,7 +59,7 @@ val TrustWeave = TrustWeave.create {
 ```
 
 **Prevention:**
-- Check available chains: `trustweave.blockchains.availableChains()`
+- Check available chains via configuration: `trustWeave.configuration.registries.blockchainRegistry.getAllChainIds()`
 - Use `InMemoryBlockchainAnchorClient` for testing
 - Register clients during TrustWeave initialization
 
@@ -74,17 +74,25 @@ CredentialVerificationResult(valid=false, errors=[Proof verification failed])
 
 1. **Issuer DID not resolvable**
    ```kotlin
-   // Ensure issuer DID is registered and resolvable
-   val issuerDid = TrustWeave.dids.create()
+   // Ensure issuer DID is created and resolvable
+   val issuerDid = trustWeave.createDid {
+       method("key")
+       algorithm("Ed25519")
+   }
    // Use this DID for issuance
    ```
 
 2. **Key ID mismatch**
    ```kotlin
    // Get the correct key ID from the DID document
-   val issuerDocument = TrustWeave.dids.create()
-   val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.id
-       ?: error("No verification method found")
+   val issuerDid = trustWeave.createDid { method("key") }
+   val issuerResolution = trustWeave.resolveDid(issuerDid)
+   val issuerDoc = when (issuerResolution) {
+       is DidResolutionResult.Success -> issuerResolution.document
+       else -> throw IllegalStateException("Failed to resolve issuer DID")
+   }
+   val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+       ?: throw IllegalStateException("No verification method found")
    ```
 
 3. **Credential expired**
@@ -117,10 +125,12 @@ TrustWeaveError.WalletCreationFailed: Provider 'database' not found
 - Check wallet provider availability
 
 ```kotlin
-val wallet = trustweave.wallets.create(
-    holderDid = "did:key:holder",
-    type = WalletType.InMemory  // Use in-memory for testing
-)
+val wallet = trustWeave.wallet {
+    id("holder-wallet")
+    holder("did:key:holder")
+    enableOrganization()
+    enablePresentation()
+}
 ```
 
 ### Plugin Initialization Fails
@@ -205,9 +215,9 @@ fun debugSystemState(trustweave: TrustWeave) {
 
     // Test basic operations
     println("\n=== Basic Operation Tests ===")
-    val testDid = try { trustweave.dids.create() } catch (e: Exception) { null }
+    val testDid = try { trustWeave.createDid { method("key") } } catch (e: Exception) { null }
     if (testDid != null) {
-        println("✅ DID creation works: ${testDid.id}")
+        println("✅ DID creation works: ${testDid.value}")
     } else {
         println("❌ DID creation failed")
     }
@@ -296,8 +306,8 @@ suspend fun traceDidResolution(did: String) {
     println("\n[Step 4] Attempting resolution...")
     val startTime = System.currentTimeMillis()
     val resolution = try {
-        trustweave.dids.resolve(did)
-    } catch (error: TrustWeaveError) {
+        trustWeave.resolveDid(did)
+    } catch (error: Exception) {
         val duration = System.currentTimeMillis() - startTime
         println("❌ Resolution failed (${duration}ms)")
             println("   Error: ${error.message}")
@@ -320,23 +330,26 @@ suspend fun minimalReproducibleExample() {
 
     // Step 1: Create TrustWeave instance
     println("\n[1] Creating TrustWeave instance...")
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
     println("✅ TrustWeave created")
 
     // Step 2: Create a DID
     println("\n[2] Creating DID...")
-    val did = TrustWeave.dids.create()
-    val didResult = Result.success(did)
-    didResult.fold(
-        onSuccess = { did ->
-            println("✅ DID created: ${did.id}")
+    val did = trustWeave.createDid { method("key") }
+    println("✅ DID created: ${did.value}")
 
-            // Step 3: Resolve the DID
-            println("\n[3] Resolving DID...")
-            val resolution = TrustWeave.dids.resolve(did.id)
-            val resolveResult = Result.success(resolution)
-            resolveResult.fold(
-                onSuccess = { resolution ->
+    // Step 3: Resolve the DID
+    println("\n[3] Resolving DID...")
+    val resolution = trustWeave.resolveDid(did)
+    when (resolution) {
+        is DidResolutionResult.Success -> {
                     println("✅ DID resolved")
                     println("   Document: ${resolution.document?.id}")
                 },
@@ -415,12 +428,11 @@ suspend fun checkNetworkConnectivity() {
     println("Testing resolution of: $testDid")
 
     val startTime = System.currentTimeMillis()
-    val resolution = TrustWeave.dids.resolve(testDid)
-    val result = Result.success(resolution)
+    val resolution = trustWeave.resolveDid(testDid)
     val duration = System.currentTimeMillis() - startTime
 
-    result.fold(
-        onSuccess = {
+    when (resolution) {
+        is DidResolutionResult.Success -> {
             println("✅ Network connectivity OK (${duration}ms)")
         },
         onFailure = { error ->
@@ -542,7 +554,7 @@ suspend fun issueMultipleCredentials(
                         }
                     }
                 }
-                by(issuerDid = request.issuerDid, keyId = request.keyId)
+                signedBy(issuerDid = request.issuerDid, keyId = request.keyId)
             }
         }
     }.awaitAll()

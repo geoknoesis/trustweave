@@ -176,13 +176,16 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for university (issuer) and student (holder)
-    val universityDidDoc = TrustWeave.dids.create()
-    val universityDid = universityDidDoc.id
-    val universityKeyId = universityDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val universityDid = trustWeave.createDid { method("key") }
+    val universityResolution = trustWeave.resolveDid(universityDid)
+    val universityDoc = when (universityResolution) {
+        is DidResolutionResult.Success -> universityResolution.document
+        else -> throw IllegalStateException("Failed to resolve university DID")
+    }
+    val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val studentDidDoc = TrustWeave.dids.create()
-    val studentDid = studentDidDoc.id
+    val studentDid = trustWeave.createDid { method("key") }
 
     println("✅ University DID: $universityDid")
     println("✅ Student DID: $studentDid")
@@ -345,14 +348,17 @@ Each party (university issuer and student holder) needs their own DID:
 
 ```kotlin
 // Create university DID (issuer)
-val universityDidDoc = TrustWeave.dids.create()
-val universityDid = universityDidDoc.id
-val universityKeyId = universityDidDoc.verificationMethod.firstOrNull()?.id
-    ?: error("No verification method found")
+val universityDid = trustWeave.createDid { method("key") }
+val universityResolution = trustWeave.resolveDid(universityDid)
+val universityDoc = when (universityResolution) {
+    is DidResolutionResult.Success -> universityResolution.document
+    else -> throw IllegalStateException("Failed to resolve university DID")
+}
+val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    ?: throw IllegalStateException("No verification method found")
 
 // Create student DID (holder)
-val studentDidDoc = TrustWeave.dids.create()
-val studentDid = studentDidDoc.id
+val studentDid = trustWeave.createDid { method("key") }
 ```
 
 **What this does:** Creates self-sovereign identifiers for both parties. The university DID will be used as the credential issuer, and the student DID will be the credential subject.

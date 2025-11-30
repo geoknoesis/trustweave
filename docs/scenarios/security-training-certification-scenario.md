@@ -176,26 +176,35 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for training providers, professionals, and employers
-    val isc2DidDoc = TrustWeave.dids.create()
-    val isc2Did = isc2DidDoc.id
-    val isc2KeyId = isc2DidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val isc2Did = trustWeave.createDid { method("key") }
+    val isc2Resolution = trustWeave.resolveDid(isc2Did)
+    val isc2Doc = when (isc2Resolution) {
+        is DidResolutionResult.Success -> isc2Resolution.document
+        else -> throw IllegalStateException("Failed to resolve ISC2 DID")
+    }
+    val isc2KeyId = isc2Doc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val ecCouncilDidDoc = TrustWeave.dids.create()
-    val ecCouncilDid = ecCouncilDidDoc.id
-    val ecCouncilKeyId = ecCouncilDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val ecCouncilDid = trustWeave.createDid { method("key") }
+    val ecCouncilResolution = trustWeave.resolveDid(ecCouncilDid)
+    val ecCouncilDoc = when (ecCouncilResolution) {
+        is DidResolutionResult.Success -> ecCouncilResolution.document
+        else -> throw IllegalStateException("Failed to resolve EC-Council DID")
+    }
+    val ecCouncilKeyId = ecCouncilDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val comptiaDidDoc = TrustWeave.dids.create()
-    val comptiaDid = comptiaDidDoc.id
-    val comptiaKeyId = comptiaDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val comptiaDid = trustWeave.createDid { method("key") }
+    val comptiaResolution = trustWeave.resolveDid(comptiaDid)
+    val comptiaDoc = when (comptiaResolution) {
+        is DidResolutionResult.Success -> comptiaResolution.document
+        else -> throw IllegalStateException("Failed to resolve CompTIA DID")
+    }
+    val comptiaKeyId = comptiaDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val professionalDidDoc = TrustWeave.dids.create()
-    val professionalDid = professionalDidDoc.id
-
-    val employerDidDoc = TrustWeave.dids.create()
-    val employerDid = employerDidDoc.id
+    val professionalDid = trustWeave.createDid { method("key") }
+    val employerDid = trustWeave.createDid { method("key") }
 
     println("✅ (ISC)² DID: $isc2Did")
     println("✅ EC-Council DID: $ecCouncilDid")

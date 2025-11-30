@@ -176,25 +176,20 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for security authority, personnel, and classified systems
-    val securityAuthorityDidDoc = TrustWeave.dids.create()
-    val securityAuthorityDid = securityAuthorityDidDoc.id
-    val securityAuthorityKeyId = securityAuthorityDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val securityAuthorityDid = trustWeave.createDid { method("key") }
+    val securityAuthorityResolution = trustWeave.resolveDid(securityAuthorityDid)
+    val securityAuthorityDoc = when (securityAuthorityResolution) {
+        is DidResolutionResult.Success -> securityAuthorityResolution.document
+        else -> throw IllegalStateException("Failed to resolve security authority DID")
+    }
+    val securityAuthorityKeyId = securityAuthorityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val personnel1DidDoc = TrustWeave.dids.create()
-    val personnel1Did = personnel1DidDoc.id
-
-    val personnel2DidDoc = TrustWeave.dids.create()
-    val personnel2Did = personnel2DidDoc.id
-
-    val topSecretSystemDidDoc = TrustWeave.dids.create()
-    val topSecretSystemDid = topSecretSystemDidDoc.id
-
-    val secretSystemDidDoc = TrustWeave.dids.create()
-    val secretSystemDid = secretSystemDidDoc.id
-
-    val confidentialSystemDidDoc = TrustWeave.dids.create()
-    val confidentialSystemDid = confidentialSystemDidDoc.id
+    val personnel1Did = trustWeave.createDid { method("key") }
+    val personnel2Did = trustWeave.createDid { method("key") }
+    val topSecretSystemDid = trustWeave.createDid { method("key") }
+    val secretSystemDid = trustWeave.createDid { method("key") }
+    val confidentialSystemDid = trustWeave.createDid { method("key") }
 
     println("✅ Security Authority DID: $securityAuthorityDid")
     println("✅ Personnel 1 DID: $personnel1Did")

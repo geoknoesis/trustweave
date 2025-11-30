@@ -126,7 +126,7 @@ val credential = trustLayer.issue {
         }
         issued(Instant.now())
     }
-    by(issuerDid = delegateDid, keyId = "key-1")
+    signedBy(issuerDid = delegateDid, keyId = "key-1")
 }
 
 // Verify credential with delegation check
@@ -235,7 +235,7 @@ val credential = trustLayer.issue {
         }
         issued(Instant.now())
     }
-    by(issuerDid = hrManagerDid, keyId = "key-1")
+    signedBy(issuerDid = hrManagerDid, keyId = "key-1")
 }
 
 // Step 5: Verify credential with delegation check

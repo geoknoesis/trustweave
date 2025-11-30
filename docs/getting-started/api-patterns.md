@@ -73,8 +73,8 @@ val rotated = trustLayer.rotateKey {
 ❌ **Incorrect (Old API - Do Not Use):**
 ```kotlin
 // These patterns are from older documentation and should not be used
-val did = TrustWeave.dids.create()
-val resolution = TrustWeave.dids.resolve(did)
+val did = trustWeave.createDid { method("key") }
+val resolution = trustWeave.resolveDid(did)
 ```
 
 ### Credential Operations
@@ -93,7 +93,7 @@ val credential = trustLayer.issue {
             claim("name", "Alice")
         }
     }
-    by(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
+    signedBy(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
 }
 
 // Verify credential
@@ -108,8 +108,8 @@ val verification = trustLayer.verify {
 ❌ **Incorrect (Old API - Do Not Use):**
 ```kotlin
 // These patterns are from older documentation
-val credential = TrustWeave.credentials.issue(...)
-val verification = TrustWeave.credentials.verify(...)
+val credential = trustWeave.issue { credential { ... }; signedBy(...) }
+val verification = trustWeave.verify { credential(credential) }
 ```
 
 ### Wallet Operations
@@ -273,7 +273,7 @@ val trustLayer = TrustLayer.build {
 ```kotlin
 val credential = trustLayer.issue {
     credential { ... }
-    by(issuerDid = issuerDid, keyId = "key-1")  // Missing DID prefix!
+    signedBy(issuerDid = issuerDid, keyId = "key-1")  // Missing DID prefix!
 }
 ```
 
@@ -282,7 +282,7 @@ val credential = trustLayer.issue {
 val issuerKeyId = "$issuerDid#key-1"
 val credential = trustLayer.issue {
     credential { ... }
-    by(issuerDid = issuerDid, keyId = issuerKeyId)
+    signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
 }
 ```
 
@@ -307,7 +307,7 @@ val trustLayer = TrustLayer.build {
 val did = trustLayer.createDid { method("key") }
 val credential = trustLayer.issue {
     credential { ... }
-    by(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
+    signedBy(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
 }
 ```
 
@@ -366,7 +366,7 @@ val credential = trustLayer.issue {
             claim("name", "Alice")
         }
     }
-    by(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
+    signedBy(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
 }
 ```
 

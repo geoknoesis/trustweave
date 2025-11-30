@@ -164,7 +164,7 @@ suspend fun issueCredential(
                     }
                 }
             }
-            by(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
+            signedBy(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
         }
         Result.success(credential)
     } catch (error: TrustWeaveError) {
@@ -310,7 +310,7 @@ suspend fun issueMultipleCredentials(
                         }
                     }
                 }
-                by(issuerDid = request.issuerDid, keyId = request.keyId)
+                signedBy(issuerDid = request.issuerDid, keyId = request.keyId)
             }
         }
     }.awaitAll()

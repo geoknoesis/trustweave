@@ -180,23 +180,34 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for sensor manufacturer, sensors, and data consumer
-    val manufacturerDidDoc = TrustWeave.dids.create()
-    val manufacturerDid = manufacturerDidDoc.id
-    val manufacturerKeyId = manufacturerDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val manufacturerDid = trustWeave.createDid { method("key") }
+    val manufacturerResolution = trustWeave.resolveDid(manufacturerDid)
+    val manufacturerDoc = when (manufacturerResolution) {
+        is DidResolutionResult.Success -> manufacturerResolution.document
+        else -> throw IllegalStateException("Failed to resolve manufacturer DID")
+    }
+    val manufacturerKeyId = manufacturerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val temperatureSensorDidDoc = TrustWeave.dids.create()
-    val temperatureSensorDid = temperatureSensorDidDoc.id
-    val temperatureSensorKeyId = temperatureSensorDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val temperatureSensorDid = trustWeave.createDid { method("key") }
+    val temperatureSensorResolution = trustWeave.resolveDid(temperatureSensorDid)
+    val temperatureSensorDoc = when (temperatureSensorResolution) {
+        is DidResolutionResult.Success -> temperatureSensorResolution.document
+        else -> throw IllegalStateException("Failed to resolve temperature sensor DID")
+    }
+    val temperatureSensorKeyId = temperatureSensorDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val humiditySensorDidDoc = TrustWeave.dids.create()
-    val humiditySensorDid = humiditySensorDidDoc.id
-    val humiditySensorKeyId = humiditySensorDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val humiditySensorDid = trustWeave.createDid { method("key") }
+    val humiditySensorResolution = trustWeave.resolveDid(humiditySensorDid)
+    val humiditySensorDoc = when (humiditySensorResolution) {
+        is DidResolutionResult.Success -> humiditySensorResolution.document
+        else -> throw IllegalStateException("Failed to resolve humidity sensor DID")
+    }
+    val humiditySensorKeyId = humiditySensorDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val dataConsumerDidDoc = TrustWeave.dids.create()
-    val dataConsumerDid = dataConsumerDidDoc.id
+    val dataConsumerDid = trustWeave.createDid { method("key") }
 
     println("✅ Sensor Manufacturer DID: $manufacturerDid")
     println("✅ Temperature Sensor DID: $temperatureSensorDid")

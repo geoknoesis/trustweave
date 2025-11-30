@@ -410,7 +410,7 @@ Everything in TrustWeave assumes deterministic canonicalization, so the very fir
 ## Step 3: Create a DID with typed options
 
 **Why:** You need an issuer DID before issuing credentials.
-**How it works:** `TrustWeave.dids.create()` uses the bundled DID method registry and typed `DidCreationOptions`.
+**How it works:** `trustWeave.createDid { }` uses the configured DID method registry and DSL builder.
 **How simple:** Configure only what you need using a fluent builder—defaults cover the rest.
 
 ```kotlin

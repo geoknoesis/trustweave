@@ -70,9 +70,15 @@ Most TrustWeave API operations throw `TrustWeaveError` exceptions on failure. So
 import com.trustweave.core.*
 
 try {
-    val did = trustweave.dids.create()
-    val credential = trustweave.credentials.issue(...)
-    val wallet = trustweave.wallets.create(holderDid = did.id)
+    val did = trustWeave.createDid { method("key") }
+    val credential = trustWeave.issue { 
+        credential { issuer(did.value); subject { id(did.value) } }
+        signedBy(issuerDid = did.value, keyId = "key-1")
+    }
+    val wallet = trustWeave.wallet { 
+        id("wallet-1")
+        holder(did.value)
+    }
 } catch (error: TrustWeaveError) {
     when (error) {
         is TrustWeaveError.DidMethodNotRegistered -> {

@@ -73,10 +73,8 @@ fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
 
     // Create a DID using the default method (did:key)
-    val did = TrustWeave.dids.create()
-    val result = Result.success(did)
-
-    result.fold(
+    val did = trustWeave.createDid { method("key") }
+    println("Created DID: ${did.value}")
         onSuccess = { didDocument ->
             println("✅ Created DID: ${didDocument.id}")
             println("   Verification Methods: ${didDocument.verificationMethod.size}")
@@ -198,12 +196,12 @@ fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
 
     // Create issuer DID (the organization issuing credentials)
-    val issuerDid = TrustWeave.dids.create()
-    println("Issuer DID: ${issuerDid.id}")
+    val issuerDid = trustWeave.createDid { method("key") }
+    println("Issuer DID: ${issuerDid.value}")
 
     // Create holder DID (the person receiving the credential)
-    val holderDid = TrustWeave.dids.create()
-    println("Holder DID: ${holderDid.id}")
+    val holderDid = trustWeave.createDid { method("key") }
+    println("Holder DID: ${holderDid.value}")
 }
 ```
 
@@ -218,12 +216,17 @@ fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
 
     // Create DIDs
-    val issuerDid = TrustWeave.dids.create()
-    val holderDid = TrustWeave.dids.create()
+    val issuerDid = trustWeave.createDid { method("key") }
+    val holderDid = trustWeave.createDid { method("key") }
 
     // Get the first verification method from issuer's DID document
-    val issuerKeyId = issuerDid.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val issuerResolution = trustWeave.resolveDid(issuerDid)
+    val issuerDoc = when (issuerResolution) {
+        is DidResolutionResult.Success -> issuerResolution.document
+        else -> throw IllegalStateException("Failed to resolve issuer DID")
+    }
+    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
     // Issue a credential
     val credentialResult = TrustWeave.issueCredential(
@@ -364,13 +367,13 @@ fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
 
     // Create holder DID
-    val holderDid = TrustWeave.dids.create()
+    val holderDid = trustWeave.createDid { method("key") }
 
     // Create wallet for the holder
-    val walletResult = TrustWeave.createWallet(
-        holderDid = holderDid.id,
-        provider = WalletProvider.InMemory  // For testing
-    )
+    val wallet = trustWeave.wallet {
+        holder(holderDid.value)
+        type("inMemory")
+    }
 
     walletResult.fold(
         onSuccess = { wallet ->
@@ -393,12 +396,15 @@ fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
 
     // Create DIDs and issue credential (from Tutorial 2)
-    val issuerDid = TrustWeave.dids.create()
-    val holderDid = TrustWeave.dids.create()
+    val issuerDid = trustWeave.createDid { method("key") }
+    val holderDid = trustWeave.createDid { method("key") }
     val credential = /* ... issue credential ... */
 
     // Create wallet
-    val wallet = TrustWeave.createWallet(holderDid.id).getOrThrow()
+    val wallet = trustWeave.wallet {
+        holder(holderDid.value)
+        type("inMemory")
+    }
 
     // Store credential in wallet
     val storeResult = wallet.storeCredential(credential)
@@ -519,20 +525,29 @@ fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
 
     // Issuer: University issuing degrees
-    val issuerDid = TrustWeave.dids.create()
-    val issuerKeyId = issuerDid.verificationMethod.first().id
+    val issuerDid = trustWeave.createDid { method("key") }
+    val issuerResolution = trustWeave.resolveDid(issuerDid)
+    val issuerDoc = when (issuerResolution) {
+        is DidResolutionResult.Success -> issuerResolution.document
+        else -> throw IllegalStateException("Failed to resolve issuer DID")
+    }
+    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
     // Holder: Student receiving degree
-    val holderDid = TrustWeave.dids.create()
-    val holderWallet = TrustWeave.createWallet(holderDid.id).getOrThrow()
+    val holderDid = trustWeave.createDid { method("key") }
+    val holderWallet = trustWeave.wallet {
+        holder(holderDid.value)
+        type("inMemory")
+    }
 
     // Verifier: Employer verifying degree
-    val verifierDid = TrustWeave.dids.create()
+    val verifierDid = trustWeave.createDid { method("key") }
 
     println("✅ All parties set up")
-    println("   Issuer: ${issuerDid.id}")
-    println("   Holder: ${holderDid.id}")
-    println("   Verifier: ${verifierDid.id}")
+    println("   Issuer: ${issuerDid.value}")
+    println("   Holder: ${holderDid.value}")
+    println("   Verifier: ${verifierDid.value}")
 }
 ```
 

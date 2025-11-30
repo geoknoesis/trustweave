@@ -146,14 +146,21 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for insurance company, airline, weather service, and baggage system
-    val insuranceDid = TrustWeave.dids.create()
-    val airlineDid = TrustWeave.dids.create()
-    val weatherServiceDid = TrustWeave.dids.create()
-    val baggageSystemDid = TrustWeave.dids.create()
+    val insuranceDid = trustWeave.createDid { method("key") }
+    val airlineDid = trustWeave.createDid { method("key") }
+    val weatherServiceDid = trustWeave.createDid { method("key") }
+    val baggageSystemDid = trustWeave.createDid { method("key") }
 
     println("✅ Insurance Company DID: ${insuranceDid.id}")
     println("✅ Airline DID: ${airlineDid.id}")

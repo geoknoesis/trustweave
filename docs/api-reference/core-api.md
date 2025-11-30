@@ -151,7 +151,7 @@ val did = trustWeave.createDid {
 // Issue credential
 val credential = trustWeave.issue {
     credential { ... }
-    by(issuerDid = did, keyId = "$did#key-1")
+    signedBy(issuerDid = did, keyId = "$did#key-1")
 }
 
 // Create wallet
@@ -445,7 +445,7 @@ The DSL builder provides a fluent API for configuring the credential:
   - `schema(String)`: Set credential schema
   - `status { }`: Configure revocation status
 
-- **`by(issuerDid: String, keyId: String)`**: Specify issuer and key for signing
+- **`signedBy(issuerDid: String, keyId: String)`**: Specify issuer and key for signing
   - **`issuerDid`**: The DID of the credential issuer
   - **`keyId`**: The key ID from issuer's DID document (e.g., `"$issuerDid#key-1"`)
 
@@ -509,7 +509,7 @@ val credential = trustWeave.issue {
             claim("name", "Alice")
         }
     }
-    by(issuerDid = "did:key:issuer", keyId = "did:key:issuer#key-1")
+    signedBy(issuerDid = "did:key:issuer", keyId = "did:key:issuer#key-1")
 }
 
 // With error handling
@@ -523,7 +523,7 @@ try {
                 claim("name", "Alice")
             }
         }
-        by(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
+        signedBy(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
     }
     println("Issued: ${credential.id}")
 } catch (error: Exception) {
@@ -1691,7 +1691,7 @@ try {
     }
     val credential = trustWeave.issue {
         credential { ... }
-        by(issuerDid = did, keyId = "$did#key-1")
+        signedBy(issuerDid = did, keyId = "$did#key-1")
     }
     val wallet = trustWeave.wallet {
         holder(did)

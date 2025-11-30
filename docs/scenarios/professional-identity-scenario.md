@@ -159,45 +159,68 @@ dependencies {
 Here’s the full professional identity wallet flow. Execute it once to see the end-to-end experience before exploring the step-by-step explanations.
 
 ```kotlin
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.models.VerifiablePresentation
-import com.trustweave.credential.PresentationOptions
-import com.trustweave.testkit.credential.InMemoryWallet
-import com.trustweave.testkit.did.DidKeyMockMethod
-import com.trustweave.testkit.kms.InMemoryKeyManagementService
-import com.trustweave.did.DidMethodRegistry
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.trust.types.ProofType
 import com.trustweave.trust.dsl.credential.credential
+import com.trustweave.testkit.services.TestkitDidMethodFactory
+import com.trustweave.testkit.services.TestkitWalletFactory
+import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 
 fun main() = runBlocking {
     println("=== Professional Identity Wallet Scenario ===\n")
 
-    // Step 1: Setup
+    // Step 1: Configure Trust Layer
     println("Step 1: Setting up services...")
     val kms = InMemoryKeyManagementService()
-    val didMethod = DidKeyMockMethod(kms)
-    val didRegistry = DidMethodRegistry().apply { register(didMethod) }
+    val kmsRef = kms
 
-    val professionalDid = didMethod.createDid()
-    println("Professional DID: ${professionalDid.id}")
+    val trustWeave = TrustWeave.build {
+        factories(
+            didMethodFactory = TestkitDidMethodFactory(),
+            walletFactory = TestkitWalletFactory()
+        )
+        keys {
+            custom(kmsRef)
+            signer { data, keyId ->
+                kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)
+            }
+        }
+        did {
+            method(DidMethods.KEY) {
+                algorithm(KeyAlgorithms.ED25519)
+            }
+        }
+        credentials {
+            defaultProofType(ProofType.Ed25519Signature2020)
+        }
+    }
+
+    // Create professional DID using DSL
+    val professionalDid = trustWeave.createDid {
+        method(DidMethods.KEY)
+        algorithm(KeyAlgorithms.ED25519)
+    }
+    println("Professional DID: ${professionalDid.value}")
 
     // Step 2: Create professional wallet
     println("\nStep 2: Creating professional wallet...")
-    val wallet = InMemoryWallet(
-        walletDid = professionalDid.id,
-        holderDid = professionalDid.id
-    )
+    val wallet = trustWeave.wallet {
+        id("professional-wallet-${professionalDid.value.substringAfterLast(":")}")
+        holder(professionalDid.value)
+        enableOrganization()
+        enablePresentation()
+    }
     println("Wallet created: ${wallet.walletId}")
 
     // Step 3: Store education credentials
     println("\nStep 3: Storing education credentials...")
     val bachelorDegree = createEducationCredential(
         issuerDid = "did:key:university",
-        holderDid = professionalDid.id,
+        holderDid = professionalDid.value,
         degreeType = "Bachelor",
         field = "Computer Science",
         institution = "Tech University",
@@ -207,7 +230,7 @@ fun main() = runBlocking {
 
     val masterDegree = createEducationCredential(
         issuerDid = "did:key:university",
-        holderDid = professionalDid.id,
+        holderDid = professionalDid.value,
         degreeType = "Master",
         field = "Software Engineering",
         institution = "Tech University",
@@ -221,7 +244,7 @@ fun main() = runBlocking {
     println("\nStep 4: Storing work experience credentials...")
     val job1 = createEmploymentCredential(
         issuerDid = "did:key:company1",
-        holderDid = professionalDid.id,
+        holderDid = professionalDid.value,
         company = "Tech Corp",
         role = "Software Engineer",
         startDate = "2020-06-01",
@@ -236,7 +259,7 @@ fun main() = runBlocking {
 
     val job2 = createEmploymentCredential(
         issuerDid = "did:key:company2",
-        holderDid = professionalDid.id,
+        holderDid = professionalDid.value,
         company = "Innovation Labs",
         role = "Senior Software Engineer",
         startDate = "2023-01-01",
@@ -254,7 +277,7 @@ fun main() = runBlocking {
     println("\nStep 5: Storing certifications...")
     val awsCert = createCertificationCredential(
         issuerDid = "did:key:aws",
-        holderDid = professionalDid.id,
+        holderDid = professionalDid.value,
         certificationName = "AWS Certified Solutions Architect",
         issuer = "Amazon Web Services",
         issueDate = "2021-03-15",
@@ -265,7 +288,7 @@ fun main() = runBlocking {
 
     val kubernetesCert = createCertificationCredential(
         issuerDid = "did:key:cncf",
-        holderDid = professionalDid.id,
+        holderDid = professionalDid.value,
         certificationName = "Certified Kubernetes Administrator",
         issuer = "Cloud Native Computing Foundation",
         issueDate = "2022-06-20",
@@ -361,9 +384,9 @@ fun main() = runBlocking {
             "certification.issuer"
             // GPA, salary, and other sensitive info NOT disclosed
         ),
-        holderDid = professionalDid.id,
+        holderDid = professionalDid.value,
         options = PresentationOptions(
-            holderDid = professionalDid.id,
+            holderDid = professionalDid.value,
             proofType = "Ed25519Signature2020",
             challenge = "job-application-${Instant.now().toEpochMilli()}"
         )
@@ -373,9 +396,9 @@ fun main() = runBlocking {
     // Presentation for professional profile (public)
     val profilePresentation = wallet.createPresentation(
         credentialIds = listOf(masterId, job2Id, awsCertId, k8sCertId),
-        holderDid = professionalDid.id,
+        holderDid = professionalDid.value,
         options = PresentationOptions(
-            holderDid = professionalDid.id,
+            holderDid = professionalDid.value,
             proofType = "Ed25519Signature2020"
         )
     )

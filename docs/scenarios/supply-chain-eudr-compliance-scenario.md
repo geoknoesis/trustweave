@@ -143,50 +143,28 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for exporter, importer, and verifier
-    val exporterDid = TrustWeave.dids.create()
-    Result.success(exporterDid).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to create exporter DID: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val exporterDid = trustWeave.createDid { method("key") }
+    val importerDid = trustWeave.createDid { method("key") }
+    val verifierDid = trustWeave.createDid { method("key") }
 
-    val importerDid = TrustWeave.dids.create()
-    Result.success(importerDid).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to create importer DID: ${error.message}")
-            return@runBlocking
-        }
-    )
-
-    val verifierDid = TrustWeave.dids.create()
-    Result.success(verifierDid).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to create verifier DID: ${error.message}")
-            return@runBlocking
-        }
-    )
-
-    println("✅ Exporter DID: ${exporterDid.id}")
-    println("✅ Importer DID: ${importerDid.id}")
-    println("✅ Verifier DID: ${verifierDid.id}")
+    println("✅ Exporter DID: ${exporterDid.value}")
+    println("✅ Importer DID: ${importerDid.value}")
+    println("✅ Verifier DID: ${verifierDid.value}")
 
     // Step 3: Create farm/production site DID
-    val farmDid = TrustWeave.dids.create()
-    Result.success(farmDid).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to create farm DID: ${error.message}")
-            return@runBlocking
-        }
-    )
+    val farmDid = trustWeave.createDid { method("key") }
+    println("✅ Farm DID: ${farmDid.value}")
     println("✅ Farm DID: ${farmDid.id}")
 
     // Step 4: Create EO data evidence (non-deforestation proof)

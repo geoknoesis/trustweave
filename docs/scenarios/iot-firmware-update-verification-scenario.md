@@ -180,18 +180,25 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for manufacturer, update server, and IoT device
-    val manufacturerDidDoc = TrustWeave.dids.create()
-    val manufacturerDid = manufacturerDidDoc.id
-    val manufacturerKeyId = manufacturerDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val manufacturerDid = trustWeave.createDid { method("key") }
+    val manufacturerResolution = trustWeave.resolveDid(manufacturerDid)
+    val manufacturerDoc = when (manufacturerResolution) {
+        is DidResolutionResult.Success -> manufacturerResolution.document
+        else -> throw IllegalStateException("Failed to resolve manufacturer DID")
+    }
+    val manufacturerKeyId = manufacturerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val updateServerDidDoc = TrustWeave.dids.create()
-    val updateServerDid = updateServerDidDoc.id
-    val updateServerKeyId = updateServerDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val updateServerDid = trustWeave.createDid { method("key") }
+    val updateServerResolution = trustWeave.resolveDid(updateServerDid)
+    val updateServerDoc = when (updateServerResolution) {
+        is DidResolutionResult.Success -> updateServerResolution.document
+        else -> throw IllegalStateException("Failed to resolve update server DID")
+    }
+    val updateServerKeyId = updateServerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val deviceDidDoc = TrustWeave.dids.create()
-    val deviceDid = deviceDidDoc.id
+    val deviceDid = trustWeave.createDid { method("key") }
 
     println("✅ Manufacturer DID: $manufacturerDid")
     println("✅ Update Server DID: $updateServerDid")

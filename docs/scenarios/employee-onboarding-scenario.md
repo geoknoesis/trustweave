@@ -181,31 +181,45 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for all parties
-    val universityDidDoc = TrustWeave.dids.create()
-    val universityDid = universityDidDoc.id
-    val universityKeyId = universityDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val universityDid = trustWeave.createDid { method("key") }
+    val universityResolution = trustWeave.resolveDid(universityDid)
+    val universityDoc = when (universityResolution) {
+        is DidResolutionResult.Success -> universityResolution.document
+        else -> throw IllegalStateException("Failed to resolve university DID")
+    }
+    val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val previousEmployerDidDoc = TrustWeave.dids.create()
-    val previousEmployerDid = previousEmployerDidDoc.id
-    val previousEmployerKeyId = previousEmployerDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val previousEmployerDid = trustWeave.createDid { method("key") }
+    val previousEmployerResolution = trustWeave.resolveDid(previousEmployerDid)
+    val previousEmployerDoc = when (previousEmployerResolution) {
+        is DidResolutionResult.Success -> previousEmployerResolution.document
+        else -> throw IllegalStateException("Failed to resolve previous employer DID")
+    }
+    val previousEmployerKeyId = previousEmployerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val certificationBodyDidDoc = TrustWeave.dids.create()
-    val certificationBodyDid = certificationBodyDidDoc.id
-    val certificationBodyKeyId = certificationBodyDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val certificationBodyDid = trustWeave.createDid { method("key") }
+    val certificationBodyResolution = trustWeave.resolveDid(certificationBodyDid)
+    val certificationBodyDoc = when (certificationBodyResolution) {
+        is DidResolutionResult.Success -> certificationBodyResolution.document
+        else -> throw IllegalStateException("Failed to resolve certification body DID")
+    }
+    val certificationBodyKeyId = certificationBodyDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val backgroundCheckProviderDidDoc = TrustWeave.dids.create()
-    val backgroundCheckProviderDid = backgroundCheckProviderDidDoc.id
-    val backgroundCheckProviderKeyId = backgroundCheckProviderDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val backgroundCheckProviderDid = trustWeave.createDid { method("key") }
+    val backgroundCheckProviderResolution = trustWeave.resolveDid(backgroundCheckProviderDid)
+    val backgroundCheckProviderDoc = when (backgroundCheckProviderResolution) {
+        is DidResolutionResult.Success -> backgroundCheckProviderResolution.document
+        else -> throw IllegalStateException("Failed to resolve background check provider DID")
+    }
+    val backgroundCheckProviderKeyId = backgroundCheckProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val candidateDidDoc = TrustWeave.dids.create()
-    val candidateDid = candidateDidDoc.id
+    val candidateDid = trustWeave.createDid { method("key") }
 
-    val employerDidDoc = TrustWeave.dids.create()
-    val employerDid = employerDidDoc.id
+    val employerDid = trustWeave.createDid { method("key") }
 
     println("✅ University DID: $universityDid")
     println("✅ Previous Employer DID: $previousEmployerDid")

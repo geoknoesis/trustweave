@@ -179,23 +179,33 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for all parties
-    val insuranceCompanyDidDoc = TrustWeave.dids.create()
-    val insuranceCompanyDid = insuranceCompanyDidDoc.id
-    val insuranceCompanyKeyId = insuranceCompanyDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val insuranceCompanyDid = trustWeave.createDid { method("key") }
+    val insuranceCompanyResolution = trustWeave.resolveDid(insuranceCompanyDid)
+    val insuranceCompanyDoc = when (insuranceCompanyResolution) {
+        is DidResolutionResult.Success -> insuranceCompanyResolution.document
+        else -> throw IllegalStateException("Failed to resolve insurance company DID")
+    }
+    val insuranceCompanyKeyId = insuranceCompanyDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val policyholderDidDoc = TrustWeave.dids.create()
-    val policyholderDid = policyholderDidDoc.id
+    val policyholderDid = trustWeave.createDid { method("key") }
+    val assessorDid = trustWeave.createDid { method("key") }
+    val assessorResolution = trustWeave.resolveDid(assessorDid)
+    val assessorDoc = when (assessorResolution) {
+        is DidResolutionResult.Success -> assessorResolution.document
+        else -> throw IllegalStateException("Failed to resolve assessor DID")
+    }
+    val assessorKeyId = assessorDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val assessorDidDoc = TrustWeave.dids.create()
-    val assessorDid = assessorDidDoc.id
-    val assessorKeyId = assessorDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
-
-    val repairShopDidDoc = TrustWeave.dids.create()
-    val repairShopDid = repairShopDidDoc.id
-    val repairShopKeyId = repairShopDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val repairShopDid = trustWeave.createDid { method("key") }
+    val repairShopResolution = trustWeave.resolveDid(repairShopDid)
+    val repairShopDoc = when (repairShopResolution) {
+        is DidResolutionResult.Success -> repairShopResolution.document
+        else -> throw IllegalStateException("Failed to resolve repair shop DID")
+    }
+    val repairShopKeyId = repairShopDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
     println("✅ Insurance Company DID: $insuranceCompanyDid")
     println("✅ Policyholder DID: $policyholderDid")

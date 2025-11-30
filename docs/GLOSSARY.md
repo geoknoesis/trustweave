@@ -146,10 +146,12 @@ Implementation that creates wallet instances (InMemory, Database, etc.).
 
 **Example:**
 ```kotlin
-val wallet = trustweave.wallets.create(
-    holderDid = "did:key:holder",
-    type = WalletType.InMemory
-)
+val wallet = trustWeave.wallet {
+    id("holder-wallet")
+    holder("did:key:holder")
+    enableOrganization()
+    enablePresentation()
+}
 ```
 
 **Related:** [Wallet API](api-reference/wallet-api.md)

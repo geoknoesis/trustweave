@@ -49,7 +49,7 @@ val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#
 // Step 3: Use extracted key ID for signing
 val credential = trustLayer.issue {
     credential { /* ... */ }
-    by(issuerDid = issuerDid, keyId = keyId) // MUST match key in DID document
+    signedBy(issuerDid = issuerDid, keyId = keyId) // MUST match key in DID document
 }
 ```
 
@@ -107,7 +107,7 @@ fun `test credential revocation workflow template`() = runBlocking {
     // Issue credential with revocation
     val credential = trustLayer.issue {
         credential { /* ... */ }
-        by(issuerDid = issuerDid, keyId = keyId)
+        signedBy(issuerDid = issuerDid, keyId = keyId)
         withRevocation() // Enable revocation status list
     }
 
@@ -266,7 +266,7 @@ fun `test blockchain anchoring workflow template`() = runBlocking {
     // Issue credential with anchoring
     val credential = trustLayer.issue {
         credential { /* ... */ }
-        by(issuerDid = issuerDid, keyId = keyId)
+        signedBy(issuerDid = issuerDid, keyId = keyId)
         anchor("testnet:inMemory")
     }
 
@@ -298,7 +298,7 @@ fun `test smart contract workflow template`() = runBlocking {
             type("SmartContractCredential", "VerifiableCredential")
             // ... contract details
         }
-        by(issuerDid = issuerDid, keyId = keyId)
+        signedBy(issuerDid = issuerDid, keyId = keyId)
         anchor("testnet:inMemory")
     }
 
@@ -376,7 +376,7 @@ fun `test workflow with AWS KMS and Ethereum DID`() = runBlocking {
     // Issue credential (same pattern)
     val credential = trustLayer.issue {
         credential { /* ... */ }
-        by(issuerDid = issuerDid, keyId = keyId) // Same pattern!
+        signedBy(issuerDid = issuerDid, keyId = keyId) // Same pattern!
     }
 
     // Verify (same pattern)
@@ -415,7 +415,7 @@ val credential = trustLayer.issue {
         }
         issued(Instant.now())
     }
-    by(issuerDid = issuerDid, keyId = keyId) // Use extracted key ID
+    signedBy(issuerDid = issuerDid, keyId = keyId) // Use extracted key ID
 }
 ```
 
@@ -456,14 +456,14 @@ assertTrue(result.valid, "Credential should be valid")
 // ❌ WRONG: Generating new key
 val newKey = kms.generateKey("Ed25519")
 val credential = trustLayer.issue {
-    by(issuerDid = issuerDid, keyId = newKey.id) // Key not in DID document!
+    signedBy(issuerDid = issuerDid, keyId = newKey.id) // Key not in DID document!
 }
 
 // ✅ CORRECT: Extract key from DID document
 val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid)?.document
 val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
 val credential = trustLayer.issue {
-    by(issuerDid = issuerDid, keyId = keyId) // Key matches DID document!
+    signedBy(issuerDid = issuerDid, keyId = keyId) // Key matches DID document!
 }
 ```
 

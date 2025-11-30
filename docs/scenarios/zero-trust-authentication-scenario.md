@@ -172,23 +172,29 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for authentication authority, users, and systems
-    val authAuthorityDidDoc = TrustWeave.dids.create()
-    val authAuthorityDid = authAuthorityDidDoc.id
-    val authAuthorityKeyId = authAuthorityDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val authAuthorityDid = trustWeave.createDid { method("key") }
+    val authAuthorityResolution = trustWeave.resolveDid(authAuthorityDid)
+    val authAuthorityDoc = when (authAuthorityResolution) {
+        is DidResolutionResult.Success -> authAuthorityResolution.document
+        else -> throw IllegalStateException("Failed to resolve auth authority DID")
+    }
+    val authAuthorityKeyId = authAuthorityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val userDidDoc = TrustWeave.dids.create()
-    val userDid = userDidDoc.id
-
-    val deviceDidDoc = TrustWeave.dids.create()
-    val deviceDid = deviceDidDoc.id
-
-    val systemDidDoc = TrustWeave.dids.create()
-    val systemDid = systemDidDoc.id
+    val userDid = trustWeave.createDid { method("key") }
+    val deviceDid = trustWeave.createDid { method("key") }
+    val systemDid = trustWeave.createDid { method("key") }
 
     println("✅ Authentication Authority DID: $authAuthorityDid")
     println("✅ User DID: $userDid")

@@ -258,7 +258,7 @@ fun main() = runBlocking {
             }
             issued(Instant.now())
         }
-        by(issuerDid = universityDid.value, keyId = keyId)
+        signedBy(issuerDid = universityDid.value, keyId = keyId)
     }
     
     // Step 6: Verify with trust checking

@@ -67,7 +67,7 @@ fun main() = runBlocking {
                     claim("name", "Alice Example")
                 }
             }
-            by(issuerDid = issuerDid.value, keyId = issuerKeyId)
+            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
         }
 
         val credentialId = wallet.store(credential)

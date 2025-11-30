@@ -143,8 +143,8 @@ Automatic Payout
 **Purpose**: Identity for all participants
 ```kotlin
 // Create DIDs for EO providers, insurers, reinsurers
-val eoProviderDid = TrustWeave.dids.create(method = "key")
-val insuranceDid = TrustWeave.dids.create(method = "key")
+val eoProviderDid = trustWeave.createDid { method("key") }
+val insuranceDid = trustWeave.createDid { method("key") }
 ```
 
 ### 2. Smart Contracts
@@ -180,11 +180,18 @@ val active = trustWeave.contracts.activateContract(bound.contract.id).getOrThrow
 **Purpose**: Wrap EO data with cryptographic proof
 ```kotlin
 // Issue EO data credential
-val floodCredential = TrustWeave.credentials.issue(
-    issuer = eoProviderDid,
-    subject = floodData,
-    types = listOf("EarthObservationCredential", "InsuranceOracleCredential")
-).getOrThrow()
+val floodCredential = trustWeave.issue {
+    credential {
+        type("EarthObservationCredential", "InsuranceOracleCredential")
+        issuer(eoProviderDid)
+        subject {
+            // Add floodData properties
+            addClaims(floodData)
+        }
+        issued(Instant.now())
+    }
+    signedBy(issuerDid = eoProviderDid, keyId = eoProviderKeyId)
+}
 ```
 
 ### 4. Contract Execution
@@ -213,9 +220,16 @@ if (result.executed) {
 **Purpose**: Verify EO data before using for triggers
 ```kotlin
 // Verify credential before trigger evaluation
-val verification = TrustWeave.credentials.verify(floodCredential)
-if (!verification.valid) {
-    // Reject trigger
+val verification = trustWeave.verify {
+    credential(floodCredential)
+}
+when (verification) {
+    is VerificationResult.Valid -> {
+        // Accept trigger
+    }
+    is VerificationResult.Invalid -> {
+        // Reject trigger
+    }
 }
 ```
 
@@ -361,20 +375,41 @@ See [Parametric Insurance MGA Implementation Guide](parametric-insurance-mga-imp
 
 ```kotlin
 // Initialize TrustWeave
-val TrustWeave = TrustWeave.create {
+val trustWeave = TrustWeave.build {
+    factories(
+        kmsFactory = TestkitKmsFactory(),
+        didMethodFactory = TestkitDidMethodFactory()
+    )
+    keys { provider("inMemory"); algorithm("Ed25519") }
+    did { method("key") { algorithm("Ed25519") } }
     blockchains {
         "algorand:mainnet" to AlgorandBlockchainAnchorClient(...)
     }
 }
 
 // Create EO provider DID
-val eoProviderDid = TrustWeave.dids.create()
+val eoProviderDid = trustWeave.createDid { method("key") }
+
+// Resolve DID to get key ID
+val resolution = trustWeave.resolveDid(eoProviderDid)
+val issuerDoc = when (resolution) {
+    is DidResolutionResult.Success -> resolution.document
+    else -> throw IllegalStateException("Failed to resolve DID")
+}
+val eoProviderKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    ?: throw IllegalStateException("No verification method found")
 
 // Issue EO data credential
-val floodCredential = TrustWeave.credentials.issue(
-    issuerDid = eoProviderDid.id,
-    credentialSubject = floodData,
-    types = listOf("EarthObservationCredential")
+val floodCredential = trustWeave.issue {
+    credential {
+        type("EarthObservationCredential")
+        issuer(eoProviderDid.value)
+        subject {
+            addClaims(floodData)
+        }
+        issued(Instant.now())
+    }
+    signedBy(issuerDid = eoProviderDid.value, keyId = eoProviderKeyId)
 ).getOrThrow()
 
 // Anchor to blockchain

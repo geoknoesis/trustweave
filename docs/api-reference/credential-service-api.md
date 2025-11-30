@@ -54,8 +54,8 @@ interface CredentialService {
 
 | Method | Purpose | Returns | Exceptions | Notes |
 |--------|---------|---------|------------|-------|
-| `issueCredential` | Canonicalise + sign a VC. | `VerifiableCredential` (with proof). | `IllegalArgumentException` for unsupported proof types or schemas. | Used by `TrustWeave.credentials.issue()` facade. |
-| `verifyCredential` | Validate a VC’s proof and optional policies. | `CredentialVerificationResult` | `IllegalStateException` if configuration missing (resolver, status service). | Returns `valid=false` when checks fail. |
+| `issueCredential` | Canonicalise + sign a VC. | `VerifiableCredential` (with proof). | `IllegalArgumentException` for unsupported proof types or schemas. | Used by `trustWeave.issue { }` DSL. |
+| `verifyCredential` | Validate a VC's proof and optional policies. | `VerificationResult` | `IllegalStateException` if configuration missing (resolver, status service). | Returns `VerificationResult.Valid` or `VerificationResult.Invalid`. |
 | `createPresentation` | Assemble a verifiable presentation. | `VerifiablePresentation` | Depends on provider (unsupported -> `UnsupportedOperationException`). | Typically optional; many issuers delegate to wallet presentation services. |
 | `verifyPresentation` | Validate presentation proofs and challenges. | `PresentationVerificationResult` | `IllegalArgumentException` for invalid challenge/domain. | Verifiers should check `result.errors`. |
 

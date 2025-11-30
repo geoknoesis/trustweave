@@ -186,10 +186,14 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized with blockchain anchoring")
 
     // Step 2: Create DID for data provider
-    val providerDidDoc = TrustWeave.dids.create()
-    val providerDid = providerDidDoc.id
-    val providerKeyId = providerDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val providerDid = trustWeave.createDid { method("key") }
+    val providerResolution = trustWeave.resolveDid(providerDid)
+    val providerDoc = when (providerResolution) {
+        is DidResolutionResult.Success -> providerResolution.document
+        else -> throw IllegalStateException("Failed to resolve provider DID")
+    }
+    val providerKeyId = providerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
     println("✅ Data Provider DID: $providerDid")
 
@@ -263,21 +267,24 @@ fun main() = runBlocking {
     println("✅ Linkset created: $linksetDigest")
 
     // Step 5: Issue Verifiable Credential referencing the Linkset
-    val credential = TrustWeave.credentials.issue(
-        issuerDid = providerDid,
-        issuerKeyId = providerKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", "eo-dataset-1")
-            put("dataset", buildJsonObject {
-                put("title", "Sentinel-2 L2A Dataset")
-                put("linksetDigest", linksetDigest)
-                put("metadataDigest", metadataDigest)
-                put("provenanceDigest", provenanceDigest)
-                put("qualityDigest", qualityDigest)
-            })
-        },
-        types = listOf("VerifiableCredential", "EarthObservationCredential", "DataIntegrityCredential")
-    ).getOrThrow()
+    val credential = trustWeave.issue {
+        credential {
+            type("EarthObservationCredential", "DataIntegrityCredential")
+            issuer(providerDid.value)
+            subject {
+                id("eo-dataset-1")
+                claim("dataset", mapOf(
+                    "title" to "Sentinel-2 L2A Dataset",
+                    "linksetDigest" to linksetDigest,
+                    "metadataDigest" to metadataDigest,
+                    "provenanceDigest" to provenanceDigest,
+                    "qualityDigest" to qualityDigest
+                ))
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = providerDid.value, keyId = providerKeyId)
+    }
 
     println("✅ Verifiable Credential issued: ${credential.id}")
     println("   Linkset digest: $linksetDigest")
@@ -302,14 +309,15 @@ fun main() = runBlocking {
     println("   Transaction Hash: ${anchorResult.ref.txHash}")
 
     // Step 7: Verify the credential
-    val verification = TrustWeave.credentials.verify(credential)
+    val verification = trustWeave.verify {
+        credential(credential)
+    }
 
-    if (verification.valid) {
-        println("\n✅ Credential Verification SUCCESS")
-        println("   Proof valid: ${verification.proofValid}")
-        println("   Issuer valid: ${verification.issuerValid}")
-        println("   Not revoked: ${verification.notRevoked}")
-    } else {
+    when (verification) {
+        is VerificationResult.Valid -> {
+            println("\n✅ Credential Verification SUCCESS")
+        }
+        is VerificationResult.Invalid -> {
         println("\n❌ Credential Verification FAILED")
         println("   Errors: ${verification.errors}")
     }

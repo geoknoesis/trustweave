@@ -35,8 +35,8 @@ dependencies {
 | Component | Purpose |
 |-----------|---------|
 | `CredentialServiceRegistry` | Discovers issuer/verifier services (in-memory or SPI). |
-| `TrustWeave.credentials.issue()` | High-level facade performing canonicalisation, signing, and proof attachment. |
-| `TrustWeave.credentials.verify()` | Rebuilds canonical form, resolves DIDs, validates proofs, and returns `CredentialVerificationResult`. |
+| `trustWeave.issue { }` | High-level DSL performing canonicalisation, signing, and proof attachment. |
+| `trustWeave.verify { }` | Rebuilds canonical form, resolves DIDs, validates proofs, and returns `VerificationResult`. |
 | `CredentialIssuanceOptions` | Lower-level SPI options (validity window, schema hints) when using `CredentialServiceRegistry`. |
 
 Detailed API signatures live in the [Credential Service API reference](../api-reference/credential-service-api.md).
@@ -50,21 +50,20 @@ import com.trustweave.credential.ProofType
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-suspend fun issueEmployeeBadge(trustweave: TrustWeave, issuerDid: String, issuerKeyId: String) =
-    trustweave.credentials.issue(
-        issuer = issuerDid,
-        subject = buildJsonObject {
-            put("id", "did:key:holder-123")
-            put("role", "Site Reliability Engineer")
-            put("level", "L5")
-        },
-        config = IssuanceConfig(
-            proofType = ProofType.Ed25519Signature2020,
-            keyId = issuerKeyId,
-            issuerDid = issuerDid
-        ),
-        types = listOf("VerifiableCredential", "EmploymentCredential")
-    )
+suspend fun issueEmployeeBadge(trustWeave: TrustWeave, issuerDid: String, issuerKeyId: String) =
+    trustWeave.issue {
+        credential {
+            type("EmploymentCredential")
+            issuer(issuerDid)
+            subject {
+                id("did:key:holder-123")
+                claim("role", "Site Reliability Engineer")
+                claim("level", "L5")
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+    }
 
 **Outcome:** Issues a signed credential using typed issuance options, returning a `VerifiableCredential` that downstream wallets or verifiers can consume.
 
@@ -81,14 +80,18 @@ TrustWeave automatically:
 import com.trustweave.TrustWeave
 import com.trustweave.credential.models.VerifiableCredential
 
-suspend fun verifyBadge(trustweave: TrustWeave, credential: VerifiableCredential) {
-    val result = trustweave.credentials.verify(credential)
-    // Note: verify() returns CredentialVerificationResult directly, not Result
-    if (result.valid) {
-        println("Credential verified with checks: proof=${result.proofValid}, issuer=${result.issuerValid}")
-        println("Not expired: ${result.notExpired}, Not revoked: ${result.notRevoked}")
-    } else {
-        println("Verification failed: ${result.errors.joinToString()}")
+suspend fun verifyBadge(trustWeave: TrustWeave, credential: VerifiableCredential) {
+    val result = trustWeave.verify {
+        credential(credential)
+    }
+    // Note: verify() returns VerificationResult sealed type
+    when (result) {
+        is VerificationResult.Valid -> {
+            println("Credential verified successfully")
+        }
+        is VerificationResult.Invalid -> {
+            println("Verification failed: ${result.reason}")
+        }
     }
 }
 
@@ -162,25 +165,43 @@ A credential is **issued** by an issuer to a subject:
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.CredentialIssuanceOptions
 
-// Issue credential using TrustWeave service API
-val trustweave = TrustWeave.create()
-val issuerDid = trustweave.dids.create()
-val issuerKeyId = issuerDid.document.verificationMethod.first().id
+// Issue credential using TrustWeave DSL API
+val trustWeave = TrustWeave.build {
+    factories(
+        kmsFactory = TestkitKmsFactory(),
+        didMethodFactory = TestkitDidMethodFactory()
+    )
+    keys { provider("inMemory"); algorithm("Ed25519") }
+    did { method("key") { algorithm("Ed25519") } }
+    credentials { defaultProofType(ProofType.Ed25519Signature2020) }
+}
 
-val issuedCredential = trustweave.credentials.issue(
-    issuer = issuerDid.id,
-    subject = buildJsonObject {
-        put("id", subjectDid)
-        put("name", "Alice")
-        put("email", "alice@example.com")
-    },
-    config = IssuanceConfig(
-        proofType = ProofType.Ed25519Signature2020,
-        keyId = issuerKeyId,
-        issuerDid = issuerDid.id
-    ),
-    types = listOf("VerifiableCredential", "PersonCredential")
-)
+val issuerDid = trustWeave.createDid {
+    method("key")
+    algorithm("Ed25519")
+}
+
+val resolution = trustWeave.resolveDid(issuerDid)
+val issuerDoc = when (resolution) {
+    is DidResolutionResult.Success -> resolution.document
+    else -> throw IllegalStateException("Failed to resolve issuer DID")
+}
+val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    ?: throw IllegalStateException("No verification method found")
+
+val issuedCredential = trustWeave.issue {
+    credential {
+        type("PersonCredential")
+        issuer(issuerDid.value)
+        subject {
+            id(subjectDid)
+            claim("name", "Alice")
+            claim("email", "alice@example.com")
+        }
+        issued(Instant.now())
+    }
+    signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+}
 
 **Outcome:** Produces a signed credential ready for distribution, anchored to the specific proof type and key you configured.
 
@@ -223,16 +244,20 @@ Verify a credential or presentation:
 import com.trustweave.TrustWeave
 import com.trustweave.credential.VerificationConfig
 
-val trustweave = TrustWeave.create()
-
-val result = trustweave.credentials.verify(
-    credential = issuedCredential,
-    config = VerificationConfig(
-        checkRevocation = false, // Requires status list integration
-        checkExpiration = true,
-        verifyBlockchainAnchor = false
+val trustWeave = TrustWeave.build {
+    factories(
+        kmsFactory = TestkitKmsFactory(),
+        didMethodFactory = TestkitDidMethodFactory()
     )
-)
+    keys { provider("inMemory"); algorithm("Ed25519") }
+    did { method("key") { algorithm("Ed25519") } }
+}
+
+val result = trustWeave.verify {
+    credential(issuedCredential)
+    checkExpiration()
+    // checkRevocation() requires status list integration
+}
 
 if (result.valid) {
     println("Credential passed structural checks.")

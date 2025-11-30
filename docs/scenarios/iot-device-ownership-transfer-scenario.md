@@ -178,23 +178,34 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for manufacturer, current owner, and new owner
-    val manufacturerDidDoc = TrustWeave.dids.create()
-    val manufacturerDid = manufacturerDidDoc.id
-    val manufacturerKeyId = manufacturerDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val manufacturerDid = trustWeave.createDid { method("key") }
+    val manufacturerResolution = trustWeave.resolveDid(manufacturerDid)
+    val manufacturerDoc = when (manufacturerResolution) {
+        is DidResolutionResult.Success -> manufacturerResolution.document
+        else -> throw IllegalStateException("Failed to resolve manufacturer DID")
+    }
+    val manufacturerKeyId = manufacturerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val currentOwnerDidDoc = TrustWeave.dids.create()
-    val currentOwnerDid = currentOwnerDidDoc.id
-    val currentOwnerKeyId = currentOwnerDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val currentOwnerDid = trustWeave.createDid { method("key") }
+    val currentOwnerResolution = trustWeave.resolveDid(currentOwnerDid)
+    val currentOwnerDoc = when (currentOwnerResolution) {
+        is DidResolutionResult.Success -> currentOwnerResolution.document
+        else -> throw IllegalStateException("Failed to resolve current owner DID")
+    }
+    val currentOwnerKeyId = currentOwnerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val newOwnerDidDoc = TrustWeave.dids.create()
-    val newOwnerDid = newOwnerDidDoc.id
-    val newOwnerKeyId = newOwnerDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val newOwnerDid = trustWeave.createDid { method("key") }
+    val newOwnerResolution = trustWeave.resolveDid(newOwnerDid)
+    val newOwnerDoc = when (newOwnerResolution) {
+        is DidResolutionResult.Success -> newOwnerResolution.document
+        else -> throw IllegalStateException("Failed to resolve new owner DID")
+    }
+    val newOwnerKeyId = newOwnerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
-    val deviceDidDoc = TrustWeave.dids.create()
-    val deviceDid = deviceDidDoc.id
+    val deviceDid = trustWeave.createDid { method("key") }
 
     println("✅ Manufacturer DID: $manufacturerDid")
     println("✅ Current Owner DID: $currentOwnerDid")

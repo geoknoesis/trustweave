@@ -153,7 +153,7 @@ val credential = trustWeave.issue {
         }
         issued(Instant.now())
     }
-    by(issuerDid = issuerDid.value, keyId = keyId)
+    signedBy(issuerDid = issuerDid.value, keyId = keyId)
     withRevocation()  // Auto-creates status list if needed
 }
 ```
@@ -298,7 +298,7 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(365 * 10, ChronoUnit.DAYS)
         }
-        by(issuerDid = issuerDid.value, keyId = keyId)
+        signedBy(issuerDid = issuerDid.value, keyId = keyId)
         withRevocation()  // Auto-creates status list
     }
     
@@ -470,7 +470,7 @@ trustWeave.revoke {
 // ✅ Issue credential with revocation
 val credential = trustWeave.issue {
     credential { ... }
-    by(issuerDid = issuerDid.value, keyId = keyId)
+    signedBy(issuerDid = issuerDid.value, keyId = keyId)
     withRevocation()  // Required for revocation support
 }
 ```

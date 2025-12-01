@@ -55,14 +55,18 @@ A verifiable credential is a tamper-evident credential that has authorship that 
 ### Using TrustWeave Service API (Recommended)
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.trust.types.ProofType
-import com.trustweave.testkit.services.*
+// Kotlin stdlib
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import java.time.Instant
+
+// TrustWeave core
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.trust.dsl.credential.ProofTypes
+import com.trustweave.trust.types.ProofType
+import com.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -72,7 +76,7 @@ fun main() = runBlocking {
         )
         keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
-        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }  // Using ProofType enum
     }
 
     // Create issuer DID (returns type-safe Did object)
@@ -94,7 +98,7 @@ fun main() = runBlocking {
     try {
         val credential = trustWeave.issue {
             credential {
-                type("PersonCredential")
+                type(CredentialTypes.PERSON)
                 issuer(issuerDid.value)  // Using typed Did object's value
                 subject {
                     id("did:key:subject")
@@ -161,7 +165,7 @@ fun main() = runBlocking {
     try {
         val credential = trustWeave.issue {
             credential {
-                type("PersonCredential")
+                type(CredentialTypes.PERSON)
                 issuer(issuerDid.value)
                 subject {
                     id("did:key:subject")
@@ -297,7 +301,7 @@ fun main() = runBlocking {
         )
         keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
-        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }  // Using ProofType enum
     }
     
     val issuerDid = trustWeave.createDid {
@@ -388,7 +392,7 @@ fun main() = runBlocking {
         try {
             trustWeave.issue {
                 credential {
-                    type("PersonCredential")
+                    type(CredentialTypes.PERSON)
                     issuer(issuerDid.value)
                     subject {
                         addClaims(subject)

@@ -41,12 +41,15 @@ dependencies {
 ### Service API Wallet (Recommended)
 
 ```kotlin
+// Kotlin stdlib
+import kotlinx.coroutines.runBlocking
+
+// TrustWeave core
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.wallet.WalletCreationOptions
 import com.trustweave.testkit.services.*
-import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
@@ -80,8 +83,12 @@ fun main() = runBlocking {
 ### Trust Layer DSL
 
 ```kotlin
-import com.trustweave.trust.dsl.trustLayer
+// Kotlin stdlib
 import kotlinx.coroutines.runBlocking
+
+// TrustWeave core
+import com.trustweave.trust.dsl.trustLayer
+import com.trustweave.trust.dsl.credential.DidMethods
 
 fun main() = runBlocking {
     val trustLayer = trustLayer {

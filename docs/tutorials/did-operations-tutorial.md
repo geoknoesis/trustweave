@@ -61,11 +61,16 @@ interface DidMethod {
 ### Using TrustWeave DSL (Recommended)
 
 ```kotlin
+// Kotlin stdlib
+import kotlinx.coroutines.runBlocking
+
+// TrustWeave core
 import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
 // Note: TestkitDidMethodFactory is for testing/tutorials only
 // In production, use appropriate DID method factories
 import com.trustweave.testkit.services.*
-import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     // Build TrustWeave instance with testkit factories (for tutorials)

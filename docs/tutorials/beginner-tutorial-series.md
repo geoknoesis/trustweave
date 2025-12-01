@@ -408,8 +408,22 @@ fun main() = runBlocking {
 ```kotlin
 import com.trustweave.wallet.*
 
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.testkit.services.*
+import kotlinx.coroutines.runBlocking
+
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
+        )
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
+    }
 
     // Create holder DID
     val holderDid = trustWeave.createDid { method(DidMethods.KEY) }

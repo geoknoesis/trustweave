@@ -700,8 +700,22 @@ fun main() = runBlocking {
 ```kotlin
 import com.trustweave.presentation.*
 
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.testkit.services.*
+import kotlinx.coroutines.runBlocking
+
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
+        )
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
+    }
 
     // ... (setup, issue, store) ...
 
@@ -733,15 +747,29 @@ fun main() = runBlocking {
 ### Step 5: Verify Presentation (Verifier)
 
 ```kotlin
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.testkit.services.*
+import kotlinx.coroutines.runBlocking
+
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
+        )
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
+    }
 
     // ... (complete workflow above) ...
 
     val presentation = presentationResult.getOrThrow()
 
     // VERIFIER: Verify presentation
-    val verificationResult = TrustWeave.verifyPresentation(
+    val verificationResult = trustWeave.verifyPresentation(
         presentation = presentation,
         challenge = "verifier-challenge-123",  // Must match
         domain = "example-employer.com"  // Must match

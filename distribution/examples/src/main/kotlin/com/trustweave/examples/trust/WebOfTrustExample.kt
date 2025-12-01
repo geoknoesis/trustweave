@@ -6,6 +6,7 @@ import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.trust.types.ProofType
 import com.trustweave.trust.types.VerificationResult
 import com.trustweave.trust.dsl.credential.CredentialTypes
+import com.trustweave.trust.types.CredentialType
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.wallet.CredentialOrganization
 import com.trustweave.testkit.did.DidKeyMockMethod
@@ -146,7 +147,7 @@ fun main() = runBlocking {
     val degreeCredential = trustWeave.issue {
         credential {
             id("https://university.edu/credentials/degree-${studentDid.value.substringAfterLast(":")}")
-            type(CredentialTypes.EDUCATION, "DegreeCredential")
+            type(CredentialTypes.EDUCATION, CredentialType.Degree)
             issuer(universityDid.value)
             subject {
                 id(studentDid.value)

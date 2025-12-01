@@ -90,11 +90,15 @@ class IssuanceBuilder(
      *
      * Domain-precise naming that clearly indicates signing operation.
      *
-     * @param issuerDid The issuer DID
+     * @param issuerDid Must be a valid DID starting with "did:"
      * @param keyId The key ID (can be just the fragment or full key ID)
+     * @throws IllegalArgumentException if issuerDid is blank, doesn't start with "did:", or keyId is blank
      */
     fun signedBy(issuerDid: String, keyId: String) {
         require(issuerDid.isNotBlank()) { "Issuer DID cannot be blank" }
+        require(issuerDid.startsWith("did:")) { 
+            "Issuer DID must start with 'did:'. Got: $issuerDid" 
+        }
         require(keyId.isNotBlank()) { "Key ID cannot be blank" }
         this.issuerIdentity = IssuerIdentity.from(issuerDid, keyId)
     }

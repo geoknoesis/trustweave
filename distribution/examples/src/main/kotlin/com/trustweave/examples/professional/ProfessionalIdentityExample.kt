@@ -5,6 +5,7 @@ import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.trust.types.ProofType
 import com.trustweave.trust.dsl.credential.CredentialTypes
+import com.trustweave.trust.types.CredentialType
 import com.trustweave.trust.dsl.credential.SchemaValidatorTypes
 import com.trustweave.trust.dsl.credential.ServiceTypes
 import com.trustweave.trust.dsl.credential.credential
@@ -155,7 +156,7 @@ fun main() = runBlocking {
     val bachelorDegree = trustWeave.issue {
         credential {
             id("https://example.edu/credentials/bachelor-${professionalDid.value.substringAfterLast(":")}")
-            type(CredentialTypes.EDUCATION, "BachelorDegreeCredential")
+            type(CredentialTypes.EDUCATION, CredentialType.Custom("BachelorDegreeCredential"))
             issuer(universityDid.value)
             subject {
                 id(professionalDid.value)
@@ -176,7 +177,7 @@ fun main() = runBlocking {
     val masterDegree = trustWeave.issue {
         credential {
             id("https://example.edu/credentials/master-${professionalDid.value.substringAfterLast(":")}")
-            type(CredentialTypes.EDUCATION, "MasterDegreeCredential")
+            type(CredentialTypes.EDUCATION, CredentialType.Custom("MasterDegreeCredential"))
             issuer(universityDid.value)
             subject {
                 id(professionalDid.value)

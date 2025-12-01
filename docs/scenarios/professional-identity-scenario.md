@@ -450,7 +450,7 @@ fun createEducationCredential(
 ): VerifiableCredential {
     return credential {
         id("https://example.edu/credentials/${degreeType.lowercase()}-${holderDid.substringAfterLast(":")}")
-        type("EducationCredential", "${degreeType}DegreeCredential")
+        type(CredentialType.Education, CredentialType.Custom("${degreeType}DegreeCredential"))
         issuer(issuerDid)
         subject {
             id(holderDid)

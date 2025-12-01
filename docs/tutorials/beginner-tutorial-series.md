@@ -227,12 +227,15 @@ fun main() = runBlocking {
 ### Step 2: Issue a Credential
 
 ```kotlin
+// Kotlin stdlib
+import kotlinx.coroutines.runBlocking
+
+// TrustWeave core
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.credential.*
 import com.trustweave.testkit.services.*
-import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
@@ -407,13 +410,15 @@ fun main() = runBlocking {
 ### Step 1: Create a Wallet
 
 ```kotlin
-import com.trustweave.wallet.*
+// Kotlin stdlib
+import kotlinx.coroutines.runBlocking
 
+// TrustWeave core
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.wallet.*
 import com.trustweave.testkit.services.*
-import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
@@ -713,13 +718,15 @@ fun main() = runBlocking {
 ### Step 4: Create Presentation (Holder)
 
 ```kotlin
-import com.trustweave.presentation.*
+// Kotlin stdlib
+import kotlinx.coroutines.runBlocking
 
+// TrustWeave core
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.presentation.*
 import com.trustweave.testkit.services.*
-import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
@@ -878,11 +885,19 @@ fun main() = runBlocking {
 ### Step 1: Register Blockchain Client
 
 ```kotlin
+// Kotlin stdlib
+import kotlinx.coroutines.runBlocking
+
+// TrustWeave core
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.anchor.*
 import com.trustweave.anchor.options.*
+import com.trustweave.testkit.services.*
 
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create {
+    val trustWeave = TrustWeave.build {
         blockchains {
             // Register Algorand testnet client
             "algorand:testnet" to AlgorandBlockchainAnchorClient(

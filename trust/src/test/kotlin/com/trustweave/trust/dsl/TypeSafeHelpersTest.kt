@@ -13,12 +13,12 @@ class TypeSafeHelpersTest {
 
     @Test
     fun `test CredentialTypes constants`() {
-        assertEquals("EducationCredential", CredentialTypes.EDUCATION)
-        assertEquals("EmploymentCredential", CredentialTypes.EMPLOYMENT)
-        assertEquals("CertificationCredential", CredentialTypes.CERTIFICATION)
-        assertEquals("DegreeCredential", CredentialTypes.DEGREE)
-        assertEquals("PersonCredential", CredentialTypes.PERSON)
-        assertEquals("VerifiableCredential", CredentialTypes.VERIFIABLE_CREDENTIAL)
+        assertEquals("EducationCredential", CredentialTypes.EDUCATION.value)
+        assertEquals("EmploymentCredential", CredentialTypes.EMPLOYMENT.value)
+        assertEquals("CertificationCredential", CredentialTypes.CERTIFICATION.value)
+        assertEquals("DegreeCredential", CredentialTypes.DEGREE.value)
+        assertEquals("PersonCredential", CredentialTypes.PERSON.value)
+        assertEquals("VerifiableCredential", CredentialTypes.VERIFIABLE_CREDENTIAL.value)
     }
 
     @Test

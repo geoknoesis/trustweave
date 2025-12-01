@@ -490,12 +490,19 @@ val walletsWithCollections = directory.findByCapability("collections")
 Here's a complete example combining all features:
 
 ```kotlin
-import com.trustweave.testkit.credential.InMemoryWallet
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.PresentationOptions
+// Kotlin stdlib
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+
+// TrustWeave core
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.PresentationOptions
+import com.trustweave.testkit.credential.InMemoryWallet
+import com.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     // Create wallet using TrustWeave service API

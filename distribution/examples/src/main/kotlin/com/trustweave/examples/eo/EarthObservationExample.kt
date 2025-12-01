@@ -343,8 +343,9 @@ fun main() = runBlocking {
 
     // The "subject" is what the credential is about - our EO dataset
     // We include the Linkset digest in the credential subject
+    // Note: Subject ID must be an IRI (URI/URL/DID/URN) per W3C VC spec
     val credentialSubject = buildJsonObject {
-        put("id", "eo-dataset-sentinel2-l2a-xyz")
+        put("id", "https://example.com/datasets/eo-dataset-sentinel2-l2a-xyz")
         put("type", "EarthObservationDataset")
         put("title", "Sentinel-2 L2A Dataset - Central Europe")
         put("description", "Atmospherically corrected Sentinel-2 Level 2A product")

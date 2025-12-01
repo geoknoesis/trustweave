@@ -1,5 +1,7 @@
 package com.trustweave.trust.dsl.credential
 
+import com.trustweave.trust.types.CredentialType
+
 /**
  * Type-Safe Helpers.
  *
@@ -16,14 +18,17 @@ package com.trustweave.trust.dsl.credential
 
 /**
  * Type-safe credential types.
+ * 
+ * Provides convenient access to CredentialType instances for use in credential builders.
+ * For custom types, use CredentialType.Custom("YourType") or CredentialType.fromString("YourType").
  */
 object CredentialTypes {
-    const val EDUCATION = "EducationCredential"
-    const val EMPLOYMENT = "EmploymentCredential"
-    const val CERTIFICATION = "CertificationCredential"
-    const val DEGREE = "DegreeCredential"
-    const val PERSON = "PersonCredential"
-    const val VERIFIABLE_CREDENTIAL = "VerifiableCredential"
+    val EDUCATION: CredentialType = CredentialType.Education
+    val EMPLOYMENT: CredentialType = CredentialType.Employment
+    val CERTIFICATION: CredentialType = CredentialType.Certification
+    val DEGREE: CredentialType = CredentialType.Degree
+    val PERSON: CredentialType = CredentialType.Person
+    val VERIFIABLE_CREDENTIAL: CredentialType = CredentialType.VerifiableCredential
 }
 
 /**

@@ -74,8 +74,15 @@ class WalletPresentationBuilder(
 
     /**
      * Set holder DID.
+     * 
+     * @param did Must be a valid DID starting with "did:"
+     * @throws IllegalArgumentException if did is blank or doesn't start with "did:"
      */
     fun holder(did: String) {
+        require(did.isNotBlank()) { "Holder DID cannot be blank" }
+        require(did.startsWith("did:")) { 
+            "Holder DID must start with 'did:'. Got: $did" 
+        }
         this.holderDid = did
     }
 

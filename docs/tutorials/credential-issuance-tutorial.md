@@ -48,6 +48,24 @@ A verifiable credential is a tamper-evident credential that has authorship that 
 
 **What this does:** Defines the credential issuance workflow.
 
+### Type-Safe Credential Types
+
+TrustWeave uses strongly-typed `CredentialType` instances for credential types. You can use:
+- **Built-in types**: `CredentialType.Education`, `CredentialType.Person`, `CredentialType.Degree`, etc.
+- **Convenience constants**: `CredentialTypes.EDUCATION`, `CredentialTypes.PERSON` (returns `CredentialType` instances)
+- **Custom types**: `CredentialType.Custom("MyCustomType")` or `CredentialType.fromString("MyCustomType")`
+
+**Example:**
+```kotlin
+credential {
+    type(CredentialType.Person)  // Type-safe
+    // OR
+    type(CredentialTypes.PERSON)  // Convenience constant
+    // OR
+    type(CredentialType.Custom("MyCustomCredential"))  // Custom type
+}
+```
+
 **Outcome:** Enables secure, verifiable credential issuance with cryptographic proof.
 
 ## Issuing Credentials
@@ -65,7 +83,9 @@ import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.trust.dsl.credential.ProofTypes
+import com.trustweave.trust.dsl.credential.CredentialTypes
 import com.trustweave.trust.types.ProofType
+import com.trustweave.trust.types.CredentialType
 import com.trustweave.testkit.services.*
 
 fun main() = runBlocking {
@@ -129,6 +149,8 @@ fun main() = runBlocking {
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.trust.dsl.credential.CredentialTypes
+import com.trustweave.trust.types.CredentialType
 import com.trustweave.credential.*
 import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
@@ -288,10 +310,16 @@ fun main() = runBlocking {
 ### Credential Lifecycle Management
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.credential.*
+// Kotlin stdlib
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
+
+// TrustWeave core
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.credential.*
+import com.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -357,10 +385,16 @@ fun main() = runBlocking {
 ### Batch Credential Issuance
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.credential.*
+// Kotlin stdlib
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
+
+// TrustWeave core
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.credential.*
+import com.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -419,9 +453,15 @@ fun main() = runBlocking {
 ### Credential Presentations
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.credential.*
+// Kotlin stdlib
 import kotlinx.coroutines.runBlocking
+
+// TrustWeave core
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.credential.*
+import com.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -476,11 +516,17 @@ fun main() = runBlocking {
 ### Structured Error Handling
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.core.exception.TrustWeaveError
-import com.trustweave.credential.*
+// Kotlin stdlib
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
+
+// TrustWeave core
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.core.exception.TrustWeaveError
+import com.trustweave.credential.*
+import com.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {

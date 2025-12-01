@@ -199,7 +199,7 @@ fun main() = runBlocking {
     // ============================================
     println("Step 8: Querying credentials...")
     val educationCreds = wallet.query {
-        (this as QueryBuilder).type(CredentialTypes.EDUCATION)
+        (this as QueryBuilder).type(CredentialTypes.EDUCATION.value)
         (this as QueryBuilder).valid()
         (this as QueryBuilder).tag("education")
     }

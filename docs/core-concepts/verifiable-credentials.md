@@ -191,7 +191,7 @@ val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter
 
 val issuedCredential = trustWeave.issue {
     credential {
-        type("PersonCredential")
+        type(CredentialType.Person)
         issuer(issuerDid.value)
         subject {
             id(subjectDid)

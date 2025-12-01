@@ -36,15 +36,26 @@ class QueryBuilder(
 
     /**
      * Filter by issuer DID.
+     * 
+     * @param issuerDid Must be a valid DID starting with "did:"
+     * @throws IllegalArgumentException if issuerDid is blank or doesn't start with "did:"
      */
     fun issuer(issuerDid: String) {
+        require(issuerDid.isNotBlank()) { "Issuer DID cannot be blank" }
+        require(issuerDid.startsWith("did:")) { 
+            "Issuer DID must start with 'did:'. Got: $issuerDid" 
+        }
         queryBuilder.byIssuer(issuerDid)
     }
 
     /**
      * Filter by credential type.
+     * 
+     * @param type Credential type string (e.g., "PersonCredential", "EducationCredential")
+     * @throws IllegalArgumentException if type is blank
      */
     fun type(type: String) {
+        require(type.isNotBlank()) { "Credential type cannot be blank" }
         queryBuilder.byType(type)
     }
 
@@ -57,8 +68,15 @@ class QueryBuilder(
 
     /**
      * Filter by subject ID.
+     * 
+     * @param subjectId Must be a valid DID starting with "did:" or a valid URI
+     * @throws IllegalArgumentException if subjectId is blank or doesn't match DID/URI format
      */
     fun subject(subjectId: String) {
+        require(subjectId.isNotBlank()) { "Subject ID cannot be blank" }
+        require(subjectId.startsWith("did:") || subjectId.matches(Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:.*"))) { 
+            "Subject ID must be a valid DID (starting with 'did:') or URI. Got: $subjectId" 
+        }
         queryBuilder.bySubject(subjectId)
     }
 

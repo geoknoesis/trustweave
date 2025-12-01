@@ -545,7 +545,7 @@ suspend fun issueMultipleCredentials(
         async {
             trustLayer.issue {
                 credential {
-                    type("VerifiableCredential", request.type)
+                    type(CredentialType.VerifiableCredential, CredentialType.fromString(request.type))
                     issuer(request.issuerDid)
                     subject {
                         id(request.holderDid)

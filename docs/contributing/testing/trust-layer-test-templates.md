@@ -295,7 +295,7 @@ fun `test smart contract workflow template`() = runBlocking {
     // Issue contract as credential
     val contractCredential = trustLayer.issue {
         credential {
-            type("SmartContractCredential", "VerifiableCredential")
+            type(CredentialType.Custom("SmartContractCredential"), CredentialType.VerifiableCredential)
             // ... contract details
         }
         signedBy(issuerDid = issuerDid, keyId = keyId)

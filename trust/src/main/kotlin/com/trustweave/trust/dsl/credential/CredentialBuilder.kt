@@ -7,6 +7,7 @@ import com.trustweave.credential.models.RefreshService
 import com.trustweave.credential.models.TermsOfUse
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.SchemaFormat
+import com.trustweave.trust.types.CredentialType
 import kotlinx.serialization.json.*
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -20,7 +21,7 @@ import java.time.temporal.ChronoUnit
  * ```kotlin
  * val credential = credential {
  *     id("https://example.edu/credentials/123")
- *     type("DegreeCredential", "BachelorDegreeCredential")
+ *     type(CredentialType.Degree, CredentialType.Custom("BachelorDegreeCredential"))
  *     issuer("did:key:university")
  *     subject {
  *         id("did:key:student")
@@ -64,7 +65,20 @@ class CredentialBuilder {
     }
 
     /**
-     * Add credential type(s). "VerifiableCredential" is automatically added.
+     * Add credential type(s) using type-safe CredentialType instances.
+     * "VerifiableCredential" is automatically added.
+     * 
+     * @param types One or more CredentialType instances (e.g., CredentialType.Education, CredentialType.Custom("MyType"))
+     */
+    fun type(vararg types: CredentialType) {
+        this.types.addAll(types.map { it.value })
+    }
+
+    /**
+     * Add credential type(s) using string values (for backward compatibility).
+     * "VerifiableCredential" is automatically added.
+     * 
+     * @param types One or more credential type strings (e.g., "EducationCredential", "PersonCredential")
      */
     fun type(vararg types: String) {
         this.types.addAll(types)
@@ -126,8 +140,17 @@ class CredentialBuilder {
 
     /**
      * Set credential schema.
+     * 
+     * @param schemaId Must be a valid URI (e.g., "https://example.com/schemas/degree.json")
+     * @param type Schema validator type (default: "JsonSchemaValidator2018")
+     * @param format Schema format (default: JSON_SCHEMA)
+     * @throws IllegalArgumentException if schemaId is blank or not a valid URI
      */
     fun schema(schemaId: String, type: String = "JsonSchemaValidator2018", format: SchemaFormat = SchemaFormat.JSON_SCHEMA) {
+        require(schemaId.isNotBlank()) { "Schema ID cannot be blank" }
+        require(schemaId.matches(Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:.*"))) { 
+            "Schema ID must be a valid URI. Got: $schemaId" 
+        }
         credentialSchema = CredentialSchema(schemaId, type, format)
     }
 
@@ -151,8 +174,22 @@ class CredentialBuilder {
 
     /**
      * Set refresh service.
+     * 
+     * @param id Must be a valid URI for the refresh service
+     * @param type Service type identifier
+     * @param endpoint Must be a valid URI for the service endpoint
+     * @throws IllegalArgumentException if any parameter is blank or not a valid URI
      */
     fun refreshService(id: String, type: String, endpoint: String) {
+        require(id.isNotBlank()) { "Refresh service ID cannot be blank" }
+        require(type.isNotBlank()) { "Refresh service type cannot be blank" }
+        require(endpoint.isNotBlank()) { "Refresh service endpoint cannot be blank" }
+        require(id.matches(Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:.*"))) { 
+            "Refresh service ID must be a valid URI. Got: $id" 
+        }
+        require(endpoint.matches(Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:.*"))) { 
+            "Refresh service endpoint must be a valid URI. Got: $endpoint" 
+        }
         refreshService = RefreshService(id, type, endpoint)
     }
 
@@ -206,9 +243,28 @@ class SubjectBuilder {
 
     /**
      * Set subject ID.
+     * 
+     * According to W3C Verifiable Credentials spec, subject IDs must be an IRI
+     * (Internationalized Resource Identifier), which includes:
+     * - A DID (starting with "did:")
+     * - A URI/URL (starting with "http:", "https:", "urn:", etc.)
+     * - Any valid IRI with a scheme
+     * 
+     * If the subject ID is omitted, the subject becomes a blank node in JSON-LD terms.
+     * 
+     * @param id Subject identifier (must be a valid IRI/URI)
+     * @throws IllegalArgumentException if id is blank or not a valid IRI format
      */
-    fun id(did: String) {
-        properties["id"] = JsonPrimitive(did)
+    fun id(id: String) {
+        require(id.isNotBlank()) { "Subject ID cannot be blank" }
+        // W3C VC spec requires IRI format (URI, URL, DID, URN, etc.)
+        // An IRI must have a scheme (e.g., "https:", "did:", "urn:", etc.)
+        require(id.matches(Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:.*"))) { 
+            "Subject ID must be a valid IRI (URI, URL, DID, URN, etc.) with a scheme. " +
+            "Examples: 'https://example.com/subject', 'did:example:123', 'urn:example:subject'. " +
+            "Got: $id" 
+        }
+        properties["id"] = JsonPrimitive(id)
     }
 
     /**

@@ -86,7 +86,7 @@ val trustLayer = TrustLayer.build { ... }
 // Issue credential
 val credential = trustLayer.issue {
     credential {
-        type("VerifiableCredential", "PersonCredential")
+        type(CredentialType.VerifiableCredential, CredentialType.Person)
         issuer(issuerDid)
         subject {
             id(holderDid)
@@ -359,7 +359,7 @@ Leverage the DSL for type safety:
 // ✅ Good: Type-safe, IDE autocomplete
 val credential = trustLayer.issue {
     credential {
-        type("VerifiableCredential", "PersonCredential")
+        type(CredentialType.VerifiableCredential, CredentialType.Person)
         issuer(issuerDid)
         subject {
             id(holderDid)

@@ -155,7 +155,7 @@ suspend fun issueCredential(
     return try {
         val credential = trustLayer.issue {
             credential {
-                type("VerifiableCredential", "PersonCredential")
+                type(CredentialType.VerifiableCredential, CredentialType.Person)
                 issuer(issuerDid)
                 subject {
                     id(holderDid)
@@ -301,7 +301,7 @@ suspend fun issueMultipleCredentials(
         async {
             trustLayer.issue {
                 credential {
-                    type("VerifiableCredential", request.type)
+                    type(CredentialType.VerifiableCredential, CredentialType.fromString(request.type))
                     issuer(request.issuerDid)
                     subject {
                         id(request.holderDid)

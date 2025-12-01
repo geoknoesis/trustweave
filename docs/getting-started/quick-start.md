@@ -88,7 +88,7 @@ fun main() = runBlocking {
         // Step 4: Issue a verifiable credential
         val credential = trustWeave.issue {
             credential {
-                type("VerifiableCredential", "QuickStartCredential")
+                type(CredentialType.VerifiableCredential, CredentialType.Custom("QuickStartCredential"))
                 issuer(issuerDid)
                 subject {
                     id("did:key:holder-placeholder")
@@ -274,7 +274,7 @@ fun main() = runBlocking {
     val credential = try {
         trustWeave.issue {
             credential {
-                type("VerifiableCredential", "QuickStartCredential")
+                type(CredentialType.VerifiableCredential, CredentialType.Custom("QuickStartCredential"))
                 issuer(issuerDid)
                 subject {
                     id("did:key:holder")
@@ -450,7 +450,7 @@ Typed builders (`DidCreationOptions`) are a core design choice: they prevent mis
 // Issue credential using the issuer DID and key ID from Step 3
 val credential = trustWeave.issue {
     credential {
-        type("VerifiableCredential", "QuickStartCredential")
+        type(CredentialType.VerifiableCredential, CredentialType.Custom("QuickStartCredential"))
         issuer(issuerDid)
         subject {
             id("did:key:holder-placeholder")

@@ -71,7 +71,14 @@ class PresentationBuilder(
     /**
      * Set key ID for signing.
      */
+    /**
+     * Set key ID for signing the presentation.
+     * 
+     * @param keyId The key ID (can be just the fragment or full key ID)
+     * @throws IllegalArgumentException if keyId is blank
+     */
     fun keyId(keyId: String) {
+        require(keyId.isNotBlank()) { "Key ID cannot be blank" }
         this.keyId = keyId
     }
 

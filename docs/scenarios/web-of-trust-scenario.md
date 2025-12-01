@@ -127,7 +127,7 @@ trustLayer.trust {
 val degreeCredential = trustLayer.issue {
     credential {
         id("https://university.edu/credentials/degree-123")
-        type("EducationCredential", "DegreeCredential")
+        type(CredentialType.Education, CredentialType.Degree)
         issuer(universityDid)
         subject {
             id(studentDid)

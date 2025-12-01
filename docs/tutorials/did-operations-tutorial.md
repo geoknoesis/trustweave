@@ -75,11 +75,11 @@ fun main() = runBlocking {
         )
         keys {
             provider("inMemory")
-            algorithm("Ed25519")
+            algorithm(KeyAlgorithms.ED25519)
         }
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(DidMethods.KEY) {
+                algorithm(KeyAlgorithms.ED25519)
             }
         }
     }
@@ -87,8 +87,8 @@ fun main() = runBlocking {
     // Create DID using did:key method (returns type-safe Did)
     try {
         val did = trustWeave.createDid {
-            method("key")  // Using string for simplicity
-            algorithm("Ed25519")
+            method(DidMethods.KEY)
+            algorithm(KeyAlgorithms.ED25519)
         }
         println("Created DID: ${did.value}")
     } catch (error: Exception) {
@@ -111,22 +111,22 @@ fun main() = runBlocking {
     // Build TrustWeave instance with testkit factories (for tutorials)
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider("inMemory"); algorithm("Ed25519") }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
         did {
-            method("key") { algorithm("Ed25519") }
-            method("web") { domain("example.com") }
+            method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) }
+            method(DidMethods.WEB) { domain("example.com") }
         }
     }
 
     // Create DID with did:key method
     val keyDid = trustWeave.createDid {
-        method("key")  // Using string for simplicity
-        algorithm("Ed25519")
+        method(DidMethods.KEY)
+        algorithm(KeyAlgorithms.ED25519)
     }
 
     // Create DID with did:web method
     val webDid = trustWeave.createDid {
-        method("web")
+        method(DidMethods.WEB)
         domain("example.com")
     }
 
@@ -184,8 +184,8 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     val didString = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
@@ -247,14 +247,18 @@ fun main() = runBlocking {
 
 ```kotlin
 import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.did.*
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     val didString = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
@@ -292,8 +296,8 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     val didString = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
@@ -358,21 +362,25 @@ fun main() = runBlocking {
 ### Working with DID Documents
 
 ```kotlin
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.did.*
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     // Build TrustWeave instance with testkit factories (for tutorials)
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     try {
         val did = trustWeave.createDid {
-            method("key")  // Using string for simplicity
-            algorithm("Ed25519")
+            method(DidMethods.KEY)
+            algorithm(KeyAlgorithms.ED25519)
         }
         
         // Resolve DID to get document
@@ -404,22 +412,25 @@ fun main() = runBlocking {
 ### Error Handling
 
 ```kotlin
-import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.core.exception.TrustWeaveError
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     // Build TrustWeave instance with testkit factories (for tutorials)
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     try {
         val did = trustWeave.createDid {
-            method("key")  // Using string for simplicity
-            algorithm("Ed25519")
+            method(DidMethods.KEY)
+            algorithm(KeyAlgorithms.ED25519)
         }
         println("Created: ${did.value}")
     } catch (error: Exception) {

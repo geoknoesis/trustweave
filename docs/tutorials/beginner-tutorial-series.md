@@ -59,8 +59,8 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     println("✅ TrustWeave initialized")
@@ -72,18 +72,23 @@ fun main() = runBlocking {
 ### Step 3: Create Your First DID
 
 ```kotlin
-import com.trustweave.core.*
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.testkit.services.*
+import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     // Create a DID using the default method (did:key)
-    val did = trustWeave.createDid { method("key") }
+    val did = trustWeave.createDid { method(DidMethods.KEY) }
     val resolution = trustWeave.resolveDid(did)
     when (resolution) {
         is DidResolutionResult.Success -> {
@@ -108,12 +113,12 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     // Create a DID using the modern DSL
-    val did = trustWeave.createDid { method("key") }
+    val did = trustWeave.createDid { method(DidMethods.KEY) }
     println("Created DID: ${did.value}")
 
     // Resolve the DID we just created
@@ -139,8 +144,8 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     // Try to resolve a non-existent DID
@@ -202,16 +207,16 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     // Create issuer DID (the organization issuing credentials)
-    val issuerDid = trustWeave.createDid { method("key") }
+    val issuerDid = trustWeave.createDid { method(DidMethods.KEY) }
     println("Issuer DID: ${issuerDid.value}")
 
     // Create holder DID (the person receiving the credential)
-    val holderDid = trustWeave.createDid { method("key") }
+    val holderDid = trustWeave.createDid { method(DidMethods.KEY) }
     println("Holder DID: ${holderDid.value}")
 }
 ```
@@ -221,7 +226,12 @@ fun main() = runBlocking {
 ### Step 2: Issue a Credential
 
 ```kotlin
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.credential.*
+import com.trustweave.testkit.services.*
+import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
@@ -230,13 +240,13 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     // Create DIDs
-    val issuerDid = trustWeave.createDid { method("key") }
-    val holderDid = trustWeave.createDid { method("key") }
+    val issuerDid = trustWeave.createDid { method(DidMethods.KEY) }
+    val holderDid = trustWeave.createDid { method(DidMethods.KEY) }
 
     // Get the first verification method from issuer's DID document
     val issuerResolution = trustWeave.resolveDid(issuerDid)
@@ -289,8 +299,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     // ... (create DIDs and issue credential from Step 2) ...
@@ -338,8 +348,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     // ... (create DIDs) ...
@@ -402,7 +412,7 @@ fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
 
     // Create holder DID
-    val holderDid = trustWeave.createDid { method("key") }
+    val holderDid = trustWeave.createDid { method(DidMethods.KEY) }
 
     // Create wallet for the holder
     val wallet = trustWeave.wallet {
@@ -434,13 +444,13 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     // Create DIDs and issue credential (from Tutorial 2)
-    val issuerDid = trustWeave.createDid { method("key") }
-    val holderDid = trustWeave.createDid { method("key") }
+    val issuerDid = trustWeave.createDid { method(DidMethods.KEY) }
+    val holderDid = trustWeave.createDid { method(DidMethods.KEY) }
     val credential = /* ... issue credential ... */
 
     // Create wallet
@@ -475,8 +485,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     // ... (create wallet and store credentials) ...
@@ -511,8 +521,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     // Create wallet with organization features enabled
@@ -582,11 +592,26 @@ fun main() = runBlocking {
 ### Step 1: Setup All Parties
 
 ```kotlin
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.testkit.services.*
+import kotlinx.coroutines.runBlocking
+
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    // Build TrustWeave instance (for tutorials, using testkit factories)
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),  // Test-only factory
+            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
+        )
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
+    }
 
     // Issuer: University issuing degrees
-    val issuerDid = trustWeave.createDid { method("key") }
+    val issuerDid = trustWeave.createDid { method(DidMethods.KEY) }
     val issuerResolution = trustWeave.resolveDid(issuerDid)
     val issuerDoc = when (issuerResolution) {
         is DidResolutionResult.Success -> issuerResolution.document
@@ -596,14 +621,14 @@ fun main() = runBlocking {
         ?: throw IllegalStateException("No verification method found")
 
     // Holder: Student receiving degree
-    val holderDid = trustWeave.createDid { method("key") }
+    val holderDid = trustWeave.createDid { method(DidMethods.KEY) }
     val holderWallet = trustWeave.wallet {
         holder(holderDid.value)
         type("inMemory")
     }
 
     // Verifier: Employer verifying degree
-    val verifierDid = trustWeave.createDid { method("key") }
+    val verifierDid = trustWeave.createDid { method(DidMethods.KEY) }
 
     println("✅ All parties set up")
     println("   Issuer: ${issuerDid.value}")
@@ -624,8 +649,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     // ... (setup parties) ...
@@ -658,8 +683,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     // ... (setup and issue) ...
@@ -752,8 +777,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     // ... (setup and issue) ...

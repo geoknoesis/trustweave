@@ -55,11 +55,14 @@ A verifiable credential is a tamper-evident credential that has authorship that 
 ### Using TrustWeave Service API (Recommended)
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.credential.IssuanceConfig
-import com.trustweave.credential.ProofType
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.trust.types.ProofType
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
+import java.time.Instant
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -67,15 +70,15 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
         credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
 
-    // Create issuer DID
+    // Create issuer DID (returns type-safe Did object)
     val issuerDid = trustWeave.createDid {
-        method("key")  // Using string for simplicity
-        algorithm("Ed25519")
+        method(DidMethods.KEY)
+        algorithm(KeyAlgorithms.ED25519)
     }
     
     // Resolve DID to get key ID
@@ -92,7 +95,7 @@ fun main() = runBlocking {
         val credential = trustWeave.issue {
             credential {
                 type("PersonCredential")
-                issuer(issuerDid.value)
+                issuer(issuerDid.value)  // Using typed Did object's value
                 subject {
                     id("did:key:subject")
                     claim("type", "Person")
@@ -101,7 +104,7 @@ fun main() = runBlocking {
                 }
                 issued(Instant.now())
             }
-            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)  // Using typed Did object's value
         }
 
         println("Issued credential: ${credential.id}")
@@ -119,8 +122,11 @@ fun main() = runBlocking {
 ### Issuing Credentials with Custom Options
 
 ```kotlin
-import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.credential.*
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import java.time.Instant
@@ -132,10 +138,10 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
-    val issuerDid = trustWeave.createDid { method("key") }
+    val issuerDid = trustWeave.createDid { method(DidMethods.KEY) }
     val issuerResolution = trustWeave.resolveDid(issuerDid)
     val issuerDoc = when (issuerResolution) {
         is DidResolutionResult.Success -> issuerResolution.document
@@ -186,8 +192,11 @@ fun main() = runBlocking {
 ### Verifying Credentials
 
 ```kotlin
-import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.credential.VerificationConfig
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -196,8 +205,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     val credential = /* previously issued credential */
@@ -229,8 +238,11 @@ fun main() = runBlocking {
 ### Verifying with Custom Configuration
 
 ```kotlin
-import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.credential.VerificationConfig
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -239,8 +251,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     val credential = /* previously issued credential */
@@ -283,14 +295,14 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
         credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
     
     val issuerDid = trustWeave.createDid {
-        method("key")  // Using string for simplicity
-        algorithm("Ed25519")
+        method(DidMethods.KEY)
+        algorithm(KeyAlgorithms.ED25519)
     }
     
     val resolution = trustWeave.resolveDid(issuerDid)
@@ -352,10 +364,10 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
-    val issuerDid = trustWeave.createDid { method("key") }
+    val issuerDid = trustWeave.createDid { method(DidMethods.KEY) }
     val issuerResolution = trustWeave.resolveDid(issuerDid)
     val issuerDoc = when (issuerResolution) {
         is DidResolutionResult.Success -> issuerResolution.document
@@ -413,12 +425,12 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     val credentials = /* list of credentials */
-    val holderDid = trustWeave.createDid { method("key") }
+    val holderDid = trustWeave.createDid { method(DidMethods.KEY) }
     val holderResolution = trustWeave.resolveDid(holderDid)
     val holderDoc = when (holderResolution) {
         is DidResolutionResult.Success -> holderResolution.document
@@ -472,10 +484,10 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
-    val issuerDid = trustWeave.createDid { method("key") }
+    val issuerDid = trustWeave.createDid { method(DidMethods.KEY) }
     val issuerResolution = trustWeave.resolveDid(issuerDid)
     val issuerDoc = when (issuerResolution) {
         is DidResolutionResult.Success -> issuerResolution.document

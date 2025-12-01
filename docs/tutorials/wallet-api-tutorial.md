@@ -41,8 +41,11 @@ dependencies {
 ### Service API Wallet (Recommended)
 
 ```kotlin
-import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.wallet.WalletCreationOptions
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -52,8 +55,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     try {
@@ -84,7 +87,7 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     val trustLayer = trustLayer {
         keys { provider("inMemory") }
-        did { method("key") }
+        did { method(DidMethods.KEY) }
     }
 
     val wallet = trustLayer.wallet {
@@ -496,8 +499,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
     val wallet = trustWeave.wallet {
         holder("did:key:holder")

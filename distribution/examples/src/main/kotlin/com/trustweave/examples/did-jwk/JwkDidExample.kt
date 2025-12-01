@@ -6,6 +6,7 @@ import com.trustweave.did.DidCreationOptions.KeyAlgorithm
 import com.trustweave.did.DidCreationOptions.KeyPurpose
 import com.trustweave.jwkdid.JwkDidMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -43,7 +44,7 @@ fun main() = runBlocking {
     val ed25519Did = trustweave.createDid {
         method("jwk")
         algorithm("Ed25519")
-    }
+    }.getOrFail()
 
     println("Created Ed25519 DID: ${ed25519Did.value}")
 
@@ -67,14 +68,14 @@ fun main() = runBlocking {
     val secp256k1Did = trustweave.createDid {
         method("jwk")
         algorithm("secp256k1")
-    }
+    }.getOrFail()
     println("Created secp256k1 DID: ${secp256k1Did.value}")
 
     // P-256 (EC type)
     val p256Did = trustweave.createDid {
         method("jwk")
         algorithm("P-256")
-    }
+    }.getOrFail()
     println("Created P-256 DID: ${p256Did.value}")
 
     println("\n" + "=".repeat(70))

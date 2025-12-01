@@ -26,60 +26,75 @@ import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    try {
-        // Create TrustWeave instance
-        val trustWeave = TrustWeave.build {
-            factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory()
-            )
-            keys {
-                provider("inMemory")
-                algorithm("Ed25519")
-            }
-            did {
-                method("key") {
-                    algorithm("Ed25519")
-                }
-            }
-        }
-
-        // Create issuer DID
-        val issuerDid = trustWeave.createDid {
-            method("key")
+    // Create TrustWeave instance
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys {
+            provider("inMemory")
             algorithm("Ed25519")
         }
-        
-        // Get key ID from DID document
-        val resolutionResult = trustWeave.resolveDid(issuerDid)
-        val issuerDocument = when (resolutionResult) {
-            is DidResolutionResult.Success -> resolutionResult.document
-            else -> throw IllegalStateException("Failed to resolve issuer DID")
-        }
-        val verificationMethod = issuerDocument.verificationMethod.firstOrNull()
-            ?: throw IllegalStateException("No verification method found")
-        val issuerKeyId = verificationMethod.id.substringAfter("#")
-
-        // Issue credential
-        val credential = trustWeave.issue {
-            credential {
-                type("VerifiableCredential", "PersonCredential")
-                issuer(issuerDid)
-                subject {
-                    id("did:key:holder-placeholder")
-                    claim("name", "Alice Example")
-                    claim("role", "Site Reliability Engineer")
-                }
+        did {
+            method("key") {
+                algorithm("Ed25519")
             }
-            signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
         }
+    }
 
-        println("✅ Issued credential: ${credential.id}")
-        println("   Issuer: ${credential.issuer}")
-        println("   Subject: ${credential.credentialSubject}")
-    } catch (error: Exception) {
-        println("❌ Error: ${error.message}")
-        error.printStackTrace()
+    // Create issuer DID
+    import com.trustweave.trust.types.DidCreationResult
+    import com.trustweave.trust.types.IssuanceResult
+    
+    val didResult = trustWeave.createDid {
+        method("key")
+        algorithm("Ed25519")
+    }
+    
+    val issuerDid = when (didResult) {
+        is DidCreationResult.Success -> didResult.did
+        else -> {
+            println("❌ Failed to create DID: ${didResult.reason}")
+            return@runBlocking
+        }
+    }
+    
+    // Get key ID from DID document
+    val resolutionResult = trustWeave.resolveDid(issuerDid)
+    val issuerDocument = when (resolutionResult) {
+        is DidResolutionResult.Success -> resolutionResult.document
+        else -> throw IllegalStateException("Failed to resolve issuer DID")
+    }
+    val verificationMethod = issuerDocument.verificationMethod.firstOrNull()
+        ?: throw IllegalStateException("No verification method found")
+    val issuerKeyId = verificationMethod.id.substringAfter("#")
+
+    // Issue credential
+    val issuanceResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "PersonCredential")
+            issuer(issuerDid.value)
+            subject {
+                id("did:key:holder-placeholder")
+                "name" to "Alice Example"
+                "role" to "Site Reliability Engineer"
+            }
+        }
+        signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+    }
+
+    val credential = when (issuanceResult) {
+        is IssuanceResult.Success -> {
+            println("✅ Issued credential: ${issuanceResult.credential.id}")
+            println("   Issuer: ${issuanceResult.credential.issuer}")
+            println("   Subject: ${issuanceResult.credential.credentialSubject}")
+            issuanceResult.credential
+        }
+        else -> {
+            println("❌ Failed to issue credential: ${issuanceResult.reason}")
+            return@runBlocking
+        }
     }
 }
 ```
@@ -149,8 +164,8 @@ val credential = trustWeave.issue {
         issuer(issuerDid)
         subject {
             id("did:key:holder")
-            claim("name", "Alice")
-            claim("email", "alice@example.com")
+            "name" to "Alice"
+            "email" to "alice@example.com"
         }
     }
     signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
@@ -200,10 +215,10 @@ The subject contains the actual claims:
 ```kotlin
 subject {
     id("did:key:holder")  // Required: subject identifier
-    claim("name", "Alice")
-    claim("email", "alice@example.com")
-    claim("age", 30)
-    claim("role", "Engineer")
+    "name" to "Alice"
+    "email" to "alice@example.com"
+    "age" to 30
+    "role" to "Engineer"
 }
 ```
 
@@ -221,7 +236,7 @@ val credential = trustWeave.issue {
     credential {
         type("VerifiableCredential", "TemporaryCredential")
         issuer(issuerDid)
-        subject { id("did:key:holder"); claim("access", "temporary") }
+        subject { id("did:key:holder"); "access" to "temporary" }
         expires(Instant.now().plus(30, ChronoUnit.DAYS))
     }
     signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
@@ -250,7 +265,7 @@ credential {
     type("VerifiableCredential", "PersonCredential")
     issuer(issuerDid)
     schema("https://schema.org/Person")
-    subject { id("did:key:holder"); claim("name", "Alice") }
+    subject { id("did:key:holder"); "name" to "Alice" }
 }
 ```
 
@@ -288,7 +303,7 @@ val credentials = subjects.map { subjectData ->
             subject {
                 id(subjectData["id"] as String)
                 subjectData.forEach { (key, value) ->
-                    if (key != "id") claim(key, value)
+                    if (key != "id") key to value
                 }
             }
         }
@@ -313,7 +328,7 @@ val credential = try {
             issuer(issuerDid.value)
             subject {
                 id("did:key:holder")
-                claim("name", "Alice")
+                "name" to "Alice"
             }
         }
         signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
@@ -337,7 +352,7 @@ val credential = trustWeave.issue {
     credential {
         type("VerifiableCredential", "RevocableCredential")
         issuer(issuerDid)
-        subject { id("did:key:holder"); claim("name", "Alice") }
+        subject { id("did:key:holder"); "name" to "Alice" }
         status {
             id(statusList.id)
             type("StatusList2021")

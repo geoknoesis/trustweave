@@ -12,6 +12,7 @@ import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.testkit.services.TestkitTrustRegistryFactory
 import com.trustweave.testkit.services.TestkitKmsFactory
+import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -45,12 +46,12 @@ class WebOfTrustIntegrationTest {
         val issuerDid = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         val holderDid = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         // Add trust anchor
         trustLayer.trust {
@@ -88,7 +89,7 @@ class WebOfTrustIntegrationTest {
                 issued(Instant.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = keyId)
-        }
+        }.getOrFail()
 
         // Verify with trust registry
         // Note: Trust registry checking is handled by orchestration layer, not in VerificationBuilder
@@ -113,17 +114,17 @@ class WebOfTrustIntegrationTest {
         val delegatorDid = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         val delegateDid = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         val holderDid = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         // Set up delegation
         trustLayer.updateDid {
@@ -153,7 +154,7 @@ class WebOfTrustIntegrationTest {
                 issued(Instant.now())
             }
             signedBy(issuerDid = delegateDid.value, keyId = "key-1")
-        }
+        }.getOrFail()
 
         assertNotNull(credential)
     }
@@ -174,17 +175,17 @@ class WebOfTrustIntegrationTest {
         val anchor1 = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         val anchor2 = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         val anchor3 = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         trustLayer.trust {
             addAnchor(anchor1.value) {}
@@ -219,12 +220,12 @@ class WebOfTrustIntegrationTest {
         val issuerDid = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         val holderDid = trustLayer.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         // Update issuer DID to have assertionMethod
         trustLayer.updateDid {
@@ -248,7 +249,7 @@ class WebOfTrustIntegrationTest {
                 issued(Instant.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = "key-1")
-        }
+        }.getOrFail()
 
         // Verify with proof purpose validation
         val result = trustLayer.verify {

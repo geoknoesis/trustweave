@@ -177,11 +177,29 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for identity provider, individual, and service providers
-    val identityProviderDid = trustWeave.createDid { method("key") }
+    import com.trustweave.trust.types.DidCreationResult
+    import com.trustweave.trust.types.DidResolutionResult
+    import com.trustweave.trust.types.WalletCreationResult
+    import com.trustweave.trust.types.IssuanceResult
+    import com.trustweave.trust.types.VerificationResult
+    
+    val identityProviderDidResult = trustWeave.createDid { method("key") }
+    val identityProviderDid = when (identityProviderDidResult) {
+        is DidCreationResult.Success -> identityProviderDidResult.did
+        else -> throw IllegalStateException("Failed to create identity provider DID: ${identityProviderDidResult.reason}")
+    }
+    
     val identityProviderResolution = trustWeave.resolveDid(identityProviderDid)
     val identityProviderDoc = when (identityProviderResolution) {
         is DidResolutionResult.Success -> identityProviderResolution.document
@@ -190,16 +208,35 @@ fun main() = runBlocking {
     val identityProviderKeyId = identityProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val individualDid = trustWeave.createDid { method("key") }
-    val alcoholServiceDid = trustWeave.createDid { method("key") }
-    val gamblingServiceDid = trustWeave.createDid { method("key") }
-    val contentServiceDid = trustWeave.createDid { method("key") }
+    val individualDidResult = trustWeave.createDid { method("key") }
+    val individualDid = when (individualDidResult) {
+        is DidCreationResult.Success -> individualDidResult.did
+        else -> throw IllegalStateException("Failed to create individual DID: ${individualDidResult.reason}")
+    }
+    
+    val alcoholServiceDidResult = trustWeave.createDid { method("key") }
+    val alcoholServiceDid = when (alcoholServiceDidResult) {
+        is DidCreationResult.Success -> alcoholServiceDidResult.did
+        else -> throw IllegalStateException("Failed to create alcohol service DID: ${alcoholServiceDidResult.reason}")
+    }
+    
+    val gamblingServiceDidResult = trustWeave.createDid { method("key") }
+    val gamblingServiceDid = when (gamblingServiceDidResult) {
+        is DidCreationResult.Success -> gamblingServiceDidResult.did
+        else -> throw IllegalStateException("Failed to create gambling service DID: ${gamblingServiceDidResult.reason}")
+    }
+    
+    val contentServiceDidResult = trustWeave.createDid { method("key") }
+    val contentServiceDid = when (contentServiceDidResult) {
+        is DidCreationResult.Success -> contentServiceDidResult.did
+        else -> throw IllegalStateException("Failed to create content service DID: ${contentServiceDidResult.reason}")
+    }
 
-    println("✅ Identity Provider DID: $identityProviderDid")
-    println("✅ Individual DID: $individualDid")
-    println("✅ Alcohol Service DID: $alcoholServiceDid")
-    println("✅ Gambling Service DID: $gamblingServiceDid")
-    println("✅ Content Service DID: $contentServiceDid")
+    println("✅ Identity Provider DID: ${identityProviderDid.value}")
+    println("✅ Individual DID: ${individualDid.value}")
+    println("✅ Alcohol Service DID: ${alcoholServiceDid.value}")
+    println("✅ Gambling Service DID: ${gamblingServiceDid.value}")
+    println("✅ Content Service DID: ${contentServiceDid.value}")
 
     // Step 3: Calculate age (in real system, this would come from verified identity document)
     val dateOfBirth = LocalDate.of(1995, 5, 15)
@@ -224,7 +261,7 @@ fun main() = runBlocking {
         put("type", "photo")
         put("format", "jpeg")
         put("data", photoBase64)
-        put("subjectDid", individualDid)
+                    put("subjectDid", individualDid.value)
         put("purpose", "ageVerification")
     }
 
@@ -232,7 +269,7 @@ fun main() = runBlocking {
     val photoDigest = DigestUtils.sha256DigestMultibase(photoMetadata)
 
     // Photo URL (in production, host photo securely)
-    val photoUrl = "https://identity-provider.com/photos/${individualDid}.jpg"
+    val photoUrl = "https://identity-provider.com/photos/${individualDid.value}.jpg"
 
     // Generate thumbnail for quick display (in production, use image library)
     val thumbnailBase64 = Base64.getEncoder().encodeToString(photoBytes.take(500).toByteArray())
@@ -243,33 +280,41 @@ fun main() = runBlocking {
     println("   Thumbnail generated")
 
     // Step 5: Issue age verification credential with photo (privacy-preserving - only age, not DOB)
-    val ageCredential = TrustWeave.issueCredential(
-        issuerDid = identityProviderDid,
-        issuerKeyId = identityProviderKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", individualDid)
-            put("ageVerification", buildJsonObject {
-                put("age", age)
-                put("ageVerified", true)
-                put("verificationDate", Instant.now().toString())
-                put("verificationMethod", "Government ID")
-                put("minimumAge", 18) // Can access 18+ services
-                put("identityProvider", "Trusted Identity Services")
-                // Photo reference with digest for integrity verification
-                put("photo", buildJsonObject {
-                    put("type", "ImageObject")
-                    put("url", photoUrl)
-                    put("digestMultibase", photoDigest)
-                    put("format", "image/jpeg")
-                    put("contentType", "image/jpeg")
-                    put("thumbnail", thumbnailDataUrl) // Small thumbnail for quick display
-                    put("photoDate", Instant.now().toString()) // When photo was taken
-                })
-            })
-        },
-        types = listOf("VerifiableCredential", "AgeVerificationCredential", "IdentityCredential"),
-        expirationDate = Instant.now().plus(5, ChronoUnit.YEARS).toString()
-    ).getOrThrow()
+    val ageIssuanceResult = trustWeave.issue {
+        credential {
+            id("age-verification-${Instant.now().toEpochMilli()}")
+            type("VerifiableCredential", "AgeVerificationCredential", "IdentityCredential")
+            issuer(identityProviderDid.value)
+            subject {
+                id(individualDid.value)
+                "ageVerification" {
+                    "age" to age
+                    "ageVerified" to true
+                    "verificationDate" to Instant.now().toString()
+                    "verificationMethod" to "Government ID"
+                    "minimumAge" to 18 // Can access 18+ services
+                    "identityProvider" to "Trusted Identity Services"
+                    // Photo reference with digest for integrity verification
+                    "photo" {
+                        "type" to "ImageObject"
+                        "url" to photoUrl
+                        "digestMultibase" to photoDigest
+                        "format" to "image/jpeg"
+                        "contentType" to "image/jpeg"
+                        "thumbnail" to thumbnailDataUrl // Small thumbnail for quick display
+                        "photoDate" to Instant.now().toString() // When photo was taken
+                    }
+                }
+            }
+            expirationDate(Instant.now().plus(5, ChronoUnit.YEARS).toString())
+        }
+        by(issuerDid = identityProviderDid.value, keyId = identityProviderKeyId)
+    }
+    
+    val ageCredential = when (ageIssuanceResult) {
+        is IssuanceResult.Success -> ageIssuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue age verification credential")
+    }
 
     println("\n✅ Age verification credential with photo issued: ${ageCredential.id}")
     println("   Age: $age years")
@@ -278,13 +323,16 @@ fun main() = runBlocking {
     println("   Note: Date of birth NOT included for privacy")
 
     // Step 5: Create individual wallet and store age credential
-    val individualWallet = TrustWeave.createWallet(
-        holderDid = individualDid,
-        options = WalletCreationOptionsBuilder().apply {
-            enableOrganization = true
-            enablePresentation = true
-        }.build()
-    ).getOrThrow()
+    val walletResult = trustWeave.wallet {
+        holder(individualDid.value)
+        enableOrganization()
+        enablePresentation()
+    }
+    
+    val individualWallet = when (walletResult) {
+        is WalletCreationResult.Success -> walletResult.wallet
+        else -> throw IllegalStateException("Failed to create wallet: ${walletResult.reason}")
+    }
 
     val ageCredentialId = individualWallet.store(ageCredential)
     println("✅ Age credential stored in wallet: $ageCredentialId")
@@ -300,9 +348,13 @@ fun main() = runBlocking {
     // Step 7: Alcohol service age verification with photo (21+ required)
     println("\n🍺 Alcohol Service Age Verification (21+ required):")
 
-    val alcoholVerification = TrustWeave.verifyCredential(ageCredential).getOrThrow()
-
-    if (alcoholVerification.valid) {
+    val alcoholVerificationResult = trustWeave.verify {
+        credential(ageCredential)
+    }
+    
+    when (alcoholVerificationResult) {
+        is VerificationResult.Valid -> {
+            val alcoholVerification = alcoholVerificationResult
         val credentialSubject = ageCredential.credentialSubject
         val ageVerification = credentialSubject.jsonObject["ageVerification"]?.jsonObject
         val verifiedAge = ageVerification?.get("age")?.jsonPrimitive?.content?.toInt() ?: 0
@@ -336,17 +388,24 @@ fun main() = runBlocking {
             println("❌ Age requirement NOT MET")
             println("❌ Access DENIED to alcohol service")
         }
-    } else {
-        println("❌ Age Credential: INVALID")
-        println("❌ Access DENIED")
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ Age Credential: INVALID")
+            println("   Errors: ${alcoholVerificationResult.errors}")
+            println("❌ Access DENIED")
+        }
     }
 
     // Step 8: Gambling service age verification (18+ required)
     println("\n🎰 Gambling Service Age Verification (18+ required):")
 
-    val gamblingVerification = TrustWeave.verifyCredential(ageCredential).getOrThrow()
-
-    if (gamblingVerification.valid) {
+    val gamblingVerificationResult = trustWeave.verify {
+        credential(ageCredential)
+    }
+    
+    when (gamblingVerificationResult) {
+        is VerificationResult.Valid -> {
+            val gamblingVerification = gamblingVerificationResult
         val credentialSubject = ageCredential.credentialSubject
         val ageVerification = credentialSubject.jsonObject["ageVerification"]?.jsonObject
         val verifiedAge = ageVerification?.get("age")?.jsonPrimitive?.content?.toInt() ?: 0
@@ -363,17 +422,24 @@ fun main() = runBlocking {
             println("❌ Age requirement NOT MET")
             println("❌ Access DENIED to gambling service")
         }
-    } else {
-        println("❌ Age Credential: INVALID")
-        println("❌ Access DENIED")
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ Age Credential: INVALID")
+            println("   Errors: ${gamblingVerificationResult.errors}")
+            println("❌ Access DENIED")
+        }
     }
 
     // Step 9: Content service age verification (13+ required for some content)
     println("\n📺 Content Service Age Verification (13+ required):")
 
-    val contentVerification = TrustWeave.verifyCredential(ageCredential).getOrThrow()
-
-    if (contentVerification.valid) {
+    val contentVerificationResult = trustWeave.verify {
+        credential(ageCredential)
+    }
+    
+    when (contentVerificationResult) {
+        is VerificationResult.Valid -> {
+            val contentVerification = contentVerificationResult
         val credentialSubject = ageCredential.credentialSubject
         val ageVerification = credentialSubject.jsonObject["ageVerification"]?.jsonObject
         val verifiedAge = ageVerification?.get("age")?.jsonPrimitive?.content?.toInt() ?: 0
@@ -389,18 +455,21 @@ fun main() = runBlocking {
             println("❌ Age requirement NOT MET")
             println("❌ Access DENIED to content service")
         }
-    } else {
-        println("❌ Age Credential: INVALID")
-        println("❌ Access DENIED")
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ Age Credential: INVALID")
+            println("   Errors: ${contentVerificationResult.errors}")
+            println("❌ Access DENIED")
+        }
     }
 
     // Step 10: Create privacy-preserving presentation
     val agePresentation = individualWallet.withPresentation { pres ->
         pres.createPresentation(
             credentialIds = listOf(ageCredentialId),
-            holderDid = individualDid,
+            holderDid = individualDid.value,
             options = PresentationOptions(
-                holderDid = individualDid,
+                holderDid = individualDid.value,
                 challenge = "age-verification-${System.currentTimeMillis()}"
             )
         )

@@ -425,9 +425,9 @@ val credential = trustLayer.issue {
         issuer("did:key:university")
         subject {
             id("did:key:student")
-            claim("degree", "Bachelor of Science")
-            claim("university", "Example University")
-            claim("graduationDate", "2023-05-15")
+            "degree" to "Bachelor of Science"
+            "university" to "Example University"
+            "graduationDate" to "2023-05-15"
         }
         issued(Instant.now())
     }
@@ -476,9 +476,9 @@ val credential = trustLayer.issue {
         issuer("did:key:university")
         subject {
             id("did:key:student")
-            claim("degree", "Bachelor of Science")
-            claim("university", "Example University")
-            claim("graduationDate", "2023-05-15")
+            "degree" to "Bachelor of Science"
+            "university" to "Example University"
+            "graduationDate" to "2023-05-15"
         }
         issued(Instant.now())
     }

@@ -268,9 +268,18 @@ Create a DID for your organization (the issuer of credentials):
 
 ```kotlin
 // Create organization DID
-val organizationDid = trustWeave.createDid {
+import com.trustweave.trust.types.DidCreationResult
+import com.trustweave.trust.types.DidResolutionResult
+import com.trustweave.trust.types.IssuanceResult
+
+val organizationDidResult = trustWeave.createDid {
     method("key")
     algorithm("Ed25519")
+}
+
+val organizationDid = when (organizationDidResult) {
+    is DidCreationResult.Success -> organizationDidResult.did
+    else -> throw IllegalStateException("Failed to create organization DID")
 }
 
 println("✓ Organization DID created: ${organizationDid.value}")
@@ -287,37 +296,56 @@ import com.trustweave.credential.models.VerifiableCredential
 import java.time.Instant
 
 // Create field worker DID
-val workerDid = trustWeave.createDid {
+val workerDidResult = trustWeave.createDid {
     method("key")
     algorithm("Ed25519")
 }
 
+val workerDid = when (workerDidResult) {
+    is DidCreationResult.Success -> workerDidResult.did
+    else -> throw IllegalStateException("Failed to create worker DID")
+}
+
 println("✓ Field worker DID created: ${workerDid.value}")
+
+// Resolve organization DID to get key ID
+val organizationResolution = trustWeave.resolveDid(organizationDid)
+val organizationDoc = when (organizationResolution) {
+    is DidResolutionResult.Success -> organizationResolution.document
+    else -> throw IllegalStateException("Failed to resolve organization DID")
+}
+val organizationKeyId = organizationDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    ?: throw IllegalStateException("No verification method found")
 
 // Issue authorization credential
 val expirationDate = Instant.now()
     .plusSeconds(365 * 24 * 60 * 60L)  // 1 year
     .toString()
 
-val workerCredential = trustWeave.issue {
+val workerIssuanceResult = trustWeave.issue {
     credential {
         id("credential:worker-auth-001")
         type("VerifiableCredential", "FieldWorkerCredential")
         issuer(organizationDid.value)
         subject {
             id(workerDid.value)
-            claim("role", "ForestSurveyor")
-            claim("projectId", "project-forest-survey-2024")
-            claim("authorized", true)
-            claim("qualifications", listOf("Certified Forester", "GPS Certified"))
-            claim("expirationDate", expirationDate)
+            "role" to "ForestSurveyor"
+            "projectId" to "project-forest-survey-2024"
+            "authorized" to true
+            "qualifications" to listOf("Certified Forester", "GPS Certified")
+            "expirationDate" to expirationDate
         }
         expirationDate(expirationDate)
     }
     by(
         issuerDid = organizationDid.value,
-        keyId = "${organizationDid.value}#key-1"
+        keyId = organizationKeyId
     )
+}
+
+val workerCredential = when (workerIssuanceResult) {
+    is IssuanceResult.Success -> workerIssuanceResult.credential
+    else -> throw IllegalStateException("Failed to issue worker credential")
 }
 
 println("✓ Worker authorization credential issued")
@@ -404,31 +432,36 @@ val dataDigest = DigestUtils.sha256DigestMultibase(eventJson)
 println("✓ Data digest computed: $dataDigest")
 
 // Issue collection event credential
-val collectionCredential = trustWeave.issue {
+val collectionIssuanceResult = trustWeave.issue {
     credential {
         id("credential:${collectionEvent.id}")
         type("VerifiableCredential", "FieldDataCollectionCredential")
         issuer(organizationDid.value)
         subject {
             id(workerDid.value)
-            claim("collectionEventId", collectionEvent.id)
-            claim("projectId", collectionEvent.projectId)
-            claim("timestamp", collectionEvent.timestamp)
-            claim("dataDigest", dataDigest)
-            claim("location", buildJsonObject {
-                put("latitude", collectionEvent.location.latitude)
-                put("longitude", collectionEvent.location.longitude)
-                put("altitude", collectionEvent.location.altitude ?: JsonNull)
-                put("accuracy", collectionEvent.location.accuracy ?: JsonNull)
-            })
-            claim("featureCount", collectionEvent.features.size)
-            claim("attachmentCount", collectionEvent.attachments?.size ?: 0)
+            "collectionEventId" to collectionEvent.id
+            "projectId" to collectionEvent.projectId
+            "timestamp" to collectionEvent.timestamp
+            "dataDigest" to dataDigest
+            "location" {
+                "latitude" to collectionEvent.location.latitude
+                "longitude" to collectionEvent.location.longitude
+                "altitude" to (collectionEvent.location.altitude ?: JsonNull)
+                "accuracy" to (collectionEvent.location.accuracy ?: JsonNull)
+            }
+            "featureCount" to collectionEvent.features.size
+            "attachmentCount" to (collectionEvent.attachments?.size ?: 0)
         }
     }
     by(
         issuerDid = organizationDid.value,
-        keyId = "${organizationDid.value}#key-1"
+        keyId = organizationKeyId
     )
+}
+
+val collectionCredential = when (collectionIssuanceResult) {
+    is IssuanceResult.Success -> collectionIssuanceResult.credential
+    else -> throw IllegalStateException("Failed to issue collection credential")
 }
 
 println("✓ Collection event credential issued")
@@ -584,16 +617,37 @@ fun main() = runBlocking {
     println()
 
     // Step 2: Create organization DID
-    val organizationDid = trustWeave.createDid {
+    import com.trustweave.trust.types.DidCreationResult
+    import com.trustweave.trust.types.DidResolutionResult
+    import com.trustweave.trust.types.IssuanceResult
+    
+    val organizationDidResult = trustWeave.createDid {
         method("key")
+    }
+    val organizationDid = when (organizationDidResult) {
+        is DidCreationResult.Success -> organizationDidResult.did
+        else -> throw IllegalStateException("Failed to create organization DID")
     }
     println("Step 2: Organization DID created")
     println("  - DID: ${organizationDid.value}")
     println()
 
+    // Resolve organization DID to get key ID
+    val organizationResolution = trustWeave.resolveDid(organizationDid)
+    val organizationDoc = when (organizationResolution) {
+        is DidResolutionResult.Success -> organizationResolution.document
+        else -> throw IllegalStateException("Failed to resolve organization DID")
+    }
+    val organizationKeyId = organizationDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
+
     // Step 3: Create field worker DID
-    val workerDid = trustWeave.createDid {
+    val workerDidResult = trustWeave.createDid {
         method("key")
+    }
+    val workerDid = when (workerDidResult) {
+        is DidCreationResult.Success -> workerDidResult.did
+        else -> throw IllegalStateException("Failed to create worker DID")
     }
     println("Step 3: Field worker DID created")
     println("  - DID: ${workerDid.value}")
@@ -604,25 +658,30 @@ fun main() = runBlocking {
         .plusSeconds(365 * 24 * 60 * 60L)
         .toString()
 
-    val workerCredential = trustWeave.issue {
+    val workerIssuanceResult = trustWeave.issue {
         credential {
             id("credential:worker-auth-001")
             type("VerifiableCredential", "FieldWorkerCredential")
             issuer(organizationDid.value)
             subject {
                 id(workerDid.value)
-                claim("role", "ForestSurveyor")
-                claim("projectId", "project-forest-survey-2024")
-                claim("authorized", true)
-                claim("qualifications", listOf("Certified Forester", "GPS Certified"))
-                claim("expirationDate", expirationDate)
+                "role" to "ForestSurveyor"
+                "projectId" to "project-forest-survey-2024"
+                "authorized" to true
+                "qualifications" to listOf("Certified Forester", "GPS Certified")
+                "expirationDate" to expirationDate
             }
             expirationDate(expirationDate)
         }
         by(
             issuerDid = organizationDid.value,
-            keyId = "${organizationDid.value}#key-1"
+            keyId = organizationKeyId
         )
+    }
+    
+    val workerCredential = when (workerIssuanceResult) {
+        is IssuanceResult.Success -> workerIssuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue worker credential")
     }
 
     println("Step 4: Worker authorization credential issued")
@@ -669,25 +728,30 @@ fun main() = runBlocking {
     val eventJson = Json.encodeToJsonElement(collectionEvent)
     val dataDigest = DigestUtils.sha256DigestMultibase(eventJson)
 
-    val collectionCredential = trustWeave.issue {
+    val collectionIssuanceResult = trustWeave.issue {
         credential {
             id("credential:${collectionEvent.id}")
             type("VerifiableCredential", "FieldDataCollectionCredential")
             issuer(organizationDid.value)
             subject {
                 id(workerDid.value)
-                claim("collectionEventId", collectionEvent.id)
-                claim("dataDigest", dataDigest)
-                claim("location", buildJsonObject {
-                    put("latitude", collectionEvent.location.latitude)
-                    put("longitude", collectionEvent.location.longitude)
-                })
+                "collectionEventId" to collectionEvent.id
+                "dataDigest" to dataDigest
+                "location" {
+                    "latitude" to collectionEvent.location.latitude
+                    "longitude" to collectionEvent.location.longitude
+                }
             }
         }
         by(
             issuerDid = organizationDid.value,
-            keyId = "${organizationDid.value}#key-1"
+            keyId = organizationKeyId
         )
+    }
+    
+    val collectionCredential = when (collectionIssuanceResult) {
+        is IssuanceResult.Success -> collectionIssuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue collection credential")
     }
 
     println("Step 6: Collection credential issued")

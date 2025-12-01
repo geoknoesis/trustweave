@@ -178,7 +178,15 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for manufacturer, current owner, and new owner
-    val manufacturerDid = trustWeave.createDid { method("key") }
+    import com.trustweave.trust.types.DidCreationResult
+    import com.trustweave.trust.types.WalletCreationResult
+    
+    val manufacturerDidResult = trustWeave.createDid { method("key") }
+    val manufacturerDid = when (manufacturerDidResult) {
+        is DidCreationResult.Success -> manufacturerDidResult.did
+        else -> throw IllegalStateException("Failed to create manufacturer DID: ${manufacturerDidResult.reason}")
+    }
+    
     val manufacturerResolution = trustWeave.resolveDid(manufacturerDid)
     val manufacturerDoc = when (manufacturerResolution) {
         is DidResolutionResult.Success -> manufacturerResolution.document
@@ -187,7 +195,12 @@ fun main() = runBlocking {
     val manufacturerKeyId = manufacturerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val currentOwnerDid = trustWeave.createDid { method("key") }
+    val currentOwnerDidResult = trustWeave.createDid { method("key") }
+    val currentOwnerDid = when (currentOwnerDidResult) {
+        is DidCreationResult.Success -> currentOwnerDidResult.did
+        else -> throw IllegalStateException("Failed to create current owner DID: ${currentOwnerDidResult.reason}")
+    }
+    
     val currentOwnerResolution = trustWeave.resolveDid(currentOwnerDid)
     val currentOwnerDoc = when (currentOwnerResolution) {
         is DidResolutionResult.Success -> currentOwnerResolution.document
@@ -196,7 +209,12 @@ fun main() = runBlocking {
     val currentOwnerKeyId = currentOwnerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val newOwnerDid = trustWeave.createDid { method("key") }
+    val newOwnerDidResult = trustWeave.createDid { method("key") }
+    val newOwnerDid = when (newOwnerDidResult) {
+        is DidCreationResult.Success -> newOwnerDidResult.did
+        else -> throw IllegalStateException("Failed to create new owner DID: ${newOwnerDidResult.reason}")
+    }
+    
     val newOwnerResolution = trustWeave.resolveDid(newOwnerDid)
     val newOwnerDoc = when (newOwnerResolution) {
         is DidResolutionResult.Success -> newOwnerResolution.document
@@ -205,26 +223,30 @@ fun main() = runBlocking {
     val newOwnerKeyId = newOwnerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val deviceDid = trustWeave.createDid { method("key") }
+    val deviceDidResult = trustWeave.createDid { method("key") }
+    val deviceDid = when (deviceDidResult) {
+        is DidCreationResult.Success -> deviceDidResult.did
+        else -> throw IllegalStateException("Failed to create device DID: ${deviceDidResult.reason}")
+    }
 
-    println("✅ Manufacturer DID: $manufacturerDid")
-    println("✅ Current Owner DID: $currentOwnerDid")
-    println("✅ New Owner DID: $newOwnerDid")
-    println("✅ Device DID: $deviceDid")
+    println("✅ Manufacturer DID: ${manufacturerDid.value}")
+    println("✅ Current Owner DID: ${currentOwnerDid.value}")
+    println("✅ New Owner DID: ${newOwnerDid.value}")
+    println("✅ Device DID: ${deviceDid.value}")
 
     // Step 3: Issue initial device ownership credential to current owner
     val currentOwnershipCredential = TrustWeave.issueCredential(
-        issuerDid = manufacturerDid,
+        issuerDid = manufacturerDid.value,
         issuerKeyId = manufacturerKeyId,
         credentialSubject = buildJsonObject {
-            put("id", deviceDid)
+            put("id", deviceDid.value)
             put("deviceOwnership", buildJsonObject {
-                put("deviceId", deviceDid)
-                put("ownerDid", currentOwnerDid)
+                put("deviceId", deviceDid.value)
+                put("ownerDid", currentOwnerDid.value)
                 put("ownershipDate", Instant.now().minus(365, ChronoUnit.DAYS).toString())
                 put("ownershipType", "Primary")
                 put("transferable", true)
-                put("manufacturer", manufacturerDid)
+                put("manufacturer", manufacturerDid.value)
                 put("deviceModel", "SmartHomeHub-2024")
                 put("serialNumber", "SHH-2024-001234")
             })
@@ -239,14 +261,14 @@ fun main() = runBlocking {
 
     // Step 4: Create ownership transfer request credential
     val transferRequestCredential = TrustWeave.issueCredential(
-        issuerDid = currentOwnerDid,
+        issuerDid = currentOwnerDid.value,
         issuerKeyId = currentOwnerKeyId,
         credentialSubject = buildJsonObject {
-            put("id", "transfer-request:${deviceDid}:${Instant.now().toEpochMilli()}")
+            put("id", "transfer-request:${deviceDid.value}:${Instant.now().toEpochMilli()}")
             put("ownershipTransfer", buildJsonObject {
-                put("deviceId", deviceDid)
-                put("currentOwnerDid", currentOwnerDid)
-                put("newOwnerDid", newOwnerDid)
+                put("deviceId", deviceDid.value)
+                put("currentOwnerDid", currentOwnerDid.value)
+                put("newOwnerDid", newOwnerDid.value)
                 put("transferDate", Instant.now().toString())
                 put("transferReason", "Sale")
                 put("authorized", true)
@@ -280,7 +302,7 @@ fun main() = runBlocking {
         println("   New Owner: ${newOwner?.take(20)}...")
         println("   Authorized: $authorized")
 
-        if (authorized && currentOwner == currentOwnerDid) {
+        if (authorized && currentOwner == currentOwnerDid.value) {
             println("✅ Transfer request verified")
             println("✅ Current owner authorized transfer")
         } else {
@@ -294,25 +316,25 @@ fun main() = runBlocking {
 
     // Step 6: Issue new ownership credential to new owner
     val newOwnershipCredential = TrustWeave.issueCredential(
-        issuerDid = manufacturerDid,
+        issuerDid = manufacturerDid.value,
         issuerKeyId = manufacturerKeyId,
         credentialSubject = buildJsonObject {
-            put("id", deviceDid)
+            put("id", deviceDid.value)
             put("deviceOwnership", buildJsonObject {
-                put("deviceId", deviceDid)
-                put("ownerDid", newOwnerDid)
+                put("deviceId", deviceDid.value)
+                put("ownerDid", newOwnerDid.value)
                 put("ownershipDate", Instant.now().toString())
                 put("ownershipType", "Primary")
                 put("transferable", true)
-                put("previousOwnerDid", currentOwnerDid)
+                put("previousOwnerDid", currentOwnerDid.value)
                 put("transferDate", Instant.now().toString())
                 put("transferReference", transferRequestCredential.id)
-                put("manufacturer", manufacturerDid)
+                put("manufacturer", manufacturerDid.value)
                 put("deviceModel", "SmartHomeHub-2024")
                 put("serialNumber", "SHH-2024-001234")
                 put("ownershipHistory", buildJsonObject {
                     put("transferCount", 1)
-                    put("previousOwners", listOf(currentOwnerDid))
+                    put("previousOwners", listOf(currentOwnerDid.value))
                 })
             })
         },
@@ -325,21 +347,27 @@ fun main() = runBlocking {
     println("   Ownership Date: ${Instant.now()}")
 
     // Step 7: Create wallets for current and new owners
-    val currentOwnerWallet = TrustWeave.createWallet(
-        holderDid = currentOwnerDid,
-        options = WalletCreationOptionsBuilder().apply {
-            enableOrganization = true
-            enablePresentation = true
-        }.build()
-    ).getOrThrow()
+    val currentOwnerWalletResult = trustWeave.wallet {
+        holder(currentOwnerDid.value)
+        enableOrganization()
+        enablePresentation()
+    }
+    
+    val currentOwnerWallet = when (currentOwnerWalletResult) {
+        is WalletCreationResult.Success -> currentOwnerWalletResult.wallet
+        else -> throw IllegalStateException("Failed to create current owner wallet: ${currentOwnerWalletResult.reason}")
+    }
 
-    val newOwnerWallet = TrustWeave.createWallet(
-        holderDid = newOwnerDid,
-        options = WalletCreationOptionsBuilder().apply {
-            enableOrganization = true
-            enablePresentation = true
-        }.build()
-    ).getOrThrow()
+    val newOwnerWalletResult = trustWeave.wallet {
+        holder(newOwnerDid.value)
+        enableOrganization()
+        enablePresentation()
+    }
+    
+    val newOwnerWallet = when (newOwnerWalletResult) {
+        is WalletCreationResult.Success -> newOwnerWalletResult.wallet
+        else -> throw IllegalStateException("Failed to create new owner wallet: ${newOwnerWalletResult.reason}")
+    }
 
     val currentOwnershipId = currentOwnerWallet.store(currentOwnershipCredential)
     val transferRequestId = currentOwnerWallet.store(transferRequestCredential)
@@ -381,7 +409,7 @@ fun main() = runBlocking {
         println("   Previous Owner: ${previousOwner?.take(20)}...")
         println("   Transfer Date: $transferDate")
 
-        if (ownerDid == newOwnerDid) {
+        if (ownerDid == newOwnerDid.value) {
             println("✅ New ownership verified")
             println("✅ New owner is authorized")
         } else {
@@ -408,7 +436,7 @@ fun main() = runBlocking {
 
         // In production, this credential would be revoked
         // For this example, we check if owner matches current owner
-        if (ownerDid == currentOwnerDid) {
+        if (ownerDid == currentOwnerDid.value) {
             println("⚠️  Previous owner credential still exists")
             println("⚠️  Previous owner access should be revoked")
             println("✅ Revocation process should be initiated")

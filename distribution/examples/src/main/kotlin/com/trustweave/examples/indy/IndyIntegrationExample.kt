@@ -13,6 +13,10 @@ import com.trustweave.anchor.exceptions.BlockchainException
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.anchor.indy.IndyBlockchainAnchorClient
 import com.trustweave.anchor.indy.IndyIntegration
+import com.trustweave.testkit.getOrFail
+import com.trustweave.trust.types.DidCreationResult
+import com.trustweave.trust.types.IssuanceResult
+import com.trustweave.trust.types.WalletCreationResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlinx.serialization.Serializable
@@ -76,27 +80,33 @@ fun main() = runBlocking {
 
     // Step 2: Create DIDs for issuer and holder
     println("Step 2: Creating DIDs...")
-    val issuerDid = try {
-        trustweave.createDid()
-    } catch (error: DidException.DidMethodNotRegistered) {
-        println("✗ DID method not registered: ${error.method}")
-        println("  Available methods: ${error.availableMethods.joinToString(", ")}")
-        return@runBlocking
-    } catch (error: Throwable) {
-        println("✗ Failed to create issuer DID: ${error.message}")
-        return@runBlocking
+    val issuerDidResult = trustweave.createDid()
+    val issuerDid = when (issuerDidResult) {
+        is DidCreationResult.Success -> issuerDidResult.did
+        is DidCreationResult.Failure.MethodNotRegistered -> {
+            println("✗ DID method not registered: ${issuerDidResult.method}")
+            println("  Available methods: ${issuerDidResult.availableMethods.joinToString(", ")}")
+            return@runBlocking
+        }
+        else -> {
+            println("✗ Failed to create issuer DID: ${issuerDidResult.reason}")
+            return@runBlocking
+        }
     }
     println("✓ Issuer DID created: ${issuerDid.value}")
 
-    val holderDid = try {
-        trustweave.createDid()
-    } catch (error: DidException.DidMethodNotRegistered) {
-        println("✗ DID method not registered: ${error.method}")
-        println("  Available methods: ${error.availableMethods.joinToString(", ")}")
-        return@runBlocking
-    } catch (error: Throwable) {
-        println("✗ Failed to create holder DID: ${error.message}")
-        return@runBlocking
+    val holderDidResult = trustweave.createDid()
+    val holderDid = when (holderDidResult) {
+        is DidCreationResult.Success -> holderDidResult.did
+        is DidCreationResult.Failure.MethodNotRegistered -> {
+            println("✗ DID method not registered: ${holderDidResult.method}")
+            println("  Available methods: ${holderDidResult.availableMethods.joinToString(", ")}")
+            return@runBlocking
+        }
+        else -> {
+            println("✗ Failed to create holder DID: ${holderDidResult.reason}")
+            return@runBlocking
+        }
     }
     println("✓ Holder DID created: ${holderDid.value}")
 
@@ -138,38 +148,29 @@ fun main() = runBlocking {
 
     // Step 3: Issue a verifiable credential
     println("Step 3: Issuing verifiable credential...")
-    val credential = try {
-        trustweave.issue {
-            credential {
-                type("UniversityDegreeCredential")
-                issuer(issuerDid.value)
-                subject {
-                    id(holderDid.value)
-                    "name" to "Alice Smith"
-                    "degree" to "Bachelor of Science in Computer Science"
-                    "university" to "Example University"
-                    "graduationDate" to "2024-05-15"
-                    "gpa" to "3.8"
-                    "honors" to true
-                }
-                issued(java.time.Instant.now())
+    val credentialResult = trustweave.issue {
+        credential {
+            type("UniversityDegreeCredential")
+            issuer(issuerDid.value)
+            subject {
+                id(holderDid.value)
+                "name" to "Alice Smith"
+                "degree" to "Bachelor of Science in Computer Science"
+                "university" to "Example University"
+                "graduationDate" to "2024-05-15"
+                "gpa" to "3.8"
+                "honors" to true
             }
-            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+            issued(java.time.Instant.now())
         }
-    } catch (error: DidException.InvalidDidFormat) {
-        println("✗ Invalid DID format: ${error.reason}")
-        return@runBlocking
-    } catch (error: DidException.DidMethodNotRegistered) {
-        println("✗ DID method not registered: ${error.method}")
-        println("  Available methods: ${error.availableMethods.joinToString(", ")}")
-        return@runBlocking
-    } catch (error: CredentialException.CredentialInvalid) {
-        println("✗ Credential validation failed: ${error.reason}")
-        println("  Field: ${error.field}")
-        return@runBlocking
-    } catch (error: Throwable) {
-        println("✗ Failed to issue credential: ${error.message}")
-        return@runBlocking
+        signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+    }
+    val credential = when (credentialResult) {
+        is IssuanceResult.Success -> credentialResult.credential
+        else -> {
+            println("✗ Failed to issue credential: ${credentialResult.reason}")
+            return@runBlocking
+        }
     }
     println("✓ Credential issued successfully")
     println("  - Credential ID: ${credential.id}")
@@ -213,16 +214,27 @@ fun main() = runBlocking {
 
     // Step 5: Create wallet and store credential
     println("Step 5: Creating wallet and storing credential...")
-    val wallet = try {
-        trustweave.wallet {
-            holder(holderDid.value)
+    val walletResult = trustweave.wallet {
+        holder(holderDid.value)
+    }
+    val wallet = when (walletResult) {
+        is WalletCreationResult.Success -> walletResult.wallet
+        is WalletCreationResult.Failure.InvalidHolderDid -> {
+            println("✗ Failed to create wallet: Invalid holder DID '${walletResult.holderDid}': ${walletResult.reason}")
+            return@runBlocking
         }
-    } catch (error: WalletException.WalletCreationFailed) {
-        println("✗ Wallet creation failed: ${error.reason}")
-        return@runBlocking
-    } catch (error: Throwable) {
-        println("✗ Failed to create wallet: ${error.message}")
-        return@runBlocking
+        is WalletCreationResult.Failure.FactoryNotConfigured -> {
+            println("✗ Failed to create wallet: ${walletResult.reason}")
+            return@runBlocking
+        }
+        is WalletCreationResult.Failure.StorageFailed -> {
+            println("✗ Failed to create wallet: ${walletResult.reason}")
+            return@runBlocking
+        }
+        is WalletCreationResult.Failure.Other -> {
+            println("✗ Failed to create wallet: ${walletResult.reason}")
+            return@runBlocking
+        }
     }
     println("✓ Wallet created successfully")
     println("  - Wallet ID: ${wallet.walletId}")
@@ -339,7 +351,7 @@ fun main() = runBlocking {
     val additionalCredentials = mutableListOf<VerifiableCredential>()
     for (i in 1..2) {
         try {
-            val additionalCredential = trustweave.issue {
+            val additionalCredentialResult = trustweave.issue {
                 credential {
                     type("ProfessionalCertification")
                     issuer(issuerDid.value)
@@ -352,6 +364,13 @@ fun main() = runBlocking {
                     issued(java.time.Instant.now())
                 }
                 signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+            }
+            val additionalCredential = when (additionalCredentialResult) {
+                is IssuanceResult.Success -> additionalCredentialResult.credential
+                else -> {
+                    println("✗ Failed to issue additional credential $i: ${additionalCredentialResult.reason}")
+                    continue
+                }
             }
 
             additionalCredentials.add(additionalCredential)

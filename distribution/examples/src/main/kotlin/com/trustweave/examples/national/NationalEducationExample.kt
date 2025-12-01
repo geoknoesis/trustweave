@@ -10,6 +10,9 @@ import com.trustweave.credential.proof.ProofType
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
 import com.trustweave.testkit.services.TestkitDidMethodFactory
+import com.trustweave.testkit.getOrFail
+import com.trustweave.trust.types.DidCreationResult
+import com.trustweave.trust.types.IssuanceResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import java.time.Instant
@@ -87,12 +90,14 @@ fun main() = runBlocking {
     println("  Role: Trusted issuer of national-level education credentials")
     println("  Method: key (default)")
 
-    val authorityDid = try {
-        trustweave.createDid()
-    } catch (error: Throwable) {
-        println("\n📥 RESPONSE: DID Creation Failed")
-        println("  ✗ Error: ${error.message}")
-        return@runBlocking
+    val authorityDidResult = trustweave.createDid()
+    val authorityDid = when (authorityDidResult) {
+        is DidCreationResult.Success -> authorityDidResult.did
+        else -> {
+            println("\n📥 RESPONSE: DID Creation Failed")
+            println("  ✗ Error: ${authorityDidResult.reason}")
+            return@runBlocking
+        }
     }
     
     // Resolve authority DID to get document
@@ -127,12 +132,14 @@ fun main() = runBlocking {
     println("  Role: Recognized educational institution")
     println("  Institution: University of Algiers (UA-001)")
 
-    val institutionDid = try {
-        trustweave.createDid()
-    } catch (error: Throwable) {
-        println("\n📥 RESPONSE: DID Creation Failed")
-        println("  ✗ Error: ${error.message}")
-        return@runBlocking
+    val institutionDidResult = trustweave.createDid()
+    val institutionDid = when (institutionDidResult) {
+        is DidCreationResult.Success -> institutionDidResult.did
+        else -> {
+            println("\n📥 RESPONSE: DID Creation Failed")
+            println("  ✗ Error: ${institutionDidResult.reason}")
+            return@runBlocking
+        }
     }
     
     // Resolve institution DID
@@ -169,7 +176,7 @@ fun main() = runBlocking {
     println("  Student ID: STU-2024-001234")
     println("  National ID: 1234567890123")
 
-    val studentDid = trustweave.createDid()
+    val studentDid = trustweave.createDid().getOrFail()
 
     println("\n📥 RESPONSE: Student DID Created Successfully")
     println("  ✓ DID: ${studentDid.value}")
@@ -238,7 +245,7 @@ fun main() = runBlocking {
             issued(java.time.Instant.now())
         }
         signedBy(issuerDid = authorityDid.value, keyId = authorityKeyId)
-    }
+    }.getOrFail()
 
     println("\n📥 RESPONSE: Enrollment Credential Issued Successfully")
     println("  ✓ Credential ID: ${enrollmentCredential.id}")
@@ -372,7 +379,7 @@ fun main() = runBlocking {
             issued(java.time.Instant.now())
         }
         signedBy(issuerDid = authorityDid.value, keyId = authorityKeyId)
-    }
+    }.getOrFail()
 
     println("\n📥 RESPONSE: Achievement Credential Issued Successfully")
     println("  ✓ Credential ID: ${achievementCredential.id}")

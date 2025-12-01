@@ -181,7 +181,14 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for all parties
-    val universityDid = trustWeave.createDid { method("key") }
+    import com.trustweave.trust.types.DidCreationResult
+    
+    val universityDidResult = trustWeave.createDid { method("key") }
+    val universityDid = when (universityDidResult) {
+        is DidCreationResult.Success -> universityDidResult.did
+        else -> throw IllegalStateException("Failed to create university DID: ${universityDidResult.reason}")
+    }
+    
     val universityResolution = trustWeave.resolveDid(universityDid)
     val universityDoc = when (universityResolution) {
         is DidResolutionResult.Success -> universityResolution.document
@@ -190,7 +197,12 @@ fun main() = runBlocking {
     val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val previousEmployerDid = trustWeave.createDid { method("key") }
+    val previousEmployerDidResult = trustWeave.createDid { method("key") }
+    val previousEmployerDid = when (previousEmployerDidResult) {
+        is DidCreationResult.Success -> previousEmployerDidResult.did
+        else -> throw IllegalStateException("Failed to create previous employer DID: ${previousEmployerDidResult.reason}")
+    }
+    
     val previousEmployerResolution = trustWeave.resolveDid(previousEmployerDid)
     val previousEmployerDoc = when (previousEmployerResolution) {
         is DidResolutionResult.Success -> previousEmployerResolution.document
@@ -199,7 +211,12 @@ fun main() = runBlocking {
     val previousEmployerKeyId = previousEmployerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val certificationBodyDid = trustWeave.createDid { method("key") }
+    val certificationBodyDidResult = trustWeave.createDid { method("key") }
+    val certificationBodyDid = when (certificationBodyDidResult) {
+        is DidCreationResult.Success -> certificationBodyDidResult.did
+        else -> throw IllegalStateException("Failed to create certification body DID: ${certificationBodyDidResult.reason}")
+    }
+    
     val certificationBodyResolution = trustWeave.resolveDid(certificationBodyDid)
     val certificationBodyDoc = when (certificationBodyResolution) {
         is DidResolutionResult.Success -> certificationBodyResolution.document
@@ -208,7 +225,12 @@ fun main() = runBlocking {
     val certificationBodyKeyId = certificationBodyDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val backgroundCheckProviderDid = trustWeave.createDid { method("key") }
+    val backgroundCheckProviderDidResult = trustWeave.createDid { method("key") }
+    val backgroundCheckProviderDid = when (backgroundCheckProviderDidResult) {
+        is DidCreationResult.Success -> backgroundCheckProviderDidResult.did
+        else -> throw IllegalStateException("Failed to create background check provider DID: ${backgroundCheckProviderDidResult.reason}")
+    }
+    
     val backgroundCheckProviderResolution = trustWeave.resolveDid(backgroundCheckProviderDid)
     val backgroundCheckProviderDoc = when (backgroundCheckProviderResolution) {
         is DidResolutionResult.Success -> backgroundCheckProviderResolution.document
@@ -217,23 +239,31 @@ fun main() = runBlocking {
     val backgroundCheckProviderKeyId = backgroundCheckProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val candidateDid = trustWeave.createDid { method("key") }
+    val candidateDidResult = trustWeave.createDid { method("key") }
+    val candidateDid = when (candidateDidResult) {
+        is DidCreationResult.Success -> candidateDidResult.did
+        else -> throw IllegalStateException("Failed to create candidate DID: ${candidateDidResult.reason}")
+    }
 
-    val employerDid = trustWeave.createDid { method("key") }
+    val employerDidResult = trustWeave.createDid { method("key") }
+    val employerDid = when (employerDidResult) {
+        is DidCreationResult.Success -> employerDidResult.did
+        else -> throw IllegalStateException("Failed to create employer DID: ${employerDidResult.reason}")
+    }
 
-    println("✅ University DID: $universityDid")
-    println("✅ Previous Employer DID: $previousEmployerDid")
-    println("✅ Certification Body DID: $certificationBodyDid")
-    println("✅ Background Check Provider DID: $backgroundCheckProviderDid")
-    println("✅ Candidate DID: $candidateDid")
-    println("✅ Employer DID: $employerDid")
+    println("✅ University DID: ${universityDid.value}")
+    println("✅ Previous Employer DID: ${previousEmployerDid.value}")
+    println("✅ Certification Body DID: ${certificationBodyDid.value}")
+    println("✅ Background Check Provider DID: ${backgroundCheckProviderDid.value}")
+    println("✅ Candidate DID: ${candidateDid.value}")
+    println("✅ Employer DID: ${employerDid.value}")
 
     // Step 3: Issue education credential
     val educationCredential = TrustWeave.issueCredential(
-        issuerDid = universityDid,
+        issuerDid = universityDid.value,
         issuerKeyId = universityKeyId,
         credentialSubject = buildJsonObject {
-            put("id", candidateDid)
+            put("id", candidateDid.value)
             put("degree", buildJsonObject {
                 put("type", "MasterDegree")
                 put("name", "Master of Business Administration")
@@ -250,10 +280,10 @@ fun main() = runBlocking {
 
     // Step 4: Issue work history credential
     val workHistoryCredential = TrustWeave.issueCredential(
-        issuerDid = previousEmployerDid,
+        issuerDid = previousEmployerDid.value,
         issuerKeyId = previousEmployerKeyId,
         credentialSubject = buildJsonObject {
-            put("id", candidateDid)
+            put("id", candidateDid.value)
             put("employment", buildJsonObject {
                 put("company", "Tech Corp Inc")
                 put("position", "Senior Software Engineer")
@@ -275,10 +305,10 @@ fun main() = runBlocking {
 
     // Step 5: Issue certification credential
     val certificationCredential = TrustWeave.issueCredential(
-        issuerDid = certificationBodyDid,
+        issuerDid = certificationBodyDid.value,
         issuerKeyId = certificationBodyKeyId,
         credentialSubject = buildJsonObject {
-            put("id", candidateDid)
+            put("id", candidateDid.value)
             put("certification", buildJsonObject {
                 put("name", "AWS Certified Solutions Architect")
                 put("issuingOrganization", "Amazon Web Services")
@@ -295,13 +325,18 @@ fun main() = runBlocking {
     println("✅ Certification credential issued: ${certificationCredential.id}")
 
     // Step 6: Create candidate wallet and store all credentials
-    val candidateWallet = TrustWeave.createWallet(
-        holderDid = candidateDid,
-        options = WalletCreationOptionsBuilder().apply {
-            enableOrganization = true
-            enablePresentation = true
-        }.build()
-    ).getOrThrow()
+    import com.trustweave.trust.types.WalletCreationResult
+    
+    val walletResult = trustWeave.wallet {
+        holder(candidateDid.value)
+        enableOrganization()
+        enablePresentation()
+    }
+    
+    val candidateWallet = when (walletResult) {
+        is WalletCreationResult.Success -> walletResult.wallet
+        else -> throw IllegalStateException("Failed to create wallet: ${walletResult.reason}")
+    }
 
     val educationCredentialId = candidateWallet.store(educationCredential)
     val workHistoryCredentialId = candidateWallet.store(workHistoryCredential)
@@ -328,10 +363,10 @@ fun main() = runBlocking {
 
     // Step 8: Background check provider verifies credentials and issues verification credential
     val backgroundCheckCredential = TrustWeave.issueCredential(
-        issuerDid = backgroundCheckProviderDid,
+        issuerDid = backgroundCheckProviderDid.value,
         issuerKeyId = backgroundCheckProviderKeyId,
         credentialSubject = buildJsonObject {
-            put("id", candidateDid)
+            put("id", candidateDid.value)
             put("backgroundCheck", buildJsonObject {
                 put("checkType", "Comprehensive")
                 put("checkDate", Instant.now().toString())
@@ -369,9 +404,9 @@ fun main() = runBlocking {
                 certificationCredentialId,
                 backgroundCheckCredentialId
             ),
-            holderDid = candidateDid,
+            holderDid = candidateDid.value,
             options = PresentationOptions(
-                holderDid = candidateDid,
+                holderDid = candidateDid.value,
                 challenge = "job-application-${System.currentTimeMillis()}"
             )
         )

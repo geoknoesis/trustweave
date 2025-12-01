@@ -78,27 +78,58 @@ fun main() = runBlocking {
         println("Canonical credential-subject digest: $digest")
 
         // Step 3: Create an issuer DID
-        val issuerDid = trustWeave.createDid {
+        val didResult = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }
-        val issuerKeyId = "$issuerDid#key-1"
-        println("Issuer DID: $issuerDid (keyId=$issuerKeyId)")
+        
+        val issuerDid = when (didResult) {
+            is DidCreationResult.Success -> {
+                println("Issuer DID: ${didResult.did.value}")
+                didResult.did
+            }
+            else -> {
+                println("Failed to create DID: ${didResult.reason}")
+                return@runBlocking
+            }
+        }
+        
+        // Extract key ID from DID document
+        val issuerDidResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid.value)
+            ?: throw IllegalStateException("Failed to resolve issuer DID")
+        val issuerDidDoc = when (issuerDidResolution) {
+            is com.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
+            else -> throw IllegalStateException("Failed to resolve issuer DID")
+        }
+        val issuerKeyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+            ?: throw IllegalStateException("No verification method in issuer DID")
+        
+        println("Issuer DID: ${issuerDid.value} (keyId=$issuerKeyId)")
 
         // Step 4: Issue a verifiable credential
-        val credential = trustWeave.issue {
+        val issuanceResult = trustWeave.issue {
             credential {
                 type(CredentialType.VerifiableCredential, CredentialType.Custom("QuickStartCredential"))
-                issuer(issuerDid)
+                issuer(issuerDid.value)
                 subject {
                     id("did:key:holder-placeholder")
-                    claim("name", "Alice Example")
-                    claim("role", "Site Reliability Engineer")
+                    "name" to "Alice Example"
+                    "role" to "Site Reliability Engineer"
                 }
             }
-            signedBy(IssuerIdentity.from(issuerDid, issuerKeyId))
+            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
         }
-        println("Issued credential id: ${credential.id}")
+        
+        val credential = when (issuanceResult) {
+            is IssuanceResult.Success -> {
+                println("Issued credential id: ${issuanceResult.credential.id}")
+                issuanceResult.credential
+            }
+            else -> {
+                println("Failed to issue credential: ${issuanceResult.reason}")
+                return@runBlocking
+            }
+        }
 
         // Step 5: Verify the credential
         val verification = trustWeave.verify {
@@ -135,53 +166,22 @@ fun main() = runBlocking {
         }
 
         // Step 6: Create a wallet and store the credential
-        val wallet = trustWeave.wallet {
+        val walletResult = trustWeave.wallet {
             holder("did:key:holder-placeholder")
         }
+        
+        val wallet = when (walletResult) {
+            is WalletCreationResult.Success -> walletResult.wallet
+            else -> {
+                println("Failed to create wallet: ${walletResult.reason}")
+                return@runBlocking
+            }
+        }
+        
         val credentialId = wallet.store(credential)
         println("✅ Stored credential: $credentialId")
-    } catch (error: DidException) {
-        when (error) {
-            is DidMethodNotRegistered -> {
-                println("❌ DID method not registered: ${error.method}")
-                println("Available methods: ${error.availableMethods}")
-            }
-            is DidNotFound -> {
-                println("❌ DID not found: ${error.did}")
-            }
-            is InvalidDidFormat -> {
-                println("❌ Invalid DID format: ${error.reason}")
-            }
-        }
-    } catch (error: CredentialException) {
-        when (error) {
-            is CredentialInvalid -> {
-                println("❌ Credential invalid: ${error.reason}")
-                error.credentialId?.let { println("   Credential ID: $it") }
-                error.field?.let { println("   Field: $it") }
-            }
-            is CredentialIssuanceFailed -> {
-                println("❌ Credential issuance failed: ${error.reason}")
-                error.issuerDid?.let { println("   Issuer DID: $it") }
-            }
-        }
-    } catch (error: WalletException) {
-        when (error) {
-            is WalletCreationFailed -> {
-                println("❌ Wallet creation failed: ${error.reason}")
-                error.provider?.let { println("   Provider: $it") }
-                error.walletId?.let { println("   Wallet ID: $it") }
-            }
-        }
-    } catch (error: TrustWeaveException) {
-        println("❌ TrustWeave error [${error.code}]: ${error.message}")
-        if (error.context.isNotEmpty()) {
-            println("   Context: ${error.context}")
-        }
-    } catch (error: Exception) {
-        println("❌ Unexpected error: ${error.message}")
-        error.printStackTrace()
-    }
+    // Error handling is now done via sealed results
+    // The when expressions above handle all error cases
 }
 ```
 
@@ -278,7 +278,7 @@ fun main() = runBlocking {
                 issuer(issuerDid)
                 subject {
                     id("did:key:holder")
-                    claim("name", "Alice")
+                    "name" to "Alice"
                 }
             }
             signedBy(IssuerIdentity.from(issuerDid, issuerKeyId))
@@ -454,8 +454,8 @@ val credential = trustWeave.issue {
         issuer(issuerDid)
         subject {
             id("did:key:holder-placeholder")
-            claim("name", "Alice Example")
-            claim("role", "Site Reliability Engineer")
+            "name" to "Alice Example"
+            "role" to "Site Reliability Engineer"
         }
     }
     signedBy(IssuerIdentity.from(issuerDid, issuerKeyId))

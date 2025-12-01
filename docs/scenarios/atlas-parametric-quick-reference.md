@@ -252,9 +252,9 @@ val floodCredential = trustWeave.issue {
         type("EarthObservationCredential", "InsuranceOracleCredential")
         issuer(eoProviderDid)
         subject {
-            claim("dataType", "SarFloodMeasurement")
-            claim("data", floodData)
-            claim("dataDigest", dataDigest)
+            "dataType" to "SarFloodMeasurement"
+            "data" to floodData
+            "dataDigest" to dataDigest
         }
         issued(Instant.now())
     }

@@ -160,7 +160,7 @@ suspend fun issueCredential(
                 subject {
                     id(holderDid)
                     claims.forEach { (key, value) ->
-                        claim(key, value)
+                        key to value
                     }
                 }
             }
@@ -306,7 +306,7 @@ suspend fun issueMultipleCredentials(
                     subject {
                         id(request.holderDid)
                         request.claims.forEach { (key, value) ->
-                            claim(key, value)
+                            key to value
                         }
                     }
                 }

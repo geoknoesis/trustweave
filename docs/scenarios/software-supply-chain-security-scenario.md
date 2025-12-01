@@ -187,7 +187,17 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for software publisher, build system, and consumer
-    val publisherDid = trustWeave.createDid { method("key") }
+    import com.trustweave.trust.types.DidCreationResult
+    import com.trustweave.trust.types.DidResolutionResult
+    import com.trustweave.trust.types.IssuanceResult
+    import com.trustweave.trust.types.WalletCreationResult
+    import com.trustweave.trust.types.VerificationResult
+    
+    val publisherDidResult = trustWeave.createDid { method("key") }
+    val publisherDid = when (publisherDidResult) {
+        is DidCreationResult.Success -> publisherDidResult.did
+        else -> throw IllegalStateException("Failed to create publisher DID")
+    }
     val publisherResolution = trustWeave.resolveDid(publisherDid)
     val publisherDoc = when (publisherResolution) {
         is DidResolutionResult.Success -> publisherResolution.document
@@ -196,7 +206,11 @@ fun main() = runBlocking {
     val publisherKeyId = publisherDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val buildSystemDid = trustWeave.createDid { method("key") }
+    val buildSystemDidResult = trustWeave.createDid { method("key") }
+    val buildSystemDid = when (buildSystemDidResult) {
+        is DidCreationResult.Success -> buildSystemDidResult.did
+        else -> throw IllegalStateException("Failed to create build system DID")
+    }
     val buildSystemResolution = trustWeave.resolveDid(buildSystemDid)
     val buildSystemDoc = when (buildSystemResolution) {
         is DidResolutionResult.Success -> buildSystemResolution.document
@@ -205,11 +219,15 @@ fun main() = runBlocking {
     val buildSystemKeyId = buildSystemDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val consumerDid = trustWeave.createDid { method("key") }
+    val consumerDidResult = trustWeave.createDid { method("key") }
+    val consumerDid = when (consumerDidResult) {
+        is DidCreationResult.Success -> consumerDidResult.did
+        else -> throw IllegalStateException("Failed to create consumer DID")
+    }
 
-    println("✅ Software Publisher DID: $publisherDid")
-    println("✅ Build System DID: $buildSystemDid")
-    println("✅ Consumer DID: $consumerDid")
+    println("✅ Software Publisher DID: ${publisherDid.value}")
+    println("✅ Build System DID: ${buildSystemDid.value}")
+    println("✅ Consumer DID: ${consumerDid.value}")
 
     // Step 3: Simulate source code and compute digest
     println("\n📦 Software Provenance:")
@@ -230,25 +248,32 @@ fun main() = runBlocking {
     println("   Commit hash: abc123def456")
 
     // Step 4: Issue software provenance credential
-    val provenanceCredential = TrustWeave.issueCredential(
-        issuerDid = publisherDid,
-        issuerKeyId = publisherKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", "software:secureapp:1.0.0")
-            put("software", buildJsonObject {
-                put("name", "SecureApp")
-                put("version", "1.0.0")
-                put("publisher", publisherDid)
-                put("sourceRepository", "https://github.com/example/secureapp")
-                put("commitHash", "abc123def456")
-                put("sourceCodeDigest", sourceCodeDigest)
-                put("license", "Apache-2.0")
-                put("releaseDate", Instant.now().toString())
-            })
-        },
-        types = listOf("VerifiableCredential", "SoftwareProvenanceCredential", "SoftwareCredential"),
-        expirationDate = null // Provenance doesn't expire
-    ).getOrThrow()
+    val provenanceIssuanceResult = trustWeave.issue {
+        credential {
+            id("software:secureapp:1.0.0")
+            type("VerifiableCredential", "SoftwareProvenanceCredential", "SoftwareCredential")
+            issuer(publisherDid.value)
+            subject {
+                id("software:secureapp:1.0.0")
+                "software" {
+                    "name" to "SecureApp"
+                    "version" to "1.0.0"
+                    "publisher" to publisherDid.value
+                    "sourceRepository" to "https://github.com/example/secureapp"
+                    "commitHash" to "abc123def456"
+                    "sourceCodeDigest" to sourceCodeDigest
+                    "license" to "Apache-2.0"
+                    "releaseDate" to Instant.now().toString()
+                }
+            }
+        }
+        by(issuerDid = publisherDid.value, keyId = publisherKeyId)
+    }
+    
+    val provenanceCredential = when (provenanceIssuanceResult) {
+        is IssuanceResult.Success -> provenanceIssuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue provenance credential")
+    }
 
     println("\n✅ Software provenance credential issued: ${provenanceCredential.id}")
 
@@ -263,34 +288,41 @@ fun main() = runBlocking {
     println("   Build environment: Isolated, verified")
 
     // Step 6: Issue build attestation credential
-    val buildAttestationCredential = TrustWeave.issueCredential(
-        issuerDid = buildSystemDid,
-        issuerKeyId = buildSystemKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", "build:secureapp:1.0.0")
-            put("build", buildJsonObject {
-                put("softwareId", "software:secureapp:1.0.0")
-                put("buildSystem", "GitHub Actions")
-                put("buildId", "build-12345")
-                put("buildDate", Instant.now().toString())
-                put("buildArtifactDigest", buildArtifactDigest)
-                put("buildEnvironment", buildJsonObject {
-                    put("isolated", true)
-                    put("verified", true)
-                    put("slsaLevel", "L3") // SLSA Level 3
-                    put("buildType", "reproducible")
-                })
-                put("sourceCodeDigest", sourceCodeDigest) // Links to source
-                put("attestation", buildJsonObject {
-                    put("type", "SLSA")
-                    put("level", 3)
-                    put("predicate", "https://slsa.dev/provenance/v0.2")
-                })
-            })
-        },
-        types = listOf("VerifiableCredential", "BuildAttestationCredential", "SLSACredential"),
-        expirationDate = null // Build attestation doesn't expire
-    ).getOrThrow()
+    val buildAttestationIssuanceResult = trustWeave.issue {
+        credential {
+            id("build:secureapp:1.0.0")
+            type("VerifiableCredential", "BuildAttestationCredential", "SLSACredential")
+            issuer(buildSystemDid.value)
+            subject {
+                id("build:secureapp:1.0.0")
+                "build" {
+                    "softwareId" to "software:secureapp:1.0.0"
+                    "buildSystem" to "GitHub Actions"
+                    "buildId" to "build-12345"
+                    "buildDate" to Instant.now().toString()
+                    "buildArtifactDigest" to buildArtifactDigest
+                    "buildEnvironment" {
+                        "isolated" to true
+                        "verified" to true
+                        "slsaLevel" to "L3" // SLSA Level 3
+                        "buildType" to "reproducible"
+                    }
+                    "sourceCodeDigest" to sourceCodeDigest // Links to source
+                    "attestation" {
+                        "type" to "SLSA"
+                        "level" to 3
+                        "predicate" to "https://slsa.dev/provenance/v0.2"
+                    }
+                }
+            }
+        }
+        by(issuerDid = buildSystemDid.value, keyId = buildSystemKeyId)
+    }
+    
+    val buildAttestationCredential = when (buildAttestationIssuanceResult) {
+        is IssuanceResult.Success -> buildAttestationIssuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue build attestation credential")
+    }
 
     println("✅ Build attestation credential issued: ${buildAttestationCredential.id}")
 
@@ -308,39 +340,49 @@ fun main() = runBlocking {
     }
 
     // Step 8: Issue SBOM credential
-    val sbomCredential = TrustWeave.issueCredential(
-        issuerDid = buildSystemDid,
-        issuerKeyId = buildSystemKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", "sbom:secureapp:1.0.0")
-            put("sbom", buildJsonObject {
-                put("softwareId", "software:secureapp:1.0.0")
-                put("sbomVersion", "SPDX-2.3")
-                put("sbomFormat", "SPDX")
-                put("creationDate", Instant.now().toString())
-                put("dependencies", dependencies.map { dep ->
-                    buildJsonObject {
-                        put("name", dep["name"] as String)
-                        put("version", dep["version"] as String)
-                        put("digest", dep["digest"] as String)
+    val sbomIssuanceResult = trustWeave.issue {
+        credential {
+            id("sbom:secureapp:1.0.0")
+            type("VerifiableCredential", "SBOMCredential", "SoftwareCredential")
+            issuer(buildSystemDid.value)
+            subject {
+                id("sbom:secureapp:1.0.0")
+                "sbom" {
+                    "softwareId" to "software:secureapp:1.0.0"
+                    "sbomVersion" to "SPDX-2.3"
+                    "sbomFormat" to "SPDX"
+                    "creationDate" to Instant.now().toString()
+                    "dependencies" to dependencies.map { dep ->
+                        buildJsonObject {
+                            "name" to (dep["name"] as String)
+                            "version" to (dep["version"] as String)
+                            "digest" to (dep["digest"] as String)
+                        }
                     }
-                })
-            })
-        },
-        types = listOf("VerifiableCredential", "SBOMCredential", "SoftwareCredential"),
-        expirationDate = null // SBOM doesn't expire
-    ).getOrThrow()
+                }
+            }
+        }
+        by(issuerDid = buildSystemDid.value, keyId = buildSystemKeyId)
+    }
+    
+    val sbomCredential = when (sbomIssuanceResult) {
+        is IssuanceResult.Success -> sbomIssuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue SBOM credential")
+    }
 
     println("✅ SBOM credential issued: ${sbomCredential.id}")
 
     // Step 9: Create consumer wallet and store credentials
-    val consumerWallet = TrustWeave.createWallet(
-        holderDid = consumerDid,
-        options = WalletCreationOptionsBuilder().apply {
-            enableOrganization = true
-            enablePresentation = true
-        }.build()
-    ).getOrThrow()
+    val walletCreationResult = trustWeave.wallet {
+        holder(consumerDid.value)
+        organization { enabled = true }
+        presentation { enabled = true }
+    }
+    
+    val consumerWallet = when (walletCreationResult) {
+        is WalletCreationResult.Success -> walletCreationResult.wallet
+        else -> throw IllegalStateException("Failed to create consumer wallet")
+    }
 
     val provenanceCredentialId = consumerWallet.store(provenanceCredential)
     val buildAttestationCredentialId = consumerWallet.store(buildAttestationCredential)
@@ -366,104 +408,131 @@ fun main() = runBlocking {
     // Step 11: Consumer verification - Software provenance
     println("\n🔍 Consumer Verification - Software Provenance:")
 
-    val provenanceVerification = TrustWeave.verifyCredential(provenanceCredential).getOrThrow()
+    val provenanceVerificationResult = trustWeave.verify {
+        credential(provenanceCredential)
+    }
+    
+    when (provenanceVerificationResult) {
+        is VerificationResult.Valid -> {
+            val credentialSubject = provenanceCredential.credentialSubject
+            val software = credentialSubject.jsonObject["software"]?.jsonObject
+            val softwareName = software?.get("name")?.jsonPrimitive?.content
+            val publisher = software?.get("publisher")?.jsonPrimitive?.content
+            val sourceCodeDigest = software?.get("sourceCodeDigest")?.jsonPrimitive?.content
 
-    if (provenanceVerification.valid) {
-        val credentialSubject = provenanceCredential.credentialSubject
-        val software = credentialSubject.jsonObject["software"]?.jsonObject
-        val softwareName = software?.get("name")?.jsonPrimitive?.content
-        val publisher = software?.get("publisher")?.jsonPrimitive?.content
-        val sourceCodeDigest = software?.get("sourceCodeDigest")?.jsonPrimitive?.content
+            println("✅ Provenance Credential: VALID")
+            println("   Software: $softwareName")
+            println("   Publisher: ${publisher?.take(20)}...")
+            println("   Source Code Digest: ${sourceCodeDigest?.take(20)}...")
 
-        println("✅ Provenance Credential: VALID")
-        println("   Software: $softwareName")
-        println("   Publisher: ${publisher?.take(20)}...")
-        println("   Source Code Digest: ${sourceCodeDigest?.take(20)}...")
-
-        if (publisher == publisherDid) {
-            println("✅ Publisher verified")
-            println("✅ Provenance VERIFIED")
-        } else {
-            println("❌ Publisher verification failed")
+            if (publisher == publisherDid.value) {
+                println("✅ Publisher verified")
+                println("✅ Provenance VERIFIED")
+            } else {
+                println("❌ Publisher verification failed")
+                println("❌ Provenance NOT VERIFIED")
+            }
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ Provenance Credential: INVALID")
+            println("   Errors: ${provenanceVerificationResult.errors}")
             println("❌ Provenance NOT VERIFIED")
         }
-    } else {
-        println("❌ Provenance Credential: INVALID")
-        println("❌ Provenance NOT VERIFIED")
     }
 
     // Step 12: Consumer verification - Build attestation
     println("\n🔍 Consumer Verification - Build Attestation:")
 
-    val buildVerification = TrustWeave.verifyCredential(buildAttestationCredential).getOrThrow()
+    val buildVerificationResult = trustWeave.verify {
+        credential(buildAttestationCredential)
+    }
+    
+    when (buildVerificationResult) {
+        is VerificationResult.Valid -> {
+            val credentialSubject = buildAttestationCredential.credentialSubject
+            val build = credentialSubject.jsonObject["build"]?.jsonObject
+            val buildSystem = build?.get("buildSystem")?.jsonPrimitive?.content
+            val slsaLevel = build?.get("buildEnvironment")?.jsonObject?.get("slsaLevel")?.jsonPrimitive?.content
+            val isolated = build?.get("buildEnvironment")?.jsonObject?.get("isolated")?.jsonPrimitive?.content?.toBoolean() ?: false
 
-    if (buildVerification.valid) {
-        val credentialSubject = buildAttestationCredential.credentialSubject
-        val build = credentialSubject.jsonObject["build"]?.jsonObject
-        val buildSystem = build?.get("buildSystem")?.jsonPrimitive?.content
-        val slsaLevel = build?.get("buildEnvironment")?.jsonObject?.get("slsaLevel")?.jsonPrimitive?.content
-        val isolated = build?.get("buildEnvironment")?.jsonObject?.get("isolated")?.jsonPrimitive?.content?.toBoolean() ?: false
+            println("✅ Build Attestation Credential: VALID")
+            println("   Build System: $buildSystem")
+            println("   SLSA Level: $slsaLevel")
+            println("   Isolated Environment: $isolated")
 
-        println("✅ Build Attestation Credential: VALID")
-        println("   Build System: $buildSystem")
-        println("   SLSA Level: $slsaLevel")
-        println("   Isolated Environment: $isolated")
-
-        if (slsaLevel == "L3" && isolated) {
-            println("✅ SLSA Level 3 verified")
-            println("✅ Build environment verified")
-            println("✅ Build Attestation VERIFIED")
-        } else {
-            println("❌ Build environment verification failed")
+            if (slsaLevel == "L3" && isolated) {
+                println("✅ SLSA Level 3 verified")
+                println("✅ Build environment verified")
+                println("✅ Build Attestation VERIFIED")
+            } else {
+                println("❌ Build environment verification failed")
+                println("❌ Build Attestation NOT VERIFIED")
+            }
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ Build Attestation Credential: INVALID")
+            println("   Errors: ${buildVerificationResult.errors}")
             println("❌ Build Attestation NOT VERIFIED")
         }
-    } else {
-        println("❌ Build Attestation Credential: INVALID")
-        println("❌ Build Attestation NOT VERIFIED")
     }
 
     // Step 13: Consumer verification - Dependency verification
     println("\n🔍 Consumer Verification - Dependency Verification:")
 
-    val sbomVerification = TrustWeave.verifyCredential(sbomCredential).getOrThrow()
+    val sbomVerificationResult = trustWeave.verify {
+        credential(sbomCredential)
+    }
+    
+    when (sbomVerificationResult) {
+        is VerificationResult.Valid -> {
+            val credentialSubject = sbomCredential.credentialSubject
+            val sbom = credentialSubject.jsonObject["sbom"]?.jsonObject
+            val dependencies = sbom?.get("dependencies")
 
-    if (sbomVerification.valid) {
-        val credentialSubject = sbomCredential.credentialSubject
-        val sbom = credentialSubject.jsonObject["sbom"]?.jsonObject
-        val dependencies = sbom?.get("dependencies")
+            println("✅ SBOM Credential: VALID")
+            println("   Dependencies: ${dependencies?.jsonArray?.size ?: 0}")
 
-        println("✅ SBOM Credential: VALID")
-        println("   Dependencies: ${dependencies?.jsonArray?.size ?: 0}")
+            // In production, verify each dependency's digest
+            var allDependenciesVerified = true
+            dependencies?.jsonArray?.forEach { dep ->
+                val depObj = dep.jsonObject
+                val name = depObj["name"]?.jsonPrimitive?.content
+                val digest = depObj["digest"]?.jsonPrimitive?.content
 
-        // In production, verify each dependency's digest
-        var allDependenciesVerified = true
-        dependencies?.jsonArray?.forEach { dep ->
-            val depObj = dep.jsonObject
-            val name = depObj["name"]?.jsonPrimitive?.content
-            val digest = depObj["digest"]?.jsonPrimitive?.content
+                println("     - $name: ${digest?.take(20)}...")
+                // In production, verify digest matches actual dependency
+            }
 
-            println("     - $name: ${digest?.take(20)}...")
-            // In production, verify digest matches actual dependency
+            if (allDependenciesVerified) {
+                println("✅ All dependencies verified")
+                println("✅ Dependency Verification PASSED")
+            } else {
+                println("❌ Some dependencies failed verification")
+                println("❌ Dependency Verification FAILED")
+            }
         }
-
-        if (allDependenciesVerified) {
-            println("✅ All dependencies verified")
-            println("✅ Dependency Verification PASSED")
-        } else {
-            println("❌ Some dependencies failed verification")
+        is VerificationResult.Invalid -> {
+            println("❌ SBOM Credential: INVALID")
+            println("   Errors: ${sbomVerificationResult.errors}")
             println("❌ Dependency Verification FAILED")
         }
-    } else {
-        println("❌ SBOM Credential: INVALID")
-        println("❌ Dependency Verification FAILED")
     }
 
     // Step 14: Complete software verification workflow
     println("\n🔍 Complete Software Verification Workflow:")
 
-    val provenanceValid = TrustWeave.verifyCredential(provenanceCredential).getOrThrow().valid
-    val buildValid = TrustWeave.verifyCredential(buildAttestationCredential).getOrThrow().valid
-    val sbomValid = TrustWeave.verifyCredential(sbomCredential).getOrThrow().valid
+    val provenanceValid = when (val result = trustWeave.verify { credential(provenanceCredential) }) {
+        is VerificationResult.Valid -> true
+        is VerificationResult.Invalid -> false
+    }
+    val buildValid = when (val result = trustWeave.verify { credential(buildAttestationCredential) }) {
+        is VerificationResult.Valid -> true
+        is VerificationResult.Invalid -> false
+    }
+    val sbomValid = when (val result = trustWeave.verify { credential(sbomCredential) }) {
+        is VerificationResult.Valid -> true
+        is VerificationResult.Invalid -> false
+    }
 
     if (provenanceValid && buildValid && sbomValid) {
         println("✅ Software Provenance: VERIFIED")

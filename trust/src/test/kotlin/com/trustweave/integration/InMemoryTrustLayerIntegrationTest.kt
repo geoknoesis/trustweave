@@ -2,6 +2,7 @@ package com.trustweave.integration
 
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.*
+import com.trustweave.trust.dsl.wallet.query as dslQuery
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.trust.dsl.credential.presentation
@@ -15,6 +16,7 @@ import com.trustweave.testkit.services.TestkitTrustRegistryFactory
 import com.trustweave.testkit.services.TestkitWalletFactory
 import com.trustweave.testkit.services.TestkitStatusListRegistryFactory
 import com.trustweave.testkit.services.TestkitBlockchainAnchorClientFactory
+import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -59,12 +61,12 @@ class InMemoryTrustLayerIntegrationTest {
         val issuerDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         val holderDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         // Step 4: Extract key ID from the issuer DID document
         // CRITICAL: The key used for signing MUST match what's in the DID document
@@ -105,7 +107,7 @@ class InMemoryTrustLayerIntegrationTest {
                 issued(Instant.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = keyId) // MUST match key in DID document
-        }
+        }.getOrFail()
 
         assertNotNull(credential, "Credential should be issued")
         assertNotNull(credential.proof, "Credential should have proof")
@@ -150,7 +152,7 @@ class InMemoryTrustLayerIntegrationTest {
         val did = trustWeave.createDid {
             method("ethr")
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         assertNotNull(did, "DID should be created")
     }
@@ -184,12 +186,12 @@ class InMemoryTrustLayerIntegrationTest {
         val issuerDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         val holderDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         // Extract key ID (same pattern)
         val issuerDidResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid.value)
@@ -216,7 +218,7 @@ class InMemoryTrustLayerIntegrationTest {
             }
             signedBy(issuerDid = issuerDid.value, keyId = keyId)
             withRevocation() // Enable revocation status list
-        }
+        }.getOrFail()
 
         assertNotNull(credential.credentialStatus, "Credential should have revocation status")
         val statusListId = credential.credentialStatus?.statusListCredential
@@ -272,12 +274,12 @@ class InMemoryTrustLayerIntegrationTest {
         val issuerDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         val holderDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         // Extract key ID (same pattern)
         val issuerDidResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid.value)
@@ -303,7 +305,7 @@ class InMemoryTrustLayerIntegrationTest {
                 issued(Instant.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = keyId)
-        }
+        }.getOrFail()
 
         // Create wallet for holder
         val wallet = trustWeave.getDslContext().wallet {
@@ -312,7 +314,7 @@ class InMemoryTrustLayerIntegrationTest {
             inMemory()
             enableOrganization()
             enablePresentation()
-        }
+        }.getOrFail()
 
         // Store credential in wallet
         val storedCredential = credential.storeIn(wallet)
@@ -323,8 +325,8 @@ class InMemoryTrustLayerIntegrationTest {
         assertNotNull(retrievedCredential, "Credential should be retrievable")
 
         // Query credentials by type
-        val credentials = wallet.query {
-            byType("TestCredential")
+        val credentials = wallet.dslQuery {
+            type("TestCredential")
             valid()
         }
         assertTrue(credentials.isNotEmpty(), "Should find stored credential")
@@ -358,12 +360,12 @@ class InMemoryTrustLayerIntegrationTest {
         val issuerDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         val holderDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         // Extract key IDs (same pattern for both issuer and holder)
         val issuerDidResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid.value)
@@ -397,7 +399,7 @@ class InMemoryTrustLayerIntegrationTest {
                 issued(Instant.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
-        }
+        }.getOrFail()
 
         val credential2 = trustWeave.issue {
             credential {
@@ -411,7 +413,7 @@ class InMemoryTrustLayerIntegrationTest {
                 issued(Instant.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
-        }
+        }.getOrFail()
 
         // Create wallet and store credentials
         val wallet = trustWeave.wallet {
@@ -419,7 +421,7 @@ class InMemoryTrustLayerIntegrationTest {
             holder(holderDid.value)
             inMemory()
             enablePresentation()
-        }
+        }.getOrFail()
 
         credential1.storeIn(wallet)
         credential2.storeIn(wallet)
@@ -481,12 +483,12 @@ class InMemoryTrustLayerIntegrationTest {
         val issuerDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         val holderDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         // Generate a new key for adding to DID
         val newKey = kms.generateKey("Ed25519")
@@ -496,7 +498,7 @@ class InMemoryTrustLayerIntegrationTest {
             did(issuerDid.value)
             method(DidMethods.KEY)
             addKey {
-                id("$issuerDid#key-2")
+                id("${issuerDid.value}#key-2")
                 type("Ed25519VerificationKey2020")
                 publicKeyJwk(newKey.publicKeyJwk ?: emptyMap())
             }
@@ -529,7 +531,7 @@ class InMemoryTrustLayerIntegrationTest {
                 issued(Instant.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = keyId)
-        }
+        }.getOrFail()
 
         assertNotNull(credential, "Credential should be issued with updated DID")
     }
@@ -572,12 +574,12 @@ class InMemoryTrustLayerIntegrationTest {
         val issuerDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         val holderDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         // Extract key ID (same pattern)
         val issuerDidResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid.value)
@@ -604,7 +606,7 @@ class InMemoryTrustLayerIntegrationTest {
             }
             signedBy(issuerDid = issuerDid.value, keyId = keyId)
             // Note: anchor() function not available in current DSL
-        }
+        }.getOrFail()
 
         // Verify credential
         val result = trustWeave.verify {
@@ -656,12 +658,12 @@ class InMemoryTrustLayerIntegrationTest {
         val issuerDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         val counterpartyDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         // Extract key ID (same pattern)
         val issuerDidResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid.value)
@@ -686,8 +688,8 @@ class InMemoryTrustLayerIntegrationTest {
                     "contractType" to "ServiceAgreement"
                     "status" to "ACTIVE"
                     "parties" {
-                        "primaryPartyDid" to issuerDid
-                        "counterpartyDid" to counterpartyDid
+                        "primaryPartyDid" to issuerDid.value
+                        "counterpartyDid" to counterpartyDid.value
                     }
                     "effectiveDate" to Instant.now().toString()
                 }
@@ -695,7 +697,7 @@ class InMemoryTrustLayerIntegrationTest {
             }
             signedBy(issuerDid = issuerDid.value, keyId = keyId)
             // Note: anchor() function not available in current DSL
-        }
+        }.getOrFail()
 
         assertNotNull(contractCredential, "Contract credential should be issued")
 

@@ -11,7 +11,8 @@ import com.trustweave.trust.dsl.credential.ServiceTypes
 import com.trustweave.trust.dsl.credential.credential
 import com.trustweave.trust.dsl.credential.presentation
 import com.trustweave.trust.dsl.wallet.organize
-import com.trustweave.trust.dsl.wallet.query
+import com.trustweave.trust.dsl.wallet.query as dslQuery
+import com.trustweave.trust.dsl.wallet.QueryBuilder
 import com.trustweave.trust.dsl.registerSchema
 import com.trustweave.trust.dsl.credential.schema
 import com.trustweave.trust.dsl.storeIn
@@ -20,10 +21,12 @@ import com.trustweave.credential.SchemaFormat
 import com.trustweave.credential.presentation.PresentationService
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.wallet.CredentialOrganization
+import com.trustweave.wallet.Wallet
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.testkit.services.TestkitWalletFactory
+import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import java.time.Instant
@@ -75,7 +78,7 @@ fun main() = runBlocking {
     val professionalDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
+    }.getOrFail()
     println("Professional DID: ${professionalDid.value}")
 
     // Register schemas for credential validation
@@ -84,19 +87,19 @@ fun main() = runBlocking {
         id("https://example.com/schemas/education")
         type(SchemaValidatorTypes.JSON_SCHEMA)
         jsonSchema {
-            put("\$schema", "http://json-schema.org/draft-07/schema#")
-            put("type", "object")
-            put("properties", buildJsonObject {
-                put("degree", buildJsonObject {
-                    put("type", "object")
-                    put("properties", buildJsonObject {
-                        put("type", buildJsonObject { put("type", "string") })
-                        put("field", buildJsonObject { put("type", "string") })
-                        put("institution", buildJsonObject { put("type", "string") })
-                        put("year", buildJsonObject { put("type", "string") })
-                    })
-                })
-            })
+            "\$schema" to "http://json-schema.org/draft-07/schema#"
+            "type" to "object"
+            "properties" {
+                "degree" {
+                    "type" to "object"
+                    "properties" {
+                        "type" { "type" to "string" }
+                        "field" { "type" to "string" }
+                        "institution" { "type" to "string" }
+                        "year" { "type" to "string" }
+                    }
+                }
+            }
         }
     }
     println("✓ Education schema registered")
@@ -105,31 +108,31 @@ fun main() = runBlocking {
         id("https://example.com/schemas/certification")
         type(SchemaValidatorTypes.JSON_SCHEMA)
         jsonSchema {
-            put("\$schema", "http://json-schema.org/draft-07/schema#")
-            put("type", "object")
-            put("properties", buildJsonObject {
-                put("certification", buildJsonObject {
-                    put("type", "object")
-                    put("properties", buildJsonObject {
-                        put("name", buildJsonObject { put("type", "string") })
-                        put("issuer", buildJsonObject { put("type", "string") })
-                        put("issueDate", buildJsonObject { put("type", "string") })
-                        put("expirationDate", buildJsonObject { put("type", "string") })
-                    })
-                })
-            })
+            "\$schema" to "http://json-schema.org/draft-07/schema#"
+            "type" to "object"
+            "properties" {
+                "certification" {
+                    "type" to "object"
+                    "properties" {
+                        "name" { "type" to "string" }
+                        "issuer" { "type" to "string" }
+                        "issueDate" { "type" to "string" }
+                        "expirationDate" { "type" to "string" }
+                    }
+                }
+            }
         }
     }
     println("✓ Certification schema registered")
 
     // Step 2: Create professional wallet using DSL
     println("\nStep 2: Creating professional wallet...")
-    val wallet = trustWeave.wallet {
+    val wallet: Wallet = trustWeave.wallet {
         id("professional-wallet-${professionalDid.value.substringAfterLast(":")}")
         holder(professionalDid.value)
         enableOrganization()
         enablePresentation()
-    }
+    }.getOrFail()
     println("Wallet created: ${wallet.walletId}")
 
     // Step 3: Store education credentials using DSL
@@ -138,7 +141,7 @@ fun main() = runBlocking {
     val universityDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
+    }.getOrFail()
     println("University DID: ${universityDid.value}")
     
     // Get the key ID from the university DID document
@@ -170,7 +173,7 @@ fun main() = runBlocking {
             issued(Instant.now())
         }
         signedBy(issuerDid = universityDid.value, keyId = universityKeyId)
-    }
+    }.getOrFail()
     val bachelorStored = bachelorDegree.storeIn(wallet)
     val bachelorId = requireNotNull(bachelorStored.id) { "Credential must have an id" }
 
@@ -191,7 +194,7 @@ fun main() = runBlocking {
             issued(Instant.now())
         }
         signedBy(issuerDid = universityDid.value, keyId = universityKeyId)
-    }
+    }.getOrFail()
     val masterStored = masterDegree.storeIn(wallet)
     val masterId = requireNotNull(masterStored.id) { "Credential must have an id" }
 
@@ -303,19 +306,19 @@ fun main() = runBlocking {
     println("\nStep 7: Querying credentials...")
 
     // Find all active certifications using query
-    val activeCerts = wallet.query {
-        byType("CertificationCredential")
+    val activeCerts = wallet.dslQuery {
+        type("CertificationCredential")
         notExpired()
         valid()
-        byTag("active")
+        tag("active")
     }
     println("Active certifications: ${activeCerts.size}")
 
     // Find cloud-related credentials by tag and collection
     if (certificationsCollectionId != null) {
-        val cloudCredentials = wallet.query {
-            byTag("cloud")
-            byCollection(certificationsCollectionId)
+        val cloudCredentials = wallet.dslQuery {
+            tag("cloud")
+            collection(certificationsCollectionId)
         }
         println("Cloud-related credentials: ${cloudCredentials.size}")
     }
@@ -327,7 +330,7 @@ fun main() = runBlocking {
     val professionalKey = kms.generateKey("Ed25519", mapOf("keyId" to "professional-key"))
 
     // Presentation for job application using wallet presentation DSL
-    val jobApplicationCredentials = listOf(masterId, job1Id, job2Id, awsCertId)
+    val jobApplicationCredentials: List<VerifiableCredential> = listOf(masterId, job1Id, job2Id, awsCertId)
         .mapNotNull { wallet.get(it) }
     val jobApplicationPresentation = presentation(presentationService) {
         credentials(jobApplicationCredentials)
@@ -351,8 +354,8 @@ fun main() = runBlocking {
     println("Job application presentation created with ${jobApplicationPresentation.verifiableCredential.size} credentials")
 
     // Presentation for professional profile using query-based presentation
-    val profileCredentials = wallet.query {
-        byTypes("MasterDegreeCredential", "EmploymentCredential", "CertificationCredential")
+    val profileCredentials = wallet.dslQuery {
+        types("MasterDegreeCredential", "EmploymentCredential", "CertificationCredential")
         valid()
     }
     val profilePresentation = presentation(presentationService) {
@@ -449,7 +452,7 @@ fun createEmploymentCredential(
 ): VerifiableCredential {
     return credential {
         // Sanitize company name for URI (replace spaces and special chars with hyphens)
-        val sanitizedCompany = company.lowercase().replace(Regex("[^a-z0-9]+"), "-")
+        val sanitizedCompany = company.lowercase().replace(Regex("[^a-z0-9]+"), "-").replace("-+".toRegex(), "-")
         id("https://example.com/employment/${sanitizedCompany}-${holderDid.substringAfterLast(":")}")
         type("EmploymentCredential")
         issuer(issuerDid)

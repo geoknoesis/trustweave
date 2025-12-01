@@ -42,31 +42,50 @@ fun main() = runBlocking {
 
 ✅ **Correct:**
 ```kotlin
+import com.trustweave.trust.types.DidCreationResult
+import com.trustweave.trust.types.DidUpdateResult
+import com.trustweave.trust.types.KeyRotationResult
+
 val trustLayer = TrustLayer.build { ... }
 
-// Create DID
-val did = trustLayer.createDid {
+// Create DID (returns sealed result)
+val didResult = trustLayer.createDid {
     method("key")
     algorithm("Ed25519")
 }
+val did = when (didResult) {
+    is DidCreationResult.Success -> didResult.did
+    else -> {
+        println("Failed to create DID: ${didResult.reason}")
+        return@runBlocking
+    }
+}
 
-// Update DID
-val updated = trustLayer.updateDid {
+// Update DID (returns sealed result)
+val updateResult = trustLayer.updateDid {
     did("did:key:example")
     addService { ... }
 }
-
-// Delegate
-val delegation = trustLayer.delegate {
-    from("did:key:issuer")
-    to("did:key:delegate")
+val updated = when (updateResult) {
+    is DidUpdateResult.Success -> updateResult.document
+    else -> {
+        println("Failed to update DID: ${updateResult.reason}")
+        return@runBlocking
+    }
 }
 
-// Rotate key
-val rotated = trustLayer.rotateKey {
+// Rotate key (returns sealed result)
+val rotationResult = trustLayer.rotateKey {
     did("did:key:example")
     oldKeyId("did:key:example#key-1")
     newKeyId("did:key:example#key-2")
+}
+val rotated = when (rotationResult) {
+    is KeyRotationResult.Success -> rotationResult.document
+    else -> {
+        println("Failed to rotate key: ${rotationResult.reason}")
+        return@runBlocking
+    }
 }
 ```
 
@@ -81,22 +100,31 @@ val resolution = trustWeave.resolveDid(did)
 
 ✅ **Correct:**
 ```kotlin
+import com.trustweave.trust.types.IssuanceResult
+
 val trustLayer = TrustLayer.build { ... }
 
-// Issue credential
-val credential = trustLayer.issue {
+// Issue credential (returns sealed result)
+val issuanceResult = trustLayer.issue {
     credential {
         type(CredentialType.VerifiableCredential, CredentialType.Person)
         issuer(issuerDid)
         subject {
             id(holderDid)
-            claim("name", "Alice")
+            "name" to "Alice"
         }
     }
     signedBy(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
 }
+val credential = when (issuanceResult) {
+    is IssuanceResult.Success -> issuanceResult.credential
+    else -> {
+        println("Failed to issue credential: ${issuanceResult.reason}")
+        return@runBlocking
+    }
+}
 
-// Verify credential
+// Verify credential (returns VerificationResult, not sealed)
 val verification = trustLayer.verify {
     credential(credential)
     checkExpiration(true)
@@ -116,13 +144,22 @@ val verification = trustWeave.verify { credential(credential) }
 
 ✅ **Correct:**
 ```kotlin
+import com.trustweave.trust.types.WalletCreationResult
+
 val trustLayer = TrustLayer.build { ... }
 
-// Create wallet
-val wallet = trustLayer.wallet {
+// Create wallet (returns sealed result)
+val walletResult = trustLayer.wallet {
     holder(holderDid)
     enableOrganization()
     enablePresentation()
+}
+val wallet = when (walletResult) {
+    is WalletCreationResult.Success -> walletResult.wallet
+    else -> {
+        println("Failed to create wallet: ${walletResult.reason}")
+        return@runBlocking
+    }
 }
 
 // Use wallet
@@ -166,14 +203,28 @@ All `TrustLayer` methods throw `TrustWeaveError` exceptions. Always use try-catc
 import com.trustweave.core.TrustWeaveError
 
 try {
-    val did = trustLayer.createDid { method("key") }
-    val credential = trustLayer.issue { ... }
-} catch (error: TrustWeaveError) {
-    when (error) {
-        is TrustWeaveError.DidMethodNotRegistered -> {
-            println("Method not registered: ${error.method}")
-            println("Available methods: ${error.availableMethods}")
+    val didResult = trustLayer.createDid { method("key") }
+    val did = when (didResult) {
+        is DidCreationResult.Success -> didResult.did
+        is DidCreationResult.Failure.MethodNotRegistered -> {
+            println("Method not registered: ${didResult.method}")
+            println("Available methods: ${didResult.availableMethods.joinToString()}")
+            return@runBlocking
         }
+        else -> {
+            println("Failed to create DID: ${didResult.reason}")
+            return@runBlocking
+        }
+    }
+    
+    val issuanceResult = trustLayer.issue { ... }
+    val credential = when (issuanceResult) {
+        is IssuanceResult.Success -> issuanceResult.credential
+        else -> {
+            println("Failed to issue credential: ${issuanceResult.reason}")
+            return@runBlocking
+        }
+    }
         is TrustWeaveError.CredentialInvalid -> {
             println("Credential invalid: ${error.reason}")
         }
@@ -229,18 +280,20 @@ val did = trustLayer.createDid { method("key") }
 **Wrong:**
 ```kotlin
 val did = trustLayer.createDid { method("key") }
-// What if this throws? Application crashes!
+// This returns DidCreationResult, not Did - need to unwrap!
 ```
 
 **Correct:**
 ```kotlin
-try {
-    val did = trustLayer.createDid { method("key") }
-    // Use did
-} catch (error: TrustWeaveError) {
-    // Handle error appropriately
-    logger.error("Failed to create DID", error)
+val didResult = trustLayer.createDid { method("key") }
+val did = when (didResult) {
+    is DidCreationResult.Success -> didResult.did
+    else -> {
+        logger.error("Failed to create DID: ${didResult.reason}")
+        return@runBlocking // or handle appropriately
+    }
 }
+// Use did
 ```
 
 ### ❌ Mistake 3: Not Configuring Required Components
@@ -363,7 +416,7 @@ val credential = trustLayer.issue {
         issuer(issuerDid)
         subject {
             id(holderDid)
-            claim("name", "Alice")
+            "name" to "Alice"
         }
     }
     signedBy(issuerDid = issuerDid, keyId = "$issuerDid#key-1")

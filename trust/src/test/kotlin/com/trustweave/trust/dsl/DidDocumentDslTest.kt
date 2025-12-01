@@ -8,6 +8,7 @@ import com.trustweave.trust.dsl.trustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.trust.dsl.credential.ServiceTypes
+import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -48,7 +49,7 @@ class DidDocumentDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         val keyHandle = kms.generateKey("Ed25519")
 
@@ -68,7 +69,7 @@ class DidDocumentDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         val updatedDoc = trustWeave.updateDid {
             did(did.value)
@@ -87,7 +88,7 @@ class DidDocumentDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         val updatedDoc = trustWeave.updateDid {
             did(did.value)
@@ -102,7 +103,7 @@ class DidDocumentDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         // First add a service
         trustWeave.updateDid {
@@ -139,7 +140,7 @@ class DidDocumentDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         assertFailsWith<IllegalStateException> {
             trustWeave.updateDid {
@@ -156,7 +157,7 @@ class DidDocumentDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         val updatedDoc = trustWeave.updateDid {
             did(did.value)
@@ -174,7 +175,7 @@ class DidDocumentDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         val keyHandle1 = kms.generateKey("Ed25519")
         val keyHandle2 = kms.generateKey("Ed25519")
@@ -209,7 +210,7 @@ class DidDocumentDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         val updatedDoc = trustWeave.updateDid {
             did(did.value)
@@ -229,7 +230,7 @@ class DidDocumentDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         val context = trustWeave.getDslContext()
         val updatedDoc = context.updateDid {

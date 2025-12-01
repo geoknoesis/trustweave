@@ -42,18 +42,27 @@ suspend fun issueCredentialWorkflow(
         val issuerKeyId = "$issuerDid#key-1"
 
         // 3. Issue credential
-        val credential = trustLayer.issue {
+        import com.trustweave.trust.types.IssuanceResult
+        
+        val issuanceResult = trustLayer.issue {
             credential {
                 type("VerifiableCredential", "PersonCredential")
-                issuer(issuerDid)
+                issuer(issuerDid.value)
                 subject {
-                    id(holderDid)
+                    id(holderDid.value)
                     claims.forEach { (key, value) ->
-                        claim(key, value)
+                        key to value
                     }
                 }
             }
-            signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+        }
+        
+        val credential = when (issuanceResult) {
+            is IssuanceResult.Success -> issuanceResult.credential
+            else -> {
+                return Result.failure(IllegalStateException("Failed to issue credential: ${issuanceResult.reason}"))
+            }
         }
 
         Result.success(credential)
@@ -276,23 +285,40 @@ suspend fun walletManagementWorkflow(
 ): Result<Wallet> {
     return try {
         // 1. Create or get wallet
-        val wallet = trustLayer.wallet {
+        import com.trustweave.trust.types.WalletCreationResult
+        import com.trustweave.trust.types.IssuanceResult
+        
+        val walletResult = trustLayer.wallet {
             holder(holderDid)
             enableOrganization()
             enablePresentation()
         }
+        
+        val wallet = when (walletResult) {
+            is WalletCreationResult.Success -> walletResult.wallet
+            else -> {
+                return Result.failure(IllegalStateException("Failed to create wallet: ${walletResult.reason}"))
+            }
+        }
 
         // 2. Store credential
-        val credential = trustLayer.issue {
+        val issuanceResult = trustLayer.issue {
             credential {
                 type("VerifiableCredential", "PersonCredential")
                 issuer("did:key:issuer")
                 subject {
                     id(holderDid)
-                    claim("name", "Alice")
+                    "name" to "Alice"
                 }
             }
             signedBy(issuerDid = "did:key:issuer", keyId = "did:key:issuer#key-1")
+        }
+        
+        val credential = when (issuanceResult) {
+            is IssuanceResult.Success -> issuanceResult.credential
+            else -> {
+                return Result.failure(IllegalStateException("Failed to issue credential: ${issuanceResult.reason}"))
+            }
         }
 
         val credentialId = wallet.store(credential)
@@ -335,7 +361,9 @@ suspend fun batchIssuanceWorkflow(
 ): Result<List<VerifiableCredential>> {
     return try {
         // Issue credentials concurrently
-        val credentials = requests.map { request ->
+        import com.trustweave.trust.types.IssuanceResult
+        
+        val issuanceResults = requests.map { request ->
             async {
                 trustLayer.issue {
                     credential {
@@ -344,7 +372,7 @@ suspend fun batchIssuanceWorkflow(
                         subject {
                             id(request.holderDid)
                             request.claims.forEach { (key, value) ->
-                                claim(key, value)
+                                key to value
                             }
                         }
                     }
@@ -352,6 +380,16 @@ suspend fun batchIssuanceWorkflow(
                 }
             }
         }.awaitAll()
+        
+        val credentials = issuanceResults.mapNotNull { result ->
+            when (result) {
+                is IssuanceResult.Success -> result.credential
+                else -> {
+                    logger.warn("Failed to issue credential: ${result.reason}")
+                    null
+                }
+            }
+        }
 
         logger.info("Batch issuance completed", mapOf(
             "count" to credentials.size

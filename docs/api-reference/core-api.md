@@ -167,15 +167,7 @@ val wallet = trustWeave.wallet {
 Creates a new DID using the default or specified method.
 
 ```kotlin
-suspend fun create(
-    method: String = "key",
-    options: DidCreationOptions = DidCreationOptions()
-): DidDocument
-
-suspend fun create(
-    method: String = "key",
-    configure: DidCreationOptionsBuilder.() -> Unit
-): DidDocument
+suspend fun createDid(block: DidBuilder.() -> Unit): DidCreationResult
 ```
 
 **Access via:** `trustWeave.createDid { }`
@@ -204,14 +196,26 @@ suspend fun create(
   - **Type**: DSL builder function
   - **Example**: `{ algorithm = KeyAlgorithm.ED25519; purpose(KeyPurpose.AUTHENTICATION) }`
 
-**Returns:** `DidDocument` - W3C-compliant DID document containing:
-- `id`: The DID string (e.g., `"did:key:z6Mk..."`)
-- `verificationMethod`: Array of verification methods with public keys
-- `authentication`: Authentication key references
-- `assertionMethod`: Assertion key references (for signing)
-- `service`: Optional service endpoints
+**Returns:** `DidCreationResult` - Sealed result type containing:
 
-**Note:** This method throws `TrustWeaveError` exceptions on failure. For error handling, wrap in try-catch or use extension functions.
+**Success Case:**
+- `DidCreationResult.Success` containing:
+  - `did`: The created `Did` object
+  - `document`: W3C-compliant DID document containing:
+    - `id`: The DID string (e.g., `"did:key:z6Mk..."`)
+    - `verificationMethod`: Array of verification methods with public keys
+    - `authentication`: Authentication key references
+    - `assertionMethod`: Assertion key references (for signing)
+    - `service`: Optional service endpoints
+
+**Failure Cases:**
+- `DidCreationResult.Failure.MethodNotRegistered` - Method is not registered (includes available methods)
+- `DidCreationResult.Failure.KeyGenerationFailed` - Key generation failed
+- `DidCreationResult.Failure.DocumentCreationFailed` - Document creation failed
+- `DidCreationResult.Failure.InvalidConfiguration` - Configuration validation failed
+- `DidCreationResult.Failure.Other` - Other error with reason and optional cause
+
+**Note:** This method returns sealed results instead of throwing exceptions. Use `when` expressions for exhaustive error handling.
 
 **Default Behavior:**
 - Uses `did:key` method if not specified
@@ -233,34 +237,61 @@ suspend fun create(
 **Example:**
 ```kotlin
 // Simple usage (uses defaults: did:key, ED25519)
-val did = trustWeave.createDid {
+val didResult = trustWeave.createDid {
     method("key")
     algorithm("Ed25519")
 }
 
+when (didResult) {
+    is DidCreationResult.Success -> {
+        println("Created DID: ${didResult.did.value}")
+        println("Document: ${didResult.document.id}")
+    }
+    is DidCreationResult.Failure.MethodNotRegistered -> {
+        println("Method not registered: ${didResult.method}")
+        println("Available methods: ${didResult.availableMethods.joinToString()}")
+    }
+    is DidCreationResult.Failure.KeyGenerationFailed -> {
+        println("Key generation failed: ${didResult.reason}")
+        didResult.cause?.printStackTrace()
+    }
+    is DidCreationResult.Failure.DocumentCreationFailed -> {
+        println("Document creation failed: ${didResult.reason}")
+    }
+    is DidCreationResult.Failure.InvalidConfiguration -> {
+        println("Invalid configuration: ${didResult.reason}")
+    }
+    is DidCreationResult.Failure.Other -> {
+        println("Error: ${didResult.reason}")
+        didResult.cause?.printStackTrace()
+    }
+}
+
+// For tests and examples, use getOrFail() helper
+import com.trustweave.testkit.getOrFail
+
+val did = trustWeave.createDid {
+    method("key")
+    algorithm("Ed25519")
+}.getOrFail() // Throws AssertionError on failure
+
 // With custom method
-val webDid = trustLayer.createDid {
+val webDidResult = trustLayer.createDid {
     method("web")
     domain("example.com")
 }
-
-// With error handling
-try {
-    val did = trustWeave.createDid {
-        method("key")
-        algorithm("Ed25519")
-    }
-    println("Created: $did")
-} catch (error: IllegalStateException) {
-    println("Error: ${error.message}")
+when (webDidResult) {
+    is DidCreationResult.Success -> println("Created: ${webDidResult.did.value}")
+    else -> println("Error: ${webDidResult.reason}")
 }
 ```
 
-**Errors:**
-- `TrustWeaveError.DidMethodNotRegistered` - Method is not registered (includes available methods)
-- `TrustWeaveError.InvalidDidFormat` - Invalid DID format (if validation fails)
-- `TrustWeaveError.ValidationFailed` - Configuration validation failed
-- `TrustWeaveError.InvalidOperation` - KMS operation failed
+**Error Types:**
+- `DidCreationResult.Failure.MethodNotRegistered` - Method is not registered (includes available methods)
+- `DidCreationResult.Failure.KeyGenerationFailed` - Key generation failed (includes reason and optional cause)
+- `DidCreationResult.Failure.DocumentCreationFailed` - Document creation failed (includes reason and optional cause)
+- `DidCreationResult.Failure.InvalidConfiguration` - Configuration validation failed (includes reason and details)
+- `DidCreationResult.Failure.Other` - Other error (includes reason and optional cause)
 
 #### resolve
 
@@ -342,19 +373,18 @@ if (result?.document != null) {
 Updates a DID document by applying a transformation function.
 
 ```kotlin
-suspend fun update(
-    did: String,
-    updater: (DidDocument) -> DidDocument
-): DidDocument
+suspend fun updateDid(block: DidUpdateBuilder.() -> Unit): DidUpdateResult
 ```
 
 **Access via:** `trustLayer.updateDid { }`
 
 **Parameters:**
-- **`did`** (String, required): The DID to update
-- **`updater`** (Function, required): Function that transforms the current document to the new document
+- **`did`** (String, required): The DID to update (via DSL builder)
+- **`addKey { }`**, **`addService { }`**, etc.: DSL methods for updating the document
 
-**Returns:** `DidDocument` - The updated DID document
+**Returns:** `DidUpdateResult` - Sealed result type containing:
+- **Success**: `DidUpdateResult.Success` with `document`: The updated DID document
+- **Failure**: Various failure types (DidNotFound, AuthorizationFailed, UpdateFailed, Other)
 
 **Edge Cases:**
 - If DID format invalid → `TrustWeaveError.InvalidDidFormat`
@@ -363,12 +393,30 @@ suspend fun update(
 
 **Example:**
 ```kotlin
-val updated = trustLayer.updateDid {
+val updateResult = trustLayer.updateDid {
     did("did:key:example")
     addService {
         id("${did}#service-1")
         type("LinkedDomains")
         endpoint("https://example.com/service")
+    }
+}
+
+when (updateResult) {
+    is DidUpdateResult.Success -> {
+        println("Updated DID document: ${updateResult.document.id}")
+    }
+    is DidUpdateResult.Failure.DidNotFound -> {
+        println("DID not found: ${updateResult.did.value}")
+    }
+    is DidUpdateResult.Failure.AuthorizationFailed -> {
+        println("Authorization failed: ${updateResult.reason}")
+    }
+    is DidUpdateResult.Failure.UpdateFailed -> {
+        println("Update failed: ${updateResult.reason}")
+    }
+    is DidUpdateResult.Failure.Other -> {
+        println("Error: ${updateResult.reason}")
     }
 }
 ```
@@ -428,7 +476,7 @@ println("Available methods: $methods") // ["key", "web", "ion"]
 Issues a verifiable credential with cryptographic proof using the DSL.
 
 ```kotlin
-suspend fun issue(block: IssuanceBuilder.() -> Unit): VerifiableCredential
+suspend fun issue(block: IssuanceBuilder.() -> Unit): IssuanceResult
 ```
 
 **Parameters:**
@@ -449,15 +497,26 @@ The DSL builder provides a fluent API for configuring the credential:
   - **`issuerDid`**: The DID of the credential issuer
   - **`keyId`**: The key ID from issuer's DID document (e.g., `"$issuerDid#key-1"`)
 
-**Returns:** `VerifiableCredential` - The issued verifiable credential
-- **Success**: Signed `VerifiableCredential` with:
-  - `id`: Auto-generated credential ID (UUID)
-  - `issuer`: Issuer DID
-  - `issuanceDate`: Current timestamp
-  - `credentialSubject`: Provided subject data
-  - `type`: Credential types
-  - `proof`: Cryptographic proof (signature)
-- **Failure**: `TrustWeaveError` with specific error type
+**Returns:** `IssuanceResult` - Sealed result type containing:
+
+**Success Case:**
+- `IssuanceResult.Success` containing:
+  - `credential`: Signed `VerifiableCredential` with:
+    - `id`: Auto-generated credential ID (UUID)
+    - `issuer`: Issuer DID
+    - `issuanceDate`: Current timestamp
+    - `credentialSubject`: Provided subject data
+    - `type`: Credential types
+    - `proof`: Cryptographic proof (signature)
+
+**Failure Cases:**
+- `IssuanceResult.Failure.IssuerResolutionFailed` - Issuer DID resolution failed
+- `IssuanceResult.Failure.KeyNotFound` - Key not found in issuer DID document
+- `IssuanceResult.Failure.SigningFailed` - Signing operation failed
+- `IssuanceResult.Failure.ProofGenerationFailed` - Proof generation failed
+- `IssuanceResult.Failure.InvalidCredential` - Credential validation failed
+- `IssuanceResult.Failure.SchemaValidationFailed` - Schema validation failed
+- `IssuanceResult.Failure.Other` - Other error with reason and optional cause
 
 **Edge Cases:**
 
@@ -499,42 +558,78 @@ The DSL builder provides a fluent API for configuring the credential:
 
 **Example:**
 ```kotlin
-// Simple usage
-val credential = trustWeave.issue {
+// Simple usage with error handling
+val issuanceResult = trustWeave.issue {
     credential {
         type("VerifiableCredential", "PersonCredential")
         issuer("did:key:issuer")
         subject {
             id("did:key:subject")
-            claim("name", "Alice")
+            "name" to "Alice"
         }
     }
     signedBy(issuerDid = "did:key:issuer", keyId = "did:key:issuer#key-1")
 }
 
-// With error handling
-try {
-    val credential = trustWeave.issue {
-        credential {
-            type("VerifiableCredential", "PersonCredential")
-            issuer(issuerDid)
-            subject {
-                id("did:key:subject")
-                claim("name", "Alice")
-            }
-        }
-        signedBy(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
+when (issuanceResult) {
+    is IssuanceResult.Success -> {
+        println("Issued credential: ${issuanceResult.credential.id}")
     }
-    println("Issued: ${credential.id}")
-} catch (error: Exception) {
-    println("Error: ${error.message}")
+    is IssuanceResult.Failure.IssuerResolutionFailed -> {
+        println("Issuer DID resolution failed: ${issuanceResult.issuerDid}")
+        println("Reason: ${issuanceResult.reason}")
+    }
+    is IssuanceResult.Failure.KeyNotFound -> {
+        println("Key not found: ${issuanceResult.keyId}")
+        println("Reason: ${issuanceResult.reason}")
+    }
+    is IssuanceResult.Failure.SigningFailed -> {
+        println("Signing failed: ${issuanceResult.reason}")
+        issuanceResult.cause?.printStackTrace()
+    }
+    is IssuanceResult.Failure.ProofGenerationFailed -> {
+        println("Proof generation failed: ${issuanceResult.reason}")
+    }
+    is IssuanceResult.Failure.InvalidCredential -> {
+        println("Invalid credential: ${issuanceResult.reason}")
+        if (issuanceResult.errors.isNotEmpty()) {
+            println("Errors: ${issuanceResult.errors.joinToString()}")
+        }
+    }
+    is IssuanceResult.Failure.SchemaValidationFailed -> {
+        println("Schema validation failed: ${issuanceResult.reason}")
+        println("Errors: ${issuanceResult.errors.joinToString()}")
+    }
+    is IssuanceResult.Failure.Other -> {
+        println("Error: ${issuanceResult.reason}")
+        issuanceResult.cause?.printStackTrace()
+    }
 }
+
+// For tests and examples, use getOrFail() helper
+import com.trustweave.testkit.getOrFail
+
+val credential = trustWeave.issue {
+    credential {
+        type("VerifiableCredential", "PersonCredential")
+        issuer(issuerDid)
+        subject {
+            id("did:key:subject")
+            "name" to "Alice"
+        }
+    }
+    signedBy(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
+}.getOrFail() // Throws AssertionError on failure
 ```
 
-**Errors:**
-- `TrustWeaveError.InvalidDidFormat` - Invalid issuer DID format
-- `TrustWeaveError.DidMethodNotRegistered` - Issuer DID method not registered
-- `TrustWeaveError.CredentialInvalid` - Credential validation failed
+**Error Types:**
+- `IssuanceResult.Failure.IssuerResolutionFailed` - Issuer DID resolution failed
+- `IssuanceResult.Failure.KeyNotFound` - Key not found in issuer DID document
+- `IssuanceResult.Failure.SigningFailed` - Signing operation failed (includes reason and optional cause)
+- `IssuanceResult.Failure.ProofGenerationFailed` - Proof generation failed (includes reason and optional cause)
+- `IssuanceResult.Failure.InvalidCredential` - Credential validation failed (includes reason and errors list)
+- `IssuanceResult.Failure.SchemaValidationFailed` - Schema validation failed (includes reason and errors list)
+- `IssuanceResult.Failure.Other` - Other error (includes reason and optional cause)
 
 #### verify
 

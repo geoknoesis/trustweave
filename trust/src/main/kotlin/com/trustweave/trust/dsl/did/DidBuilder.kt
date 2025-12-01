@@ -4,6 +4,7 @@ import com.trustweave.did.DidCreationOptions
 import com.trustweave.did.DidCreationOptionsBuilder
 import com.trustweave.did.DidMethod
 import com.trustweave.trust.types.Did
+import com.trustweave.trust.types.DidCreationResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -79,33 +80,76 @@ class DidBuilder(
      * This operation performs I/O-bound work (key generation, DID document creation)
      * and uses the configured dispatcher. It is non-blocking and can be cancelled.
      *
-     * @return Type-safe Did (e.g., Did("did:key:z6Mk..."))
+     * @return Sealed result type with success or detailed failure information
      */
-    suspend fun build(): Did = withContext(ioDispatcher) {
-        val methodName = method ?: throw IllegalStateException(
-            "DID method is required. Use method(\"key\") or method(\"web\") etc."
+    suspend fun build(): DidCreationResult = withContext(ioDispatcher) {
+        val methodName = method ?: return@withContext DidCreationResult.Failure.InvalidConfiguration(
+            reason = "DID method is required. Use method(\"key\") or method(\"web\") etc."
         )
 
         val didMethod = provider.getDidMethod(methodName) as? DidMethod
-            ?: throw IllegalStateException(
-                "DID method '$methodName' is not configured. " +
-                "Configure it in trustLayer { did { method(\"$methodName\") { ... } } }"
-            )
+            ?: run {
+                // Try to get available methods from registry if provider is TrustWeaveContext
+                val availableMethods = try {
+                    (provider as? com.trustweave.trust.dsl.TrustWeaveContext)
+                        ?.getConfig()
+                        ?.registries
+                        ?.didRegistry
+                        ?.getAllMethodNames()
+                        ?: emptyList()
+                } catch (e: Exception) {
+                    emptyList()
+                }
+                return@withContext DidCreationResult.Failure.MethodNotRegistered(
+                    method = methodName,
+                    availableMethods = availableMethods
+                )
+            }
 
-        val document = didMethod.createDid(optionsBuilder.build())
-        return@withContext Did(document.id)
+        try {
+            val document = didMethod.createDid(optionsBuilder.build())
+            DidCreationResult.Success(
+                did = Did(document.id),
+                document = document
+            )
+        } catch (e: com.trustweave.core.exception.TrustWeaveException) {
+            when (e) {
+                is com.trustweave.did.exception.DidException.DidMethodNotRegistered -> {
+                    DidCreationResult.Failure.MethodNotRegistered(
+                        method = methodName,
+                        availableMethods = e.availableMethods
+                    )
+                }
+                else -> {
+                    DidCreationResult.Failure.Other(
+                        reason = e.message ?: "DID creation failed",
+                        cause = e
+                    )
+                }
+            }
+        } catch (e: IllegalArgumentException) {
+            DidCreationResult.Failure.InvalidConfiguration(
+                reason = e.message ?: "Invalid configuration",
+                details = emptyMap()
+            )
+        } catch (e: Exception) {
+            DidCreationResult.Failure.Other(
+                reason = e.message ?: "Unknown error during DID creation",
+                cause = e
+            )
+        }
     }
 }
 
 /**
  * Extension function to create a DID using a DID DSL provider.
  *
- * Returns a type-safe Did.
+ * Returns a sealed result type for exhaustive error handling.
  * 
  * Uses the default dispatcher ([Dispatchers.IO]) unless the provider
  * is a [TrustWeaveContext] with a custom dispatcher configured.
  */
-suspend fun DidDslProvider.createDid(block: DidBuilder.() -> Unit): Did {
+suspend fun DidDslProvider.createDid(block: DidBuilder.() -> Unit): DidCreationResult {
     val dispatcher = (this as? com.trustweave.trust.dsl.TrustWeaveContext)?.getConfig()?.ioDispatcher
         ?: Dispatchers.IO
     val builder = DidBuilder(this, dispatcher)

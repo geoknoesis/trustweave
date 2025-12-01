@@ -8,6 +8,7 @@ import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.proof.ProofType
 import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -39,7 +40,7 @@ fun main(): Unit = runBlocking {
     val digest = DigestUtils.sha256DigestMultibase(credentialSubject)
     println("Canonical credential-subject digest: $digest")
 
-    val issuerDid = trustweave.createDid()
+    val issuerDid = trustweave.createDid().getOrFail()
     
     // Resolve DID to get verification method
     val issuerDidResolution = trustweave.resolveDid(issuerDid)
@@ -63,7 +64,7 @@ fun main(): Unit = runBlocking {
             issued(java.time.Instant.now())
         }
         signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
-    }
+    }.getOrFail()
     println("Issued credential id: ${credential.id}")
 
     val verification = trustweave.verifyCredential(credential)

@@ -13,6 +13,7 @@ import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.trust.dsl.credential.credential
 import com.trustweave.trust.types.ProofType
+import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -85,7 +86,7 @@ class IssuanceBuilderBranchCoverageTest {
                 issued(Instant.now())
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-        }
+        }.getOrFail()
 
         assertNotNull(issuedCredential)
     }
@@ -108,7 +109,7 @@ class IssuanceBuilderBranchCoverageTest {
         val issuedCredential = trustWeave.issue {
             credential(preBuiltCredential)
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-        }
+        }.getOrFail()
 
         assertNotNull(issuedCredential)
     }
@@ -148,7 +149,7 @@ class IssuanceBuilderBranchCoverageTest {
                 issued(Instant.now())
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-        }
+        }.getOrFail()
 
         assertNotNull(issuedCredential)
     }
@@ -194,7 +195,7 @@ class IssuanceBuilderBranchCoverageTest {
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             // No proof type - uses default
-        }
+        }.getOrFail()
 
         assertNotNull(issuedCredential.proof)
         assertEquals("Ed25519Signature2020", issuedCredential.proof?.type)
@@ -217,7 +218,7 @@ class IssuanceBuilderBranchCoverageTest {
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             withProof(ProofType.Ed25519Signature2020) // Use supported proof type
-        }
+        }.getOrFail()
 
         assertNotNull(issuedCredential.proof)
         assertEquals("Ed25519Signature2020", issuedCredential.proof?.type)
@@ -242,7 +243,7 @@ class IssuanceBuilderBranchCoverageTest {
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             challenge("challenge-123")
-        }
+        }.getOrFail()
 
         assertNotNull(issuedCredential.proof)
         assertEquals("challenge-123", issuedCredential.proof?.challenge)
@@ -265,7 +266,7 @@ class IssuanceBuilderBranchCoverageTest {
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             domain("example.com")
-        }
+        }.getOrFail()
 
         assertNotNull(issuedCredential.proof)
         assertEquals("example.com", issuedCredential.proof?.domain)
@@ -289,7 +290,7 @@ class IssuanceBuilderBranchCoverageTest {
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             challenge("challenge-123")
             domain("example.com")
-        }
+        }.getOrFail()
 
         assertNotNull(issuedCredential.proof)
         assertEquals("challenge-123", issuedCredential.proof?.challenge)
@@ -315,7 +316,7 @@ class IssuanceBuilderBranchCoverageTest {
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             // autoAnchor is false in config
-        }
+        }.getOrFail()
 
         assertNotNull(issuedCredential)
         // Credential should be issued but not anchored
@@ -360,7 +361,7 @@ class IssuanceBuilderBranchCoverageTest {
                 issued(Instant.now())
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-        }
+        }.getOrFail()
 
         assertNotNull(issuedCredential)
         // Anchoring may fail silently, but credential is issued
@@ -402,7 +403,7 @@ class IssuanceBuilderBranchCoverageTest {
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             // Note: anchor() function not available in current DSL
-        }
+        }.getOrFail()
 
         assertNotNull(issuedCredential)
     }
@@ -529,7 +530,7 @@ class IssuanceBuilderBranchCoverageTest {
                 issued(Instant.now())
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-        }
+        }.getOrFail()
 
         assertNotNull(issuedCredential)
     }

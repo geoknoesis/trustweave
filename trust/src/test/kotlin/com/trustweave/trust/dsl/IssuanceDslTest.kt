@@ -9,6 +9,7 @@ import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.credential.credential
 import com.trustweave.trust.types.ProofType
+import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -73,7 +74,7 @@ class IssuanceDslTest {
                 issued(Instant.now())
             }
             signedBy(issuerDid = issuerDidId, keyId = issuerKey.id.value)
-        }
+        }.getOrFail()
 
         assertNotNull(issuedCredential)
         assertTrue(issuedCredential.type.contains("PersonCredential"))
@@ -102,7 +103,7 @@ class IssuanceDslTest {
         val issuedCredential = trustWeave.issue {
             credential(credential)
             signedBy(issuerDid = issuerDidId, keyId = issuerKey.id.value)
-        }
+        }.getOrFail()
 
         assertNotNull(issuedCredential)
         assertNotNull(issuedCredential.proof)
@@ -126,7 +127,7 @@ class IssuanceDslTest {
             }
             signedBy(issuerDid = issuerDidId, keyId = issuerKey.id.value)
             withProof(ProofType.Ed25519Signature2020)
-        }
+        }.getOrFail()
 
         assertNotNull(issuedCredential.proof)
         assertEquals("Ed25519Signature2020", issuedCredential.proof?.type)
@@ -151,7 +152,7 @@ class IssuanceDslTest {
             signedBy(issuerDid = issuerDidId, keyId = issuerKey.id.value)
             challenge("challenge-123")
             domain("example.com")
-        }
+        }.getOrFail()
 
         assertNotNull(issuedCredential.proof)
         assertEquals("challenge-123", issuedCredential.proof?.challenge)

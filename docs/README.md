@@ -76,8 +76,8 @@ fun main() = runBlocking {
             issuer(issuerDid)
             subject {
                 id("did:example:alice")
-                claim("name", "Alice")
-                claim("email", "alice@example.com")
+                "name" to "Alice"
+                "email" to "alice@example.com"
             }
         }
         signedBy(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
@@ -250,8 +250,8 @@ val degree = trustLayer.issue {
         issuer(universityDid)
         subject {
             id(studentDid)
-            claim("degree", "Bachelor of Science")
-            claim("major", "Computer Science")
+            "degree" to "Bachelor of Science"
+            "major" to "Computer Science"
         }
     }
     signedBy(issuerDid = universityDid, keyId = "$universityDid#key-1")

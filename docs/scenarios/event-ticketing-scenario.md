@@ -177,7 +177,15 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for event organizer, attendee, and venue
-    val organizerDid = trustWeave.createDid { method("key") }
+    import com.trustweave.trust.types.DidCreationResult
+    import com.trustweave.trust.types.WalletCreationResult
+    
+    val organizerDidResult = trustWeave.createDid { method("key") }
+    val organizerDid = when (organizerDidResult) {
+        is DidCreationResult.Success -> organizerDidResult.did
+        else -> throw IllegalStateException("Failed to create organizer DID: ${organizerDidResult.reason}")
+    }
+    
     val organizerResolution = trustWeave.resolveDid(organizerDid)
     val organizerDoc = when (organizerResolution) {
         is DidResolutionResult.Success -> organizerResolution.document
@@ -186,21 +194,35 @@ fun main() = runBlocking {
     val organizerKeyId = organizerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val attendeeDid = trustWeave.createDid { method("key") }
-    val newAttendeeDid = trustWeave.createDid { method("key") }
-    val venueDid = trustWeave.createDid { method("key") }
+    val attendeeDidResult = trustWeave.createDid { method("key") }
+    val attendeeDid = when (attendeeDidResult) {
+        is DidCreationResult.Success -> attendeeDidResult.did
+        else -> throw IllegalStateException("Failed to create attendee DID: ${attendeeDidResult.reason}")
+    }
+    
+    val newAttendeeDidResult = trustWeave.createDid { method("key") }
+    val newAttendeeDid = when (newAttendeeDidResult) {
+        is DidCreationResult.Success -> newAttendeeDidResult.did
+        else -> throw IllegalStateException("Failed to create new attendee DID: ${newAttendeeDidResult.reason}")
+    }
+    
+    val venueDidResult = trustWeave.createDid { method("key") }
+    val venueDid = when (venueDidResult) {
+        is DidCreationResult.Success -> venueDidResult.did
+        else -> throw IllegalStateException("Failed to create venue DID: ${venueDidResult.reason}")
+    }
 
-    println("✅ Event Organizer DID: $organizerDid")
-    println("✅ Attendee DID: $attendeeDid")
-    println("✅ New Attendee DID (for transfer): $newAttendeeDid")
-    println("✅ Venue DID: $venueDid")
+    println("✅ Event Organizer DID: ${organizerDid.value}")
+    println("✅ Attendee DID: ${attendeeDid.value}")
+    println("✅ New Attendee DID (for transfer): ${newAttendeeDid.value}")
+    println("✅ Venue DID: ${venueDid.value}")
 
     // Step 3: Issue event ticket credential
     val ticketCredential = TrustWeave.issueCredential(
-        issuerDid = organizerDid,
+        issuerDid = organizerDid.value,
         issuerKeyId = organizerKeyId,
         credentialSubject = buildJsonObject {
-            put("id", attendeeDid)
+            put("id", attendeeDid.value)
             put("ticket", buildJsonObject {
                 put("eventName", "Tech Conference 2024")
                 put("eventDate", "2024-06-15")
@@ -227,13 +249,16 @@ fun main() = runBlocking {
     println("   Seat: A-42 (VIP)")
 
     // Step 4: Create attendee wallet and store ticket
-    val attendeeWallet = TrustWeave.createWallet(
-        holderDid = attendeeDid,
-        options = WalletCreationOptionsBuilder().apply {
-            enableOrganization = true
-            enablePresentation = true
-        }.build()
-    ).getOrThrow()
+    val walletResult = trustWeave.wallet {
+        holder(attendeeDid.value)
+        enableOrganization()
+        enablePresentation()
+    }
+    
+    val attendeeWallet = when (walletResult) {
+        is WalletCreationResult.Success -> walletResult.wallet
+        else -> throw IllegalStateException("Failed to create wallet: ${walletResult.reason}")
+    }
 
     val ticketCredentialId = attendeeWallet.store(ticketCredential)
     println("✅ Ticket stored in attendee wallet: $ticketCredentialId")
@@ -298,10 +323,10 @@ fun main() = runBlocking {
         // Issue new ticket credential to new attendee (in real system, this would be signed by original holder)
         // For this example, we'll issue a transfer credential from the organizer
         val transferredTicketCredential = TrustWeave.issueCredential(
-            issuerDid = organizerDid,
+            issuerDid = organizerDid.value,
             issuerKeyId = organizerKeyId,
             credentialSubject = buildJsonObject {
-                put("id", newAttendeeDid)
+                put("id", newAttendeeDid.value)
                 put("ticket", buildJsonObject {
                     put("eventName", "Tech Conference 2024")
                     put("eventDate", "2024-06-15")
@@ -316,7 +341,7 @@ fun main() = runBlocking {
                     put("transferable", false) // Transfer disabled after first transfer
                     put("maxTransfers", 1)
                     put("transferCount", 1)
-                    put("transferredFrom", attendeeDid)
+                    put("transferredFrom", attendeeDid.value)
                     put("transferDate", Instant.now().toString())
                 })
             },
@@ -330,13 +355,16 @@ fun main() = runBlocking {
         println("   Further transfers: DISABLED")
 
         // Store in new attendee's wallet
-        val newAttendeeWallet = TrustWeave.createWallet(
-            holderDid = newAttendeeDid,
-            options = WalletCreationOptionsBuilder().apply {
-                enableOrganization = true
-                enablePresentation = true
-            }.build()
-        ).getOrThrow()
+        val newAttendeeWalletResult = trustWeave.wallet {
+            holder(newAttendeeDid.value)
+            enableOrganization()
+            enablePresentation()
+        }
+        
+        val newAttendeeWallet = when (newAttendeeWalletResult) {
+            is WalletCreationResult.Success -> newAttendeeWalletResult.wallet
+            else -> throw IllegalStateException("Failed to create new attendee wallet: ${newAttendeeWalletResult.reason}")
+        }
 
         val transferredTicketId = newAttendeeWallet.store(transferredTicketCredential)
         newAttendeeWallet.withOrganization { org ->
@@ -361,7 +389,7 @@ fun main() = runBlocking {
             val transferCount = transferredTicket?.get("transferCount")?.jsonPrimitive?.content?.toInt() ?: 0
 
             println("   Original holder: $transferredFrom")
-            println("   Current holder: $newAttendeeDid")
+            println("   Current holder: ${newAttendeeDid.value}")
             println("   Transfer count: $transferCount")
             println("✅ Transfer verified - Entry APPROVED")
         } else {
@@ -376,9 +404,9 @@ fun main() = runBlocking {
     val accessPresentation = attendeeWallet.withPresentation { pres ->
         pres.createPresentation(
             credentialIds = listOf(ticketCredentialId),
-            holderDid = attendeeDid,
+            holderDid = attendeeDid.value,
             options = PresentationOptions(
-                holderDid = attendeeDid,
+                holderDid = attendeeDid.value,
                 challenge = "venue-access-${System.currentTimeMillis()}"
             )
         )

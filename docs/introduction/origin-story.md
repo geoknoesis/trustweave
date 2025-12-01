@@ -95,9 +95,11 @@ Want to issue a credential? You write:
 val credential = trustLayer.issue {
     credential {
         issuer(issuerDid)
-        subject { id(holderDid) }
+        subject { 
+            id(holderDid)
+            "degree" to "Bachelor of Science"
+        }
         type("VerifiableCredential", "UniversityDegree")
-        claim("degree", "Bachelor of Science")
     }
 }
 ```

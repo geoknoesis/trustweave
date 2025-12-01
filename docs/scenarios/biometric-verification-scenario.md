@@ -179,7 +179,15 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for identity provider, individual, and service providers
-    val identityProviderDid = trustWeave.createDid { method("key") }
+    import com.trustweave.trust.types.DidCreationResult
+    import com.trustweave.trust.types.WalletCreationResult
+    
+    val identityProviderDidResult = trustWeave.createDid { method("key") }
+    val identityProviderDid = when (identityProviderDidResult) {
+        is DidCreationResult.Success -> identityProviderDidResult.did
+        else -> throw IllegalStateException("Failed to create identity provider DID: ${identityProviderDidResult.reason}")
+    }
+    
     val identityProviderResolution = trustWeave.resolveDid(identityProviderDid)
     val identityProviderDoc = when (identityProviderResolution) {
         is DidResolutionResult.Success -> identityProviderResolution.document
@@ -188,14 +196,28 @@ fun main() = runBlocking {
     val identityProviderKeyId = identityProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val individualDid = trustWeave.createDid { method("key") }
-    val bankDid = trustWeave.createDid { method("key") }
-    val buildingAccessDid = trustWeave.createDid { method("key") }
+    val individualDidResult = trustWeave.createDid { method("key") }
+    val individualDid = when (individualDidResult) {
+        is DidCreationResult.Success -> individualDidResult.did
+        else -> throw IllegalStateException("Failed to create individual DID: ${individualDidResult.reason}")
+    }
+    
+    val bankDidResult = trustWeave.createDid { method("key") }
+    val bankDid = when (bankDidResult) {
+        is DidCreationResult.Success -> bankDidResult.did
+        else -> throw IllegalStateException("Failed to create bank DID: ${bankDidResult.reason}")
+    }
+    
+    val buildingAccessDidResult = trustWeave.createDid { method("key") }
+    val buildingAccessDid = when (buildingAccessDidResult) {
+        is DidCreationResult.Success -> buildingAccessDidResult.did
+        else -> throw IllegalStateException("Failed to create building access DID: ${buildingAccessDidResult.reason}")
+    }
 
-    println("✅ Identity Provider DID: $identityProviderDid")
-    println("✅ Individual DID: $individualDid")
-    println("✅ Bank Service DID: $bankDid")
-    println("✅ Building Access DID: $buildingAccessDid")
+    println("✅ Identity Provider DID: ${identityProviderDid.value}")
+    println("✅ Individual DID: ${individualDid.value}")
+    println("✅ Bank Service DID: ${bankDid.value}")
+    println("✅ Building Access DID: ${buildingAccessDid.value}")
 
     // Step 3: Simulate biometric capture and template creation
     // In production, this would use actual biometric capture devices
@@ -247,10 +269,10 @@ fun main() = runBlocking {
 
     // Step 4: Issue fingerprint biometric credential
     val fingerprintCredential = TrustWeave.issueCredential(
-        issuerDid = identityProviderDid,
+        issuerDid = identityProviderDid.value,
         issuerKeyId = identityProviderKeyId,
         credentialSubject = buildJsonObject {
-            put("id", individualDid)
+            put("id", individualDid.value)
             put("biometric", buildJsonObject {
                 put("type", "fingerprint")
                 put("biometricType", "Fingerprint")
@@ -277,10 +299,10 @@ fun main() = runBlocking {
 
     // Step 5: Issue face biometric credential
     val faceCredential = TrustWeave.issueCredential(
-        issuerDid = identityProviderDid,
+        issuerDid = identityProviderDid.value,
         issuerKeyId = identityProviderKeyId,
         credentialSubject = buildJsonObject {
-            put("id", individualDid)
+            put("id", individualDid.value)
             put("biometric", buildJsonObject {
                 put("type", "face")
                 put("biometricType", "Face")
@@ -306,10 +328,10 @@ fun main() = runBlocking {
 
     // Step 6: Issue voice biometric credential
     val voiceCredential = TrustWeave.issueCredential(
-        issuerDid = identityProviderDid,
+        issuerDid = identityProviderDid.value,
         issuerKeyId = identityProviderKeyId,
         credentialSubject = buildJsonObject {
-            put("id", individualDid)
+            put("id", individualDid.value)
             put("biometric", buildJsonObject {
                 put("type", "voice")
                 put("biometricType", "Voice")
@@ -334,13 +356,16 @@ fun main() = runBlocking {
     println("✅ Voice biometric credential issued: ${voiceCredential.id}")
 
     // Step 7: Create individual wallet and store all biometric credentials
-    val individualWallet = TrustWeave.createWallet(
-        holderDid = individualDid,
-        options = WalletCreationOptionsBuilder().apply {
-            enableOrganization = true
-            enablePresentation = true
-        }.build()
-    ).getOrThrow()
+    val walletResult = trustWeave.wallet {
+        holder(individualDid.value)
+        enableOrganization()
+        enablePresentation()
+    }
+    
+    val individualWallet = when (walletResult) {
+        is WalletCreationResult.Success -> walletResult.wallet
+        else -> throw IllegalStateException("Failed to create wallet: ${walletResult.reason}")
+    }
 
     val fingerprintCredentialId = individualWallet.store(fingerprintCredential)
     val faceCredentialId = individualWallet.store(faceCredential)

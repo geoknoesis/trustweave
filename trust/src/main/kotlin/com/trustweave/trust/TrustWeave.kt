@@ -22,6 +22,9 @@ import com.trustweave.trust.types.IssuerIdentity
 import com.trustweave.trust.types.VerifierIdentity
 import com.trustweave.trust.types.HolderIdentity
 import com.trustweave.trust.types.CredentialType
+import com.trustweave.trust.types.DidCreationResult
+import com.trustweave.trust.types.IssuanceResult
+import com.trustweave.trust.types.WalletCreationResult
 import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -68,7 +71,7 @@ import kotlin.time.Duration.Companion.seconds
  *         issuer("did:key:university")
  *         subject {
  *             id("did:key:student")
- *             claim("degree", "Bachelor of Science")
+ *             "degree" to "Bachelor of Science"
  *         }
  *     }
  *     signedBy(issuerDid = "did:key:university", keyId = "key-1")
@@ -162,14 +165,37 @@ class TrustWeave private constructor(
     /**
      * Issue a verifiable credential using the configured TrustWeave instance.
      *
+     * Returns a sealed result type for exhaustive error handling.
+     * This is the recommended way to issue credentials as it provides
+     * type-safe error handling without exceptions.
+     *
+     * **Example:**
+     * ```kotlin
+     * when (val result = trustWeave.issue {
+     *     credential { ... }
+     *     signedBy(issuerDid, keyId)
+     * }) {
+     *     is IssuanceResult.Success -> {
+     *         println("Issued: ${result.credential.id}")
+     *     }
+     *     is IssuanceResult.Failure.IssuerResolutionFailed -> {
+     *         println("Failed to resolve issuer: ${result.issuerDid}")
+     *     }
+     *     is IssuanceResult.Failure.KeyNotFound -> {
+     *         println("Key not found: ${result.keyId}")
+     *     }
+     *     // ... compiler ensures all cases handled
+     * }
+     * ```
+     *
      * @param timeout Maximum time to wait for issuance (default: 30 seconds)
      * @param block DSL block for building the credential and specifying issuance parameters
-     * @return The issued verifiable credential
+     * @return Sealed result type with success or detailed failure information
      */
     suspend fun issue(
         timeout: Duration = 30.seconds,
         block: IssuanceBuilder.() -> Unit
-    ): VerifiableCredential {
+    ): IssuanceResult {
         return withTimeout(timeout) {
             context.issue(block)
         }
@@ -183,19 +209,15 @@ class TrustWeave private constructor(
      *
      * **Example:**
      * ```kotlin
-     * val credential = trustWeave.issueCredential(
+     * when (val result = trustWeave.issueCredential(
      *     issuer = "did:key:university",
      *     keyId = "key-1",
-     *     subject = mapOf(
-     *         "id" to "did:key:student",
-     *         "degree" to mapOf(
-     *             "type" to "BachelorDegree",
-     *             "name" to "Bachelor of Science"
-     *         )
-     *     ),
-     *     credentialType = "DegreeCredential",
-     *     timeout = 30.seconds
-     * )
+     *     subject = mapOf("id" to "did:key:student", "degree" to "Bachelor"),
+     *     credentialType = "DegreeCredential"
+     * )) {
+     *     is IssuanceResult.Success -> println("Issued: ${result.credential.id}")
+     *     is IssuanceResult.Failure -> println("Failed: ${result.reason}")
+     * }
      * ```
      *
      * @param issuer The issuer DID
@@ -204,7 +226,7 @@ class TrustWeave private constructor(
      * @param credentialType The credential type (default: "VerifiableCredential")
      * @param credentialId Optional credential ID (auto-generated if not provided)
      * @param timeout Maximum time to wait for issuance (default: 30 seconds)
-     * @return The issued verifiable credential
+     * @return Sealed result type with success or detailed failure information
      */
     suspend fun issueCredential(
         issuer: String,
@@ -213,7 +235,7 @@ class TrustWeave private constructor(
         credentialType: String = "VerifiableCredential",
         credentialId: String? = null,
         timeout: Duration = 30.seconds
-    ): VerifiableCredential {
+    ): IssuanceResult {
         return withTimeout(timeout) {
             context.issue {
                 credential {
@@ -302,32 +324,40 @@ class TrustWeave private constructor(
     /**
      * Create a DID using the configured TrustWeave instance.
      *
-     * Single method that supports both simple and complex configurations.
+     * Returns a sealed result type for exhaustive error handling.
+     * This is the recommended way to create DIDs as it provides
+     * type-safe error handling without exceptions.
      *
-     * **Simple case:**
+     * **Example:**
      * ```kotlin
-     * val did = trustWeave.createDid()  // Uses default method "key"
-     * val did = trustWeave.createDid(method = "key")
-     * ```
-     *
-     * **Complex case:**
-     * ```kotlin
-     * val did = trustWeave.createDid(method = "key", timeout = 10.seconds) {
+     * when (val result = trustWeave.createDid(method = "key") {
      *     algorithm("Ed25519")
-     *     purpose(KeyPurpose.AUTHENTICATION)
+     * }) {
+     *     is DidCreationResult.Success -> {
+     *         println("Created: ${result.did.value}")
+     *         println("Document: ${result.document.id}")
+     *     }
+     *     is DidCreationResult.Failure.MethodNotRegistered -> {
+     *         println("Method not registered: ${result.method}")
+     *         println("Available: ${result.availableMethods}")
+     *     }
+     *     is DidCreationResult.Failure.KeyGenerationFailed -> {
+     *         println("Key generation failed: ${result.reason}")
+     *     }
+     *     // ... compiler ensures all cases handled
      * }
      * ```
      *
      * @param method DID method to use (default: "key")
      * @param timeout Maximum time to wait for DID creation (default: 10 seconds)
      * @param configure Optional DSL block for configuring the DID
-     * @return The created DID (type-safe)
+     * @return Sealed result type with success or detailed failure information
      */
     suspend fun createDid(
         method: String = "key",
         timeout: Duration = 10.seconds,
         configure: (DidBuilder.() -> Unit)? = null
-    ): Did {
+    ): DidCreationResult {
         return withTimeout(timeout) {
             if (configure != null) {
                 context.createDid {
@@ -473,9 +503,9 @@ class TrustWeave private constructor(
      * Create a wallet using the configured TrustWeave instance.
      *
      * @param block DSL block for configuring the wallet
-     * @return The created wallet
+     * @return Sealed result type with success or detailed failure information
      */
-    suspend fun wallet(block: WalletBuilder.() -> Unit): Wallet {
+    suspend fun wallet(block: WalletBuilder.() -> Unit): WalletCreationResult {
         return context.wallet(block)
     }
 

@@ -6,6 +6,7 @@ import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.trust.types.ProofType
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.wallet.CredentialOrganization
+import com.trustweave.wallet.Wallet
 import com.trustweave.trust.dsl.wallet.query
 import com.trustweave.trust.dsl.wallet.QueryBuilder
 import com.trustweave.trust.dsl.wallet.organize
@@ -17,6 +18,7 @@ import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.kms.KeyManagementService
 import com.trustweave.did.DidMethod
 import com.trustweave.did.DidCreationOptions
+import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -96,7 +98,7 @@ fun main() = runBlocking {
     val universityDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
+    }.getOrFail()
     println("University DID: ${universityDid.value}")
     
     // Verify the key exists in KMS immediately after DID creation
@@ -125,17 +127,17 @@ fun main() = runBlocking {
     val studentDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
+    }.getOrFail()
     println("Student DID: ${studentDid.value}")
 
     // Step 3: Create student wallet using DSL
     println("\nStep 3: Creating student wallet...")
-    val studentWallet = trustWeave.wallet {
+    val studentWallet: Wallet = trustWeave.wallet {
         id("student-wallet-${studentDid.value.substringAfterLast(":")}")
         holder(studentDid.value)
         enableOrganization()
         enablePresentation()
-    }
+    }.getOrFail()
     println("Wallet created with ID: ${studentWallet.walletId}")
 
     // Step 4: University issues degree credential using DSL
@@ -164,7 +166,7 @@ fun main() = runBlocking {
             expires(365 * 10, ChronoUnit.DAYS) // Valid for 10 years
         }
         signedBy(issuerDid = universityDid.value, keyId = issuerKeyId)
-    }
+    }.getOrFail()
 
     println("Credential issued:")
     println("  - Type: ${issuedCredential.type}")

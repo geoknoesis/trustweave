@@ -75,9 +75,19 @@ CredentialVerificationResult(valid=false, errors=[Proof verification failed])
 1. **Issuer DID not resolvable**
    ```kotlin
    // Ensure issuer DID is created and resolvable
-   val issuerDid = trustWeave.createDid {
+   import com.trustweave.trust.types.DidCreationResult
+   
+   val didResult = trustWeave.createDid {
        method("key")
        algorithm("Ed25519")
+   }
+   
+   val issuerDid = when (didResult) {
+       is DidCreationResult.Success -> didResult.did
+       else -> {
+           println("Failed to create DID: ${didResult.reason}")
+           return@runBlocking // or handle appropriately
+       }
    }
    // Use this DID for issuance
    ```
@@ -85,7 +95,12 @@ CredentialVerificationResult(valid=false, errors=[Proof verification failed])
 2. **Key ID mismatch**
    ```kotlin
    // Get the correct key ID from the DID document
-   val issuerDid = trustWeave.createDid { method("key") }
+   val didResult = trustWeave.createDid { method("key") }
+   val issuerDid = when (didResult) {
+       is DidCreationResult.Success -> didResult.did
+       else -> throw IllegalStateException("Failed to create DID: ${didResult.reason}")
+   }
+   
    val issuerResolution = trustWeave.resolveDid(issuerDid)
    val issuerDoc = when (issuerResolution) {
        is DidResolutionResult.Success -> issuerResolution.document
@@ -125,11 +140,18 @@ TrustWeaveError.WalletCreationFailed: Provider 'database' not found
 - Check wallet provider availability
 
 ```kotlin
-val wallet = trustWeave.wallet {
+import com.trustweave.trust.types.WalletCreationResult
+
+val walletResult = trustWeave.wallet {
     id("holder-wallet")
     holder("did:key:holder")
     enableOrganization()
     enablePresentation()
+}
+
+val wallet = when (walletResult) {
+    is WalletCreationResult.Success -> walletResult.wallet
+    else -> throw IllegalStateException("Failed to create wallet: ${walletResult.reason}")
 }
 ```
 
@@ -215,11 +237,14 @@ fun debugSystemState(trustweave: TrustWeave) {
 
     // Test basic operations
     println("\n=== Basic Operation Tests ===")
-    val testDid = try { trustWeave.createDid { method("key") } } catch (e: Exception) { null }
-    if (testDid != null) {
-        println("✅ DID creation works: ${testDid.value}")
-    } else {
-        println("❌ DID creation failed")
+    val didResult = trustWeave.createDid { method("key") }
+    when (didResult) {
+        is DidCreationResult.Success -> {
+            println("✅ DID creation works: ${didResult.did.value}")
+        }
+        else -> {
+            println("❌ DID creation failed: ${didResult.reason}")
+        }
     }
 }
 ```
@@ -342,8 +367,17 @@ suspend fun minimalReproducibleExample() {
 
     // Step 2: Create a DID
     println("\n[2] Creating DID...")
-    val did = trustWeave.createDid { method("key") }
-    println("✅ DID created: ${did.value}")
+    val didResult = trustWeave.createDid { method("key") }
+    val did = when (didResult) {
+        is DidCreationResult.Success -> {
+            println("✅ DID created: ${didResult.did.value}")
+            didResult.did
+        }
+        else -> {
+            println("❌ DID creation failed: ${didResult.reason}")
+            return@minimalReproducibleExample
+        }
+    }
 
     // Step 3: Resolve the DID
     println("\n[3] Resolving DID...")
@@ -550,7 +584,7 @@ suspend fun issueMultipleCredentials(
                     subject {
                         id(request.holderDid)
                         request.claims.forEach { (key, value) ->
-                            claim(key, value)
+                            key to value
                         }
                     }
                 }
@@ -623,7 +657,14 @@ suspend fun operationWithTimeout(
 ) {
     try {
         withTimeout(timeoutMillis) {
-            val did = trustLayer.createDid { method("key") }
+            val didResult = trustLayer.createDid { method("key") }
+            val did = when (didResult) {
+                is DidCreationResult.Success -> didResult.did
+                else -> {
+                    logger.error("DID creation failed: ${didResult.reason}")
+                    return@withTimeout
+                }
+            }
             // ... operation
         }
     } catch (e: TimeoutCancellationException) {

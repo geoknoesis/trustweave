@@ -269,33 +269,51 @@ See [DID Method Integrations](../how-to/README.md#did-method-integrations) for c
 
 ## Error Handling
 
-DID operations may throw `TrustWeaveException` on failure. Always wrap in try-catch:
+DID operations now return sealed result types instead of throwing exceptions. This provides type-safe, exhaustive error handling:
 
 ```kotlin
-import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.trust.types.DidCreationResult
 
-try {
-    val did = trustWeave.createDid { method("key") }
-    // Use DID
-} catch (error: TrustWeaveException) {
-    when (error) {
-        is TrustWeaveException.PluginNotFound -> {
-            // Method not available
-            println("DID method not found: ${error.pluginId}")
-        }
-        is TrustWeaveException.Unknown -> {
-            // Other operation failed
-            println("Error: ${error.message}")
-        }
-        else -> {
-            // Other error
-            println("Unexpected error: ${error.message}")
-        }
+val didResult = trustWeave.createDid { 
+    method("key") 
+}
+
+when (didResult) {
+    is DidCreationResult.Success -> {
+        println("Created DID: ${didResult.did.value}")
+        // Use didResult.did and didResult.document
+    }
+    is DidCreationResult.Failure.MethodNotRegistered -> {
+        println("DID method not found: ${didResult.method}")
+        println("Available methods: ${didResult.availableMethods.joinToString()}")
+    }
+    is DidCreationResult.Failure.KeyGenerationFailed -> {
+        println("Key generation failed: ${didResult.reason}")
+        didResult.cause?.printStackTrace()
+    }
+    is DidCreationResult.Failure.DocumentCreationFailed -> {
+        println("Document creation failed: ${didResult.reason}")
+    }
+    is DidCreationResult.Failure.InvalidConfiguration -> {
+        println("Invalid configuration: ${didResult.reason}")
+    }
+    is DidCreationResult.Failure.Other -> {
+        println("Error: ${didResult.reason}")
+        didResult.cause?.printStackTrace()
     }
 }
 ```
 
-**Note:** `resolveDid()` returns a sealed result type instead of throwing exceptions, which is preferred for exhaustive error handling.
+**For tests and examples**, you can use the `getOrFail()` helper:
+
+```kotlin
+import com.trustweave.testkit.getOrFail
+
+val did = trustWeave.createDid { method("key") }.getOrFail()
+// Throws AssertionError on failure (suitable for tests/examples only)
+```
+
+**Note:** All I/O operations (`createDid`, `issue`, `updateDid`, `rotateKey`, `wallet`, `revoke`) now return sealed result types for exhaustive error handling. `resolveDid()` also returns a sealed result type.
 
 ## API Reference
 

@@ -154,18 +154,56 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for exporter, importer, and verifier
-    val exporterDid = trustWeave.createDid { method("key") }
-    val importerDid = trustWeave.createDid { method("key") }
-    val verifierDid = trustWeave.createDid { method("key") }
-
-    println("✅ Exporter DID: ${exporterDid.value}")
-    println("✅ Importer DID: ${importerDid.value}")
-    println("✅ Verifier DID: ${verifierDid.value}")
+    import com.trustweave.trust.types.DidCreationResult
+    
+    val exporterDidResult = trustWeave.createDid { method("key") }
+    val exporterDid = when (exporterDidResult) {
+        is DidCreationResult.Success -> {
+            println("✅ Exporter DID: ${exporterDidResult.did.value}")
+            exporterDidResult.did
+        }
+        else -> {
+            println("Failed to create exporter DID: ${exporterDidResult.reason}")
+            return@runBlocking
+        }
+    }
+    
+    val importerDidResult = trustWeave.createDid { method("key") }
+    val importerDid = when (importerDidResult) {
+        is DidCreationResult.Success -> {
+            println("✅ Importer DID: ${importerDidResult.did.value}")
+            importerDidResult.did
+        }
+        else -> {
+            println("Failed to create importer DID: ${importerDidResult.reason}")
+            return@runBlocking
+        }
+    }
+    
+    val verifierDidResult = trustWeave.createDid { method("key") }
+    val verifierDid = when (verifierDidResult) {
+        is DidCreationResult.Success -> {
+            println("✅ Verifier DID: ${verifierDidResult.did.value}")
+            verifierDidResult.did
+        }
+        else -> {
+            println("Failed to create verifier DID: ${verifierDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
     // Step 3: Create farm/production site DID
-    val farmDid = trustWeave.createDid { method("key") }
-    println("✅ Farm DID: ${farmDid.value}")
-    println("✅ Farm DID: ${farmDid.id}")
+    val farmDidResult = trustWeave.createDid { method("key") }
+    val farmDid = when (farmDidResult) {
+        is DidCreationResult.Success -> {
+            println("✅ Farm DID: ${farmDidResult.did.value}")
+            farmDidResult.did
+        }
+        else -> {
+            println("Failed to create farm DID: ${farmDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
     // Step 4: Create EO data evidence (non-deforestation proof)
     val eoDeforestationProof = buildJsonObject {
@@ -202,17 +240,22 @@ fun main() = runBlocking {
     val eoProofDigest = DigestUtils.sha256DigestMultibase(eoDeforestationProof)
 
     // Step 5: Verifier issues compliance credential
-    val verifierKeyId = verifierDid.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val verifierResolution = trustWeave.resolveDid(verifierDid)
+    val verifierDoc = when (verifierResolution) {
+        is DidResolutionResult.Success -> verifierResolution.document
+        else -> throw IllegalStateException("Failed to resolve verifier DID")
+    }
+    val verifierKeyId = verifierDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
     val complianceCredential = TrustWeave.issueCredential(
-        issuerDid = verifierDid.id,
+        issuerDid = verifierDid.value,
         issuerKeyId = verifierKeyId,
         credentialSubject = buildJsonObject {
             put("id", "eudr-compliance-2024-001")
             put("complianceType", "EUDR")
             put("farm", buildJsonObject {
-                put("id", farmDid.id)
+                put("id", farmDid.value)
                 put("name", "Sustainable Coffee Farm")
                 put("location", buildJsonObject {
                     put("latitude", -3.4653)
@@ -225,7 +268,7 @@ fun main() = runBlocking {
             put("complianceStatus", "compliant")
             put("verificationDate", Instant.now().toString())
             put("validUntil", Instant.now().plus(365, java.time.temporal.ChronoUnit.DAYS).toString())
-            put("verifier", verifierDid.id)
+            put("verifier", verifierDid.value)
         },
         types = listOf("VerifiableCredential", "EUDRComplianceCredential")
     ).fold(
@@ -241,11 +284,16 @@ fun main() = runBlocking {
     println("   Farm: ${farmDid.id}")
 
     // Step 6: Create Digital Product Passport (DPP)
-    val exporterKeyId = exporterDid.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val exporterResolution = trustWeave.resolveDid(exporterDid)
+    val exporterDoc = when (exporterResolution) {
+        is DidResolutionResult.Success -> exporterResolution.document
+        else -> throw IllegalStateException("Failed to resolve exporter DID")
+    }
+    val exporterKeyId = exporterDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
     val dppCredential = TrustWeave.issueCredential(
-        issuerDid = exporterDid.id,
+        issuerDid = exporterDid.value,
         issuerKeyId = exporterKeyId,
         credentialSubject = buildJsonObject {
             put("id", "dpp-coffee-shipment-2024-001")
@@ -253,12 +301,12 @@ fun main() = runBlocking {
             put("commodity", "Coffee Beans")
             put("quantity", 10000.0)  // kg
             put("unit", "kg")
-            put("farm", farmDid.id)
+            put("farm", farmDid.value)
             put("complianceCredentialId", complianceCredential.id)
             put("eoEvidenceDigest", eoProofDigest)
             put("harvestDate", "2024-06-15")
             put("exportDate", Instant.now().toString())
-            put("exporter", exporterDid.id)
+            put("exporter", exporterDid.value)
             put("destination", "EU")
         },
         types = listOf("VerifiableCredential", "DigitalProductPassport", "EUDRProductCredential")

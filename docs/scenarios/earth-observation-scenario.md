@@ -186,7 +186,15 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized with blockchain anchoring")
 
     // Step 2: Create DID for data provider
-    val providerDid = trustWeave.createDid { method("key") }
+    import com.trustweave.trust.types.DidCreationResult
+    import com.trustweave.trust.types.IssuanceResult
+    
+    val providerDidResult = trustWeave.createDid { method("key") }
+    val providerDid = when (providerDidResult) {
+        is DidCreationResult.Success -> providerDidResult.did
+        else -> throw IllegalStateException("Failed to create provider DID: ${providerDidResult.reason}")
+    }
+    
     val providerResolution = trustWeave.resolveDid(providerDid)
     val providerDoc = when (providerResolution) {
         is DidResolutionResult.Success -> providerResolution.document
@@ -195,7 +203,7 @@ fun main() = runBlocking {
     val providerKeyId = providerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    println("✅ Data Provider DID: $providerDid")
+    println("✅ Data Provider DID: ${providerDid.value}")
 
     // Step 3: Create EO dataset artifacts with digests
     // Metadata artifact
@@ -267,23 +275,28 @@ fun main() = runBlocking {
     println("✅ Linkset created: $linksetDigest")
 
     // Step 5: Issue Verifiable Credential referencing the Linkset
-    val credential = trustWeave.issue {
+    val issuanceResult = trustWeave.issue {
         credential {
             type("EarthObservationCredential", "DataIntegrityCredential")
             issuer(providerDid.value)
             subject {
                 id("eo-dataset-1")
-                claim("dataset", mapOf(
+                "dataset" to mapOf(
                     "title" to "Sentinel-2 L2A Dataset",
                     "linksetDigest" to linksetDigest,
                     "metadataDigest" to metadataDigest,
                     "provenanceDigest" to provenanceDigest,
                     "qualityDigest" to qualityDigest
-                ))
+                )
             }
             issued(Instant.now())
         }
         signedBy(issuerDid = providerDid.value, keyId = providerKeyId)
+    }
+    
+    val credential = when (issuanceResult) {
+        is IssuanceResult.Success -> issuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
     }
 
     println("✅ Verifiable Credential issued: ${credential.id}")

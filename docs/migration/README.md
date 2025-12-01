@@ -52,6 +52,14 @@ See [Migrating to 1.0.0](migrating-to-1.0.0.md) for detailed migration instructi
 - Error handling updates
 - Plugin lifecycle changes
 
+### Migrating to Typed Values API
+
+See [Migrating to Typed Values API](migrating-to-typed-values.md) for migration from String-based parameters to type-safe typed values:
+- Replacing String parameters with `Did`, `KeyId`, etc.
+- Updating DSL builders to use typed values
+- Benefits of compile-time type safety
+- Common migration issues and solutions
+
 ## Breaking Changes
 
 Breaking changes are clearly marked in the CHANGELOG with migration instructions. Common breaking changes include:

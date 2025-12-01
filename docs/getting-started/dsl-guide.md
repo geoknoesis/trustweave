@@ -136,7 +136,9 @@ Issue credentials with automatic proof generation:
 import com.trustweave.trust.types.IssuerIdentity
 import com.trustweave.trust.types.ProofType
 
-val issuedCredential = trustLayer.issue {
+import com.trustweave.trust.types.IssuanceResult
+
+val issuanceResult = trustLayer.issue {
     credential {
         type("DegreeCredential")
         issuer("did:key:university")
@@ -153,6 +155,11 @@ val issuedCredential = trustLayer.issue {
     challenge("challenge-123")
     domain("example.com")
     anchor()  // Automatically anchor if autoAnchor is enabled
+}
+
+val issuedCredential = when (issuanceResult) {
+    is IssuanceResult.Success -> issuanceResult.credential
+    else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
 }
 ```
 
@@ -173,7 +180,7 @@ val issuedCredential = trustLayer.issue {
 import com.trustweave.trust.types.IssuerIdentity
 import com.trustweave.trust.types.ProofType
 
-val issuedCredential = trustWeave.issue {
+val issuanceResult = trustWeave.issue {
     credential {
         type("DegreeCredential")
         issuer("did:key:university")
@@ -191,6 +198,11 @@ val issuedCredential = trustWeave.issue {
     withProof(ProofType.Ed25519Signature2020)
     challenge("challenge-123")
     domain("example.com")
+}
+
+val issuedCredential = when (issuanceResult) {
+    is IssuanceResult.Success -> issuanceResult.credential
+    else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
 }
 ```
 
@@ -249,9 +261,16 @@ when (result) {
 Create and manage wallets:
 
 ```kotlin
-val wallet = trustWeave.wallet {
+import com.trustweave.trust.types.WalletCreationResult
+
+val walletResult = trustWeave.wallet {
     holder("did:key:holder")
     // Additional wallet configuration
+}
+
+val wallet = when (walletResult) {
+    is WalletCreationResult.Success -> walletResult.wallet
+    else -> throw IllegalStateException("Failed to create wallet: ${walletResult.reason}")
 }
 
 // Store credentials

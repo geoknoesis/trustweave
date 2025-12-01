@@ -68,24 +68,42 @@ fun main() = runBlocking {
 ### Step 2: Create DIDs for Entities
 
 ```kotlin
-val universityDid = trustLayer.createDid {
+import com.trustweave.trust.types.DidCreationResult
+
+val universityDidResult = trustLayer.createDid {
     method(DidMethods.KEY)
     algorithm(KeyAlgorithms.ED25519)
 }
+val universityDid = when (universityDidResult) {
+    is DidCreationResult.Success -> universityDidResult.did
+    else -> throw IllegalStateException("Failed to create university DID: ${universityDidResult.reason}")
+}
 
-val companyDid = trustLayer.createDid {
+val companyDidResult = trustLayer.createDid {
     method(DidMethods.KEY)
     algorithm(KeyAlgorithms.ED25519)
 }
+val companyDid = when (companyDidResult) {
+    is DidCreationResult.Success -> companyDidResult.did
+    else -> throw IllegalStateException("Failed to create company DID: ${companyDidResult.reason}")
+}
 
-val studentDid = trustLayer.createDid {
+val studentDidResult = trustLayer.createDid {
     method(DidMethods.KEY)
     algorithm(KeyAlgorithms.ED25519)
 }
+val studentDid = when (studentDidResult) {
+    is DidCreationResult.Success -> studentDidResult.did
+    else -> throw IllegalStateException("Failed to create student DID: ${studentDidResult.reason}")
+}
 
-val hrDeptDid = trustLayer.createDid {
+val hrDeptDidResult = trustLayer.createDid {
     method(DidMethods.KEY)
     algorithm(KeyAlgorithms.ED25519)
+}
+val hrDeptDid = when (hrDeptDidResult) {
+    is DidCreationResult.Success -> hrDeptDidResult.did
+    else -> throw IllegalStateException("Failed to create HR dept DID: ${hrDeptDidResult.reason}")
 }
 ```
 
@@ -124,13 +142,24 @@ trustLayer.trust {
 
 ```kotlin
 // Issue degree credential from university
-val degreeCredential = trustLayer.issue {
+import com.trustweave.trust.types.IssuanceResult
+
+// First, resolve university DID to get key ID
+val universityResolution = trustLayer.resolveDid(universityDid)
+val universityDoc = when (universityResolution) {
+    is DidResolutionResult.Success -> universityResolution.document
+    else -> throw IllegalStateException("Failed to resolve university DID")
+}
+val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    ?: throw IllegalStateException("No verification method found")
+
+val degreeIssuanceResult = trustLayer.issue {
     credential {
         id("https://university.edu/credentials/degree-123")
         type(CredentialType.Education, CredentialType.Degree)
-        issuer(universityDid)
+        issuer(universityDid.value)
         subject {
-            id(studentDid)
+            id(studentDid.value)
             "degree" {
                 "type" to "Bachelor"
                 "field" to "Computer Science"
@@ -140,7 +169,12 @@ val degreeCredential = trustLayer.issue {
         issued(Instant.now())
         expires(Instant.now().plusSeconds(31536000)) // 1 year
     }
-    signedBy(issuerDid = universityDid, keyId = "key-1")
+    signedBy(issuerDid = universityDid.value, keyId = universityKeyId)
+}
+
+val degreeCredential = when (degreeIssuanceResult) {
+    is IssuanceResult.Success -> degreeIssuanceResult.credential
+    else -> throw IllegalStateException("Failed to issue credential: ${degreeIssuanceResult.reason}")
 }
 
 // Verify with trust registry
@@ -199,13 +233,22 @@ if (delegationResult.valid) {
 
 ```kotlin
 // HR department issues credential using delegated authority
-val employmentCredential = trustLayer.issue {
+// First resolve HR DID to get key ID
+val hrResolution = trustLayer.resolveDid(hrDeptDid)
+val hrDoc = when (hrResolution) {
+    is DidResolutionResult.Success -> hrResolution.document
+    else -> throw IllegalStateException("Failed to resolve HR DID")
+}
+val hrKeyId = hrDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    ?: throw IllegalStateException("No verification method found")
+
+val employmentIssuanceResult = trustLayer.issue {
     credential {
         id("https://company.com/credentials/employment-456")
         type("EmploymentCredential")
-        issuer(hrDeptDid) // HR issues on behalf of company
+        issuer(hrDeptDid.value) // HR issues on behalf of company
         subject {
-            id(studentDid)
+            id(studentDid.value)
             "employment" {
                 "company" to "Tech Corp"
                 "role" to "Software Engineer"
@@ -214,7 +257,12 @@ val employmentCredential = trustLayer.issue {
         }
         issued(Instant.now())
     }
-    signedBy(issuerDid = hrDeptDid, keyId = "key-1")
+    signedBy(issuerDid = hrDeptDid.value, keyId = hrKeyId)
+}
+
+val employmentCredential = when (employmentIssuanceResult) {
+    is IssuanceResult.Success -> employmentIssuanceResult.credential
+    else -> throw IllegalStateException("Failed to issue credential: ${employmentIssuanceResult.reason}")
 }
 
 // Verify credential with delegation check
@@ -295,13 +343,13 @@ trustLayer.updateDid {
 }
 
 // Issue credential with assertionMethod proof purpose
-val validatedCredential = trustLayer.issue {
+val validatedIssuanceResult = trustLayer.issue {
     credential {
         id("https://university.edu/credentials/validated-789")
         type("EducationCredential")
-        issuer(universityDid)
+        issuer(universityDid.value)
         subject {
-            id(studentDid)
+            id(studentDid.value)
             "certification" {
                 "name" to "Certified Developer"
                 "level" to "Advanced"
@@ -309,8 +357,13 @@ val validatedCredential = trustLayer.issue {
         }
         issued(Instant.now())
     }
-    signedBy(issuerDid = universityDid, keyId = "key-1")
+    signedBy(issuerDid = universityDid.value, keyId = universityKeyId)
     proofPurpose(ProofPurposes.ASSERTION_METHOD)
+}
+
+val validatedCredential = when (validatedIssuanceResult) {
+    is IssuanceResult.Success -> validatedIssuanceResult.credential
+    else -> throw IllegalStateException("Failed to issue credential: ${validatedIssuanceResult.reason}")
 }
 
 // Verify with proof purpose validation
@@ -341,40 +394,67 @@ fun completeWebOfTrustWorkflow() = runBlocking {
     }
 
     // 1. Create DIDs
-    val issuerDid = trustLayer.createDid { method(DidMethods.KEY) }
-    val holderDid = trustLayer.createDid { method(DidMethods.KEY) }
+    val issuerDidResult = trustLayer.createDid { method(DidMethods.KEY) }
+    val issuerDid = when (issuerDidResult) {
+        is DidCreationResult.Success -> issuerDidResult.did
+        else -> throw IllegalStateException("Failed to create issuer DID: ${issuerDidResult.reason}")
+    }
+    
+    val holderDidResult = trustLayer.createDid { method(DidMethods.KEY) }
+    val holderDid = when (holderDidResult) {
+        is DidCreationResult.Success -> holderDidResult.did
+        else -> throw IllegalStateException("Failed to create holder DID: ${holderDidResult.reason}")
+    }
 
     // 2. Set up trust anchor
     trustLayer.trust {
-        addAnchor(issuerDid) {
+        addAnchor(issuerDid.value) {
             credentialTypes("TestCredential")
         }
     }
 
     // 3. Update issuer DID with assertionMethod
-    trustLayer.updateDid {
-        did(issuerDid)
+    val updateResult = trustLayer.updateDid {
+        did(issuerDid.value)
         method(DidMethods.KEY)
-        addAssertionMethod("$issuerDid#key-1")
+        addAssertionMethod("${issuerDid.value}#key-1")
+    }
+    when (updateResult) {
+        is DidUpdateResult.Success -> { /* Success */ }
+        else -> throw IllegalStateException("Failed to update DID: ${updateResult.reason}")
     }
 
-    // 4. Issue credential
-    val credential = trustLayer.issue {
+    // 4. Resolve issuer DID to get key ID
+    val issuerResolution = trustLayer.resolveDid(issuerDid)
+    val issuerDoc = when (issuerResolution) {
+        is DidResolutionResult.Success -> issuerResolution.document
+        else -> throw IllegalStateException("Failed to resolve issuer DID")
+    }
+    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
+
+    // 5. Issue credential
+    val issuanceResult = trustLayer.issue {
         credential {
             id("https://example.com/credential-1")
             type("TestCredential")
-            issuer(issuerDid)
+            issuer(issuerDid.value)
             subject {
-                id(holderDid)
+                id(holderDid.value)
                 "test" to "value"
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = issuerDid, keyId = "key-1")
+        signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
         proofPurpose(ProofPurposes.ASSERTION_METHOD)
     }
+    
+    val credential = when (issuanceResult) {
+        is IssuanceResult.Success -> issuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
+    }
 
-    // 5. Verify with all checks enabled
+    // 6. Verify with all checks enabled
     val result = trustLayer.verify {
         credential(credential)
         checkTrustRegistry(true)
@@ -382,7 +462,7 @@ fun completeWebOfTrustWorkflow() = runBlocking {
         checkExpiration(true)
     }
 
-    // 6. Check results
+    // 7. Check results
     println("Complete Verification Results:")
     println("  Valid: ${result.valid}")
     println("  Trust Registry Valid: ${result.trustRegistryValid}")

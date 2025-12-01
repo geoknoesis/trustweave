@@ -192,24 +192,24 @@ class SarFloodProduct(
                 effectiveDate = Instant.now().toString(),
                 expirationDate = Instant.now().plusSeconds(365 * 24 * 60 * 60).toString(),
                 contractData = buildJsonObject {
-                    put("productType", "SarFlood")
-                    put("coverageAmount", coverageAmount)
-                    put("location", buildJsonObject {
-                        put("latitude", location.latitude)
-                        put("longitude", location.longitude)
-                        put("address", location.address)
-                        put("region", location.region)
-                    })
-                    put("thresholds", buildJsonObject {
-                        put("tier1Cm", 20.0)
-                        put("tier2Cm", 50.0)
-                        put("tier3Cm", 100.0)
-                    })
-                    put("payoutTiers", buildJsonObject {
-                        put("tier1", 0.25)  // 25% of coverage
-                        put("tier2", 0.50)  // 50% of coverage
-                        put("tier3", 1.0)   // 100% of coverage
-                    })
+                    "productType" to "SarFlood"
+                    "coverageAmount" to coverageAmount
+                    "location" {
+                        "latitude" to location.latitude
+                        "longitude" to location.longitude
+                        "address" to location.address
+                        "region" to location.region
+                    }
+                    "thresholds" {
+                        "tier1Cm" to 20.0
+                        "tier2Cm" to 50.0
+                        "tier3Cm" to 100.0
+                    }
+                    "payoutTiers" {
+                        "tier1" to 0.25  // 25% of coverage
+                        "tier2" to 0.50  // 50% of coverage
+                        "tier3" to 1.0   // 100% of coverage
+                    }
                 }
             )
         ).getOrThrow()
@@ -276,7 +276,10 @@ class SarFloodProduct(
         val dataDigest = DigestUtils.sha256DigestMultibase(floodData)
 
         // Step 3: Issue verifiable credential for EO data
-        val resolution = trustWeave.resolveDid(eoProviderDid)
+        // Note: eoProviderDid is a String (DID value), so we need to create a Did object for resolveDid
+        import com.trustweave.core.Did
+        val eoProviderDidObj = Did(eoProviderDid)
+        val resolution = trustWeave.resolveDid(eoProviderDidObj)
         val eoProviderDoc = when (resolution) {
             is DidResolutionResult.Success -> resolution.document
             else -> throw IllegalStateException("Failed to resolve EO provider DID")
@@ -284,33 +287,44 @@ class SarFloodProduct(
         val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
             ?: throw IllegalStateException("No verification method found")
 
-        val floodCredential = trustWeave.issue {
+        val floodIssuanceResult = trustWeave.issue {
             credential {
-                issuer(eoProviderDid.value)
+                id("sar-flood-${location.id}-${timestamp.toEpochMilli()}")
+                type("VerifiableCredential", "EarthObservationCredential", "InsuranceOracleCredential", "SarFloodCredential")
+                issuer(eoProviderDid)
                 subject {
                     id("sar-flood-${location.id}-${timestamp.toEpochMilli()}")
-                    claim("dataType", "SarFloodMeasurement")
-                    claim("data", floodData)
-                    claim("dataDigest", dataDigest)
-                    claim("provider", eoProviderDid.value)
-                    claim("timestamp", timestamp.toString())
+                    "dataType" to "SarFloodMeasurement"
+                    "data" to floodData
+                    "dataDigest" to dataDigest
+                    "provider" to eoProviderDid
+                    "timestamp" to timestamp.toString()
                 }
                 issued(Instant.now())
             }
-            signedBy(issuerDid = eoProviderDid.value, keyId = eoProviderKeyId)
+            by(issuerDid = eoProviderDid, keyId = eoProviderKeyId)
         }
-                "SarFloodCredential"
-            )
-        ).getOrThrow()
+        
+        val floodCredential = when (floodIssuanceResult) {
+            is IssuanceResult.Success -> floodIssuanceResult.credential
+            else -> throw IllegalStateException("Failed to issue flood credential")
+        }
 
         // Step 4: Anchor to blockchain for tamper-proof record
         val anchorResult = trustWeave.blockchains.anchor(
             data = floodCredential,
             serializer = VerifiableCredential.serializer(),
             chainId = "algorand:mainnet"
-        ).getOrThrow()
-
-        println("✅ SAR Flood Credential issued and anchored: ${anchorResult.ref.txHash}")
+        )
+        
+        anchorResult.fold(
+            onSuccess = { anchor ->
+                println("✅ SAR Flood Credential issued and anchored: ${anchor.ref.txHash}")
+            },
+            onFailure = { error ->
+                throw IllegalStateException("Failed to anchor credential: ${error.message}")
+            }
+        )
 
         floodCredential
     }
@@ -438,7 +452,10 @@ class HeatwaveProduct(
 
         val dataDigest = DigestUtils.sha256DigestMultibase(heatwaveData)
 
-        val eoProviderResolution = trustWeave.resolveDid(eoProviderDid)
+        // Resolve DID from string (eoProviderDid is a DID string)
+        import com.trustweave.core.Did
+        val eoProviderDidObj = Did(eoProviderDid)
+        val eoProviderResolution = trustWeave.resolveDid(eoProviderDidObj)
         val eoProviderDoc = when (eoProviderResolution) {
             is DidResolutionResult.Success -> eoProviderResolution.document
             else -> throw IllegalStateException("Failed to resolve EO provider DID")
@@ -446,29 +463,44 @@ class HeatwaveProduct(
         val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
             ?: throw IllegalStateException("No verification method found")
 
-        val heatwaveCredential = trustWeave.issue {
+        val heatwaveIssuanceResult = trustWeave.issue {
             credential {
+                id("heatwave-${location.id}-${Instant.now().toEpochMilli()}")
                 type("EarthObservationCredential", "InsuranceOracleCredential", "HeatwaveCredential")
-                issuer(eoProviderDid.value)
+                issuer(eoProviderDid)
                 subject {
                     id("heatwave-${location.id}-${Instant.now().toEpochMilli()}")
-                    claim("dataType", "HeatwaveMeasurement")
-                    claim("data", heatwaveData)
-                    claim("dataDigest", dataDigest)
-                    claim("provider", eoProviderDid.value)
-                    claim("timestamp", Instant.now().toString())
+                    "dataType" to "HeatwaveMeasurement"
+                    "data" to heatwaveData
+                    "dataDigest" to dataDigest
+                    "provider" to eoProviderDid
+                    "timestamp" to Instant.now().toString()
                 }
                 issued(Instant.now())
             }
-            signedBy(issuerDid = eoProviderDid.value, keyId = eoProviderKeyId)
+            by(issuerDid = eoProviderDid, keyId = eoProviderKeyId)
+        }
+        
+        val heatwaveCredential = when (heatwaveIssuanceResult) {
+            is IssuanceResult.Success -> heatwaveIssuanceResult.credential
+            else -> throw IllegalStateException("Failed to issue heatwave credential")
         }
 
         // Anchor to blockchain
-        trustWeave.blockchains.anchor(
+        val anchorResult = trustWeave.blockchains.anchor(
             data = heatwaveCredential,
             serializer = VerifiableCredential.serializer(),
             chainId = "algorand:mainnet"
-        ).getOrThrow()
+        )
+        
+        anchorResult.fold(
+            onSuccess = { anchor ->
+                // Credential anchored successfully
+            },
+            onFailure = { error ->
+                throw IllegalStateException("Failed to anchor credential: ${error.message}")
+            }
+        )
 
         heatwaveCredential
     }
@@ -666,7 +698,10 @@ class SolarAttenuationProduct(
 
         val dataDigest = DigestUtils.sha256DigestMultibase(solarData)
 
-        val eoProviderResolution = trustWeave.resolveDid(eoProviderDid)
+        // Resolve DID from string (eoProviderDid is a DID string)
+        import com.trustweave.core.Did
+        val eoProviderDidObj = Did(eoProviderDid)
+        val eoProviderResolution = trustWeave.resolveDid(eoProviderDidObj)
         val eoProviderDoc = when (eoProviderResolution) {
             is DidResolutionResult.Success -> eoProviderResolution.document
             else -> throw IllegalStateException("Failed to resolve EO provider DID")
@@ -674,29 +709,44 @@ class SolarAttenuationProduct(
         val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
             ?: throw IllegalStateException("No verification method found")
 
-        val solarCredential = trustWeave.issue {
+        val solarIssuanceResult = trustWeave.issue {
             credential {
+                id("solar-attenuation-${location.id}-${Instant.now().toEpochMilli()}")
                 type("EarthObservationCredential", "InsuranceOracleCredential", "SolarAttenuationCredential")
-                issuer(eoProviderDid.value)
+                issuer(eoProviderDid)
                 subject {
                     id("solar-attenuation-${location.id}-${Instant.now().toEpochMilli()}")
-                    claim("dataType", "SolarAttenuationMeasurement")
-                    claim("data", solarData)
-                    claim("dataDigest", dataDigest)
-                    claim("provider", eoProviderDid.value)
-                    claim("timestamp", Instant.now().toString())
+                    "dataType" to "SolarAttenuationMeasurement"
+                    "data" to solarData
+                    "dataDigest" to dataDigest
+                    "provider" to eoProviderDid
+                    "timestamp" to Instant.now().toString()
                 }
                 issued(Instant.now())
             }
-            signedBy(issuerDid = eoProviderDid.value, keyId = eoProviderKeyId)
+            by(issuerDid = eoProviderDid, keyId = eoProviderKeyId)
+        }
+        
+        val solarCredential = when (solarIssuanceResult) {
+            is IssuanceResult.Success -> solarIssuanceResult.credential
+            else -> throw IllegalStateException("Failed to issue solar credential")
         }
 
         // Anchor to blockchain
-        trustWeave.blockchains.anchor(
+        val anchorResult = trustWeave.blockchains.anchor(
             data = solarCredential,
             serializer = VerifiableCredential.serializer(),
             chainId = "algorand:mainnet"
-        ).getOrThrow()
+        )
+        
+        anchorResult.fold(
+            onSuccess = { anchor ->
+                // Credential anchored successfully
+            },
+            onFailure = { error ->
+                throw IllegalStateException("Failed to anchor credential: ${error.message}")
+            }
+        )
 
         solarCredential
     }
@@ -793,9 +843,29 @@ suspend fun completeFloodInsuranceWorkflow() {
     }
 
     // Step 2: Create DIDs for parties
-    val insurerDid = trustWeave.createDid { method("key") }
-    val insuredDid = trustWeave.createDid { method("key") }
-    val eoProviderDid = trustWeave.createDid { method("key") }
+    import com.trustweave.trust.types.DidCreationResult
+    import com.trustweave.trust.types.DidResolutionResult
+    import com.trustweave.trust.types.IssuanceResult
+    import com.trustweave.trust.types.VerificationResult
+    
+    val insurerDidResult = trustWeave.createDid { method("key") }
+    val insurerDid = when (insurerDidResult) {
+        is DidCreationResult.Success -> insurerDidResult.did
+        else -> throw IllegalStateException("Failed to create insurer DID")
+    }
+    
+    val insuredDidResult = trustWeave.createDid { method("key") }
+    val insuredDid = when (insuredDidResult) {
+        is DidCreationResult.Success -> insuredDidResult.did
+        else -> throw IllegalStateException("Failed to create insured DID")
+    }
+    
+    val eoProviderDidResult = trustWeave.createDid { method("key") }
+    val eoProviderDid = when (eoProviderDidResult) {
+        is DidCreationResult.Success -> eoProviderDidResult.did
+        else -> throw IllegalStateException("Failed to create EO provider DID")
+    }
+    
     val insurerResolution = trustWeave.resolveDid(insurerDid)
     val insurerDoc = when (insurerResolution) {
         is DidResolutionResult.Success -> insurerResolution.document
@@ -809,8 +879,8 @@ suspend fun completeFloodInsuranceWorkflow() {
 
     // Step 4: Create contract
     val contract = floodProduct.createFloodContract(
-        insurerDid = insurerDid.id,
-        insuredDid = insuredDid.id,
+        insurerDid = insurerDid.value,
+        insuredDid = insuredDid.value,
         coverageAmount = 1_000_000.0,
         location = Location(
             id = "loc-001",
@@ -824,15 +894,16 @@ suspend fun completeFloodInsuranceWorkflow() {
     // Step 5: Bind contract (issue VC and anchor)
     val bound = floodProduct.bindFloodContract(
         contract = contract,
-        insurerDid = insurerDid.id,
+        insurerDid = insurerDid.value,
         insurerKeyId = insurerKeyId
     )
 
     // Step 6: Activate contract
-    val active = trustWeave.contracts.activateContract(bound.contract.id).getOrThrow()
+    val activeResult = trustWeave.contracts.activateContract(bound.contract.id)
+    val active = activeResult.getOrThrow()
 
     // Step 7: Process EO data (in production, this comes from EO provider)
-    val floodCredential = floodProduct.processSarFloodData(
+    val floodCredentialResult = floodProduct.processSarFloodData(
         location = Location(
             id = "loc-001",
             latitude = 35.2271,
@@ -848,7 +919,9 @@ suspend fun completeFloodInsuranceWorkflow() {
             quality = "high"
         ),
         timestamp = Instant.now()
-    ).getOrThrow()
+    )
+    
+    val floodCredential = floodCredentialResult.getOrThrow()
 
     // Step 8: Execute contract
     val executionResult = floodProduct.executeFloodContract(
@@ -901,8 +974,13 @@ class AtlasParametricPlatform {
         }
 
         // Create DIDs for EO providers
-        val eoProviderDid = runBlocking {
+        val eoProviderDidResult = runBlocking {
             trustWeave.createDid { method("key") }
+        }
+        
+        val eoProviderDid = when (eoProviderDidResult) {
+            is DidCreationResult.Success -> eoProviderDidResult.did
+            else -> throw IllegalStateException("Failed to create EO provider DID")
         }
 
         // Initialize products
@@ -948,11 +1026,16 @@ class AtlasParametricPlatform {
         }) {
             // Process SAR data and issue credential
             val location = extractLocation(contract)
-            val floodCredential = sarFloodProduct.processSarFloodData(
+            val floodCredentialResult = sarFloodProduct.processSarFloodData(
                 location = location,
                 sarData = floodData,
                 timestamp = Instant.now()
-            ).getOrThrow()
+            )
+            
+            val floodCredential = floodCredentialResult.getOrNull() ?: run {
+                println("Failed to process flood data")
+                continue
+            }
 
             // Execute contract
             val executionResult = sarFloodProduct.executeFloodContract(
@@ -1040,9 +1123,17 @@ class MultiProviderEoDataService(
     ): Result<EoData> = trustweaveCatching {
 
         // Step 1: Verify credential
-        val verification = TrustWeave.verifyCredential(dataCredential).getOrThrow()
-        if (!verification.valid) {
-            error("Credential verification failed: ${verification.errors}")
+        val verificationResult = trustWeave.verify {
+            credential(dataCredential)
+        }
+        
+        when (verificationResult) {
+            is VerificationResult.Valid -> {
+                // Credential is valid, continue
+            }
+            is VerificationResult.Invalid -> {
+                error("Credential verification failed: ${verificationResult.errors}")
+            }
         }
 
         // Step 2: Check if provider is certified

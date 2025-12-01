@@ -180,7 +180,14 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for manufacturer, update server, and IoT device
-    val manufacturerDid = trustWeave.createDid { method("key") }
+    import com.trustweave.trust.types.DidCreationResult
+    
+    val manufacturerDidResult = trustWeave.createDid { method("key") }
+    val manufacturerDid = when (manufacturerDidResult) {
+        is DidCreationResult.Success -> manufacturerDidResult.did
+        else -> throw IllegalStateException("Failed to create manufacturer DID: ${manufacturerDidResult.reason}")
+    }
+    
     val manufacturerResolution = trustWeave.resolveDid(manufacturerDid)
     val manufacturerDoc = when (manufacturerResolution) {
         is DidResolutionResult.Success -> manufacturerResolution.document
@@ -189,7 +196,12 @@ fun main() = runBlocking {
     val manufacturerKeyId = manufacturerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val updateServerDid = trustWeave.createDid { method("key") }
+    val updateServerDidResult = trustWeave.createDid { method("key") }
+    val updateServerDid = when (updateServerDidResult) {
+        is DidCreationResult.Success -> updateServerDidResult.did
+        else -> throw IllegalStateException("Failed to create update server DID: ${updateServerDidResult.reason}")
+    }
+    
     val updateServerResolution = trustWeave.resolveDid(updateServerDid)
     val updateServerDoc = when (updateServerResolution) {
         is DidResolutionResult.Success -> updateServerResolution.document
@@ -198,11 +210,15 @@ fun main() = runBlocking {
     val updateServerKeyId = updateServerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val deviceDid = trustWeave.createDid { method("key") }
+    val deviceDidResult = trustWeave.createDid { method("key") }
+    val deviceDid = when (deviceDidResult) {
+        is DidCreationResult.Success -> deviceDidResult.did
+        else -> throw IllegalStateException("Failed to create device DID: ${deviceDidResult.reason}")
+    }
 
-    println("✅ Manufacturer DID: $manufacturerDid")
-    println("✅ Update Server DID: $updateServerDid")
-    println("✅ IoT Device DID: $deviceDid")
+    println("✅ Manufacturer DID: ${manufacturerDid.value}")
+    println("✅ Update Server DID: ${updateServerDid.value}")
+    println("✅ IoT Device DID: ${deviceDid.value}")
 
     // Step 3: Simulate firmware creation and compute digest
     println("\n📦 Firmware Creation:")
@@ -225,14 +241,14 @@ fun main() = runBlocking {
 
     // Step 4: Issue firmware attestation credential
     val firmwareAttestation = TrustWeave.issueCredential(
-        issuerDid = manufacturerDid,
+        issuerDid = manufacturerDid.value,
         issuerKeyId = manufacturerKeyId,
         credentialSubject = buildJsonObject {
             put("id", "firmware:device-model-2024:$firmwareVersion")
             put("firmware", buildJsonObject {
                 put("firmwareId", "fw-device-model-2024-$firmwareVersion")
                 put("version", firmwareVersion)
-                put("manufacturer", manufacturerDid)
+                put("manufacturer", manufacturerDid.value)
                 put("deviceModel", "DeviceModel-2024")
                 put("firmwareDigest", firmwareDigest)
                 put("firmwareSize", firmwareSize)
@@ -258,7 +274,7 @@ fun main() = runBlocking {
 
     // Step 5: Issue firmware update authorization credential
     val updateAuthorization = TrustWeave.issueCredential(
-        issuerDid = updateServerDid,
+        issuerDid = updateServerDid.value,
         issuerKeyId = updateServerKeyId,
         credentialSubject = buildJsonObject {
             put("id", "update-auth:device-model-2024:$firmwareVersion")
@@ -281,7 +297,7 @@ fun main() = runBlocking {
                     put("currentVersions", listOf("2.0.0", "2.0.1"))
                     put("excludedDevices", emptyList<String>())
                 })
-                put("updateServer", updateServerDid)
+                put("updateServer", updateServerDid.value)
             })
         },
         types = listOf("VerifiableCredential", "FirmwareUpdateAuthorizationCredential", "UpdateCredential"),
@@ -291,13 +307,18 @@ fun main() = runBlocking {
     println("✅ Firmware update authorization credential issued: ${updateAuthorization.id}")
 
     // Step 6: Create device wallet and store credentials
-    val deviceWallet = TrustWeave.createWallet(
-        holderDid = deviceDid,
-        options = WalletCreationOptionsBuilder().apply {
-            enableOrganization = true
-            enablePresentation = true
-        }.build()
-    ).getOrThrow()
+    import com.trustweave.trust.types.WalletCreationResult
+    
+    val walletResult = trustWeave.wallet {
+        holder(deviceDid.value)
+        enableOrganization()
+        enablePresentation()
+    }
+    
+    val deviceWallet = when (walletResult) {
+        is WalletCreationResult.Success -> walletResult.wallet
+        else -> throw IllegalStateException("Failed to create wallet: ${walletResult.reason}")
+    }
 
     val firmwareAttestationId = deviceWallet.store(firmwareAttestation)
     val updateAuthorizationId = deviceWallet.store(updateAuthorization)

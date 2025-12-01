@@ -11,6 +11,7 @@ import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.wallet.CredentialOrganization
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 
@@ -70,31 +71,31 @@ fun main() = runBlocking {
     val universityDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
+    }.getOrFail()
     println("University DID: ${universityDid.value}")
 
     val companyDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
+    }.getOrFail()
     println("Company DID: ${companyDid.value}")
 
     val hrDeptDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
+    }.getOrFail()
     println("HR Department DID: ${hrDeptDid.value}")
 
     val studentDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
+    }.getOrFail()
     println("Student DID: ${studentDid.value}")
 
     val verifierDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
+    }.getOrFail()
     println("Verifier DID: ${verifierDid.value}\n")
 
     // Step 3: Set up trust anchors
@@ -161,7 +162,7 @@ fun main() = runBlocking {
             issued(Instant.now())
         }
         signedBy(issuerDid = universityDid.value, keyId = "key-1")
-    }
+    }.getOrFail()
     println("✓ Issued degree credential from university")
 
     // Issue employment credential from HR department (delegated)
@@ -181,7 +182,7 @@ fun main() = runBlocking {
             issued(Instant.now())
         }
         signedBy(issuerDid = hrDeptDid.value, keyId = "key-1")
-    }
+    }.getOrFail()
     println("✓ Issued employment credential from HR department (delegated)\n")
 
     // Step 6: Verify credentials with trust registry

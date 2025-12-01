@@ -27,6 +27,8 @@ Verifiable Credentials enable trust without intermediaries. They're tamper-proof
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.types.ProofType
 import com.trustweave.trust.types.VerificationResult
+import com.trustweave.trust.types.DidCreationResult
+import com.trustweave.trust.types.IssuanceResult
 import com.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
@@ -105,12 +107,22 @@ val trustWeave = TrustWeave.build {
 Create a DID (Decentralized Identifier) for the credential issuer. This identity will sign the credential.
 
 ```kotlin
-val issuerDid = trustWeave.createDid {
+import com.trustweave.trust.types.DidCreationResult
+
+val didResult = trustWeave.createDid {
     method("key")
     algorithm("Ed25519")
 }
 
-println("Issuer DID: ${issuerDid.value}")
+val issuerDid = when (didResult) {
+    is DidCreationResult.Success -> {
+        println("Issuer DID: ${didResult.did.value}")
+        didResult.did
+    }
+    else -> {
+        throw IllegalStateException("Failed to create DID: ${didResult.reason}")
+    }
+}
 ```
 
 **What this does:**
@@ -159,7 +171,9 @@ println("Signing key ID: $keyId")
 Define the credential content using the DSL builder. Specify the subject, types, and metadata.
 
 ```kotlin
-val credential = trustWeave.issue {
+import com.trustweave.trust.types.IssuanceResult
+
+val issuanceResult = trustWeave.issue {
     credential {
         id("https://example.edu/credentials/degree-123")
         type("DegreeCredential", "BachelorDegreeCredential")
@@ -178,6 +192,11 @@ val credential = trustWeave.issue {
         expires(365 * 10, ChronoUnit.DAYS) // Valid for 10 years
     }
     signedBy(issuerDid = issuerDid.value, keyId = keyId)
+}
+
+val credential = when (issuanceResult) {
+    is IssuanceResult.Success -> issuanceResult.credential
+    else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
 }
 ```
 
@@ -202,12 +221,17 @@ val credential = trustWeave.issue {
 The `issue { }` block automatically generates a cryptographic proof and attaches it to the credential.
 
 ```kotlin
-val issuedCredential = trustWeave.issue {
+val issuanceResult = trustWeave.issue {
     credential {
         // ... credential definition from Step 4
     }
     signedBy(issuerDid = issuerDid.value, keyId = keyId)
     withProof(ProofType.Ed25519Signature2020)
+}
+
+val issuedCredential = when (issuanceResult) {
+    is IssuanceResult.Success -> issuanceResult.credential
+    else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
 }
 ```
 
@@ -292,10 +316,19 @@ fun main() = runBlocking {
     }
     
     // Step 2: Create issuer DID
-    val issuerDid = trustWeave.createDid {
+    val didResult = trustWeave.createDid {
         method("key")
     }
-    println("Issuer DID: ${issuerDid.value}")
+    val issuerDid = when (didResult) {
+        is DidCreationResult.Success -> {
+            println("Issuer DID: ${didResult.did.value}")
+            didResult.did
+        }
+        else -> {
+            println("Failed to create DID: ${didResult.reason}")
+            return@runBlocking
+        }
+    }
     
     // Step 3: Get signing key
     val resolutionResult = trustWeave.resolveDid(issuerDid)
@@ -308,7 +341,7 @@ fun main() = runBlocking {
     val keyId = verificationMethod.id.substringAfter("#")
     
     // Step 4 & 5: Issue credential
-    val issuedCredential = trustWeave.issue {
+    val issuanceResult = trustWeave.issue {
         credential {
             id("https://example.edu/credentials/degree-123")
             type("DegreeCredential")
@@ -324,6 +357,14 @@ fun main() = runBlocking {
             expires(365 * 10, ChronoUnit.DAYS)
         }
         signedBy(issuerDid = issuerDid.value, keyId = keyId)
+    }
+    
+    val issuedCredential = when (issuanceResult) {
+        is IssuanceResult.Success -> issuanceResult.credential
+        else -> {
+            println("Failed to issue credential: ${issuanceResult.reason}")
+            return@runBlocking
+        }
     }
     
     println("Credential issued:")

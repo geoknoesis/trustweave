@@ -9,7 +9,10 @@ import com.trustweave.trust.dsl.trustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.trust.dsl.wallet.organize
+import com.trustweave.testkit.getOrFail
+import com.trustweave.trust.types.IssuanceResult
 import kotlinx.coroutines.runBlocking
+import java.time.Instant
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.junit.jupiter.api.BeforeEach
@@ -56,15 +59,28 @@ class TrustLayerExtensionsTest {
                 algorithm("Ed25519")
             }
         ) { did ->
-            VerifiableCredential(
-                type = listOf("VerifiableCredential"),
-                issuer = did,
-                credentialSubject = buildJsonObject {
-                    put("id", "did:key:subject")
-                },
-                issuanceDate = "2024-01-01T00:00:00Z"
-            )
-        }
+            // Extract key ID from DID document
+            val didResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(did)
+                ?: throw IllegalStateException("Failed to resolve DID")
+            val didDoc = when (didResolution) {
+                is com.trustweave.did.resolver.DidResolutionResult.Success -> didResolution.document
+                else -> throw IllegalStateException("Failed to resolve DID")
+            }
+            val keyId = didDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+                ?: throw IllegalStateException("No verification method in DID")
+            
+            trustWeave.issue {
+                credential {
+                    type("VerifiableCredential")
+                    issuer(did)
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Instant.parse("2024-01-01T00:00:00Z"))
+                }
+                signedBy(issuerDid = did, keyId = keyId)
+            }
+        }.getOrFail()
 
         assertNotNull(credential)
         assertTrue(credential.issuer.startsWith("did:key:"))
@@ -78,17 +94,30 @@ class TrustLayerExtensionsTest {
                 algorithm("Ed25519")
             },
             credentialBlock = { did ->
-                VerifiableCredential(
-                    type = listOf("VerifiableCredential"),
-                    issuer = did,
-                    credentialSubject = buildJsonObject {
-                        put("id", "did:key:subject")
-                    },
-                    issuanceDate = "2024-01-01T00:00:00Z"
-                )
+                // Extract key ID from DID document
+                val didResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(did)
+                    ?: throw IllegalStateException("Failed to resolve DID")
+                val didDoc = when (didResolution) {
+                    is com.trustweave.did.resolver.DidResolutionResult.Success -> didResolution.document
+                    else -> throw IllegalStateException("Failed to resolve DID")
+                }
+                val keyId = didDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+                    ?: throw IllegalStateException("No verification method in DID")
+                
+                trustWeave.issue {
+                    credential {
+                        type("VerifiableCredential")
+                        issuer(did)
+                        subject {
+                            id("did:key:subject")
+                        }
+                        issued(Instant.parse("2024-01-01T00:00:00Z"))
+                    }
+                    signedBy(issuerDid = did, keyId = keyId)
+                }
             },
             wallet = wallet
-        )
+        ).getOrThrow()
 
         assertNotNull(stored)
         // StoredCredential is just VerifiableCredential, wallet storage is separate
@@ -106,14 +135,27 @@ class TrustLayerExtensionsTest {
                 algorithm("Ed25519")
             },
             credentialBlock = { did ->
-                VerifiableCredential(
-                    type = listOf("VerifiableCredential"),
-                    issuer = did,
-                    credentialSubject = buildJsonObject {
-                        put("id", "did:key:subject")
-                    },
-                    issuanceDate = "2024-01-01T00:00:00Z"
-                )
+                // Extract key ID from DID document
+                val didResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(did)
+                    ?: throw IllegalStateException("Failed to resolve DID")
+                val didDoc = when (didResolution) {
+                    is com.trustweave.did.resolver.DidResolutionResult.Success -> didResolution.document
+                    else -> throw IllegalStateException("Failed to resolve DID")
+                }
+                val keyId = didDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+                    ?: throw IllegalStateException("No verification method in DID")
+                
+                trustWeave.issue {
+                    credential {
+                        type("VerifiableCredential")
+                        issuer(did)
+                        subject {
+                            id("did:key:subject")
+                        }
+                        issued(Instant.parse("2024-01-01T00:00:00Z"))
+                    }
+                    signedBy(issuerDid = did, keyId = keyId)
+                }
             },
             wallet = wallet,
             organizeBlock = { stored ->
@@ -124,7 +166,7 @@ class TrustLayerExtensionsTest {
                     tag(credentialId, "test")
                 }
             }
-        )
+        ).getOrThrow()
 
         assertNotNull(result)
         assertTrue(result.did.value.startsWith("did:key:"))
@@ -141,17 +183,30 @@ class TrustLayerExtensionsTest {
                 algorithm("Ed25519")
             },
             credentialBlock = { did ->
-                VerifiableCredential(
-                    type = listOf("VerifiableCredential"),
-                    issuer = did,
-                    credentialSubject = buildJsonObject {
-                        put("id", "did:key:subject")
-                    },
-                    issuanceDate = "2024-01-01T00:00:00Z"
-                )
+                // Extract key ID from DID document
+                val didResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(did)
+                    ?: throw IllegalStateException("Failed to resolve DID")
+                val didDoc = when (didResolution) {
+                    is com.trustweave.did.resolver.DidResolutionResult.Success -> didResolution.document
+                    else -> throw IllegalStateException("Failed to resolve DID")
+                }
+                val keyId = didDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+                    ?: throw IllegalStateException("No verification method in DID")
+                
+                trustWeave.issue {
+                    credential {
+                        type("VerifiableCredential")
+                        issuer(did)
+                        subject {
+                            id("did:key:subject")
+                        }
+                        issued(Instant.parse("2024-01-01T00:00:00Z"))
+                    }
+                    signedBy(issuerDid = did, keyId = keyId)
+                }
             },
             wallet = wallet
-        )
+        ).getOrThrow()
 
         assertNotNull(result)
         assertNull(result.organizationResult)
@@ -166,15 +221,28 @@ class TrustLayerExtensionsTest {
                 algorithm("Ed25519")
             }
         ) { did ->
-            VerifiableCredential(
-                type = listOf("VerifiableCredential"),
-                issuer = did,
-                credentialSubject = buildJsonObject {
-                    put("id", "did:key:subject")
-                },
-                issuanceDate = "2024-01-01T00:00:00Z"
-            )
-        }
+            // Extract key ID from DID document
+            val didResolution = context.getConfig().registries.didRegistry.resolve(did)
+                ?: throw IllegalStateException("Failed to resolve DID")
+            val didDoc = when (didResolution) {
+                is com.trustweave.did.resolver.DidResolutionResult.Success -> didResolution.document
+                else -> throw IllegalStateException("Failed to resolve DID")
+            }
+            val keyId = didDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+                ?: throw IllegalStateException("No verification method in DID")
+            
+            context.issue {
+                credential {
+                    type("VerifiableCredential")
+                    issuer(did)
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Instant.parse("2024-01-01T00:00:00Z"))
+                }
+                signedBy(issuerDid = did, keyId = keyId)
+            }
+        }.getOrFail()
 
         assertNotNull(credential)
         assertTrue(credential.issuer.startsWith("did:key:"))
@@ -189,17 +257,30 @@ class TrustLayerExtensionsTest {
                 algorithm("Ed25519")
             },
             credentialBlock = { did ->
-                VerifiableCredential(
-                    type = listOf("VerifiableCredential"),
-                    issuer = did,
-                    credentialSubject = buildJsonObject {
-                        put("id", "did:key:subject")
-                    },
-                    issuanceDate = "2024-01-01T00:00:00Z"
-                )
+                // Extract key ID from DID document
+                val didResolution = context.getConfig().registries.didRegistry.resolve(did)
+                    ?: throw IllegalStateException("Failed to resolve DID")
+                val didDoc = when (didResolution) {
+                    is com.trustweave.did.resolver.DidResolutionResult.Success -> didResolution.document
+                    else -> throw IllegalStateException("Failed to resolve DID")
+                }
+                val keyId = didDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+                    ?: throw IllegalStateException("No verification method in DID")
+                
+                context.issue {
+                    credential {
+                        type("VerifiableCredential")
+                        issuer(did)
+                        subject {
+                            id("did:key:subject")
+                        }
+                        issued(Instant.parse("2024-01-01T00:00:00Z"))
+                    }
+                    signedBy(issuerDid = did, keyId = keyId)
+                }
             },
             wallet = wallet
-        )
+        ).getOrThrow()
 
         assertNotNull(stored)
         // StoredCredential is just VerifiableCredential, wallet storage is separate

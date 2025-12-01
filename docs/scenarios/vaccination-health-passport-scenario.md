@@ -180,7 +180,16 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for healthcare provider and individual
-    val healthcareProviderDid = trustWeave.createDid { method("key") }
+    import com.trustweave.trust.types.DidCreationResult
+    import com.trustweave.trust.types.WalletCreationResult
+    import com.trustweave.trust.types.DidResolutionResult
+    
+    val healthcareProviderDidResult = trustWeave.createDid { method("key") }
+    val healthcareProviderDid = when (healthcareProviderDidResult) {
+        is DidCreationResult.Success -> healthcareProviderDidResult.did
+        else -> throw IllegalStateException("Failed to create healthcare provider DID: ${healthcareProviderDidResult.reason}")
+    }
+    
     val healthcareProviderResolution = trustWeave.resolveDid(healthcareProviderDid)
     val healthcareProviderDoc = when (healthcareProviderResolution) {
         is DidResolutionResult.Success -> healthcareProviderResolution.document
@@ -189,99 +198,137 @@ fun main() = runBlocking {
     val healthcareProviderKeyId = healthcareProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val individualDid = trustWeave.createDid { method("key") }
-    val airlineDid = trustWeave.createDid { method("key") }
+    val individualDidResult = trustWeave.createDid { method("key") }
+    val individualDid = when (individualDidResult) {
+        is DidCreationResult.Success -> individualDidResult.did
+        else -> throw IllegalStateException("Failed to create individual DID: ${individualDidResult.reason}")
+    }
+    
+    val airlineDidResult = trustWeave.createDid { method("key") }
+    val airlineDid = when (airlineDidResult) {
+        is DidCreationResult.Success -> airlineDidResult.did
+        else -> throw IllegalStateException("Failed to create airline DID: ${airlineDidResult.reason}")
+    }
 
-    println("✅ Healthcare Provider DID: $healthcareProviderDid")
-    println("✅ Individual DID: $individualDid")
-    println("✅ Airline Verifier DID: $airlineDid")
+    println("✅ Healthcare Provider DID: ${healthcareProviderDid.value}")
+    println("✅ Individual DID: ${individualDid.value}")
+    println("✅ Airline Verifier DID: ${airlineDid.value}")
 
     // Step 3: Issue first vaccination credential (COVID-19, Dose 1)
-    val vaccination1Credential = TrustWeave.issueCredential(
-        issuerDid = healthcareProviderDid,
-        issuerKeyId = healthcareProviderKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", individualDid)
-            put("vaccination", buildJsonObject {
-                put("vaccineType", "COVID-19")
-                put("vaccineName", "Pfizer-BioNTech")
-                put("manufacturer", "Pfizer Inc")
-                put("lotNumber", "EW0167")
-                put("doseNumber", 1)
-                put("totalDoses", 2)
-                put("vaccinationDate", "2021-03-15")
-                put("vaccinationSite", "City Health Clinic")
-                put("healthcareProvider", "City Health Services")
-                put("batchNumber", "BATCH-2021-001")
-            })
-        },
-        types = listOf("VerifiableCredential", "VaccinationCredential", "HealthCredential"),
-        expirationDate = Instant.now().plus(2, ChronoUnit.YEARS).toString()
-    ).getOrThrow()
+    import com.trustweave.trust.types.IssuanceResult
+    
+    val vaccination1IssuanceResult = trustWeave.issue {
+        credential {
+            id("vaccination-covid19-dose1-${Instant.now().toEpochMilli()}")
+            type("VerifiableCredential", "VaccinationCredential", "HealthCredential")
+            issuer(healthcareProviderDid.value)
+            subject {
+                id(individualDid.value)
+                "vaccination" {
+                    "vaccineType" to "COVID-19"
+                    "vaccineName" to "Pfizer-BioNTech"
+                    "manufacturer" to "Pfizer Inc"
+                    "lotNumber" to "EW0167"
+                    "doseNumber" to 1
+                    "totalDoses" to 2
+                    "vaccinationDate" to "2021-03-15"
+                    "vaccinationSite" to "City Health Clinic"
+                    "healthcareProvider" to "City Health Services"
+                    "batchNumber" to "BATCH-2021-001"
+                }
+            }
+            expirationDate(Instant.now().plus(2, ChronoUnit.YEARS).toString())
+        }
+        by(issuerDid = healthcareProviderDid.value, keyId = healthcareProviderKeyId)
+    }
+    
+    val vaccination1Credential = when (vaccination1IssuanceResult) {
+        is IssuanceResult.Success -> vaccination1IssuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue first vaccination credential")
+    }
 
     println("\n✅ First vaccination credential issued: ${vaccination1Credential.id}")
 
     // Step 4: Issue second vaccination credential (COVID-19, Dose 2)
-    val vaccination2Credential = TrustWeave.issueCredential(
-        issuerDid = healthcareProviderDid,
-        issuerKeyId = healthcareProviderKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", individualDid)
-            put("vaccination", buildJsonObject {
-                put("vaccineType", "COVID-19")
-                put("vaccineName", "Pfizer-BioNTech")
-                put("manufacturer", "Pfizer Inc")
-                put("lotNumber", "EW0189")
-                put("doseNumber", 2)
-                put("totalDoses", 2)
-                put("vaccinationDate", "2021-04-05")
-                put("vaccinationSite", "City Health Clinic")
-                put("healthcareProvider", "City Health Services")
-                put("batchNumber", "BATCH-2021-002")
-                put("fullyVaccinated", true)
-            })
-        },
-        types = listOf("VerifiableCredential", "VaccinationCredential", "HealthCredential"),
-        expirationDate = Instant.now().plus(2, ChronoUnit.YEARS).toString()
-    ).getOrThrow()
+    val vaccination2IssuanceResult = trustWeave.issue {
+        credential {
+            id("vaccination-covid19-dose2-${Instant.now().toEpochMilli()}")
+            type("VerifiableCredential", "VaccinationCredential", "HealthCredential")
+            issuer(healthcareProviderDid.value)
+            subject {
+                id(individualDid.value)
+                "vaccination" {
+                    "vaccineType" to "COVID-19"
+                    "vaccineName" to "Pfizer-BioNTech"
+                    "manufacturer" to "Pfizer Inc"
+                    "lotNumber" to "EW0189"
+                    "doseNumber" to 2
+                    "totalDoses" to 2
+                    "vaccinationDate" to "2021-04-05"
+                    "vaccinationSite" to "City Health Clinic"
+                    "healthcareProvider" to "City Health Services"
+                    "batchNumber" to "BATCH-2021-002"
+                    "fullyVaccinated" to true
+                }
+            }
+            expirationDate(Instant.now().plus(2, ChronoUnit.YEARS).toString())
+        }
+        by(issuerDid = healthcareProviderDid.value, keyId = healthcareProviderKeyId)
+    }
+    
+    val vaccination2Credential = when (vaccination2IssuanceResult) {
+        is IssuanceResult.Success -> vaccination2IssuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue second vaccination credential")
+    }
 
     println("✅ Second vaccination credential issued: ${vaccination2Credential.id}")
 
     // Step 5: Issue booster vaccination credential
-    val boosterCredential = TrustWeave.issueCredential(
-        issuerDid = healthcareProviderDid,
-        issuerKeyId = healthcareProviderKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", individualDid)
-            put("vaccination", buildJsonObject {
-                put("vaccineType", "COVID-19")
-                put("vaccineName", "Pfizer-BioNTech Booster")
-                put("manufacturer", "Pfizer Inc")
-                put("lotNumber", "EW0256")
-                put("doseNumber", 3)
-                put("totalDoses", 3)
-                put("vaccinationDate", "2022-11-20")
-                put("vaccinationSite", "City Health Clinic")
-                put("healthcareProvider", "City Health Services")
-                put("batchNumber", "BATCH-2022-045")
-                put("fullyVaccinated", true)
-                put("booster", true)
-            })
-        },
-        types = listOf("VerifiableCredential", "VaccinationCredential", "HealthCredential", "BoosterCredential"),
-        expirationDate = Instant.now().plus(1, ChronoUnit.YEARS).toString()
-    ).getOrThrow()
+    val boosterIssuanceResult = trustWeave.issue {
+        credential {
+            id("vaccination-covid19-booster-${Instant.now().toEpochMilli()}")
+            type("VerifiableCredential", "VaccinationCredential", "HealthCredential", "BoosterCredential")
+            issuer(healthcareProviderDid.value)
+            subject {
+                id(individualDid.value)
+                "vaccination" {
+                    "vaccineType" to "COVID-19"
+                    "vaccineName" to "Pfizer-BioNTech Booster"
+                    "manufacturer" to "Pfizer Inc"
+                    "lotNumber" to "EW0256"
+                    "doseNumber" to 3
+                    "totalDoses" to 3
+                    "vaccinationDate" to "2022-11-20"
+                    "vaccinationSite" to "City Health Clinic"
+                    "healthcareProvider" to "City Health Services"
+                    "batchNumber" to "BATCH-2022-045"
+                    "fullyVaccinated" to true
+                    "booster" to true
+                }
+            }
+            expirationDate(Instant.now().plus(1, ChronoUnit.YEARS).toString())
+        }
+        by(issuerDid = healthcareProviderDid.value, keyId = healthcareProviderKeyId)
+    }
+    
+    val boosterCredential = when (boosterIssuanceResult) {
+        is IssuanceResult.Success -> boosterIssuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue booster vaccination credential")
+    }
 
     println("✅ Booster vaccination credential issued: ${boosterCredential.id}")
 
     // Step 6: Create health wallet and store all vaccination credentials
-    val healthWallet = TrustWeave.createWallet(
-        holderDid = individualDid,
-        options = WalletCreationOptionsBuilder().apply {
-            enableOrganization = true
-            enablePresentation = true
-        }.build()
-    ).getOrThrow()
+    val walletCreationResult = trustWeave.wallet {
+        holder(individualDid.value)
+        organization { enabled = true }
+        presentation { enabled = true }
+    }
+    
+    val healthWallet = when (walletCreationResult) {
+        is WalletCreationResult.Success -> walletCreationResult.wallet
+        else -> throw IllegalStateException("Failed to create health wallet")
+    }
 
     val vaccination1Id = healthWallet.store(vaccination1Credential)
     val vaccination2Id = healthWallet.store(vaccination2Credential)
@@ -324,7 +371,16 @@ fun main() = runBlocking {
     // Step 9: Airline verifies vaccination status
     println("\n✈️ Airline Verification Process:")
 
-    val boosterVerification = TrustWeave.verifyCredential(boosterCredential).getOrThrow()
+    import com.trustweave.trust.types.VerificationResult
+    
+    val boosterVerificationResult = trustWeave.verify {
+        credential(boosterCredential)
+    }
+    
+    val boosterVerification = when (boosterVerificationResult) {
+        is VerificationResult.Valid -> boosterVerificationResult
+        is VerificationResult.Invalid -> boosterVerificationResult
+    }
 
     if (boosterVerification.valid) {
         println("✅ Vaccination Credential: VALID")

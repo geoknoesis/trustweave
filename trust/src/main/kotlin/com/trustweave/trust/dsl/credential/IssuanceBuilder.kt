@@ -11,6 +11,7 @@ import com.trustweave.trust.types.IssuerIdentity
 import com.trustweave.trust.types.ProofType
 import com.trustweave.trust.types.Did
 import com.trustweave.trust.types.KeyId
+import com.trustweave.trust.types.IssuanceResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -138,13 +139,15 @@ class IssuanceBuilder(
      * 
      * This operation performs I/O-bound work (credential issuance, status list operations)
      * and uses the configured dispatcher. It is non-blocking and can be cancelled.
+     *
+     * @return Sealed result type with success or detailed failure information
      */
-    suspend fun build(): VerifiableCredential = withContext(ioDispatcher) {
-        val cred = credential ?: throw IllegalStateException(
-            "Credential is required. Use credential { ... } to build the credential."
+    suspend fun build(): IssuanceResult = withContext(ioDispatcher) {
+        val cred = credential ?: return@withContext IssuanceResult.Failure.InvalidCredential(
+            reason = "Credential is required. Use credential { ... } to build the credential."
         )
-        val resolvedIssuerIdentity = issuerIdentity ?: throw IllegalStateException(
-            "Issuer identity is required. Use signedBy(IssuerIdentity.from(issuerDid, keyId)) to specify the issuer."
+        val resolvedIssuerIdentity = issuerIdentity ?: return@withContext IssuanceResult.Failure.InvalidCredential(
+            reason = "Issuer identity is required. Use signedBy(IssuerIdentity.from(issuerDid, keyId)) to specify the issuer."
         )
 
         // Handle auto-revocation if enabled
@@ -158,11 +161,11 @@ class IssuanceBuilder(
                         purpose = StatusPurpose.REVOCATION
                     )
                 } catch (e: Exception) {
-                    throw IllegalStateException(
-                        "Failed to create status list for revocation. " +
-                        "This is required when withRevocation() is enabled. " +
-                        "Error: ${e.message}",
-                        e
+                    return@withContext IssuanceResult.Failure.Other(
+                        reason = "Failed to create status list for revocation. " +
+                                "This is required when withRevocation() is enabled. " +
+                                "Error: ${e.message}",
+                        cause = e
                     )
                 }
 
@@ -177,9 +180,9 @@ class IssuanceBuilder(
 
                 credentialToIssue = cred.copy(credentialStatus = credentialStatus)
             } else {
-                throw IllegalStateException(
-                    "Revocation requested but status list manager is not configured. " +
-                    "Configure it in TrustWeave.build { revocation { provider(\"inMemory\") } }"
+                return@withContext IssuanceResult.Failure.Other(
+                    reason = "Revocation requested but status list manager is not configured. " +
+                            "Configure it in TrustWeave.build { revocation { provider(\"inMemory\") } }"
                 )
             }
         }
@@ -198,13 +201,49 @@ class IssuanceBuilder(
         )
 
         // Issue credential - use the class property issuer (CredentialIssuer instance)
-        val issuedCredential = issuer.issue(
-            credential = credentialToIssue,
-            issuerDid = resolvedIssuerIdentity.did.value,
-            keyId = resolvedIssuerIdentity.keyId.value,
-            options = options
-        )
-        issuedCredential
+        try {
+            val issuedCredential = issuer.issue(
+                credential = credentialToIssue,
+                issuerDid = resolvedIssuerIdentity.did.value,
+                keyId = resolvedIssuerIdentity.keyId.value,
+                options = options
+            )
+            IssuanceResult.Success(issuedCredential)
+        } catch (e: com.trustweave.did.exception.DidException.DidResolutionFailed) {
+            IssuanceResult.Failure.IssuerResolutionFailed(
+                issuerDid = resolvedIssuerIdentity.did.value,
+                reason = e.message ?: "Failed to resolve issuer DID"
+            )
+        } catch (e: com.trustweave.kms.exception.KmsException.KeyNotFound) {
+            IssuanceResult.Failure.KeyNotFound(
+                keyId = resolvedIssuerIdentity.keyId.value,
+                reason = e.message ?: "Key not found"
+            )
+        } catch (e: com.trustweave.credential.exception.CredentialException) {
+            when (e) {
+                is com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed -> {
+                    IssuanceResult.Failure.Other(
+                        reason = e.reason ?: "Credential issuance failed",
+                        cause = e
+                    )
+                }
+                else -> {
+                    IssuanceResult.Failure.Other(
+                        reason = e.message ?: "Credential error",
+                        cause = e
+                    )
+                }
+            }
+        } catch (e: IllegalArgumentException) {
+            IssuanceResult.Failure.InvalidCredential(
+                reason = e.message ?: "Invalid credential parameters"
+            )
+        } catch (e: Exception) {
+            IssuanceResult.Failure.Other(
+                reason = e.message ?: "Unknown error during credential issuance",
+                cause = e
+            )
+        }
     }
 }
 
@@ -213,8 +252,10 @@ class IssuanceBuilder(
  * 
  * Uses the configured dispatcher if the provider is a TrustWeaveContext,
  * otherwise defaults to Dispatchers.IO.
+ *
+ * @return Sealed result type with success or detailed failure information
  */
-suspend fun CredentialDslProvider.issue(block: IssuanceBuilder.() -> Unit): VerifiableCredential {
+suspend fun CredentialDslProvider.issue(block: IssuanceBuilder.() -> Unit): IssuanceResult {
     val dispatcher = (this as? com.trustweave.trust.dsl.TrustWeaveContext)?.getConfig()?.ioDispatcher
         ?: Dispatchers.IO
     val builder = IssuanceBuilder(

@@ -213,12 +213,32 @@ fun main() = runBlocking {
     }
 
     // Create issuer DID (the organization issuing credentials)
-    val issuerDid = trustWeave.createDid { method(DidMethods.KEY) }
-    println("Issuer DID: ${issuerDid.value}")
+    import com.trustweave.trust.types.DidCreationResult
+    
+    val issuerDidResult = trustWeave.createDid { method(DidMethods.KEY) }
+    val issuerDid = when (issuerDidResult) {
+        is DidCreationResult.Success -> {
+            println("Issuer DID: ${issuerDidResult.did.value}")
+            issuerDidResult.did
+        }
+        else -> {
+            println("Failed to create issuer DID: ${issuerDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
     // Create holder DID (the person receiving the credential)
-    val holderDid = trustWeave.createDid { method(DidMethods.KEY) }
-    println("Holder DID: ${holderDid.value}")
+    val holderDidResult = trustWeave.createDid { method(DidMethods.KEY) }
+    val holderDid = when (holderDidResult) {
+        is DidCreationResult.Success -> {
+            println("Holder DID: ${holderDidResult.did.value}")
+            holderDidResult.did
+        }
+        else -> {
+            println("Failed to create holder DID: ${holderDidResult.reason}")
+            return@runBlocking
+        }
+    }
 }
 ```
 
@@ -249,8 +269,23 @@ fun main() = runBlocking {
     }
 
     // Create DIDs
-    val issuerDid = trustWeave.createDid { method(DidMethods.KEY) }
-    val holderDid = trustWeave.createDid { method(DidMethods.KEY) }
+    val issuerDidResult = trustWeave.createDid { method(DidMethods.KEY) }
+    val issuerDid = when (issuerDidResult) {
+        is DidCreationResult.Success -> issuerDidResult.did
+        else -> {
+            println("Failed to create issuer DID: ${issuerDidResult.reason}")
+            return@runBlocking
+        }
+    }
+    
+    val holderDidResult = trustWeave.createDid { method(DidMethods.KEY) }
+    val holderDid = when (holderDidResult) {
+        is DidCreationResult.Success -> holderDidResult.did
+        else -> {
+            println("Failed to create holder DID: ${holderDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
     // Get the first verification method from issuer's DID document
     val issuerResolution = trustWeave.resolveDid(issuerDid)
@@ -261,31 +296,37 @@ fun main() = runBlocking {
     val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    // Issue a credential
-    val credentialResult = TrustWeave.issueCredential(
-        issuerDid = issuerDid.value,
-        issuerKeyId = issuerKeyId,
-        credentialSubject = mapOf(
-            "id" to holderDid.value,
-            "name" to "Alice",
-            "degree" to "Bachelor of Science",
-            "university" to "Example University"
-        ),
-        types = listOf("VerifiableCredential", "EducationalCredential")
-    )
-
-    credentialResult.fold(
-        onSuccess = { credential ->
-            println("✅ Credential issued")
-            println("   ID: ${credential.id}")
-            println("   Issuer: ${credential.issuer}")
-            println("   Subject: ${credential.credentialSubject}")
-            println("   Types: ${credential.type}")
-        },
-        onFailure = { error ->
-            println("❌ Failed to issue credential: ${error.message}")
+    // Issue a credential using DSL
+    import com.trustweave.trust.types.IssuanceResult
+    import java.time.Instant
+    
+    val issuanceResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "EducationalCredential")
+            issuer(issuerDid.value)
+            subject {
+                id(holderDid.value)
+                "name" to "Alice"
+                "degree" to "Bachelor of Science"
+                "university" to "Example University"
+            }
+            issued(Instant.now())
         }
-    )
+        signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+    }
+
+    when (issuanceResult) {
+        is IssuanceResult.Success -> {
+            println("✅ Credential issued")
+            println("   ID: ${issuanceResult.credential.id}")
+            println("   Issuer: ${issuanceResult.credential.issuer}")
+            println("   Subject: ${issuanceResult.credential.credentialSubject}")
+            println("   Types: ${issuanceResult.credential.type}")
+        }
+        else -> {
+            println("❌ Failed to issue credential: ${issuanceResult.reason}")
+        }
+    }
 }
 ```
 
@@ -432,23 +473,34 @@ fun main() = runBlocking {
     }
 
     // Create holder DID
-    val holderDid = trustWeave.createDid { method(DidMethods.KEY) }
+    val holderDidResult = trustWeave.createDid { method(DidMethods.KEY) }
+    val holderDid = when (holderDidResult) {
+        is DidCreationResult.Success -> holderDidResult.did
+        else -> {
+            println("Failed to create holder DID: ${holderDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
     // Create wallet for the holder
-    val wallet = trustWeave.wallet {
+    import com.trustweave.trust.types.WalletCreationResult
+    
+    val walletResult = trustWeave.wallet {
         holder(holderDid.value)
         type("inMemory")
     }
 
-    walletResult.fold(
-        onSuccess = { wallet ->
-            println("✅ Wallet created: ${wallet.walletId}")
-            println("   Holder: ${wallet.holderDid}")
-        },
-        onFailure = { error ->
-            println("❌ Failed to create wallet: ${error.message}")
+    val wallet = when (walletResult) {
+        is WalletCreationResult.Success -> {
+            println("✅ Wallet created: ${walletResult.wallet.walletId}")
+            println("   Holder: ${holderDid.value}")
+            walletResult.wallet
         }
-    )
+        else -> {
+            println("❌ Failed to create wallet: ${walletResult.reason}")
+            return@runBlocking
+        }
+    }
 }
 ```
 
@@ -469,27 +521,44 @@ fun main() = runBlocking {
     }
 
     // Create DIDs and issue credential (from Tutorial 2)
-    val issuerDid = trustWeave.createDid { method(DidMethods.KEY) }
-    val holderDid = trustWeave.createDid { method(DidMethods.KEY) }
+    val issuerDidResult = trustWeave.createDid { method(DidMethods.KEY) }
+    val issuerDid = when (issuerDidResult) {
+        is DidCreationResult.Success -> issuerDidResult.did
+        else -> {
+            println("Failed to create issuer DID: ${issuerDidResult.reason}")
+            return@runBlocking
+        }
+    }
+    
+    val holderDidResult = trustWeave.createDid { method(DidMethods.KEY) }
+    val holderDid = when (holderDidResult) {
+        is DidCreationResult.Success -> holderDidResult.did
+        else -> {
+            println("Failed to create holder DID: ${holderDidResult.reason}")
+            return@runBlocking
+        }
+    }
+    
+    // Issue credential (simplified - see Tutorial 2 for full example)
     val credential = /* ... issue credential ... */
 
     // Create wallet
-    val wallet = trustWeave.wallet {
+    val walletResult = trustWeave.wallet {
         holder(holderDid.value)
         type("inMemory")
     }
-
-    // Store credential in wallet
-    val storeResult = wallet.storeCredential(credential)
-
-    storeResult.fold(
-        onSuccess = { storedId ->
-            println("✅ Credential stored: $storedId")
-        },
-        onFailure = { error ->
-            println("❌ Failed to store credential: ${error.message}")
+    
+    val wallet = when (walletResult) {
+        is WalletCreationResult.Success -> walletResult.wallet
+        else -> {
+            println("Failed to create wallet: ${walletResult.reason}")
+            return@runBlocking
         }
-    )
+    }
+
+    // Store credential in wallet (store returns String, not Result)
+    val storedId = wallet.store(credential)
+    println("✅ Credential stored: $storedId")
 }
 ```
 
@@ -631,7 +700,15 @@ fun main() = runBlocking {
     }
 
     // Issuer: University issuing degrees
-    val issuerDid = trustWeave.createDid { method(DidMethods.KEY) }
+    val issuerDidResult = trustWeave.createDid { method(DidMethods.KEY) }
+    val issuerDid = when (issuerDidResult) {
+        is DidCreationResult.Success -> issuerDidResult.did
+        else -> {
+            println("Failed to create issuer DID: ${issuerDidResult.reason}")
+            return@runBlocking
+        }
+    }
+    
     val issuerResolution = trustWeave.resolveDid(issuerDid)
     val issuerDoc = when (issuerResolution) {
         is DidResolutionResult.Success -> issuerResolution.document
@@ -641,14 +718,37 @@ fun main() = runBlocking {
         ?: throw IllegalStateException("No verification method found")
 
     // Holder: Student receiving degree
-    val holderDid = trustWeave.createDid { method(DidMethods.KEY) }
-    val holderWallet = trustWeave.wallet {
+    val holderDidResult = trustWeave.createDid { method(DidMethods.KEY) }
+    val holderDid = when (holderDidResult) {
+        is DidCreationResult.Success -> holderDidResult.did
+        else -> {
+            println("Failed to create holder DID: ${holderDidResult.reason}")
+            return@runBlocking
+        }
+    }
+    
+    val holderWalletResult = trustWeave.wallet {
         holder(holderDid.value)
         type("inMemory")
     }
+    
+    val holderWallet = when (holderWalletResult) {
+        is WalletCreationResult.Success -> holderWalletResult.wallet
+        else -> {
+            println("Failed to create wallet: ${holderWalletResult.reason}")
+            return@runBlocking
+        }
+    }
 
     // Verifier: Employer verifying degree
-    val verifierDid = trustWeave.createDid { method(DidMethods.KEY) }
+    val verifierDidResult = trustWeave.createDid { method(DidMethods.KEY) }
+    val verifierDid = when (verifierDidResult) {
+        is DidCreationResult.Success -> verifierDidResult.did
+        else -> {
+            println("Failed to create verifier DID: ${verifierDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
     println("✅ All parties set up")
     println("   Issuer: ${issuerDid.value}")

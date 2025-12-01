@@ -33,24 +33,42 @@ core/TrustWeave-trust/src/test/kotlin/com/geoknoesis/TrustWeave/integration/InMe
 This ensures proof verification succeeds because the DID document contains the correct verification method.
 
 ```kotlin
+import com.trustweave.trust.types.DidCreationResult
+import com.trustweave.trust.types.IssuanceResult
+import com.trustweave.testkit.getOrFail
+
 // Step 1: Create DID (generates key and stores in DID document)
-val issuerDid = trustLayer.createDid {
+val didResult = trustLayer.createDid {
     method(DidMethods.KEY)
     algorithm(KeyAlgorithms.ED25519)
 }
 
+val issuerDid = when (didResult) {
+    is DidCreationResult.Success -> didResult.did
+    else -> throw IllegalStateException("Failed to create DID: ${didResult.reason}")
+}
+
 // Step 2: Extract key ID from DID document
-val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid)?.document
+val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid.value)?.document
     ?: throw IllegalStateException("Failed to resolve issuer DID")
 
 val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
     ?: throw IllegalStateException("No verification method in issuer DID")
 
 // Step 3: Use extracted key ID for signing
-val credential = trustLayer.issue {
+val issuanceResult = trustLayer.issue {
     credential { /* ... */ }
-    signedBy(issuerDid = issuerDid, keyId = keyId) // MUST match key in DID document
+    signedBy(issuerDid = issuerDid.value, keyId = keyId) // MUST match key in DID document
 }
+
+val credential = when (issuanceResult) {
+    is IssuanceResult.Success -> issuanceResult.credential
+    else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
+}
+
+// For tests, you can use getOrFail() helper:
+// val issuerDid = trustLayer.createDid { ... }.getOrFail()
+// val credential = trustLayer.issue { ... }.getOrFail()
 ```
 
 ## Available Templates
@@ -105,11 +123,19 @@ fun `test credential revocation workflow template`() = runBlocking {
     }
 
     // Issue credential with revocation
-    val credential = trustLayer.issue {
+    val issuanceResult = trustLayer.issue {
         credential { /* ... */ }
-        signedBy(issuerDid = issuerDid, keyId = keyId)
+        signedBy(issuerDid = issuerDid.value, keyId = keyId)
         withRevocation() // Enable revocation status list
     }
+    
+    val credential = when (issuanceResult) {
+        is IssuanceResult.Success -> issuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
+    }
+    
+    // Or use getOrFail() in tests:
+    // val credential = trustLayer.issue { ... }.getOrFail()
 
     // Revoke credential
     trustLayer.revoke {
@@ -142,13 +168,24 @@ fun `test credential revocation workflow template`() = runBlocking {
 @Test
 fun `test wallet storage workflow template`() = runBlocking {
     // Create wallet
-    val wallet = trustLayer.wallet {
+    import com.trustweave.trust.types.WalletCreationResult
+    import com.trustweave.testkit.getOrFail
+    
+    val walletResult = trustLayer.wallet {
         id("holder-wallet-1")
-        holder(holderDid)
+        holder(holderDid.value)
         inMemory()
         enableOrganization()
         enablePresentation()
     }
+    
+    val wallet = when (walletResult) {
+        is WalletCreationResult.Success -> walletResult.wallet
+        else -> throw IllegalStateException("Failed to create wallet: ${walletResult.reason}")
+    }
+    
+    // Or use getOrFail() in tests:
+    // val wallet = trustLayer.wallet { ... }.getOrFail()
 
     // Store credential
     credential.storeIn(wallet)
@@ -216,20 +253,31 @@ fun `test verifiable presentation workflow template`() = runBlocking {
 @Test
 fun `test DID update workflow template`() = runBlocking {
     // Create DID
-    val issuerDid = trustLayer.createDid { /* ... */ }
+    val didResult = trustLayer.createDid { /* ... */ }
+    val issuerDid = when (didResult) {
+        is DidCreationResult.Success -> didResult.did
+        else -> throw IllegalStateException("Failed to create DID: ${didResult.reason}")
+    }
 
     // Generate new key
     val newKey = kms.generateKey("Ed25519")
 
     // Update DID
-    trustLayer.updateDid {
-        did(issuerDid)
+    import com.trustweave.trust.types.DidUpdateResult
+    
+    val updateResult = trustLayer.updateDid {
+        did(issuerDid.value)
         method(DidMethods.KEY)
         addKey {
-            id("$issuerDid#key-2")
+            id("${issuerDid.value}#key-2")
             type("Ed25519VerificationKey2020")
             publicKeyJwk(newKey.publicKeyJwk ?: emptyMap())
         }
+    }
+    
+    when (updateResult) {
+        is DidUpdateResult.Success -> { /* Success */ }
+        else -> throw IllegalStateException("Failed to update DID: ${updateResult.reason}")
     }
 
     // Issue credential with updated DID
@@ -264,10 +312,15 @@ fun `test blockchain anchoring workflow template`() = runBlocking {
     }
 
     // Issue credential with anchoring
-    val credential = trustLayer.issue {
+    val issuanceResult = trustLayer.issue {
         credential { /* ... */ }
-        signedBy(issuerDid = issuerDid, keyId = keyId)
+        signedBy(issuerDid = issuerDid.value, keyId = keyId)
         anchor("testnet:inMemory")
+    }
+    
+    val credential = when (issuanceResult) {
+        is IssuanceResult.Success -> issuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
     }
 
     // Verify anchor
@@ -293,13 +346,18 @@ fun `test blockchain anchoring workflow template`() = runBlocking {
 @Test
 fun `test smart contract workflow template`() = runBlocking {
     // Issue contract as credential
-    val contractCredential = trustLayer.issue {
+    val issuanceResult = trustLayer.issue {
         credential {
             type(CredentialType.Custom("SmartContractCredential"), CredentialType.VerifiableCredential)
             // ... contract details
         }
-        signedBy(issuerDid = issuerDid, keyId = keyId)
+        signedBy(issuerDid = issuerDid.value, keyId = keyId)
         anchor("testnet:inMemory")
+    }
+    
+    val contractCredential = when (issuanceResult) {
+        is IssuanceResult.Success -> issuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
     }
 
     // Verify contract
@@ -361,22 +419,32 @@ fun `test workflow with AWS KMS and Ethereum DID`() = runBlocking {
     }
 
     // Same pattern: create DID, extract key ID, issue credential
-    val issuerDid = trustLayer.createDid {
+    val didResult = trustLayer.createDid {
         method("ethr")
         algorithm(KeyAlgorithms.ED25519)
     }
+    
+    val issuerDid = when (didResult) {
+        is DidCreationResult.Success -> didResult.did
+        else -> throw IllegalStateException("Failed to create DID: ${didResult.reason}")
+    }
 
     // Extract key ID (same pattern)
-    val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid)?.document
+    val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid.value)?.document
         ?: throw IllegalStateException("Failed to resolve issuer DID")
 
     val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method in issuer DID")
 
     // Issue credential (same pattern)
-    val credential = trustLayer.issue {
+    val issuanceResult = trustLayer.issue {
         credential { /* ... */ }
-        signedBy(issuerDid = issuerDid, keyId = keyId) // Same pattern!
+        signedBy(issuerDid = issuerDid.value, keyId = keyId) // Same pattern!
+    }
+    
+    val credential = when (issuanceResult) {
+        is IssuanceResult.Success -> issuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
     }
 
     // Verify (same pattern)
@@ -404,19 +472,27 @@ val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#
 ### Pattern 2: Issue Credential with Extracted Key
 
 ```kotlin
-val credential = trustLayer.issue {
+val issuanceResult = trustLayer.issue {
     credential {
         id("https://example.com/credential-1")
         type("TestCredential")
-        issuer(issuerDid)
+        issuer(issuerDid.value)
         subject {
-            id(holderDid)
+            id(holderDid.value)
             "test" to "value"
         }
         issued(Instant.now())
     }
-    signedBy(issuerDid = issuerDid, keyId = keyId) // Use extracted key ID
+    signedBy(issuerDid = issuerDid.value, keyId = keyId) // Use extracted key ID
 }
+
+val credential = when (issuanceResult) {
+    is IssuanceResult.Success -> issuanceResult.credential
+    else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
+}
+
+// In tests, use getOrFail():
+// val credential = trustLayer.issue { ... }.getOrFail()
 ```
 
 ### Pattern 3: Verify Credential with All Checks
@@ -455,15 +531,24 @@ assertTrue(result.valid, "Credential should be valid")
 ```kotlin
 // ❌ WRONG: Generating new key
 val newKey = kms.generateKey("Ed25519")
-val credential = trustLayer.issue {
-    signedBy(issuerDid = issuerDid, keyId = newKey.id) // Key not in DID document!
+val issuanceResult1 = trustLayer.issue {
+    signedBy(issuerDid = issuerDid.value, keyId = newKey.id) // Key not in DID document!
 }
+// This will fail with IssuanceResult.Failure.KeyNotFound
 
 // ✅ CORRECT: Extract key from DID document
-val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid)?.document
+val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid.value)?.document
+    ?: throw IllegalStateException("Failed to resolve issuer DID")
 val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
-val credential = trustLayer.issue {
-    signedBy(issuerDid = issuerDid, keyId = keyId) // Key matches DID document!
+    ?: throw IllegalStateException("No verification method in issuer DID")
+
+val issuanceResult2 = trustLayer.issue {
+    signedBy(issuerDid = issuerDid.value, keyId = keyId) // Key matches DID document!
+}
+
+val credential = when (issuanceResult2) {
+    is IssuanceResult.Success -> issuanceResult2.credential
+    else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult2.reason}")
 }
 ```
 

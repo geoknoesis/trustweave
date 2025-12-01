@@ -6,6 +6,7 @@ import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.trust.types.ProofType
 import com.trustweave.trust.types.*
 import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 
@@ -51,25 +52,25 @@ fun main() = runBlocking {
     val ceoDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
+    }.getOrFail()
     println("CEO DID: $ceoDid")
 
     val hrDirectorDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
+    }.getOrFail()
     println("HR Director DID: $hrDirectorDid")
 
     val hrManagerDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
+    }.getOrFail()
     println("HR Manager DID: $hrManagerDid")
 
     val employeeDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
+    }.getOrFail()
     println("Employee DID: $employeeDid\n")
 
     // Step 3: Set up delegation chain
@@ -145,7 +146,7 @@ fun main() = runBlocking {
             issued(Instant.now())
         }
         signedBy(issuerDid = hrManagerDid.value, keyId = "key-1")
-    }
+    }.getOrFail()
     println("✓ Credential issued by HR Manager (delegated authority)\n")
 
     // Step 7: Verify credential with delegation check

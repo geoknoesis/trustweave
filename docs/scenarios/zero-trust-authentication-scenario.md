@@ -183,7 +183,15 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for authentication authority, users, and systems
-    val authAuthorityDid = trustWeave.createDid { method("key") }
+    import com.trustweave.trust.types.DidCreationResult
+    import com.trustweave.trust.types.WalletCreationResult
+    
+    val authAuthorityDidResult = trustWeave.createDid { method("key") }
+    val authAuthorityDid = when (authAuthorityDidResult) {
+        is DidCreationResult.Success -> authAuthorityDidResult.did
+        else -> throw IllegalStateException("Failed to create auth authority DID: ${authAuthorityDidResult.reason}")
+    }
+    
     val authAuthorityResolution = trustWeave.resolveDid(authAuthorityDid)
     val authAuthorityDoc = when (authAuthorityResolution) {
         is DidResolutionResult.Success -> authAuthorityResolution.document
@@ -192,34 +200,48 @@ fun main() = runBlocking {
     val authAuthorityKeyId = authAuthorityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val userDid = trustWeave.createDid { method("key") }
-    val deviceDid = trustWeave.createDid { method("key") }
-    val systemDid = trustWeave.createDid { method("key") }
+    val userDidResult = trustWeave.createDid { method("key") }
+    val userDid = when (userDidResult) {
+        is DidCreationResult.Success -> userDidResult.did
+        else -> throw IllegalStateException("Failed to create user DID: ${userDidResult.reason}")
+    }
+    
+    val deviceDidResult = trustWeave.createDid { method("key") }
+    val deviceDid = when (deviceDidResult) {
+        is DidCreationResult.Success -> deviceDidResult.did
+        else -> throw IllegalStateException("Failed to create device DID: ${deviceDidResult.reason}")
+    }
+    
+    val systemDidResult = trustWeave.createDid { method("key") }
+    val systemDid = when (systemDidResult) {
+        is DidCreationResult.Success -> systemDidResult.did
+        else -> throw IllegalStateException("Failed to create system DID: ${systemDidResult.reason}")
+    }
 
-    println("✅ Authentication Authority DID: $authAuthorityDid")
-    println("✅ User DID: $userDid")
-    println("✅ Device DID: $deviceDid")
-    println("✅ System DID: $systemDid")
+    println("✅ Authentication Authority DID: ${authAuthorityDid.value}")
+    println("✅ User DID: ${userDid.value}")
+    println("✅ Device DID: ${deviceDid.value}")
+    println("✅ System DID: ${systemDid.value}")
 
     // Step 3: Issue short-lived authentication credential (15 minutes)
     val authCredential = TrustWeave.issueCredential(
-        issuerDid = authAuthorityDid,
+        issuerDid = authAuthorityDid.value,
         issuerKeyId = authAuthorityKeyId,
         credentialSubject = buildJsonObject {
-            put("id", userDid)
-            put("authentication", buildJsonObject {
-                put("authenticated", true)
-                put("authenticationMethod", "Multi-Factor")
-                put("authenticationDate", Instant.now().toString())
-                put("deviceId", deviceDid)
-                put("deviceAttested", true)
-                put("deviceTrustLevel", "High")
-                put("context", buildJsonObject {
-                    put("location", "Office Building A")
-                    put("ipAddress", "10.0.1.100")
-                    put("network", "Corporate LAN")
-                    put("timeOfDay", Instant.now().toString())
-                })
+            "id" to userDid.value
+            "authentication" {
+                "authenticated" to true
+                "authenticationMethod" to "Multi-Factor"
+                "authenticationDate" to Instant.now().toString()
+                "deviceId" to deviceDid.value
+                "deviceAttested" to true
+                "deviceTrustLevel" to "High"
+                "context" {
+                    "location" to "Office Building A"
+                    "ipAddress" to "10.0.1.100"
+                    "network" to "Corporate LAN"
+                    "timeOfDay" to Instant.now().toString()
+                }
                 put("riskScore", 0.1) // Low risk
                 put("behavioralAnalysis", "Normal")
                 put("sessionId", null) // No traditional session
@@ -231,17 +253,20 @@ fun main() = runBlocking {
 
     println("\n✅ Short-lived authentication credential issued: ${authCredential.id}")
     println("   Validity: 15 minutes")
-    println("   Device: $deviceDid")
+    println("   Device: ${deviceDid.value}")
     println("   Note: No traditional session created")
 
     // Step 4: Create user wallet and store authentication credential
-    val userWallet = TrustWeave.createWallet(
-        holderDid = userDid,
-        options = WalletCreationOptionsBuilder().apply {
-            enableOrganization = true
-            enablePresentation = true
-        }.build()
-    ).getOrThrow()
+    val walletResult = trustWeave.wallet {
+        holder(userDid.value)
+        enableOrganization()
+        enablePresentation()
+    }
+    
+    val userWallet = when (walletResult) {
+        is WalletCreationResult.Success -> walletResult.wallet
+        else -> throw IllegalStateException("Failed to create wallet: ${walletResult.reason}")
+    }
 
     val authCredentialId = userWallet.store(authCredential)
     println("✅ Authentication credential stored in wallet: $authCredentialId")
@@ -290,15 +315,15 @@ fun main() = runBlocking {
 
     // Simulate time passing - in production, this would be a real-time check
     val reAuthCredential = TrustWeave.issueCredential(
-        issuerDid = authAuthorityDid,
+        issuerDid = authAuthorityDid.value,
         issuerKeyId = authAuthorityKeyId,
         credentialSubject = buildJsonObject {
-            put("id", userDid)
+            put("id", userDid.value)
             put("authentication", buildJsonObject {
                 put("authenticated", true)
                 put("authenticationMethod", "Continuous")
                 put("authenticationDate", Instant.now().toString())
-                put("deviceId", deviceDid)
+                put("deviceId", deviceDid.value)
                 put("deviceAttested", true)
                 put("deviceTrustLevel", "High")
                 put("context", buildJsonObject {
@@ -334,10 +359,10 @@ fun main() = runBlocking {
 
     // Create an expired credential
     val expiredCredential = TrustWeave.issueCredential(
-        issuerDid = authAuthorityDid,
+        issuerDid = authAuthorityDid.value,
         issuerKeyId = authAuthorityKeyId,
         credentialSubject = buildJsonObject {
-            put("id", userDid)
+            put("id", userDid.value)
             put("authentication", buildJsonObject {
                 put("authenticated", true)
                 put("authenticationDate", Instant.now().minus(20, ChronoUnit.MINUTES).toString())
@@ -363,14 +388,14 @@ fun main() = runBlocking {
     println("\n🔐 High-Risk Scenario Verification:")
 
     val highRiskCredential = TrustWeave.issueCredential(
-        issuerDid = authAuthorityDid,
+        issuerDid = authAuthorityDid.value,
         issuerKeyId = authAuthorityKeyId,
         credentialSubject = buildJsonObject {
-            put("id", userDid)
+            put("id", userDid.value)
             put("authentication", buildJsonObject {
                 put("authenticated", true)
                 put("authenticationDate", Instant.now().toString())
-                put("deviceId", deviceDid)
+                put("deviceId", deviceDid.value)
                 put("deviceAttested", false) // Device not attested
                 put("context", buildJsonObject {
                     put("location", "Unknown")
@@ -408,9 +433,9 @@ fun main() = runBlocking {
     val authPresentation = userWallet.withPresentation { pres ->
         pres.createPresentation(
             credentialIds = listOf(authCredentialId),
-            holderDid = userDid,
+            holderDid = userDid.value,
             options = PresentationOptions(
-                holderDid = userDid,
+                holderDid = userDid.value,
                 challenge = "zero-trust-auth-${System.currentTimeMillis()}"
             )
         )

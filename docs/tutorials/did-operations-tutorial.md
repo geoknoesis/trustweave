@@ -89,15 +89,21 @@ fun main() = runBlocking {
         }
     }
 
-    // Create DID using did:key method (returns type-safe Did)
-    try {
-        val did = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
+    // Create DID using did:key method (returns sealed result)
+    import com.trustweave.trust.types.DidCreationResult
+    
+    val didResult = trustWeave.createDid {
+        method(DidMethods.KEY)
+        algorithm(KeyAlgorithms.ED25519)
+    }
+    
+    when (didResult) {
+        is DidCreationResult.Success -> {
+            println("Created DID: ${didResult.did.value}")
         }
-        println("Created DID: ${did.value}")
-    } catch (error: Exception) {
-        println("DID creation failed: ${error.message}")
+        else -> {
+            println("DID creation failed: ${didResult.reason}")
+        }
     }
 }
 ```
@@ -130,15 +136,31 @@ fun main() = runBlocking {
     }
 
     // Create DID with did:key method
-    val keyDid = trustWeave.createDid {
+    val keyDidResult = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
     }
+    
+    val keyDid = when (keyDidResult) {
+        is DidCreationResult.Success -> keyDidResult.did
+        else -> {
+            println("Failed to create key DID: ${keyDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
     // Create DID with did:web method
-    val webDid = trustWeave.createDid {
+    val webDidResult = trustWeave.createDid {
         method(DidMethods.WEB)
         domain("example.com")
+    }
+    
+    val webDid = when (webDidResult) {
+        is DidCreationResult.Success -> webDidResult.did
+        else -> {
+            println("Failed to create web DID: ${webDidResult.reason}")
+            return@runBlocking
+        }
     }
 
     println("Key DID: ${keyDid.value}")

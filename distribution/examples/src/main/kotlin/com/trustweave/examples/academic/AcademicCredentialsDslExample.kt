@@ -11,6 +11,8 @@ import com.trustweave.trust.dsl.wallet.organize
 import com.trustweave.trust.dsl.wallet.presentation
 import com.trustweave.trust.types.*
 import com.trustweave.wallet.CredentialOrganization
+import com.trustweave.wallet.Wallet
+import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -74,23 +76,23 @@ fun main() = runBlocking {
     val universityDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
+    }.getOrFail()
     println("University DID: $universityDid")
 
     val studentDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
+    }.getOrFail()
     println("Student DID: $studentDid")
 
     // Step 3: Create student wallet using DSL
     println("\nStep 3: Creating student wallet...")
-    val studentWallet = trustWeave.wallet {
+    val studentWallet: Wallet = trustWeave.wallet {
         id("student-wallet-${studentDid.value.substringAfterLast(":")}")
         holder(studentDid.value)
         enableOrganization()
         enablePresentation()
-    }
+    }.getOrFail()
     println("Wallet created with ID: ${studentWallet.walletId}")
 
     // Step 4: University issues degree credential using DSL
@@ -119,7 +121,7 @@ fun main() = runBlocking {
         }
         signedBy(issuerDid = universityDid.value, keyId = issuerKey.id.value)
         withRevocation() // Auto-create status list
-    }
+    }.getOrFail()
 
     println("Credential issued:")
     println("  - Type: ${issuedCredential.type}")

@@ -155,18 +155,39 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for insurance company and EO data provider
-    val insuranceDid = trustWeave.createDid {
+    import com.trustweave.trust.types.DidCreationResult
+    import com.trustweave.trust.types.IssuanceResult
+    
+    val insuranceDidResult = trustWeave.createDid {
         method("key")
         algorithm("Ed25519")
     }
-    println("✅ Created insurance DID: ${insuranceDid.value}")
+    val insuranceDid = when (insuranceDidResult) {
+        is DidCreationResult.Success -> {
+            println("✅ Created insurance DID: ${insuranceDidResult.did.value}")
+            insuranceDidResult.did
+        }
+        else -> {
+            println("Failed to create insurance DID: ${insuranceDidResult.reason}")
+            return@runBlocking
+        }
+    }
     
     // Continue with EO provider DID creation
-    val eoProviderDid = trustWeave.createDid {
+    val eoProviderDidResult = trustWeave.createDid {
         method("key")
         algorithm("Ed25519")
     }
-    println("✅ Created EO provider DID: ${eoProviderDid.value}")
+    val eoProviderDid = when (eoProviderDidResult) {
+        is DidCreationResult.Success -> {
+            println("✅ Created EO provider DID: ${eoProviderDidResult.did.value}")
+            eoProviderDidResult.did
+        }
+        else -> {
+            println("Failed to create EO provider DID: ${eoProviderDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
     println("✅ Insurance Company DID: ${insuranceDid.value}")
     println("✅ EO Data Provider DID: ${eoProviderDid.value}")
@@ -206,24 +227,33 @@ fun main() = runBlocking {
     val dataDigest = DigestUtils.sha256DigestMultibase(rainfallData)
 
     // Issue verifiable credential for EO data
-    val eoDataCredential = trustWeave.issue {
+    val eoDataIssuanceResult = trustWeave.issue {
         credential {
             type("EarthObservationCredential", "InsuranceOracleCredential")
             issuer(eoProviderDid.value)
             subject {
                 id("rainfall-measurement-2024-06-15")
-                claim("dataType", "RainfallMeasurement")
-                claim("data", rainfallData)
-                claim("dataDigest", dataDigest)
-                claim("provider", eoProviderDid.value)
-                claim("timestamp", Instant.now().toString())
+                "dataType" to "RainfallMeasurement"
+                "data" to rainfallData
+                "dataDigest" to dataDigest
+                "provider" to eoProviderDid.value
+                "timestamp" to Instant.now().toString()
             }
             issued(Instant.now())
         }
         signedBy(issuerDid = eoProviderDid.value, keyId = eoProviderKeyId)
     }
-
-    println("✅ EO Data Credential issued: ${eoDataCredential.id}")
+    
+    val eoDataCredential = when (eoDataIssuanceResult) {
+        is IssuanceResult.Success -> {
+            println("✅ EO Data Credential issued: ${eoDataIssuanceResult.credential.id}")
+            eoDataIssuanceResult.credential
+        }
+        else -> {
+            println("Failed to issue EO data credential: ${eoDataIssuanceResult.reason}")
+            return@runBlocking
+        }
+    }
     println("   Data digest: $dataDigest")
 
     // Step 4: Verify EO data credential (insurance company verifies before using)
@@ -277,28 +307,37 @@ fun main() = runBlocking {
         val insuranceKeyId = insuranceDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
             ?: throw IllegalStateException("No verification method found")
 
-        val payoutCredential = trustWeave.issue {
+        val payoutIssuanceResult = trustWeave.issue {
             credential {
                 type("InsurancePayoutCredential")
                 issuer(insuranceDid.value)
                 subject {
                     id("payout-2024-06-15")
-                    claim("policyId", "POL-12345")
-                    claim("triggerType", "RainfallBelowThreshold")
-                    claim("triggerValue", rainfallValue)
-                    claim("threshold", triggerThreshold)
-                    claim("dataCredentialId", eoDataCredential.id)
-                    claim("dataDigest", dataDigest)
-                    claim("payoutAmount", 50000.0)
-                    claim("currency", "USD")
-                    claim("timestamp", Instant.now().toString())
+                    "policyId" to "POL-12345"
+                    "triggerType" to "RainfallBelowThreshold"
+                    "triggerValue" to rainfallValue
+                    "threshold" to triggerThreshold
+                    "dataCredentialId" to eoDataCredential.id
+                    "dataDigest" to dataDigest
+                    "payoutAmount" to 50000.0
+                    "currency" to "USD"
+                    "timestamp" to Instant.now().toString()
                 }
                 issued(Instant.now())
             }
             signedBy(issuerDid = insuranceDid.value, keyId = insuranceKeyId)
         }
-
-        println("✅ Payout Credential issued: ${payoutCredential.id}")
+        
+        val payoutCredential = when (payoutIssuanceResult) {
+            is IssuanceResult.Success -> {
+                println("✅ Payout Credential issued: ${payoutIssuanceResult.credential.id}")
+                payoutIssuanceResult.credential
+            }
+            else -> {
+                println("Failed to issue payout credential: ${payoutIssuanceResult.reason}")
+                return@runBlocking
+            }
+        }
         println("   Payout amount: $50,000 USD")
         println("   Data credential: ${eoDataCredential.id}")
     } else {
@@ -423,16 +462,16 @@ val spectralData = buildJsonObject {
 
 val spectralDigest = DigestUtils.sha256DigestMultibase(spectralData)
 
-val spectralCredential = trustWeave.issue {
+val spectralIssuanceResult = trustWeave.issue {
     credential {
         type("SpectralAnalysisCredential", "InsuranceOracleCredential")
         issuer(eoProviderDid.value)
         subject {
             id("spectral-fingerprint-wildfire-2024")
-            claim("dataType", "SpectralFingerprint")
-            claim("data", spectralData)
-            claim("dataDigest", spectralDigest)
-            claim("provider", eoProviderDid.value)
+            "dataType" to "SpectralFingerprint"
+            "data" to spectralData
+            "dataDigest" to spectralDigest
+            "provider" to eoProviderDid.value
         }
         issued(Instant.now())
     }

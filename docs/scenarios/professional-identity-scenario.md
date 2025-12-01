@@ -200,21 +200,44 @@ fun main() = runBlocking {
     }
 
     // Create professional DID using DSL
-    val professionalDid = trustWeave.createDid {
+    import com.trustweave.trust.types.DidCreationResult
+    import com.trustweave.trust.types.WalletCreationResult
+    
+    val professionalDidResult = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
     }
-    println("Professional DID: ${professionalDid.value}")
+    
+    val professionalDid = when (professionalDidResult) {
+        is DidCreationResult.Success -> {
+            println("Professional DID: ${professionalDidResult.did.value}")
+            professionalDidResult.did
+        }
+        else -> {
+            println("Failed to create professional DID: ${professionalDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
     // Step 2: Create professional wallet
     println("\nStep 2: Creating professional wallet...")
-    val wallet = trustWeave.wallet {
+    val walletResult = trustWeave.wallet {
         id("professional-wallet-${professionalDid.value.substringAfterLast(":")}")
         holder(professionalDid.value)
         enableOrganization()
         enablePresentation()
     }
-    println("Wallet created: ${wallet.walletId}")
+    
+    val wallet = when (walletResult) {
+        is WalletCreationResult.Success -> {
+            println("Wallet created: ${walletResult.wallet.walletId}")
+            walletResult.wallet
+        }
+        else -> {
+            println("Failed to create wallet: ${walletResult.reason}")
+            return@runBlocking
+        }
+    }
 
     // Step 3: Store education credentials
     println("\nStep 3: Storing education credentials...")

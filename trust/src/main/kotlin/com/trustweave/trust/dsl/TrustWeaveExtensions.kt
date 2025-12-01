@@ -6,6 +6,8 @@ import com.trustweave.trust.dsl.wallet.OrganizationResult
 import com.trustweave.trust.dsl.did.DidBuilder
 import com.trustweave.trust.types.Did
 import com.trustweave.trust.types.VerificationResult
+import com.trustweave.trust.types.DidCreationResult
+import com.trustweave.trust.types.IssuanceResult
 import com.trustweave.did.DidDocument
 
 /**
@@ -52,13 +54,29 @@ suspend fun VerifiableCredential.storeIn(wallet: Wallet): StoredCredential {
  *
  * @param didBlock DID creation block
  * @param credentialBlock Credential issuance block that receives the created DID
- * @return Issued credential
+ * @return Issued credential result
  */
 suspend fun TrustWeaveContext.createDidAndIssue(
     didBlock: DidBuilder.() -> Unit,
-    credentialBlock: suspend (String) -> VerifiableCredential
-): VerifiableCredential {
-    val did = createDid(didBlock)
+    credentialBlock: suspend (String) -> IssuanceResult
+): IssuanceResult {
+    val didResult = createDid(didBlock)
+    val did = when (didResult) {
+        is DidCreationResult.Success -> didResult.did
+        is DidCreationResult.Failure -> {
+            val reason = when (didResult) {
+                is DidCreationResult.Failure.MethodNotRegistered -> 
+                    "DID method '${didResult.method}' not registered. Available: ${didResult.availableMethods.joinToString()}"
+                is DidCreationResult.Failure.KeyGenerationFailed -> didResult.reason
+                is DidCreationResult.Failure.DocumentCreationFailed -> didResult.reason
+                is DidCreationResult.Failure.InvalidConfiguration -> didResult.reason
+                is DidCreationResult.Failure.Other -> didResult.reason
+            }
+            return IssuanceResult.Failure.Other(
+                reason = "DID creation failed: $reason"
+            )
+        }
+    }
     return credentialBlock(did.value)
 }
 
@@ -69,16 +87,47 @@ suspend fun TrustWeaveContext.createDidAndIssue(
  * @param didBlock DID creation block
  * @param credentialBlock Credential issuance block
  * @param wallet Wallet to store credential in
- * @return Stored credential result
+ * @return Result containing stored credential or failure
  */
 suspend fun TrustWeaveContext.createDidIssueAndStore(
     didBlock: DidBuilder.() -> Unit,
-    credentialBlock: suspend (String) -> VerifiableCredential,
+    credentialBlock: suspend (String) -> IssuanceResult,
     wallet: Wallet
-): StoredCredential {
-    val did = createDid(didBlock)
-    val credential = credentialBlock(did.value)
-    return credential.storeIn(wallet)
+): Result<StoredCredential> {
+    val didResult = createDid(didBlock)
+    val did = when (didResult) {
+        is DidCreationResult.Success -> didResult.did
+        is DidCreationResult.Failure -> {
+            val reason = when (didResult) {
+                is DidCreationResult.Failure.MethodNotRegistered -> 
+                    "DID method '${didResult.method}' not registered. Available: ${didResult.availableMethods.joinToString()}"
+                is DidCreationResult.Failure.KeyGenerationFailed -> didResult.reason
+                is DidCreationResult.Failure.DocumentCreationFailed -> didResult.reason
+                is DidCreationResult.Failure.InvalidConfiguration -> didResult.reason
+                is DidCreationResult.Failure.Other -> didResult.reason
+            }
+            return Result.failure(IllegalStateException("DID creation failed: $reason"))
+        }
+    }
+    val issuanceResult = credentialBlock(did.value)
+    val credential = when (issuanceResult) {
+        is IssuanceResult.Success -> issuanceResult.credential
+        is IssuanceResult.Failure -> {
+            val reason = when (issuanceResult) {
+                is IssuanceResult.Failure.IssuerResolutionFailed -> 
+                    "Issuer DID '${issuanceResult.issuerDid}' resolution failed: ${issuanceResult.reason}"
+                is IssuanceResult.Failure.KeyNotFound -> 
+                    "Key '${issuanceResult.keyId}' not found: ${issuanceResult.reason}"
+                is IssuanceResult.Failure.SigningFailed -> issuanceResult.reason
+                is IssuanceResult.Failure.ProofGenerationFailed -> issuanceResult.reason
+                is IssuanceResult.Failure.InvalidCredential -> issuanceResult.reason
+                is IssuanceResult.Failure.SchemaValidationFailed -> issuanceResult.reason
+                is IssuanceResult.Failure.Other -> issuanceResult.reason
+            }
+            return Result.failure(IllegalStateException("Credential issuance failed: $reason"))
+        }
+    }
+    return Result.success(credential.storeIn(wallet))
 }
 
 
@@ -89,16 +138,49 @@ suspend fun TrustWeaveContext.createDidIssueAndStore(
  * @param credentialBlock Credential issuance block
  * @param wallet Wallet to store credential in
  * @param organizeBlock Optional organization block
- * @return Complete workflow result
+ * @return Result containing complete workflow result or failure
  */
 suspend fun TrustWeaveContext.completeWorkflow(
     didBlock: DidBuilder.() -> Unit,
-    credentialBlock: suspend (String) -> VerifiableCredential,
+    credentialBlock: suspend (String) -> IssuanceResult,
     wallet: Wallet,
     organizeBlock: (suspend (StoredCredential) -> OrganizationResult)? = null
-): WorkflowResult {
-    val did = createDid(didBlock)
-    val credential = credentialBlock(did.value)
+): Result<WorkflowResult> {
+    val didResult = createDid(didBlock)
+    val did = when (didResult) {
+        is DidCreationResult.Success -> didResult.did
+        is DidCreationResult.Failure -> {
+            val reason = when (didResult) {
+                is DidCreationResult.Failure.MethodNotRegistered -> 
+                    "DID method '${didResult.method}' not registered. Available: ${didResult.availableMethods.joinToString()}"
+                is DidCreationResult.Failure.KeyGenerationFailed -> didResult.reason
+                is DidCreationResult.Failure.DocumentCreationFailed -> didResult.reason
+                is DidCreationResult.Failure.InvalidConfiguration -> didResult.reason
+                is DidCreationResult.Failure.Other -> didResult.reason
+            }
+            return Result.failure(IllegalStateException("DID creation failed: $reason"))
+        }
+    }
+    
+    val issuanceResult = credentialBlock(did.value)
+    val credential = when (issuanceResult) {
+        is IssuanceResult.Success -> issuanceResult.credential
+        is IssuanceResult.Failure -> {
+            val reason = when (issuanceResult) {
+                is IssuanceResult.Failure.IssuerResolutionFailed -> 
+                    "Issuer DID '${issuanceResult.issuerDid}' resolution failed: ${issuanceResult.reason}"
+                is IssuanceResult.Failure.KeyNotFound -> 
+                    "Key '${issuanceResult.keyId}' not found: ${issuanceResult.reason}"
+                is IssuanceResult.Failure.SigningFailed -> issuanceResult.reason
+                is IssuanceResult.Failure.ProofGenerationFailed -> issuanceResult.reason
+                is IssuanceResult.Failure.InvalidCredential -> issuanceResult.reason
+                is IssuanceResult.Failure.SchemaValidationFailed -> issuanceResult.reason
+                is IssuanceResult.Failure.Other -> issuanceResult.reason
+            }
+            return Result.failure(IllegalStateException("Credential issuance failed: $reason"))
+        }
+    }
+    
     val stored = credential.storeIn(wallet)
 
     val organizationResult = organizeBlock?.invoke(stored)
@@ -107,13 +189,13 @@ suspend fun TrustWeaveContext.completeWorkflow(
         credential(credential)
     }
 
-    return WorkflowResult(
+    return Result.success(WorkflowResult(
         did = did,
         credential = credential,
         storedCredential = stored,
         organizationResult = organizationResult,
         verificationResult = verificationResult
-    )
+    ))
 }
 
 /**
@@ -131,7 +213,7 @@ data class WorkflowResult(
  * Extension functions for TrustWeaveConfig to delegate to TrustWeaveContext.
  * These allow calling createDid, updateDid, and rotateKey directly on TrustWeaveConfig.
  */
-suspend fun TrustWeaveConfig.createDid(block: DidBuilder.() -> Unit): Did {
+suspend fun TrustWeaveConfig.createDid(block: DidBuilder.() -> Unit): DidCreationResult {
     return getDslContext().createDid(block)
 }
 
@@ -147,7 +229,7 @@ suspend fun TrustWeaveConfig.verify(block: com.trustweave.trust.dsl.credential.V
     return getDslContext().verify(block)
 }
 
-suspend fun TrustWeaveConfig.issue(block: com.trustweave.trust.dsl.credential.IssuanceBuilder.() -> Unit): com.trustweave.credential.models.VerifiableCredential {
+suspend fun TrustWeaveConfig.issue(block: com.trustweave.trust.dsl.credential.IssuanceBuilder.() -> Unit): IssuanceResult {
     return getDslContext().issue(block)
 }
 
@@ -182,25 +264,25 @@ suspend fun TrustWeaveConfig.revoke(block: com.trustweave.trust.dsl.credential.R
  */
 suspend fun TrustWeaveConfig.createDidAndIssue(
     didBlock: DidBuilder.() -> Unit,
-    credentialBlock: suspend (String) -> VerifiableCredential
-): VerifiableCredential {
+    credentialBlock: suspend (String) -> IssuanceResult
+): IssuanceResult {
     return getDslContext().createDidAndIssue(didBlock, credentialBlock)
 }
 
 suspend fun TrustWeaveConfig.createDidIssueAndStore(
     didBlock: DidBuilder.() -> Unit,
-    credentialBlock: suspend (String) -> VerifiableCredential,
+    credentialBlock: suspend (String) -> IssuanceResult,
     wallet: Wallet
-): StoredCredential {
+): Result<StoredCredential> {
     return getDslContext().createDidIssueAndStore(didBlock, credentialBlock, wallet)
 }
 
 suspend fun TrustWeaveConfig.completeWorkflow(
     didBlock: DidBuilder.() -> Unit,
-    credentialBlock: suspend (String) -> VerifiableCredential,
+    credentialBlock: suspend (String) -> IssuanceResult,
     wallet: Wallet,
     organizeBlock: (suspend (StoredCredential) -> OrganizationResult)? = null
-): WorkflowResult {
+): Result<WorkflowResult> {
     return getDslContext().completeWorkflow(didBlock, credentialBlock, wallet, organizeBlock)
 }
 

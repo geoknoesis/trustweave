@@ -14,6 +14,7 @@ import com.trustweave.trust.dsl.TrustWeaveConfig
 import com.trustweave.trust.dsl.trustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -54,7 +55,7 @@ class DidDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         assertTrue(did.value.startsWith("did:key:"), "DID should start with did:key:")
         assertNotNull(did)
@@ -85,7 +86,7 @@ class DidDslTest {
             method("key")
             algorithm("Ed25519")
             option("custom", "value")
-        }
+        }.getOrFail()
 
         assertNotNull(did)
         assertTrue(did.value.startsWith("did:key:"))
@@ -97,7 +98,7 @@ class DidDslTest {
         val did = context.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         assertNotNull(did)
         assertTrue(did.value.startsWith("did:key:"))
@@ -108,14 +109,14 @@ class DidDslTest {
         val did1 = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         // Create second DID - even with same algorithm, should produce different DID
         // since it generates a new key
         val did2 = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         assertNotNull(did1)
         assertNotNull(did2)
@@ -127,7 +128,7 @@ class DidDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         // Verify DID format
         assertTrue(did.value.startsWith("did:key:"))

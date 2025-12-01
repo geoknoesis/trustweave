@@ -180,7 +180,15 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for sensor manufacturer, sensors, and data consumer
-    val manufacturerDid = trustWeave.createDid { method("key") }
+    import com.trustweave.trust.types.DidCreationResult
+    import com.trustweave.trust.types.WalletCreationResult
+    
+    val manufacturerDidResult = trustWeave.createDid { method("key") }
+    val manufacturerDid = when (manufacturerDidResult) {
+        is DidCreationResult.Success -> manufacturerDidResult.did
+        else -> throw IllegalStateException("Failed to create manufacturer DID: ${manufacturerDidResult.reason}")
+    }
+    
     val manufacturerResolution = trustWeave.resolveDid(manufacturerDid)
     val manufacturerDoc = when (manufacturerResolution) {
         is DidResolutionResult.Success -> manufacturerResolution.document
@@ -189,7 +197,12 @@ fun main() = runBlocking {
     val manufacturerKeyId = manufacturerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val temperatureSensorDid = trustWeave.createDid { method("key") }
+    val temperatureSensorDidResult = trustWeave.createDid { method("key") }
+    val temperatureSensorDid = when (temperatureSensorDidResult) {
+        is DidCreationResult.Success -> temperatureSensorDidResult.did
+        else -> throw IllegalStateException("Failed to create temperature sensor DID: ${temperatureSensorDidResult.reason}")
+    }
+    
     val temperatureSensorResolution = trustWeave.resolveDid(temperatureSensorDid)
     val temperatureSensorDoc = when (temperatureSensorResolution) {
         is DidResolutionResult.Success -> temperatureSensorResolution.document
@@ -198,7 +211,12 @@ fun main() = runBlocking {
     val temperatureSensorKeyId = temperatureSensorDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val humiditySensorDid = trustWeave.createDid { method("key") }
+    val humiditySensorDidResult = trustWeave.createDid { method("key") }
+    val humiditySensorDid = when (humiditySensorDidResult) {
+        is DidCreationResult.Success -> humiditySensorDidResult.did
+        else -> throw IllegalStateException("Failed to create humidity sensor DID: ${humiditySensorDidResult.reason}")
+    }
+    
     val humiditySensorResolution = trustWeave.resolveDid(humiditySensorDid)
     val humiditySensorDoc = when (humiditySensorResolution) {
         is DidResolutionResult.Success -> humiditySensorResolution.document
@@ -207,24 +225,28 @@ fun main() = runBlocking {
     val humiditySensorKeyId = humiditySensorDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val dataConsumerDid = trustWeave.createDid { method("key") }
+    val dataConsumerDidResult = trustWeave.createDid { method("key") }
+    val dataConsumerDid = when (dataConsumerDidResult) {
+        is DidCreationResult.Success -> dataConsumerDidResult.did
+        else -> throw IllegalStateException("Failed to create data consumer DID: ${dataConsumerDidResult.reason}")
+    }
 
-    println("✅ Sensor Manufacturer DID: $manufacturerDid")
-    println("✅ Temperature Sensor DID: $temperatureSensorDid")
-    println("✅ Humidity Sensor DID: $humiditySensorDid")
-    println("✅ Data Consumer DID: $dataConsumerDid")
+    println("✅ Sensor Manufacturer DID: ${manufacturerDid.value}")
+    println("✅ Temperature Sensor DID: ${temperatureSensorDid.value}")
+    println("✅ Humidity Sensor DID: ${humiditySensorDid.value}")
+    println("✅ Data Consumer DID: ${dataConsumerDid.value}")
 
     // Step 3: Issue sensor attestation credential for temperature sensor
     val temperatureSensorAttestation = TrustWeave.issueCredential(
-        issuerDid = manufacturerDid,
+        issuerDid = manufacturerDid.value,
         issuerKeyId = manufacturerKeyId,
         credentialSubject = buildJsonObject {
-            put("id", temperatureSensorDid)
+            put("id", temperatureSensorDid.value)
             put("sensor", buildJsonObject {
                 put("sensorType", "Temperature")
                 put("model", "TempSense-Pro-2024")
                 put("serialNumber", "TS-2024-001234")
-                put("manufacturer", manufacturerDid)
+                put("manufacturer", manufacturerDid.value)
                 put("calibration", buildJsonObject {
                     put("calibrated", true)
                     put("calibrationDate", Instant.now().minus(30, ChronoUnit.DAYS).toString())
@@ -248,15 +270,15 @@ fun main() = runBlocking {
 
     // Step 4: Issue sensor attestation credential for humidity sensor
     val humiditySensorAttestation = TrustWeave.issueCredential(
-        issuerDid = manufacturerDid,
+        issuerDid = manufacturerDid.value,
         issuerKeyId = manufacturerKeyId,
         credentialSubject = buildJsonObject {
-            put("id", humiditySensorDid)
+            put("id", humiditySensorDid.value)
             put("sensor", buildJsonObject {
                 put("sensorType", "Humidity")
                 put("model", "HumidSense-Pro-2024")
                 put("serialNumber", "HS-2024-005678")
-                put("manufacturer", manufacturerDid)
+                put("manufacturer", manufacturerDid.value)
                 put("calibration", buildJsonObject {
                     put("calibrated", true)
                     put("calibrationDate", Instant.now().minus(60, ChronoUnit.DAYS).toString())
@@ -284,7 +306,7 @@ fun main() = runBlocking {
     // Temperature reading
     val temperatureReading = 23.5
     val temperatureData = buildJsonObject {
-        put("sensorId", temperatureSensorDid)
+        put("sensorId", temperatureSensorDid.value)
         put("sensorType", "Temperature")
         put("value", temperatureReading)
         put("unit", "Celsius")
@@ -305,7 +327,7 @@ fun main() = runBlocking {
     // Humidity reading
     val humidityReading = 65.3
     val humidityData = buildJsonObject {
-        put("sensorId", humiditySensorDid)
+        put("sensorId", humiditySensorDid.value)
         put("sensorType", "Humidity")
         put("value", humidityReading)
         put("unit", "% RH")
@@ -328,12 +350,12 @@ fun main() = runBlocking {
     // For this example, we'll use the manufacturer's key to simulate sensor signing
 
     val temperatureDataAttestation = TrustWeave.issueCredential(
-        issuerDid = temperatureSensorDid,
+        issuerDid = temperatureSensorDid.value,
         issuerKeyId = temperatureSensorKeyId,
         credentialSubject = buildJsonObject {
             put("id", "data:temperature:${Instant.now().toEpochMilli()}")
             put("sensorData", buildJsonObject {
-                put("sensorId", temperatureSensorDid)
+                put("sensorId", temperatureSensorDid.value)
                 put("dataDigest", temperatureDataDigest)
                 put("dataType", "Temperature")
                 put("timestamp", Instant.now().toString())
@@ -353,12 +375,12 @@ fun main() = runBlocking {
     println("\n✅ Temperature data attestation credential issued: ${temperatureDataAttestation.id}")
 
     val humidityDataAttestation = TrustWeave.issueCredential(
-        issuerDid = humiditySensorDid,
+        issuerDid = humiditySensorDid.value,
         issuerKeyId = humiditySensorKeyId,
         credentialSubject = buildJsonObject {
             put("id", "data:humidity:${Instant.now().toEpochMilli()}")
             put("sensorData", buildJsonObject {
-                put("sensorId", humiditySensorDid)
+                put("sensorId", humiditySensorDid.value)
                 put("dataDigest", humidityDataDigest)
                 put("dataType", "Humidity")
                 put("timestamp", Instant.now().toString())
@@ -378,13 +400,16 @@ fun main() = runBlocking {
     println("✅ Humidity data attestation credential issued: ${humidityDataAttestation.id}")
 
     // Step 7: Create consumer wallet and store credentials
-    val consumerWallet = TrustWeave.createWallet(
-        holderDid = dataConsumerDid,
-        options = WalletCreationOptionsBuilder().apply {
-            enableOrganization = true
-            enablePresentation = true
-        }.build()
-    ).getOrThrow()
+    val walletResult = trustWeave.wallet {
+        holder(dataConsumerDid.value)
+        enableOrganization()
+        enablePresentation()
+    }
+    
+    val consumerWallet = when (walletResult) {
+        is WalletCreationResult.Success -> walletResult.wallet
+        else -> throw IllegalStateException("Failed to create wallet: ${walletResult.reason}")
+    }
 
     val tempSensorAttestationId = consumerWallet.store(temperatureSensorAttestation)
     val humiditySensorAttestationId = consumerWallet.store(humiditySensorAttestation)

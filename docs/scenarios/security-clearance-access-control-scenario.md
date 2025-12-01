@@ -176,7 +176,15 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for security authority, personnel, and classified systems
-    val securityAuthorityDid = trustWeave.createDid { method("key") }
+    import com.trustweave.trust.types.DidCreationResult
+    import com.trustweave.trust.types.WalletCreationResult
+    
+    val securityAuthorityDidResult = trustWeave.createDid { method("key") }
+    val securityAuthorityDid = when (securityAuthorityDidResult) {
+        is DidCreationResult.Success -> securityAuthorityDidResult.did
+        else -> throw IllegalStateException("Failed to create security authority DID: ${securityAuthorityDidResult.reason}")
+    }
+    
     val securityAuthorityResolution = trustWeave.resolveDid(securityAuthorityDid)
     val securityAuthorityDoc = when (securityAuthorityResolution) {
         is DidResolutionResult.Success -> securityAuthorityResolution.document
@@ -185,25 +193,49 @@ fun main() = runBlocking {
     val securityAuthorityKeyId = securityAuthorityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val personnel1Did = trustWeave.createDid { method("key") }
-    val personnel2Did = trustWeave.createDid { method("key") }
-    val topSecretSystemDid = trustWeave.createDid { method("key") }
-    val secretSystemDid = trustWeave.createDid { method("key") }
-    val confidentialSystemDid = trustWeave.createDid { method("key") }
+    val personnel1DidResult = trustWeave.createDid { method("key") }
+    val personnel1Did = when (personnel1DidResult) {
+        is DidCreationResult.Success -> personnel1DidResult.did
+        else -> throw IllegalStateException("Failed to create personnel 1 DID: ${personnel1DidResult.reason}")
+    }
+    
+    val personnel2DidResult = trustWeave.createDid { method("key") }
+    val personnel2Did = when (personnel2DidResult) {
+        is DidCreationResult.Success -> personnel2DidResult.did
+        else -> throw IllegalStateException("Failed to create personnel 2 DID: ${personnel2DidResult.reason}")
+    }
+    
+    val topSecretSystemDidResult = trustWeave.createDid { method("key") }
+    val topSecretSystemDid = when (topSecretSystemDidResult) {
+        is DidCreationResult.Success -> topSecretSystemDidResult.did
+        else -> throw IllegalStateException("Failed to create top secret system DID: ${topSecretSystemDidResult.reason}")
+    }
+    
+    val secretSystemDidResult = trustWeave.createDid { method("key") }
+    val secretSystemDid = when (secretSystemDidResult) {
+        is DidCreationResult.Success -> secretSystemDidResult.did
+        else -> throw IllegalStateException("Failed to create secret system DID: ${secretSystemDidResult.reason}")
+    }
+    
+    val confidentialSystemDidResult = trustWeave.createDid { method("key") }
+    val confidentialSystemDid = when (confidentialSystemDidResult) {
+        is DidCreationResult.Success -> confidentialSystemDidResult.did
+        else -> throw IllegalStateException("Failed to create confidential system DID: ${confidentialSystemDidResult.reason}")
+    }
 
-    println("✅ Security Authority DID: $securityAuthorityDid")
-    println("✅ Personnel 1 DID: $personnel1Did")
-    println("✅ Personnel 2 DID: $personnel2Did")
-    println("✅ Top Secret System DID: $topSecretSystemDid")
-    println("✅ Secret System DID: $secretSystemDid")
-    println("✅ Confidential System DID: $confidentialSystemDid")
+    println("✅ Security Authority DID: ${securityAuthorityDid.value}")
+    println("✅ Personnel 1 DID: ${personnel1Did.value}")
+    println("✅ Personnel 2 DID: ${personnel2Did.value}")
+    println("✅ Top Secret System DID: ${topSecretSystemDid.value}")
+    println("✅ Secret System DID: ${secretSystemDid.value}")
+    println("✅ Confidential System DID: ${confidentialSystemDid.value}")
 
     // Step 3: Issue Top Secret clearance for Personnel 1
     val topSecretClearance = TrustWeave.issueCredential(
-        issuerDid = securityAuthorityDid,
+        issuerDid = securityAuthorityDid.value,
         issuerKeyId = securityAuthorityKeyId,
         credentialSubject = buildJsonObject {
-            put("id", personnel1Did)
+            put("id", personnel1Did.value)
             put("securityClearance", buildJsonObject {
                 put("clearanceLevel", "Top Secret")
                 put("clearanceType", "TS/SCI") // Top Secret/Sensitive Compartmented Information
@@ -230,10 +262,10 @@ fun main() = runBlocking {
 
     // Step 4: Issue Secret clearance for Personnel 2
     val secretClearance = TrustWeave.issueCredential(
-        issuerDid = securityAuthorityDid,
+        issuerDid = securityAuthorityDid.value,
         issuerKeyId = securityAuthorityKeyId,
         credentialSubject = buildJsonObject {
-            put("id", personnel2Did)
+            put("id", personnel2Did.value)
             put("securityClearance", buildJsonObject {
                 put("clearanceLevel", "Secret")
                 put("clearanceType", "Secret")
@@ -257,21 +289,27 @@ fun main() = runBlocking {
     println("   Personnel: ${personnel2Did.take(20)}...")
 
     // Step 5: Create personnel wallets and store clearance credentials
-    val personnel1Wallet = TrustWeave.createWallet(
-        holderDid = personnel1Did,
-        options = WalletCreationOptionsBuilder().apply {
-            enableOrganization = true
-            enablePresentation = true
-        }.build()
-    ).getOrThrow()
+    val personnel1WalletResult = trustWeave.wallet {
+        holder(personnel1Did.value)
+        enableOrganization()
+        enablePresentation()
+    }
+    
+    val personnel1Wallet = when (personnel1WalletResult) {
+        is WalletCreationResult.Success -> personnel1WalletResult.wallet
+        else -> throw IllegalStateException("Failed to create personnel 1 wallet: ${personnel1WalletResult.reason}")
+    }
 
-    val personnel2Wallet = TrustWeave.createWallet(
-        holderDid = personnel2Did,
-        options = WalletCreationOptionsBuilder().apply {
-            enableOrganization = true
-            enablePresentation = true
-        }.build()
-    ).getOrThrow()
+    val personnel2WalletResult = trustWeave.wallet {
+        holder(personnel2Did.value)
+        enableOrganization()
+        enablePresentation()
+    }
+    
+    val personnel2Wallet = when (personnel2WalletResult) {
+        is WalletCreationResult.Success -> personnel2WalletResult.wallet
+        else -> throw IllegalStateException("Failed to create personnel 2 wallet: ${personnel2WalletResult.reason}")
+    }
 
     val topSecretCredentialId = personnel1Wallet.store(topSecretClearance)
     val secretCredentialId = personnel2Wallet.store(secretClearance)
@@ -417,9 +455,9 @@ fun main() = runBlocking {
     val clearancePresentation = personnel1Wallet.withPresentation { pres ->
         pres.createPresentation(
             credentialIds = listOf(topSecretCredentialId),
-            holderDid = personnel1Did,
+            holderDid = personnel1Did.value,
             options = PresentationOptions(
-                holderDid = personnel1Did,
+                holderDid = personnel1Did.value,
                 challenge = "clearance-verification-${System.currentTimeMillis()}"
             )
         )

@@ -109,7 +109,7 @@ val credential = trustWeave.issue {
         issuer(issuerDid)
         subject {
             id("did:key:holder")
-            claim("name", "Alice")
+            "name" to "Alice"
         }
     }
     signedBy(issuerIdentity)

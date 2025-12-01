@@ -185,33 +185,71 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for organization, employees, and auditors
-    val organizationDid = trustWeave.createDid { method("key") }
-    println("✅ Created organization DID: ${organizationDid.value}")
+    import com.trustweave.trust.types.DidCreationResult
+    
+    val organizationDidResult = trustWeave.createDid { method("key") }
+    val organizationDid = when (organizationDidResult) {
+        is DidCreationResult.Success -> {
+            println("✅ Created organization DID: ${organizationDidResult.did.value}")
+            organizationDidResult.did
+        }
+        else -> {
+            println("Failed to create organization DID: ${organizationDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
-    val adminDid = trustWeave.createDid { method("key") }
-    println("✅ Created admin DID: ${adminDid.value}")
+    val adminDidResult = trustWeave.createDid { method("key") }
+    val adminDid = when (adminDidResult) {
+        is DidCreationResult.Success -> {
+            println("✅ Created admin DID: ${adminDidResult.did.value}")
+            adminDidResult.did
+        }
+        else -> {
+            println("Failed to create admin DID: ${adminDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
-    val employeeDid = trustWeave.createDid { method("key") }
-    println("✅ Created employee DID: ${employeeDid.value}")
+    val employeeDidResult = trustWeave.createDid { method("key") }
+    val employeeDid = when (employeeDidResult) {
+        is DidCreationResult.Success -> {
+            println("✅ Created employee DID: ${employeeDidResult.did.value}")
+            employeeDidResult.did
+        }
+        else -> {
+            println("Failed to create employee DID: ${employeeDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
-    val auditorDid = trustWeave.createDid { method("key") }
-    println("✅ Created auditor DID: ${auditorDid.value}")
-
-    println("✅ Organization DID: ${organizationDid.id}")
-    println("✅ Admin DID: ${adminDid.id}")
-    println("✅ Employee DID: ${employeeDid.id}")
-    println("✅ Auditor DID: ${auditorDid.id}")
+    val auditorDidResult = trustWeave.createDid { method("key") }
+    val auditorDid = when (auditorDidResult) {
+        is DidCreationResult.Success -> {
+            println("✅ Created auditor DID: ${auditorDidResult.did.value}")
+            auditorDidResult.did
+        }
+        else -> {
+            println("Failed to create auditor DID: ${auditorDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
     // Step 3: Issue access control credentials (CC6.1, CC6.2, CC6.3)
-    val orgKeyId = organizationDid.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
+    val orgResolution = trustWeave.resolveDid(organizationDid)
+    val orgDoc = when (orgResolution) {
+        is DidResolutionResult.Success -> orgResolution.document
+        else -> throw IllegalStateException("Failed to resolve organization DID")
+    }
+    val orgKeyId = orgDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
     // Admin access credential
     val adminAccessCredential = TrustWeave.issueCredential(
-        issuerDid = organizationDid.id,
+        issuerDid = organizationDid.value,
         issuerKeyId = orgKeyId,
         credentialSubject = buildJsonObject {
-            put("id", adminDid.id)
+            put("id", adminDid.value)
             put("role", "Administrator")
             put("permissions", buildJsonArray {
                 add("credential:issue")
@@ -238,10 +276,10 @@ fun main() = runBlocking {
 
     // Employee access credential
     val employeeAccessCredential = TrustWeave.issueCredential(
-        issuerDid = organizationDid.id,
+        issuerDid = organizationDid.value,
         issuerKeyId = orgKeyId,
         credentialSubject = buildJsonObject {
-            put("id", employeeDid.id)
+            put("id", employeeDid.value)
             put("role", "User")
             put("permissions", buildJsonArray {
                 add("credential:verify")
@@ -266,7 +304,7 @@ fun main() = runBlocking {
     val auditLogEntry = buildJsonObject {
         put("id", "audit-log-${Instant.now().toEpochMilli()}")
         put("timestamp", Instant.now().toString())
-        put("userId", adminDid.id)
+        put("userId", adminDid.value)
         put("action", "credential:issue")
         put("resourceType", "credential")
         put("resourceId", adminAccessCredential.id)
@@ -317,18 +355,43 @@ fun main() = runBlocking {
     println("   Issuer valid: ${adminVerification.issuerValid}")
 
     // Step 6: Key rotation with history preservation (CC7.3)
-    val newAdminDid = trustWeave.createDid { method("key") }
-    println("✅ Created new admin DID: ${newAdminDid.value}")
+    val newAdminDidResult = trustWeave.createDid { method("key") }
+    val newAdminDid = when (newAdminDidResult) {
+        is DidCreationResult.Success -> {
+            println("✅ Created new admin DID: ${newAdminDidResult.did.value}")
+            newAdminDidResult.did
+        }
+        else -> {
+            println("Failed to create new admin DID: ${newAdminDidResult.reason}")
+            return@runBlocking
+        }
+    }
+    
+    val newAdminResolution = trustWeave.resolveDid(newAdminDid)
+    val newAdminDoc = when (newAdminResolution) {
+        is DidResolutionResult.Success -> newAdminResolution.document
+        else -> throw IllegalStateException("Failed to resolve new admin DID")
+    }
+    val newAdminKeyId = newAdminDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
+    
+    val adminResolution = trustWeave.resolveDid(adminDid)
+    val adminDoc = when (adminResolution) {
+        is DidResolutionResult.Success -> adminResolution.document
+        else -> throw IllegalStateException("Failed to resolve admin DID")
+    }
+    val oldAdminKeyId = adminDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found")
 
     // Issue key rotation credential
     val keyRotationCredential = TrustWeave.issueCredential(
-        issuerDid = organizationDid.id,
+        issuerDid = organizationDid.value,
         issuerKeyId = orgKeyId,
         credentialSubject = buildJsonObject {
             put("id", "key-rotation-${Instant.now().toEpochMilli()}")
             put("type", "KeyRotation")
-            put("oldKeyId", adminDid.verificationMethod.firstOrNull()?.id)
-            put("newKeyId", newAdminDid.verificationMethod.firstOrNull()?.id)
+            put("oldKeyId", oldAdminKeyId)
+            put("newKeyId", newAdminKeyId)
             put("rotationDate", Instant.now().toString())
             put("reason", "Scheduled rotation")
             put("rotationPolicy", "90-day rotation")
@@ -363,7 +426,7 @@ fun main() = runBlocking {
 
     // Step 7: Change management credential (CC7.4)
     val changeManagementCredential = TrustWeave.issueCredential(
-        issuerDid = organizationDid.id,
+        issuerDid = organizationDid.value,
         issuerKeyId = orgKeyId,
         credentialSubject = buildJsonObject {
             put("id", "change-${Instant.now().toEpochMilli()}")
@@ -371,7 +434,7 @@ fun main() = runBlocking {
             put("changeType", "Configuration")
             put("description", "Updated KMS configuration")
             put("changeDate", Instant.now().toString())
-            put("approvedBy", adminDid.id)
+            put("approvedBy", adminDid.value)
             put("changeId", "CHG-2024-001")
             put("impact", "Low")
             put("status", "Completed")
@@ -390,7 +453,7 @@ fun main() = runBlocking {
 
     // Step 8: Incident response credential
     val incidentCredential = TrustWeave.issueCredential(
-        issuerDid = organizationDid.id,
+        issuerDid = organizationDid.value,
         issuerKeyId = orgKeyId,
         credentialSubject = buildJsonObject {
             put("id", "incident-${Instant.now().toEpochMilli()}")

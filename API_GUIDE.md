@@ -43,7 +43,7 @@ try {
             issuer(did)
             subject {
                 id("did:key:holder")
-                claim("name", "Alice")
+                "name" to "Alice"
             }
         }
         signedBy(IssuerIdentity.from(did, "$did#key-1"))

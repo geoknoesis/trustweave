@@ -5,6 +5,7 @@ import com.trustweave.trust.dsl.TrustWeaveConfig
 import com.trustweave.trust.dsl.trustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -41,7 +42,7 @@ class KeyRotationDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         // Rotate key
         val updatedDoc = trustWeave.rotateKey {
@@ -66,7 +67,7 @@ class KeyRotationDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         val updatedDoc = trustWeave.rotateKey {
             did(did.value)
@@ -82,7 +83,7 @@ class KeyRotationDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         val updatedDoc = trustWeave.rotateKey {
             did(did.value)
@@ -98,7 +99,7 @@ class KeyRotationDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         assertFailsWith<IllegalStateException> {
             trustWeave.rotateKey {
@@ -114,7 +115,7 @@ class KeyRotationDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         val context = trustWeave.getDslContext()
         val updatedDoc = context.rotateKey {
@@ -130,7 +131,7 @@ class KeyRotationDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }
+        }.getOrFail()
 
         val updatedDoc = trustWeave.rotateKey {
             did(did.value)

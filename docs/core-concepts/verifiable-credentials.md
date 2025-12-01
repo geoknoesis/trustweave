@@ -57,8 +57,8 @@ suspend fun issueEmployeeBadge(trustWeave: TrustWeave, issuerDid: String, issuer
             issuer(issuerDid)
             subject {
                 id("did:key:holder-123")
-                claim("role", "Site Reliability Engineer")
-                claim("level", "L5")
+                "role" to "Site Reliability Engineer"
+                "level" to "L5"
             }
             issued(Instant.now())
         }
@@ -176,9 +176,17 @@ val trustWeave = TrustWeave.build {
     credentials { defaultProofType(ProofType.Ed25519Signature2020) }
 }
 
-val issuerDid = trustWeave.createDid {
+import com.trustweave.trust.types.DidCreationResult
+import com.trustweave.trust.types.IssuanceResult
+
+val didResult = trustWeave.createDid {
     method("key")
     algorithm("Ed25519")
+}
+
+val issuerDid = when (didResult) {
+    is DidCreationResult.Success -> didResult.did
+    else -> throw IllegalStateException("Failed to create DID: ${didResult.reason}")
 }
 
 val resolution = trustWeave.resolveDid(issuerDid)
@@ -189,18 +197,23 @@ val issuerDoc = when (resolution) {
 val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
     ?: throw IllegalStateException("No verification method found")
 
-val issuedCredential = trustWeave.issue {
+val issuanceResult = trustWeave.issue {
     credential {
         type(CredentialType.Person)
         issuer(issuerDid.value)
         subject {
             id(subjectDid)
-            claim("name", "Alice")
-            claim("email", "alice@example.com")
+            "name" to "Alice"
+            "email" to "alice@example.com"
         }
         issued(Instant.now())
     }
     signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+}
+
+val issuedCredential = when (issuanceResult) {
+    is IssuanceResult.Success -> issuanceResult.credential
+    else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
 }
 
 **Outcome:** Produces a signed credential ready for distribution, anchored to the specific proof type and key you configured.

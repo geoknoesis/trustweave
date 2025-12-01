@@ -14,6 +14,9 @@ import com.trustweave.core.util.DigestUtils
 import com.trustweave.did.exception.DidException
 import com.trustweave.anchor.exceptions.BlockchainException
 import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.testkit.getOrFail
+import com.trustweave.trust.types.DidCreationResult
+import com.trustweave.trust.types.IssuanceResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import java.time.Instant
@@ -95,19 +98,25 @@ fun main() = runBlocking {
     println("  Method: key (default)")
     println("  Parameters: Using default DID creation options")
 
-    val issuerDid = try {
-        trustweave.createDid()
-    } catch (error: DidException.DidMethodNotRegistered) {
-        println("\n📥 RESPONSE: DID Creation Failed")
-        println("  ✗ Error Type: DidMethodNotRegistered")
-        println("  ✗ Method: ${error.method}")
-        println("  ✗ Available methods: ${error.availableMethods.joinToString(", ")}")
-        return@runBlocking
-    } catch (error: Throwable) {
-        println("\n📥 RESPONSE: DID Creation Failed")
-        println("  ✗ Error: ${error.message}")
-        println("  ✗ Error Type: ${error::class.simpleName}")
-        return@runBlocking
+    val issuerDidResult = trustweave.createDid()
+    val issuerDid = when (issuerDidResult) {
+        is DidCreationResult.Success -> issuerDidResult.did
+        is DidCreationResult.Failure.MethodNotRegistered -> {
+            println("\n📥 RESPONSE: DID Creation Failed")
+            println("  ✗ Error Type: DidMethodNotRegistered")
+            println("  ✗ Method: ${issuerDidResult.method}")
+            println("  ✗ Available methods: ${issuerDidResult.availableMethods.joinToString(", ")}")
+            return@runBlocking
+        }
+        is DidCreationResult.Failure.KeyGenerationFailed,
+        is DidCreationResult.Failure.DocumentCreationFailed,
+        is DidCreationResult.Failure.InvalidConfiguration,
+        is DidCreationResult.Failure.Other -> {
+            println("\n📥 RESPONSE: DID Creation Failed")
+            println("  ✗ Error: ${issuerDidResult.reason}")
+            println("  ✗ Error Type: ${issuerDidResult::class.simpleName}")
+            return@runBlocking
+        }
     }
 
     // Resolve the DID to get the document with verification methods
@@ -368,7 +377,7 @@ fun main() = runBlocking {
     println(subjectJson.encodeToString(JsonObject.serializer(), credentialSubject))
 
     // Issue the credential using TrustWeave facade
-    val credential = trustweave.issue {
+    val credentialResult = trustweave.issue {
         credential {
             type("EarthObservationCredential")
             issuer(issuerDid.value)
@@ -387,6 +396,14 @@ fun main() = runBlocking {
             issued(java.time.Instant.now())
         }
         signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+    }
+    val credential = when (credentialResult) {
+        is IssuanceResult.Success -> credentialResult.credential
+        else -> {
+            println("\n📥 RESPONSE: Credential Issuance Failed")
+            println("  ✗ Error: ${credentialResult.reason}")
+            return@runBlocking
+        }
     }
 
     println("\n📥 RESPONSE: Credential Issued Successfully")

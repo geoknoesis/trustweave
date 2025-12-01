@@ -11,12 +11,14 @@ import com.trustweave.trust.types.ProofType
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.SchemaFormat
 import com.trustweave.wallet.CredentialOrganization
+import com.trustweave.wallet.Wallet
 import com.trustweave.trust.dsl.storeIn
 import com.trustweave.trust.dsl.wallet.organize
 import com.trustweave.trust.dsl.wallet.query
 import com.trustweave.trust.dsl.wallet.QueryBuilder
 import com.trustweave.trust.dsl.wallet.presentation
 import com.trustweave.trust.types.*
+import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import java.time.Instant
@@ -77,13 +79,13 @@ fun main() = runBlocking {
     val issuerDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
+    }.getOrFail()
     println("Issuer DID: $issuerDid")
 
     val holderDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
+    }.getOrFail()
     println("Holder DID: $holderDid\n")
 
     // ============================================
@@ -156,7 +158,7 @@ fun main() = runBlocking {
         }
         signedBy(issuerDid = issuerDid.value, keyId = "key-1")
         withRevocation() // Auto-creates status list
-    }
+    }.getOrFail()
     println("✓ Credential issued with ID: ${credential.id}")
     println("  Has revocation status: ${credential.credentialStatus != null}\n")
 
@@ -164,12 +166,12 @@ fun main() = runBlocking {
     // STEP 6: Create Wallet and Store Credential
     // ============================================
     println("Step 6: Creating wallet and storing credential...")
-    val wallet = trustWeave.wallet {
+    val wallet: Wallet = trustWeave.wallet {
         id("comprehensive-wallet")
         holder(holderDid.value)
         enableOrganization()
         enablePresentation()
-    }
+    }.getOrFail()
 
     val stored = credential.storeIn(wallet)
     println("✓ Credential stored with ID: ${stored.id}\n")

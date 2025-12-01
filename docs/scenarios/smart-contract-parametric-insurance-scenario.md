@@ -278,9 +278,23 @@ suspend fun completeParametricInsuranceWorkflow() {
     }
 
     // Step 1: Create DIDs
-    val insurerDid = trustWeave.createDid { method("key") }
-    val insuredDid = trustWeave.createDid { method("key") }
-    val eoProviderDid = trustWeave.createDid { method("key") }
+    val insurerDidResult = trustWeave.createDid { method("key") }
+    val insurerDid = when (insurerDidResult) {
+        is DidCreationResult.Success -> insurerDidResult.did
+        else -> throw IllegalStateException("Failed to create insurer DID: ${insurerDidResult.reason}")
+    }
+    
+    val insuredDidResult = trustWeave.createDid { method("key") }
+    val insuredDid = when (insuredDidResult) {
+        is DidCreationResult.Success -> insuredDidResult.did
+        else -> throw IllegalStateException("Failed to create insured DID: ${insuredDidResult.reason}")
+    }
+    
+    val eoProviderDidResult = trustWeave.createDid { method("key") }
+    val eoProviderDid = when (eoProviderDidResult) {
+        is DidCreationResult.Success -> eoProviderDidResult.did
+        else -> throw IllegalStateException("Failed to create EO provider DID: ${eoProviderDidResult.reason}")
+    }
     
     val insurerResolution = trustWeave.resolveDid(insurerDid)
     val insurerDoc = when (insurerResolution) {
@@ -328,17 +342,24 @@ suspend fun completeParametricInsuranceWorkflow() {
     val floodDepth = 75.0 // cm
 
     // Issue EO data credential (simplified - in production, EO provider issues this)
-    val eoDataCredential = trustWeave.issue {
+    import com.trustweave.trust.types.IssuanceResult
+    
+    val eoDataIssuanceResult = trustWeave.issue {
         credential {
             type("EarthObservationCredential")
             issuer(eoProviderDid.value)
             subject {
-                claim("floodDepthCm", floodDepth)
-                claim("timestamp", Instant.now().toString())
+                "floodDepthCm" to floodDepth
+                "timestamp" to Instant.now().toString()
             }
             issued(Instant.now())
         }
         signedBy(issuerDid = eoProviderDid.value, keyId = eoProviderKeyId)
+    }
+    
+    val eoDataCredential = when (eoDataIssuanceResult) {
+        is IssuanceResult.Success -> eoDataIssuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue EO data credential: ${eoDataIssuanceResult.reason}")
     }
 
     // Step 6: Execute contract

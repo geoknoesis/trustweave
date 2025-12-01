@@ -23,6 +23,9 @@ import com.trustweave.trust.TrustRegistry
 import com.trustweave.trust.types.ProofType
 import com.trustweave.trust.types.Did
 import com.trustweave.trust.types.VerificationResult
+import com.trustweave.trust.types.DidCreationResult
+import com.trustweave.trust.types.IssuanceResult
+import com.trustweave.trust.types.WalletCreationResult
 import com.trustweave.trust.dsl.KeyRotationBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -170,8 +173,10 @@ class TrustWeaveContext(
      * Uses CredentialDslProvider to delegate to credential DSL.
      * 
      * This operation performs I/O-bound work and uses the configured dispatcher.
+     *
+     * @return Sealed result type with success or detailed failure information
      */
-    suspend fun issue(block: IssuanceBuilder.() -> Unit): VerifiableCredential = withContext(getIoDispatcher()) {
+    suspend fun issue(block: IssuanceBuilder.() -> Unit): IssuanceResult = withContext(getIoDispatcher()) {
         (this@TrustWeaveContext as CredentialDslProvider).issue(block)
     }
 
@@ -186,16 +191,37 @@ class TrustWeaveContext(
     /**
      * Create a wallet using the TrustWeave configuration.
      * Delegates to WalletDslProvider extension function.
+     *
+     * @return Sealed result type with success or detailed failure information
      */
-    suspend fun wallet(block: WalletBuilder.() -> Unit): Wallet {
-        return (this as WalletDslProvider).wallet(block)
+    suspend fun wallet(block: WalletBuilder.() -> Unit): WalletCreationResult {
+        return try {
+            val wallet = (this as WalletDslProvider).wallet(block)
+            WalletCreationResult.Success(wallet)
+        } catch (e: IllegalStateException) {
+            when {
+                e.message?.contains("WalletFactory", ignoreCase = true) == true ->
+                    WalletCreationResult.Failure.FactoryNotConfigured(e.message ?: "Wallet factory not configured")
+                e.message?.contains("holder", ignoreCase = true) == true ->
+                    WalletCreationResult.Failure.InvalidHolderDid(
+                        holderDid = "",
+                        reason = e.message ?: "Invalid holder DID"
+                    )
+                else ->
+                    WalletCreationResult.Failure.Other(e.message ?: "Wallet creation failed", e)
+            }
+        } catch (e: Throwable) {
+            WalletCreationResult.Failure.Other(e.message ?: "Wallet creation failed", e)
+        }
     }
 
     /**
      * Create a DID using the TrustWeave configuration.
      * Delegates to DidDslProvider extension function.
+     *
+     * @return Sealed result type with success or detailed failure information
      */
-    suspend fun createDid(block: DidBuilder.() -> Unit): Did {
+    suspend fun createDid(block: DidBuilder.() -> Unit): DidCreationResult {
         return (this as DidDslProvider).createDid(block)
     }
 

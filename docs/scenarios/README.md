@@ -229,11 +229,24 @@ fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
 
     // 2. Create DIDs
-    val issuerDid = trustWeave.createDid { method("key") }
-    val holderDid = trustWeave.createDid { method("key") }
+    import com.trustweave.trust.types.DidCreationResult
+    import com.trustweave.trust.types.IssuanceResult
+    import com.trustweave.trust.types.WalletCreationResult
+    
+    val issuerDidResult = trustWeave.createDid { method("key") }
+    val issuerDid = when (issuerDidResult) {
+        is DidCreationResult.Success -> issuerDidResult.did
+        else -> throw IllegalStateException("Failed to create issuer DID: ${issuerDidResult.reason}")
+    }
+    
+    val holderDidResult = trustWeave.createDid { method("key") }
+    val holderDid = when (holderDidResult) {
+        is DidCreationResult.Success -> holderDidResult.did
+        else -> throw IllegalStateException("Failed to create holder DID: ${holderDidResult.reason}")
+    }
 
     // 3. Issue Credential
-    val credential = trustWeave.issue {
+    val issuanceResult = trustWeave.issue {
         credential {
             issuer(issuerDid.value)
             subject { id(holderDid.value) }
@@ -241,9 +254,21 @@ fun main() = runBlocking {
         }
         signedBy(issuerDid = issuerDid.value, keyId = "key-1")
     }
+    
+    val credential = when (issuanceResult) {
+        is IssuanceResult.Success -> issuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
+    }
 
     // 4. Store in Wallet
-    val wallet = TrustWeave.createWallet(holderDid.id).getOrThrow()
+    val walletResult = trustWeave.wallet {
+        holder(holderDid.value)
+    }
+    
+    val wallet = when (walletResult) {
+        is WalletCreationResult.Success -> walletResult.wallet
+        else -> throw IllegalStateException("Failed to create wallet: ${walletResult.reason}")
+    }
     val credentialId = wallet.store(credential)
 
     // 5. Verify

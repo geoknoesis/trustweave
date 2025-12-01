@@ -176,7 +176,17 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for university (issuer) and student (holder)
-    val universityDid = trustWeave.createDid { method("key") }
+    import com.trustweave.trust.types.DidCreationResult
+    
+    val universityDidResult = trustWeave.createDid { method("key") }
+    val universityDid = when (universityDidResult) {
+        is DidCreationResult.Success -> universityDidResult.did
+        else -> {
+            println("Failed to create university DID: ${universityDidResult.reason}")
+            return@runBlocking
+        }
+    }
+    
     val universityResolution = trustWeave.resolveDid(universityDid)
     val universityDoc = when (universityResolution) {
         is DidResolutionResult.Success -> universityResolution.document
@@ -185,42 +195,65 @@ fun main() = runBlocking {
     val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val studentDid = trustWeave.createDid { method("key") }
+    val studentDidResult = trustWeave.createDid { method("key") }
+    val studentDid = when (studentDidResult) {
+        is DidCreationResult.Success -> studentDidResult.did
+        else -> {
+            println("Failed to create student DID: ${studentDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
-    println("✅ University DID: $universityDid")
-    println("✅ Student DID: $studentDid")
+    println("✅ University DID: ${universityDid.value}")
+    println("✅ Student DID: ${studentDid.value}")
 
     // Step 3: Issue a degree credential
-    val credential = TrustWeave.issueCredential(
-        issuerDid = universityDid,
-        issuerKeyId = universityKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", studentDid)
-            put("degree", buildJsonObject {
-                put("type", "BachelorDegree")
-                put("name", "Bachelor of Science in Computer Science")
-                put("university", "Example University")
-                put("graduationDate", "2023-05-15")
-                put("gpa", "3.8")
-                put("major", "Computer Science")
-                put("honors", "Summa Cum Laude")
-            })
-        },
-        types = listOf("VerifiableCredential", "DegreeCredential", "BachelorDegreeCredential"),
-        expirationDate = Instant.now().plus(10, ChronoUnit.YEARS).toString()
-    ).getOrThrow()
+    import com.trustweave.trust.types.IssuanceResult
+    import com.trustweave.trust.types.WalletCreationResult
+    import com.trustweave.trust.types.VerificationResult
+    
+    val issuanceResult = trustWeave.issue {
+        credential {
+            id("https://example.edu/credentials/degree-${Instant.now().toEpochMilli()}")
+            type("VerifiableCredential", "DegreeCredential", "BachelorDegreeCredential")
+            issuer(universityDid.value)
+            subject {
+                id(studentDid.value)
+                "degree" {
+                    "type" to "BachelorDegree"
+                    "name" to "Bachelor of Science in Computer Science"
+                    "university" to "Example University"
+                    "graduationDate" to "2023-05-15"
+                    "gpa" to "3.8"
+                    "major" to "Computer Science"
+                    "honors" to "Summa Cum Laude"
+                }
+            }
+            expirationDate(Instant.now().plus(10, ChronoUnit.YEARS).toString())
+        }
+        by(issuerDid = universityDid.value, keyId = universityKeyId)
+    }
+    
+    val credential = when (issuanceResult) {
+        is IssuanceResult.Success -> issuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue credential")
+    }
 
     println("✅ Credential issued: ${credential.id}")
     println("   Type: ${credential.type.joinToString()}")
     println("   Issuer: ${credential.issuer}")
 
     // Step 4: Create student wallet and store credential
-    val studentWallet = TrustWeave.createWallet(
-        holderDid = studentDid
-    ) {
-        enableOrganization = true
-        enablePresentation = true
-    }.getOrThrow()
+    val walletResult = trustWeave.wallet {
+        holder(studentDid.value)
+        organization { enabled = true }
+        presentation { enabled = true }
+    }
+    
+    val studentWallet = when (walletResult) {
+        is WalletCreationResult.Success -> walletResult.wallet
+        else -> throw IllegalStateException("Failed to create wallet")
+    }
 
     val credentialId = studentWallet.store(credential)
     println("✅ Credential stored in wallet: $credentialId")
@@ -237,9 +270,9 @@ fun main() = runBlocking {
     val presentation = studentWallet.withPresentation { pres ->
         pres.createPresentation(
             credentialIds = listOf(credentialId),
-            holderDid = studentDid,
+            holderDid = studentDid.value,
             options = PresentationOptions(
-                holderDid = studentDid,
+                holderDid = studentDid.value,
                 challenge = "job-application-12345"
             )
         )
@@ -250,19 +283,24 @@ fun main() = runBlocking {
     println("   Credentials: ${presentation.verifiableCredential.size}")
 
     // Step 7: Verify the credential
-    val verification = TrustWeave.verifyCredential(credential).getOrThrow()
-
-    if (verification.valid) {
-        println("\n✅ Credential Verification SUCCESS")
-        println("   Proof valid: ${verification.proofValid}")
-        println("   Issuer valid: ${verification.issuerValid}")
-        println("   Not revoked: ${verification.notRevoked}")
-        if (verification.warnings.isNotEmpty()) {
-            println("   Warnings: ${verification.warnings}")
+    val verificationResult = trustWeave.verify {
+        credential(credential)
+    }
+    
+    when (verificationResult) {
+        is VerificationResult.Valid -> {
+            println("\n✅ Credential Verification SUCCESS")
+            println("   Proof valid: ${verificationResult.proofValid}")
+            println("   Issuer valid: ${verificationResult.issuerValid}")
+            println("   Not revoked: ${verificationResult.notRevoked}")
+            if (verificationResult.warnings.isNotEmpty()) {
+                println("   Warnings: ${verificationResult.warnings}")
+            }
         }
-    } else {
-        println("\n❌ Credential Verification FAILED")
-        println("   Errors: ${verification.errors}")
+        is VerificationResult.Invalid -> {
+            println("\n❌ Credential Verification FAILED")
+            println("   Errors: ${verificationResult.errors}")
+        }
     }
 
     // Step 8: Display wallet statistics
@@ -348,7 +386,14 @@ Each party (university issuer and student holder) needs their own DID:
 
 ```kotlin
 // Create university DID (issuer)
-val universityDid = trustWeave.createDid { method("key") }
+import com.trustweave.trust.types.DidCreationResult
+
+val universityDidResult = trustWeave.createDid { method("key") }
+val universityDid = when (universityDidResult) {
+    is DidCreationResult.Success -> universityDidResult.did
+    else -> throw IllegalStateException("Failed to create university DID: ${universityDidResult.reason}")
+}
+
 val universityResolution = trustWeave.resolveDid(universityDid)
 val universityDoc = when (universityResolution) {
     is DidResolutionResult.Success -> universityResolution.document
@@ -358,7 +403,11 @@ val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.id?.substr
     ?: throw IllegalStateException("No verification method found")
 
 // Create student DID (holder)
-val studentDid = trustWeave.createDid { method("key") }
+val studentDidResult = trustWeave.createDid { method("key") }
+val studentDid = when (studentDidResult) {
+    is DidCreationResult.Success -> studentDidResult.did
+    else -> throw IllegalStateException("Failed to create student DID: ${studentDidResult.reason}")
+}
 ```
 
 **What this does:** Creates self-sovereign identifiers for both parties. The university DID will be used as the credential issuer, and the student DID will be the credential subject.
@@ -368,24 +417,34 @@ val studentDid = trustWeave.createDid { method("key") }
 The university creates and issues a verifiable credential:
 
 ```kotlin
-val credential = TrustWeave.issueCredential(
-    issuerDid = universityDid,
-    issuerKeyId = universityKeyId,
-    credentialSubject = buildJsonObject {
-        put("id", studentDid)
-        put("degree", buildJsonObject {
-            put("type", "BachelorDegree")
-            put("name", "Bachelor of Science in Computer Science")
-            put("university", "Example University")
-            put("graduationDate", "2023-05-15")
-            put("gpa", "3.8")
-            put("major", "Computer Science")
-            put("honors", "Summa Cum Laude")
-        })
-    },
-    types = listOf("VerifiableCredential", "DegreeCredential", "BachelorDegreeCredential"),
-    expirationDate = Instant.now().plus(10, ChronoUnit.YEARS).toString()
-).getOrThrow()
+import com.trustweave.trust.types.IssuanceResult
+
+val issuanceResult = trustWeave.issue {
+    credential {
+        id("https://example.edu/credentials/degree-${Instant.now().toEpochMilli()}")
+        type("VerifiableCredential", "DegreeCredential", "BachelorDegreeCredential")
+        issuer(universityDid.value)
+        subject {
+            id(studentDid.value)
+            "degree" {
+                "type" to "BachelorDegree"
+                "name" to "Bachelor of Science in Computer Science"
+                "university" to "Example University"
+                "graduationDate" to "2023-05-15"
+                "gpa" to "3.8"
+                "major" to "Computer Science"
+                "honors" to "Summa Cum Laude"
+            }
+        }
+        expirationDate(Instant.now().plus(10, ChronoUnit.YEARS).toString())
+    }
+    by(issuerDid = universityDid.value, keyId = universityKeyId)
+}
+
+val credential = when (issuanceResult) {
+    is IssuanceResult.Success -> issuanceResult.credential
+    else -> throw IllegalStateException("Failed to issue credential")
+}
 ```
 
 **What this does:** Issues a cryptographically signed credential with the university's DID. The credential includes degree information and is valid for 10 years.
@@ -395,12 +454,18 @@ val credential = TrustWeave.issueCredential(
 Students need a wallet to store their credentials:
 
 ```kotlin
-val studentWallet = TrustWeave.createWallet(
-    holderDid = studentDid
-) {
-    enableOrganization = true  // Enable collections and tags
-    enablePresentation = true  // Enable presentation creation
-}.getOrThrow()
+import com.trustweave.trust.types.WalletCreationResult
+
+val walletResult = trustWeave.wallet {
+    holder(studentDid.value)
+    organization { enabled = true }  // Enable collections and tags
+    presentation { enabled = true }  // Enable presentation creation
+}
+
+val studentWallet = when (walletResult) {
+    is WalletCreationResult.Success -> walletResult.wallet
+    else -> throw IllegalStateException("Failed to create wallet")
+}
 ```
 
 **What this does:** Creates an in-memory wallet for the student with organization and presentation capabilities enabled.
@@ -466,15 +531,22 @@ val presentation = studentWallet.withPresentation { pres ->
 Employers verify the credential cryptographically:
 
 ```kotlin
-val verification = TrustWeave.verifyCredential(credential).getOrThrow()
+import com.trustweave.trust.types.VerificationResult
 
-if (verification.valid) {
-    println("Credential is valid!")
-    println("Proof valid: ${verification.proofValid}")
-    println("Issuer valid: ${verification.issuerValid}")
-    println("Not revoked: ${verification.notRevoked}")
-} else {
-    println("Credential verification failed: ${verification.errors}")
+val verificationResult = trustWeave.verify {
+    credential(credential)
+}
+
+when (verificationResult) {
+    is VerificationResult.Valid -> {
+        println("Credential is valid!")
+        println("Proof valid: ${verificationResult.proofValid}")
+        println("Issuer valid: ${verificationResult.issuerValid}")
+        println("Not revoked: ${verificationResult.notRevoked}")
+    }
+    is VerificationResult.Invalid -> {
+        println("Credential verification failed: ${verificationResult.errors}")
+    }
 }
 ```
 
@@ -530,12 +602,22 @@ Complete verification flow using TrustWeave facade:
 suspend fun verifyAcademicCredential(
     credential: VerifiableCredential,
     expectedIssuer: String,
-    TrustWeave: TrustWeave
+    trustWeave: TrustWeave
 ): Boolean {
-    val result = TrustWeave.verifyCredential(credential).getOrThrow()
-
-    if (!result.valid) return false
-    if (credential.issuer != expectedIssuer) return false
+    val verificationResult = trustWeave.verify {
+        credential(credential)
+    }
+    
+    when (verificationResult) {
+        is VerificationResult.Valid -> {
+            // Credential is valid, continue checks
+        }
+        is VerificationResult.Invalid -> {
+            return false
+        }
+    }
+    
+    if (credential.issuer.firstOrNull()?.id != expectedIssuer) return false
     if (!credential.type.contains("DegreeCredential")) return false
 
     return true

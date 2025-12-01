@@ -12,6 +12,7 @@ import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.trust.types.VerificationResult
 import com.trustweave.trust.types.*
+import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -58,12 +59,12 @@ class TrustRegistryDslComprehensiveTest {
         val universityDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         val companyDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         trustWeave.trust {
             addAnchor(universityDid.value) {
@@ -99,17 +100,17 @@ class TrustRegistryDslComprehensiveTest {
         val anchor1 = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         val anchor2 = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         val anchor3 = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         trustWeave.trust {
             addAnchor(anchor1.value) {}
@@ -148,17 +149,17 @@ class TrustRegistryDslComprehensiveTest {
         val eduIssuer1 = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         val eduIssuer2 = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         val empIssuer = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         trustWeave.trust {
             addAnchor(eduIssuer1.value) {
@@ -203,7 +204,7 @@ class TrustRegistryDslComprehensiveTest {
         val issuerDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         trustWeave.trust {
             addAnchor(issuerDid.value) {
@@ -240,12 +241,12 @@ class TrustRegistryDslComprehensiveTest {
         val issuerDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         val holderDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
+        }.getOrFail()
 
         trustWeave.trust {
             addAnchor(issuerDid.value) {
@@ -282,7 +283,7 @@ class TrustRegistryDslComprehensiveTest {
                 issued(Instant.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = keyId)
-        }
+        }.getOrFail()
 
         val result = trustWeave.verify {
             credential(credential)

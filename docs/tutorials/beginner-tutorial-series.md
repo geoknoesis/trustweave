@@ -50,12 +50,13 @@ dependencies {
 ### Step 2: Create TrustWeave Instance
 
 ```kotlin
-import com.trustweave.TrustWeave
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    // Create TrustWeave with default configuration
-    // This includes did:key method by default
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory

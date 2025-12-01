@@ -176,6 +176,8 @@ fun main() = runBlocking {
 
 ```kotlin
 import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.trust.types.Did
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.testkit.services.*

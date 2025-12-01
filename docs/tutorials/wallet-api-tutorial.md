@@ -64,9 +64,8 @@ fun main() = runBlocking {
             holder("did:key:holder")
             type("inMemory")
             // Organization features can be configured here
-                enablePresentation = true
-            )
-        )
+            enablePresentation()
+        }
 
         println("Wallet ID: ${wallet.walletId}")
         println("Holder: ${wallet.holderDid}")

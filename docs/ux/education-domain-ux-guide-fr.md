@@ -107,7 +107,7 @@ Ce document fournit un guide complet de l'expérience utilisateur pour créer, c
 **Événements Backend :**
 1. Valider le format de l'email
 2. Vérifier la force du mot de passe
-3. Vérifier si l'email existe déj�
+3. Vérifier si l'email existe déj�
 4. Créer le compte utilisateur
 5. Générer le DID de l'institution
 6. Créer la paire de clés par défaut

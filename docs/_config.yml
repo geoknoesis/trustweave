@@ -9,6 +9,8 @@ version: 1.0.0-SNAPSHOT
 # GitHub Pages Configuration
 # For project sites: baseurl should be "/repository-name"
 # For user/org sites: baseurl should be ""
+# Note: url is set to GitHub Pages domain for independence from custom domain redirects
+# All links use relative URLs ({{ site.baseurl }}) to work on both domains
 baseurl: "/trustweave"
 url: "https://geoknoesis.github.io"
 
@@ -157,6 +159,42 @@ defaults:
       nav_exclude: false
   - scope:
       path: "integrations/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "integrations/aws-kms.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "integrations/azure-kms.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "integrations/google-kms.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "integrations/hashicorp-vault-kms.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "integrations/ibm-key-protect-kms.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "integrations/inmemory-kms.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "kms/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "kms/KMS_QUICK_START.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "kms/KMS_PLUGINS_CONFIGURATION.md"
     values:
       nav_exclude: false
   - scope:
